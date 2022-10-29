@@ -19,5 +19,6 @@ struct caveS {
   uint8_t cidx;  // creature
   uint8_t tidx;  // treasure
   uint8_t fval;  // floor
+  uint8_t lr : 1;
 };
 static struct caveS caveD[MAX_HEIGHT][MAX_WIDTH];
