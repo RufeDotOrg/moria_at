@@ -1,14 +1,11 @@
+#include "game_common.h"
+#include "game_const.h"
+#include "game_type.h"
+
 #include <errno.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
-
-#include <stdbool.h>
-
-#define MAX_WIDTH 256
-#define MAX_HEIGHT 128
-#define SCREEN_HEIGHT 8
-#define SCREEN_WIDTH 16
 
 static struct termios save_termD;
 // Common terminal commands
@@ -19,11 +16,6 @@ static char tc_move_cursorD[] = "\x1b[H";
 static char tc_hide_cursorD[] = "\x1b[?25l";
 static char tc_show_cursorD[] = "\x1b[?25h";
 
-struct uS {
-  int x;
-  int y;
-};
-static struct uS uD;
 char
 get_sym(int row, int col)
 {
@@ -31,16 +23,6 @@ get_sym(int row, int col)
   return '.';
 }
 
-#define CLAMP(x, min, max) (x < min ? min : x > max ? max : x)
-struct panelS {
-  int panel_row;
-  int panel_row_min;
-  int panel_row_max;
-  int panel_col;
-  int panel_col_min;
-  int panel_col_max;
-};
-static struct panelS panelD;
 void
 panel_bounds(struct panelS* panel)
 {
@@ -71,8 +53,6 @@ panel_update(struct panelS* panel, int x, int y, bool force)
 
 static char bufferD[4 * 1024];
 static int buffer_usedD;
-#define AL(x) (sizeof(x) / sizeof(x[0]))
-#define AP(x) x, AL(x)
 int
 buffer_append(char* str, int str_len)
 {
@@ -96,7 +76,7 @@ main()
 
   write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
 
-  panel_update(&panelD, uD.x, uD.y, true);
+  panel_bounds(&panelD);
 
   char c;
   while (1) {

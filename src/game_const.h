@@ -1,0 +1,6 @@
+
+#define MAX_WIDTH 256
+#define MAX_HEIGHT 128
+#define SCREEN_HEIGHT 8
+#define SCREEN_WIDTH 16
+
