@@ -10,6 +10,8 @@
 #define FLOOR_LIGHT 1
 #define FLOOR_DARK 2
 #define FLOOR_CORR 3
+#define MAX_OPEN_SPACE 3
+#define MIN_CLOSED_SPACE 4
 #define FLOOR_OBST 4 /* a corridor space with cl/st/se door or rubble */
 #define TMP1_WALL	8
 #define TMP2_WALL	9

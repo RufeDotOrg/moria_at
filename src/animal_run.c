@@ -296,13 +296,52 @@ static void fill_cave(fval) register int fval;
     }
   }
 }
+static void place_stairs(typ, num, walls) int typ, num, walls;
+{
+  register struct caveS* cave_ptr;
+  int i, j, flag;
+  register int y1, x1, y2, x2;
+
+  for (i = 0; i < num; i++) {
+    flag = FALSE;
+    do {
+      j = 0;
+      do {
+        /* Note: don't let y1/x1 be zero, and don't let y2/x2 be equal
+           to cur_height-1/cur_width-1, these values are always
+           BOUNDARY_ROCK. */
+        y1 = randint(MAX_HEIGHT - 14);
+        x1 = randint(MAX_WIDTH - 14);
+        y2 = y1 + 12;
+        x2 = x1 + 12;
+        do {
+          do {
+            cave_ptr = &caveD[y1][x1];
+            // if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->tidx == 0) &&
+            //     (next_to_walls(y1, x1) >= walls)) {
+            flag = TRUE;
+            //  if (typ == 1)
+            //    place_up_stairs(y1, x1);
+            //  else
+            //    place_down_stairs(y1, x1);
+            //}
+            x1++;
+          } while ((x1 != x2) && (!flag));
+          x1 = x2 - 12;
+          y1++;
+        } while ((y1 != y2) && (!flag));
+        j++;
+      } while ((!flag) && (j <= 30));
+      walls--;
+    } while (!flag);
+  }
+}
 void
 cave_gen()
 {
   int room_map[MAX_COL][MAX_ROW] = {0};
   register int i, j, k;
   int y1, x1, y2, x2, pick1, pick2, tmp;
-  int alloc_level;
   int16_t yloc[400], xloc[400];
 
   k = DUN_ROOM_MEAN;
@@ -355,18 +394,21 @@ cave_gen()
   //   try_door(doorstk[i].y - 1, doorstk[i].x);
   //   try_door(doorstk[i].y + 1, doorstk[i].x);
   // }
-  // alloc_level = (dun_level / 3);
+  place_stairs(2, randint(2) + 2, 3);
+  place_stairs(1, randint(2), 3);
+  /* Set up the character co-ords, used by alloc_monster, place_win_monster
+   */
+  // new_spot(&char_row, &char_col);
+
+  // int alloc_level = (dun_level / 3);
   // if (alloc_level < 2)
   //   alloc_level = 2;
   // else if (alloc_level > 10)
   //   alloc_level = 10;
-  // place_stairs(2, randint(2) + 2, 3);
-  // place_stairs(1, randint(2), 3);
-  // /* Set up the character co-ords, used by alloc_monster, place_win_monster
-  // */ new_spot(&char_row, &char_col); alloc_monster((randint(8) +
-  // MIN_MALLOC_LEVEL + alloc_level), 0, TRUE); alloc_object(set_corr, 3,
-  // randint(alloc_level)); alloc_object(set_room, 5, randnor(TREAS_ROOM_ALLOC,
-  // 3)); alloc_object(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
+  // alloc_monster((randint(8) + MIN_MALLOC_LEVEL + alloc_level), 0, TRUE);
+  // alloc_object(set_corr, 3, randint(alloc_level));
+  // alloc_object(set_room, 5, randnor(TREAS_ROOM_ALLOC, 3));
+  // alloc_object(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
   // alloc_object(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
   // alloc_object(set_floor, 1, randint(alloc_level));
   // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
@@ -463,8 +505,9 @@ main()
     }
     char line[80];
     {
-      int print_len = snprintf(AP(line), "(%d,%d) xy (%d,%d) p\r\n", uD.x, uD.y,
-                               panelD.panel_col, panelD.panel_row);
+      int print_len =
+          snprintf(AP(line), "(%d,%d) xy (%d,%d) p (%d) fval\r\n", uD.x, uD.y,
+                   panelD.panel_col, panelD.panel_row, caveD[uD.y][uD.x].fval);
       if (print_len < AL(line)) buffer_append(line, print_len);
     }
     if (log_usedD) {
