@@ -14,3 +14,10 @@ struct panelS {
   int panel_col_max;
 };
 static struct panelS panelD;
+
+struct caveS {
+  uint8_t cidx;  // creature
+  uint8_t tidx;  // treasure
+  uint8_t fval;  // floor
+};
+static struct caveS caveD[MAX_HEIGHT][MAX_WIDTH];

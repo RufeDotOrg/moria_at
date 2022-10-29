@@ -16,11 +16,27 @@ static char tc_move_cursorD[] = "\x1b[H";
 static char tc_hide_cursorD[] = "\x1b[?25l";
 static char tc_show_cursorD[] = "\x1b[?25h";
 
+void
+cave_init()
+{
+  for (int row = 0; row < MAX_HEIGHT; ++row) {
+    for (int col = 0; col < MAX_WIDTH; ++col) {
+      bool wall = (row == 0 || row + 1 == MAX_HEIGHT) ||
+                  (col == 0 || col + 1 == MAX_WIDTH);
+      if (!wall) caveD[row][col].fval = FLOOR_LIGHT;
+    }
+  }
+}
+
 char
 get_sym(int row, int col)
 {
   if (row == uD.y && col == uD.x) return '@';
-  return '.';
+  switch (caveD[row][col].fval) {
+    case FLOOR_LIGHT:
+      return '.';
+  }
+  return '#';
 }
 
 void
@@ -76,6 +92,8 @@ main()
 
   write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
 
+  uD.x = uD.y = 1;
+  cave_init();
   panel_bounds(&panelD);
 
   char c;
@@ -111,37 +129,43 @@ main()
     }
 
     if (c == CTRL('c')) break;
+    int x = uD.x;
+    int y = uD.y;
     switch (c) {
       case 'k':
-        uD.y -= (uD.y > 0);
+        y -= (y > 0);
         break;
       case 'j':
-        uD.y += (uD.y + 1 < MAX_HEIGHT);
+        y += (y + 1 < MAX_HEIGHT);
         break;
       case 'l':
-        uD.x += (uD.x + 1 < MAX_WIDTH);
+        x += (x + 1 < MAX_WIDTH);
         break;
       case 'h':
-        uD.x -= (uD.x > 0);
+        x -= (x > 0);
         break;
       case 'n':
-        uD.x += (uD.x + 1 < MAX_WIDTH);
-        uD.y += (uD.y + 1 < MAX_HEIGHT);
+        x += (x + 1 < MAX_WIDTH);
+        y += (y + 1 < MAX_HEIGHT);
         break;
       case 'b':
-        uD.x -= (uD.x > 0);
-        uD.y += (uD.y + 1 < MAX_HEIGHT);
+        x -= (x > 0);
+        y += (y + 1 < MAX_HEIGHT);
         break;
       case 'y':
-        uD.x -= (uD.x > 0);
-        uD.y -= (uD.y > 0);
+        x -= (x > 0);
+        y -= (y > 0);
         break;
       case 'u':
-        uD.x += (uD.x + 1 < MAX_WIDTH);
-        uD.y -= (uD.y > 0);
+        x += (x + 1 < MAX_WIDTH);
+        y -= (y > 0);
         break;
     }
-    panel_update(&panelD, uD.x, uD.y, false);
+    if (caveD[y][x].fval != FLOOR_WALL) {
+      uD.x = x;
+      uD.y = y;
+      panel_update(&panelD, uD.x, uD.y, false);
+    }
   }
 
   write(1, tc_clearD, sizeof(tc_clearD));

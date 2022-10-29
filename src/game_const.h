@@ -4,3 +4,5 @@
 #define SCREEN_HEIGHT 8
 #define SCREEN_WIDTH 16
 
+#define FLOOR_WALL 0
+#define FLOOR_LIGHT 1
