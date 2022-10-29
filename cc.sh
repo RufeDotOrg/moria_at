@@ -19,6 +19,9 @@ EXT=.${1##*.}
 OUTFILE=`basename $1 $EXT`
 
 case $EXT in
+  .c )
+    CFLAGS+=" -Wno-implicit-function-declaration "
+    ;;
   .cc ) ;&
   .cpp )
     CFLAGS+=" -fno-asynchronous-unwind-tables -fno-rtti -fno-exceptions -std=c++17 "
