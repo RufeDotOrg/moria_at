@@ -85,12 +85,22 @@ cave_init()
       bool wall = (row == 0 || row + 1 == MAX_HEIGHT) ||
                   (col == 0 || col + 1 == MAX_WIDTH);
       if (wall)
-        caveD[row][col].fval = GRANITE_WALL;
+        caveD[row][col].fval = BOUNDARY_WALL;
       else
         caveD[row][col].fval = FLOOR_LIGHT;
     }
   }
   uD.x = uD.y = 1;
+}
+static void
+place_boundary()
+{
+  for (int row = 0; row < MAX_HEIGHT; ++row)
+    for (int col = 0; col < MAX_WIDTH; ++col)
+      if ((row == 0 || row + 1 == MAX_HEIGHT) ||
+          (col == 0 || col + 1 == MAX_WIDTH)) {
+        caveD[row][col].fval = BOUNDARY_WALL;
+      }
 }
 
 #define RNG_M 2147483647L /* m = 2^31 - 1 */
@@ -465,7 +475,8 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
         do {
           do {
             cave_ptr = &caveD[y1][x1];
-            // if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->oidx == 0) &&
+            // if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->oidx == 0)
+            // &&
             //     (next_to_walls(y1, x1) >= walls)) {
             if (cave_ptr->fval <= MAX_OPEN_SPACE) {
               flag = TRUE;
@@ -473,7 +484,8 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
                 place_stair_tval_tchar(y1, x1, TV_UP_STAIR, '<');
               else {
                 place_stair_tval_tchar(y1, x1, TV_DOWN_STAIR, '>');
-                log_usedD = snprintf(AP(logD), "%d,%d stairs", x1, y1);
+                log_usedD = snprintf(AP(logD), "%d,%d stairs of (%d) objects",
+                                     x1, y1, obj_usedD);
                 uD.x = x1;
                 uD.y = y1;
               }
@@ -579,9 +591,10 @@ cave_gen()
   }
 
   fill_cave(GRANITE_WALL);
-  // for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL, DUN_STR_MC);
-  // for (i = 0; i < DUN_STR_QUA; i++) place_streamer(QUARTZ_WALL, DUN_STR_QC);
-  // place_boundary();
+  // for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL,
+  // DUN_STR_MC); for (i = 0; i < DUN_STR_QUA; i++)
+  // place_streamer(QUARTZ_WALL, DUN_STR_QC);
+  place_boundary();
   /* Place intersection doors  */
   for (i = 0; i < doorindex; i++) {
     try_door(doorstk[i].y, doorstk[i].x - 1);
@@ -607,6 +620,14 @@ cave_gen()
   // alloc_object(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
   // alloc_object(set_floor, 1, randint(alloc_level));
   // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
+}
+void
+generate_cave()
+{
+  memset(caveD, 0, sizeof(caveD));
+  obj_usedD = 0;
+  memset(entity_objD, 0, sizeof(entity_objD));
+  cave_gen();
 }
 
 char
@@ -800,13 +821,13 @@ main()
   write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
 
   dun_level = 1;
-  cave_gen();
+  generate_cave();
 
   while (!death) {
     panel_update(&panelD, uD.x, uD.y, true);
     dungeon();
 
-    if (!death) cave_gen();
+    if (!death) generate_cave();
   }
 
   write(1, tc_clearD, sizeof(tc_clearD));

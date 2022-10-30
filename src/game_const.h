@@ -17,6 +17,7 @@
 #define TMP2_WALL	9
 #define MIN_WALL 12
 #define GRANITE_WALL 12
+#define BOUNDARY_WALL	15
 
 #define DUN_TUN_RND	  9   /* 1/Chance of Random direction	       */
 #define DUN_TUN_CHG	 70   /* Chance of changing direction (99 max) */
