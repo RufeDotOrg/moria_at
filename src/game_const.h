@@ -27,5 +27,8 @@
 #define TRUE 1
 #define FALSE 0
 
+#define TV_UP_STAIR	107
+#define TV_DOWN_STAIR	108
+
 #define MODE_DFLT 0
 #define MODE_MAP 1

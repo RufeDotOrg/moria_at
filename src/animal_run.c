@@ -11,6 +11,7 @@ static int dun_level = 1;
 static int modeD;
 static char logD[80];
 static int log_usedD;
+ARR_REUSE(obj, 256);
 
 static struct termios save_termD;
 // Common terminal commands
@@ -296,6 +297,29 @@ static void fill_cave(fval) register int fval;
     }
   }
 }
+static void delete_object(y, x) int y, x;
+{
+  register struct caveS* cave_ptr;
+  cave_ptr = &caveD[y][x];
+  obj_unuse(&entity_objD[cave_ptr->oidx]);
+  cave_ptr->oidx = 0;
+}
+static void place_up_stairs(y, x) int y, x;
+{
+  register struct objS* obj;
+  register struct caveS* cave_ptr;
+
+  cave_ptr = &caveD[y][x];
+  if (cave_ptr->oidx != 0) delete_object(y, x);
+  obj = obj_use();
+  // invcopy(&t_list[cur_pos], obj_up_stair);
+  obj->tval = TV_UP_STAIR;
+  obj->tchar = '<';
+  obj->subval = 1;
+  obj->number = 1;
+
+  cave_ptr->oidx = AM(objD, obj->id);
+}
 static void place_stairs(typ, num, walls) int typ, num, walls;
 {
   register struct caveS* cave_ptr;
@@ -317,11 +341,12 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
         do {
           do {
             cave_ptr = &caveD[y1][x1];
-            // if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->tidx == 0) &&
+            // if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->oidx == 0) &&
             //     (next_to_walls(y1, x1) >= walls)) {
             flag = TRUE;
             //  if (typ == 1)
-            //    place_up_stairs(y1, x1);
+            place_up_stairs(y1, x1);
+            log_usedD = snprintf(AP(logD), "%d,%d stairs\r\n", x1, y1);
             //  else
             //    place_down_stairs(y1, x1);
             //}
@@ -381,7 +406,6 @@ cave_gen()
     x2 = xloc[i + 1];
     build_tunnel(y2, x2, y1, x1);
   }
-  log_usedD = snprintf(AP(logD), "%d tunnel_count\r\n", k);
 
   fill_cave(GRANITE_WALL);
   // for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL, DUN_STR_MC);
@@ -417,8 +441,15 @@ cave_gen()
 char
 get_sym(int row, int col)
 {
+  register struct caveS* cave_ptr;
+
   if (row == uD.y && col == uD.x) return '@';
-  switch (caveD[row][col].fval) {
+  cave_ptr = &caveD[row][col];
+  if (cave_ptr->oidx) {
+    struct objS* obj = &entity_objD[cave_ptr->oidx];
+    return obj->tchar;
+  }
+  switch (cave_ptr->fval) {
     case FLOOR_LIGHT:
       return '.';
     case FLOOR_DARK:
@@ -526,7 +557,6 @@ main()
     if (c == CTRL('c')) break;
     if (c == CTRL('w')) {
       modeD = !modeD ? MODE_MAP : MODE_DFLT;
-      continue;
     }
 
     int x, y, x_max, y_max;
