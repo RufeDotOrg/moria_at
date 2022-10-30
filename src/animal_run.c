@@ -7,7 +7,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-static int dun_level = 1;
+static int death;
+static int dun_level;
 static int free_turn_flag;
 static int new_level_flag;
 static int modeD;
@@ -28,7 +29,7 @@ static void
 msg_print(char* text)
 {
   // TBD: drops text, does not halt game for -more-
-  log_usedD = snprintf(AP(logD), text);
+  log_usedD = snprintf(AP(logD), "%s", text);
 }
 static void
 go_up()
@@ -39,7 +40,8 @@ go_up()
   c_ptr = &caveD[uD.y][uD.x];
   if (c_ptr->oidx != 0)
     if (entity_objD[c_ptr->oidx].tval == TV_UP_STAIR) {
-      dun_level -= 1 new_level_flag = TRUE;
+      dun_level -= 1;
+      new_level_flag = TRUE;
       msg_print("You enter a maze of up staircases.");
       msg_print("You pass through a one-way door.");
     } else
@@ -557,25 +559,12 @@ buffer_append(char* str, int str_len)
   return 1;
 }
 
-int
-main()
+void
+dungeon()
 {
-  ioctl(0, TCGETA, &save_termD);
-
-  struct termios tbuf;
-  tcgetattr(STDIN_FILENO, &tbuf);
-  tbuf.c_iflag &= ~(ICRNL | IXON);
-  tbuf.c_oflag &= ~(OPOST);
-  tbuf.c_lflag &= ~(ECHO | ICANON | ISIG);
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &tbuf);
-
-  write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
-
-  cave_gen();
-  panel_update(&panelD, uD.x, uD.y, true);
-
+  new_level_flag = FALSE;
   char c;
-  while (1) {
+  do {
     buffer_usedD = 0;
     buffer_append(AP(tc_clearD));
     buffer_append(AP(tc_move_cursorD));
@@ -599,8 +588,9 @@ main()
     char line[80];
     {
       int print_len =
-          snprintf(AP(line), "(%d,%d) xy (%d,%d) p (%d) fval\r\n", uD.x, uD.y,
-                   panelD.panel_col, panelD.panel_row, caveD[uD.y][uD.x].fval);
+          snprintf(AP(line), "(%d,%d) xy (%d,%d) p (%d) fval %d feet\r\n", uD.x,
+                   uD.y, panelD.panel_col, panelD.panel_row,
+                   caveD[uD.y][uD.x].fval, dun_level * 50);
       if (print_len < AL(line)) buffer_append(line, print_len);
     }
     buffer_append(AP(tc_move_cursorD));
@@ -612,7 +602,10 @@ main()
       continue;
     }
 
-    if (c == CTRL('c')) break;
+    if (c == CTRL('c')) {
+      death = 1;
+      break;
+    }
     if (c == CTRL('w')) {
       modeD = !modeD ? MODE_MAP : MODE_DFLT;
     }
@@ -678,6 +671,30 @@ main()
       panelD.panel_col = x;
       panel_bounds(&panelD);
     }
+  } while (!new_level_flag);
+}
+int
+main()
+{
+  ioctl(0, TCGETA, &save_termD);
+
+  struct termios tbuf;
+  tcgetattr(STDIN_FILENO, &tbuf);
+  tbuf.c_iflag &= ~(ICRNL | IXON);
+  tbuf.c_oflag &= ~(OPOST);
+  tbuf.c_lflag &= ~(ECHO | ICANON | ISIG);
+  tcsetattr(STDIN_FILENO, TCSAFLUSH, &tbuf);
+
+  write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
+
+  dun_level = 1;
+  cave_gen();
+
+  while (!death) {
+    panel_update(&panelD, uD.x, uD.y, true);
+    dungeon();
+
+    if (!death) cave_gen();
   }
 
   write(1, tc_clearD, sizeof(tc_clearD));
