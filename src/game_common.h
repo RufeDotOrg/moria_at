@@ -46,6 +46,10 @@
     if (eid && ent->id == eid) return ent;                                   \
     return 0;                                                                \
   }                                                                          \
+  int type##_index(struct type##S* ent)                                      \
+  {                                                                          \
+    return AM(type##D, ent->id);                                             \
+  }                                                                          \
   void type##_unuse(struct type##S* ent)                                     \
   {                                                                          \
     int eid = ent->id;                                                       \

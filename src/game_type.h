@@ -30,4 +30,5 @@ struct objS {
   uint8_t tchar;
   uint8_t subval;
   uint8_t number;
+  int16_t p1;
 };

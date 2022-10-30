@@ -215,8 +215,75 @@ register int y1, x1, y2, x2;
       *cdir = 0;
   }
 }
+static void place_broken_door(broken, y, x) int broken, y, x;
+{
+  register struct objS* obj;
+  register struct caveS* cave_ptr;
+
+  // invcopy(&t_list[cur_pos], OBJ_OPEN_DOOR);
+  obj = obj_use();
+  obj->tval = TV_OPEN_DOOR;
+  obj->tchar = '\'';
+  obj->subval = 1;
+  obj->number = 1;
+  obj->p1 = broken;
+
+  cave_ptr = &caveD[y][x];
+  cave_ptr->oidx = obj_index(obj);
+  cave_ptr->fval = FLOOR_CORR;
+}
+static void place_closed_door(locked, y, x) int locked, y, x;
+{
+  register struct objS* obj;
+  register struct caveS* cave_ptr;
+
+  // invcopy(&t_list[cur_pos], OBJ_CLOSED_DOOR);
+  obj = obj_use();
+  obj->tval = TV_CLOSED_DOOR;
+  obj->tchar = '+';
+  obj->subval = 1;
+  obj->number = 1;
+  obj->p1 = locked;
+
+  cave_ptr = &caveD[y][x];
+  cave_ptr->oidx = obj_index(obj);
+  cave_ptr->fval = FLOOR_OBST;
+}
+static void place_secret_door(y, x) int y, x;
+{
+  register struct objS* obj;
+  register struct caveS* cave_ptr;
+
+  // invcopy(&t_list[cur_pos], OBJ_SECRET_DOOR);
+  obj = obj_use();
+  obj->tval = TV_SECRET_DOOR;
+  obj->tchar = '8';
+  obj->subval = 1;
+  obj->number = 1;
+
+  cave_ptr = &caveD[y][x];
+  cave_ptr->oidx = obj_index(obj);
+  cave_ptr->fval = FLOOR_OBST;
+}
 static void place_door(y, x) int y, x;
 {
+  register int tmp;
+  register int lock;
+
+  tmp = randint(3);
+  if (tmp == 1) {
+    place_broken_door(randint(4) == 1, y, x);
+  } else if (tmp == 2) {
+    tmp = randint(12);
+    lock = randint(10);
+    if (tmp > 3)
+      place_closed_door(0, y, x);
+    else if (tmp == 3)
+      place_closed_door(-lock, y, x);
+    else
+      place_closed_door(lock, y, x);
+  } else
+    place_secret_door(y, x);
 }
 static coords doorstk[100];
 static int doorindex;
@@ -373,7 +440,7 @@ static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
   obj->subval = 1;
   obj->number = 1;
 
-  cave_ptr->oidx = AM(objD, obj->id);
+  cave_ptr->oidx = obj_index(obj);
 }
 static void place_stairs(typ, num, walls) int typ, num, walls;
 {
