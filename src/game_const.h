@@ -27,6 +27,7 @@
 #define TRUE 1
 #define FALSE 0
 
+#define TV_MIN_DOORS	104
 #define TV_OPEN_DOOR	104
 #define TV_CLOSED_DOOR	105
 #define TV_UP_STAIR	107

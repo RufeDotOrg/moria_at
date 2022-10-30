@@ -414,7 +414,9 @@ static void fill_cave(fval) register int fval;
   for (i = MAX_HEIGHT - 2; i > 0; i--) {
     c_ptr = &caveD[i][1];
     for (j = MAX_WIDTH - 2; j > 0; j--) {
-      if (!c_ptr->fval) c_ptr->fval = fval;
+      if ((c_ptr->fval == FLOOR_NULL) || (c_ptr->fval == TMP1_WALL) ||
+          (c_ptr->fval == TMP2_WALL))
+        c_ptr->fval = fval;
       c_ptr++;
     }
   }
@@ -487,6 +489,49 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
     } while (!flag);
   }
 }
+int
+next_to_corr(y, x)
+register int y, x;
+{
+  register int k, j, i;
+  register struct caveS* c_ptr;
+
+  i = 0;
+  for (j = y - 1; j <= (y + 1); j++)
+    for (k = x - 1; k <= (x + 1); k++) {
+      c_ptr = &caveD[j][k];
+      /* should fail if there is already a door present */
+      if (c_ptr->fval == FLOOR_CORR &&
+          (c_ptr->oidx == 0 || entity_objD[c_ptr->oidx].tval < TV_MIN_DOORS))
+        i++;
+    }
+  return (i);
+}
+static int
+next_to(y, x)
+register int y, x;
+{
+  register int next;
+
+  if (next_to_corr(y, x) > 2)
+    if ((caveD[y - 1][x].fval >= MIN_WALL) &&
+        (caveD[y + 1][x].fval >= MIN_WALL))
+      next = TRUE;
+    else if ((caveD[y][x - 1].fval >= MIN_WALL) &&
+             (caveD[y][x + 1].fval >= MIN_WALL))
+      next = TRUE;
+    else
+      next = FALSE;
+  else
+    next = FALSE;
+  return (next);
+}
+static void try_door(y, x) register int y, x;
+{
+  if ((caveD[y][x].fval == FLOOR_CORR) && (randint(100) > DUN_TUN_JCT) &&
+      next_to(y, x))
+    place_door(y, x);
+}
 void
 cave_gen()
 {
@@ -537,13 +582,13 @@ cave_gen()
   // for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL, DUN_STR_MC);
   // for (i = 0; i < DUN_STR_QUA; i++) place_streamer(QUARTZ_WALL, DUN_STR_QC);
   // place_boundary();
-  // /* Place intersection doors  */
-  // for (i = 0; i < doorindex; i++) {
-  //   try_door(doorstk[i].y, doorstk[i].x - 1);
-  //   try_door(doorstk[i].y, doorstk[i].x + 1);
-  //   try_door(doorstk[i].y - 1, doorstk[i].x);
-  //   try_door(doorstk[i].y + 1, doorstk[i].x);
-  // }
+  /* Place intersection doors  */
+  for (i = 0; i < doorindex; i++) {
+    try_door(doorstk[i].y, doorstk[i].x - 1);
+    try_door(doorstk[i].y, doorstk[i].x + 1);
+    try_door(doorstk[i].y - 1, doorstk[i].x);
+    try_door(doorstk[i].y + 1, doorstk[i].x);
+  }
   place_stairs(2, randint(2) + 2, 3);
   place_stairs(1, randint(2), 3);
   /* Set up the character co-ords, used by alloc_monster, place_win_monster
@@ -727,7 +772,7 @@ dungeon()
         break;
     }
     if (modeD == MODE_DFLT) {
-      if (caveD[y][x].fval != GRANITE_WALL) {
+      if (caveD[y][x].fval < MIN_WALL) {
         uD.x = x;
         uD.y = y;
         panel_update(&panelD, uD.x, uD.y, false);
