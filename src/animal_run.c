@@ -8,6 +8,8 @@
 #include <unistd.h>
 
 static int dun_level = 1;
+static int free_turn_flag;
+static int new_level_flag;
 static int modeD;
 static char logD[80];
 static int log_usedD;
@@ -22,6 +24,57 @@ static char tc_move_cursorD[] = "\x1b[H";
 static char tc_hide_cursorD[] = "\x1b[?25l";
 static char tc_show_cursorD[] = "\x1b[?25h";
 
+static void
+msg_print(char* text)
+{
+  // TBD: drops text, does not halt game for -more-
+  log_usedD = snprintf(AP(logD), text);
+}
+static void
+go_up()
+{
+  register struct caveS* c_ptr;
+  register int no_stairs = FALSE;
+
+  c_ptr = &caveD[uD.y][uD.x];
+  if (c_ptr->oidx != 0)
+    if (entity_objD[c_ptr->oidx].tval == TV_UP_STAIR) {
+      dun_level -= 1 new_level_flag = TRUE;
+      msg_print("You enter a maze of up staircases.");
+      msg_print("You pass through a one-way door.");
+    } else
+      no_stairs = TRUE;
+  else
+    no_stairs = TRUE;
+
+  if (no_stairs) {
+    msg_print("I see no up staircase here.");
+    free_turn_flag = TRUE;
+  }
+}
+static void
+go_down()
+{
+  register struct caveS* c_ptr;
+  register int no_stairs = FALSE;
+
+  c_ptr = &caveD[uD.y][uD.x];
+  if (c_ptr->oidx != 0)
+    if (entity_objD[c_ptr->oidx].tval == TV_DOWN_STAIR) {
+      dun_level += 1;
+      new_level_flag = TRUE;
+      msg_print("You enter a maze of down staircases.");
+      msg_print("You pass through a one-way door.");
+    } else
+      no_stairs = TRUE;
+  else
+    no_stairs = TRUE;
+
+  if (no_stairs) {
+    msg_print("I see no down staircase here.");
+    free_turn_flag = TRUE;
+  }
+}
 void
 cave_init()
 {
@@ -304,7 +357,7 @@ static void delete_object(y, x) int y, x;
   obj_unuse(&entity_objD[cave_ptr->oidx]);
   cave_ptr->oidx = 0;
 }
-static void place_up_stairs(y, x) int y, x;
+static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
 {
   register struct objS* obj;
   register struct caveS* cave_ptr;
@@ -313,8 +366,8 @@ static void place_up_stairs(y, x) int y, x;
   if (cave_ptr->oidx != 0) delete_object(y, x);
   obj = obj_use();
   // invcopy(&t_list[cur_pos], obj_up_stair);
-  obj->tval = TV_UP_STAIR;
-  obj->tchar = '<';
+  obj->tval = tval;
+  obj->tchar = tchar;
   obj->subval = 1;
   obj->number = 1;
 
@@ -343,13 +396,17 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
             cave_ptr = &caveD[y1][x1];
             // if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->oidx == 0) &&
             //     (next_to_walls(y1, x1) >= walls)) {
-            flag = TRUE;
-            //  if (typ == 1)
-            place_up_stairs(y1, x1);
-            log_usedD = snprintf(AP(logD), "%d,%d stairs\r\n", x1, y1);
-            //  else
-            //    place_down_stairs(y1, x1);
-            //}
+            if (cave_ptr->fval <= MAX_OPEN_SPACE) {
+              flag = TRUE;
+              if (typ == 1)
+                place_stair_tval_tchar(y1, x1, TV_UP_STAIR, '<');
+              else {
+                place_stair_tval_tchar(y1, x1, TV_DOWN_STAIR, '>');
+                log_usedD = snprintf(AP(logD), "%d,%d stairs", x1, y1);
+                uD.x = x1;
+                uD.y = y1;
+              }
+            }
             x1++;
           } while ((x1 != x2) && (!flag));
           x1 = x2 - 12;
@@ -522,6 +579,11 @@ main()
     buffer_usedD = 0;
     buffer_append(AP(tc_clearD));
     buffer_append(AP(tc_move_cursorD));
+    if (log_usedD) {
+      buffer_append(logD, log_usedD);
+      log_usedD = 0;
+    }
+    buffer_append(AP(tc_crlfD));
     int panel_row_min = panelD.panel_row_min;
     int panel_row_max = panelD.panel_row_max;
     int panel_col_min = panelD.panel_col_min;
@@ -540,10 +602,6 @@ main()
           snprintf(AP(line), "(%d,%d) xy (%d,%d) p (%d) fval\r\n", uD.x, uD.y,
                    panelD.panel_col, panelD.panel_row, caveD[uD.y][uD.x].fval);
       if (print_len < AL(line)) buffer_append(line, print_len);
-    }
-    if (log_usedD) {
-      buffer_append(logD, log_usedD);
-      log_usedD = 0;
     }
     buffer_append(AP(tc_move_cursorD));
     write(STDOUT_FILENO, bufferD, buffer_usedD);
@@ -600,6 +658,12 @@ main()
       case 'u':
         x += (x + 1 < x_max);
         y -= (y > 0);
+        break;
+      case '<':
+        go_up();
+        break;
+      case '>':
+        go_down();
         break;
     }
     if (modeD == MODE_DFLT) {
