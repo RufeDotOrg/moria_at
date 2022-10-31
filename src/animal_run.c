@@ -572,7 +572,6 @@ int slp;
   mon->cdis = distance(uD.y, uD.x, y, x);
 
   caveD[y][x].midx = mon_index(mon);
-  log_usedD = snprintf(AP(logD), "%d,%d monster (%d) total", x, y, mon_usedD);
   return TRUE;
 }
 void alloc_monster(num, dis, slp) int num, dis;
@@ -747,12 +746,293 @@ buffer_append(char* str, int str_len)
   return 1;
 }
 
+static void get_moves(monptr, mm) int monptr;
+register int* mm;
+{
+  int y, ay, x, ax, move_val;
+
+  y = entity_monD[monptr].fy - uD.y;
+  x = entity_monD[monptr].fx - uD.x;
+  if (y < 0) {
+    move_val = 8;
+    ay = -y;
+  } else {
+    move_val = 0;
+    ay = y;
+  }
+  if (x > 0) {
+    move_val += 4;
+    ax = x;
+  } else
+    ax = -x;
+  /* this has the advantage of preventing the diamond maneuvre, also faster */
+  if (ay > (ax << 1))
+    move_val += 2;
+  else if (ax > (ay << 1))
+    move_val++;
+  switch (move_val) {
+    case 0:
+      mm[0] = 9;
+      if (ay > ax) {
+        mm[1] = 8;
+        mm[2] = 6;
+        mm[3] = 7;
+        mm[4] = 3;
+      } else {
+        mm[1] = 6;
+        mm[2] = 8;
+        mm[3] = 3;
+        mm[4] = 7;
+      }
+      break;
+    case 1:
+    case 9:
+      mm[0] = 6;
+      if (y < 0) {
+        mm[1] = 3;
+        mm[2] = 9;
+        mm[3] = 2;
+        mm[4] = 8;
+      } else {
+        mm[1] = 9;
+        mm[2] = 3;
+        mm[3] = 8;
+        mm[4] = 2;
+      }
+      break;
+    case 2:
+    case 6:
+      mm[0] = 8;
+      if (x < 0) {
+        mm[1] = 9;
+        mm[2] = 7;
+        mm[3] = 6;
+        mm[4] = 4;
+      } else {
+        mm[1] = 7;
+        mm[2] = 9;
+        mm[3] = 4;
+        mm[4] = 6;
+      }
+      break;
+    case 4:
+      mm[0] = 7;
+      if (ay > ax) {
+        mm[1] = 8;
+        mm[2] = 4;
+        mm[3] = 9;
+        mm[4] = 1;
+      } else {
+        mm[1] = 4;
+        mm[2] = 8;
+        mm[3] = 1;
+        mm[4] = 9;
+      }
+      break;
+    case 5:
+    case 13:
+      mm[0] = 4;
+      if (y < 0) {
+        mm[1] = 1;
+        mm[2] = 7;
+        mm[3] = 2;
+        mm[4] = 8;
+      } else {
+        mm[1] = 7;
+        mm[2] = 1;
+        mm[3] = 8;
+        mm[4] = 2;
+      }
+      break;
+    case 8:
+      mm[0] = 3;
+      if (ay > ax) {
+        mm[1] = 2;
+        mm[2] = 6;
+        mm[3] = 1;
+        mm[4] = 9;
+      } else {
+        mm[1] = 6;
+        mm[2] = 2;
+        mm[3] = 9;
+        mm[4] = 1;
+      }
+      break;
+    case 10:
+    case 14:
+      mm[0] = 2;
+      if (x < 0) {
+        mm[1] = 3;
+        mm[2] = 1;
+        mm[3] = 6;
+        mm[4] = 4;
+      } else {
+        mm[1] = 1;
+        mm[2] = 3;
+        mm[3] = 4;
+        mm[4] = 6;
+      }
+      break;
+    case 12:
+      mm[0] = 1;
+      if (ay > ax) {
+        mm[1] = 2;
+        mm[2] = 4;
+        mm[3] = 3;
+        mm[4] = 7;
+      } else {
+        mm[1] = 4;
+        mm[2] = 2;
+        mm[3] = 7;
+        mm[4] = 3;
+      }
+      break;
+  }
+}
+int
+mmove(dir, y, x)
+int dir;
+register int *y, *x;
+{
+  register int new_row, new_col;
+  int b;
+
+  switch (dir) {
+    case 1:
+      new_row = *y + 1;
+      new_col = *x - 1;
+      break;
+    case 2:
+      new_row = *y + 1;
+      new_col = *x;
+      break;
+    case 3:
+      new_row = *y + 1;
+      new_col = *x + 1;
+      break;
+    case 4:
+      new_row = *y;
+      new_col = *x - 1;
+      break;
+    case 5:
+      new_row = *y;
+      new_col = *x;
+      break;
+    case 6:
+      new_row = *y;
+      new_col = *x + 1;
+      break;
+    case 7:
+      new_row = *y - 1;
+      new_col = *x - 1;
+      break;
+    case 8:
+      new_row = *y - 1;
+      new_col = *x;
+      break;
+    case 9:
+      new_row = *y - 1;
+      new_col = *x + 1;
+      break;
+  }
+  b = FALSE;
+  if ((new_row >= 0) && (new_row < MAX_HEIGHT) && (new_col >= 0) &&
+      (new_col < MAX_WIDTH)) {
+    *y = new_row;
+    *x = new_col;
+    b = TRUE;
+  }
+  return (b);
+}
+void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
+{
+  int tmp = caveD[y1][x1].midx;
+  caveD[y1][x1].midx = 0;
+  caveD[y2][x2].midx = tmp;
+}
+void update_mon(monptr) int monptr;
+{
+}
+static void make_move(monptr, mm, rcmove) int monptr;
+int* mm;
+uint32_t* rcmove;
+{
+  int i, newy, newx, do_turn, do_move, stuck_door;
+  register struct caveS* c_ptr;
+  register struct monS* m_ptr;
+
+  i = 0;
+  do_turn = FALSE;
+  do_move = FALSE;
+  m_ptr = &entity_monD[monptr];
+  for (int i = 0; i < 5; ++i) {
+    /* Get new position  	*/
+    newy = m_ptr->fy;
+    newx = m_ptr->fx;
+    mmove(mm[i], &newy, &newx);
+    c_ptr = &caveD[newy][newx];
+    if (c_ptr->fval == BOUNDARY_WALL) continue;
+
+    /* Floor is open?  	   */
+    if (c_ptr->fval <= MAX_OPEN_SPACE) do_move = TRUE;
+    /* Creature has attempted to move on player?     */
+    if (do_move) {
+      if (newy == uD.y && newx == uD.x) {
+        /* if the monster is not lit, must call update_mon, it may
+           be faster than character, and hence could have just
+           moved next to character this same turn */
+        // TBD:
+        // if (!m_ptr->ml) update_mon(monptr);
+        // make_attack(monptr);
+        do_move = FALSE;
+        do_turn = TRUE;
+      }
+      /* Creature is attempting to move on other creature?     */
+      else if ((c_ptr->midx > 1) &&
+               ((newy != m_ptr->fy) || (newx != m_ptr->fx))) {
+        do_move = FALSE;
+      }
+    }
+    /* Creature has been allowed move.   */
+    if (do_move) {
+      /* Move creature record  	       */
+      move_rec(m_ptr->fy, m_ptr->fx, newy, newx);
+      // if (m_ptr->ml) {
+      //   m_ptr->ml = FALSE;
+      //   lite_spot((int)m_ptr->fy, (int)m_ptr->fx);
+      // }
+      m_ptr->fy = newy;
+      m_ptr->fx = newx;
+      m_ptr->cdis = distance(uD.y, uD.x, newy, newx);
+      do_turn = TRUE;
+    }
+    if (do_turn) break;
+  }
+}
+static void mon_move(monptr, rcmove) int monptr;
+uint32_t* rcmove;
+{
+  int mm[9];
+  get_moves(monptr, mm);
+  make_move(monptr, mm, rcmove);
+}
+void creatures(move) int move;
+{
+  uint32_t rcmove;
+  int move_count;
+
+  FOR_EACH(mon, {
+    mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
+    if (move) mon_move(it_index, &rcmove);
+    update_mon(it_index);
+  });
+}
 void
 dungeon()
 {
   new_level_flag = FALSE;
   char c;
-  do {
+  while (1) {
     buffer_usedD = 0;
     buffer_append(AP(tc_clearD));
     buffer_append(AP(tc_move_cursorD));
@@ -859,7 +1139,9 @@ dungeon()
       panelD.panel_col = x;
       panel_bounds(&panelD);
     }
-  } while (!new_level_flag);
+    if (new_level_flag) break;
+    creatures(TRUE);
+  }
 }
 int
 main()

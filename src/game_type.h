@@ -37,7 +37,7 @@ struct monS {
   int id;
   int16_t hp;
   uint16_t cidx;  // creature
-  int8_t fy;
-  int8_t fx;
-  int8_t cdis;
+  uint8_t fy;
+  uint8_t fx;
+  uint8_t cdis;
 };
