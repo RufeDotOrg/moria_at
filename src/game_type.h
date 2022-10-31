@@ -16,7 +16,7 @@ struct panelS {
 static struct panelS panelD;
 
 struct caveS {
-  uint8_t cidx;  // creature
+  uint8_t midx;  // monster
   uint8_t oidx;  // object
   uint8_t fval;  // floor
   uint8_t lr : 1;
@@ -31,4 +31,13 @@ struct objS {
   uint8_t subval;
   uint8_t number;
   int16_t p1;
+};
+
+struct monS {
+  int id;
+  int16_t hp;
+  uint16_t cidx;  // creature
+  int8_t fy;
+  int8_t fx;
+  int8_t cdis;
 };

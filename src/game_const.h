@@ -37,3 +37,6 @@
 
 #define MODE_DFLT 0
 #define MODE_MAP 1
+
+/* Creature constants						*/
+#define MIN_MALLOC_LEVEL   14 /* Minimum number of monsters/level      */

@@ -15,6 +15,7 @@ static int modeD;
 static char logD[80];
 static int log_usedD;
 ARR_REUSE(obj, 256);
+ARR_REUSE(mon, 256);
 
 static struct termios save_termD;
 // Common terminal commands
@@ -484,8 +485,6 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
                 place_stair_tval_tchar(y1, x1, TV_UP_STAIR, '<');
               else {
                 place_stair_tval_tchar(y1, x1, TV_DOWN_STAIR, '>');
-                log_usedD = snprintf(AP(logD), "%d,%d stairs of (%d) objects",
-                                     x1, y1, obj_usedD);
                 uD.x = x1;
                 uD.y = y1;
               }
@@ -538,11 +537,65 @@ register int y, x;
     next = FALSE;
   return (next);
 }
+int
+distance(y1, x1, y2, x2)
+int y1, x1, y2, x2;
+{
+  register int dy, dx;
+
+  dy = y1 - y2;
+  if (dy < 0) dy = -dy;
+  dx = x1 - x2;
+  if (dx < 0) dx = -dx;
+
+  return ((((dy + dx) << 1) - (dy > dx ? dx : dy)) >> 1);
+}
 static void try_door(y, x) register int y, x;
 {
   if ((caveD[y][x].fval == FLOOR_CORR) && (randint(100) > DUN_TUN_JCT) &&
       next_to(y, x))
     place_door(y, x);
+}
+int
+place_monster(y, x, z, slp)
+register int y, x, z;
+int slp;
+{
+  register struct monS* mon;
+
+  mon = mon_use();
+  if (!mon) return FALSE;
+  mon->hp = 1;
+  mon->cidx = 0;
+  mon->fy = y;
+  mon->fx = x;
+  mon->cdis = distance(uD.y, uD.x, y, x);
+
+  caveD[y][x].midx = mon_index(mon);
+  log_usedD = snprintf(AP(logD), "%d,%d monster (%d) total", x, y, mon_usedD);
+  return TRUE;
+}
+void alloc_monster(num, dis, slp) int num, dis;
+int slp;
+{
+  register int y, x, i;
+  int l;
+
+  for (i = 0; i < num; i++) {
+    do {
+      y = randint(MAX_HEIGHT - 2);
+      x = randint(MAX_WIDTH - 2);
+    } while (caveD[y][x].fval >= MIN_CLOSED_SPACE || (caveD[y][x].midx != 0) ||
+             (distance(y, x, uD.y, uD.x) <= dis));
+
+    // l = get_mons_num(dun_level);
+    /* Dragons are always created sleeping here, so as to give the player a
+       sporting chance.  */
+    // if (c_list[l].cchar == 'd' || c_list[l].cchar == 'D') slp = TRUE;
+    /* Place_monster() should always return TRUE here.  It does not
+       matter if it fails though.  */
+    place_monster(y, x, l, slp);
+  }
 }
 void
 cave_gen()
@@ -608,12 +661,8 @@ cave_gen()
    */
   // new_spot(&char_row, &char_col);
 
-  // int alloc_level = (dun_level / 3);
-  // if (alloc_level < 2)
-  //   alloc_level = 2;
-  // else if (alloc_level > 10)
-  //   alloc_level = 10;
-  // alloc_monster((randint(8) + MIN_MALLOC_LEVEL + alloc_level), 0, TRUE);
+  int alloc_level = CLAMP(dun_level / 3, 2, 10);
+  alloc_monster((randint(8) + MIN_MALLOC_LEVEL + alloc_level), 0, TRUE);
   // alloc_object(set_corr, 3, randint(alloc_level));
   // alloc_object(set_room, 5, randnor(TREAS_ROOM_ALLOC, 3));
   // alloc_object(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
@@ -627,6 +676,8 @@ generate_cave()
   memset(caveD, 0, sizeof(caveD));
   obj_usedD = 0;
   memset(entity_objD, 0, sizeof(entity_objD));
+  mon_usedD = 0;
+  memset(entity_monD, 0, sizeof(entity_monD));
   cave_gen();
 }
 
@@ -637,6 +688,10 @@ get_sym(int row, int col)
 
   if (row == uD.y && col == uD.x) return '@';
   cave_ptr = &caveD[row][col];
+  if (cave_ptr->midx) {
+    struct monS* mon = &entity_monD[cave_ptr->midx];
+    return 'k';
+  }
   if (cave_ptr->oidx) {
     struct objS* obj = &entity_objD[cave_ptr->oidx];
     return obj->tchar;
