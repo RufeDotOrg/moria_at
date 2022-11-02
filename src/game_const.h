@@ -40,3 +40,5 @@
 
 /* Creature constants						*/
 #define MIN_MALLOC_LEVEL   14 /* Minimum number of monsters/level      */
+
+#define BTH_PLUS_ADJ 3 // base-to-hit per plus-to-hit

@@ -133,6 +133,18 @@ int maxval;
   randval = rnd();
   return ((int)(randval % maxval) + 1);
 }
+int
+damroll(num, sides)
+int num, sides;
+{
+  register int i, sum = 0;
+
+  for (i = 0; i < num; i++) sum += randint(sides);
+  return (sum);
+}
+void disturb(search, light) int search, light;
+{
+}
 
 static void build_room(yval, xval) int yval, xval;
 {
@@ -953,6 +965,55 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 void update_mon(monptr) int monptr;
 {
 }
+int
+test_hit(bth, level, pth, ac)
+int bth, level, pth, ac;
+{
+  register int i, die;
+
+  disturb(1, 0);
+  i = bth + pth * BTH_PLUS_ADJ;
+  // TBD:  + (level * class_level_adj[py.misc.pclass][attack_type]);
+
+  // pth could be less than 0 if player wielding weapon too heavy for him
+  // always miss 1 out of 20, always hit 1 out of 20
+  die = randint(20);
+  if ((die != 1) && ((die == 20) || ((i > 0) && (randint(i) > ac))))
+    return TRUE;
+  else
+    return FALSE;
+}
+static void take_hit(damage) int damage;
+{
+  uD.chp -= damage;
+  if (uD.chp < 0) {
+    death = true;
+    new_level_flag = TRUE;
+  }
+}
+static void mon_attack(midx) int midx;
+{
+  struct monS* mon = &entity_monD[midx];
+
+  int creature_level = 1;
+  int adice = 1;
+  int asides = 4;
+  for (int it = 0; it < MAX_MON_NATTACK; ++it) {
+    if (death) break;
+    disturb(1, 0);
+    int flag = FALSE;
+    int tac = uD.ac + uD.toac;
+    if (test_hit(60, creature_level, 0, tac)) flag = TRUE;
+    if (flag) {
+      msg_print("It hits you.");
+      int damage = damroll(adice, asides);
+      damage -= (tac * damage) / 200;
+      take_hit(damage);
+    } else {
+      msg_print("It misses you.");
+    }
+  }
+}
 static void make_move(monptr, mm, rcmove) int monptr;
 int* mm;
 uint32_t* rcmove;
@@ -983,7 +1044,7 @@ uint32_t* rcmove;
            moved next to character this same turn */
         // TBD:
         // if (!m_ptr->ml) update_mon(monptr);
-        // make_attack(monptr);
+        mon_attack(monptr);
         do_move = FALSE;
         do_turn = TRUE;
       }
@@ -1143,6 +1204,11 @@ dungeon()
     creatures(TRUE);
   }
 }
+void
+player_init()
+{
+  uD.chp = 100;
+}
 int
 main()
 {
@@ -1159,6 +1225,7 @@ main()
 
   dun_level = 1;
   generate_cave();
+  player_init();
 
   while (!death) {
     panel_update(&panelD, uD.x, uD.y, true);

@@ -2,6 +2,9 @@
 struct uS {
   int x;
   int y;
+  int chp;
+  int ac;
+  int toac;
 };
 static struct uS uD;
 
