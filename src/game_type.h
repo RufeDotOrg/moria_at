@@ -2,6 +2,8 @@
 struct uS {
   int x;
   int y;
+  int exp;
+  int lev;
   int chp;
   int ac;
   int toac;

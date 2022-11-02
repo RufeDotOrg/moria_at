@@ -144,6 +144,39 @@ int num, sides;
   for (i = 0; i < num; i++) sum += randint(sides);
   return (sum);
 }
+int
+critical_blow(weight, plus, dam)
+register int weight, plus, dam;
+{
+  register int critical;
+
+  critical = dam;
+  /* Weight of weapon, plusses to hit, and character level all      */
+  /* contribute to the chance of a critical  		   */
+  if (randint(5000) <= (int)(weight + 5 * plus)) {
+    //  + (class_level_adj[py.misc.pclass][attack_type] * py.misc.lev)
+    weight += randint(650);
+    // 380 max itemization (you can wield iron chests apparently)
+    // 280 for two-handed great flail (TV_HAFTED)
+    // 300 for lance (TV_POLEARM)
+    // 280 for zweihander (TV_SWORD)
+
+    if (weight < 400) {
+      critical = 2 * dam + 5;
+      msg_print("It was a good hit! (x2 damage)");
+    } else if (weight < 700) {
+      critical = 3 * dam + 10;
+      msg_print("It was an excellent hit! (x3 damage)");
+    } else if (weight < 900) {
+      critical = 4 * dam + 15;
+      msg_print("It was a superb hit! (x4 damage)");
+    } else {
+      critical = 5 * dam + 20;
+      msg_print("It was a *GREAT* hit! (x5 damage)");
+    }
+  }
+  return (critical);
+}
 void disturb(search, light) int search, light;
 {
 }
@@ -579,7 +612,7 @@ int slp;
 
   mon = mon_use();
   if (!mon) return FALSE;
-  mon->hp = 1;
+  mon->hp = 3;
   mon->cidx = 0;
   mon->fy = y;
   mon->fx = x;
@@ -999,12 +1032,73 @@ int bth, level, pth, ac;
   else
     return FALSE;
 }
-static void take_hit(damage) int damage;
+static void mon_death(y, x) int y, x;
+{
+  caveD[y][x].midx = 0;
+}
+static int
+mon_take_hit(midx, dam)
+int midx, dam;
+{
+  struct monS* mon = &entity_monD[midx];
+  mon->hp -= dam;
+  if (mon->hp >= 0) return -1;
+
+  mon_death(mon->fy, mon->fx);
+  // new_exp = ((long)c_ptr->mexp * c_ptr->level) / p_ptr->lev;
+  uD.exp += 1;
+  int cidx = mon->cidx;
+  mon_unuse(mon);
+  return cidx;
+}
+void
+py_init()
+{
+  uD.chp = 100;
+  uD.lev = 1;
+}
+static void py_take_hit(damage) int damage;
 {
   uD.chp -= damage;
   if (uD.chp < 0) {
     death = true;
     new_level_flag = TRUE;
+  }
+}
+void
+py_experience()
+{
+}
+void py_attack(y, x) int y, x;
+{
+  register int k, blows;
+  int base_tohit;
+
+  int midx = caveD[y][x].midx;
+  struct monS* mon = &entity_monD[midx];
+
+  blows = 1;
+  base_tohit = 30;
+
+  int creature_ac = 0;
+  /* Loop for number of blows,  trying to hit the critter.	  */
+  for (int it = 0; it < blows; ++it) {
+    if (test_hit(base_tohit, uD.lev, 0, creature_ac)) {
+      msg_print("You hit it.");
+      k = damroll(1, 2);
+      k = critical_blow(1, 0, k);
+      // k += p_ptr->ptodam;
+      if (k < 0) k = 0;
+
+      /* See if we done it in.  			 */
+      if (mon_take_hit(midx, k) >= 0) {
+        msg_print("You have slain it.");
+        py_experience();
+        blows = 0;
+      }
+    } else {
+      msg_print("You miss it.");
+    }
   }
 }
 static void mon_attack(midx) int midx;
@@ -1024,7 +1118,7 @@ static void mon_attack(midx) int midx;
       msg_print("It hits you.");
       int damage = damroll(adice, asides);
       damage -= (tac * damage) / 200;
-      take_hit(damage);
+      py_take_hit(damage);
     } else {
       msg_print("It misses you.");
     }
@@ -1108,8 +1202,17 @@ void
 status_update()
 {
   memset(statusD, '    ', sizeof(statusD));
-  int count = snprintf(AP(statusD[0]), "CHP : %6d", uD.chp);
-  statusD[0][count] = ' ';
+  int count, line;
+  line = 0;
+#define PR_STAT(ABBR, val)                                      \
+  {                                                             \
+    int count = snprintf(AP(statusD[line]), ABBR ": %6d", val); \
+    statusD[line][count] = ' ';                                 \
+    line += 1;                                                  \
+  }
+  PR_STAT("CHP ", uD.chp);
+  PR_STAT("LEV ", uD.lev);
+  PR_STAT("EXP ", uD.exp);
 }
 void
 dungeon()
@@ -1209,7 +1312,10 @@ dungeon()
         break;
     }
     if (modeD == MODE_DFLT) {
-      if (caveD[y][x].fval < MIN_WALL) {
+      struct caveS* c_ptr = &caveD[y][x];
+      if (c_ptr->midx) {
+        py_attack(y, x);
+      } else if (c_ptr->fval < MIN_WALL) {
         uD.x = x;
         uD.y = y;
         panel_update(&panelD, uD.x, uD.y, false);
@@ -1223,11 +1329,6 @@ dungeon()
     if (new_level_flag) break;
     creatures(TRUE);
   }
-}
-void
-player_init()
-{
-  uD.chp = 100;
 }
 int
 main()
@@ -1245,7 +1346,7 @@ main()
 
   dun_level = 1;
   generate_cave();
-  player_init();
+  py_init();
 
   while (!death) {
     panel_update(&panelD, uD.x, uD.y, true);
