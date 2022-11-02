@@ -3,6 +3,7 @@
 #define MAX_HEIGHT 128
 #define SCREEN_HEIGHT 8
 #define SCREEN_WIDTH 16
+#define STATUS_WIDTH 13
 #define MAX_COL (MAX_WIDTH / SCREEN_WIDTH * 2 - 2)
 #define MAX_ROW (MAX_HEIGHT / SCREEN_HEIGHT * 2 - 2)
 
@@ -40,6 +41,6 @@
 
 /* Creature constants						*/
 #define MIN_MALLOC_LEVEL   14 /* Minimum number of monsters/level      */
-#define MAX_MON_NATTACK 4
+#define MAX_MON_NATTACK 1
 
 #define BTH_PLUS_ADJ 3 // base-to-hit per plus-to-hit

@@ -12,6 +12,8 @@ static int dun_level;
 static int free_turn_flag;
 static int new_level_flag;
 static int modeD;
+static char statusD[SCREEN_HEIGHT][STATUS_WIDTH];
+static char symmapD[SCREEN_HEIGHT][SCREEN_WIDTH];
 static char logD[80];
 static int log_usedD;
 ARR_REUSE(obj, 256);
@@ -718,6 +720,20 @@ get_sym(int row, int col)
   }
   return '#';
 }
+void
+symmap_update()
+{
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+  char* sym = &symmapD[0][0];
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      *sym++ = get_sym(row, col);
+    }
+  }
+}
 
 void
 panel_bounds(struct panelS* panel)
@@ -1089,11 +1105,21 @@ void creatures(move) int move;
   });
 }
 void
+status_update()
+{
+  memset(statusD, '    ', sizeof(statusD));
+  int count = snprintf(AP(statusD[0]), "CHP : %6d", uD.chp);
+  statusD[0][count] = ' ';
+}
+void
 dungeon()
 {
   new_level_flag = FALSE;
   char c;
   while (1) {
+    status_update();
+    symmap_update();
+
     buffer_usedD = 0;
     buffer_append(AP(tc_clearD));
     buffer_append(AP(tc_move_cursorD));
@@ -1102,16 +1128,10 @@ dungeon()
       log_usedD = 0;
     }
     buffer_append(AP(tc_crlfD));
-    int panel_row_min = panelD.panel_row_min;
-    int panel_row_max = panelD.panel_row_max;
-    int panel_col_min = panelD.panel_col_min;
-    int panel_col_max = panelD.panel_col_max;
-    for (int row = panel_row_min; row < panel_row_max; ++row) {
+    for (int row = 0; row < SCREEN_HEIGHT; ++row) {
       buffer_append(AP(tc_clear_lineD));
-      for (int col = panel_col_min; col < panel_col_max; ++col) {
-        char c = get_sym(row, col);
-        buffer_append(&c, 1);
-      }
+      buffer_append(AP(statusD[row]));
+      buffer_append(AP(symmapD[row]));
       buffer_append(AP(tc_crlfD));
     }
     char line[80];
