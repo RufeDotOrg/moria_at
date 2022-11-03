@@ -1,6 +1,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#define ABS(x) (x >= 0 ? x : -x)
 #define AL(x) (sizeof(x) / sizeof(x[0]))
 #define AP(x) x, AL(x)
 #define AM(arr, id) (id % AL(arr))

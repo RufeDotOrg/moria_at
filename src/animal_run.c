@@ -1256,7 +1256,7 @@ static void bash(uy, ux) int *uy, *ux;
         msg_print("You smash into the door!");
         tmp = 100;  // py.stats.use_stat[A_STR] + py.misc.wt / 2;
         /* Use (roughly) similar method as for monsters. */
-        if (randint(tmp * (20 + abs(obj->p1))) < 10 * (tmp - abs(obj->p1))) {
+        if (randint(tmp * (20 + ABS(obj->p1))) < 10 * (tmp - ABS(obj->p1))) {
           msg_print("The door crashes open!");
           // invcopy(&t_list[c_ptr->tptr], OBJ_OPEN_DOOR);
           obj->tval = TV_OPEN_DOOR;
