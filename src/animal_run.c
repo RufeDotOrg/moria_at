@@ -1195,6 +1195,44 @@ static void mon_attack(midx) int midx;
   }
 }
 static void
+close_object()
+{
+  int y, x, dir, no_object, valid_object;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  y = uD.y;
+  x = uD.x;
+  if (get_dir(0, &dir)) {
+    mmove(dir, &y, &x);
+    c_ptr = &caveD[y][x];
+    obj = &entity_objD[c_ptr->oidx];
+
+    no_object = (obj->id == 0);
+    valid_object = obj->tval == TV_OPEN_DOOR;
+
+    if (valid_object) {
+      if (c_ptr->midx == 0) {
+        if (obj->p1 == 0) {
+          // invcopy(&t_list[c_ptr->tptr], OBJ_CLOSED_DOOR);
+          obj->tval = TV_CLOSED_DOOR;
+          obj->tchar = '+';
+          c_ptr->fval = FLOOR_OBST;
+          // lite_spot(y, x);
+        } else
+          msg_print("The door appears to be broken.");
+      } else {
+        msg_print( "Something is in your way!");
+      }
+    }
+
+    if (no_object) {
+      msg_print("I do not see anything you can close there.");
+      free_turn_flag = TRUE;
+    }
+  }
+}
+static void
 open_object()
 {
   int y, x, i, dir;
@@ -1205,7 +1243,7 @@ open_object()
   y = uD.y;
   x = uD.x;
   if (get_dir(0, &dir)) {
-    (void)mmove(dir, &y, &x);
+    mmove(dir, &y, &x);
     c_ptr = &caveD[y][x];
     obj = &entity_objD[c_ptr->oidx];
     no_object = (obj->id == 0);
@@ -1464,6 +1502,9 @@ dungeon()
       case 'u':
         x += (x + 1 < x_max);
         y -= (y > 0);
+        break;
+      case 'c':
+        close_object();
         break;
       case 'o':
         open_object();
