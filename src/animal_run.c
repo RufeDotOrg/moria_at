@@ -1549,7 +1549,7 @@ dungeon()
       struct caveS* c_ptr = &caveD[y][x];
       if (c_ptr->midx) {
         py_attack(y, x);
-      } else if (c_ptr->fval < MIN_WALL) {
+      } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
         uD.x = x;
         uD.y = y;
         panel_update(&panelD, uD.x, uD.y, false);
