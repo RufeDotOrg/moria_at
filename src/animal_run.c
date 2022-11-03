@@ -523,10 +523,8 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
         do {
           do {
             cave_ptr = &caveD[y1][x1];
-            // if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->oidx == 0)
-            // &&
-            //     (next_to_walls(y1, x1) >= walls)) {
-            if (cave_ptr->fval <= MAX_OPEN_SPACE) {
+            //  if (next_to_walls(y1, x1) >= walls)
+            if (cave_ptr->fval <= MAX_OPEN_SPACE && cave_ptr->oidx == 0) {
               flag = TRUE;
               if (typ == 1)
                 place_stair_tval_tchar(y1, x1, TV_UP_STAIR, '<');
@@ -1221,6 +1219,7 @@ dungeon()
   new_level_flag = FALSE;
   char c;
   while (1) {
+    free_turn_flag = FALSE;
     status_update();
     symmap_update();
 
@@ -1268,6 +1267,7 @@ dungeon()
     }
     if (c == CTRL('w')) {
       modeD = !modeD ? MODE_MAP : MODE_DFLT;
+      free_turn_flag = TRUE;
     }
     if (c == CTRL('h')) {
       uD.chp = uD.mhp;
@@ -1313,6 +1313,7 @@ dungeon()
       y = panelD.panel_row;
       x_max = MAX_COL - 2;
       y_max = MAX_ROW - 2;
+      free_turn_flag = TRUE;
     }
     switch (c) {
       case 'k':
@@ -1366,6 +1367,7 @@ dungeon()
       panel_bounds(&panelD);
     }
     if (new_level_flag) break;
+    if (free_turn_flag) continue;
     creatures(TRUE);
   }
 }
