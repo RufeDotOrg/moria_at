@@ -44,3 +44,6 @@
 #define MAX_MON_NATTACK 1
 
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
+
+// Input
+#define ESCAPE '\033'

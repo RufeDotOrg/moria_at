@@ -12,11 +12,87 @@ static int log_usedD;
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
 
+static char
+inkey()
+{
+  char c = platform_readansi();
+  if (c == CTRL('c')) {
+    death = 1;
+    return -1;
+  }
+  return c;
+}
 static void
 msg_print(char* text)
 {
   // TBD: drops text, does not halt game for -more-
   log_usedD = snprintf(AP(logD), "%s", text);
+}
+int
+in_subcommand(prompt, command)
+char* prompt;
+char* command;
+{
+  msg_print(prompt);
+  *command = inkey();
+  msg_print("");
+  return (*command != ESCAPE);
+}
+static char
+map_roguedir(comval)
+register char comval;
+{
+  switch (comval) {
+    case 'h':
+      comval = '4';
+      break;
+    case 'y':
+      comval = '7';
+      break;
+    case 'k':
+      comval = '8';
+      break;
+    case 'u':
+      comval = '9';
+      break;
+    case 'l':
+      comval = '6';
+      break;
+    case 'n':
+      comval = '3';
+      break;
+    case 'j':
+      comval = '2';
+      break;
+    case 'b':
+      comval = '1';
+      break;
+    case '.':
+      comval = '5';
+      break;
+  }
+  return (comval);
+}
+int
+get_dir(prompt, dir)
+char* prompt;
+int* dir;
+{
+  char command;
+  static char prev_dir; /* Direction memory. -CJS- */
+
+  if (!prompt) prompt = "Which direction?";
+  if (in_subcommand(prompt, &command)) {
+    command = map_roguedir(command);
+    if (command >= '1' && command <= '9' && command != '5') {
+      prev_dir = command - '0';
+      *dir = prev_dir;
+      return TRUE;
+    }
+  }
+
+  free_turn_flag = TRUE;
+  return FALSE;
 }
 static void
 go_up()
@@ -808,7 +884,8 @@ register int* mm;
     ax = x;
   } else
     ax = -x;
-  /* this has the advantage of preventing the diamond maneuvre, also faster */
+  /* this has the advantage of preventing the diamond maneuvre, also faster
+   */
   if (ay > (ax << 1))
     move_val += 2;
   else if (ax > (ay << 1))
@@ -1107,6 +1184,64 @@ static void mon_attack(midx) int midx;
     }
   }
 }
+static void
+open_object()
+{
+  int y, x, i, dir;
+  int no_object, valid_object;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  y = uD.y;
+  x = uD.x;
+  if (get_dir(0, &dir)) {
+    (void)mmove(dir, &y, &x);
+    c_ptr = &caveD[y][x];
+    obj = &entity_objD[c_ptr->oidx];
+    no_object = (obj->id == 0);
+    valid_object = (obj->tval == TV_CLOSED_DOOR);
+
+    if (valid_object) {
+      // Monster may be invisible and will retaliate
+      if (c_ptr->midx) {
+        msg_print("Something is in your way!");
+      } else if (obj->tval == TV_CLOSED_DOOR) {
+        if (obj->p1 > 0) /* It's locked.  */
+        {
+          i = 20;
+          // p_ptr = &py.misc;
+          // i = p_ptr->disarm + 2 * todis_adj() + stat_adj(A_INT) +
+          //     (class_level_adj[p_ptr->pclass][CLA_DISARM] * p_ptr->lev / 3);
+          // Too much whiskey
+          // if (py.flags.confused > 0)
+          //   msg_print("You are too confused to pick the lock.");
+          // else
+          if ((i - obj->p1) > randint(100)) {
+            msg_print("You have picked the lock.");
+            uD.exp += 1;
+            py_experience();
+            obj->p1 = 0;
+          } else
+            msg_print("You failed to pick the lock.");
+        } else if (obj->p1 < 0) /* It's stuck    */
+          msg_print("It appears to be stuck.");
+        if (obj->p1 == 0) {
+          // invcopy(&t_list[c_ptr->tptr], OBJ_OPEN_DOOR);
+          obj->tval = TV_OPEN_DOOR;
+          obj->tchar = '\'';
+          c_ptr->fval = FLOOR_CORR;
+          // lite_spot(y, x);
+          // command_count = 0;
+        }
+      }
+    }
+
+    if (no_object) {
+      msg_print("I do not see anything you can open there.");
+      free_turn_flag = TRUE;
+    }
+  }
+}
 static void make_move(monptr, mm, rcmove) int monptr;
 int* mm;
 uint32_t* rcmove;
@@ -1238,13 +1373,9 @@ dungeon()
     buffer_append(AP(tc_move_cursorD));
     write(STDOUT_FILENO, bufferD, buffer_usedD);
 
-    char c = platform_readansi();
+    char c = inkey();
     if (c == -1) break;
 
-    if (c == CTRL('c')) {
-      death = 1;
-      break;
-    }
     if (c == CTRL('w')) {
       modeD = !modeD ? MODE_MAP : MODE_DFLT;
       free_turn_flag = TRUE;
@@ -1323,6 +1454,9 @@ dungeon()
       case 'u':
         x += (x + 1 < x_max);
         y -= (y > 0);
+        break;
+      case 'o':
+        open_object();
         break;
       case '<':
         go_up();
