@@ -5,6 +5,7 @@ struct uS {
   int exp;
   int lev;
   int chp;
+  int mhp;
   int ac;
   int toac;
 };

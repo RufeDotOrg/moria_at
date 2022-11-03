@@ -1055,6 +1055,7 @@ void
 py_init()
 {
   uD.chp = 100;
+  uD.mhp = 100;
   uD.lev = 1;
 }
 static void py_take_hit(damage) int damage;
@@ -1261,9 +1262,40 @@ dungeon()
     if (c == CTRL('w')) {
       modeD = !modeD ? MODE_MAP : MODE_DFLT;
     }
+    if (c == CTRL('h')) {
+      uD.chp = uD.mhp;
+    }
 
     int x, y, x_max, y_max;
-    if (modeD == MODE_DFLT) {
+    if (c == CTRL('t')) {
+      msg_print("teleport");
+      do {
+        x = randint(MAX_WIDTH - 2);
+        y = randint(MAX_HEIGHT - 2);
+      } while (caveD[y][x].fval >= MIN_CLOSED_SPACE || caveD[y][x].midx != 0);
+    } else if (c == CTRL('m') && mon_usedD) {
+      int rv = randint(mon_usedD);
+      struct monS* mon = mon_get(monD[rv - 1]);
+      int fy = mon->fy;
+      int fx = mon->fx;
+      x = uD.x;
+      y = uD.y;
+      log_usedD = snprintf(AP(logD), "%s: %d id (%d/%d)", "Teleport to monster",
+                           mon->id, rv, mon_usedD);
+      for (int ro = fy - 1; ro <= fy + 1; ++ro) {
+        for (int co = fx - 1; co <= fx + 1; ++co) {
+          if (!in_bounds(ro, co)) continue;
+          if ((caveD[ro][co].fval >= MIN_WALL || caveD[ro][co].midx != 0)) {
+            continue;
+          }
+
+          y = ro;
+          x = co;
+          log_usedD =
+              snprintf(AP(logD), "%s (%d, %d)", "Teleport to monster", ro, co);
+        }
+      }
+    } else if (modeD == MODE_DFLT) {
       x = uD.x;
       y = uD.y;
       x_max = MAX_WIDTH;

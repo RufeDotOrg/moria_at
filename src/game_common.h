@@ -42,9 +42,9 @@
   }                                                                          \
   struct type##S* type##_get(int eid)                                        \
   {                                                                          \
+    struct type##S* dflt = entity_##type##D;                                   \
     struct type##S* ent = &AS(entity_##type##D, eid);                        \
-    if (eid && ent->id == eid) return ent;                                   \
-    return 0;                                                                \
+    return ent->id == eid ? ent : dflt;                                      \
   }                                                                          \
   int type##_index(struct type##S* ent)                                      \
   {                                                                          \
