@@ -166,7 +166,7 @@ cave_init()
 {
   for (int row = 0; row < MAX_HEIGHT; ++row) {
     for (int col = 0; col < MAX_WIDTH; ++col) {
-      bool wall = (row == 0 || row + 1 == MAX_HEIGHT) ||
+      BOOL wall = (row == 0 || row + 1 == MAX_HEIGHT) ||
                   (col == 0 || col + 1 == MAX_WIDTH);
       if (wall)
         caveD[row][col].fval = BOUNDARY_WALL;
@@ -312,11 +312,11 @@ typedef struct {
   int x;
   int y;
 } coords;
-bool
+BOOL
 in_bounds(int row, int col)
 {
-  bool rc = (row > 0 && row < MAX_HEIGHT - 1);
-  bool cc = (col > 0 && col < MAX_WIDTH - 1);
+  BOOL rc = (row > 0 && row < MAX_HEIGHT - 1);
+  BOOL cc = (col > 0 && col < MAX_WIDTH - 1);
   return cc && rc;
 }
 static void rand_dir(rdir, cdir) int *rdir, *cdir;
@@ -858,15 +858,15 @@ panel_bounds(struct panelS* panel)
   panel->panel_col_max = panel->panel_col_min + SCREEN_WIDTH;
 }
 void
-panel_update(struct panelS* panel, int x, int y, bool force)
+panel_update(struct panelS* panel, int x, int y, BOOL force)
 {
-  bool yd = (y < panel->panel_row_min + 1 || y > panel->panel_row_max - 2);
+  BOOL yd = (y < panel->panel_row_min + 1 || y > panel->panel_row_max - 2);
   if (force || yd) {
     int prow = (y - SCREEN_HEIGHT / 4) / (SCREEN_HEIGHT / 2);
     panel->panel_row = CLAMP(prow, 0, MAX_ROW);
   }
 
-  bool xd = (x < panel->panel_col_min + 1 || x > panel->panel_col_max - 2);
+  BOOL xd = (x < panel->panel_col_min + 1 || x > panel->panel_col_max - 2);
   if (force || xd) {
     int pcol = (x - SCREEN_WIDTH / 4) / (SCREEN_WIDTH / 2);
     panel->panel_col = CLAMP(pcol, 0, MAX_COL - 2);
@@ -1131,7 +1131,7 @@ static void py_take_hit(damage) int damage;
 {
   uD.chp -= damage;
   if (uD.chp < 0) {
-    death = true;
+    death = TRUE;
     new_level_flag = TRUE;
   }
 }
@@ -1604,7 +1604,7 @@ dungeon()
       } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
         uD.x = x;
         uD.y = y;
-        panel_update(&panelD, uD.x, uD.y, false);
+        panel_update(&panelD, uD.x, uD.y, FALSE);
       }
     }
     if (modeD == MODE_MAP) {
@@ -1627,7 +1627,7 @@ main()
   py_init();
 
   while (!death) {
-    panel_update(&panelD, uD.x, uD.y, true);
+    panel_update(&panelD, uD.x, uD.y, TRUE);
     dungeon();
 
     if (!death) generate_cave();
