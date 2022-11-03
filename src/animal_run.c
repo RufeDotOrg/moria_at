@@ -1138,6 +1138,44 @@ static void py_take_hit(damage) int damage;
 void
 py_experience()
 {
+  int exp = uD.exp;
+  int lev = uD.lev;
+  int expfact = 100;
+
+  if (exp > MAX_EXP) exp = MAX_EXP;
+
+  while ((lev < MAX_PLAYER_LEVEL) &&
+         (player_exp[lev - 1] * expfact / 100) <= exp) {
+    int dif_exp, need_exp;
+
+    lev += 1;
+    snprintf(AP(logD), "Welcome to level %d.", lev);
+    im_print();
+    // calc_hitpoints();
+
+    need_exp = player_exp[lev - 1] * expfact / 100;
+    if (exp > need_exp) {
+      /* lose some of the 'extra' exp when gaining several levels at once */
+      dif_exp = exp - need_exp;
+      exp = need_exp + (dif_exp / 2);
+    }
+
+    // TBD: spell/mana
+    // c_ptr = &class[p_ptr->pclass];
+    // if (c_ptr->spell == MAGE) {
+    //   calc_spells(A_INT);
+    //   calc_mana(A_INT);
+    // } else if (c_ptr->spell == PRIEST) {
+    //   calc_spells(A_WIS);
+    //   calc_mana(A_WIS);
+    // }
+  }
+
+  // if (p_ptr->exp > p_ptr->max_exp) p_ptr->max_exp = p_ptr->exp;
+
+  // prt_long(p_ptr->exp, 14, STAT_COLUMN + 6);
+  uD.exp = exp;
+  uD.lev = lev;
 }
 void py_attack(y, x) int y, x;
 {
@@ -1526,7 +1564,8 @@ dungeon()
       for (int ro = fy - 1; ro <= fy + 1; ++ro) {
         for (int co = fx - 1; co <= fx + 1; ++co) {
           if (!in_bounds(ro, co)) continue;
-          if ((caveD[ro][co].fval >= MIN_WALL || caveD[ro][co].midx != 0)) {
+          if ((caveD[ro][co].fval >= MIN_CLOSED_SPACE ||
+               caveD[ro][co].midx != 0)) {
             continue;
           }
 

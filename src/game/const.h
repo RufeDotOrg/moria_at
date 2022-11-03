@@ -43,6 +43,9 @@
 #define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */
 #define MAX_MON_NATTACK 1
 
+/* Player constants */
+#define MAX_PLAYER_LEVEL 40
+#define MAX_EXP 999999
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
 
 // Input
