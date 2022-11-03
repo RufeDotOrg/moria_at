@@ -1222,7 +1222,7 @@ close_object()
         } else
           msg_print("The door appears to be broken.");
       } else {
-        msg_print( "Something is in your way!");
+        msg_print("Something is in your way!");
       }
     }
 
@@ -1289,6 +1289,32 @@ open_object()
       free_turn_flag = TRUE;
     }
   }
+}
+static void search(y, x, chance) int y, x, chance;
+{
+  register int i, j;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  // p_ptr = &py.flags;
+  // if (p_ptr->confused > 0) chance = chance / 10;
+  // if ((p_ptr->blind > 0) || no_light()) chance = chance / 10;
+  // if (p_ptr->image > 0) chance = chance / 10;
+  for (i = (y - 1); i <= (y + 1); i++)
+    for (j = (x - 1); j <= (x + 1); j++)
+      if (randint(100) < chance) /* always in_bounds here */
+      {
+        c_ptr = &caveD[i][j];
+        obj = &entity_objD[c_ptr->oidx];
+
+        if (obj->tval == TV_SECRET_DOOR) {
+          msg_print("You have found a secret door.");
+          obj->tval = TV_CLOSED_DOOR;
+          obj->tchar = '+';
+          // lite_spot(y,x);
+          // end_find();
+        }
+      }
 }
 static void make_move(monptr, mm, rcmove) int monptr;
 int* mm;
@@ -1508,6 +1534,9 @@ dungeon()
         break;
       case 'o':
         open_object();
+        break;
+      case 's':
+        search(y, x, 25);
         break;
       case '<':
         go_up();
