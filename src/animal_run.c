@@ -1232,6 +1232,55 @@ close_object()
     }
   }
 }
+static void bash(uy, ux) int *uy, *ux;
+{
+  int y, x, dir, tmp;
+  int valid_obj;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  y = uD.y;
+  x = uD.x;
+  if (get_dir(0, &dir)) {
+    // if (py.flags.confused > 0) ...
+    (void)mmove(dir, &y, &x);
+    c_ptr = &caveD[y][x];
+    obj = &entity_objD[c_ptr->oidx];
+    valid_obj = (obj->id != 0);
+
+    if (c_ptr->midx) {
+      // TBD: py_bash() vs monster
+      py_attack(y, x);
+    } else if (valid_obj) {
+      if (obj->tval == TV_CLOSED_DOOR) {
+        msg_print("You smash into the door!");
+        tmp = 100;  // py.stats.use_stat[A_STR] + py.misc.wt / 2;
+        /* Use (roughly) similar method as for monsters. */
+        if (randint(tmp * (20 + abs(obj->p1))) < 10 * (tmp - abs(obj->p1))) {
+          msg_print("The door crashes open!");
+          // invcopy(&t_list[c_ptr->tptr], OBJ_OPEN_DOOR);
+          obj->tval = TV_OPEN_DOOR;
+          obj->tchar = '\'';
+          obj->p1 = 1 - randint(2); /* 50% chance of breaking door */
+          c_ptr->fval = FLOOR_CORR;
+          // if (py.flags.confused == 0)
+          *uy = y;
+          *ux = x;
+          // else
+          //   lite_spot(y, x);
+        } else if (randint(150) > 18) {  // py.stats.use_stat[A_DEX]) {
+          msg_print("You are off-balance.");
+          // py.flags.paralysis = 1 + randint(2);
+        } else
+          msg_print("The door holds firm.");
+      } else
+        /* Can't give free turn, or else player could try directions
+           until he found invisible creature */
+        msg_print("You bash it, but nothing interesting happens.");
+    } else /* same message for wall as for secret door */
+      msg_print("You bash it, but nothing interesting happens.");
+  }
+}
 static void
 open_object()
 {
@@ -1531,6 +1580,9 @@ dungeon()
         break;
       case 'c':
         close_object();
+        break;
+      case 'f':
+        bash(&y, &x);
         break;
       case 'o':
         open_object();
