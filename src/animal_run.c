@@ -790,7 +790,7 @@ panel_update(struct panelS* panel, int x, int y, bool force)
   bool xd = (x < panel->panel_col_min + 1 || x > panel->panel_col_max - 2);
   if (force || xd) {
     int pcol = (x - SCREEN_WIDTH / 4) / (SCREEN_WIDTH / 2);
-    panel->panel_col = CLAMP(pcol, 0, MAX_COL);
+    panel->panel_col = CLAMP(pcol, 0, MAX_COL - 2);
   }
 
   panel_bounds(panel);
@@ -1239,10 +1239,17 @@ dungeon()
       buffer_append(AP(tc_crlfD));
     }
     char line[80];
-    {
+    if (modeD == MODE_MAP) {
+      int print_len = snprintf(
+          AP(line), "(%d,%d) quad | (%d,%d) xy | (%d) fval %d feet\r\n",
+          panelD.panel_col, panelD.panel_row,
+          panelD.panel_col * SCREEN_WIDTH / 2,
+          panelD.panel_row * SCREEN_HEIGHT / 2, caveD[uD.y][uD.x].fval,
+          dun_level * 50);
+      if (print_len < AL(line)) buffer_append(line, print_len);
+    } else if (modeD == MODE_DFLT) {
       int print_len =
-          snprintf(AP(line), "(%d,%d) xy (%d,%d) p (%d) fval %d feet\r\n", uD.x,
-                   uD.y, panelD.panel_col, panelD.panel_row,
+          snprintf(AP(line), "(%d,%d) xy (%d) fval %d feet\r\n", uD.x, uD.y,
                    caveD[uD.y][uD.x].fval, dun_level * 50);
       if (print_len < AL(line)) buffer_append(line, print_len);
     }
@@ -1304,8 +1311,8 @@ dungeon()
     if (modeD == MODE_MAP) {
       x = panelD.panel_col;
       y = panelD.panel_row;
-      x_max = MAX_COL;
-      y_max = MAX_ROW;
+      x_max = MAX_COL - 2;
+      y_max = MAX_ROW - 2;
     }
     switch (c) {
       case 'k':
