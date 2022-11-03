@@ -12,6 +12,17 @@ static int log_usedD;
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
 
+static char bufferD[4 * 1024];
+static int buffer_usedD;
+int
+buffer_append(char* str, int str_len)
+{
+  if (buffer_usedD + str_len > sizeof(bufferD)) return 0;
+  memcpy(&bufferD[buffer_usedD], str, str_len);
+  buffer_usedD += str_len;
+  return 1;
+}
+
 static char
 inkey()
 {
@@ -23,10 +34,20 @@ inkey()
   return c;
 }
 static void
+im_print()
+{
+  buffer_usedD = 0;
+  buffer_append(AP(tc_move_cursorD));
+  buffer_append(AP(tc_clear_lineD));
+  buffer_append(logD, log_usedD);
+  buffer_append(AP(tc_move_cursorD));
+  write(STDOUT_FILENO, bufferD, buffer_usedD);
+}
+static void
 msg_print(char* text)
 {
-  // TBD: drops text, does not halt game for -more-
   log_usedD = snprintf(AP(logD), "%s", text);
+  im_print();
 }
 int
 in_subcommand(prompt, command)
@@ -852,17 +873,6 @@ panel_update(struct panelS* panel, int x, int y, bool force)
   }
 
   panel_bounds(panel);
-}
-
-static char bufferD[4 * 1024];
-static int buffer_usedD;
-int
-buffer_append(char* str, int str_len)
-{
-  if (buffer_usedD + str_len > sizeof(bufferD)) return 0;
-  memcpy(&bufferD[buffer_usedD], str, str_len);
-  buffer_usedD += str_len;
-  return 1;
 }
 
 static void get_moves(monptr, mm) int monptr;
