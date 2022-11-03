@@ -1,8 +1,4 @@
-#include "platform.c"
-
-#include "game_common.h"
-#include "game_const.h"
-#include "game_type.h"
+#include "game.c"
 
 static int death;
 static int dun_level;
