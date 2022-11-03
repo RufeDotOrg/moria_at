@@ -1,11 +1,8 @@
+#include "platform.c"
+
 #include "game_common.h"
 #include "game_const.h"
 #include "game_type.h"
-
-#include <errno.h>
-#include <sys/ioctl.h>
-#include <termios.h>
-#include <unistd.h>
 
 static int death;
 static int dun_level;
@@ -18,15 +15,6 @@ static char logD[80];
 static int log_usedD;
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
-
-static struct termios save_termD;
-// Common terminal commands
-static char tc_crlfD[] = "\r\n";
-static char tc_clearD[] = "\x1b[2J";
-static char tc_clear_lineD[] = "\x1b[K";
-static char tc_move_cursorD[] = "\x1b[H";
-static char tc_hide_cursorD[] = "\x1b[?25l";
-static char tc_show_cursorD[] = "\x1b[?25h";
 
 static void
 msg_print(char* text)
@@ -1217,7 +1205,6 @@ void
 dungeon()
 {
   new_level_flag = FALSE;
-  char c;
   while (1) {
     free_turn_flag = FALSE;
     status_update();
@@ -1255,11 +1242,8 @@ dungeon()
     buffer_append(AP(tc_move_cursorD));
     write(STDOUT_FILENO, bufferD, buffer_usedD);
 
-    int read_count = read(0, &c, 1);
-    if (read_count == -1) {
-      if (errno != EAGAIN) break;
-      continue;
-    }
+    char c = platform_readansi();
+    if (c == -1) break;
 
     if (c == CTRL('c')) {
       death = 1;
@@ -1374,16 +1358,7 @@ dungeon()
 int
 main()
 {
-  ioctl(0, TCGETA, &save_termD);
-
-  struct termios tbuf;
-  tcgetattr(STDIN_FILENO, &tbuf);
-  tbuf.c_iflag &= ~(ICRNL | IXON);
-  tbuf.c_oflag &= ~(OPOST);
-  tbuf.c_lflag &= ~(ECHO | ICANON | ISIG);
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &tbuf);
-
-  write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
+  platform_tty_init();
 
   dun_level = 1;
   generate_cave();
@@ -1396,9 +1371,6 @@ main()
     if (!death) generate_cave();
   }
 
-  write(1, tc_clearD, sizeof(tc_clearD));
-  write(1, tc_show_cursorD, sizeof(tc_show_cursorD));
-
-  ioctl(0, TCSETA, &save_termD);
+  platform_tty_reset();
   return 0;
 }
