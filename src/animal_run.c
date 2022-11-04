@@ -794,17 +794,17 @@ int element;
 void
 cave_gen()
 {
-  int room_map[MAX_COL][MAX_ROW] = {0};
+  int room_map[MAX_COL - 1][MAX_ROW - 1] = {0};
   register int i, j, k;
   int y1, x1, y2, x2, pick1, pick2, tmp;
   int16_t yloc[400], xloc[400];
 
   k = DUN_ROOM_MEAN;
   for (i = 0; i < k; i++)
-    room_map[randint(MAX_ROW) - 1][randint(MAX_COL) - 1] = 1;
+    room_map[randint(AL(room_map)) - 1][randint(AL(room_map[0])) - 1] = 1;
   k = 0;
-  for (i = 0; i < MAX_ROW; i++)
-    for (j = 0; j < MAX_COL; j++)
+  for (i = 0; i < AL(room_map); i++)
+    for (j = 0; j < AL(room_map[0]); j++)
       if (room_map[i][j]) {
         yloc[k] = i * (SCREEN_HEIGHT >> 1) + (SCREEN_HEIGHT >> 2);
         xloc[k] = j * (SCREEN_WIDTH >> 1) + (SCREEN_WIDTH >> 2);
