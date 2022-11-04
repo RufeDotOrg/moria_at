@@ -1,5 +1,6 @@
 #include "game.c"
 
+static int obj_teleport_idxD;
 static int death;
 static int dun_level;
 static int free_turn_flag;
@@ -754,7 +755,7 @@ int typ, num;
     }
     /* don't put an object beneath the player, this could cause problems
        if player is standing under rubble, or on a trap */
-    while ((!(*alloc_set)(caveD[y][x].fval)) || (caveD[y][x].midx != 0) ||
+    while ((!(*alloc_set)(caveD[y][x].fval)) || (caveD[y][x].oidx != 0) ||
            (y == uD.y && x == uD.x));
     switch (typ) {
       case 1:
@@ -1669,6 +1670,7 @@ void
 dungeon()
 {
   new_level_flag = FALSE;
+  obj_teleport_idxD = 0;
   while (1) {
     free_turn_flag = FALSE;
     status_update();
@@ -1734,11 +1736,13 @@ dungeon()
       int fx = mon->fx;
       py_teleport_near(fy, fx, &y, &x);
     } else if (c == CTRL('o')) {
+      int seek_tval = obj_teleportD[obj_teleport_idxD];
+
       for (int row = 1; row < MAX_HEIGHT - 1; ++row) {
         for (int col = 1; col < MAX_WIDTH - 1; ++col) {
           int oidx = caveD[row][col].oidx;
           struct objS* obj = &entity_objD[oidx];
-          if (obj->tval != TV_INVIS_TRAP) continue;
+          if (obj->tval != seek_tval) continue;
 
           log_usedD =
               snprintf(AP(logD), "%s: %d oidx", "Teleport to object", oidx);
@@ -1746,6 +1750,11 @@ dungeon()
           row = MAX_HEIGHT;
           col = MAX_WIDTH;
         }
+      }
+      if (y == uD.y && x == uD.x) {
+        obj_teleport_idxD = ((obj_teleport_idxD + 1) % AL(obj_teleportD));
+        log_usedD =
+            snprintf(AP(logD), "Switching object type %d", obj_teleport_idxD);
       }
     } else if (modeD == MODE_DFLT) {
       x = uD.x;
