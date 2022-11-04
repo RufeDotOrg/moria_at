@@ -1331,6 +1331,18 @@ static void obj_desc(oidx) int oidx;
 
   snprintf(AP(descD), "%s", treasure->name);
 }
+BOOL is_a_vowel(c) char c;
+{
+  switch (c) {
+    case 'a':
+    case 'e':
+    case 'i':
+    case 'o':
+    case 'u':
+      return TRUE;
+  }
+  return FALSE;
+}
 static void mon_desc(midx) int midx;
 {
   struct monS* mon = &entity_monD[midx];
@@ -1442,18 +1454,6 @@ void py_attack(y, x) int y, x;
       im_print();
     }
   }
-}
-BOOL is_a_vowel(c) char c;
-{
-  switch (c) {
-    case 'a':
-    case 'e':
-    case 'i':
-    case 'o':
-    case 'u':
-      return TRUE;
-  }
-  return FALSE;
 }
 static void mon_attack(midx) int midx;
 {
