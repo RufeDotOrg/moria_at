@@ -741,7 +741,7 @@ void place_trap(y, x, subval) int y, x, subval;
   obj->p1 = 2;
   obj->dam[0] = 1;
   obj->dam[1] = 8;
-  obj->level = 90;
+  obj->level = 50;
 }
 void alloc_object(alloc_set, typ, num) int (*alloc_set)();
 int typ, num;
@@ -1339,6 +1339,52 @@ close_object()
     }
   }
 }
+void disarm_trap(uy, ux) int *uy, *ux;
+{
+  int y, x, dir, valid, skill;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  y = uD.y;
+  x = uD.x;
+  if (get_dir(0, &dir)) {
+    mmove(dir, &y, &x);
+    c_ptr = &caveD[y][x];
+    obj = &entity_objD[c_ptr->oidx];
+    valid = (obj->tval == TV_VIS_TRAP);
+
+    if (valid) {
+      if (c_ptr->midx) {
+        msg_print("Something is in your way!");
+      } else if (obj->tval == TV_VIS_TRAP) {
+        skill = randint(100) - obj->level;
+        if (skill >= 0) {
+          msg_print("You have disarmed the trap.");
+          uD.exp += obj->p1;
+          delete_object(y, x);
+          *uy = y;
+          *ux = x;
+          py_experience();
+        }
+        /* avoid randint(0) call */
+        else if (skill > -20)
+          msg_print("You failed to disarm the trap.");
+        else {
+          msg_print("You set the trap off!");
+          /* make sure we move onto the trap even if confused */
+          // tmp = py.flags.confused;
+          // py.flags.confused = 0;
+          *uy = y;
+          *ux = x;
+          // py.flags.confused += tmp;
+        }
+      }
+    } else {
+      msg_print("I do not see anything to disarm there.");
+      free_turn_flag = TRUE;
+    }
+  }
+}
 static void bash(uy, ux) int *uy, *ux;
 {
   int y, x, dir, tmp;
@@ -1350,7 +1396,7 @@ static void bash(uy, ux) int *uy, *ux;
   x = uD.x;
   if (get_dir(0, &dir)) {
     // if (py.flags.confused > 0) ...
-    (void)mmove(dir, &y, &x);
+    mmove(dir, &y, &x);
     c_ptr = &caveD[y][x];
     obj = &entity_objD[c_ptr->oidx];
     valid_obj = (obj->id != 0);
@@ -1686,11 +1732,14 @@ dungeon()
       for (int row = 1; row < MAX_HEIGHT - 1; ++row) {
         for (int col = 1; col < MAX_WIDTH - 1; ++col) {
           int oidx = caveD[row][col].oidx;
-          if (oidx) {
-            log_usedD =
-                snprintf(AP(logD), "%s: %d oidx", "Teleport to object", oidx);
-            py_teleport_near(row, col, &y, &x);
-          }
+          struct objS* obj = &entity_objD[oidx];
+          if (obj->tval != TV_INVIS_TRAP) continue;
+
+          log_usedD =
+              snprintf(AP(logD), "%s: %d oidx", "Teleport to object", oidx);
+          py_teleport_near(row, col, &y, &x);
+          row = MAX_HEIGHT;
+          col = MAX_WIDTH;
         }
       }
     } else if (modeD == MODE_DFLT) {
@@ -1738,6 +1787,9 @@ dungeon()
       case 'c':
         close_object();
         break;
+      case 'd':
+        disarm_trap(&y, &x);
+        break;
       case 'f':
         bash(&y, &x);
         break;
@@ -1763,7 +1815,7 @@ dungeon()
         uD.y = y;
         uD.x = x;
         panel_update(&panelD, uD.x, uD.y, FALSE);
-        if (obj->tval == TV_INVIS_TRAP) {
+        if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
           hit_trap(y, x);
         }
       }
