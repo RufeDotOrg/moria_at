@@ -30,10 +30,56 @@
 #define DUN_TUN_PEN 25 /* % chance of room doors		       */
 #define DUN_TUN_JCT 15 /* % chance of doors at tunnel junctions */
 #define DUN_ROOM_MEAN 64 // TBD: retune - originally 32. map dimensions are modified
+#define TREAS_ROOM_MEAN 14 // TBD: retune
 #define TRUE 1
 #define FALSE 0
 
 /* Treasure constants */
+#define TV_NOTHING	0
+#define TV_MISC		1
+#define TV_CHEST	2
+/* min tval for wearable items, all items between TV_MIN_WEAR and TV_MAX_WEAR
+   use the same flag bits, see the TR_* defines */
+#define TV_MIN_WEAR	10
+/* items tested for enchantments, i.e. the MAGIK inscription, see the
+   enchanted() procedure */
+#define TV_MIN_ENCHANT	10
+#define TV_SLING_AMMO	10
+#define TV_BOLT		11
+#define TV_ARROW	12
+#define TV_SPIKE	13
+#define TV_LIGHT	15
+#define TV_BOW		20
+#define TV_HAFTED	21
+#define TV_POLEARM	22
+#define TV_SWORD	23
+#define TV_DIGGING	25
+#define TV_BOOTS	30
+#define TV_GLOVES	31
+#define TV_CLOAK	32
+#define TV_HELM		33
+#define TV_SHIELD	34
+#define TV_HARD_ARMOR	35
+#define TV_SOFT_ARMOR	36
+/* max tval that uses the TR_* flags */
+#define TV_MAX_ENCHANT	39
+#define TV_AMULET	40
+#define TV_RING		45
+/* max tval for wearable items */
+#define TV_MAX_WEAR	50
+#define TV_STAFF	55
+#define TV_WAND		65
+#define TV_SCROLL1	70
+#define TV_SCROLL2	71
+#define TV_POTION1	75
+#define TV_POTION2	76
+#define TV_FLASK	77
+#define TV_FOOD 	80
+#define TV_MAGIC_BOOK	90
+#define TV_PRAYER_BOOK	91
+/* objects with tval above this are never picked up by monsters */
+#define TV_MAX_OBJECT	99
+#define TV_GOLD		100
 // Items above cannot be lifted by the player
 #define TV_MAX_PICK_UP 100
 #define TV_INVIS_TRAP 101
@@ -47,6 +93,9 @@
 #define TV_SECRET_DOOR 109
 
 #define MAX_TRAP 3
+#define MAX_OBJ_LEVEL 50
+
+#define OBJ_GREAT 12 // 1/x treasure is a big surprise!
 
 /* Creature constants						*/
 #define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */

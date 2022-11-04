@@ -4,5 +4,6 @@
 #include "game/var.h"
 
 #include "db/mon.c"
+#include "db/obj.c"
 
 #include "platform.c"

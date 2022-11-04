@@ -717,6 +717,79 @@ static void try_door(y, x) register int y, x;
       next_to(y, x))
     place_door(y, x);
 }
+int set_room(element) register int element;
+{
+  return (element == FLOOR_DARK || element == FLOOR_LIGHT);
+}
+int set_corr(element) register int element;
+{
+  return (element == FLOOR_CORR || element == FLOOR_OBST);
+}
+int set_floor(element) int element;
+{
+  return (element <= MAX_FLOOR);
+}
+int set_large(item)         /* Items too large to fit in chests   -DJG- */
+    struct treasureS* item; /* Use treasure_type since item not yet created */
+{
+  switch (item->tval) {
+    case TV_CHEST:
+    case TV_BOW:
+    case TV_POLEARM:
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+    case TV_STAFF:
+      return TRUE;
+    case TV_HAFTED:
+    case TV_SWORD:
+    case TV_DIGGING:
+      if (item->weight > 150)
+        return TRUE;
+      else
+        return FALSE;
+  }
+  return FALSE;
+}
+int get_obj_num(level, must_be_small) int level, must_be_small;
+{
+  int i, j;
+
+  if (level == 0)
+    i = randint(o_level[0]);
+  else {
+    if (level >= MAX_OBJ_LEVEL)
+      level = MAX_OBJ_LEVEL;
+    else if (randint(OBJ_GREAT) == 1) {
+      level = level * MAX_OBJ_LEVEL / randint(MAX_OBJ_LEVEL) + 1;
+      if (level > MAX_OBJ_LEVEL) level = MAX_OBJ_LEVEL;
+    }
+
+    /* This code has been added to make it slightly more likely to get the
+       higher level objects.  Originally a uniform distribution over all
+       objects less than or equal to the dungeon level.  This distribution
+       makes a level n objects occur approx 2/n% of the time on level n,
+       and 1/2n are 0th level. */
+    do {
+      if (randint(2) == 1)
+        i = randint(o_level[level]) - 1;
+      else
+      /* Choose three objects, pick the highest level. */
+      {
+        i = randint(o_level[level]) - 1;
+        j = randint(o_level[level]) - 1;
+        if (i < j) i = j;
+        j = randint(o_level[level]) - 1;
+        if (i < j) i = j;
+        j = treasureD[sorted_objects[i]].level;
+        if (j == 0)
+          i = randint(o_level[0]) - 1;
+        else
+          i = randint(o_level[j] - o_level[j - 1]) - 1 + o_level[j - 1];
+      }
+    } while ((must_be_small) && (set_large(&treasureD[sorted_objects[i]])));
+  }
+  return (i);
+}
 int get_mon_num(level) int level;
 {
   register int i, j, num;
@@ -785,6 +858,34 @@ int slp;
     place_monster(y, x, z, slp);
   }
 }
+void place_object(y, x, must_be_small) int y, x, must_be_small;
+{
+  struct objS* obj;
+
+  obj = obj_use();
+  caveD[y][x].oidx = obj_index(obj);
+
+  int sn = get_obj_num(dun_level, must_be_small);
+  int z = sorted_objects[sn];
+  struct treasureS* treasure = &treasureD[z];
+
+  // invcopy(&t_list[cur_pos], z);
+  // TBD: duck type
+  obj->tidx = z;
+  obj->tval = treasure->tval;
+  obj->tchar = treasure->tchar;
+  obj->subval = treasure->subval;
+  obj->number = treasure->number;
+  obj->p1 = treasure->p1;
+  memcpy(obj->dam, treasure->damage, sizeof(obj->dam));
+  obj->level = treasure->level;
+
+  // TBD: the following is important for projectile count and special assignment
+  // magic_treasure(cur_pos, dun_level);
+
+  if (uD.y == y && uD.x == x)
+    msg_print("You feel something roll beneath your feet.");
+}
 void place_trap(y, x, subval) int y, x, subval;
 {
   struct objS* obj = obj_use();
@@ -800,7 +901,7 @@ void place_trap(y, x, subval) int y, x, subval;
   obj->dam[1] = 8;
   obj->level = 50;
 }
-void alloc_object(alloc_set, typ, num) int (*alloc_set)();
+void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
 int typ, num;
 {
   for (int it = 0; it < num; it++) {
@@ -825,22 +926,10 @@ int typ, num;
         // place_gold(y, x);
         break;
       case 5:
-        // place_object(y, x, FALSE);
+        place_object(y, x, FALSE);
         break;
     }
   }
-}
-int set_room(element) register int element;
-{
-  return (element == FLOOR_DARK || element == FLOOR_LIGHT);
-}
-int set_corr(element) register int element;
-{
-  return (element == FLOOR_CORR || element == FLOOR_OBST);
-}
-int set_floor(element) int element;
-{
-  return (element <= MAX_FLOOR);
 }
 void
 cave_gen()
@@ -908,11 +997,11 @@ cave_gen()
 
   int alloc_level = CLAMP(dun_level / 3, 2, 10);
   alloc_mon((randint(8) + MIN_MALLOC_LEVEL + alloc_level), 0, TRUE);
-  // alloc_object(set_corr, 3, randint(alloc_level));
-  // alloc_object(set_room, 5, randnor(TREAS_ROOM_ALLOC, 3));
-  // alloc_object(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
-  // alloc_object(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
-  alloc_object(set_floor, 1, randint(alloc_level));
+  // alloc_obj(set_corr, 3, randint(alloc_level));
+  alloc_obj(set_room, 5, randnor(TREAS_ROOM_MEAN, 3));
+  // alloc_obj(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
+  // alloc_obj(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
+  alloc_obj(set_floor, 1, randint(alloc_level));
   // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
 }
 void
@@ -1939,6 +2028,26 @@ mon_level_init()
 
   for (i = 1; i <= MAX_MON_LEVEL; i++) m_level[i] += m_level[i - 1];
 }
+void
+obj_level_init()
+{
+  int i, l;
+  int tmp[MAX_OBJ_LEVEL + 1];
+
+  for (i = 0; i <= MAX_OBJ_LEVEL; i++) o_level[i] = 0;
+  for (i = 1; i < AL(treasureD); i++) o_level[treasureD[i].level]++;
+  for (i = 1; i <= MAX_OBJ_LEVEL; i++) o_level[i] += o_level[i - 1];
+
+  /* now produce an array with object indexes sorted by level, by using
+     the info in o_level, this is an O(n) sort! */
+  /* this is not a stable sort, but that does not matter */
+  for (i = 0; i <= MAX_OBJ_LEVEL; i++) tmp[i] = 1;
+  for (i = 1; i < AL(treasureD); i++) {
+    l = treasureD[i].level;
+    sorted_objects[o_level[l] - tmp[l]] = i;
+    tmp[l]++;
+  }
+}
 int
 main()
 {
@@ -1946,6 +2055,7 @@ main()
 
   dun_level = 1;
   mon_level_init();
+  obj_level_init();
   generate_cave();
   py_init();
 

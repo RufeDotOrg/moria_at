@@ -29,9 +29,27 @@ struct caveS {
 };
 static struct caveS caveD[MAX_HEIGHT][MAX_WIDTH];
 
+struct treasureS {
+  char *name;        /* Object name		*/
+  uint32_t flags;    /* Special flags	*/
+  uint8_t tval;      /* Category number	*/
+  uint8_t tchar;     /* Character representation*/
+  int16_t p1;        /* Misc. use variable	*/
+  int32_t cost;      /* Cost of item		*/
+  uint8_t subval;    /* Sub-category number	*/
+  uint8_t number;    /* Number of items	*/
+  uint16_t weight;   /* Weight		*/
+  int16_t tohit;     /* Plusses to hit	*/
+  int16_t todam;     /* Plusses to damage	*/
+  int16_t ac;        /* Normal AC		*/
+  int16_t toac;      /* Plusses to AC	*/
+  uint8_t damage[2]; /* Damage when hits	*/
+  uint8_t level;     /* Level item first found */
+};
+
 struct objS {
   int id;
-  uint16_t tidx;  // treasure
+  uint16_t tidx;  // treasure definition
   uint8_t tval;
   uint8_t tchar;
   uint8_t subval;
