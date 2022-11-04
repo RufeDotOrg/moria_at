@@ -245,8 +245,8 @@ int randnor(mean, stand) int mean, stand;
   /* might end up one below target, check that here */
   if (normal_table[iindex] < tmp) iindex = iindex + 1;
 
-  /* normal_table is based on SD of 64, so adjust the index value here,
-     round the half way case up */
+    /* normal_table is based on SD of 64, so adjust the index value here,
+       round the half way case up */
 #define NORMAL_TABLE_SD 64
   offset = ((stand * iindex) + (NORMAL_TABLE_SD >> 1)) / NORMAL_TABLE_SD;
 
@@ -848,7 +848,7 @@ cave_gen()
   int y1, x1, y2, x2, pick1, pick2, tmp;
   int16_t yloc[400], xloc[400];
 
-  k = DUN_ROOM_MEAN;
+  k = randnor(DUN_ROOM_MEAN, 2);
   for (i = 0; i < k; i++)
     room_map[randint(AL(room_map)) - 1][randint(AL(room_map[0])) - 1] = 1;
   k = 0;
@@ -1899,8 +1899,7 @@ mon_level_init()
   k = AL(creatureD) - MAX_WIN_MON;
   for (i = 1; i < k; i++) m_level[creatureD[i].level]++;
 
-  for (i = 1; i <= MAX_MON_LEVEL; i++)
-    m_level[i] += m_level[i - 1];
+  for (i = 1; i <= MAX_MON_LEVEL; i++) m_level[i] += m_level[i - 1];
 }
 int
 main()
