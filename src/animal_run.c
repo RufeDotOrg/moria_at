@@ -1324,6 +1324,13 @@ static int mon_take_hit(midx, dam) int midx, dam;
   mon_unuse(mon);
   return cidx;
 }
+static void obj_desc(oidx) int oidx;
+{
+  struct objS* obj = &entity_objD[oidx];
+  struct treasureS* treasure = &treasureD[obj->tidx];
+
+  snprintf(AP(descD), "%s", treasure->name);
+}
 static void mon_desc(midx) int midx;
 {
   struct monS* mon = &entity_monD[midx];
@@ -2001,8 +2008,14 @@ dungeon()
         uD.y = y;
         uD.x = x;
         panel_update(&panelD, uD.x, uD.y, FALSE);
-        if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
-          hit_trap(y, x);
+        if (obj->tval) {
+          if (obj->tval <= TV_MAX_PICK_UP) {
+            obj_desc(c_ptr->oidx);
+            log_usedD = snprintf(AP(logD), "You see %s here.", descD);
+            im_print();
+          } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
+            hit_trap(y, x);
+          }
         }
       }
     }
