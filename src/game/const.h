@@ -7,6 +7,9 @@
 #define MAX_COL (MAX_WIDTH / SCREEN_WIDTH * 2)
 #define MAX_ROW (MAX_HEIGHT / SCREEN_HEIGHT * 2)
 
+#define MODE_DFLT 0
+#define MODE_MAP 1
+
 #define FLOOR_NULL 0
 #define FLOOR_LIGHT 1
 #define FLOOR_DARK 2
@@ -14,6 +17,7 @@
 #define MAX_OPEN_SPACE 3
 #define MIN_CLOSED_SPACE 4
 #define FLOOR_OBST 4 /* a corridor space with cl/st/se door or rubble */
+#define MAX_FLOOR 4
 #define TMP1_WALL 8
 #define TMP2_WALL 9
 #define MIN_WALL 12
@@ -29,6 +33,12 @@
 #define TRUE 1
 #define FALSE 0
 
+/* Treasure constants */
+// Items above cannot be lifted by the player
+#define TV_MAX_PICK_UP 100
+#define TV_INVIS_TRAP 101
+#define TV_VIS_TRAP 102
+#define TV_RUBBLE 103
 #define TV_MIN_DOORS 104
 #define TV_OPEN_DOOR 104
 #define TV_CLOSED_DOOR 105
@@ -36,8 +46,7 @@
 #define TV_DOWN_STAIR 108
 #define TV_SECRET_DOOR 109
 
-#define MODE_DFLT 0
-#define MODE_MAP 1
+#define MAX_TRAP 3
 
 /* Creature constants						*/
 #define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */

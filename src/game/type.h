@@ -1,7 +1,7 @@
 
 struct uS {
-  int x;
   int y;
+  int x;
   int exp;
   int lev;
   int chp;
@@ -37,6 +37,8 @@ struct objS {
   uint8_t subval;
   uint8_t number;
   int16_t p1;
+  uint8_t dam[2];
+  uint8_t level;
 };
 
 struct monS {

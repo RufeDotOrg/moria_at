@@ -226,6 +226,12 @@ int num, sides;
   return (sum);
 }
 int
+pdamroll(array)
+uint8_t* array;
+{
+  return damroll(array[0], array[1]);
+}
+int
 critical_blow(weight, plus, dam)
 register int weight, plus, dam;
 {
@@ -722,6 +728,69 @@ int slp;
     place_monster(y, x, l, slp);
   }
 }
+void place_trap(y, x, subval) int y, x, subval;
+{
+  struct objS* obj = obj_use();
+
+  caveD[y][x].oidx = obj_index(obj);
+  // invcopy(&t_list[cur_pos], OBJ_TRAP_LIST + subval);
+  obj->tval = TV_INVIS_TRAP;
+  obj->tchar = '^';
+  obj->subval = subval;
+  obj->number = 1;
+  obj->p1 = 2;
+  obj->dam[0] = 1;
+  obj->dam[1] = 8;
+  obj->level = 90;
+}
+void alloc_object(alloc_set, typ, num) int (*alloc_set)();
+int typ, num;
+{
+  for (int it = 0; it < num; it++) {
+    int y, x;
+    do {
+      y = randint(MAX_HEIGHT) - 1;
+      x = randint(MAX_WIDTH) - 1;
+    }
+    /* don't put an object beneath the player, this could cause problems
+       if player is standing under rubble, or on a trap */
+    while ((!(*alloc_set)(caveD[y][x].fval)) || (caveD[y][x].midx != 0) ||
+           (y == uD.y && x == uD.x));
+    switch (typ) {
+      case 1:
+        place_trap(y, x, randint(MAX_TRAP));
+        break;
+      case 2:  // unused
+      case 3:
+        // place_rubble(y, x);
+        break;
+      case 4:
+        // place_gold(y, x);
+        break;
+      case 5:
+        // place_object(y, x, FALSE);
+        break;
+    }
+  }
+}
+int
+set_room(element)
+register int element;
+{
+  return (element == FLOOR_DARK || element == FLOOR_LIGHT);
+}
+int
+set_corr(element)
+register int element;
+{
+  return (element == FLOOR_CORR || element == FLOOR_OBST);
+}
+int
+set_floor(element)
+int element;
+{
+  return (element <= MAX_FLOOR);
+}
 void
 cave_gen()
 {
@@ -792,7 +861,7 @@ cave_gen()
   // alloc_object(set_room, 5, randnor(TREAS_ROOM_ALLOC, 3));
   // alloc_object(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
   // alloc_object(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
-  // alloc_object(set_floor, 1, randint(alloc_level));
+  alloc_object(set_floor, 1, randint(alloc_level));
   // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
 }
 void
@@ -1493,6 +1562,58 @@ status_update()
   PR_STAT("LEV ", uD.lev);
   PR_STAT("EXP ", uD.exp);
 }
+void py_teleport_near(y, x, uy, ux) int y, x;
+int *uy, *ux;
+{
+  for (int ro = y - 1; ro <= y + 1; ++ro) {
+    for (int co = x - 1; co <= x + 1; ++co) {
+      if ((caveD[ro][co].fval >= MIN_CLOSED_SPACE || caveD[ro][co].midx != 0)) {
+        continue;
+      }
+
+      *uy = ro;
+      *ux = co;
+      log_usedD = snprintf(AP(logD), "%s (%d, %d)", "Teleport near", ro, co);
+    }
+  }
+}
+static void hit_trap(y, x) int y, x;
+{
+  int dam, tac;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  tac = uD.ac + uD.toac;
+  // end_find();
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
+  if (obj->tval == TV_INVIS_TRAP) {
+    obj->tval = TV_VIS_TRAP;
+    // lite_spot(y, x);
+  }
+  dam = pdamroll(obj->dam);
+  // TBD: dam may be conditional by trap subval
+  py_take_hit(dam);
+  snprintf(AP(logD), "hit trap [ subval %d ]", obj->subval);
+  im_print();
+  switch (obj->subval) {
+    case 1:
+      msg_print("You fell into a covered pit");
+      break;
+    case 2:
+      if (test_hit(125, 0, 0, tac)) {
+        msg_print("An arrow hits you.");
+      } else {
+        msg_print("An arrow barely misses you.");
+      }
+      break;
+    case 3:
+      msg_print("You fell through a trap door!");
+      new_level_flag = TRUE;
+      dun_level += 1;
+      break;
+  }
+}
 void
 dungeon()
 {
@@ -1555,24 +1676,21 @@ dungeon()
     } else if (c == CTRL('m') && mon_usedD) {
       int rv = randint(mon_usedD);
       struct monS* mon = mon_get(monD[rv - 1]);
-      int fy = mon->fy;
-      int fx = mon->fx;
-      x = uD.x;
-      y = uD.y;
       log_usedD = snprintf(AP(logD), "%s: %d id (%d/%d)", "Teleport to monster",
                            mon->id, rv, mon_usedD);
-      for (int ro = fy - 1; ro <= fy + 1; ++ro) {
-        for (int co = fx - 1; co <= fx + 1; ++co) {
-          if (!in_bounds(ro, co)) continue;
-          if ((caveD[ro][co].fval >= MIN_CLOSED_SPACE ||
-               caveD[ro][co].midx != 0)) {
-            continue;
-          }
 
-          y = ro;
-          x = co;
-          log_usedD =
-              snprintf(AP(logD), "%s (%d, %d)", "Teleport to monster", ro, co);
+      int fy = mon->fy;
+      int fx = mon->fx;
+      py_teleport_near(fy, fx, &y, &x);
+    } else if (c == CTRL('o')) {
+      for (int row = 1; row < MAX_HEIGHT - 1; ++row) {
+        for (int col = 1; col < MAX_WIDTH - 1; ++col) {
+          int oidx = caveD[row][col].oidx;
+          if (oidx) {
+            log_usedD =
+                snprintf(AP(logD), "%s: %d oidx", "Teleport to object", oidx);
+            py_teleport_near(row, col, &y, &x);
+          }
         }
       }
     } else if (modeD == MODE_DFLT) {
@@ -1641,9 +1759,13 @@ dungeon()
       if (c_ptr->midx) {
         py_attack(y, x);
       } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
-        uD.x = x;
+        struct objS* obj = &entity_objD[c_ptr->oidx];
         uD.y = y;
+        uD.x = x;
         panel_update(&panelD, uD.x, uD.y, FALSE);
+        if (obj->tval == TV_INVIS_TRAP) {
+          hit_trap(y, x);
+        }
       }
     }
     if (modeD == MODE_MAP) {
