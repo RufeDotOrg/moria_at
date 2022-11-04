@@ -41,10 +41,33 @@ struct objS {
   uint8_t level;
 };
 
+struct creatureS {
+  char *name;        /* Descrip of creature	*/
+  uint32_t cmove;    /* Bit field		*/
+  uint32_t spells;   /* Creature spells	*/
+  uint16_t cdefense; /* Bit field		*/
+  uint16_t mexp;     /* Exp value for kill	*/
+  uint8_t sleep;     /* Inactive counter/10	*/
+  uint8_t aaf;       /* Area affect radius	*/
+  uint8_t ac;        /* AC			*/
+  uint8_t speed;     /* Movement speed+10	*/
+  uint8_t cchar;     /* Character rep.	*/
+  uint8_t hd[2];     /* Creatures hit die	*/
+  uint8_t damage[4]; /* Type attack and damage*/
+  uint8_t level;     /* Level of creature	*/
+};
+
+struct attackS {
+  uint8_t attack_type;
+  uint8_t attack_desc;
+  uint8_t attack_dice;
+  uint8_t attack_sides;
+};
+
 struct monS {
   int id;
   int16_t hp;
-  uint16_t cidx;  // creature
+  uint16_t cidx;  // creature definition
   uint8_t fy;
   uint8_t fx;
   uint8_t cdis;

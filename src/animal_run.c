@@ -50,9 +50,7 @@ msg_print(char* text)
   log_usedD = snprintf(AP(logD), "%s", text);
   im_print();
 }
-int
-in_subcommand(prompt, command)
-char* prompt;
+int in_subcommand(prompt, command) char* prompt;
 char* command;
 {
   msg_print(prompt);
@@ -60,9 +58,7 @@ char* command;
   msg_print("");
   return (*command != ESCAPE);
 }
-static char
-map_roguedir(comval)
-register char comval;
+static char map_roguedir(comval) register char comval;
 {
   switch (comval) {
     case 'h':
@@ -95,9 +91,7 @@ register char comval;
   }
   return (comval);
 }
-int
-get_dir(prompt, dir)
-char* prompt;
+int get_dir(prompt, dir) char* prompt;
 int* dir;
 {
   char command;
@@ -208,33 +202,71 @@ rnd()
   return rnd_seed;
 }
 
-int
-randint(maxval)
-int maxval;
+int randint(maxval) int maxval;
 {
   register long randval;
 
   randval = rnd();
   return ((int)(randval % maxval) + 1);
 }
-int
-damroll(num, sides)
-int num, sides;
+#define MAX_SHORT 0xffff
+int randnor(mean, stand) int mean, stand;
+{
+  register int tmp, offset, low, iindex, high;
+
+  tmp = randint(MAX_SHORT);
+
+  /* off scale, assign random value between 4 and 5 times SD */
+  if (tmp == MAX_SHORT) {
+    offset = 4 * stand + randint(stand);
+
+    /* one half are negative */
+    if (randint(2) == 1) offset = -offset;
+
+    return mean + offset;
+  }
+
+  /* binary search normal normal_table to get index that matches tmp */
+  /* this takes up to 8 iterations */
+  low = 0;
+  iindex = AL(normal_table) >> 1;
+  high = AL(normal_table);
+  while (TRUE) {
+    if ((normal_table[iindex] == tmp) || (high == (low + 1))) break;
+    if (normal_table[iindex] > tmp) {
+      high = iindex;
+      iindex = low + ((iindex - low) >> 1);
+    } else {
+      low = iindex;
+      iindex = iindex + ((high - iindex) >> 1);
+    }
+  }
+
+  /* might end up one below target, check that here */
+  if (normal_table[iindex] < tmp) iindex = iindex + 1;
+
+  /* normal_table is based on SD of 64, so adjust the index value here,
+     round the half way case up */
+#define NORMAL_TABLE_SD 64
+  offset = ((stand * iindex) + (NORMAL_TABLE_SD >> 1)) / NORMAL_TABLE_SD;
+
+  /* one half should be negative */
+  if (randint(2) == 1) offset = -offset;
+
+  return mean + offset;
+}
+int damroll(num, sides) int num, sides;
 {
   register int i, sum = 0;
 
   for (i = 0; i < num; i++) sum += randint(sides);
   return (sum);
 }
-int
-pdamroll(array)
-uint8_t* array;
+int pdamroll(array) uint8_t* array;
 {
   return damroll(array[0], array[1]);
 }
-int
-critical_blow(weight, plus, dam)
-register int weight, plus, dam;
+int critical_blow(weight, plus, dam) register int weight, plus, dam;
 {
   register int critical;
 
@@ -633,9 +665,7 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
     } while (!flag);
   }
 }
-int
-next_to_corr(y, x)
-register int y, x;
+int next_to_corr(y, x) register int y, x;
 {
   register int k, j, i;
   register struct caveS* c_ptr;
@@ -651,9 +681,7 @@ register int y, x;
     }
   return (i);
 }
-static int
-next_to(y, x)
-register int y, x;
+static int next_to(y, x) register int y, x;
 {
   register int next;
 
@@ -670,9 +698,7 @@ register int y, x;
     next = FALSE;
   return (next);
 }
-int
-distance(y1, x1, y2, x2)
-int y1, x1, y2, x2;
+int distance(y1, x1, y2, x2) int y1, x1, y2, x2;
 {
   register int dy, dx;
 
@@ -689,17 +715,45 @@ static void try_door(y, x) register int y, x;
       next_to(y, x))
     place_door(y, x);
 }
-int
-place_monster(y, x, z, slp)
-register int y, x, z;
+int get_mon_num(level) int level;
+{
+  register int i, j, num;
+
+  if (level <= 0)
+    i = randint(m_level[0]);
+  else {
+    if (level > MAX_MON_LEVEL) level = MAX_MON_LEVEL;
+    if (randint(MON_NASTY) == 1) {
+      i = randnor(0, 4);
+      level = level + ABS(i) + 1;
+      if (level > MAX_MON_LEVEL) level = MAX_MON_LEVEL;
+    } else {
+      /* This code has been added to make it slightly more likely to
+         get the higher level monsters. Originally a uniform
+         distribution over all monsters of level less than or equal to the
+         dungeon level. This distribution makes a level n monster occur
+         approx 2/n% of the time on level n, and 1/n*n% are 1st level. */
+
+      num = m_level[level] - m_level[0];
+      i = randint(num);
+      j = randint(num);
+      if (j > i) i = j;
+      level = creatureD[i + m_level[0]].level;
+    }
+    i = randint(m_level[level] - m_level[level - 1]) + m_level[level - 1];
+  }
+  return i;
+}
+int place_monster(y, x, z, slp) register int y, x, z;
 int slp;
 {
   register struct monS* mon;
 
   mon = mon_use();
   if (!mon) return FALSE;
+  // TBD: duck type
   mon->hp = 3;
-  mon->cidx = 0;
+  mon->cidx = z;
   mon->fy = y;
   mon->fx = x;
   mon->cdis = distance(uD.y, uD.x, y, x);
@@ -707,11 +761,11 @@ int slp;
   caveD[y][x].midx = mon_index(mon);
   return TRUE;
 }
-void alloc_monster(num, dis, slp) int num, dis;
+void alloc_mon(num, dis, slp) int num, dis;
 int slp;
 {
   register int y, x, i;
-  int l;
+  int z;
 
   for (i = 0; i < num; i++) {
     do {
@@ -720,13 +774,13 @@ int slp;
     } while (caveD[y][x].fval >= MIN_CLOSED_SPACE || (caveD[y][x].midx != 0) ||
              (distance(y, x, uD.y, uD.x) <= dis));
 
-    // l = get_mons_num(dun_level);
+    z = get_mon_num(dun_level);
     /* Dragons are always created sleeping here, so as to give the player a
        sporting chance.  */
-    // if (c_list[l].cchar == 'd' || c_list[l].cchar == 'D') slp = TRUE;
+    // if (c_list[z].cchar == 'd' || c_list[z].cchar == 'D') slp = TRUE;
     /* Place_monster() should always return TRUE here.  It does not
        matter if it fails though.  */
-    place_monster(y, x, l, slp);
+    place_monster(y, x, z, slp);
   }
 }
 void place_trap(y, x, subval) int y, x, subval;
@@ -774,21 +828,15 @@ int typ, num;
     }
   }
 }
-int
-set_room(element)
-register int element;
+int set_room(element) register int element;
 {
   return (element == FLOOR_DARK || element == FLOOR_LIGHT);
 }
-int
-set_corr(element)
-register int element;
+int set_corr(element) register int element;
 {
   return (element == FLOOR_CORR || element == FLOOR_OBST);
 }
-int
-set_floor(element)
-int element;
+int set_floor(element) int element;
 {
   return (element <= MAX_FLOOR);
 }
@@ -857,7 +905,7 @@ cave_gen()
   // new_spot(&char_row, &char_col);
 
   int alloc_level = CLAMP(dun_level / 3, 2, 10);
-  alloc_monster((randint(8) + MIN_MALLOC_LEVEL + alloc_level), 0, TRUE);
+  alloc_mon((randint(8) + MIN_MALLOC_LEVEL + alloc_level), 0, TRUE);
   // alloc_object(set_corr, 3, randint(alloc_level));
   // alloc_object(set_room, 5, randnor(TREAS_ROOM_ALLOC, 3));
   // alloc_object(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
@@ -885,7 +933,8 @@ get_sym(int row, int col)
   cave_ptr = &caveD[row][col];
   if (cave_ptr->midx) {
     struct monS* mon = &entity_monD[cave_ptr->midx];
-    return 'k';
+    struct creatureS* creature = &creatureD[mon->cidx];
+    return creature->cchar;
   }
   if (cave_ptr->oidx) {
     struct objS* obj = &entity_objD[cave_ptr->oidx];
@@ -1089,9 +1138,7 @@ register int* mm;
       break;
   }
 }
-int
-mmove(dir, y, x)
-int dir;
+int mmove(dir, y, x) int dir;
 register int *y, *x;
 {
   register int new_row, new_col;
@@ -1153,9 +1200,7 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 void update_mon(monptr) int monptr;
 {
 }
-int
-test_hit(bth, level, pth, ac)
-int bth, level, pth, ac;
+int test_hit(bth, level, pth, ac) int bth, level, pth, ac;
 {
   register int i, die;
 
@@ -1175,9 +1220,7 @@ static void mon_death(y, x) int y, x;
 {
   caveD[y][x].midx = 0;
 }
-static int
-mon_take_hit(midx, dam)
-int midx, dam;
+static int mon_take_hit(midx, dam) int midx, dam;
 {
   struct monS* mon = &entity_monD[midx];
   mon->hp -= dam;
@@ -1282,12 +1325,14 @@ void py_attack(y, x) int y, x;
 static void mon_attack(midx) int midx;
 {
   struct monS* mon = &entity_monD[midx];
+  struct creatureS* cre = &creatureD[mon->cidx];
 
   int creature_level = 1;
   int adice = 1;
   int asides = 4;
-  for (int it = 0; it < MAX_MON_NATTACK; ++it) {
+  for (int it = 0; it < AL(cre->damage); ++it) {
     if (death) break;
+    if (!cre->damage[0]) break;
     disturb(1, 0);
     int flag = FALSE;
     int tac = uD.ac + uD.toac;
@@ -1844,12 +1889,26 @@ dungeon()
     creatures(TRUE);
   }
 }
+void
+mon_level_init()
+{
+  int i, k;
+
+  memset(m_level, 0, sizeof(m_level));
+
+  k = AL(creatureD) - MAX_WIN_MON;
+  for (i = 1; i < k; i++) m_level[creatureD[i].level]++;
+
+  for (i = 1; i <= MAX_MON_LEVEL; i++)
+    m_level[i] += m_level[i - 1];
+}
 int
 main()
 {
   platform_tty_init();
 
   dun_level = 1;
+  mon_level_init();
   generate_cave();
   py_init();
 
