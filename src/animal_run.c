@@ -8,6 +8,8 @@ static int new_level_flag;
 static int modeD;
 static char statusD[SCREEN_HEIGHT][STATUS_WIDTH];
 static char symmapD[SCREEN_HEIGHT][SCREEN_WIDTH];
+static char descD[160];
+static char death_descD[160];
 static char logD[80];
 static int log_usedD;
 ARR_REUSE(obj, 256);
@@ -1233,6 +1235,23 @@ static int mon_take_hit(midx, dam) int midx, dam;
   mon_unuse(mon);
   return cidx;
 }
+static void mon_desc(midx) int midx;
+{
+  struct monS* mon = &entity_monD[midx];
+  struct creatureS* cre = &creatureD[mon->cidx];
+
+  // if (!mon->ml)
+  //  strcpy(cdesc, "It ");
+  // else
+  snprintf(AP(descD), "The %s", cre->name);
+
+  // if (CM_WIN & cre->cmove)
+  //  snprintf(AP(death_descD), "The %s", cre->name);
+  if (is_a_vowel(cre->name[0]))
+    snprintf(AP(death_descD), "An %s", cre->name);
+  else
+    snprintf(AP(death_descD), "A %s", cre->name);
+}
 void
 py_init()
 {
@@ -1262,7 +1281,7 @@ py_experience()
     int dif_exp, need_exp;
 
     lev += 1;
-    snprintf(AP(logD), "Welcome to level %d.", lev);
+    log_usedD = snprintf(AP(logD), "Welcome to level %d.", lev);
     im_print();
     // calc_hitpoints();
 
@@ -1298,6 +1317,9 @@ void py_attack(y, x) int y, x;
   int midx = caveD[y][x].midx;
   struct monS* mon = &entity_monD[midx];
 
+  mon_desc(midx);
+  descD[0] = tolower(descD[0]);
+
   blows = 1;
   base_tohit = 30;
 
@@ -1305,7 +1327,8 @@ void py_attack(y, x) int y, x;
   /* Loop for number of blows,  trying to hit the critter.	  */
   for (int it = 0; it < blows; ++it) {
     if (test_hit(base_tohit, uD.lev, 0, creature_ac)) {
-      msg_print("You hit it.");
+      log_usedD = snprintf(AP(logD), "You hit %s.", descD);
+      im_print();
       k = damroll(1, 2);
       k = critical_blow(1, 0, k);
       // k += p_ptr->ptodam;
@@ -1313,20 +1336,35 @@ void py_attack(y, x) int y, x;
 
       /* See if we done it in.  			 */
       if (mon_take_hit(midx, k) >= 0) {
-        msg_print("You have slain it.");
+        log_usedD = snprintf(AP(logD), "You have slain %s.", descD);
+        im_print();
         py_experience();
         blows = 0;
       }
     } else {
-      msg_print("You miss it.");
+      log_usedD = snprintf(AP(logD), "You miss %s.", descD);
+      im_print();
     }
   }
+}
+BOOL is_a_vowel(c) char c;
+{
+  switch (c) {
+    case 'a':
+    case 'e':
+    case 'i':
+    case 'o':
+    case 'u':
+      return TRUE;
+  }
+  return FALSE;
 }
 static void mon_attack(midx) int midx;
 {
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
+  mon_desc(midx);
   int creature_level = 1;
   int adice = 1;
   int asides = 4;
@@ -1338,12 +1376,14 @@ static void mon_attack(midx) int midx;
     int tac = uD.ac + uD.toac;
     if (test_hit(60, creature_level, 0, tac)) flag = TRUE;
     if (flag) {
-      msg_print("It hits you.");
+      log_usedD = snprintf(AP(logD), "%s hits you.", descD);
+      im_print();
       int damage = damroll(adice, asides);
       damage -= (tac * damage) / 200;
       py_take_hit(damage);
     } else {
-      msg_print("It misses you.");
+      log_usedD = snprintf(AP(logD), "%s misses you.", descD);
+      im_print();
     }
   }
 }
@@ -1691,8 +1731,6 @@ static void hit_trap(y, x) int y, x;
   dam = pdamroll(obj->dam);
   // TBD: dam may be conditional by trap subval
   py_take_hit(dam);
-  snprintf(AP(logD), "hit trap [ subval %d ]", obj->subval);
-  im_print();
   switch (obj->subval) {
     case 1:
       msg_print("You fell into a covered pit");
