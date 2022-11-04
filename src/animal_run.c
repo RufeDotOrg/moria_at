@@ -735,7 +735,7 @@ void place_trap(y, x, subval) int y, x, subval;
   caveD[y][x].oidx = obj_index(obj);
   // invcopy(&t_list[cur_pos], OBJ_TRAP_LIST + subval);
   obj->tval = TV_INVIS_TRAP;
-  obj->tchar = '^';
+  obj->tchar = '%';
   obj->subval = subval;
   obj->number = 1;
   obj->p1 = 2;
@@ -1515,6 +1515,10 @@ static void search(y, x, chance) int y, x, chance;
           obj->tchar = '+';
           // lite_spot(y,x);
           // end_find();
+        } else if (obj->tval == TV_INVIS_TRAP) {
+          msg_print("You have found a trap.");
+          obj->tval = TV_VIS_TRAP;
+          obj->tchar = '^';
         }
       }
 }
@@ -1635,6 +1639,7 @@ static void hit_trap(y, x) int y, x;
   obj = &entity_objD[c_ptr->oidx];
   if (obj->tval == TV_INVIS_TRAP) {
     obj->tval = TV_VIS_TRAP;
+    obj->tchar = '^';
     // lite_spot(y, x);
   }
   dam = pdamroll(obj->dam);
@@ -1787,7 +1792,7 @@ dungeon()
       case 'c':
         close_object();
         break;
-      case 'd':
+      case 'D':
         disarm_trap(&y, &x);
         break;
       case 'f':
