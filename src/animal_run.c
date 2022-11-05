@@ -1514,6 +1514,7 @@ int begin, end;
       line += 1;
     }
   }
+  free_turn_flag = TRUE;
   return line;
 }
 static int
@@ -2072,6 +2073,9 @@ dungeon()
     x = uD.x;
     y = uD.y;
     switch (c) {
+      case ' ':
+        free_turn_flag = TRUE;
+        break;
       case 'k':
       case 'j':
       case 'l':
