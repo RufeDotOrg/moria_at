@@ -53,10 +53,10 @@ struct objS {
   uint16_t tidx;  // treasure definition
   uint8_t tval;
   uint8_t tchar;
-  uint8_t subval;
-  uint8_t number;
   int16_t p1;
   int32_t cost;
+  uint8_t subval;
+  uint8_t number;
   uint8_t dam[2];
   uint8_t level;
 };
