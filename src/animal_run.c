@@ -1178,13 +1178,13 @@ panel_bounds(struct panelS* panel)
 void
 panel_update(struct panelS* panel, int y, int x, BOOL force)
 {
-  BOOL yd = (y < panel->panel_row_min + 1 || y > panel->panel_row_max - 2);
+  BOOL yd = (y < panel->panel_row_min + 2 || y > panel->panel_row_max - 3);
   if (force || yd) {
     int prow = (y - SCREEN_HEIGHT / 4) / (SCREEN_HEIGHT / 2);
     panel->panel_row = CLAMP(prow, 0, MAX_ROW);
   }
 
-  BOOL xd = (x < panel->panel_col_min + 1 || x > panel->panel_col_max - 2);
+  BOOL xd = (x < panel->panel_col_min + 2 || x > panel->panel_col_max - 3);
   if (force || xd) {
     int pcol = (x - SCREEN_WIDTH / 4) / (SCREEN_WIDTH / 2);
     panel->panel_col = CLAMP(pcol, 0, MAX_COL - 2);
