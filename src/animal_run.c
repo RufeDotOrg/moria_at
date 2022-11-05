@@ -62,8 +62,10 @@ draw()
     }
   }
   char line[80];
-  int print_len = snprintf(AP(line), "(%d,%d) xy (%d) fval %d feet\r\n", uD.x,
-                           uD.y, caveD[uD.y][uD.x].fval, dun_level * 50);
+  int print_len =
+      snprintf(AP(line), "(%d,%d) xy (%d,%d) quadrant (%d) fval %d feet\r\n",
+               uD.x, uD.y, panelD.panel_col, panelD.panel_row,
+               caveD[uD.y][uD.x].fval, dun_level * 50);
   if (print_len < AL(line)) buffer_append(line, print_len);
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
@@ -74,6 +76,7 @@ inkey()
   char c = platform_readansi();
   if (c == CTRL('c')) {
     death = 1;
+    new_level_flag = TRUE;
     return -1;
   }
   return c;
@@ -1480,6 +1483,21 @@ py_init()
   uD.mhp = 100;
   uD.lev = 1;
 }
+static void
+py_map()
+{
+  int y, x, dir;
+  while (get_dir("Map: Look which direction?", &dir)) {
+    mmove(dir, &panelD.panel_row, &panelD.panel_col);
+    if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
+    if (panelD.panel_col > MAX_COL - 2) panelD.panel_col = MAX_COL - 2;
+    panel_bounds(&panelD);
+    symmap_update();
+    draw();
+  }
+  panel_update(&panelD, uD.y, uD.x, TRUE);
+  free_turn_flag = TRUE;
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -2102,8 +2120,7 @@ dungeon()
         disarm_trap(&y, &x);
         break;
       case 'W':
-        // py_map();
-        free_turn_flag = TRUE;
+        py_map();
         break;
       case CTRL('h'):
         uD.chp = uD.mhp;
