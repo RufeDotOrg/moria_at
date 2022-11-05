@@ -2087,22 +2087,14 @@ dungeon()
         break;
       case 'e': {
         int count = py_inven(INVEN_EQUIP, MAX_INVEN);
-        if (count == 0) {
-          log_usedD = snprintf(AP(logD), "You wearing nothing.");
-        } else {
-          log_usedD = snprintf(AP(logD), "You are wearing:");
-        }
+        log_usedD = snprintf(AP(logD), "You wearing %d items.", count);
       } break;
       case 'f':
         bash(&y, &x);
         break;
       case 'i': {
         int count = py_inven(0, INVEN_EQUIP);
-        if (count == 0) {
-          log_usedD = snprintf(AP(logD), "You carrying nothing.");
-        } else {
-          log_usedD = snprintf(AP(logD), "You are carrying:");
-        }
+        log_usedD = snprintf(AP(logD), "You carrying %d items.", count);
       } break;
       case 'o':
         open_object();
