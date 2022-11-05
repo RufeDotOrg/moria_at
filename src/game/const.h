@@ -108,5 +108,21 @@
 #define MAX_EXP 999999
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
 
+/* magic numbers for players inventory array */
+#define INVEN_CARRY 21  /* last carried item */
+#define INVEN_WIELD 22	/* must be first item in equipment list */
+#define INVEN_HEAD  23
+#define INVEN_NECK  24
+#define INVEN_BODY  25
+#define INVEN_ARM   26
+#define INVEN_HANDS 27
+#define INVEN_RIGHT 28
+#define INVEN_LEFT  29
+#define INVEN_FEET  30
+#define INVEN_OUTER 31
+#define INVEN_LIGHT 32
+#define INVEN_AUX   33
+#define MAX_INVEN 34
+
 // Input
 #define ESCAPE '\033'

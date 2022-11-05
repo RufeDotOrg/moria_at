@@ -12,8 +12,14 @@ static char descD[160];
 static char death_descD[160];
 static char logD[80];
 static int log_usedD;
+
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
+
+// Inventory of object IDs; obj_get(id)
+// Zero is an available or empty slot
+// [INVEN_WIELD, INVEN_AUX] are equipment
+static int invenD[MAX_INVEN];
 
 static char bufferD[4 * 1024];
 static int buffer_usedD;
@@ -52,7 +58,9 @@ msg_print(char* text)
   log_usedD = snprintf(AP(logD), "%s", text);
   im_print();
 }
-int in_subcommand(prompt, command) char* prompt;
+int
+in_subcommand(prompt, command)
+char* prompt;
 char* command;
 {
   msg_print(prompt);
@@ -60,7 +68,9 @@ char* command;
   msg_print("");
   return (*command != ESCAPE);
 }
-static char map_roguedir(comval) register char comval;
+static char
+map_roguedir(comval)
+register char comval;
 {
   switch (comval) {
     case 'h':
@@ -93,7 +103,9 @@ static char map_roguedir(comval) register char comval;
   }
   return (comval);
 }
-int get_dir(prompt, dir) char* prompt;
+int
+get_dir(prompt, dir)
+char* prompt;
 int* dir;
 {
   char command;
@@ -204,7 +216,9 @@ rnd()
   return rnd_seed;
 }
 
-int randint(maxval) int maxval;
+int
+randint(maxval)
+int maxval;
 {
   register long randval;
 
@@ -212,7 +226,9 @@ int randint(maxval) int maxval;
   return ((int)(randval % maxval) + 1);
 }
 #define MAX_SHORT 0xffff
-int randnor(mean, stand) int mean, stand;
+int
+randnor(mean, stand)
+int mean, stand;
 {
   register int tmp, offset, low, iindex, high;
 
@@ -257,18 +273,24 @@ int randnor(mean, stand) int mean, stand;
 
   return mean + offset;
 }
-int damroll(num, sides) int num, sides;
+int
+damroll(num, sides)
+int num, sides;
 {
   register int i, sum = 0;
 
   for (i = 0; i < num; i++) sum += randint(sides);
   return (sum);
 }
-int pdamroll(array) uint8_t* array;
+int
+pdamroll(array)
+uint8_t* array;
 {
   return damroll(array[0], array[1]);
 }
-int critical_blow(weight, plus, dam) register int weight, plus, dam;
+int
+critical_blow(weight, plus, dam)
+register int weight, plus, dam;
 {
   register int critical;
 
@@ -667,7 +689,9 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
     } while (!flag);
   }
 }
-int next_to_corr(y, x) register int y, x;
+int
+next_to_corr(y, x)
+register int y, x;
 {
   register int k, j, i;
   register struct caveS* c_ptr;
@@ -683,7 +707,9 @@ int next_to_corr(y, x) register int y, x;
     }
   return (i);
 }
-static int next_to(y, x) register int y, x;
+static int
+next_to(y, x)
+register int y, x;
 {
   register int next;
 
@@ -700,7 +726,9 @@ static int next_to(y, x) register int y, x;
     next = FALSE;
   return (next);
 }
-int distance(y1, x1, y2, x2) int y1, x1, y2, x2;
+int
+distance(y1, x1, y2, x2)
+int y1, x1, y2, x2;
 {
   register int dy, dx;
 
@@ -717,20 +745,27 @@ static void try_door(y, x) register int y, x;
       next_to(y, x))
     place_door(y, x);
 }
-int set_room(element) register int element;
+int
+set_room(element)
+register int element;
 {
   return (element == FLOOR_DARK || element == FLOOR_LIGHT);
 }
-int set_corr(element) register int element;
+int
+set_corr(element)
+register int element;
 {
   return (element == FLOOR_CORR || element == FLOOR_OBST);
 }
-int set_floor(element) int element;
+int
+set_floor(element)
+int element;
 {
   return (element <= MAX_FLOOR);
 }
-int set_large(item)         /* Items too large to fit in chests   -DJG- */
-    struct treasureS* item; /* Use treasure_type since item not yet created */
+int
+set_large(item)         /* Items too large to fit in chests   -DJG- */
+struct treasureS* item; /* Use treasure_type since item not yet created */
 {
   switch (item->tval) {
     case TV_CHEST:
@@ -750,7 +785,9 @@ int set_large(item)         /* Items too large to fit in chests   -DJG- */
   }
   return FALSE;
 }
-int get_obj_num(level, must_be_small) int level, must_be_small;
+int
+get_obj_num(level, must_be_small)
+int level, must_be_small;
 {
   int i, j;
 
@@ -790,7 +827,9 @@ int get_obj_num(level, must_be_small) int level, must_be_small;
   }
   return (i);
 }
-int get_mon_num(level) int level;
+int
+get_mon_num(level)
+int level;
 {
   register int i, j, num;
 
@@ -819,7 +858,9 @@ int get_mon_num(level) int level;
   }
   return i;
 }
-int place_monster(y, x, z, slp) register int y, x, z;
+int
+place_monster(y, x, z, slp)
+register int y, x, z;
 int slp;
 {
   register struct monS* mon;
@@ -877,6 +918,7 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   obj->subval = treasure->subval;
   obj->number = treasure->number;
   obj->p1 = treasure->p1;
+  obj->cost = treasure->cost;
   memcpy(obj->dam, treasure->damage, sizeof(obj->dam));
   obj->level = treasure->level;
 
@@ -1229,7 +1271,9 @@ register int* mm;
       break;
   }
 }
-int mmove(dir, y, x) int dir;
+int
+mmove(dir, y, x)
+int dir;
 register int *y, *x;
 {
   register int new_row, new_col;
@@ -1291,7 +1335,9 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 void update_mon(monptr) int monptr;
 {
 }
-int test_hit(bth, level, pth, ac) int bth, level, pth, ac;
+int
+test_hit(bth, level, pth, ac)
+int bth, level, pth, ac;
 {
   register int i, die;
 
@@ -1311,7 +1357,9 @@ static void mon_death(y, x) int y, x;
 {
   caveD[y][x].midx = 0;
 }
-static int mon_take_hit(midx, dam) int midx, dam;
+static int
+mon_take_hit(midx, dam)
+int midx, dam;
 {
   struct monS* mon = &entity_monD[midx];
   mon->hp -= dam;
@@ -1331,7 +1379,9 @@ static void obj_desc(oidx) int oidx;
 
   snprintf(AP(descD), "%s", treasure->name);
 }
-BOOL is_a_vowel(c) char c;
+BOOL
+is_a_vowel(c)
+char c;
 {
   switch (c) {
     case 'a':
@@ -1366,6 +1416,64 @@ py_init()
   uD.chp = 100;
   uD.mhp = 100;
   uD.lev = 1;
+}
+static int
+carry_count_empty()
+{
+  int count = 0;
+  for (int it = 0; it <= INVEN_CARRY; ++it) {
+    count += (invenD[it] == 0);
+  }
+  return count;
+}
+static int
+inven_carry(obj_id)
+int obj_id;
+{
+  for (int it = 0; it <= INVEN_CARRY; ++it) {
+    if (!invenD[it]) {
+      invenD[it] = obj_id;
+      return it;
+    }
+  }
+  return -1;
+}
+static void py_carry(y, x, pickup) int y, x;
+int pickup;
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+  int locn;
+
+  c_ptr = &caveD[y][x];
+  obj_desc(c_ptr->oidx);
+  obj = &entity_objD[c_ptr->oidx];
+
+  /* There's GOLD in them thar hills!      */
+  if (obj->tval == TV_GOLD) {
+    uD.au += obj->cost;
+    log_usedD = snprintf(AP(logD), "You have found %d gold pieces worth of %s",
+                         obj->cost, descD);
+    im_print();
+    delete_object(y, x);
+  } else {
+    // TBD: Merge items of the same type?
+
+    if (pickup) {
+      if (carry_count_empty()) {
+        locn = inven_carry(obj->id);
+        log_usedD = snprintf(AP(logD), "You have %s (%c)", descD, locn + 'a');
+        im_print();
+        caveD[y][x].oidx = 0;
+      } else {
+        log_usedD = snprintf(AP(logD), "You can't carry %s", descD);
+        im_print();
+      }
+    } else {
+      log_usedD = snprintf(AP(logD), "You see %s here.", descD);
+      im_print();
+    }
+  }
 }
 static void py_take_hit(damage) int damage;
 {
@@ -2010,9 +2118,7 @@ dungeon()
         panel_update(&panelD, uD.x, uD.y, FALSE);
         if (obj->tval) {
           if (obj->tval <= TV_MAX_PICK_UP) {
-            obj_desc(c_ptr->oidx);
-            log_usedD = snprintf(AP(logD), "You see %s here.", descD);
-            im_print();
+            py_carry(y, x, TRUE);
           } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
             hit_trap(y, x);
           }
