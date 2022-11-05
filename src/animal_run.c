@@ -8,6 +8,8 @@ static int new_level_flag;
 static int modeD;
 static char statusD[SCREEN_HEIGHT][STATUS_WIDTH];
 static char symmapD[SCREEN_HEIGHT][SCREEN_WIDTH];
+static char overlayD[SCREEN_HEIGHT][80 - STATUS_WIDTH];
+static int overlay_usedD[SCREEN_HEIGHT];
 static char descD[160];
 static char death_descD[160];
 static char logD[80];
@@ -1446,8 +1448,29 @@ py_init()
   uD.mhp = 100;
   uD.lev = 1;
 }
+static void
+py_inven()
+{
+  int line = 0;
+
+  for (int it = 0; it <= INVEN_CARRY; ++it) {
+    int obj_id = invenD[it];
+    if (obj_id) {
+      struct objS* obj = obj_get(obj_id);
+      obj_desc(obj_index(obj));
+      overlay_usedD[line] =
+          snprintf(AP(overlayD[line]), "%c) %s", 'a' + it, descD);
+      line += 1;
+    }
+  }
+  if (line == 0) {
+    log_usedD = snprintf(AP(logD), "You carry nothing.");
+  } else {
+    log_usedD = snprintf(AP(logD), "You are carrying:");
+  }
+}
 static int
-carry_count_empty()
+py_carry_count()
 {
   int count = 0;
   for (int it = 0; it <= INVEN_CARRY; ++it) {
@@ -1489,7 +1512,7 @@ int pickup;
     // TBD: Merge items of the same type?
 
     if (pickup) {
-      if (carry_count_empty()) {
+      if (py_carry_count()) {
         locn = inven_carry(obj->id);
         log_usedD = snprintf(AP(logD), "You have %s (%c)", descD, locn + 'a');
         im_print();
@@ -2002,11 +2025,22 @@ dungeon()
       log_usedD = 0;
     }
     buffer_append(AP(tc_crlfD));
-    for (int row = 0; row < SCREEN_HEIGHT; ++row) {
-      buffer_append(AP(tc_clear_lineD));
-      buffer_append(AP(statusD[row]));
-      buffer_append(AP(symmapD[row]));
-      buffer_append(AP(tc_crlfD));
+    if (overlay_usedD[0]) {
+      for (int row = 0; row < SCREEN_HEIGHT; ++row) {
+        buffer_append(AP(tc_clear_lineD));
+        buffer_append(AP(statusD[row]));
+        buffer_append(overlayD[row], overlay_usedD[row]);
+        buffer_append(AP(tc_crlfD));
+      }
+      AC(overlayD);
+      AC(overlay_usedD);
+    } else {
+      for (int row = 0; row < SCREEN_HEIGHT; ++row) {
+        buffer_append(AP(tc_clear_lineD));
+        buffer_append(AP(statusD[row]));
+        buffer_append(AP(symmapD[row]));
+        buffer_append(AP(tc_crlfD));
+      }
     }
     char line[80];
     if (modeD == MODE_MAP) {
@@ -2124,6 +2158,9 @@ dungeon()
         break;
       case 'f':
         bash(&y, &x);
+        break;
+      case 'i':
+        py_inven();
         break;
       case 'o':
         open_object();
