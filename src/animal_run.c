@@ -32,7 +32,6 @@ buffer_append(char* str, int str_len)
   buffer_usedD += str_len;
   return 1;
 }
-
 static void
 draw()
 {
@@ -823,6 +822,54 @@ struct treasureS* item; /* Use treasure_type since item not yet created */
   return FALSE;
 }
 int
+slot_equip(tval)
+int tval;
+{
+  int slot = 0;
+  switch (tval) {
+    case TV_SLING_AMMO:
+    case TV_BOLT:
+    case TV_ARROW:
+    case TV_BOW:
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+    case TV_DIGGING:
+    case TV_SPIKE:
+      slot = INVEN_WIELD;
+      break;
+    case TV_LIGHT:
+      slot = INVEN_LIGHT;
+      break;
+    case TV_BOOTS:
+      slot = INVEN_FEET;
+      break;
+    case TV_GLOVES:
+      slot = INVEN_HANDS;
+      break;
+    case TV_CLOAK:
+      slot = INVEN_OUTER;
+      break;
+    case TV_HELM:
+      slot = INVEN_HEAD;
+      break;
+    case TV_SHIELD:
+      slot = INVEN_ARM;
+      break;
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+      slot = INVEN_BODY;
+      break;
+    case TV_AMULET:
+      slot = INVEN_NECK;
+      break;
+    case TV_RING:
+      slot = INVEN_RING;
+      break;
+  }
+  return slot;
+}
+int
 get_obj_num(level, must_be_small)
 int level, must_be_small;
 {
@@ -1517,6 +1564,32 @@ int begin, end;
   free_turn_flag = TRUE;
   return line;
 }
+void
+py_wear()
+{
+  char c;
+  struct objS* obj;
+
+  int count = py_inven(0, INVEN_EQUIP);
+  draw();
+  if (count) {
+    if (in_subcommand("Wear/Wield which item:?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        obj = obj_get(invenD[iidx]);
+        int slot = slot_equip(obj->tval);
+        int slot_count = (slot == INVEN_RING) ? 2 : 1;
+        // TBD: Replace equipped item?
+        for (int it = 0; it < slot_count; ++it) {
+          if (invenD[slot + it] == 0) {
+            invenD[slot] = obj->id;
+            invenD[iidx] = 0;
+          }
+        }
+      }
+    }
+  }
+}
 static int
 py_carry_count()
 {
@@ -2105,6 +2178,9 @@ dungeon()
         break;
       case 's':
         search(y, x, 25);
+        break;
+      case 'w':
+        py_wear();
         break;
       case '<':
         go_up();

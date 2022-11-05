@@ -24,63 +24,63 @@
 #define GRANITE_WALL 12
 #define BOUNDARY_WALL 15
 
-#define DUN_TUN_RND 9  /* 1/Chance of Random direction	       */
-#define DUN_TUN_CHG 70 /* Chance of changing direction (99 max) */
-#define DUN_TUN_CON 15 /* Chance of extra tunneling	       */
-#define DUN_TUN_PEN 25 /* % chance of room doors		       */
-#define DUN_TUN_JCT 15 /* % chance of doors at tunnel junctions */
-#define DUN_ROOM_MEAN 64 // TBD: retune - originally 32
-#define TREAS_ROOM_MEAN 14 // TBD: retune
-#define TREAS_GOLD_ALLOC 4 // TBD: retune
+#define DUN_TUN_RND 9       /* 1/Chance of Random direction	       */
+#define DUN_TUN_CHG 70      /* Chance of changing direction (99 max) */
+#define DUN_TUN_CON 15      /* Chance of extra tunneling	       */
+#define DUN_TUN_PEN 25      /* % chance of room doors		       */
+#define DUN_TUN_JCT 15      /* % chance of doors at tunnel junctions */
+#define DUN_ROOM_MEAN 64    // TBD: retune - originally 32
+#define TREAS_ROOM_MEAN 14  // TBD: retune
+#define TREAS_GOLD_ALLOC 4  // TBD: retune
 #define TRUE 1
 #define FALSE 0
 
 /* Treasure constants */
-#define TV_NOTHING	0
-#define TV_MISC		1
-#define TV_CHEST	2
+#define TV_NOTHING 0
+#define TV_MISC 1
+#define TV_CHEST 2
 /* min tval for wearable items, all items between TV_MIN_WEAR and TV_MAX_WEAR
    use the same flag bits, see the TR_* defines */
-#define TV_MIN_WEAR	10
+#define TV_MIN_WEAR 10
 /* items tested for enchantments, i.e. the MAGIK inscription, see the
    enchanted() procedure */
-#define TV_MIN_ENCHANT	10
-#define TV_SLING_AMMO	10
-#define TV_BOLT		11
-#define TV_ARROW	12
-#define TV_SPIKE	13
-#define TV_LIGHT	15
-#define TV_BOW		20
-#define TV_HAFTED	21
-#define TV_POLEARM	22
-#define TV_SWORD	23
-#define TV_DIGGING	25
-#define TV_BOOTS	30
-#define TV_GLOVES	31
-#define TV_CLOAK	32
-#define TV_HELM		33
-#define TV_SHIELD	34
-#define TV_HARD_ARMOR	35
-#define TV_SOFT_ARMOR	36
+#define TV_MIN_ENCHANT 10
+#define TV_SLING_AMMO 10
+#define TV_BOLT 11
+#define TV_ARROW 12
+#define TV_SPIKE 13
+#define TV_LIGHT 15
+#define TV_BOW 20
+#define TV_HAFTED 21
+#define TV_POLEARM 22
+#define TV_SWORD 23
+#define TV_DIGGING 25
+#define TV_BOOTS 30
+#define TV_GLOVES 31
+#define TV_CLOAK 32
+#define TV_HELM 33
+#define TV_SHIELD 34
+#define TV_HARD_ARMOR 35
+#define TV_SOFT_ARMOR 36
 /* max tval that uses the TR_* flags */
-#define TV_MAX_ENCHANT	39
-#define TV_AMULET	40
-#define TV_RING		45
+#define TV_MAX_ENCHANT 39
+#define TV_AMULET 40
+#define TV_RING 45
 /* max tval for wearable items */
-#define TV_MAX_WEAR	50
-#define TV_STAFF	55
-#define TV_WAND		65
-#define TV_SCROLL1	70
-#define TV_SCROLL2	71
-#define TV_POTION1	75
-#define TV_POTION2	76
-#define TV_FLASK	77
-#define TV_FOOD 	80
-#define TV_MAGIC_BOOK	90
-#define TV_PRAYER_BOOK	91
+#define TV_MAX_WEAR 50
+#define TV_STAFF 55
+#define TV_WAND 65
+#define TV_SCROLL1 70
+#define TV_SCROLL2 71
+#define TV_POTION1 75
+#define TV_POTION2 76
+#define TV_FLASK 77
+#define TV_FOOD 80
+#define TV_MAGIC_BOOK 90
+#define TV_PRAYER_BOOK 91
 /* objects with tval above this are never picked up by monsters */
-#define TV_MAX_OBJECT	99
-#define TV_GOLD		100
+#define TV_MAX_OBJECT 99
+#define TV_GOLD 100
 // Items above cannot be lifted by the player
 #define TV_MAX_PICK_UP 100
 #define TV_INVIS_TRAP 101
@@ -96,12 +96,12 @@
 #define MAX_TRAP 3
 #define MAX_OBJ_LEVEL 50
 
-#define OBJ_GREAT 12 // 1/x treasure is a big surprise!
+#define OBJ_GREAT 12  // 1/x treasure is a big surprise!
 
 /* Creature constants						*/
 #define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */
 #define MAX_MON_LEVEL 40
-#define MON_NASTY 50 // 1/x monsters are a big baddie
+#define MON_NASTY 50  // 1/x monsters are a big baddie
 #define MAX_WIN_MON 2
 
 /* Player constants */
@@ -112,17 +112,18 @@
 /* magic numbers for players inventory array */
 #define INVEN_EQUIP 22
 #define INVEN_WIELD 22
-#define INVEN_HEAD  23
-#define INVEN_NECK  24
-#define INVEN_BODY  25
-#define INVEN_ARM   26
+#define INVEN_HEAD 23
+#define INVEN_NECK 24
+#define INVEN_BODY 25
+#define INVEN_ARM 26
 #define INVEN_HANDS 27
+#define INVEN_RING 28
 #define INVEN_RIGHT 28
-#define INVEN_LEFT  29
-#define INVEN_FEET  30
+#define INVEN_LEFT 29
+#define INVEN_FEET 30
 #define INVEN_OUTER 31
 #define INVEN_LIGHT 32
-#define INVEN_AUX   33
+#define INVEN_AUX 33
 #define MAX_INVEN 34
 
 // Input
