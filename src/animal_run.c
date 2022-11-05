@@ -1573,7 +1573,7 @@ py_wear()
   int count = py_inven(0, INVEN_EQUIP);
   draw();
   if (count) {
-    if (in_subcommand("Wear/Wield which item:?", &c)) {
+    if (in_subcommand("Wear/Wield which item?", &c)) {
       int iidx = c - 'a';
       if (iidx < INVEN_EQUIP) {
         obj = obj_get(invenD[iidx]);
@@ -1586,6 +1586,29 @@ py_wear()
             invenD[iidx] = 0;
           }
         }
+      }
+    }
+  }
+}
+static void
+py_drop()
+{
+  char c, y, x;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  y = uD.y;
+  x = uD.x;
+  c_ptr = &caveD[y][x];
+  int count = py_inven(0, INVEN_EQUIP);
+  draw();
+  if (c_ptr->oidx == 0 && count) {
+    if (in_subcommand("Drop which item?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        obj = obj_get(invenD[iidx]);
+        c_ptr->oidx = obj_index(obj);
+        invenD[iidx] = 0;
       }
     }
   }
@@ -2181,6 +2204,9 @@ dungeon()
         break;
       case 'c':
         close_object();
+        break;
+      case 'd':
+        py_drop();
         break;
       case 'e': {
         int count = py_inven(INVEN_EQUIP, MAX_INVEN);
