@@ -2,13 +2,22 @@
 
 #define BOOL int
 
-#define ABS(x) (x >= 0 ? x : -x)
-#define AL(x) (sizeof(x) / sizeof(x[0]))
-#define AP(x) x, AL(x)
-#define AM(arr, id) (id % AL(arr))
-#define AS(arr, id) arr[id % AL(arr)]
-#define CLAMP(x, min, max) (x < min ? min : x > max ? max : x)
+// Default Type init
 #define DFT(x) ((x){0})
+
+// Array Clear
+#define AC(x) memset(x, 0, sizeof(x))
+// Array Length
+#define AL(x) (sizeof(x) / sizeof(x[0]))
+// Array Pair
+#define AP(x) x, AL(x)
+// Array Modulus
+#define AM(arr, id) (id % AL(arr))
+// Array Slot
+#define AS(arr, id) arr[id % AL(arr)]
+
+#define ABS(x) (x >= 0 ? x : -x)
+#define CLAMP(x, min, max) (x < min ? min : x > max ? max : x)
 #define OF2(x) (((x - 1) & x) == 0)
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
