@@ -34,6 +34,52 @@ buffer_append(char* str, int str_len)
   return 1;
 }
 
+static void
+draw()
+{
+    buffer_usedD = 0;
+    buffer_append(AP(tc_clearD));
+    buffer_append(AP(tc_move_cursorD));
+    if (log_usedD) {
+      buffer_append(logD, log_usedD);
+      log_usedD = 0;
+    }
+    buffer_append(AP(tc_crlfD));
+    if (overlay_usedD[0]) {
+      for (int row = 0; row < SCREEN_HEIGHT; ++row) {
+        buffer_append(AP(tc_clear_lineD));
+        buffer_append(AP(statusD[row]));
+        buffer_append(overlayD[row], overlay_usedD[row]);
+        buffer_append(AP(tc_crlfD));
+      }
+      AC(overlayD);
+      AC(overlay_usedD);
+    } else {
+      for (int row = 0; row < SCREEN_HEIGHT; ++row) {
+        buffer_append(AP(tc_clear_lineD));
+        buffer_append(AP(statusD[row]));
+        buffer_append(AP(symmapD[row]));
+        buffer_append(AP(tc_crlfD));
+      }
+    }
+    char line[80];
+    if (modeD == MODE_MAP) {
+      int print_len = snprintf(
+          AP(line), "(%d,%d) quad | (%d,%d) xy | (%d) fval %d feet\r\n",
+          panelD.panel_col, panelD.panel_row,
+          panelD.panel_col * SCREEN_WIDTH / 2,
+          panelD.panel_row * SCREEN_HEIGHT / 2, caveD[uD.y][uD.x].fval,
+          dun_level * 50);
+      if (print_len < AL(line)) buffer_append(line, print_len);
+    } else if (modeD == MODE_DFLT) {
+      int print_len =
+          snprintf(AP(line), "(%d,%d) xy (%d) fval %d feet\r\n", uD.x, uD.y,
+                   caveD[uD.y][uD.x].fval, dun_level * 50);
+      if (print_len < AL(line)) buffer_append(line, print_len);
+    }
+    buffer_append(AP(tc_move_cursorD));
+    write(STDOUT_FILENO, bufferD, buffer_usedD);
+}
 static char
 inkey()
 {
@@ -2014,49 +2060,7 @@ dungeon()
     status_update();
     symmap_update();
 
-    buffer_usedD = 0;
-    buffer_append(AP(tc_clearD));
-    buffer_append(AP(tc_move_cursorD));
-    if (log_usedD) {
-      buffer_append(logD, log_usedD);
-      log_usedD = 0;
-    }
-    buffer_append(AP(tc_crlfD));
-    if (overlay_usedD[0]) {
-      for (int row = 0; row < SCREEN_HEIGHT; ++row) {
-        buffer_append(AP(tc_clear_lineD));
-        buffer_append(AP(statusD[row]));
-        buffer_append(overlayD[row], overlay_usedD[row]);
-        buffer_append(AP(tc_crlfD));
-      }
-      AC(overlayD);
-      AC(overlay_usedD);
-    } else {
-      for (int row = 0; row < SCREEN_HEIGHT; ++row) {
-        buffer_append(AP(tc_clear_lineD));
-        buffer_append(AP(statusD[row]));
-        buffer_append(AP(symmapD[row]));
-        buffer_append(AP(tc_crlfD));
-      }
-    }
-    char line[80];
-    if (modeD == MODE_MAP) {
-      int print_len = snprintf(
-          AP(line), "(%d,%d) quad | (%d,%d) xy | (%d) fval %d feet\r\n",
-          panelD.panel_col, panelD.panel_row,
-          panelD.panel_col * SCREEN_WIDTH / 2,
-          panelD.panel_row * SCREEN_HEIGHT / 2, caveD[uD.y][uD.x].fval,
-          dun_level * 50);
-      if (print_len < AL(line)) buffer_append(line, print_len);
-    } else if (modeD == MODE_DFLT) {
-      int print_len =
-          snprintf(AP(line), "(%d,%d) xy (%d) fval %d feet\r\n", uD.x, uD.y,
-                   caveD[uD.y][uD.x].fval, dun_level * 50);
-      if (print_len < AL(line)) buffer_append(line, print_len);
-    }
-    buffer_append(AP(tc_move_cursorD));
-    write(STDOUT_FILENO, bufferD, buffer_usedD);
-
+    draw();
     char c = inkey();
     if (c == -1) break;
 
