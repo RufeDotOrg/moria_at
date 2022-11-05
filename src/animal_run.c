@@ -1611,6 +1611,26 @@ int obj_id;
   }
   return -1;
 }
+void
+py_takeoff()
+{
+  char c;
+  struct objS* obj;
+
+  int carry_count = py_carry_count();
+  int equip_count = py_inven(INVEN_EQUIP, MAX_INVEN);
+  draw();
+  if (carry_count && equip_count) {
+    if (in_subcommand("Take off which item?", &c)) {
+      int iidx = INVEN_EQUIP + (c - 'a');
+      if (iidx < MAX_INVEN) {
+        obj = obj_get(invenD[iidx]);
+        inven_carry(obj->id);
+        invenD[iidx] = 0;
+      }
+    }
+  }
+}
 static void py_carry(y, x, pickup) int y, x;
 int pickup;
 {
@@ -2190,6 +2210,9 @@ dungeon()
         break;
       case 'D':
         disarm_trap(&y, &x);
+        break;
+      case 'T':
+        py_takeoff();
         break;
       case 'W':
         py_map();
