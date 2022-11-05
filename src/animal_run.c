@@ -899,6 +899,35 @@ int slp;
     place_monster(y, x, z, slp);
   }
 }
+
+#define MAX_GOLD 18
+static int goldD[MAX_GOLD] = {
+    3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 80,
+};
+void place_gold(y, x) int y, x;
+{
+  register int i, cur_pos;
+  struct objS* obj;
+
+  obj = obj_use();
+  caveD[y][x].oidx = obj_index(obj);
+
+  i = ((randint(dun_level + 2) + 2) / 2) - 1;
+  if (randint(OBJ_GREAT) == 1) i += randint(dun_level + 1);
+  if (i >= MAX_GOLD) i = MAX_GOLD - 1;
+
+  // invcopy(&t_list[cur_pos], OBJ_GOLD_LIST + i);
+  obj->tval = TV_GOLD;
+  obj->tchar = '$';
+  obj->cost = goldD[i];
+  obj->subval = i;
+  obj->number = 1;
+  obj->level = 1;
+
+  obj->cost += (8 * randint(obj->cost)) + randint(8);
+  if (uD.y == y && uD.x == x)
+    msg_print("You feel something roll beneath your feet.");
+}
 void place_object(y, x, must_be_small) int y, x, must_be_small;
 {
   struct objS* obj;
@@ -965,7 +994,7 @@ int typ, num;
         // place_rubble(y, x);
         break;
       case 4:
-        // place_gold(y, x);
+        place_gold(y, x);
         break;
       case 5:
         place_object(y, x, FALSE);
@@ -1042,7 +1071,7 @@ cave_gen()
   // alloc_obj(set_corr, 3, randint(alloc_level));
   alloc_obj(set_room, 5, randnor(TREAS_ROOM_MEAN, 3));
   // alloc_obj(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
-  // alloc_obj(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
+  alloc_obj(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
   alloc_obj(set_floor, 1, randint(alloc_level));
   // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
 }
@@ -1451,7 +1480,7 @@ int pickup;
 
   /* There's GOLD in them thar hills!      */
   if (obj->tval == TV_GOLD) {
-    uD.au += obj->cost;
+    uD.gold += obj->cost;
     log_usedD = snprintf(AP(logD), "You have found %d gold pieces worth of %s",
                          obj->cost, descD);
     im_print();
@@ -1901,6 +1930,8 @@ status_update()
   PR_STAT("CHP ", uD.chp);
   PR_STAT("LEV ", uD.lev);
   PR_STAT("EXP ", uD.exp);
+  line += 1;
+  PR_STAT("GOLD", uD.gold);
 }
 void py_teleport_near(y, x, uy, ux) int y, x;
 int *uy, *ux;

@@ -29,8 +29,9 @@
 #define DUN_TUN_CON 15 /* Chance of extra tunneling	       */
 #define DUN_TUN_PEN 25 /* % chance of room doors		       */
 #define DUN_TUN_JCT 15 /* % chance of doors at tunnel junctions */
-#define DUN_ROOM_MEAN 64 // TBD: retune - originally 32. map dimensions are modified
+#define DUN_ROOM_MEAN 64 // TBD: retune - originally 32
 #define TREAS_ROOM_MEAN 14 // TBD: retune
+#define TREAS_GOLD_ALLOC 4 // TBD: retune
 #define TRUE 1
 #define FALSE 0
 

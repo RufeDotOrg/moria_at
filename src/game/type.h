@@ -6,7 +6,7 @@ struct uS {
   int lev;
   int chp;
   int mhp;
-  int au;
+  int gold;
   int ac;
   int toac;
 };
