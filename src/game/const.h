@@ -101,7 +101,7 @@
 #define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */
 #define MAX_MON_LEVEL 40
 #define MON_NASTY 50 // 1/x monsters are a big baddie
-#define MAX_WIN_MON 1
+#define MAX_WIN_MON 2
 
 /* Player constants */
 #define MAX_PLAYER_LEVEL 40
