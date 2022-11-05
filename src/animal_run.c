@@ -1448,32 +1448,29 @@ py_init()
   uD.mhp = 100;
   uD.lev = 1;
 }
-static void
-py_inven()
+static int
+py_inven(begin, end)
+int begin, end;
 {
   int line = 0;
 
-  for (int it = 0; it <= INVEN_CARRY; ++it) {
+  for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
     if (obj_id) {
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj_index(obj));
       overlay_usedD[line] =
-          snprintf(AP(overlayD[line]), "%c) %s", 'a' + it, descD);
+          snprintf(AP(overlayD[line]), "%c) %s", 'a' + it - begin, descD);
       line += 1;
     }
   }
-  if (line == 0) {
-    log_usedD = snprintf(AP(logD), "You carry nothing.");
-  } else {
-    log_usedD = snprintf(AP(logD), "You are carrying:");
-  }
+  return line;
 }
 static int
 py_carry_count()
 {
   int count = 0;
-  for (int it = 0; it <= INVEN_CARRY; ++it) {
+  for (int it = 0; it < INVEN_EQUIP; ++it) {
     count += (invenD[it] == 0);
   }
   return count;
@@ -1482,7 +1479,7 @@ static int
 inven_carry(obj_id)
 int obj_id;
 {
-  for (int it = 0; it <= INVEN_CARRY; ++it) {
+  for (int it = 0; it < INVEN_EQUIP; ++it) {
     if (!invenD[it]) {
       invenD[it] = obj_id;
       return it;
@@ -2156,12 +2153,25 @@ dungeon()
       case 'D':
         disarm_trap(&y, &x);
         break;
+      case 'e': {
+        int count = py_inven(INVEN_EQUIP, MAX_INVEN);
+        if (count == 0) {
+          log_usedD = snprintf(AP(logD), "You wearing nothing.");
+        } else {
+          log_usedD = snprintf(AP(logD), "You are wearing:");
+        }
+      } break;
       case 'f':
         bash(&y, &x);
         break;
-      case 'i':
-        py_inven();
-        break;
+      case 'i': {
+        int count = py_inven(0, INVEN_EQUIP);
+        if (count == 0) {
+          log_usedD = snprintf(AP(logD), "You carrying nothing.");
+        } else {
+          log_usedD = snprintf(AP(logD), "You are carrying:");
+        }
+      } break;
       case 'o':
         open_object();
         break;

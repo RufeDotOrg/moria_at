@@ -110,8 +110,8 @@
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
 
 /* magic numbers for players inventory array */
-#define INVEN_CARRY 21  /* last carried item */
-#define INVEN_WIELD 22	/* must be first item in equipment list */
+#define INVEN_EQUIP 22
+#define INVEN_WIELD 22
 #define INVEN_HEAD  23
 #define INVEN_NECK  24
 #define INVEN_BODY  25
