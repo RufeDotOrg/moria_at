@@ -5,7 +5,6 @@ static int death;
 static int dun_level;
 static int free_turn_flag;
 static int new_level_flag;
-static int modeD;
 static char statusD[SCREEN_HEIGHT][STATUS_WIDTH];
 static char symmapD[SCREEN_HEIGHT][SCREEN_WIDTH];
 static char overlayD[SCREEN_HEIGHT][80 - STATUS_WIDTH];
@@ -37,48 +36,37 @@ buffer_append(char* str, int str_len)
 static void
 draw()
 {
-    buffer_usedD = 0;
-    buffer_append(AP(tc_clearD));
-    buffer_append(AP(tc_move_cursorD));
-    if (log_usedD) {
-      buffer_append(logD, log_usedD);
-      log_usedD = 0;
+  buffer_usedD = 0;
+  buffer_append(AP(tc_clearD));
+  buffer_append(AP(tc_move_cursorD));
+  if (log_usedD) {
+    buffer_append(logD, log_usedD);
+    log_usedD = 0;
+  }
+  buffer_append(AP(tc_crlfD));
+  if (overlay_usedD[0]) {
+    for (int row = 0; row < SCREEN_HEIGHT; ++row) {
+      buffer_append(AP(tc_clear_lineD));
+      buffer_append(AP(statusD[row]));
+      buffer_append(overlayD[row], overlay_usedD[row]);
+      buffer_append(AP(tc_crlfD));
     }
-    buffer_append(AP(tc_crlfD));
-    if (overlay_usedD[0]) {
-      for (int row = 0; row < SCREEN_HEIGHT; ++row) {
-        buffer_append(AP(tc_clear_lineD));
-        buffer_append(AP(statusD[row]));
-        buffer_append(overlayD[row], overlay_usedD[row]);
-        buffer_append(AP(tc_crlfD));
-      }
-      AC(overlayD);
-      AC(overlay_usedD);
-    } else {
-      for (int row = 0; row < SCREEN_HEIGHT; ++row) {
-        buffer_append(AP(tc_clear_lineD));
-        buffer_append(AP(statusD[row]));
-        buffer_append(AP(symmapD[row]));
-        buffer_append(AP(tc_crlfD));
-      }
+    AC(overlayD);
+    AC(overlay_usedD);
+  } else {
+    for (int row = 0; row < SCREEN_HEIGHT; ++row) {
+      buffer_append(AP(tc_clear_lineD));
+      buffer_append(AP(statusD[row]));
+      buffer_append(AP(symmapD[row]));
+      buffer_append(AP(tc_crlfD));
     }
-    char line[80];
-    if (modeD == MODE_MAP) {
-      int print_len = snprintf(
-          AP(line), "(%d,%d) quad | (%d,%d) xy | (%d) fval %d feet\r\n",
-          panelD.panel_col, panelD.panel_row,
-          panelD.panel_col * SCREEN_WIDTH / 2,
-          panelD.panel_row * SCREEN_HEIGHT / 2, caveD[uD.y][uD.x].fval,
-          dun_level * 50);
-      if (print_len < AL(line)) buffer_append(line, print_len);
-    } else if (modeD == MODE_DFLT) {
-      int print_len =
-          snprintf(AP(line), "(%d,%d) xy (%d) fval %d feet\r\n", uD.x, uD.y,
-                   caveD[uD.y][uD.x].fval, dun_level * 50);
-      if (print_len < AL(line)) buffer_append(line, print_len);
-    }
-    buffer_append(AP(tc_move_cursorD));
-    write(STDOUT_FILENO, bufferD, buffer_usedD);
+  }
+  char line[80];
+  int print_len = snprintf(AP(line), "(%d,%d) xy (%d) fval %d feet\r\n", uD.x,
+                           uD.y, caveD[uD.y][uD.x].fval, dun_level * 50);
+  if (print_len < AL(line)) buffer_append(line, print_len);
+  buffer_append(AP(tc_move_cursorD));
+  write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
 static char
 inkey()
@@ -157,14 +145,12 @@ char* prompt;
 int* dir;
 {
   char command;
-  static char prev_dir; /* Direction memory. -CJS- */
 
   if (!prompt) prompt = "Which direction?";
   if (in_subcommand(prompt, &command)) {
     command = map_roguedir(command);
     if (command >= '1' && command <= '9' && command != '5') {
-      prev_dir = command - '0';
-      *dir = prev_dir;
+      *dir = command - '0';
       return TRUE;
     }
   }
@@ -1187,7 +1173,7 @@ panel_bounds(struct panelS* panel)
   panel->panel_col_max = panel->panel_col_min + SCREEN_WIDTH;
 }
 void
-panel_update(struct panelS* panel, int x, int y, BOOL force)
+panel_update(struct panelS* panel, int y, int x, BOOL force)
 {
   BOOL yd = (y < panel->panel_row_min + 1 || y > panel->panel_row_max - 2);
   if (force || yd) {
@@ -2053,6 +2039,7 @@ static void hit_trap(y, x) int y, x;
 void
 dungeon()
 {
+  int c, y, x;
   new_level_flag = FALSE;
   obj_teleport_idxD = 0;
   while (1) {
@@ -2061,101 +2048,24 @@ dungeon()
     symmap_update();
 
     draw();
-    char c = inkey();
+    c = inkey();
     if (c == -1) break;
 
-    if (c == CTRL('w')) {
-      modeD = !modeD ? MODE_MAP : MODE_DFLT;
-      free_turn_flag = TRUE;
-    }
-    if (c == CTRL('h')) {
-      uD.chp = uD.mhp;
-    }
-
-    int x, y, x_max, y_max;
-    if (c == CTRL('t')) {
-      msg_print("teleport");
-      do {
-        x = randint(MAX_WIDTH - 2);
-        y = randint(MAX_HEIGHT - 2);
-      } while (caveD[y][x].fval >= MIN_CLOSED_SPACE || caveD[y][x].midx != 0);
-    } else if (c == CTRL('m') && mon_usedD) {
-      int rv = randint(mon_usedD);
-      struct monS* mon = mon_get(monD[rv - 1]);
-      log_usedD = snprintf(AP(logD), "%s: %d id (%d/%d)", "Teleport to monster",
-                           mon->id, rv, mon_usedD);
-
-      int fy = mon->fy;
-      int fx = mon->fx;
-      py_teleport_near(fy, fx, &y, &x);
-    } else if (c == CTRL('o')) {
-      int seek_tval = obj_teleportD[obj_teleport_idxD];
-
-      for (int row = 1; row < MAX_HEIGHT - 1; ++row) {
-        for (int col = 1; col < MAX_WIDTH - 1; ++col) {
-          int oidx = caveD[row][col].oidx;
-          struct objS* obj = &entity_objD[oidx];
-          if (obj->tval != seek_tval) continue;
-
-          log_usedD =
-              snprintf(AP(logD), "%s: %d oidx", "Teleport to object", oidx);
-          py_teleport_near(row, col, &y, &x);
-          row = MAX_HEIGHT;
-          col = MAX_WIDTH;
-        }
-      }
-      if (y == uD.y && x == uD.x) {
-        obj_teleport_idxD = ((obj_teleport_idxD + 1) % AL(obj_teleportD));
-        log_usedD =
-            snprintf(AP(logD), "Switching object type %d", obj_teleport_idxD);
-      }
-    } else if (modeD == MODE_DFLT) {
-      x = uD.x;
-      y = uD.y;
-      x_max = MAX_WIDTH;
-      y_max = MAX_HEIGHT;
-    }
-    if (modeD == MODE_MAP) {
-      x = panelD.panel_col;
-      y = panelD.panel_row;
-      x_max = MAX_COL - 2;
-      y_max = MAX_ROW - 2;
-      free_turn_flag = TRUE;
-    }
+    x = uD.x;
+    y = uD.y;
     switch (c) {
       case 'k':
-        y -= (y > 0);
-        break;
       case 'j':
-        y += (y + 1 < y_max);
-        break;
       case 'l':
-        x += (x + 1 < x_max);
-        break;
       case 'h':
-        x -= (x > 0);
-        break;
       case 'n':
-        x += (x + 1 < x_max);
-        y += (y + 1 < y_max);
-        break;
       case 'b':
-        x -= (x > 0);
-        y += (y + 1 < y_max);
-        break;
       case 'y':
-        x -= (x > 0);
-        y -= (y > 0);
-        break;
       case 'u':
-        x += (x + 1 < x_max);
-        y -= (y > 0);
+        mmove(map_roguedir(c) - '0', &y, &x);
         break;
       case 'c':
         close_object();
-        break;
-      case 'D':
-        disarm_trap(&y, &x);
         break;
       case 'e': {
         int count = py_inven(INVEN_EQUIP, MAX_INVEN);
@@ -2188,8 +2098,60 @@ dungeon()
       case '>':
         go_down();
         break;
+      case 'D':
+        disarm_trap(&y, &x);
+        break;
+      case 'W':
+        // py_map();
+        free_turn_flag = TRUE;
+        break;
+      case CTRL('h'):
+        uD.chp = uD.mhp;
+        break;
+      case CTRL('t'):
+        msg_print("teleport");
+        do {
+          x = randint(MAX_WIDTH - 2);
+          y = randint(MAX_HEIGHT - 2);
+        } while (caveD[y][x].fval >= MIN_CLOSED_SPACE || caveD[y][x].midx != 0);
+        break;
+      case CTRL('m'):
+        if (mon_usedD) {
+          int rv = randint(mon_usedD);
+          struct monS* mon = mon_get(monD[rv - 1]);
+          log_usedD = snprintf(AP(logD), "%s: %d id (%d/%d)",
+                               "Teleport to monster", mon->id, rv, mon_usedD);
+
+          int fy = mon->fy;
+          int fx = mon->fx;
+          py_teleport_near(fy, fx, &y, &x);
+        }
+        break;
+      case CTRL('o'): {
+        int seek_tval = obj_teleportD[obj_teleport_idxD];
+
+        for (int row = 1; row < MAX_HEIGHT - 1; ++row) {
+          for (int col = 1; col < MAX_WIDTH - 1; ++col) {
+            int oidx = caveD[row][col].oidx;
+            struct objS* obj = &entity_objD[oidx];
+            if (obj->tval != seek_tval) continue;
+
+            log_usedD =
+                snprintf(AP(logD), "%s: %d oidx", "Teleport to object", oidx);
+            py_teleport_near(row, col, &y, &x);
+            row = MAX_HEIGHT;
+            col = MAX_WIDTH;
+          }
+        }
+        if (y == uD.y && x == uD.x) {
+          obj_teleport_idxD = ((obj_teleport_idxD + 1) % AL(obj_teleportD));
+          log_usedD =
+              snprintf(AP(logD), "Switching object type %d", obj_teleport_idxD);
+        }
+      } break;
     }
-    if (modeD == MODE_DFLT) {
+
+    if (uD.y != y || uD.x != x) {
       struct caveS* c_ptr = &caveD[y][x];
       if (c_ptr->midx) {
         py_attack(y, x);
@@ -2197,7 +2159,7 @@ dungeon()
         struct objS* obj = &entity_objD[c_ptr->oidx];
         uD.y = y;
         uD.x = x;
-        panel_update(&panelD, uD.x, uD.y, FALSE);
+        panel_update(&panelD, uD.y, uD.x, FALSE);
         if (obj->tval) {
           if (obj->tval <= TV_MAX_PICK_UP) {
             py_carry(y, x, TRUE);
@@ -2207,11 +2169,7 @@ dungeon()
         }
       }
     }
-    if (modeD == MODE_MAP) {
-      panelD.panel_row = y;
-      panelD.panel_col = x;
-      panel_bounds(&panelD);
-    }
+
     if (new_level_flag) break;
     if (free_turn_flag) continue;
     creatures(TRUE);
@@ -2261,7 +2219,7 @@ main()
   py_init();
 
   while (!death) {
-    panel_update(&panelD, uD.x, uD.y, TRUE);
+    panel_update(&panelD, uD.y, uD.x, TRUE);
     dungeon();
 
     if (!death) generate_cave();
