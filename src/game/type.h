@@ -57,7 +57,8 @@ struct objS {
   int32_t cost;
   uint8_t subval;
   uint8_t number;
-  uint8_t dam[2];
+  uint16_t weight;
+  uint8_t damage[2];
   uint8_t level;
 };
 

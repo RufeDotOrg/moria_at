@@ -1072,9 +1072,10 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   obj->tchar = treasure->tchar;
   obj->subval = treasure->subval;
   obj->number = treasure->number;
+  obj->weight = treasure->weight;
   obj->p1 = treasure->p1;
   obj->cost = treasure->cost;
-  memcpy(obj->dam, treasure->damage, sizeof(obj->dam));
+  memcpy(obj->damage, treasure->damage, sizeof(obj->damage));
   obj->level = treasure->level;
 
   // TBD: the following is important for projectile count and special assignment
@@ -1094,8 +1095,8 @@ void place_trap(y, x, subval) int y, x, subval;
   obj->subval = subval;
   obj->number = 1;
   obj->p1 = 2;
-  obj->dam[0] = 1;
-  obj->dam[1] = 8;
+  obj->damage[0] = 1;
+  obj->damage[1] = 8;
   obj->level = 50;
 }
 void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
@@ -1785,6 +1786,7 @@ void py_attack(y, x) int y, x;
 
   int midx = caveD[y][x].midx;
   struct monS* mon = &entity_monD[midx];
+  struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
   mon_desc(midx);
   descD[0] = tolower(descD[0]);
@@ -1797,8 +1799,13 @@ void py_attack(y, x) int y, x;
   for (int it = 0; it < blows; ++it) {
     if (test_hit(base_tohit, uD.lev, 0, creature_ac)) {
       MSG("You hit %s.", descD);
-      k = damroll(1, 2);
-      k = critical_blow(1, 0, k);
+      if (obj->tval) {
+        k = pdamroll(obj->damage);
+        k = critical_blow(obj->weight, 0, k);
+      } else {
+        k = damroll(1, 1);
+        k = critical_blow(1, 0, k);
+      }
       // k += p_ptr->ptodam;
       if (k < 0) k = 0;
 
@@ -2183,7 +2190,7 @@ static void hit_trap(y, x) int y, x;
     obj->tchar = '^';
     // lite_spot(y, x);
   }
-  dam = pdamroll(obj->dam);
+  dam = pdamroll(obj->damage);
   // TBD: dam may be conditional by trap subval
   py_take_hit(dam);
   switch (obj->subval) {
