@@ -947,15 +947,20 @@ place_monster(y, x, z, slp)
 register int y, x, z;
 int slp;
 {
-  register struct monS* mon;
+  struct monS* mon;
+  struct creatureS* cre;
 
+  cre = &creatureD[z];
   mon = mon_use();
   if (!mon) return FALSE;
   // TBD: duck type
-  mon->hp = 3;
-  mon->cidx = z;
   mon->fy = y;
   mon->fx = x;
+  mon->cidx = z;
+  if (cre->cdefense & CD_MAX_HP)
+    mon->hp = cre->hd[0] * cre->hd[1];
+  else
+    mon->hp = pdamroll(cre->hd);
   mon->cdis = distance(uD.y, uD.x, y, x);
 
   caveD[y][x].midx = mon_index(mon);

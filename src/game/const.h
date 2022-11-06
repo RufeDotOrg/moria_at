@@ -104,6 +104,23 @@
 #define MON_NASTY 50  // 1/x monsters are a big baddie
 #define MAX_WIN_MON 2
 
+/* creature defense flags */
+#define CD_DRAGON	0x0001
+#define CD_ANIMAL	0x0002
+#define CD_EVIL		0x0004
+#define CD_UNDEAD	0x0008
+#define CD_WEAKNESS	0x03F0
+#define CD_FROST	0x0010
+#define CD_FIRE		0x0020
+#define CD_POISON	0x0040
+#define CD_ACID		0x0080
+#define CD_LIGHT	0x0100
+#define CD_STONE	0x0200
+
+#define CD_NO_SLEEP	0x1000
+#define CD_INFRA	0x2000
+#define CD_MAX_HP	0x4000
+
 /* Player constants */
 #define MAX_PLAYER_LEVEL 40
 #define MAX_EXP 999999
