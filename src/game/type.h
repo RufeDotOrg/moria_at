@@ -12,6 +12,15 @@ struct uS {
 };
 static struct uS uD;
 
+// Only the player has stats
+struct statS {
+  int8_t max_stat[MAX_A]; /* What is restored */
+  int8_t cur_stat[MAX_A]; /* What is natural */
+  int8_t mod_stat[MAX_A]; /* Boosted artificially (by wearing something) */
+  int8_t use_stat[MAX_A]; /* Play value, see set_use_stat() */
+};
+static struct statS statD;
+
 struct panelS {
   int panel_row;
   int panel_row_min;

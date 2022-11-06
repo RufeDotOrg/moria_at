@@ -1572,6 +1572,15 @@ py_init()
   uD.chp = 100;
   uD.mhp = 100;
   uD.lev = 1;
+
+  int8_t stat[MAX_A];
+  for (int it = 0; it < MAX_A; ++it) {
+    stat[it] = 15;
+  }
+  memcpy(statD.max_stat, AP(stat));
+  memcpy(statD.cur_stat, AP(stat));
+  AC(statD.mod_stat);
+  memcpy(statD.use_stat, AP(stat));
 }
 static void
 py_map()
