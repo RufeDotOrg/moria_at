@@ -1818,7 +1818,7 @@ static void mon_attack(midx) int midx;
   int asides = 4;
   for (int it = 0; it < AL(cre->damage); ++it) {
     if (death) break;
-    if (!cre->damage[0]) break;
+    if (!cre->damage[it]) break;
     disturb(1, 0);
     int flag = FALSE;
     int tac = uD.ac + uD.toac;
