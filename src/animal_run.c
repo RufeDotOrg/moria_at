@@ -17,11 +17,11 @@ static int log_usedD;
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
 
-#define MSG(x, ...)                                                       \
-  {                                                                       \
-    char vtype[80];                                                       \
-    int len = snprintf(AP(vtype), "<%d>" x " ", __LINE__, ##__VA_ARGS__); \
-    msg_print2(vtype, len);                                               \
+#define MSG(x, ...)                                                   \
+  {                                                                   \
+    char vtype[80];                                                   \
+    int len = snprintf(AP(vtype), "<%d>" x, __LINE__, ##__VA_ARGS__); \
+    msg_print2(vtype, len);                                           \
   }
 
 // Inventory of object IDs; obj_get(id)
@@ -118,6 +118,9 @@ int msglen;
     im_print();
     in_wait();
     len = 0;
+  } else if (len) {
+    logD[len] = ' ';
+    len += 1;
   }
 
   len += snprintf(logD + len, AL(logD), "%s", msg);
