@@ -136,7 +136,9 @@ in_subcommand(prompt, command)
 char* prompt;
 char* command;
 {
-  msg_print(prompt);
+  if (log_usedD) im_print();
+  log_usedD = snprintf(AP(logD), "%s", prompt);
+  im_print();
   *command = inkey();
   log_usedD = 0;
   return (*command != ESCAPE);
@@ -1624,6 +1626,7 @@ py_wear()
           if (invenD[slot + it] == 0) {
             invenD[slot] = obj->id;
             invenD[iidx] = 0;
+            MSG("You are wearing %s.", descD);
           }
         }
       }
