@@ -17,6 +17,13 @@ static int log_usedD;
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
 
+#define MSG(x, ...)                                                       \
+  {                                                                       \
+    char vtype[80];                                                       \
+    int len = snprintf(AP(vtype), "<%d>" x " ", __LINE__, ##__VA_ARGS__); \
+    msg_print2(vtype, len);                                               \
+  }
+
 // Inventory of object IDs; obj_get(id)
 // Zero is an available or empty slot
 // [INVEN_WIELD, INVEN_AUX] are equipment
@@ -90,11 +97,36 @@ im_print()
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
+void
+in_wait()
+{
+  char c;
+  do {
+    c = inkey();
+  } while (c != ' ');
+}
+char log_extD[] = " -more-";
+static void msg_print2(msg, msglen) char* msg;
+int msglen;
+{
+  int len = log_usedD;
+  int maxlen = AL(logD) - AL(log_extD);
+
+  // wait for user to acknowledge prior buffer -more-
+  if (len + msglen >= maxlen) {
+    log_usedD += snprintf(logD + len, AL(logD), "%s", log_extD);
+    im_print();
+    in_wait();
+    len = 0;
+  }
+
+  len += snprintf(logD + len, AL(logD), "%s", msg);
+  log_usedD = len;
+}
 static void
 msg_print(char* text)
 {
-  log_usedD = snprintf(AP(logD), "%s", text);
-  im_print();
+  msg_print2(text, strlen(text));
 }
 int
 in_subcommand(prompt, command)
@@ -103,7 +135,7 @@ char* command;
 {
   msg_print(prompt);
   *command = inkey();
-  msg_print("");
+  log_usedD = 0;
   return (*command != ESCAPE);
 }
 static char
@@ -1673,9 +1705,7 @@ int pickup;
   /* There's GOLD in them thar hills!      */
   if (obj->tval == TV_GOLD) {
     uD.gold += obj->cost;
-    log_usedD = snprintf(AP(logD), "You have found %d gold pieces worth of %s",
-                         obj->cost, descD);
-    im_print();
+    MSG("You have found %d gold pieces worth of %s", obj->cost, descD);
     delete_object(y, x);
   } else {
     // TBD: Merge items of the same type?
@@ -1683,16 +1713,13 @@ int pickup;
     if (pickup) {
       if (py_carry_count()) {
         locn = inven_carry(obj->id);
-        log_usedD = snprintf(AP(logD), "You have %s (%c)", descD, locn + 'a');
-        im_print();
+        MSG("You pickup %s (%c)", descD, locn + 'a');
         caveD[y][x].oidx = 0;
       } else {
-        log_usedD = snprintf(AP(logD), "You can't carry %s", descD);
-        im_print();
+        MSG("You can't carry %s", descD);
       }
     } else {
-      log_usedD = snprintf(AP(logD), "You see %s here.", descD);
-      im_print();
+      MSG("You see %s here.", descD);
     }
   }
 }
@@ -1718,8 +1745,7 @@ py_experience()
     int dif_exp, need_exp;
 
     lev += 1;
-    log_usedD = snprintf(AP(logD), "Welcome to level %d.", lev);
-    im_print();
+    MSG("Welcome to level %d.", lev);
     // calc_hitpoints();
 
     need_exp = player_exp[lev - 1] * expfact / 100;
@@ -1764,8 +1790,7 @@ void py_attack(y, x) int y, x;
   /* Loop for number of blows,  trying to hit the critter.	  */
   for (int it = 0; it < blows; ++it) {
     if (test_hit(base_tohit, uD.lev, 0, creature_ac)) {
-      log_usedD = snprintf(AP(logD), "You hit %s.", descD);
-      im_print();
+      MSG("You hit %s.", descD);
       k = damroll(1, 2);
       k = critical_blow(1, 0, k);
       // k += p_ptr->ptodam;
@@ -1773,14 +1798,12 @@ void py_attack(y, x) int y, x;
 
       /* See if we done it in.  			 */
       if (mon_take_hit(midx, k) >= 0) {
-        log_usedD = snprintf(AP(logD), "You have slain %s.", descD);
-        im_print();
+        MSG("You have slain %s.", descD);
         py_experience();
         blows = 0;
       }
     } else {
-      log_usedD = snprintf(AP(logD), "You miss %s.", descD);
-      im_print();
+      MSG("You miss %s.", descD);
     }
   }
 }
@@ -1801,14 +1824,12 @@ static void mon_attack(midx) int midx;
     int tac = uD.ac + uD.toac;
     if (test_hit(60, creature_level, 0, tac)) flag = TRUE;
     if (flag) {
-      log_usedD = snprintf(AP(logD), "%s hits you.", descD);
-      im_print();
+      MSG("%s hits you.", descD);
       int damage = damroll(adice, asides);
       damage -= (tac * damage) / 200;
       py_take_hit(damage);
     } else {
-      log_usedD = snprintf(AP(logD), "%s misses you.", descD);
-      im_print();
+      MSG("%s misses you.", descD);
     }
   }
 }
@@ -2136,7 +2157,8 @@ int *uy, *ux;
 
       *uy = ro;
       *ux = co;
-      log_usedD = snprintf(AP(logD), "%s (%d, %d)", "Teleport near", ro, co);
+      MSG("Teleport near (%d, %d)", ro, co);
+      return;
     }
   }
 }
@@ -2215,14 +2237,14 @@ dungeon()
         break;
       case 'e': {
         int count = py_inven(INVEN_EQUIP, MAX_INVEN);
-        log_usedD = snprintf(AP(logD), "You wearing %d items.", count);
+        MSG("You wearing %d items.", count);
       } break;
       case 'f':
         bash(&y, &x);
         break;
       case 'i': {
         int count = py_inven(0, INVEN_EQUIP);
-        log_usedD = snprintf(AP(logD), "You carrying %d items.", count);
+        MSG("You carrying %d items.", count);
       } break;
       case 'o':
         open_object();
@@ -2262,8 +2284,7 @@ dungeon()
         if (mon_usedD) {
           int rv = randint(mon_usedD);
           struct monS* mon = mon_get(monD[rv - 1]);
-          log_usedD = snprintf(AP(logD), "%s: %d id (%d/%d)",
-                               "Teleport to monster", mon->id, rv, mon_usedD);
+          MSG("Teleport to monster id %d (%d/%d)", mon->id, rv, mon_usedD);
 
           int fy = mon->fy;
           int fx = mon->fx;
