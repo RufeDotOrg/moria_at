@@ -1672,6 +1672,7 @@ py_wear()
           if (invenD[slot + it] == 0) {
             invenD[slot] = obj->id;
             invenD[iidx] = 0;
+            py_bonuses(obj, 1);
             MSG("You are wearing %s.", descD);
           }
         }
@@ -1761,6 +1762,10 @@ py_takeoff()
         obj = obj_get(invenD[iidx]);
         inven_carry(obj->id);
         invenD[iidx] = 0;
+
+        obj_desc(obj_index(obj));
+        py_bonuses(obj, -1);
+        MSG("You take off %s.", descD);
       }
     }
   }
