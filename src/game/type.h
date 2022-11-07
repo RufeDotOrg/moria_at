@@ -20,8 +20,34 @@ struct uS {
 };
 static struct uS uD;
 
+struct raceS {
+  char *trace;         /* Type of race			*/
+  uint8_t attr[MAX_A]; /* Attribute adjustments */
+  uint8_t b_age;       /* Base age of character		*/
+  uint8_t m_age;       /* Maximum age of character	*/
+  uint8_t m_b_ht;      /* base height for males		*/
+  uint8_t m_m_ht;      /* mod height for males		*/
+  uint8_t m_b_wt;      /* base weight for males		*/
+  uint8_t m_m_wt;      /* mod weight for males		*/
+  uint8_t f_b_ht;      /* base height females		*/
+  uint8_t f_m_ht;      /* mod height for females	*/
+  uint8_t f_b_wt;      /* base weight for female	*/
+  uint8_t f_m_wt;      /* mod weight for females	*/
+  int8_t dis;          /* base chance to disarm		*/
+  int8_t srh;          /* base chance for search	*/
+  int8_t stl;          /* Stealth of character		*/
+  int8_t fos;          /* frequency of auto search	*/
+  int8_t bth;          /* adj base chance to hit	*/
+  int8_t bthb;         /* adj base to hit with bows	*/
+  int8_t bsav;         /* Race base for saving throw	*/
+  uint8_t bhitdie;     /* Base hit points for race	*/
+  uint8_t infra;       /* See infra-red			*/
+  uint8_t b_exp;       /* Base experience factor	*/
+  uint8_t rtclass;     /* Bit field for class types	*/
+};
+
 struct classS {
-  char *title;           /* type of class		*/
+  char *title;             /* type of class		*/
   uint8_t adj_hd;          /* Adjust hit points		*/
   uint8_t mdis;            /* mod disarming traps		*/
   uint8_t msrh;            /* modifier to searching	*/
