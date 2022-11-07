@@ -7,6 +7,8 @@ static int free_turn_flag;
 static int new_level_flag;
 static char statusD[SCREEN_HEIGHT][STATUS_WIDTH];
 static char symmapD[SCREEN_HEIGHT][SCREEN_WIDTH];
+static char screenD[19][80];
+static int screen_usedD[AL(screenD)];
 static char overlayD[SCREEN_HEIGHT][80 - STATUS_WIDTH];
 static int overlay_usedD[SCREEN_HEIGHT];
 static char descD[160];
@@ -50,7 +52,15 @@ draw()
     log_usedD = 0;
   }
   buffer_append(AP(tc_crlfD));
-  if (overlay_usedD[0]) {
+  if (screen_usedD[0]) {
+    for (int row = 0; row < AL(screenD); ++row) {
+      buffer_append(AP(tc_clear_lineD));
+      buffer_append(screenD[row], screen_usedD[row]);
+      buffer_append(AP(tc_crlfD));
+    }
+    AC(screenD);
+    AC(screen_usedD);
+  } else if (overlay_usedD[0]) {
     for (int row = 0; row < SCREEN_HEIGHT; ++row) {
       buffer_append(AP(tc_clear_lineD));
       buffer_append(AP(statusD[row]));
@@ -69,9 +79,9 @@ draw()
   }
   char line[80];
   int print_len =
-      snprintf(AP(line), "(%d,%d) xy (%d,%d) quadrant (%d) fval %d feet\r\n",
-               uD.x, uD.y, panelD.panel_col, panelD.panel_row,
-               caveD[uD.y][uD.x].fval, dun_level * 50);
+      snprintf(AP(line), "(%d,%d) xy (%d,%d) quadrant (%d) fval %d feet", uD.x,
+               uD.y, panelD.panel_col, panelD.panel_row, caveD[uD.y][uD.x].fval,
+               dun_level * 50);
   if (print_len < AL(line)) buffer_append(line, print_len);
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
@@ -1537,6 +1547,11 @@ py_init()
   memcpy(statD.cur_stat, AP(stat));
   AC(statD.mod_stat);
   memcpy(statD.use_stat, AP(stat));
+
+  // Test delta cur/max
+  for (int it = 0; it < MAX_A; ++it) {
+    statD.max_stat[it] += 1;
+  }
 }
 int8_t modify_stat(stat, amount) int stat, amount;
 {
@@ -1705,6 +1720,30 @@ static int inven_carry(obj_id) int obj_id;
     }
   }
   return -1;
+}
+char stat_nameD[MAX_A][5] = {
+    "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
+};
+void
+py_screen()
+{
+  int line, col, col_width;
+  col_width = 20;
+  line = 0;
+  col = 0;
+#define PY_STAT(FMT, ...)                                                     \
+  screen_usedD[line] = snprintf(screenD[line] + (col_width * col), col_width, \
+                                FMT, ##__VA_ARGS__);                          \
+  line += 1;
+  for (int it = 0; it < MAX_A; ++it) {
+    if (statD.use_stat[it] == statD.max_stat[it]) {
+      PY_STAT("%s: %6d", stat_nameD[it], statD.use_stat[it]);
+    } else {
+      PY_STAT("%s: %6d %6d", stat_nameD[it], statD.use_stat[it],
+              statD.max_stat[it]);
+    }
+  }
+  free_turn_flag = TRUE;
 }
 void
 py_takeoff()
@@ -2301,6 +2340,9 @@ dungeon()
         break;
       case '>':
         go_down();
+        break;
+      case 'C':
+        py_screen();
         break;
       case 'D':
         disarm_trap(&y, &x);
