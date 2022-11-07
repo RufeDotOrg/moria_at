@@ -491,6 +491,8 @@ static void place_broken_door(broken, y, x) int broken, y, x;
 
   // invcopy(&t_list[cur_pos], OBJ_OPEN_DOOR);
   obj = obj_use();
+  obj->fy = y;
+  obj->fx = x;
   obj->tval = TV_OPEN_DOOR;
   obj->tchar = '\'';
   obj->subval = 1;
@@ -508,6 +510,8 @@ static void place_closed_door(locked, y, x) int locked, y, x;
 
   // invcopy(&t_list[cur_pos], OBJ_CLOSED_DOOR);
   obj = obj_use();
+  obj->fy = y;
+  obj->fx = x;
   obj->tval = TV_CLOSED_DOOR;
   obj->tchar = '+';
   obj->subval = 1;
@@ -525,6 +529,8 @@ static void place_secret_door(y, x) int y, x;
 
   // invcopy(&t_list[cur_pos], OBJ_SECRET_DOOR);
   obj = obj_use();
+  obj->fy = y;
+  obj->fx = x;
   obj->tval = TV_SECRET_DOOR;
   obj->tchar = '8';
   obj->subval = 1;
@@ -705,6 +711,8 @@ static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
   cave_ptr = &caveD[y][x];
   if (cave_ptr->oidx != 0) delete_object(y, x);
   obj = obj_use();
+  obj->fy = y;
+  obj->fx = x;
   // invcopy(&t_list[cur_pos], obj_up_stair);
   obj->tval = tval;
   obj->tchar = tchar;
@@ -1016,6 +1024,8 @@ void place_gold(y, x) int y, x;
   if (i >= MAX_GOLD) i = MAX_GOLD - 1;
 
   // invcopy(&t_list[cur_pos], OBJ_GOLD_LIST + i);
+  obj->fy = y;
+  obj->fx = x;
   obj->tval = TV_GOLD;
   obj->tchar = '$';
   obj->cost = goldD[i];
@@ -1041,14 +1051,16 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   // invcopy(&t_list[cur_pos], z);
   // TBD: duck type
   obj->flags = treasure->flags;
-  obj->tidx = z;
+  obj->fy = y;
+  obj->fx = x;
   obj->tval = treasure->tval;
   obj->tchar = treasure->tchar;
+  obj->tidx = z;
+  obj->p1 = treasure->p1;
+  obj->cost = treasure->cost;
   obj->subval = treasure->subval;
   obj->number = treasure->number;
   obj->weight = treasure->weight;
-  obj->p1 = treasure->p1;
-  obj->cost = treasure->cost;
   memcpy(obj->damage, treasure->damage, sizeof(obj->damage));
   obj->level = treasure->level;
 
@@ -1064,6 +1076,8 @@ void place_trap(y, x, subval) int y, x, subval;
 
   caveD[y][x].oidx = obj_index(obj);
   // invcopy(&t_list[cur_pos], OBJ_TRAP_LIST + subval);
+  obj->fy = y;
+  obj->fx = x;
   obj->tval = TV_INVIS_TRAP;
   obj->tchar = '%';
   obj->subval = subval;
@@ -1179,11 +1193,21 @@ cave_gen()
 void
 generate_cave()
 {
+  // Clear the cave
   memset(caveD, 0, sizeof(caveD));
-  obj_usedD = 0;
-  memset(entity_objD, 0, sizeof(entity_objD));
+
+  // Release objects in the cave
+  FOR_EACH(obj, {
+    if (obj->fx || obj->fy) {
+      obj_unuse(obj);
+    }
+  });
+
+  // Release all monsters
   mon_usedD = 0;
   memset(entity_monD, 0, sizeof(entity_monD));
+
+  // a fresh cave!
   cave_gen();
 }
 
@@ -1697,6 +1721,8 @@ py_drop()
       int iidx = c - 'a';
       if (iidx < INVEN_EQUIP) {
         obj = obj_get(invenD[iidx]);
+        obj->fy = y;
+        obj->fx = x;
         c_ptr->oidx = obj_index(obj);
         invenD[iidx] = 0;
       }
@@ -1793,6 +1819,8 @@ int pickup;
       if (py_carry_count()) {
         locn = inven_carry(obj->id);
         MSG("You pickup %s (%c)", descD, locn + 'a');
+        obj->fy = 0;
+        obj->fx = 0;
         caveD[y][x].oidx = 0;
       } else {
         MSG("You can't carry %s", descD);
