@@ -131,9 +131,7 @@ msg_print(char* text)
 {
   msg_print2(text, strlen(text));
 }
-int
-in_subcommand(prompt, command)
-char* prompt;
+int in_subcommand(prompt, command) char* prompt;
 char* command;
 {
   if (log_usedD) im_print();
@@ -143,9 +141,7 @@ char* command;
   log_usedD = 0;
   return (*command != ESCAPE);
 }
-static char
-map_roguedir(comval)
-register char comval;
+static char map_roguedir(comval) register char comval;
 {
   switch (comval) {
     case 'h':
@@ -178,9 +174,7 @@ register char comval;
   }
   return (comval);
 }
-int
-get_dir(prompt, dir)
-char* prompt;
+int get_dir(prompt, dir) char* prompt;
 int* dir;
 {
   char command;
@@ -289,9 +283,7 @@ rnd()
   return rnd_seed;
 }
 
-int
-randint(maxval)
-int maxval;
+int randint(maxval) int maxval;
 {
   register long randval;
 
@@ -299,9 +291,7 @@ int maxval;
   return ((int)(randval % maxval) + 1);
 }
 #define MAX_SHORT 0xffff
-int
-randnor(mean, stand)
-int mean, stand;
+int randnor(mean, stand) int mean, stand;
 {
   register int tmp, offset, low, iindex, high;
 
@@ -346,24 +336,18 @@ int mean, stand;
 
   return mean + offset;
 }
-int
-damroll(num, sides)
-int num, sides;
+int damroll(num, sides) int num, sides;
 {
   register int i, sum = 0;
 
   for (i = 0; i < num; i++) sum += randint(sides);
   return (sum);
 }
-int
-pdamroll(array)
-uint8_t* array;
+int pdamroll(array) uint8_t* array;
 {
   return damroll(array[0], array[1]);
 }
-int
-critical_blow(weight, plus, dam)
-register int weight, plus, dam;
+int critical_blow(weight, plus, dam) register int weight, plus, dam;
 {
   register int critical;
 
@@ -762,9 +746,7 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
     } while (!flag);
   }
 }
-int
-next_to_corr(y, x)
-register int y, x;
+int next_to_corr(y, x) register int y, x;
 {
   register int k, j, i;
   register struct caveS* c_ptr;
@@ -780,9 +762,7 @@ register int y, x;
     }
   return (i);
 }
-static int
-next_to(y, x)
-register int y, x;
+static int next_to(y, x) register int y, x;
 {
   register int next;
 
@@ -799,9 +779,7 @@ register int y, x;
     next = FALSE;
   return (next);
 }
-int
-distance(y1, x1, y2, x2)
-int y1, x1, y2, x2;
+int distance(y1, x1, y2, x2) int y1, x1, y2, x2;
 {
   register int dy, dx;
 
@@ -818,27 +796,20 @@ static void try_door(y, x) register int y, x;
       next_to(y, x))
     place_door(y, x);
 }
-int
-set_room(element)
-register int element;
+int set_room(element) register int element;
 {
   return (element == FLOOR_DARK || element == FLOOR_LIGHT);
 }
-int
-set_corr(element)
-register int element;
+int set_corr(element) register int element;
 {
   return (element == FLOOR_CORR || element == FLOOR_OBST);
 }
-int
-set_floor(element)
-int element;
+int set_floor(element) int element;
 {
   return (element <= MAX_FLOOR);
 }
-int
-set_large(item)         /* Items too large to fit in chests   -DJG- */
-struct treasureS* item; /* Use treasure_type since item not yet created */
+int set_large(item)         /* Items too large to fit in chests   -DJG- */
+    struct treasureS* item; /* Use treasure_type since item not yet created */
 {
   switch (item->tval) {
     case TV_CHEST:
@@ -858,9 +829,7 @@ struct treasureS* item; /* Use treasure_type since item not yet created */
   }
   return FALSE;
 }
-int
-slot_equip(tval)
-int tval;
+int slot_equip(tval) int tval;
 {
   int slot = 0;
   switch (tval) {
@@ -906,9 +875,7 @@ int tval;
   }
   return slot;
 }
-int
-get_obj_num(level, must_be_small)
-int level, must_be_small;
+int get_obj_num(level, must_be_small) int level, must_be_small;
 {
   int i, j;
 
@@ -948,9 +915,7 @@ int level, must_be_small;
   }
   return (i);
 }
-int
-get_mon_num(level)
-int level;
+int get_mon_num(level) int level;
 {
   register int i, j, num;
 
@@ -979,9 +944,7 @@ int level;
   }
   return i;
 }
-int
-place_monster(y, x, z, slp)
-register int y, x, z;
+int place_monster(y, x, z, slp) register int y, x, z;
 int slp;
 {
   struct monS* mon;
@@ -1067,6 +1030,7 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
 
   // invcopy(&t_list[cur_pos], z);
   // TBD: duck type
+  obj->flags = treasure->flags;
   obj->tidx = z;
   obj->tval = treasure->tval;
   obj->tchar = treasure->tchar;
@@ -1427,9 +1391,7 @@ register int* mm;
       break;
   }
 }
-int
-mmove(dir, y, x)
-int dir;
+int mmove(dir, y, x) int dir;
 register int *y, *x;
 {
   register int new_row, new_col;
@@ -1491,9 +1453,7 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 void update_mon(monptr) int monptr;
 {
 }
-int
-test_hit(bth, level, pth, ac)
-int bth, level, pth, ac;
+int test_hit(bth, level, pth, ac) int bth, level, pth, ac;
 {
   register int i, die;
 
@@ -1513,9 +1473,7 @@ static void mon_death(y, x) int y, x;
 {
   caveD[y][x].midx = 0;
 }
-static int
-mon_take_hit(midx, dam)
-int midx, dam;
+static int mon_take_hit(midx, dam) int midx, dam;
 {
   struct monS* mon = &entity_monD[midx];
   mon->hp -= dam;
@@ -1535,9 +1493,7 @@ static void obj_desc(oidx) int oidx;
 
   snprintf(AP(descD), "%s", treasure->name);
 }
-BOOL
-is_a_vowel(c)
-char c;
+BOOL is_a_vowel(c) char c;
 {
   switch (c) {
     case 'a':
@@ -1582,6 +1538,73 @@ py_init()
   AC(statD.mod_stat);
   memcpy(statD.use_stat, AP(stat));
 }
+int8_t modify_stat(stat, amount) int stat, amount;
+{
+  int loop, i;
+  int8_t tmp_stat;
+
+  tmp_stat = statD.cur_stat[stat];
+  loop = (amount < 0 ? -amount : amount);
+  for (i = 0; i < loop; i++) {
+    if (amount > 0) {
+      if (tmp_stat < 18)
+        tmp_stat++;
+      else if (tmp_stat < 108)
+        tmp_stat += 10;
+      else
+        tmp_stat = 118;
+    } else {
+      if (tmp_stat > 27)
+        tmp_stat -= 10;
+      else if (tmp_stat > 18)
+        tmp_stat = 18;
+      else if (tmp_stat > 3)
+        tmp_stat--;
+    }
+  }
+  return tmp_stat;
+}
+void set_use_stat(stat) int stat;
+{
+  statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
+
+  // if (stat == A_STR) {
+  //   py.flags.status |= PY_STR_WGT;
+  //   calc_bonuses();
+  // } else if (stat == A_DEX)
+  //   calc_bonuses();
+  // else if (stat == A_INT) {
+  //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
+  //   calc_mana(A_INT);
+  // } else if (stat == A_WIS) {
+  //   if (class[py.misc.pclass].spell == PRIEST) calc_spells(A_WIS);
+  //   calc_mana(A_WIS);
+  // } else if (stat == A_CON)
+  //   calc_hitpoints();
+}
+void py_bonuses(obj, factor) struct objS* obj;
+int factor;
+{
+  int i, amount;
+
+  amount = obj->p1 * factor;
+  if (obj->flags & TR_STATS) {
+    for (i = 0; i < 6; i++)
+      if ((1 << i) & obj->flags) {
+        statD.mod_stat[i] += amount;
+        set_use_stat(i);
+      }
+  }
+  // if (TR_SEARCH & obj->flags) {
+  //  py.misc.srh += amount;
+  //  py.misc.fos -= amount;
+  //}
+  // if (TR_STEALTH & obj->flags) py.misc.stl += amount;
+  // if (TR_SPEED & obj->flags) change_speed(-amount);
+  // if ((TR_BLIND & obj->flags) && (factor > 0)) py.flags.blind += 1000;
+  // if ((TR_TIMID & obj->flags) && (factor > 0)) py.flags.afraid += 50;
+  // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
+}
 static void
 py_map()
 {
@@ -1597,9 +1620,7 @@ py_map()
   panel_update(&panelD, uD.y, uD.x, TRUE);
   free_turn_flag = TRUE;
 }
-static int
-py_inven(begin, end)
-int begin, end;
+static int py_inven(begin, end) int begin, end;
 {
   int line = 0;
 
@@ -1675,9 +1696,7 @@ py_carry_count()
   }
   return count;
 }
-static int
-inven_carry(obj_id)
-int obj_id;
+static int inven_carry(obj_id) int obj_id;
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     if (!invenD[it]) {

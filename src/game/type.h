@@ -59,6 +59,7 @@ struct treasureS {
 
 struct objS {
   int id;
+  uint32_t flags;
   uint16_t tidx;  // treasure definition
   uint8_t tval;
   uint8_t tchar;
