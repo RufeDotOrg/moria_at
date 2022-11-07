@@ -9,8 +9,32 @@ struct uS {
   int gold;
   int ac;
   int toac;
+  // Class/Race
+  uint8_t bth;
+  uint8_t search;
+  uint8_t fos;  // Frequency of search
+  uint8_t disarm;
+  uint8_t stealth;
+  uint8_t save;
+  uint8_t mult_exp;  // multiplier for exp-per-level
 };
 static struct uS uD;
+
+struct classS {
+  char *title;           /* type of class		*/
+  uint8_t adj_hd;          /* Adjust hit points		*/
+  uint8_t mdis;            /* mod disarming traps		*/
+  uint8_t msrh;            /* modifier to searching	*/
+  uint8_t mstl;            /* modifier to stealth		*/
+  uint8_t mfos;            /* modifier to freq-of-search	*/
+  uint8_t mbth;            /* modifier to base to hit	*/
+  uint8_t mbthb;           /* modifier to base to hit - bows*/
+  uint8_t msav;            /* Class modifier to save	*/
+  uint8_t mattr[MAX_A];    /* Class modifier for attributes	*/
+  uint8_t spell;           /* class use mage spells	*/
+  uint8_t m_exp;           /* Class experience factor	*/
+  uint8_t first_spell_lev; /* First level where class can use spells. */
+};
 
 // Only the player has stats
 struct statS {

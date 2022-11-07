@@ -1563,6 +1563,17 @@ py_init()
   uD.mhp = 100;
   uD.lev = 1;
 
+  // Race & class
+  int clidx = randint(AL(classD));
+  struct classS* cl_ptr = &classD[clidx];
+  uD.bth = cl_ptr->mbth;
+  uD.search = cl_ptr->msrh;
+  uD.fos = cl_ptr->mfos;
+  uD.disarm = cl_ptr->mdis;
+  uD.stealth = cl_ptr->mstl;
+  uD.save = cl_ptr->msav;
+  uD.mult_exp = cl_ptr->m_exp;
+
   int8_t stat[MAX_A];
   for (int it = 0; it < MAX_A; ++it) {
     stat[it] = 15;

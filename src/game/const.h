@@ -99,42 +99,42 @@
 #define OBJ_GREAT 12  // 1/x treasure is a big surprise!
 
 // Wearable obj flags
-#define TR_STATS	0x0000003FL	/* the stats must be the low 6 bits */
-#define TR_STR		0x00000001L
-#define TR_INT		0x00000002L
-#define TR_WIS		0x00000004L
-#define TR_DEX		0x00000008L
-#define TR_CON		0x00000010L
-#define TR_CHR		0x00000020L
-#define TR_SEARCH	0x00000040L
-#define TR_SLOW_DIGEST	0x00000080L
-#define TR_STEALTH	0x00000100L
-#define TR_AGGRAVATE	0x00000200L
-#define TR_TELEPORT	0x00000400L
-#define TR_REGEN	0x00000800L
-#define TR_SPEED	0x00001000L
+#define TR_STATS 0x0000003FL /* the stats must be the low 6 bits */
+#define TR_STR 0x00000001L
+#define TR_INT 0x00000002L
+#define TR_WIS 0x00000004L
+#define TR_DEX 0x00000008L
+#define TR_CON 0x00000010L
+#define TR_CHR 0x00000020L
+#define TR_SEARCH 0x00000040L
+#define TR_SLOW_DIGEST 0x00000080L
+#define TR_STEALTH 0x00000100L
+#define TR_AGGRAVATE 0x00000200L
+#define TR_TELEPORT 0x00000400L
+#define TR_REGEN 0x00000800L
+#define TR_SPEED 0x00001000L
 
-#define TR_EGO_WEAPON	0x0007E000L
-#define TR_SLAY_DRAGON	0x00002000L
-#define TR_SLAY_ANIMAL	0x00004000L
-#define TR_SLAY_EVIL	0x00008000L
-#define TR_SLAY_UNDEAD	0x00010000L
-#define TR_FROST_BRAND	0x00020000L
-#define TR_FLAME_TONGUE	0x00040000L
+#define TR_EGO_WEAPON 0x0007E000L
+#define TR_SLAY_DRAGON 0x00002000L
+#define TR_SLAY_ANIMAL 0x00004000L
+#define TR_SLAY_EVIL 0x00008000L
+#define TR_SLAY_UNDEAD 0x00010000L
+#define TR_FROST_BRAND 0x00020000L
+#define TR_FLAME_TONGUE 0x00040000L
 
-#define TR_RES_FIRE	0x00080000L
-#define TR_RES_ACID	0x00100000L
-#define TR_RES_COLD	0x00200000L
-#define TR_SUST_STAT	0x00400000L
-#define TR_FREE_ACT	0x00800000L
-#define TR_SEE_INVIS	0x01000000L
-#define TR_RES_LIGHT	0x02000000L
-#define TR_FFALL	0x04000000L
-#define TR_BLIND	0x08000000L
-#define TR_TIMID	0x10000000L
-#define TR_TUNNEL	0x20000000L
-#define TR_INFRA	0x40000000L
-#define TR_CURSED	0x80000000L
+#define TR_RES_FIRE 0x00080000L
+#define TR_RES_ACID 0x00100000L
+#define TR_RES_COLD 0x00200000L
+#define TR_SUST_STAT 0x00400000L
+#define TR_FREE_ACT 0x00800000L
+#define TR_SEE_INVIS 0x01000000L
+#define TR_RES_LIGHT 0x02000000L
+#define TR_FFALL 0x04000000L
+#define TR_BLIND 0x08000000L
+#define TR_TIMID 0x10000000L
+#define TR_TUNNEL 0x20000000L
+#define TR_INFRA 0x40000000L
+#define TR_CURSED 0x80000000L
 
 /* Creature constants						*/
 #define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */
@@ -143,26 +143,30 @@
 #define MAX_WIN_MON 2
 
 /* creature defense flags */
-#define CD_DRAGON	0x0001
-#define CD_ANIMAL	0x0002
-#define CD_EVIL		0x0004
-#define CD_UNDEAD	0x0008
-#define CD_WEAKNESS	0x03F0
-#define CD_FROST	0x0010
-#define CD_FIRE		0x0020
-#define CD_POISON	0x0040
-#define CD_ACID		0x0080
-#define CD_LIGHT	0x0100
-#define CD_STONE	0x0200
+#define CD_DRAGON 0x0001
+#define CD_ANIMAL 0x0002
+#define CD_EVIL 0x0004
+#define CD_UNDEAD 0x0008
+#define CD_WEAKNESS 0x03F0
+#define CD_FROST 0x0010
+#define CD_FIRE 0x0020
+#define CD_POISON 0x0040
+#define CD_ACID 0x0080
+#define CD_LIGHT 0x0100
+#define CD_STONE 0x0200
 
-#define CD_NO_SLEEP	0x1000
-#define CD_INFRA	0x2000
-#define CD_MAX_HP	0x4000
+#define CD_NO_SLEEP 0x1000
+#define CD_INFRA 0x2000
+#define CD_MAX_HP 0x4000
 
 /* Player constants */
 #define MAX_PLAYER_LEVEL 40
 #define MAX_EXP 999999
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
+
+/* Class spell types */
+#define SP_MAGE 1
+#define SP_PRIEST 2
 
 /* magic numbers for players inventory array */
 #define INVEN_EQUIP 22
