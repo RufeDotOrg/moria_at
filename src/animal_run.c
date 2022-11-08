@@ -2038,6 +2038,7 @@ py_takeoff()
       }
     }
   }
+  calc_bonuses();
 }
 static void py_carry(y, x, pickup) int y, x;
 int pickup;
