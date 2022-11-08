@@ -2104,6 +2104,7 @@ py_wear()
             invenD[slot] = obj->id;
             invenD[iidx] = 0;
             py_bonuses(obj, 1);
+            obj_desc(obj_index(obj));
             MSG("You are wearing %s.", descD);
           }
         }
