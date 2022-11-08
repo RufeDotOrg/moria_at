@@ -139,7 +139,8 @@
 /* Creature constants						*/
 #define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */
 #define MAX_MON_LEVEL 40
-#define MON_NASTY 50  // 1/x monsters are a big baddie
+#define MON_NASTY 50     // 1/x monsters are a big baddie
+#define MON_DRAIN_LIFE 2 /* Percent of player exp drained per hit */
 #define MAX_WIN_MON 2
 #define CRE_LEV_ADJ 3
 

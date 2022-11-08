@@ -2311,8 +2311,268 @@ static void mon_attack(midx) int midx;
     if (test_hit(bth, adj, 0, uac)) flag = TRUE;
     if (flag) {
       int damage = damroll(attack->attack_dice, attack->attack_sides);
-      damage -= (uac * damage) / 200;
-      py_take_hit(damage);
+      switch (attack_type) {
+        case 1: /*Normal attack  */
+                /* round half-way case down */
+          damage -= (uac * damage) / 200;
+          py_take_hit(damage);
+          break;
+        case 2: /*Lose Strength*/
+          py_take_hit(damage);
+          // if (py.flags.sustain_str)
+          //  msg_print("You feel weaker for a moment, but it passes.");
+          // else if (randint(2) == 1) {
+          //   msg_print("You feel weaker.");
+          //   (void)dec_stat(A_STR);
+          // }
+          break;
+        case 3: /*Confusion attack*/
+          py_take_hit(damage);
+          //f_ptr = &py.flags;
+          //if (randint(2) == 1) {
+          //  if (f_ptr->confused < 1) {
+          //    msg_print("You feel confused.");
+          //    f_ptr->confused += randint((int)r_ptr->level);
+          //  } else
+          //    notice = FALSE;
+          //  f_ptr->confused += 3;
+          //} else
+          //  notice = FALSE;
+          break;
+        case 4: /*Fear attack  */
+          py_take_hit(damage);
+          //f_ptr = &py.flags;
+          //if (player_saves())
+          //  msg_print("You resist the effects!");
+          //else if (f_ptr->afraid < 1) {
+          //  msg_print("You are suddenly afraid!");
+          //  f_ptr->afraid += 3 + randint((int)r_ptr->level);
+          //} else {
+          //  f_ptr->afraid += 3;
+          //  notice = FALSE;
+          //}
+          break;
+        case 5: /*Fire attack  */
+          msg_print("You are enveloped in flames!");
+          // fire_dam(damage);
+          break;
+        case 6: /*Acid attack  */
+          msg_print("You are covered in acid!");
+          // acid_dam(damage);
+          break;
+        case 7: /*Cold attack  */
+          msg_print("You are covered with frost!");
+          // cold_dam(damage);
+          break;
+        case 8: /*Lightning attack*/
+          msg_print("Lightning strikes you!");
+          // light_dam(damage);
+          break;
+        case 9: /*Corrosion attack*/
+          msg_print("A stinging red gas swirls about you.");
+          // corrode_gas();
+          py_take_hit(damage);
+          break;
+        case 10: /*Blindness attack*/
+          py_take_hit(damage);
+          //f_ptr = &py.flags;
+          //if (f_ptr->blind < 1) {
+          //  f_ptr->blind += 10 + randint((int)r_ptr->level);
+          //  msg_print("Your eyes begin to sting.");
+          //} else {
+          //  f_ptr->blind += 5;
+          //  notice = FALSE;
+          //}
+          break;
+        case 11: /*Paralysis attack*/
+          py_take_hit(damage);
+          //f_ptr = &py.flags;
+          //if (player_saves())
+          //  msg_print("You resist the effects!");
+          //else if (f_ptr->paralysis < 1) {
+          //  if (f_ptr->free_act)
+          //    msg_print("You are unaffected.");
+          //  else {
+          //    f_ptr->paralysis = randint((int)r_ptr->level) + 3;
+          //    msg_print("You are paralyzed.");
+          //  }
+          //} else
+          //  notice = FALSE;
+          break;
+        case 12: /*Steal Money    */
+          //if ((py.flags.paralysis < 1) &&
+          //    (randint(124) < py.stats.use_stat[A_DEX]))
+          //  msg_print("You quickly protect your money pouch!");
+          //else {
+          //  gold = (p_ptr->au / 10) + randint(25);
+          //  if (gold > p_ptr->au)
+          //    p_ptr->au = 0;
+          //  else
+          //    p_ptr->au -= gold;
+          //  msg_print("Your purse feels lighter.");
+          //  prt_gold();
+          //}
+          //if (randint(2) == 1) {
+          //  msg_print("There is a puff of smoke!");
+          //  teleport_away(monptr, MAX_SIGHT);
+          //}
+          break;
+        case 13: /*Steal Object   */
+          //if ((py.flags.paralysis < 1) &&
+          //    (randint(124) < py.stats.use_stat[A_DEX]))
+          //  msg_print("You grab hold of your backpack!");
+          //else {
+          //  i = randint(inven_ctr) - 1;
+          //  inven_destroy(i);
+          //  msg_print("Your backpack feels lighter.");
+          //}
+          //if (randint(2) == 1) {
+          //  msg_print("There is a puff of smoke!");
+          //  teleport_away(monptr, MAX_SIGHT);
+          //}
+          break;
+        case 14: /*Poison   */
+          py_take_hit(damage);
+          // f_ptr = &py.flags;
+          // msg_print("You feel very sick.");
+          // f_ptr->poisoned += randint((int)r_ptr->level) + 5;
+          break;
+        case 15: /*Lose dexterity */
+          py_take_hit(damage);
+          //f_ptr = &py.flags;
+          //if (f_ptr->sustain_dex)
+          //  msg_print("You feel clumsy for a moment, but it passes.");
+          //else {
+          //  msg_print("You feel more clumsy.");
+          //  (void)dec_stat(A_DEX);
+          //}
+          break;
+        case 16: /*Lose constitution */
+          py_take_hit(damage);
+          //f_ptr = &py.flags;
+          //if (f_ptr->sustain_con)
+          //  msg_print("Your body resists the effects of the disease.");
+          //else {
+          //  msg_print("Your health is damaged!");
+          //  (void)dec_stat(A_CON);
+          //}
+          break;
+        case 17: /*Lose intelligence */
+          py_take_hit(damage);
+          //f_ptr = &py.flags;
+          //msg_print("You have trouble thinking clearly.");
+          //if (f_ptr->sustain_int)
+          //  msg_print("But your mind quickly clears.");
+          //else
+          //  (void)dec_stat(A_INT);
+          break;
+        case 18: /*Lose wisdom     */
+          py_take_hit(damage);
+          //f_ptr = &py.flags;
+          //if (f_ptr->sustain_wis)
+          //  msg_print("Your wisdom is sustained.");
+          //else {
+          //  msg_print("Your wisdom is drained.");
+          //  (void)dec_stat(A_WIS);
+          //}
+          break;
+        case 19: /*Lose experience  */
+          msg_print("You feel your life draining away!");
+          // lose_exp(damage + (uD.exp / 100) * MON_DRAIN_LIFE);
+          break;
+        case 20: /*Aggravate monster*/
+          // aggravate_monster(20);
+          break;
+        case 21: /*Disenchant     */
+          // flag = FALSE;
+          // // INVEN_AUX is protected
+          // switch (randint(7)) {
+          //   case 1:
+          //     i = INVEN_WIELD;
+          //     break;
+          //   case 2:
+          //     i = INVEN_BODY;
+          //     break;
+          //   case 3:
+          //     i = INVEN_ARM;
+          //     break;
+          //   case 4:
+          //     i = INVEN_OUTER;
+          //     break;
+          //   case 5:
+          //     i = INVEN_HANDS;
+          //     break;
+          //   case 6:
+          //     i = INVEN_HEAD;
+          //     break;
+          //   case 7:
+          //     i = INVEN_FEET;
+          //     break;
+          // }
+          // i_ptr = &inventory[i];
+          // // Weapons may lose tohit/todam. Armor may lose toac.
+          // // Ego weapon toac is protected.
+          // // Gauntlets of Slaying tohit/todam are protected.
+          // if (i == INVEN_WIELD) {
+          //   if (i_ptr->tohit > 0) {
+          //     i_ptr->tohit -= randint(2);
+          //     /* don't send it below zero */
+          //     if (i_ptr->tohit < 0) i_ptr->tohit = 0;
+          //     flag = TRUE;
+          //   }
+          //   if (i_ptr->todam > 0) {
+          //     i_ptr->todam -= randint(2);
+          //     /* don't send it below zero */
+          //     if (i_ptr->todam < 0) i_ptr->todam = 0;
+          //     flag = TRUE;
+          //   }
+          // } else {
+          //   if (i_ptr->toac > 0) {
+          //     i_ptr->toac -= randint(2);
+          //     /* don't send it below zero */
+          //     if (i_ptr->toac < 0) i_ptr->toac = 0;
+          //     flag = TRUE;
+          //   }
+          // }
+          // if (flag) {
+          //   msg_print("There is a static feeling in the air.");
+          //   calc_bonuses();
+          // } else
+          //   notice = FALSE;
+          break;
+        case 22: /*Eat food     */
+          //if (find_range(TV_FOOD, TV_NEVER, &i, &j)) {
+          //  inven_destroy(i);
+          //  msg_print("It got at your rations!");
+          //} else
+          //  notice = FALSE;
+          break;
+        case 23: /*Eat light     */
+          // i_ptr = &inventory[INVEN_LIGHT];
+          // if (i_ptr->p1 > 0) {
+          //   i_ptr->p1 -= (250 + randint(250));
+          //   if (i_ptr->p1 < 1) i_ptr->p1 = 1;
+          //   if (py.flags.blind < 1)
+          //     msg_print("Your light dims.");
+          //   else
+          //     notice = FALSE;
+          // } else
+          //   notice = FALSE;
+          break;
+        case 24: /*Eat charges    */
+          // i = randint(inven_ctr) - 1;
+          // j = r_ptr->level;
+          // i_ptr = &inventory[i];
+          // if (((i_ptr->tval == TV_STAFF) || (i_ptr->tval == TV_WAND)) &&
+          //     (i_ptr->p1 > 0)) {
+          //   m_ptr->hp += j * i_ptr->p1;
+          //   i_ptr->p1 = 0;
+          //   if (!known2_p(i_ptr)) add_inscribe(i_ptr, ID_EMPTY);
+          //   msg_print("Energy drains from your pack!");
+          // } else
+          //   notice = FALSE;
+          break;
+      }
       MSG("%s%s", descD, attack_string(attack_desc));
     } else {
       MSG("%s misses you.", descD);
