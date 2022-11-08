@@ -9,7 +9,9 @@ struct uS {
   int gold;
   int ac;
   int toac;
-  // Class/Race
+  uint8_t clidx; // class
+  uint8_t ridx; // race
+  // initialized by class/race
   uint8_t bth;
   uint8_t search;
   uint8_t fos;  // Frequency of search

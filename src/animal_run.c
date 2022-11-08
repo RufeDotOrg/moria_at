@@ -1613,6 +1613,7 @@ py_init()
   // Race & class
   int ridx = randint(AL(raceD));
   struct raceS* r_ptr = &raceD[ridx];
+  uD.ridx = ridx;
   uD.bth = r_ptr->bth;
   uD.search = r_ptr->srh;
   uD.fos = r_ptr->fos;
@@ -1626,6 +1627,7 @@ py_init()
 
   int clidx = randint(AL(classD));
   struct classS* cl_ptr = &classD[clidx];
+  uD.clidx = clidx;
   uD.bth += cl_ptr->mbth;
   uD.search += cl_ptr->msrh;
   uD.fos += cl_ptr->mfos;
@@ -1838,6 +1840,9 @@ py_screen()
 #define PY_STAT(FMT, ...)                                                     \
   screen_usedD[line] = snprintf(screenD[line] + (col_width * col), col_width, \
                                 FMT, ##__VA_ARGS__);                          \
+  line += 1;
+  PY_STAT("Race: %s", raceD[uD.ridx].trace);
+  PY_STAT("Class: %s", classD[uD.clidx].title);
   line += 1;
   for (int it = 0; it < MAX_A; ++it) {
     if (statD.use_stat[it] == statD.max_stat[it]) {
