@@ -10,7 +10,7 @@ uint32_t player_exp[MAX_PLAYER_LEVEL] = {
 /* this table is used to generate a psuedo-normal distribution.   See the
    function randnor() in misc1.c, this is much faster than calling
    transcendental function to calculate a true normal distribution */
-uint16_t normal_table[] = {
+int16_t normal_table[] = {
     206,   613,   1022,  1430,  1838,  2245,  2652,  3058,  3463,  3867,  4271,
     4673,  5075,  5475,  5874,  6271,  6667,  7061,  7454,  7845,  8234,  8621,
     9006,  9389,  9770,  10148, 10524, 10898, 11269, 11638, 12004, 12367, 12727,

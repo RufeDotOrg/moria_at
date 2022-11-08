@@ -299,22 +299,14 @@ int randint(maxval) int maxval;
   randval = rnd();
   return ((int)(randval % maxval) + 1);
 }
-#define MAX_SHORT 0xffff
+#define MAX_S16 0x7fff
 int randnor(mean, stand) int mean, stand;
 {
-  register int tmp, offset, low, iindex, high;
+  register int offset, low, iindex, high;
+  int16_t tmp;
 
-  tmp = randint(MAX_SHORT);
-
-  /* off scale, assign random value between 4 and 5 times SD */
-  if (tmp == MAX_SHORT) {
-    offset = 4 * stand + randint(stand);
-
-    /* one half are negative */
-    if (randint(2) == 1) offset = -offset;
-
-    return mean + offset;
-  }
+  tmp = randint(MAX_S16);
+  tmp = MAX_S16;
 
   /* binary search normal normal_table to get index that matches tmp */
   /* this takes up to 8 iterations */
@@ -322,7 +314,7 @@ int randnor(mean, stand) int mean, stand;
   iindex = AL(normal_table) >> 1;
   high = AL(normal_table);
   while (TRUE) {
-    if ((normal_table[iindex] == tmp) || (high == (low + 1))) break;
+    if (high <= low + 1) break;
     if (normal_table[iindex] > tmp) {
       high = iindex;
       iindex = low + ((iindex - low) >> 1);
@@ -339,6 +331,9 @@ int randnor(mean, stand) int mean, stand;
        round the half way case up */
 #define NORMAL_TABLE_SD 64
   offset = ((stand * iindex) + (NORMAL_TABLE_SD >> 1)) / NORMAL_TABLE_SD;
+
+  /* off scale, boost random value between 4 and 5 times SD */
+  if (tmp == MAX_S16) offset += randint(stand);
 
   /* one half should be negative */
   if (randint(2) == 1) offset = -offset;
@@ -1574,7 +1569,7 @@ py_init()
   uD.lev = 1;
 
   // Race & class
-  int ridx = randint(AL(raceD));
+  int ridx = randint(AL(raceD)) - 1;
   struct raceS* r_ptr = &raceD[ridx];
   uD.ridx = ridx;
   uD.bth = r_ptr->bth;
@@ -1588,7 +1583,7 @@ py_init()
     stat[it] = 15 + r_ptr->attr[it];
   }
 
-  int clidx = randint(AL(classD));
+  int clidx = randint(AL(classD)) - 1;
   struct classS* cl_ptr = &classD[clidx];
   uD.clidx = clidx;
   uD.bth += cl_ptr->mbth;
