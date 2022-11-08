@@ -3090,6 +3090,7 @@ dungeon()
         break;
       case CTRL('h'):
         uD.chp = uD.mhp;
+        msg_print("You are healed.");
         break;
       case CTRL('t'):
         msg_print("teleport");
