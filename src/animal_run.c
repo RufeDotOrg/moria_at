@@ -1784,12 +1784,13 @@ mon_take_hit(midx, dam)
 int midx, dam;
 {
   struct monS* mon = &entity_monD[midx];
+  struct creatureS* cre = &creatureD[mon->cidx];
   mon->hp -= dam;
   if (mon->hp >= 0) return -1;
 
   mon_death(mon->fy, mon->fx);
-  // new_exp = ((long)c_ptr->mexp * c_ptr->level) / p_ptr->lev;
-  uD.exp += 1;
+  // TBD: frac_exp
+  uD.exp += (cre->mexp * cre->level) / uD.lev;
   int cidx = mon->cidx;
   mon_unuse(mon);
   return cidx;
