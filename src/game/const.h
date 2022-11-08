@@ -171,11 +171,11 @@
 #define SP_PRIEST 2
 
 /* Class level adjustment */
-#define LA_BTH		0
-#define LA_BTHB	1
-#define LA_DEVICE	2
-#define LA_DISARM	3
-#define LA_SAVE	4
+#define LA_BTH 0
+#define LA_BTHB 1
+#define LA_DEVICE 2
+#define LA_DISARM 3
+#define LA_SAVE 4
 #define MAX_LA 5
 
 /* magic numbers for players inventory array */
