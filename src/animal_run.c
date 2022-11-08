@@ -1495,6 +1495,37 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 void update_mon(monptr) int monptr;
 {
 }
+int bth_adj(attype) int attype;
+{
+  switch (attype) {
+    case 1: return 60;
+    case 2: return -3;
+    case 3: return 10;
+    case 4: return 10;
+    case 5: return 10;
+    case 6: return 0;
+    case 7: return 10;
+    case 8: return 10;
+    case 9: return 0;
+    case 10: return 2;
+    case 11: return 2;
+    case 12: return 5;
+    case 13: return 2;
+    case 14: return 5;
+    case 15: return 0;
+    case 16: return 0;
+    case 17: return 2;
+    case 18: return 2;
+    case 19: return 5;
+    case 20: return 120; // TBD: originally cannot miss
+    case 21: return 20;
+    case 22: return 5;
+    case 23: return 5;
+    case 24: return 15;
+    case 99: return 120; // TBD: originally cannot miss
+  }
+  return -60;
+}
 int
 tohit_adj()
 {
@@ -1598,6 +1629,7 @@ int test_hit(bth, level_adj, pth, ac) int bth, level_adj, pth, ac;
   i = bth + pth * BTH_PLUS_ADJ + level_adj;
 
   // pth could be less than 0 if player wielding weapon too heavy for him
+  // bth can be less than 0 for creatures
   // always miss 1 out of 20, always hit 1 out of 20
   die = randint(20);
   if ((die != 1) && ((die == 20) || ((i > 0) && (randint(i) > ac))))
@@ -2168,6 +2200,7 @@ void py_attack(y, x) int y, x;
 }
 static void mon_attack(midx) int midx;
 {
+  int bth;
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
@@ -2179,9 +2212,10 @@ static void mon_attack(midx) int midx;
     if (!cre->attack_list[it]) break;
     struct attackS* attack = &attackD[cre->attack_list[it]];
 
+    bth = bth_adj(attack->attack_type);
     disturb(1, 0);
     int flag = FALSE;
-    if (test_hit(60, adj, 0, uac)) flag = TRUE;
+    if (test_hit(bth, adj, 0, uac)) flag = TRUE;
     if (flag) {
       MSG("%s hits you.", descD);
       int damage = damroll(attack->attack_dice, attack->attack_sides);
