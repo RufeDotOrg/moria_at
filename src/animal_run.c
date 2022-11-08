@@ -2027,6 +2027,30 @@ void set_use_stat(stat) int stat;
   // } else if (stat == A_CON)
   //   calc_hitpoints();
 }
+int
+dec_stat(stat)
+register int stat;
+{
+  int tmp_stat, loss;
+
+  tmp_stat = statD.cur_stat[stat];
+  if (tmp_stat > 3) {
+    if (tmp_stat < 19)
+      tmp_stat--;
+    else if (tmp_stat < 117) {
+      loss = (((118 - tmp_stat) >> 1) + 1) >> 1;
+      tmp_stat += -randint(loss) - loss;
+      if (tmp_stat < 18) tmp_stat = 18;
+    } else
+      tmp_stat--;
+
+    statD.cur_stat[stat] = tmp_stat;
+    set_use_stat(stat);
+    return TRUE;
+  }
+
+  return FALSE;
+}
 void py_bonuses(obj, factor) struct objS* obj;
 int factor;
 {
@@ -2380,8 +2404,8 @@ static void mon_attack(midx) int midx;
           // if (py.flags.sustain_str)
           //  msg_print("You feel weaker for a moment, but it passes.");
           // else if (randint(2) == 1) {
-          //   msg_print("You feel weaker.");
-          //   (void)dec_stat(A_STR);
+          msg_print("You feel weaker.");
+          dec_stat(A_STR);
           // }
           break;
         case 3: /*Confusion attack*/
@@ -2501,8 +2525,8 @@ static void mon_attack(midx) int midx;
           // if (f_ptr->sustain_dex)
           //  msg_print("You feel clumsy for a moment, but it passes.");
           // else {
-          //  msg_print("You feel more clumsy.");
-          //  (void)dec_stat(A_DEX);
+          msg_print("You feel more clumsy.");
+          dec_stat(A_DEX);
           //}
           break;
         case 16: /*Lose constitution */
@@ -2511,18 +2535,18 @@ static void mon_attack(midx) int midx;
           // if (f_ptr->sustain_con)
           //  msg_print("Your body resists the effects of the disease.");
           // else {
-          //  msg_print("Your health is damaged!");
-          //  (void)dec_stat(A_CON);
+          msg_print("Your health is damaged!");
+          dec_stat(A_CON);
           //}
           break;
         case 17: /*Lose intelligence */
           py_take_hit(damage);
           // f_ptr = &py.flags;
-          // msg_print("You have trouble thinking clearly.");
+          msg_print("You have trouble thinking clearly.");
           // if (f_ptr->sustain_int)
           //  msg_print("But your mind quickly clears.");
           // else
-          //  (void)dec_stat(A_INT);
+          dec_stat(A_INT);
           break;
         case 18: /*Lose wisdom     */
           py_take_hit(damage);
@@ -2530,8 +2554,8 @@ static void mon_attack(midx) int midx;
           // if (f_ptr->sustain_wis)
           //  msg_print("Your wisdom is sustained.");
           // else {
-          //  msg_print("Your wisdom is drained.");
-          //  (void)dec_stat(A_WIS);
+          msg_print("Your wisdom is drained.");
+          dec_stat(A_WIS);
           //}
           break;
         case 19: /*Lose experience  */
