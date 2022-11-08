@@ -1935,14 +1935,12 @@ py_wear()
   calc_bonuses();
 }
 static void
-py_drop()
+py_drop(y, x) int y, x;
 {
-  char c, y, x;
+  char c;
   struct caveS* c_ptr;
   struct objS* obj;
 
-  y = uD.y;
-  x = uD.x;
   c_ptr = &caveD[y][x];
   int count = py_inven(0, INVEN_EQUIP);
   draw();
@@ -2568,8 +2566,8 @@ dungeon()
     c = inkey();
     if (c == -1) break;
 
-    x = uD.x;
     y = uD.y;
+    x = uD.x;
     switch (c) {
       case ' ':
         free_turn_flag = TRUE;
@@ -2588,7 +2586,7 @@ dungeon()
         close_object();
         break;
       case 'd':
-        py_drop();
+        py_drop(y, x);
         break;
       case 'e': {
         int count = py_inven(INVEN_EQUIP, MAX_INVEN);
