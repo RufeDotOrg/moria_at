@@ -7,8 +7,6 @@ uint32_t player_exp[MAX_PLAYER_LEVEL] = {
     75000L,  100000L,  150000L,  200000L,  300000L,  400000L, 500000L,
     750000L, 1500000L, 2500000L, 5000000L, 10000000L};
 
-int obj_teleportD[] = { TV_INVIS_TRAP, TV_DOWN_STAIR };
-
 /* this table is used to generate a psuedo-normal distribution.   See the
    function randnor() in misc1.c, this is much faster than calling
    transcendental function to calculate a true normal distribution */

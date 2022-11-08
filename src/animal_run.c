@@ -1,6 +1,5 @@
 #include "game.c"
 
-static int obj_teleport_idxD;
 static int death;
 static int dun_level;
 static int free_turn_flag;
@@ -455,8 +454,8 @@ static void build_room(yval, xval) int yval, xval;
   }
 }
 typedef struct {
-  int x;
   int y;
+  int x;
 } coords;
 BOOL
 in_bounds(int row, int col)
@@ -853,6 +852,18 @@ set_floor(element)
 int element;
 {
   return (element <= MAX_FLOOR);
+}
+BOOL
+is_door(tval)
+int tval;
+{
+  switch (tval) {
+    case TV_OPEN_DOOR:
+    case TV_CLOSED_DOOR:
+    case TV_SECRET_DOOR:
+      return TRUE;
+  }
+  return FALSE;
 }
 int
 set_large(item)         /* Items too large to fit in chests   -DJG- */
@@ -2342,7 +2353,9 @@ status_update()
   line += 1;
   PR_STAT("GOLD", uD.gold);
 }
-void py_teleport_near(y, x, uy, ux) int y, x;
+BOOL
+py_teleport_near(y, x, uy, ux)
+int y, x;
 int *uy, *ux;
 {
   for (int ro = y - 1; ro <= y + 1; ++ro) {
@@ -2354,9 +2367,11 @@ int *uy, *ux;
       *uy = ro;
       *ux = co;
       MSG("Teleport near (%d, %d)", ro, co);
-      return;
+      return TRUE;
     }
   }
+
+  return FALSE;
 }
 static void hit_trap(y, x) int y, x;
 {
@@ -2399,7 +2414,6 @@ dungeon()
 {
   int c, y, x;
   new_level_flag = FALSE;
-  obj_teleport_idxD = 0;
   while (1) {
     free_turn_flag = FALSE;
     status_update();
@@ -2491,25 +2505,33 @@ dungeon()
         }
         break;
       case CTRL('o'): {
-        int seek_tval = obj_teleportD[obj_teleport_idxD];
+        static int y_obj_teleportD;
+        static int x_obj_teleportD;
+        int row, col;
+        int fy, fx;
+        fy = y_obj_teleportD;
+        fx = x_obj_teleportD;
 
-        for (int row = 1; row < MAX_HEIGHT - 1; ++row) {
-          for (int col = 1; col < MAX_WIDTH - 1; ++col) {
+        for (row = 1; row < MAX_HEIGHT - 1; ++row) {
+          for (col = 1; col < MAX_WIDTH - 1; ++col) {
             int oidx = caveD[row][col].oidx;
+            if (!oidx) continue;
             struct objS* obj = &entity_objD[oidx];
-            if (obj->tval != seek_tval) continue;
+            if (is_door(obj->tval)) continue;
 
-            log_usedD =
-                snprintf(AP(logD), "%s: %d oidx", "Teleport to object", oidx);
-            py_teleport_near(row, col, &y, &x);
-            row = MAX_HEIGHT;
-            col = MAX_WIDTH;
+            if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
+
+            if (py_teleport_near(row, col, &y, &x)) {
+              MSG("Teleport to obj %d", oidx);
+              y_obj_teleportD = row;
+              x_obj_teleportD = col;
+              row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+            }
           }
         }
-        if (y == uD.y && x == uD.x) {
-          obj_teleport_idxD = ((obj_teleport_idxD + 1) % AL(obj_teleportD));
-          log_usedD =
-              snprintf(AP(logD), "Switching object type %d", obj_teleport_idxD);
+        if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
+          y_obj_teleportD = x_obj_teleportD = 0;
+          msg_print("Reset object teleport");
         }
       } break;
     }
