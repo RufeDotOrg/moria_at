@@ -1934,26 +1934,33 @@ py_wear()
   }
   calc_bonuses();
 }
-static void
-py_drop(y, x) int y, x;
+static void py_drop(y, x) int y, x;
 {
   char c;
   struct caveS* c_ptr;
   struct objS* obj;
 
   c_ptr = &caveD[y][x];
+  if (c_ptr->oidx != 0) {
+    MSG("There is already an object on the ground here.");
+    return;
+  }
+
   int count = py_inven(0, INVEN_EQUIP);
+  if (!count) {
+    MSG("You aren't carrying anything");
+    return;
+  }
   draw();
-  if (c_ptr->oidx == 0 && count) {
-    if (in_subcommand("Drop which item?", &c)) {
-      int iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        obj = obj_get(invenD[iidx]);
-        obj->fy = y;
-        obj->fx = x;
-        c_ptr->oidx = obj_index(obj);
-        invenD[iidx] = 0;
-      }
+
+  if (in_subcommand("Drop which item?", &c)) {
+    int iidx = c - 'a';
+    if (iidx < INVEN_EQUIP) {
+      obj = obj_get(invenD[iidx]);
+      obj->fy = y;
+      obj->fx = x;
+      c_ptr->oidx = obj_index(obj);
+      invenD[iidx] = 0;
     }
   }
 }
