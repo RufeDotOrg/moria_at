@@ -2328,8 +2328,8 @@ static void mon_attack(midx) int midx;
           break;
         case 3: /*Confusion attack*/
           py_take_hit(damage);
-          //f_ptr = &py.flags;
-          //if (randint(2) == 1) {
+          // f_ptr = &py.flags;
+          // if (randint(2) == 1) {
           //  if (f_ptr->confused < 1) {
           //    msg_print("You feel confused.");
           //    f_ptr->confused += randint((int)r_ptr->level);
@@ -2341,10 +2341,10 @@ static void mon_attack(midx) int midx;
           break;
         case 4: /*Fear attack  */
           py_take_hit(damage);
-          //f_ptr = &py.flags;
-          //if (player_saves())
+          // f_ptr = &py.flags;
+          // if (player_saves())
           //  msg_print("You resist the effects!");
-          //else if (f_ptr->afraid < 1) {
+          // else if (f_ptr->afraid < 1) {
           //  msg_print("You are suddenly afraid!");
           //  f_ptr->afraid += 3 + randint((int)r_ptr->level);
           //} else {
@@ -2375,8 +2375,8 @@ static void mon_attack(midx) int midx;
           break;
         case 10: /*Blindness attack*/
           py_take_hit(damage);
-          //f_ptr = &py.flags;
-          //if (f_ptr->blind < 1) {
+          // f_ptr = &py.flags;
+          // if (f_ptr->blind < 1) {
           //  f_ptr->blind += 10 + randint((int)r_ptr->level);
           //  msg_print("Your eyes begin to sting.");
           //} else {
@@ -2386,10 +2386,10 @@ static void mon_attack(midx) int midx;
           break;
         case 11: /*Paralysis attack*/
           py_take_hit(damage);
-          //f_ptr = &py.flags;
-          //if (player_saves())
+          // f_ptr = &py.flags;
+          // if (player_saves())
           //  msg_print("You resist the effects!");
-          //else if (f_ptr->paralysis < 1) {
+          // else if (f_ptr->paralysis < 1) {
           //  if (f_ptr->free_act)
           //    msg_print("You are unaffected.");
           //  else {
@@ -2400,10 +2400,10 @@ static void mon_attack(midx) int midx;
           //  notice = FALSE;
           break;
         case 12: /*Steal Money    */
-          //if ((py.flags.paralysis < 1) &&
+          // if ((py.flags.paralysis < 1) &&
           //    (randint(124) < py.stats.use_stat[A_DEX]))
           //  msg_print("You quickly protect your money pouch!");
-          //else {
+          // else {
           //  gold = (p_ptr->au / 10) + randint(25);
           //  if (gold > p_ptr->au)
           //    p_ptr->au = 0;
@@ -2412,21 +2412,21 @@ static void mon_attack(midx) int midx;
           //  msg_print("Your purse feels lighter.");
           //  prt_gold();
           //}
-          //if (randint(2) == 1) {
+          // if (randint(2) == 1) {
           //  msg_print("There is a puff of smoke!");
           //  teleport_away(monptr, MAX_SIGHT);
           //}
           break;
         case 13: /*Steal Object   */
-          //if ((py.flags.paralysis < 1) &&
+          // if ((py.flags.paralysis < 1) &&
           //    (randint(124) < py.stats.use_stat[A_DEX]))
           //  msg_print("You grab hold of your backpack!");
-          //else {
+          // else {
           //  i = randint(inven_ctr) - 1;
           //  inven_destroy(i);
           //  msg_print("Your backpack feels lighter.");
           //}
-          //if (randint(2) == 1) {
+          // if (randint(2) == 1) {
           //  msg_print("There is a puff of smoke!");
           //  teleport_away(monptr, MAX_SIGHT);
           //}
@@ -2439,39 +2439,39 @@ static void mon_attack(midx) int midx;
           break;
         case 15: /*Lose dexterity */
           py_take_hit(damage);
-          //f_ptr = &py.flags;
-          //if (f_ptr->sustain_dex)
+          // f_ptr = &py.flags;
+          // if (f_ptr->sustain_dex)
           //  msg_print("You feel clumsy for a moment, but it passes.");
-          //else {
+          // else {
           //  msg_print("You feel more clumsy.");
           //  (void)dec_stat(A_DEX);
           //}
           break;
         case 16: /*Lose constitution */
           py_take_hit(damage);
-          //f_ptr = &py.flags;
-          //if (f_ptr->sustain_con)
+          // f_ptr = &py.flags;
+          // if (f_ptr->sustain_con)
           //  msg_print("Your body resists the effects of the disease.");
-          //else {
+          // else {
           //  msg_print("Your health is damaged!");
           //  (void)dec_stat(A_CON);
           //}
           break;
         case 17: /*Lose intelligence */
           py_take_hit(damage);
-          //f_ptr = &py.flags;
-          //msg_print("You have trouble thinking clearly.");
-          //if (f_ptr->sustain_int)
+          // f_ptr = &py.flags;
+          // msg_print("You have trouble thinking clearly.");
+          // if (f_ptr->sustain_int)
           //  msg_print("But your mind quickly clears.");
-          //else
+          // else
           //  (void)dec_stat(A_INT);
           break;
         case 18: /*Lose wisdom     */
           py_take_hit(damage);
-          //f_ptr = &py.flags;
-          //if (f_ptr->sustain_wis)
+          // f_ptr = &py.flags;
+          // if (f_ptr->sustain_wis)
           //  msg_print("Your wisdom is sustained.");
-          //else {
+          // else {
           //  msg_print("Your wisdom is drained.");
           //  (void)dec_stat(A_WIS);
           //}
@@ -2541,7 +2541,7 @@ static void mon_attack(midx) int midx;
           //   notice = FALSE;
           break;
         case 22: /*Eat food     */
-          //if (find_range(TV_FOOD, TV_NEVER, &i, &j)) {
+          // if (find_range(TV_FOOD, TV_NEVER, &i, &j)) {
           //  inven_destroy(i);
           //  msg_print("It got at your rations!");
           //} else
@@ -2800,7 +2800,7 @@ static void search(y, x, chance) int y, x, chance;
         }
       }
 }
-static void make_move(monptr, mm, rcmove) int monptr;
+static void make_move(midx, mm, rcmove) int midx;
 int* mm;
 uint32_t* rcmove;
 {
@@ -2811,7 +2811,7 @@ uint32_t* rcmove;
   i = 0;
   do_turn = FALSE;
   do_move = FALSE;
-  m_ptr = &entity_monD[monptr];
+  m_ptr = &entity_monD[midx];
   for (int i = 0; i < 5; ++i) {
     /* Get new position  	*/
     newy = m_ptr->fy;
@@ -2829,8 +2829,8 @@ uint32_t* rcmove;
            be faster than character, and hence could have just
            moved next to character this same turn */
         // TBD:
-        // if (!m_ptr->ml) update_mon(monptr);
-        mon_attack(monptr);
+        // if (!m_ptr->ml) update_mon(midx);
+        mon_attack(midx);
         do_move = FALSE;
         do_turn = TRUE;
       }
@@ -2856,21 +2856,27 @@ uint32_t* rcmove;
     if (do_turn) break;
   }
 }
-static void mon_move(monptr, rcmove) int monptr;
+static void mon_move(midx, rcmove) int midx;
 uint32_t* rcmove;
 {
   int mm[9];
-  get_moves(monptr, mm);
-  make_move(monptr, mm, rcmove);
+  get_moves(midx, mm);
+  make_move(midx, mm, rcmove);
 }
 void creatures(move) int move;
 {
   uint32_t rcmove;
   int move_count;
+  struct creatureS* cre;
 
   FOR_EACH(mon, {
+    cre = &creatureD[mon->cidx];
     mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
-    if (move) mon_move(it_index, &rcmove);
+    if (move) {
+      if ((cre->cmove & CM_ATTACK_ONLY) == 0 || mon->cdis < 2) {
+        mon_move(it_index, &rcmove);
+      }
+    }
     update_mon(it_index);
   });
 }
