@@ -2081,7 +2081,6 @@ int begin, end;
       line += 1;
     }
   }
-  free_turn_flag = TRUE;
   return line;
 }
 void
@@ -3051,6 +3050,7 @@ dungeon()
         py_drop(y, x);
         break;
       case 'e': {
+        free_turn_flag = TRUE;
         int count = py_inven(INVEN_EQUIP, MAX_INVEN);
         MSG("You wearing %d items.", count);
       } break;
@@ -3058,6 +3058,7 @@ dungeon()
         bash(&y, &x);
         break;
       case 'i': {
+        free_turn_flag = TRUE;
         int count = py_inven(0, INVEN_EQUIP);
         MSG("You carrying %d items.", count);
       } break;
