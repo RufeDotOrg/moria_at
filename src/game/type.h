@@ -9,8 +9,8 @@ struct uS {
   int gold;
   int ac;
   int toac;
-  uint8_t clidx; // class
-  uint8_t ridx; // race
+  uint8_t clidx;  // class
+  uint8_t ridx;   // race
   // initialized by class/race
   uint8_t bth;
   uint8_t search;
@@ -127,19 +127,19 @@ struct objS {
 };
 
 struct creatureS {
-  char *name;        /* Descrip of creature	*/
-  uint32_t cmove;    /* Bit field		*/
-  uint32_t spells;   /* Creature spells	*/
-  uint16_t cdefense; /* Bit field		*/
-  uint16_t mexp;     /* Exp value for kill	*/
-  uint8_t sleep;     /* Inactive counter/10	*/
-  uint8_t aaf;       /* Area affect radius	*/
-  uint8_t ac;        /* AC			*/
-  uint8_t speed;     /* Movement speed+10	*/
-  uint8_t cchar;     /* Character rep.	*/
-  uint8_t hd[2];     /* Creatures hit die	*/
-  uint8_t damage[4]; /* Type attack and damage*/
-  uint8_t level;     /* Level of creature	*/
+  char *name;             /* Descrip of creature	*/
+  uint32_t cmove;         /* Bit field		*/
+  uint32_t spells;        /* Creature spells	*/
+  uint16_t cdefense;      /* Bit field		*/
+  uint16_t mexp;          /* Exp value for kill	*/
+  uint8_t sleep;          /* Inactive counter/10	*/
+  uint8_t aaf;            /* Area affect radius	*/
+  uint8_t ac;             /* AC			*/
+  uint8_t speed;          /* Movement speed+10	*/
+  uint8_t cchar;          /* Character rep.	*/
+  uint8_t hd[2];          /* Creatures hit die	*/
+  uint8_t attack_list[4]; /* Type attack and damage*/
+  uint8_t level;          /* Level of creature	*/
 };
 
 struct attackS {

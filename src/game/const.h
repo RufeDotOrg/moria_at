@@ -141,6 +141,7 @@
 #define MAX_MON_LEVEL 40
 #define MON_NASTY 50  // 1/x monsters are a big baddie
 #define MAX_WIN_MON 2
+#define CRE_LEV_ADJ 3
 
 /* creature defense flags */
 #define CD_DRAGON 0x0001
@@ -162,11 +163,20 @@
 /* Player constants */
 #define MAX_PLAYER_LEVEL 40
 #define MAX_EXP 999999
+
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
 
 /* Class spell types */
 #define SP_MAGE 1
 #define SP_PRIEST 2
+
+/* Class level adjustment */
+#define LA_BTH		0
+#define LA_BTHB	1
+#define LA_DEVICE	2
+#define LA_DISARM	3
+#define LA_SAVE	4
+#define MAX_LA 5
 
 /* magic numbers for players inventory array */
 #define INVEN_EQUIP 22

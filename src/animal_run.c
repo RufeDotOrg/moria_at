@@ -1527,14 +1527,13 @@ void update_mon(monptr) int monptr;
 {
 }
 int
-test_hit(bth, level, pth, ac)
-int bth, level, pth, ac;
+test_hit(bth, level_adj, pth, ac)
+int bth, level_adj, pth, ac;
 {
   register int i, die;
 
   disturb(1, 0);
-  i = bth + pth * BTH_PLUS_ADJ;
-  // TBD:  + (level * class_level_adj[py.misc.pclass][attack_type]);
+  i = bth + pth * BTH_PLUS_ADJ + level_adj;
 
   // pth could be less than 0 if player wielding weapon too heavy for him
   // always miss 1 out of 20, always hit 1 out of 20
@@ -1968,6 +1967,7 @@ void py_attack(y, x) int y, x;
 
   int midx = caveD[y][x].midx;
   struct monS* mon = &entity_monD[midx];
+  struct creatureS* cre = &creatureD[mon->cidx];
   struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
   mon_desc(midx);
@@ -1976,10 +1976,11 @@ void py_attack(y, x) int y, x;
   blows = 1;
   base_tohit = 30;
 
-  int creature_ac = 0;
+  int adj = uD.lev * level_adj[uD.clidx][LA_BTH];
+  int creature_ac = cre->ac;
   /* Loop for number of blows,  trying to hit the critter.	  */
   for (int it = 0; it < blows; ++it) {
-    if (test_hit(uD.bth, uD.lev, 0, creature_ac)) {
+    if (test_hit(uD.bth, adj, 0, creature_ac)) {
       MSG("You hit %s.", descD);
       if (obj->tval) {
         k = pdamroll(obj->damage);
@@ -2008,20 +2009,20 @@ static void mon_attack(midx) int midx;
   struct creatureS* cre = &creatureD[mon->cidx];
 
   mon_desc(midx);
-  int creature_level = 1;
-  int adice = 1;
-  int asides = 4;
-  for (int it = 0; it < AL(cre->damage); ++it) {
+  int adj = cre->level * CRE_LEV_ADJ;
+  int uac = uD.ac + uD.toac;
+  for (int it = 0; it < AL(cre->attack_list); ++it) {
     if (death) break;
-    if (!cre->damage[it]) break;
+    if (!cre->attack_list[it]) break;
+    struct attackS* attack = &attackD[cre->attack_list[it]];
+
     disturb(1, 0);
     int flag = FALSE;
-    int tac = uD.ac + uD.toac;
-    if (test_hit(60, creature_level, 0, tac)) flag = TRUE;
+    if (test_hit(60, adj, 0, uac)) flag = TRUE;
     if (flag) {
       MSG("%s hits you.", descD);
-      int damage = damroll(adice, asides);
-      damage -= (tac * damage) / 200;
+      int damage = damroll(attack->attack_dice, attack->attack_sides);
+      damage -= (uac * damage) / 200;
       py_take_hit(damage);
     } else {
       MSG("%s misses you.", descD);

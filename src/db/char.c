@@ -1,4 +1,5 @@
 
+
 struct classS classD[] = {
     {"Warrior", 9, 25, 14, 1, 38, 70, 55, 18, {5, -2, -2, 2, 2, -1}, 0, 0, 0},
     {"Mage",
@@ -66,6 +67,17 @@ struct classS classD[] = {
      SP_PRIEST,
      35,
      1},
+};
+
+// level adjustment
+int level_adj[][MAX_LA] = {
+    /*         bth    bthb   device  disarm   save/misc hit  */
+    /* Warrior */ {4, 4, 2, 2, 3},
+    /* Mage    */ {2, 2, 4, 3, 3},
+    /* Priest  */ {2, 2, 4, 3, 3},
+    /* Rogue   */ {3, 4, 3, 4, 3},
+    /* Ranger  */ {3, 4, 3, 3, 3},
+    /* Paladin */ {3, 3, 3, 2, 3},
 };
 
 struct raceS raceD[] = {
