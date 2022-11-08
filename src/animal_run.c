@@ -1065,6 +1065,10 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   obj->subval = treasure->subval;
   obj->number = treasure->number;
   obj->weight = treasure->weight;
+  obj->tohit = treasure->tohit;
+  obj->todam = treasure->todam;
+  obj->ac = treasure->ac;
+  obj->toac = treasure->toac;
   memcpy(obj->damage, treasure->damage, sizeof(obj->damage));
   obj->level = treasure->level;
 
@@ -1491,6 +1495,101 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 void update_mon(monptr) int monptr;
 {
 }
+int
+tohit_adj()
+{
+  register int total, stat;
+
+  stat = statD.use_stat[A_DEX];
+  if (stat < 4)
+    total = -3;
+  else if (stat < 6)
+    total = -2;
+  else if (stat < 8)
+    total = -1;
+  else if (stat < 16)
+    total = 0;
+  else if (stat < 17)
+    total = 1;
+  else if (stat < 18)
+    total = 2;
+  else if (stat < 69)
+    total = 3;
+  else if (stat < 118)
+    total = 4;
+  else
+    total = 5;
+  stat = statD.use_stat[A_STR];
+  if (stat < 4)
+    total -= 3;
+  else if (stat < 5)
+    total -= 2;
+  else if (stat < 7)
+    total -= 1;
+  else if (stat < 18)
+    total -= 0;
+  else if (stat < 94)
+    total += 1;
+  else if (stat < 109)
+    total += 2;
+  else if (stat < 117)
+    total += 3;
+  else
+    total += 4;
+  return (total);
+}
+int
+toac_adj()
+{
+  register int stat;
+
+  stat = statD.use_stat[A_DEX];
+  if (stat < 4)
+    return (-4);
+  else if (stat == 4)
+    return (-3);
+  else if (stat == 5)
+    return (-2);
+  else if (stat == 6)
+    return (-1);
+  else if (stat < 15)
+    return (0);
+  else if (stat < 18)
+    return (1);
+  else if (stat < 59)
+    return (2);
+  else if (stat < 94)
+    return (3);
+  else if (stat < 117)
+    return (4);
+  else
+    return (5);
+}
+int
+todam_adj()
+{
+  register int stat;
+
+  stat = statD.use_stat[A_STR];
+  if (stat < 4)
+    return (-2);
+  else if (stat < 5)
+    return (-1);
+  else if (stat < 16)
+    return (0);
+  else if (stat < 17)
+    return (1);
+  else if (stat < 18)
+    return (2);
+  else if (stat < 94)
+    return (3);
+  else if (stat < 109)
+    return (4);
+  else if (stat < 117)
+    return (5);
+  else
+    return (6);
+}
 int test_hit(bth, level_adj, pth, ac) int bth, level_adj, pth, ac;
 {
   register int i, die;
@@ -1560,6 +1659,108 @@ static void mon_desc(midx) int midx;
     snprintf(AP(death_descD), "A %s", cre->name);
 }
 void
+calc_bonuses()
+{
+  int it;
+  // p_ptr = &py.flags;
+  // m_ptr = &py.misc;
+  // if (p_ptr->slow_digest) p_ptr->food_digested++;
+  // if (p_ptr->regenerate) p_ptr->food_digested -= 3;
+  // p_ptr->see_inv = FALSE;
+  // p_ptr->teleport = FALSE;
+  // p_ptr->free_act = FALSE;
+  // p_ptr->slow_digest = FALSE;
+  // p_ptr->aggravate = FALSE;
+  // p_ptr->sustain_str = FALSE;
+  // p_ptr->sustain_int = FALSE;
+  // p_ptr->sustain_wis = FALSE;
+  // p_ptr->sustain_con = FALSE;
+  // p_ptr->sustain_dex = FALSE;
+  // p_ptr->sustain_chr = FALSE;
+  // p_ptr->fire_resist = FALSE;
+  // p_ptr->acid_resist = FALSE;
+  // p_ptr->cold_resist = FALSE;
+  // p_ptr->regenerate = FALSE;
+  // p_ptr->lght_resist = FALSE;
+  // p_ptr->ffall = FALSE;
+
+  uD.ptohit = tohit_adj(); /* Real To Hit   */
+  uD.ptodam = todam_adj(); /* Real To Dam   */
+  uD.ptoac = toac_adj();   /* Real To AC    */
+  uD.pac = 0;              /* Real AC       */
+  for (it = INVEN_WIELD; it < INVEN_LIGHT; it++) {
+    struct objS* obj = obj_get(invenD[it]);
+    uD.ptohit += obj->tohit;
+    if (obj->tval != TV_BOW) /* Bows can't damage. -CJS- */
+      uD.ptodam += obj->todam;
+    uD.ptoac += obj->toac;
+    uD.pac += obj->ac;
+  }
+
+  // if (weapon_heavy)
+  //  uD.dis_th +=
+  //      (py.stats.use_stat[A_STR] * 15 - inventory[INVEN_WIELD].weight);
+
+  /* Add in temporary spell increases  */
+  // if (p_ptr->invuln > 0) {
+  //  m_ptr->pac += 100;
+  //  m_ptr->dis_ac += 100;
+  //}
+  // if (p_ptr->blessed > 0) {
+  //  m_ptr->pac += 2;
+  //  m_ptr->dis_ac += 2;
+  //}
+  // if (p_ptr->detect_inv > 0) p_ptr->see_inv = TRUE;
+
+  // item_flags = 0;
+  // i_ptr = &inventory[INVEN_WIELD];
+  // for (i = INVEN_WIELD; i < INVEN_LIGHT; i++) {
+  //  item_flags |= i_ptr->flags;
+  //  i_ptr++;
+  //}
+  // if (TR_SLOW_DIGEST & item_flags) p_ptr->slow_digest = TRUE;
+  // if (TR_AGGRAVATE & item_flags) p_ptr->aggravate = TRUE;
+  // if (TR_TELEPORT & item_flags) p_ptr->teleport = TRUE;
+  // if (TR_REGEN & item_flags) p_ptr->regenerate = TRUE;
+  // if (TR_RES_FIRE & item_flags) p_ptr->fire_resist = TRUE;
+  // if (TR_RES_ACID & item_flags) p_ptr->acid_resist = TRUE;
+  // if (TR_RES_COLD & item_flags) p_ptr->cold_resist = TRUE;
+  // if (TR_FREE_ACT & item_flags) p_ptr->free_act = TRUE;
+  // if (TR_SEE_INVIS & item_flags) p_ptr->see_inv = TRUE;
+  // if (TR_RES_LIGHT & item_flags) p_ptr->lght_resist = TRUE;
+  // if (TR_FFALL & item_flags) p_ptr->ffall = TRUE;
+
+  // i_ptr = &inventory[INVEN_WIELD];
+  // for (i = INVEN_WIELD; i < INVEN_LIGHT; i++) {
+  //  if (TR_SUST_STAT & i_ptr->flags) switch (i_ptr->p1) {
+  //      case 1:
+  //        p_ptr->sustain_str = TRUE;
+  //        break;
+  //      case 2:
+  //        p_ptr->sustain_int = TRUE;
+  //        break;
+  //      case 3:
+  //        p_ptr->sustain_wis = TRUE;
+  //        break;
+  //      case 4:
+  //        p_ptr->sustain_con = TRUE;
+  //        break;
+  //      case 5:
+  //        p_ptr->sustain_dex = TRUE;
+  //        break;
+  //      case 6:
+  //        p_ptr->sustain_chr = TRUE;
+  //        break;
+  //      default:
+  //        break;
+  //    }
+  //  i_ptr++;
+  //}
+
+  // if (p_ptr->slow_digest) p_ptr->food_digested--;
+  // if (p_ptr->regenerate) p_ptr->food_digested += 3;
+}
+void
 py_init()
 {
   int8_t stat[MAX_A];
@@ -1607,6 +1808,8 @@ py_init()
   for (int it = 0; it < MAX_A; ++it) {
     statD.max_stat[it] += 1;
   }
+
+  calc_bonuses();
 }
 int8_t modify_stat(stat, amount) int stat, amount;
 {
@@ -1638,11 +1841,6 @@ void set_use_stat(stat) int stat;
 {
   statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
 
-  // if (stat == A_STR) {
-  //   py.flags.status |= PY_STR_WGT;
-  //   calc_bonuses();
-  // } else if (stat == A_DEX)
-  //   calc_bonuses();
   // else if (stat == A_INT) {
   //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
   //   calc_mana(A_INT);
@@ -1734,6 +1932,7 @@ py_wear()
       }
     }
   }
+  calc_bonuses();
 }
 static void
 py_drop()
@@ -1804,6 +2003,11 @@ py_screen()
               statD.max_stat[it]);
     }
   }
+  line += 1;
+  PY_STAT("ToHit: %+6d", uD.ptohit);
+  PY_STAT("ToDam: %+6d", uD.ptodam);
+  PY_STAT("Ac   : %6d", uD.pac);
+  PY_STAT("ToAc : %+6d", uD.ptoac);
   free_turn_flag = TRUE;
 }
 void
@@ -1963,7 +2167,7 @@ static void mon_attack(midx) int midx;
 
   mon_desc(midx);
   int adj = cre->level * CRE_LEV_ADJ;
-  int uac = uD.ac + uD.toac;
+  int uac = uD.pac + uD.ptoac;
   for (int it = 0; it < AL(cre->attack_list); ++it) {
     if (death) break;
     if (!cre->attack_list[it]) break;
@@ -2294,6 +2498,7 @@ status_update()
   PR_STAT("EXP ", uD.exp);
   line += 1;
   PR_STAT("GOLD", uD.gold);
+  PR_STAT("AC  ", uD.pac);
 }
 BOOL py_teleport_near(y, x, uy, ux) int y, x;
 int *uy, *ux;
@@ -2319,7 +2524,7 @@ static void hit_trap(y, x) int y, x;
   struct caveS* c_ptr;
   struct objS* obj;
 
-  tac = uD.ac + uD.toac;
+  tac = uD.pac + uD.ptoac;
   // end_find();
   c_ptr = &caveD[y][x];
   obj = &entity_objD[c_ptr->oidx];

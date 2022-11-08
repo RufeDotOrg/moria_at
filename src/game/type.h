@@ -7,8 +7,10 @@ struct uS {
   int chp;
   int mhp;
   int gold;
-  int ac;
-  int toac;
+  int ptohit;
+  int ptodam;
+  int pac;
+  int ptoac;
   uint8_t clidx;  // class
   uint8_t ridx;   // race
   // initialized by class/race
@@ -122,6 +124,10 @@ struct objS {
   uint8_t subval;
   uint8_t number;
   uint16_t weight;
+  int16_t tohit;
+  int16_t todam;
+  int16_t ac;
+  int16_t toac;
   uint8_t damage[2];
   uint8_t level;
 };
