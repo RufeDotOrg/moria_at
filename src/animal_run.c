@@ -1498,33 +1498,124 @@ void update_mon(monptr) int monptr;
 int bth_adj(attype) int attype;
 {
   switch (attype) {
-    case 1: return 60;
-    case 2: return -3;
-    case 3: return 10;
-    case 4: return 10;
-    case 5: return 10;
-    case 6: return 0;
-    case 7: return 10;
-    case 8: return 10;
-    case 9: return 0;
-    case 10: return 2;
-    case 11: return 2;
-    case 12: return 5;
-    case 13: return 2;
-    case 14: return 5;
-    case 15: return 0;
-    case 16: return 0;
-    case 17: return 2;
-    case 18: return 2;
-    case 19: return 5;
-    case 20: return 120; // TBD: originally cannot miss
-    case 21: return 20;
-    case 22: return 5;
-    case 23: return 5;
-    case 24: return 15;
-    case 99: return 120; // TBD: originally cannot miss
+    case 1:
+      return 60;
+    case 2:
+      return -3;
+    case 3:
+      return 10;
+    case 4:
+      return 10;
+    case 5:
+      return 10;
+    case 6:
+      return 0;
+    case 7:
+      return 10;
+    case 8:
+      return 10;
+    case 9:
+      return 0;
+    case 10:
+      return 2;
+    case 11:
+      return 2;
+    case 12:
+      return 5;
+    case 13:
+      return 2;
+    case 14:
+      return 5;
+    case 15:
+      return 0;
+    case 16:
+      return 0;
+    case 17:
+      return 2;
+    case 18:
+      return 2;
+    case 19:
+      return 5;
+    case 20:
+      return 120;  // TBD: originally cannot miss
+    case 21:
+      return 20;
+    case 22:
+      return 5;
+    case 23:
+      return 5;
+    case 24:
+      return 15;
+    case 99:
+      return 120;  // TBD: originally cannot miss
   }
   return -60;
+}
+char* attack_string(adesc) int adesc;
+{
+  switch (adesc) {
+    case 1:
+      return ((" hits you."));
+    case 2:
+      return ((" bites you."));
+    case 3:
+      return ((" claws you."));
+    case 4:
+      return ((" stings you."));
+    case 5:
+      return ((" touches you."));
+    case 6:
+      return ((" kicks you."));
+    case 7:
+      return ((" gazes at you."));
+    case 8:
+      return ((" breathes on you."));
+    case 9:
+      return ((" spits on you."));
+    case 10:
+      return ((" makes a horrible wail."));
+    case 11:
+      return ((" embraces you."));
+    case 12:
+      return ((" crawls on you."));
+    case 13:
+      return ((" releases a cloud of spores."));
+    case 14:
+      return ((" begs you for money."));
+    case 15:
+      descD[0] = 0;
+      return ("You've been slimed!");
+    case 16:
+      return ((" crushes you."));
+    case 17:
+      return ((" tramples you."));
+    case 18:
+      return ((" drools on you."));
+    case 19:
+      switch (randint(9)) {
+        case 1:
+          return ((" insults you!"));
+        case 2:
+          return ((" insults your mother!"));
+        case 3:
+          return ((" gives you the finger!"));
+        case 4:
+          return ((" humiliates you!"));
+        case 5:
+          return ((" wets on your leg!"));
+        case 6:
+          return ((" defiles you!"));
+        case 7:
+          return ((" dances around you!"));
+        case 8:
+          return ((" makes obscene gestures!"));
+        case 9:
+          return ((" moons you!!!"));
+      }
+    case 99:
+      return ((" is repelled."));
+  }
+  return " hits you.";
 }
 int
 tohit_adj()
@@ -2212,15 +2303,17 @@ static void mon_attack(midx) int midx;
     if (!cre->attack_list[it]) break;
     struct attackS* attack = &attackD[cre->attack_list[it]];
 
-    bth = bth_adj(attack->attack_type);
+    int attack_type = attack->attack_type;
+    int attack_desc = attack->attack_desc;
+    bth = bth_adj(attack_type);
     disturb(1, 0);
     int flag = FALSE;
     if (test_hit(bth, adj, 0, uac)) flag = TRUE;
     if (flag) {
-      MSG("%s hits you.", descD);
       int damage = damroll(attack->attack_dice, attack->attack_sides);
       damage -= (uac * damage) / 200;
       py_take_hit(damage);
+      MSG("%s%s", descD, attack_string(attack_desc));
     } else {
       MSG("%s misses you.", descD);
     }
