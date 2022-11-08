@@ -1979,7 +1979,7 @@ void py_attack(y, x) int y, x;
   int creature_ac = 0;
   /* Loop for number of blows,  trying to hit the critter.	  */
   for (int it = 0; it < blows; ++it) {
-    if (test_hit(base_tohit, uD.lev, 0, creature_ac)) {
+    if (test_hit(uD.bth, uD.lev, 0, creature_ac)) {
       MSG("You hit %s.", descD);
       if (obj->tval) {
         k = pdamroll(obj->damage);
