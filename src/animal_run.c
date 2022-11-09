@@ -3471,6 +3471,7 @@ int *uy, *ux;
 {
   for (int ro = y - 1; ro <= y + 1; ++ro) {
     for (int co = x - 1; co <= x + 1; ++co) {
+      if (ro == y && co == x) continue;
       if ((caveD[ro][co].fval >= MIN_CLOSED_SPACE || caveD[ro][co].midx != 0)) {
         continue;
       }
