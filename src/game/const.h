@@ -231,6 +231,8 @@
 #define MAX_TITLES     45     /* Used with scrolls     */
 
 /* inventory stacking subvals */
+#define MAX_SUBVAL 64
+#define MASK_SUBVAL (MAX_SUBVAL - 1)
 /* these never stack */
 #define ITEM_NEVER_STACK_MIN	0
 #define ITEM_NEVER_STACK_MAX	63

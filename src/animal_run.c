@@ -848,6 +848,61 @@ int element;
 {
   return (element <= MAX_FLOOR);
 }
+int
+tr_subval(tr_ptr)
+struct treasureS* tr_ptr;
+{
+  return MASK_SUBVAL & tr_ptr->subval;
+}
+// Known refers to stackable treasures that are instanced
+// Distinct from identification which is PER object
+static uint8_t knownD[6][MAX_SUBVAL];
+int
+tr_known_row(tr_ptr)
+struct treasureS* tr_ptr;
+{
+  switch (tr_ptr->tval) {
+    case TV_AMULET:
+      return (0);
+    case TV_RING:
+      return (1);
+    case TV_STAFF:
+      return (2);
+    case TV_WAND:
+      return (3);
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+      return (4);
+    case TV_POTION1:
+    case TV_POTION2:
+      return (5);
+    case TV_FOOD:
+      if (tr_subval(tr_ptr) < AL(mushrooms)) return (6);
+      return (-1);
+    default:
+      return (-1);
+  }
+}
+BOOL
+tr_known(tr_ptr)
+struct treasureS* tr_ptr;
+{
+  int krow = tr_known_row(tr_ptr);
+  if (krow < 0) return TRUE;
+  int subval = tr_subval(tr_ptr);
+  return knownD[krow][subval];
+}
+BOOL
+tr_make_known(tr_ptr)
+struct treasureS* tr_ptr;
+{
+  int krow = tr_known_row(tr_ptr);
+  int subval = tr_subval(tr_ptr);
+  if (krow < 0) return FALSE;
+  BOOL change = 1 ^ knownD[krow][subval];
+  knownD[krow][subval] = 1;
+  return change;
+}
 BOOL
 vuln_fire(obj)
 struct objS* obj;
@@ -2016,15 +2071,14 @@ void obj_desc(obj) struct objS* obj;
   char *basenm, *modstr;
   char damstr[80];
   int indexx, modify, append_name, tmp;
-  struct treasureS* tre;
+  struct treasureS* tr_ptr;
 
-  tre = &treasureD[obj->tidx];
+  tr_ptr = &treasureD[obj->tidx];
   indexx = obj->subval & (ITEM_SINGLE_STACK_MIN - 1);
-  basenm = tre->name;
+  basenm = tr_ptr->name;
   modstr = 0;
   damstr[0] = 0;
-  // TBD: known1_p
-  modify = TRUE;  //(known1_p(obj) ? FALSE : TRUE);
+  modify = tr_known(tr_ptr) ? FALSE : TRUE;
   append_name = FALSE;
   switch (obj->tval) {
     case TV_MISC:
@@ -2174,7 +2228,7 @@ void obj_desc(obj) struct objS* obj;
     strcpy(descD, basenm);
   if (append_name) {
     strcat(descD, " of ");
-    strcat(descD, tre->name);
+    strcat(descD, tr_ptr->name);
   }
   // if (obj->number != 1) {
   //   insert_str(descD, "ch~", "ches");
