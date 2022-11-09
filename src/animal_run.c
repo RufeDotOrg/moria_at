@@ -1992,7 +1992,8 @@ void obj_detail(obj) struct objS* obj;
 
   // TBD: magik empty damned
 }
-void obj_desc(obj) struct objS* obj;
+void obj_desc(obj, prefix) struct objS* obj;
+BOOL prefix;
 {
   char *basenm, *modstr;
   char damstr[80];
@@ -2157,7 +2158,8 @@ void obj_desc(obj) struct objS* obj;
     strcat(descD, tr_ptr->name);
   }
   if (damstr[0]) strcat(descD, damstr);
-  obj_prefix(obj, TRUE);
+  obj_prefix(obj, prefix);
+  if (prefix) obj_detail(obj);
 }
 BOOL is_a_vowel(c) char c;
 {
@@ -2453,8 +2455,7 @@ static int py_inven(begin, end) int begin, end;
     int obj_id = invenD[it];
     if (obj_id) {
       struct objS* obj = obj_get(obj_id);
-      obj_desc(obj);
-      obj_detail(obj);
+      obj_desc(obj, TRUE);
       overlay_usedD[line] =
           snprintf(AP(overlayD[line]), "%c) %s", 'a' + it - begin, descD);
       line += 1;
@@ -2483,7 +2484,7 @@ py_wear()
             invenD[slot] = obj->id;
             invenD[iidx] = 0;
             py_bonuses(obj, 1);
-            obj_desc(obj);
+            obj_desc(obj, TRUE);
             MSG("You are wearing %s.", descD);
           }
         }
@@ -2590,7 +2591,7 @@ py_takeoff()
         inven_carry(obj->id);
         invenD[iidx] = 0;
 
-        obj_desc(obj);
+        obj_desc(obj, TRUE);
         py_bonuses(obj, -1);
         MSG("You take off %s.", descD);
       }
@@ -2607,7 +2608,7 @@ int pickup;
 
   c_ptr = &caveD[y][x];
   obj = &entity_objD[c_ptr->oidx];
-  obj_desc(obj);
+  obj_desc(obj, TRUE);
 
   /* There's GOLD in them thar hills!      */
   if (obj->tval == TV_GOLD) {
@@ -2693,7 +2694,7 @@ int minus_ac(typ_dam) uint32_t typ_dam;
   if (i > 0) {
     j = tmp[randint(i) - 1];
     obj = obj_get(invenD[j]);
-    obj_desc(obj);
+    obj_desc(obj, FALSE);
     if (obj->flags & typ_dam) {
       MSG("Your %s resists damage!", descD);
       minus = TRUE;
