@@ -228,22 +228,22 @@
 #define INVEN_AUX 33
 #define MAX_INVEN 34
 
-#define MAX_TITLES     45     /* Used with scrolls     */
+#define MAX_TITLES 45 /* Used with scrolls     */
 
 /* inventory stacking subvals */
 #define MAX_SUBVAL 64
 #define MASK_SUBVAL (MAX_SUBVAL - 1)
 /* these never stack */
-#define ITEM_NEVER_STACK_MIN	0
-#define ITEM_NEVER_STACK_MAX	63
+#define ITEM_NEVER_STACK_MIN 0
+#define ITEM_NEVER_STACK_MAX 63
 /* these items always stack with others of same subval, always treated as
    single objects, must be power of 2 */
-#define ITEM_SINGLE_STACK_MIN	64
-#define ITEM_SINGLE_STACK_MAX	192	/* see NOTE below */
+#define ITEM_SINGLE_STACK_MIN 64
+#define ITEM_SINGLE_STACK_MAX 192 /* see NOTE below */
 /* these items stack with others only if have same subval and same p1,
    they are treated as a group for wielding, etc. */
-#define ITEM_GROUP_MIN		192
-#define ITEM_GROUP_MAX		255
+#define ITEM_GROUP_MIN 192
+#define ITEM_GROUP_MAX 255
 /* NOTE: items with subval 192 are treated as single objects, but only stack
    with others of same subval if have the same p1 value, only used for
    torches */
