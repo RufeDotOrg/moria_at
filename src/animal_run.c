@@ -1888,41 +1888,44 @@ static int mon_take_hit(midx, dam) int midx, dam;
   return cidx;
 }
 // TBD: Refactor
-void
-desc_noprefix()
+void obj_prefix(obj, prefix) struct objS* obj;
+BOOL prefix;
 {
-  // if (!strncmp("some", tmp_val, 4))
-  //   (void)strcpy(descD, &tmp_val[5]);
-  // else if (tmp_val[0] == '&')
-  //   /* eliminate the '& ' at the beginning */
-  //   (void)strcpy(descD, &tmp_val[2]);
-  // else
-  //   (void)strcpy(descD, tmp_val);
-  //
-  // ELSE
-  //
-  /* ampersand is always the first character */
-  // if (obj_name[0] == '&') {
-  //   /* use &obj_name[1], so that & does not appear in output */
-  //   if (obj->number > 1)
-  //     sprintf(descD, "%d%s", (int)obj->number, &obj_name[1]);
-  //   else if (obj->number < 1)
-  //     sprintf(descD, "%s%s", "no more", &obj_name[1]);
-  //   else if (is_a_vowel(obj_name[2]))
-  //     sprintf(descD, "an%s", &obj_name[1]);
-  //   else
-  //     sprintf(descD, "a%s", &obj_name[1]);
-  // }
-  // /* handle 'no more' case specially */
-  // else if (obj->number < 1) {
-  //   /* check for "some" at start */
-  //   if (!strncmp("some", obj_name, 4))
-  //     sprintf(descD, "no more %s", &obj_name[5]);
-  //   /* here if no article */
-  //   else
-  //     sprintf(descD, "no more %s", obj_name);
-  // } else
-  //   strcpy(descD, obj_name);
+  char obj_name[160];
+  memcpy(obj_name, descD, sizeof(obj_name));
+
+  if (prefix) {
+    /* ampersand is always the first character */
+    if (obj_name[0] == '&') {
+      /* use &obj_name[1], so that & does not appear in output */
+      if (obj->number > 1)
+        sprintf(descD, "%d%s", (int)obj->number, &obj_name[1]);
+      else if (obj->number < 1)
+        sprintf(descD, "%s%s", "no more", &obj_name[1]);
+      else if (is_a_vowel(obj_name[2]))
+        sprintf(descD, "an%s", &obj_name[1]);
+      else
+        sprintf(descD, "a%s", &obj_name[1]);
+    }
+    /* handle 'no more' case specially */
+    else if (obj->number < 1) {
+      /* check for "some" at start */
+      if (!strncmp("some", obj_name, 4))
+        sprintf(descD, "no more %s", &obj_name[5]);
+      /* here if no article */
+      else
+        sprintf(descD, "no more %s", obj_name);
+    } else
+      strcpy(descD, obj_name);
+  } else {
+    if (!strncmp("some", obj_name, 4))
+      strcpy(descD, &obj_name[5]);
+    else if (obj_name[0] == '&')
+      /* eliminate the '& ' at the beginning */
+      strcpy(descD, &obj_name[2]);
+    else
+      strcpy(descD, obj_name);
+  }
 }
 void obj_detail(obj) struct objS* obj;
 {
@@ -2153,12 +2156,8 @@ void obj_desc(obj) struct objS* obj;
     strcat(descD, " of ");
     strcat(descD, tr_ptr->name);
   }
-  // if (obj->number != 1) {
-  //   insert_str(descD, "ch~", "ches");
-  //   insert_str(descD, "~", "s");
-  // } else
-  //   insert_str(descD, "~", 0);
   if (damstr[0]) strcat(descD, damstr);
+  obj_prefix(obj, TRUE);
 }
 BOOL is_a_vowel(c) char c;
 {
