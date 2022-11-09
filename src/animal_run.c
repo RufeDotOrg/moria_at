@@ -861,7 +861,7 @@ int element;
 {
   return (element <= MAX_FLOOR);
 }
-void tr_obj_copy(tidx, obj) 
+void tr_obj_copy(tidx, obj) int tidx;
 struct objS* obj;
 {
   struct treasureS* tr_ptr = &treasureD[tidx];
@@ -2494,6 +2494,12 @@ py_init()
     }
   } while ((player_hpD[MAX_PLAYER_LEVEL - 1] < min_value) ||
            (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
+
+  // Starting equipment..
+  struct objS* dagger = obj_use();
+  tr_obj_copy(30, dagger);
+  dagger->idflag |= ID_REVEAL;
+  invenD[0] = dagger->id;
 }
 int8_t
 modify_stat(stat, amount)
