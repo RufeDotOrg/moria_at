@@ -2414,7 +2414,7 @@ py_init()
   AC(statD.mod_stat);
   memcpy(statD.use_stat, AP(stat));
 
-  // Test delta cur/max
+  // TEMP: Test delta cur/max
   for (int it = 0; it < MAX_A; ++it) {
     statD.max_stat[it] += 1;
   }
@@ -3405,6 +3405,26 @@ open_object()
     }
   }
 }
+static void
+py_make_known()
+{
+  char c;
+  struct objS* obj;
+
+  // TBD: filter?
+  int count = py_inven(0, INVEN_EQUIP);
+  draw();
+  if (count) {
+    if (in_subcommand("Make known which item?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        obj = obj_get(invenD[iidx]);
+        struct treasureS* tr_ptr = &treasureD[obj->tidx];
+        tr_make_known(tr_ptr);
+      }
+    }
+  }
+}
 static void search(y, x, chance) int y, x, chance;
 {
   register int i, j;
@@ -3639,6 +3659,10 @@ dungeon()
         int count = py_inven(0, INVEN_EQUIP);
         MSG("You carrying %d items.", count);
       } break;
+      case 'm':
+        // TEMP: testing tr_make_known
+        py_make_known();
+        break;
       case 'o':
         open_object();
         break;
