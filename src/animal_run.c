@@ -849,6 +849,70 @@ int element;
   return (element <= MAX_FLOOR);
 }
 BOOL
+vuln_fire(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_ARROW:
+    case TV_BOW:
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_SOFT_ARMOR:
+      /* Items of (RF) should not be destroyed.  */
+      if (obj->flags & TR_RES_FIRE)
+        return FALSE;
+      else
+        return TRUE;
+
+    case TV_STAFF:
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+      return TRUE;
+  }
+  return (FALSE);
+}
+BOOL
+vuln_acid(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_MISC:
+    case TV_CHEST:
+      return TRUE;
+    case TV_BOLT:
+    case TV_ARROW:
+    case TV_BOW:
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_SOFT_ARMOR:
+      if (obj->flags & TR_RES_ACID)
+        return (FALSE);
+      else
+        return (TRUE);
+  }
+  return (FALSE);
+}
+BOOL
+vuln_frost(obj)
+struct objS* obj;
+{
+  return ((obj->tval == TV_POTION1) || (obj->tval == TV_POTION2) ||
+          (obj->tval == TV_FLASK));
+}
+BOOL
+vuln_lightning(obj)
+struct objS* obj;
+{
+  return ((obj->tval == TV_RING) || (obj->tval == TV_WAND) ||
+          (obj->tval == TV_SPIKE));
+}
+BOOL
 is_door(tval)
 int tval;
 {
@@ -2287,6 +2351,111 @@ static void py_take_hit(damage) int damage;
     new_level_flag = TRUE;
   }
 }
+int inven_damage(typ, perc) int (*typ)();
+register int perc;
+{
+  register int it, j;
+
+  j = 0;
+  for (it = 0; it < INVEN_EQUIP; it++) {
+    struct objS* obj = obj_get(invenD[it]);
+    if ((*typ)(obj) && (randint(100) < perc)) {
+      // TBD: Single stack items may decrement obj->number
+      invenD[it] = 0;
+      obj_unuse(obj);
+      j++;
+    }
+  }
+  return (j);
+}
+int
+minus_ac(typ_dam)
+uint32_t typ_dam;
+{
+  register int i, j;
+  int tmp[6], minus;
+  struct objS* obj;
+
+  i = 0;
+  if (invenD[INVEN_BODY]) {
+    tmp[i] = INVEN_BODY;
+    i++;
+  }
+  if (invenD[INVEN_ARM]) {
+    tmp[i] = INVEN_ARM;
+    i++;
+  }
+  if (invenD[INVEN_OUTER]) {
+    tmp[i] = INVEN_OUTER;
+    i++;
+  }
+  if (invenD[INVEN_HANDS]) {
+    tmp[i] = INVEN_HANDS;
+    i++;
+  }
+  if (invenD[INVEN_HEAD]) {
+    tmp[i] = INVEN_HEAD;
+    i++;
+  }
+  if (invenD[INVEN_FEET]) {
+    tmp[i] = INVEN_FEET;
+    i++;
+  }
+  minus = FALSE;
+  if (i > 0) {
+    j = tmp[randint(i) - 1];
+    obj = obj_get(invenD[j]);
+    obj_desc(obj_index(obj));
+    if (obj->flags & typ_dam) {
+      MSG("Your %s resists damage!", descD);
+      minus = TRUE;
+    } else if ((obj->ac + obj->toac) > 0) {
+      MSG("Your %s is damaged!", descD);
+      obj->toac--;
+      calc_bonuses();
+      minus = TRUE;
+    }
+  }
+  return (minus);
+}
+void fire_dam(dam) int dam;
+{
+  // TBD: Resistance
+  // if (py.flags.fire_resist) dam = dam / 3;
+  // if (py.flags.resist_heat > 0) dam = dam / 3;
+  py_take_hit(dam);
+  if (inven_damage(vuln_fire, 3) > 0)
+    msg_print("There is smoke coming from your pack!");
+}
+void acid_dam(dam) int dam;
+{
+  register int flag;
+
+  flag = 0;
+  if (minus_ac(TR_RES_ACID)) flag = 1;
+  // TBD: Resistance
+  // if (py.flags.acid_resist) flag += 2;
+  py_take_hit(dam / (flag + 1));
+  if (inven_damage(vuln_acid, 3) > 0)
+    msg_print("There is an acrid smell coming from your pack!");
+}
+void cold_dam(dam) int dam;
+{
+  // if (py.flags.cold_resist) dam = dam / 3;
+  // if (py.flags.resist_cold > 0) dam = dam / 3;
+  py_take_hit(dam);
+  if (inven_damage(vuln_frost, 5) > 0)
+    msg_print("Something shatters inside your pack!");
+}
+void light_dam(dam) int dam;
+{
+  // if (py.flags.lght_resist)
+  //   take_hit((dam / 3), kb_str);
+  // else
+  py_take_hit(dam);
+  if (inven_damage(vuln_lightning, 3) > 0)
+    msg_print("There are sparks coming from your pack!");
+}
 void
 py_experience()
 {
@@ -2436,19 +2605,19 @@ static void mon_attack(midx) int midx;
           break;
         case 5: /*Fire attack  */
           msg_print("You are enveloped in flames!");
-          // fire_dam(damage);
+          fire_dam(damage);
           break;
         case 6: /*Acid attack  */
           msg_print("You are covered in acid!");
-          // acid_dam(damage);
+          acid_dam(damage);
           break;
         case 7: /*Cold attack  */
           msg_print("You are covered with frost!");
-          // cold_dam(damage);
+          cold_dam(damage);
           break;
         case 8: /*Lightning attack*/
           msg_print("Lightning strikes you!");
-          // light_dam(damage);
+          light_dam(damage);
           break;
         case 9: /*Corrosion attack*/
           msg_print("A stinging red gas swirls about you.");
