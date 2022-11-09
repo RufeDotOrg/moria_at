@@ -234,7 +234,6 @@
 #define ID_DAMD		0x2 /* cursed */
 #define ID_EMPTY	0x4 /* reveal on use */
 #define ID_REVEAL 0x8 /* Object ident is known */
-#define ID_SHOW_HITDAM	0x20 /* assigned during obj generation */
 
 /* inventory stacking subvals */
 #define MAX_SUBVAL 64

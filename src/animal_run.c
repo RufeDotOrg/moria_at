@@ -950,6 +950,22 @@ BOOL is_door(tval) int tval;
   }
   return FALSE;
 }
+int oset_hitdam(obj) struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+    case TV_BOW:
+    case TV_DIGGING:
+      return TRUE;
+    case TV_GLOVES:
+      return (obj->tohit || obj->todam);
+    case TV_RING:
+      return (obj->tohit && obj->todam);
+  }
+  return FALSE;
+}
 int set_large(item)         /* Items too large to fit in chests   -DJG- */
     struct treasureS* item; /* Use treasure_type since item not yet created */
 {
@@ -1917,7 +1933,7 @@ void obj_detail(obj) struct objS* obj;
     strcat(descD, obj->name2);
   }
   if (obj_reveal(obj)) {
-    if (obj->idflag & ID_SHOW_HITDAM)
+    if (oset_hitdam(obj))
       sprintf(tmp_str, " (%+d,%+d)", obj->tohit, obj->todam);
     else if (obj->tohit != 0)
       sprintf(tmp_str, " (%+d)", obj->tohit);
