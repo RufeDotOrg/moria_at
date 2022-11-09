@@ -731,6 +731,20 @@ static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
 
   cave_ptr->oidx = obj_index(obj);
 }
+static void new_spot(y, x) int *y, *x;
+{
+  register int i, j;
+  register struct caveS* c_ptr;
+
+  do {
+    i = randint(MAX_HEIGHT - 2);
+    j = randint(MAX_WIDTH - 2);
+    c_ptr = &caveD[i][j];
+  } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
+           (c_ptr->midx != 0));
+  *y = i;
+  *x = j;
+}
 static void place_stairs(typ, num, walls) int typ, num, walls;
 {
   register struct caveS* cave_ptr;
@@ -759,8 +773,6 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
                 place_stair_tval_tchar(y1, x1, TV_UP_STAIR, '<');
               else {
                 place_stair_tval_tchar(y1, x1, TV_DOWN_STAIR, '>');
-                uD.x = x1;
-                uD.y = y1;
               }
             }
             x1++;
@@ -1348,9 +1360,6 @@ cave_gen()
         k++;
       }
 
-  uD.x = xloc[0];
-  uD.y = yloc[0];
-
   for (i = 0; i < k; i++) {
     pick1 = randint(k) - 1;
     pick2 = randint(k) - 1;
@@ -1389,7 +1398,7 @@ cave_gen()
   place_stairs(1, randint(2), 3);
   /* Set up the character co-ords, used by alloc_monster, place_win_monster
    */
-  // new_spot(&char_row, &char_col);
+  new_spot(&uD.y, &uD.x);
 
   int alloc_level = CLAMP(dun_level / 3, 2, 10);
   alloc_mon((randint(8) + MIN_MALLOC_LEVEL + alloc_level), 0, TRUE);
