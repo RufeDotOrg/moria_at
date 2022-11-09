@@ -230,9 +230,9 @@
 
 #define MAX_TITLES 45 /* Used with scrolls     */
 
-#define ID_MAGIK	0x1 /* sense of magic */
-#define ID_DAMD		0x2 /* cursed */
-#define ID_EMPTY	0x4 /* reveal on use */
+#define ID_MAGIK 0x1  /* sense of magic */
+#define ID_DAMD 0x2   /* cursed */
+#define ID_EMPTY 0x4  /* reveal on use */
 #define ID_REVEAL 0x8 /* Object ident is known */
 
 /* inventory stacking subvals */

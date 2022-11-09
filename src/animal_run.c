@@ -140,7 +140,9 @@ msg_print(char* text)
 {
   msg_print2(text, strlen(text));
 }
-int in_subcommand(prompt, command) char* prompt;
+int
+in_subcommand(prompt, command)
+char* prompt;
 char* command;
 {
   if (log_usedD) im_print();
@@ -150,7 +152,9 @@ char* command;
   log_usedD = 0;
   return (*command != ESCAPE);
 }
-static char map_roguedir(comval) register char comval;
+static char
+map_roguedir(comval)
+register char comval;
 {
   switch (comval) {
     case 'h':
@@ -183,7 +187,9 @@ static char map_roguedir(comval) register char comval;
   }
   return (comval);
 }
-int get_dir(prompt, dir) char* prompt;
+int
+get_dir(prompt, dir)
+char* prompt;
 int* dir;
 {
   char command;
@@ -292,7 +298,9 @@ rnd()
   return rnd_seed;
 }
 
-int randint(maxval) int maxval;
+int
+randint(maxval)
+int maxval;
 {
   register long randval;
 
@@ -300,7 +308,9 @@ int randint(maxval) int maxval;
   return ((int)(randval % maxval) + 1);
 }
 #define MAX_S16 0x7fff
-int randnor(mean, stand) int mean, stand;
+int
+randnor(mean, stand)
+int mean, stand;
 {
   register int offset, low, iindex, high;
   int16_t tmp;
@@ -340,18 +350,24 @@ int randnor(mean, stand) int mean, stand;
 
   return mean + offset;
 }
-int damroll(num, sides) int num, sides;
+int
+damroll(num, sides)
+int num, sides;
 {
   register int i, sum = 0;
 
   for (i = 0; i < num; i++) sum += randint(sides);
   return (sum);
 }
-int pdamroll(array) uint8_t* array;
+int
+pdamroll(array)
+uint8_t* array;
 {
   return damroll(array[0], array[1]);
 }
-int critical_blow(weight, plus, dam) register int weight, plus, dam;
+int
+critical_blow(weight, plus, dam)
+register int weight, plus, dam;
 {
   register int critical;
 
@@ -758,7 +774,9 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
     } while (!flag);
   }
 }
-int next_to_corr(y, x) register int y, x;
+int
+next_to_corr(y, x)
+register int y, x;
 {
   register int k, j, i;
   register struct caveS* c_ptr;
@@ -774,7 +792,9 @@ int next_to_corr(y, x) register int y, x;
     }
   return (i);
 }
-static int next_to(y, x) register int y, x;
+static int
+next_to(y, x)
+register int y, x;
 {
   register int next;
 
@@ -791,7 +811,9 @@ static int next_to(y, x) register int y, x;
     next = FALSE;
   return (next);
 }
-int distance(y1, x1, y2, x2) int y1, x1, y2, x2;
+int
+distance(y1, x1, y2, x2)
+int y1, x1, y2, x2;
 {
   register int dy, dx;
 
@@ -808,26 +830,36 @@ static void try_door(y, x) register int y, x;
       next_to(y, x))
     place_door(y, x);
 }
-int set_room(element) register int element;
+int
+set_room(element)
+register int element;
 {
   return (element == FLOOR_DARK || element == FLOOR_LIGHT);
 }
-int set_corr(element) register int element;
+int
+set_corr(element)
+register int element;
 {
   return (element == FLOOR_CORR || element == FLOOR_OBST);
 }
-int set_floor(element) int element;
+int
+set_floor(element)
+int element;
 {
   return (element <= MAX_FLOOR);
 }
-int tr_subval(tr_ptr) struct treasureS* tr_ptr;
+int
+tr_subval(tr_ptr)
+struct treasureS* tr_ptr;
 {
   return MASK_SUBVAL & tr_ptr->subval;
 }
 // Known refers to stackable treasures that are instanced
 // Distinct from identification which is PER object
 static uint8_t knownD[7][MAX_SUBVAL];
-int tr_known_row(tr_ptr) struct treasureS* tr_ptr;
+int
+tr_known_row(tr_ptr)
+struct treasureS* tr_ptr;
 {
   switch (tr_ptr->tval) {
     case TV_AMULET:
@@ -851,14 +883,18 @@ int tr_known_row(tr_ptr) struct treasureS* tr_ptr;
       return (-1);
   }
 }
-BOOL tr_known(tr_ptr) struct treasureS* tr_ptr;
+BOOL
+tr_known(tr_ptr)
+struct treasureS* tr_ptr;
 {
   int krow = tr_known_row(tr_ptr);
   if (krow < 0) return TRUE;
   int subval = tr_subval(tr_ptr);
   return knownD[krow][subval];
 }
-BOOL tr_make_known(tr_ptr) struct treasureS* tr_ptr;
+BOOL
+tr_make_known(tr_ptr)
+struct treasureS* tr_ptr;
 {
   int krow = tr_known_row(tr_ptr);
   int subval = tr_subval(tr_ptr);
@@ -867,11 +903,15 @@ BOOL tr_make_known(tr_ptr) struct treasureS* tr_ptr;
   knownD[krow][subval] = 1;
   return change;
 }
-BOOL obj_reveal(obj) struct objS* obj;
+BOOL
+obj_reveal(obj)
+struct objS* obj;
 {
   return ((obj->idflag & ID_REVEAL) != 0);
 }
-BOOL vuln_fire(obj) struct objS* obj;
+BOOL
+vuln_fire(obj)
+struct objS* obj;
 {
   switch (obj->tval) {
     case TV_ARROW:
@@ -895,7 +935,9 @@ BOOL vuln_fire(obj) struct objS* obj;
   }
   return (FALSE);
 }
-BOOL vuln_acid(obj) struct objS* obj;
+BOOL
+vuln_acid(obj)
+struct objS* obj;
 {
   switch (obj->tval) {
     case TV_MISC:
@@ -917,17 +959,23 @@ BOOL vuln_acid(obj) struct objS* obj;
   }
   return (FALSE);
 }
-BOOL vuln_frost(obj) struct objS* obj;
+BOOL
+vuln_frost(obj)
+struct objS* obj;
 {
   return ((obj->tval == TV_POTION1) || (obj->tval == TV_POTION2) ||
           (obj->tval == TV_FLASK));
 }
-BOOL vuln_lightning(obj) struct objS* obj;
+BOOL
+vuln_lightning(obj)
+struct objS* obj;
 {
   return ((obj->tval == TV_RING) || (obj->tval == TV_WAND) ||
           (obj->tval == TV_SPIKE));
 }
-BOOL vuln_gas(obj) struct objS* obj;
+BOOL
+vuln_gas(obj)
+struct objS* obj;
 {
   // DESIGN: (R) armor is destroyed by gas. Ego weapons too. Yeesh.
   switch (obj->tval) {
@@ -940,7 +988,9 @@ BOOL vuln_gas(obj) struct objS* obj;
   }
   return (FALSE);
 }
-BOOL is_door(tval) int tval;
+BOOL
+is_door(tval)
+int tval;
 {
   switch (tval) {
     case TV_OPEN_DOOR:
@@ -950,7 +1000,9 @@ BOOL is_door(tval) int tval;
   }
   return FALSE;
 }
-int oset_hitdam(obj) struct objS* obj;
+int
+oset_hitdam(obj)
+struct objS* obj;
 {
   switch (obj->tval) {
     case TV_HAFTED:
@@ -966,8 +1018,9 @@ int oset_hitdam(obj) struct objS* obj;
   }
   return FALSE;
 }
-int set_large(item)         /* Items too large to fit in chests   -DJG- */
-    struct treasureS* item; /* Use treasure_type since item not yet created */
+int
+set_large(item)         /* Items too large to fit in chests   -DJG- */
+struct treasureS* item; /* Use treasure_type since item not yet created */
 {
   switch (item->tval) {
     case TV_CHEST:
@@ -987,7 +1040,9 @@ int set_large(item)         /* Items too large to fit in chests   -DJG- */
   }
   return FALSE;
 }
-int slot_equip(tval) int tval;
+int
+slot_equip(tval)
+int tval;
 {
   int slot = 0;
   switch (tval) {
@@ -1033,7 +1088,9 @@ int slot_equip(tval) int tval;
   }
   return slot;
 }
-int get_obj_num(level, must_be_small) int level, must_be_small;
+int
+get_obj_num(level, must_be_small)
+int level, must_be_small;
 {
   int i, j;
 
@@ -1073,7 +1130,9 @@ int get_obj_num(level, must_be_small) int level, must_be_small;
   }
   return (i);
 }
-int get_mon_num(level) int level;
+int
+get_mon_num(level)
+int level;
 {
   register int i, j, num;
 
@@ -1102,7 +1161,9 @@ int get_mon_num(level) int level;
   }
   return i;
 }
-int place_monster(y, x, z, slp) register int y, x, z;
+int
+place_monster(y, x, z, slp)
+register int y, x, z;
 int slp;
 {
   struct monS* mon;
@@ -1574,7 +1635,9 @@ register int* mm;
       break;
   }
 }
-int mmove(dir, y, x) int dir;
+int
+mmove(dir, y, x)
+int dir;
 register int *y, *x;
 {
   register int new_row, new_col;
@@ -1636,7 +1699,9 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 void update_mon(monptr) int monptr;
 {
 }
-int bth_adj(attype) int attype;
+int
+bth_adj(attype)
+int attype;
 {
   switch (attype) {
     case 1:
@@ -1692,7 +1757,9 @@ int bth_adj(attype) int attype;
   }
   return -60;
 }
-char* attack_string(adesc) int adesc;
+char*
+attack_string(adesc)
+int adesc;
 {
   switch (adesc) {
     case 1:
@@ -1853,7 +1920,9 @@ todam_adj()
   else
     return (6);
 }
-int test_hit(bth, level_adj, pth, ac) int bth, level_adj, pth, ac;
+int
+test_hit(bth, level_adj, pth, ac)
+int bth, level_adj, pth, ac;
 {
   register int i, die;
 
@@ -1873,7 +1942,9 @@ static void mon_death(y, x) int y, x;
 {
   caveD[y][x].midx = 0;
 }
-static int mon_take_hit(midx, dam) int midx, dam;
+static int
+mon_take_hit(midx, dam)
+int midx, dam;
 {
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
@@ -2161,7 +2232,9 @@ BOOL prefix;
   obj_prefix(obj, prefix);
   if (prefix) obj_detail(obj);
 }
-BOOL is_a_vowel(c) char c;
+BOOL
+is_a_vowel(c)
+char c;
 {
   switch (c) {
     case 'a':
@@ -2343,7 +2416,9 @@ py_init()
 
   calc_bonuses();
 }
-int8_t modify_stat(stat, amount) int stat, amount;
+int8_t
+modify_stat(stat, amount)
+int stat, amount;
 {
   int loop, i;
   int8_t tmp_stat;
@@ -2387,7 +2462,9 @@ void set_use_stat(stat) int stat;
   // } else if (stat == A_CON)
   //   calc_hitpoints();
 }
-int dec_stat(stat) register int stat;
+int
+dec_stat(stat)
+register int stat;
 {
   int tmp_stat, loss;
 
@@ -2447,7 +2524,9 @@ py_map()
   panel_update(&panelD, uD.y, uD.x, TRUE);
   free_turn_flag = TRUE;
 }
-static int py_inven(begin, end) int begin, end;
+static int
+py_inven(begin, end)
+int begin, end;
 {
   int line = 0;
 
@@ -2532,7 +2611,9 @@ py_carry_count()
   }
   return count;
 }
-static int inven_carry(obj_id) int obj_id;
+static int
+inven_carry(obj_id)
+int obj_id;
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     if (!invenD[it]) {
@@ -2659,7 +2740,9 @@ register int perc;
   }
   return (j);
 }
-int minus_ac(typ_dam) uint32_t typ_dam;
+int
+minus_ac(typ_dam)
+uint32_t typ_dam;
 {
   register int i, j;
   int tmp[6], minus;
@@ -3467,7 +3550,9 @@ status_update()
   PR_STAT("GOLD", uD.gold);
   PR_STAT("AC  ", uD.pac);
 }
-BOOL py_teleport_near(y, x, uy, ux) int y, x;
+BOOL
+py_teleport_near(y, x, uy, ux)
+int y, x;
 int *uy, *ux;
 {
   for (int ro = y - 1; ro <= y + 1; ++ro) {
