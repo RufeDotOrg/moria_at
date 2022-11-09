@@ -826,7 +826,7 @@ int tr_subval(tr_ptr) struct treasureS* tr_ptr;
 }
 // Known refers to stackable treasures that are instanced
 // Distinct from identification which is PER object
-static uint8_t knownD[6][MAX_SUBVAL];
+static uint8_t knownD[7][MAX_SUBVAL];
 int tr_known_row(tr_ptr) struct treasureS* tr_ptr;
 {
   switch (tr_ptr->tval) {
