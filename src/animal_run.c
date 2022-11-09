@@ -913,6 +913,21 @@ struct objS* obj;
           (obj->tval == TV_SPIKE));
 }
 BOOL
+vuln_gas(obj)
+  struct objS* obj;
+{
+  // DESIGN: (R) armor is destroyed by gas. Ego weapons too. Yeesh.
+  switch (obj->tval) {
+    case TV_SWORD:
+    case TV_HELM:
+    case TV_SHIELD:
+    case TV_HARD_ARMOR:
+    case TV_WAND:
+      return (TRUE);
+  }
+  return (FALSE);
+}
+BOOL
 is_door(tval)
 int tval;
 {
@@ -2456,6 +2471,13 @@ void light_dam(dam) int dam;
   if (inven_damage(vuln_lightning, 3) > 0)
     msg_print("There are sparks coming from your pack!");
 }
+void corrode_gas()
+{
+  if (!minus_ac(TR_RES_ACID))
+    py_take_hit(randint(8));
+  if (inven_damage(vuln_gas, 5) > 0)
+    msg_print("There is an acrid smell coming from your pack.");
+}
 void
 py_experience()
 {
@@ -2621,7 +2643,7 @@ static void mon_attack(midx) int midx;
           break;
         case 9: /*Corrosion attack*/
           msg_print("A stinging red gas swirls about you.");
-          // corrode_gas();
+          corrode_gas();
           py_take_hit(damage);
           break;
         case 10: /*Blindness attack*/
