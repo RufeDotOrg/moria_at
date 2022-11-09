@@ -914,7 +914,7 @@ struct objS* obj;
 }
 BOOL
 vuln_gas(obj)
-  struct objS* obj;
+struct objS* obj;
 {
   // DESIGN: (R) armor is destroyed by gas. Ego weapons too. Yeesh.
   switch (obj->tval) {
@@ -2097,6 +2097,11 @@ void set_use_stat(stat) int stat;
 {
   statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
 
+  if (stat == A_STR) {
+    calc_bonuses();
+  } else if (stat == A_DEX) {
+    calc_bonuses();
+  }
   // else if (stat == A_INT) {
   //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
   //   calc_mana(A_INT);
@@ -2471,10 +2476,10 @@ void light_dam(dam) int dam;
   if (inven_damage(vuln_lightning, 3) > 0)
     msg_print("There are sparks coming from your pack!");
 }
-void corrode_gas()
+void
+corrode_gas()
 {
-  if (!minus_ac(TR_RES_ACID))
-    py_take_hit(randint(8));
+  if (!minus_ac(TR_RES_ACID)) py_take_hit(randint(8));
   if (inven_damage(vuln_gas, 5) > 0)
     msg_print("There is an acrid smell coming from your pack.");
 }
