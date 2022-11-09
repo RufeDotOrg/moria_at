@@ -3773,6 +3773,7 @@ dungeon()
         py_map();
         break;
       case CTRL('h'):
+        if (uD.mhp < 100) uD.mhp = 100;
         uD.chp = uD.mhp;
         msg_print("You are healed.");
         break;
