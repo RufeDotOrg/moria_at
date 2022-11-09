@@ -1902,7 +1902,6 @@ void obj_prefix(obj) struct objS* obj;
   //   strcat(tmp_val, " ");
   //   strcat(tmp_val, special_names[obj->name2]);
   // }
-  // if (damstr[0] != '\0') strcat(tmp_val, damstr);
   // if (known2_p(obj)) {
   //   /* originally used %+d, but several machines don't support it */
   //   if (obj->ident & ID_SHOW_HITDAM)
@@ -2023,7 +2022,7 @@ void obj_desc(obj) struct objS* obj;
   indexx = obj->subval & (ITEM_SINGLE_STACK_MIN - 1);
   basenm = tre->name;
   modstr = 0;
-  damstr[0] = '\0';
+  damstr[0] = 0;
   // TBD: known1_p
   modify = TRUE;  //(known1_p(obj) ? FALSE : TRUE);
   append_name = FALSE;
@@ -2034,7 +2033,7 @@ void obj_desc(obj) struct objS* obj;
     case TV_SLING_AMMO:
     case TV_BOLT:
     case TV_ARROW:
-      sprintf(damstr, " (%dd%d)", obj->damage[0], obj->damage[1]);
+      snprintf(AP(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_LIGHT:
       break;
@@ -2049,15 +2048,15 @@ void obj_desc(obj) struct objS* obj;
         tmp = 4;
       else
         tmp = -1;
-      sprintf(damstr, " (x%d)", tmp);
+      snprintf(AP(damstr), " (x%d)", tmp);
       break;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
-      sprintf(damstr, " (%dd%d)", obj->damage[0], obj->damage[1]);
+      snprintf(AP(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_DIGGING:
-      sprintf(damstr, " (%dd%d)", obj->damage[0], obj->damage[1]);
+      snprintf(AP(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_BOOTS:
     case TV_GLOVES:
@@ -2182,6 +2181,7 @@ void obj_desc(obj) struct objS* obj;
   //   insert_str(descD, "~", "s");
   // } else
   //   insert_str(descD, "~", 0);
+  if (damstr[0]) strcat(descD, damstr);
 }
 BOOL
 is_a_vowel(c)
