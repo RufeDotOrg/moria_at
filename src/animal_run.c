@@ -1874,11 +1874,309 @@ int midx, dam;
   mon_unuse(mon);
   return cidx;
 }
-static void obj_desc(obj) struct objS* obj;
+// TBD: Refactor
+void
+desc_noprefix()
 {
-  struct treasureS* treasure = &treasureD[obj->tidx];
+  // if (!strncmp("some", tmp_val, 4))
+  //   (void)strcpy(descD, &tmp_val[5]);
+  // else if (tmp_val[0] == '&')
+  //   /* eliminate the '& ' at the beginning */
+  //   (void)strcpy(descD, &tmp_val[2]);
+  // else
+  //   (void)strcpy(descD, tmp_val);
+}
+void obj_prefix(obj) struct objS* obj;
+{
+  // TBD: p1_use is an item set
+  //
+  // char tmp_val[160];
+  // strcpy(tmp_val, descD);
 
-  snprintf(AP(descD), "%s", treasure->name);
+  // if (obj->name2 != SN_NULL && known2_p(obj)) {
+  //   strcat(tmp_val, " ");
+  //   strcat(tmp_val, special_names[obj->name2]);
+  // }
+  // if (damstr[0] != '\0') strcat(tmp_val, damstr);
+  // if (known2_p(obj)) {
+  //   /* originally used %+d, but several machines don't support it */
+  //   if (obj->ident & ID_SHOW_HITDAM)
+  //     sprintf(tmp_str, " (%c%d,%c%d)", (obj->tohit < 0) ? '-' : '+',
+  //             abs(obj->tohit), (obj->todam < 0) ? '-' : '+',
+  //             abs(obj->todam));
+  //   else if (obj->tohit != 0)
+  //     sprintf(tmp_str, " (%c%d)", (obj->tohit < 0) ? '-' : '+',
+  //             abs(obj->tohit));
+  //   else if (obj->todam != 0)
+  //     sprintf(tmp_str, " (%c%d)", (obj->todam < 0) ? '-' : '+',
+  //             abs(obj->todam));
+  //   else
+  //     tmp_str[0] = '\0';
+  //   strcat(tmp_val, tmp_str);
+  // }
+  // /* Crowns have a zero base AC, so make a special test for them. */
+  // if (obj->ac != 0 || (obj->tval == TV_HELM)) {
+  //   sprintf(tmp_str, " [%d", obj->ac);
+  //   strcat(tmp_val, tmp_str);
+  //   if (known2_p(obj)) {
+  //     /* originally used %+d, but several machines don't support it */
+  //     sprintf(tmp_str, ",%c%d", (obj->toac < 0) ? '-' : '+', abs(obj->toac));
+  //     strcat(tmp_val, tmp_str);
+  //   }
+  //   strcat(tmp_val, "]");
+  // } else if ((obj->toac != 0) && known2_p(obj)) {
+  //   /* originally used %+d, but several machines don't support it */
+  //   sprintf(tmp_str, " [%c%d]", (obj->toac < 0) ? '-' : '+', abs(obj->toac));
+  //   strcat(tmp_val, tmp_str);
+  // }
+
+  // /* override defaults, check for p1 flags in the ident field */
+  // if (obj->ident & ID_NOSHOW_P1)
+  //   p1_use = IGNORED;
+  // else if (obj->ident & ID_SHOW_P1)
+  //   p1_use = Z_PLUSSES;
+  // tmp_str[0] = '\0';
+  // if (p1_use == LIGHT)
+  //   sprintf(tmp_str, " with %d turns of light", obj->p1);
+  // else if (p1_use == IGNORED)
+  //   ;
+  // else if (known2_p(obj)) {
+  //   if (p1_use == Z_PLUSSES)
+  //     /* originally used %+d, but several machines don't support it */
+  //     sprintf(tmp_str, " (%c%d)", (obj->p1 < 0) ? '-' : '+', abs(obj->p1));
+  //   else if (p1_use == CHARGES)
+  //     sprintf(tmp_str, " (%d charges)", obj->p1);
+  //   else if (obj->p1 != 0) {
+  //     if (p1_use == PLUSSES)
+  //       sprintf(tmp_str, " (%c%d)", (obj->p1 < 0) ? '-' : '+', abs(obj->p1));
+  //     else if (p1_use == FLAGS) {
+  //       if (obj->flags & TR_STR)
+  //         sprintf(tmp_str, " (%c%d to STR)", (obj->p1 < 0) ? '-' : '+',
+  //                 abs(obj->p1));
+  //       else if (obj->flags & TR_STEALTH)
+  //         sprintf(tmp_str, " (%c%d to stealth)", (obj->p1 < 0) ? '-' : '+',
+  //                 abs(obj->p1));
+  //     }
+  //   }
+  // }
+  // strcat(tmp_val, tmp_str);
+
+  // /* ampersand is always the first character */
+  // if (tmp_val[0] == '&') {
+  //   /* use &tmp_val[1], so that & does not appear in output */
+  //   if (obj->number > 1)
+  //     sprintf(descD, "%d%s", (int)obj->number, &tmp_val[1]);
+  //   else if (obj->number < 1)
+  //     sprintf(descD, "%s%s", "no more", &tmp_val[1]);
+  //   else if (is_a_vowel(tmp_val[2]))
+  //     sprintf(descD, "an%s", &tmp_val[1]);
+  //   else
+  //     sprintf(descD, "a%s", &tmp_val[1]);
+  // }
+  // /* handle 'no more' case specially */
+  // else if (obj->number < 1) {
+  //   /* check for "some" at start */
+  //   if (!strncmp("some", tmp_val, 4)) sprintf(descD, "no more %s",
+  //   &tmp_val[5]);
+  //   /* here if no article */
+  //   else
+  //     sprintf(descD, "no more %s", tmp_val);
+  // } else
+  //   strcpy(descD, tmp_val);
+
+  // tmp_str[0] = '\0';
+  // if ((indexx = object_offset(obj)) >= 0) {
+  //   indexx = (indexx << 6) + (obj->subval & (ITEM_SINGLE_STACK_MIN - 1));
+  //   /* don't print tried string for store bought items */
+  //   if ((object_ident[indexx] & OD_TRIED) && !store_bought_p(obj))
+  //     strcat(tmp_str, "tried ");
+  // }
+  // if (obj->ident & (ID_MAGIK | ID_EMPTY | ID_DAMD)) {
+  //   if (obj->ident & ID_MAGIK) strcat(tmp_str, "magik ");
+  //   if (obj->ident & ID_EMPTY) strcat(tmp_str, "empty ");
+  //   if (obj->ident & ID_DAMD) strcat(tmp_str, "damned ");
+  // }
+  // if (obj->inscrip[0] != '\0')
+  //   strcat(tmp_str, obj->inscrip);
+  // else if ((indexx = strlen(tmp_str)) > 0)
+  //   /* remove the extra blank at the end */
+  //   tmp_str[indexx - 1] = '\0';
+  // if (tmp_str[0]) {
+  //   sprintf(tmp_val, " {%s}", tmp_str);
+  //   strcat(descD, tmp_val);
+  // }
+  // strcat(descD, ".");
+}
+void obj_desc(obj) struct objS* obj;
+{
+  char *basenm, *modstr;
+  char damstr[80];
+  int indexx, modify, append_name, tmp;
+  struct treasureS* tre;
+
+  tre = &treasureD[obj->tidx];
+  indexx = obj->subval & (ITEM_SINGLE_STACK_MIN - 1);
+  basenm = tre->name;
+  modstr = 0;
+  damstr[0] = '\0';
+  // TBD: known1_p
+  modify = TRUE;  //(known1_p(obj) ? FALSE : TRUE);
+  append_name = FALSE;
+  switch (obj->tval) {
+    case TV_MISC:
+    case TV_CHEST:
+      break;
+    case TV_SLING_AMMO:
+    case TV_BOLT:
+    case TV_ARROW:
+      sprintf(damstr, " (%dd%d)", obj->damage[0], obj->damage[1]);
+      break;
+    case TV_LIGHT:
+      break;
+    case TV_SPIKE:
+      break;
+    case TV_BOW:
+      if (obj->p1 == 1 || obj->p1 == 2)
+        tmp = 2;
+      else if (obj->p1 == 3 || obj->p1 == 5)
+        tmp = 3;
+      else if (obj->p1 == 4 || obj->p1 == 6)
+        tmp = 4;
+      else
+        tmp = -1;
+      sprintf(damstr, " (x%d)", tmp);
+      break;
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+      sprintf(damstr, " (%dd%d)", obj->damage[0], obj->damage[1]);
+      break;
+    case TV_DIGGING:
+      sprintf(damstr, " (%dd%d)", obj->damage[0], obj->damage[1]);
+      break;
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_HELM:
+    case TV_SHIELD:
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+      break;
+    case TV_AMULET:
+      if (modify) {
+        basenm = "& %s Amulet";
+        modstr = amulets[indexx];
+      } else {
+        basenm = "& Amulet";
+        append_name = TRUE;
+      }
+      break;
+    case TV_RING:
+      if (modify) {
+        basenm = "& %s Ring";
+        modstr = rocks[indexx];
+      } else {
+        basenm = "& Ring";
+        append_name = TRUE;
+      }
+      break;
+    case TV_STAFF:
+      if (modify) {
+        basenm = "& %s Staff";
+        modstr = woods[indexx];
+      } else {
+        basenm = "& Staff";
+        append_name = TRUE;
+      }
+      break;
+    case TV_WAND:
+      if (modify) {
+        basenm = "& %s Wand";
+        modstr = metals[indexx];
+      } else {
+        basenm = "& Wand";
+        append_name = TRUE;
+      }
+      break;
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+      if (modify) {
+        basenm = "& Scroll~ titled \"%s\"";
+        modstr = titles[indexx];
+      } else {
+        basenm = "& Scroll~";
+        append_name = TRUE;
+      }
+      break;
+    case TV_POTION1:
+    case TV_POTION2:
+      if (modify) {
+        basenm = "& %s Potion~";
+        modstr = colors[indexx];
+      } else {
+        basenm = "& Potion~";
+        append_name = TRUE;
+      }
+      break;
+    case TV_FLASK:
+      break;
+    case TV_FOOD:
+      if (modify) {
+        if (indexx <= 15)
+          basenm = "& %s Mushroom~";
+        else if (indexx <= 20)
+          basenm = "& Hairy %s Mold~";
+        if (indexx <= 20) modstr = mushrooms[indexx];
+      } else {
+        append_name = TRUE;
+        if (indexx <= 15)
+          basenm = "& Mushroom~";
+        else if (indexx <= 20)
+          basenm = "& Hairy Mold~";
+        else
+          /* Ordinary food does not have a name appended.  */
+          append_name = FALSE;
+      }
+      break;
+    case TV_MAGIC_BOOK:
+      modstr = basenm;
+      basenm = "& Book~ of Magic Spells %s";
+      break;
+    case TV_PRAYER_BOOK:
+      modstr = basenm;
+      basenm = "& Holy Book~ of Prayers %s";
+      break;
+    case TV_OPEN_DOOR:
+    case TV_CLOSED_DOOR:
+    case TV_SECRET_DOOR:
+    case TV_RUBBLE:
+    case TV_GOLD:
+    case TV_INVIS_TRAP:
+    case TV_VIS_TRAP:
+    case TV_UP_STAIR:
+    case TV_DOWN_STAIR:
+      descD[0] = 0;
+      return;
+    // case TV_STORE_DOOR:
+    //   sprintf(descD, "the entrance to the %s.",
+    //   object_list[obj->index].name); return;
+    default:
+      strcpy(descD, "Error in objdes()");
+      return;
+  }
+  if (modstr != 0)
+    sprintf(descD, basenm, modstr);
+  else
+    strcpy(descD, basenm);
+  if (append_name) {
+    strcat(descD, " of ");
+    strcat(descD, tre->name);
+  }
+  // if (obj->number != 1) {
+  //   insert_str(descD, "ch~", "ches");
+  //   insert_str(descD, "~", "s");
+  // } else
+  //   insert_str(descD, "~", 0);
 }
 BOOL
 is_a_vowel(c)
