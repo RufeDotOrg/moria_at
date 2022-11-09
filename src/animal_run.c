@@ -1133,6 +1133,11 @@ int slp;
 static int goldD[MAX_GOLD] = {
     3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 80,
 };
+static char* gold_nameD[MAX_GOLD] = {
+    "copper",    "copper",  "copper", "silver",   "silver",   "silver",
+    "garnets",   "garnets", "gold",   "gold",     "gold",     "opals",
+    "sapphires", "gold",    "rubies", "diamonds", "emeralds", "mithril",
+};
 void place_gold(y, x) int y, x;
 {
   register int i, cur_pos;
@@ -2640,7 +2645,8 @@ int pickup;
   /* There's GOLD in them thar hills!      */
   if (obj->tval == TV_GOLD) {
     uD.gold += obj->cost;
-    MSG("You have found %d gold pieces worth of %s", obj->cost, descD);
+    MSG("You have found %d gold pieces worth of %s.", obj->cost,
+        gold_nameD[obj->subval]);
     delete_object(y, x);
   } else {
     // TBD: Merge items of the same type?
