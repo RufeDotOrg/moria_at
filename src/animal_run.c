@@ -867,6 +867,10 @@ BOOL tr_make_known(tr_ptr) struct treasureS* tr_ptr;
   knownD[krow][subval] = 1;
   return change;
 }
+BOOL obj_reveal(obj) struct objS* obj;
+{
+  return ((obj->idflag & ID_REVEAL) != 0);
+}
 BOOL vuln_fire(obj) struct objS* obj;
 {
   switch (obj->tval) {
@@ -1878,51 +1882,66 @@ desc_noprefix()
   //   (void)strcpy(descD, &tmp_val[2]);
   // else
   //   (void)strcpy(descD, tmp_val);
-}
-void obj_prefix(obj) struct objS* obj;
-{
-  // TBD: p1_use is an item set
   //
-  // char tmp_val[160];
-  // strcpy(tmp_val, descD);
-
-  // if (obj->name2 != SN_NULL && known2_p(obj)) {
-  //   strcat(tmp_val, " ");
-  //   strcat(tmp_val, special_names[obj->name2]);
-  // }
-  // if (known2_p(obj)) {
-  //   /* originally used %+d, but several machines don't support it */
-  //   if (obj->ident & ID_SHOW_HITDAM)
-  //     sprintf(tmp_str, " (%c%d,%c%d)", (obj->tohit < 0) ? '-' : '+',
-  //             abs(obj->tohit), (obj->todam < 0) ? '-' : '+',
-  //             abs(obj->todam));
-  //   else if (obj->tohit != 0)
-  //     sprintf(tmp_str, " (%c%d)", (obj->tohit < 0) ? '-' : '+',
-  //             abs(obj->tohit));
-  //   else if (obj->todam != 0)
-  //     sprintf(tmp_str, " (%c%d)", (obj->todam < 0) ? '-' : '+',
-  //             abs(obj->todam));
+  // ELSE
+  //
+  /* ampersand is always the first character */
+  // if (obj_name[0] == '&') {
+  //   /* use &obj_name[1], so that & does not appear in output */
+  //   if (obj->number > 1)
+  //     sprintf(descD, "%d%s", (int)obj->number, &obj_name[1]);
+  //   else if (obj->number < 1)
+  //     sprintf(descD, "%s%s", "no more", &obj_name[1]);
+  //   else if (is_a_vowel(obj_name[2]))
+  //     sprintf(descD, "an%s", &obj_name[1]);
   //   else
-  //     tmp_str[0] = '\0';
-  //   strcat(tmp_val, tmp_str);
+  //     sprintf(descD, "a%s", &obj_name[1]);
   // }
-  // /* Crowns have a zero base AC, so make a special test for them. */
-  // if (obj->ac != 0 || (obj->tval == TV_HELM)) {
-  //   sprintf(tmp_str, " [%d", obj->ac);
-  //   strcat(tmp_val, tmp_str);
-  //   if (known2_p(obj)) {
-  //     /* originally used %+d, but several machines don't support it */
-  //     sprintf(tmp_str, ",%c%d", (obj->toac < 0) ? '-' : '+', abs(obj->toac));
-  //     strcat(tmp_val, tmp_str);
-  //   }
-  //   strcat(tmp_val, "]");
-  // } else if ((obj->toac != 0) && known2_p(obj)) {
-  //   /* originally used %+d, but several machines don't support it */
-  //   sprintf(tmp_str, " [%c%d]", (obj->toac < 0) ? '-' : '+', abs(obj->toac));
-  //   strcat(tmp_val, tmp_str);
-  // }
+  // /* handle 'no more' case specially */
+  // else if (obj->number < 1) {
+  //   /* check for "some" at start */
+  //   if (!strncmp("some", obj_name, 4))
+  //     sprintf(descD, "no more %s", &obj_name[5]);
+  //   /* here if no article */
+  //   else
+  //     sprintf(descD, "no more %s", obj_name);
+  // } else
+  //   strcpy(descD, obj_name);
+}
+void obj_detail(obj) struct objS* obj;
+{
+  char tmp_str[80];
 
-  // /* override defaults, check for p1 flags in the ident field */
+  if (obj->name2 && obj_reveal(obj)) {
+    strcat(descD, " ");
+    strcat(descD, obj->name2);
+  }
+  if (obj_reveal(obj)) {
+    if (obj->idflag & ID_SHOW_HITDAM)
+      sprintf(tmp_str, " (%+d,%+d)", obj->tohit, obj->todam);
+    else if (obj->tohit != 0)
+      sprintf(tmp_str, " (%+d)", obj->tohit);
+    else if (obj->todam != 0)
+      sprintf(tmp_str, " (%+d)", obj->todam);
+    else
+      tmp_str[0] = '\0';
+    strcat(descD, tmp_str);
+  }
+  /* Crowns have a zero base AC, so make a special test for them. */
+  if (obj->ac != 0 || (obj->tval == TV_HELM)) {
+    sprintf(tmp_str, " [%d", obj->ac);
+    strcat(descD, tmp_str);
+    if (obj_reveal(obj)) {
+      sprintf(tmp_str, ",%+d", obj->toac);
+      strcat(descD, tmp_str);
+    }
+    strcat(descD, "]");
+  } else if ((obj->toac != 0) && obj_reveal(obj)) {
+    sprintf(tmp_str, " [%+d]", obj->toac);
+    strcat(descD, tmp_str);
+  }
+
+  /* override defaults, check for p1 flags in the ident field */
   // if (obj->ident & ID_NOSHOW_P1)
   //   p1_use = IGNORED;
   // else if (obj->ident & ID_SHOW_P1)
@@ -1934,7 +1953,6 @@ void obj_prefix(obj) struct objS* obj;
   //   ;
   // else if (known2_p(obj)) {
   //   if (p1_use == Z_PLUSSES)
-  //     /* originally used %+d, but several machines don't support it */
   //     sprintf(tmp_str, " (%c%d)", (obj->p1 < 0) ? '-' : '+', abs(obj->p1));
   //   else if (p1_use == CHARGES)
   //     sprintf(tmp_str, " (%d charges)", obj->p1);
@@ -1951,53 +1969,9 @@ void obj_prefix(obj) struct objS* obj;
   //     }
   //   }
   // }
-  // strcat(tmp_val, tmp_str);
+  // strcat(descD, tmp_str);
 
-  // /* ampersand is always the first character */
-  // if (tmp_val[0] == '&') {
-  //   /* use &tmp_val[1], so that & does not appear in output */
-  //   if (obj->number > 1)
-  //     sprintf(descD, "%d%s", (int)obj->number, &tmp_val[1]);
-  //   else if (obj->number < 1)
-  //     sprintf(descD, "%s%s", "no more", &tmp_val[1]);
-  //   else if (is_a_vowel(tmp_val[2]))
-  //     sprintf(descD, "an%s", &tmp_val[1]);
-  //   else
-  //     sprintf(descD, "a%s", &tmp_val[1]);
-  // }
-  // /* handle 'no more' case specially */
-  // else if (obj->number < 1) {
-  //   /* check for "some" at start */
-  //   if (!strncmp("some", tmp_val, 4)) sprintf(descD, "no more %s",
-  //   &tmp_val[5]);
-  //   /* here if no article */
-  //   else
-  //     sprintf(descD, "no more %s", tmp_val);
-  // } else
-  //   strcpy(descD, tmp_val);
-
-  // tmp_str[0] = '\0';
-  // if ((indexx = object_offset(obj)) >= 0) {
-  //   indexx = (indexx << 6) + (obj->subval & (ITEM_SINGLE_STACK_MIN - 1));
-  //   /* don't print tried string for store bought items */
-  //   if ((object_ident[indexx] & OD_TRIED) && !store_bought_p(obj))
-  //     strcat(tmp_str, "tried ");
-  // }
-  // if (obj->ident & (ID_MAGIK | ID_EMPTY | ID_DAMD)) {
-  //   if (obj->ident & ID_MAGIK) strcat(tmp_str, "magik ");
-  //   if (obj->ident & ID_EMPTY) strcat(tmp_str, "empty ");
-  //   if (obj->ident & ID_DAMD) strcat(tmp_str, "damned ");
-  // }
-  // if (obj->inscrip[0] != '\0')
-  //   strcat(tmp_str, obj->inscrip);
-  // else if ((indexx = strlen(tmp_str)) > 0)
-  //   /* remove the extra blank at the end */
-  //   tmp_str[indexx - 1] = '\0';
-  // if (tmp_str[0]) {
-  //   sprintf(tmp_val, " {%s}", tmp_str);
-  //   strcat(descD, tmp_val);
-  // }
-  // strcat(descD, ".");
+  // TBD: magik empty damned
 }
 void obj_desc(obj) struct objS* obj;
 {
@@ -2465,6 +2439,7 @@ static int py_inven(begin, end) int begin, end;
     if (obj_id) {
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj);
+      obj_detail(obj);
       overlay_usedD[line] =
           snprintf(AP(overlayD[line]), "%c) %s", 'a' + it - begin, descD);
       line += 1;
@@ -3342,6 +3317,7 @@ py_make_known()
         obj = obj_get(invenD[iidx]);
         struct treasureS* tr_ptr = &treasureD[obj->tidx];
         tr_make_known(tr_ptr);
+        obj->idflag |= ID_REVEAL;
       }
     }
   }
