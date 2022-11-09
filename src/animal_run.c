@@ -2313,21 +2313,12 @@ calc_hitpoints()
   // if (py.flags.status & PY_HERO) hitpoints += 10;
   // if (py.flags.status & PY_SHERO) hitpoints += 20;
 
-  uD.mhp = hitpoints;
-  /* mhp can equal zero while character is being created */
-  // if ((hitpoints != p_ptr->mhp) && (p_ptr->mhp != 0)) {
-  //   /* change current hit points proportionately to change of mhp,
-  //      divide first to avoid overflow, little loss of accuracy */
-  //   value =
-  //       (((long)p_ptr->chp << 16) + p_ptr->chp_frac) / p_ptr->mhp *
-  //       hitpoints;
-  //   p_ptr->chp = value >> 16;
-  //   p_ptr->chp_frac = value & 0xFFFF;
-  //   p_ptr->mhp = hitpoints;
+  // Scale current hp to the new maximum
+  int value = ((p_ptr->chp << 16) + p_ptr->chp_frac) / p_ptr->mhp * hitpoints;
+  p_ptr->chp = value >> 16;
+  p_ptr->chp_frac = value & 0xFFFF;
 
-  //   /* can't print hit points here, may be in store or inventory mode */
-  //   py.flags.status |= PY_HP;
-  // }
+  p_ptr->mhp = hitpoints;
 }
 void
 calc_bonuses()
@@ -2479,9 +2470,8 @@ py_init()
     statD.max_stat[it] += 1;
   }
 
-  calc_bonuses();
-
   uD.mhp = uD.chp = hitdie + con_adj();
+  uD.chp_frac = 0;
   uD.lev = 1;
 
   int min_value = (MAX_PLAYER_LEVEL * 3 / 8 * (hitdie - 1)) + MAX_PLAYER_LEVEL;
@@ -2499,7 +2489,9 @@ py_init()
   struct objS* dagger = obj_use();
   tr_obj_copy(30, dagger);
   dagger->idflag |= ID_REVEAL;
-  invenD[0] = dagger->id;
+  invenD[INVEN_WIELD] = dagger->id;
+
+  calc_bonuses();
 }
 int8_t
 modify_stat(stat, amount)

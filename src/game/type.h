@@ -5,6 +5,7 @@ struct uS {
   int exp;
   int lev;
   int chp;
+  int chp_frac;
   int mhp;
   int gold;
   int ptohit;
