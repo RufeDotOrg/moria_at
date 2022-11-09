@@ -1,5 +1,6 @@
 #include "game.c"
 
+static int player_hpD[AL(player_exp)];
 static int death;
 static int dun_level;
 static int free_turn_flag;
@@ -860,6 +861,30 @@ int element;
 {
   return (element <= MAX_FLOOR);
 }
+void tr_obj_copy(tidx, obj) 
+struct objS* obj;
+{
+  struct treasureS* tr_ptr = &treasureD[tidx];
+  obj->name2 = 0;
+  obj->flags = tr_ptr->flags;
+  obj->fy = 0;
+  obj->fx = 0;
+  obj->tval = tr_ptr->tval;
+  obj->tchar = tr_ptr->tchar;
+  obj->tidx = tidx;
+  obj->p1 = tr_ptr->p1;
+  obj->cost = tr_ptr->cost;
+  obj->subval = tr_ptr->subval;
+  obj->number = tr_ptr->number;
+  obj->weight = tr_ptr->weight;
+  obj->tohit = tr_ptr->tohit;
+  obj->todam = tr_ptr->todam;
+  obj->ac = tr_ptr->ac;
+  obj->toac = tr_ptr->toac;
+  memcpy(obj->damage, tr_ptr->damage, sizeof(obj->damage));
+  obj->level = tr_ptr->level;
+  obj->idflag = 0;
+}
 int
 tr_subval(tr_ptr)
 struct treasureS* tr_ptr;
@@ -1264,27 +1289,10 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
 
   int sn = get_obj_num(dun_level, must_be_small);
   int z = sorted_objects[sn];
-  struct treasureS* treasure = &treasureD[z];
 
-  // invcopy(&t_list[cur_pos], z);
-  // TBD: duck type
-  obj->flags = treasure->flags;
+  tr_obj_copy(z, obj);
   obj->fy = y;
   obj->fx = x;
-  obj->tval = treasure->tval;
-  obj->tchar = treasure->tchar;
-  obj->tidx = z;
-  obj->p1 = treasure->p1;
-  obj->cost = treasure->cost;
-  obj->subval = treasure->subval;
-  obj->number = treasure->number;
-  obj->weight = treasure->weight;
-  obj->tohit = treasure->tohit;
-  obj->todam = treasure->todam;
-  obj->ac = treasure->ac;
-  obj->toac = treasure->toac;
-  memcpy(obj->damage, treasure->damage, sizeof(obj->damage));
-  obj->level = treasure->level;
 
   // TBD: the following is important for projectile count and special assignment
   // magic_treasure(cur_pos, dun_level);
@@ -1835,6 +1843,25 @@ int adesc;
   return " hits you.";
 }
 int
+con_adj()
+{
+  int con;
+
+  con = statD.use_stat[A_CON];
+  if (con < 7)
+    return (con - 7);
+  else if (con < 17)
+    return (0);
+  else if (con == 17)
+    return (1);
+  else if (con < 94)
+    return (2);
+  else if (con < 117)
+    return (3);
+  else
+    return (4);
+}
+int
 tohit_adj()
 {
   register int total, stat;
@@ -2273,6 +2300,36 @@ static void mon_desc(midx) int midx;
     snprintf(AP(death_descD), "A %s", cre->name);
 }
 void
+calc_hitpoints()
+{
+  int hitpoints, level;
+
+  level = uD.lev;
+  hitpoints = player_hpD[level - 1] + (con_adj() * level);
+  /* always give at least one point per level + 1 */
+  if (hitpoints < (level + 1)) hitpoints = level + 1;
+
+  // TBD: heroism
+  // if (py.flags.status & PY_HERO) hitpoints += 10;
+  // if (py.flags.status & PY_SHERO) hitpoints += 20;
+
+  uD.mhp = hitpoints;
+  /* mhp can equal zero while character is being created */
+  // if ((hitpoints != p_ptr->mhp) && (p_ptr->mhp != 0)) {
+  //   /* change current hit points proportionately to change of mhp,
+  //      divide first to avoid overflow, little loss of accuracy */
+  //   value =
+  //       (((long)p_ptr->chp << 16) + p_ptr->chp_frac) / p_ptr->mhp *
+  //       hitpoints;
+  //   p_ptr->chp = value >> 16;
+  //   p_ptr->chp_frac = value & 0xFFFF;
+  //   p_ptr->mhp = hitpoints;
+
+  //   /* can't print hit points here, may be in store or inventory mode */
+  //   py.flags.status |= PY_HP;
+  // }
+}
+void
 calc_bonuses()
 {
   int it;
@@ -2377,15 +2434,13 @@ calc_bonuses()
 void
 py_init()
 {
+  int it, hitdie;
   int8_t stat[MAX_A];
-
-  uD.chp = 100;
-  uD.mhp = 100;
-  uD.lev = 1;
 
   // Race & class
   int ridx = randint(AL(raceD)) - 1;
   struct raceS* r_ptr = &raceD[ridx];
+  hitdie = r_ptr->bhitdie;
   uD.ridx = ridx;
   uD.bth = r_ptr->bth;
   uD.search = r_ptr->srh;
@@ -2400,6 +2455,7 @@ py_init()
 
   int clidx = randint(AL(classD)) - 1;
   struct classS* cl_ptr = &classD[clidx];
+  hitdie += cl_ptr->adj_hd;
   uD.clidx = clidx;
   uD.bth += cl_ptr->mbth;
   uD.search += cl_ptr->msrh;
@@ -2424,6 +2480,20 @@ py_init()
   }
 
   calc_bonuses();
+
+  uD.mhp = uD.chp = hitdie + con_adj();
+  uD.lev = 1;
+
+  int min_value = (MAX_PLAYER_LEVEL * 3 / 8 * (hitdie - 1)) + MAX_PLAYER_LEVEL;
+  int max_value = (MAX_PLAYER_LEVEL * 5 / 8 * (hitdie - 1)) + MAX_PLAYER_LEVEL;
+  player_hpD[0] = hitdie;
+  do {
+    for (it = 1; it < MAX_PLAYER_LEVEL; it++) {
+      player_hpD[it] = randint(hitdie);
+      player_hpD[it] += player_hpD[it - 1];
+    }
+  } while ((player_hpD[MAX_PLAYER_LEVEL - 1] < min_value) ||
+           (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
 }
 int8_t
 modify_stat(stat, amount)
@@ -2461,15 +2531,15 @@ void set_use_stat(stat) int stat;
     calc_bonuses();
   } else if (stat == A_DEX) {
     calc_bonuses();
-  }
+  } else if (stat == A_CON)
+    calc_hitpoints();
   // else if (stat == A_INT) {
   //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
   //   calc_mana(A_INT);
   // } else if (stat == A_WIS) {
   //   if (class[py.misc.pclass].spell == PRIEST) calc_spells(A_WIS);
   //   calc_mana(A_WIS);
-  // } else if (stat == A_CON)
-  //   calc_hitpoints();
+  // }
 }
 int
 dec_stat(stat)
@@ -2859,7 +2929,7 @@ py_experience()
 
     lev += 1;
     MSG("Welcome to level %d.", lev);
-    // calc_hitpoints();
+    calc_hitpoints();
 
     need_exp = player_exp[lev - 1] * expfact / 100;
     if (exp > need_exp) {
