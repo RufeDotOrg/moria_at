@@ -3674,8 +3674,8 @@ uint32_t* rcmove;
         do_turn = TRUE;
       }
       /* Creature is attempting to move on other creature?     */
-      else if ((c_ptr->midx > 1) &&
-               ((newy != m_ptr->fy) || (newx != m_ptr->fx))) {
+      else if (c_ptr->midx && c_ptr->midx != midx) {
+        //   // TBD: Creatures can eat creatures
         do_move = FALSE;
       }
     }
