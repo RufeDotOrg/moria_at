@@ -2918,7 +2918,7 @@ py_experience()
 {
   int exp = uD.exp;
   int lev = uD.lev;
-  int expfact = 100;
+  int expfact = uD.mult_exp;
 
   if (exp > MAX_EXP) exp = MAX_EXP;
 
