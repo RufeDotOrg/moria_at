@@ -1,5 +1,6 @@
 #include "game.c"
 
+static int turnD;
 static int player_hpD[AL(player_exp)];
 static int death;
 static int dun_level;
@@ -2314,11 +2315,10 @@ calc_hitpoints()
   // if (py.flags.status & PY_SHERO) hitpoints += 20;
 
   // Scale current hp to the new maximum
-  int value = ((p_ptr->chp << 16) + p_ptr->chp_frac) / p_ptr->mhp * hitpoints;
-  p_ptr->chp = value >> 16;
-  p_ptr->chp_frac = value & 0xFFFF;
-
-  p_ptr->mhp = hitpoints;
+  int value = ((uD.chp << 16) + uD.chp_frac) / uD.mhp * hitpoints;
+  uD.chp = value >> 16;
+  uD.chp_frac = value & 0xFFFF;
+  uD.mhp = hitpoints;
 }
 void
 calc_bonuses()
@@ -2492,6 +2492,9 @@ py_init()
   invenD[INVEN_WIELD] = dagger->id;
 
   calc_bonuses();
+
+  uD.food = 7500;
+  uD.food_digested = 2;
 }
 int8_t
 modify_stat(stat, amount)
@@ -3684,162 +3687,216 @@ static void hit_trap(y, x) int y, x;
       break;
   }
 }
+static void regenhp(percent) int percent;
+{
+  uint32_t new_value;
+  int chp, mhp, chp_frac;
+
+  mhp = uD.mhp;
+  new_value = mhp * percent + PLAYER_REGEN_HPBASE + uD.chp_frac;
+  chp = uD.chp + (new_value >> 16);
+  chp_frac = (new_value & 0xFFFF);
+
+  /* set frac to zero even if equal */
+  if (chp >= mhp) {
+    chp = mhp;
+    chp_frac = 0;
+  }
+
+  uD.chp = chp;
+  uD.chp_frac = chp_frac;
+}
+void
+tick()
+{
+  int regen_amount;
+  turnD += 1;
+
+  if (uD.food < 0)
+    regen_amount = 0;
+  else if (uD.food < PLAYER_FOOD_FAINT)
+    regen_amount = PLAYER_REGEN_FAINT;
+  else if (uD.food < PLAYER_FOOD_WEAK)
+    regen_amount = PLAYER_REGEN_WEAK;
+  else
+    regen_amount = PLAYER_REGEN_NORMAL;
+
+  uD.food -= uD.food_digested;
+  if (uD.food < 0) {
+    strcpy(death_descD, "starvation");
+    py_take_hit(-uD.food / 16);
+    disturb(1, 0);
+  }
+
+  // if (uD.regenerate) regen_amount = regen_amount * 3 / 2;
+  // if (uD.rest != 0)
+  // || (py.flags.status & PY_SEARCH)
+  // regen_amount = regen_amount * 2;
+  // if (py.flags.poisoned < 1)
+  regenhp(regen_amount);
+  // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
+}
 void
 dungeon()
 {
   int c, y, x;
   new_level_flag = FALSE;
   while (1) {
-    free_turn_flag = FALSE;
-    status_update();
-    symmap_update();
+    tick();
 
-    draw();
-    c = inkey();
-    if (c == -1) break;
+    do {
+      status_update();
+      symmap_update();
 
-    y = uD.y;
-    x = uD.x;
-    switch (c) {
-      case ' ':
-        free_turn_flag = TRUE;
-        break;
-      case 'k':
-      case 'j':
-      case 'l':
-      case 'h':
-      case 'n':
-      case 'b':
-      case 'y':
-      case 'u':
-        mmove(map_roguedir(c) - '0', &y, &x);
-        break;
-      case 'c':
-        close_object();
-        break;
-      case 'd':
-        py_drop(y, x);
-        break;
-      case 'e': {
-        free_turn_flag = TRUE;
-        int count = py_inven(INVEN_EQUIP, MAX_INVEN);
-        MSG("You wearing %d items.", count);
-      } break;
-      case 'f':
-        bash(&y, &x);
-        break;
-      case 'i': {
-        free_turn_flag = TRUE;
-        int count = py_inven(0, INVEN_EQUIP);
-        MSG("You carrying %d items.", count);
-      } break;
-      case 'm':
-        // TEMP: testing tr_make_known
-        py_make_known();
-        break;
-      case 'o':
-        open_object();
-        break;
-      case 's':
-        search(y, x, 25);
-        break;
-      case 'w':
-        py_wear();
-        break;
-      case '<':
-        go_up();
-        break;
-      case '>':
-        go_down();
-        break;
-      case 'C':
-        py_screen();
-        break;
-      case 'D':
-        disarm_trap(&y, &x);
-        break;
-      case 'T':
-        py_takeoff();
-        break;
-      case 'W':
-        py_map();
-        break;
-      case CTRL('h'):
-        if (uD.mhp < 100) uD.mhp = 100;
-        uD.chp = uD.mhp;
-        msg_print("You are healed.");
-        break;
-      case CTRL('t'):
-        msg_print("teleport");
-        do {
-          x = randint(MAX_WIDTH - 2);
-          y = randint(MAX_HEIGHT - 2);
-        } while (caveD[y][x].fval >= MIN_CLOSED_SPACE || caveD[y][x].midx != 0);
-        break;
-      case CTRL('m'):
-        if (mon_usedD) {
-          int rv = randint(mon_usedD);
-          struct monS* mon = mon_get(monD[rv - 1]);
-          MSG("Teleport to monster id %d (%d/%d)", mon->id, rv, mon_usedD);
+      draw();
+      free_turn_flag = FALSE;
 
-          int fy = mon->fy;
-          int fx = mon->fx;
-          py_teleport_near(fy, fx, &y, &x);
-        }
-        break;
-      case CTRL('o'): {
-        static int y_obj_teleportD;
-        static int x_obj_teleportD;
-        int row, col;
-        int fy, fx;
-        fy = y_obj_teleportD;
-        fx = x_obj_teleportD;
+      c = inkey();
+      if (c == -1) break;
 
-        for (row = 1; row < MAX_HEIGHT - 1; ++row) {
-          for (col = 1; col < MAX_WIDTH - 1; ++col) {
-            int oidx = caveD[row][col].oidx;
-            if (!oidx) continue;
-            struct objS* obj = &entity_objD[oidx];
-            if (is_door(obj->tval)) continue;
+      y = uD.y;
+      x = uD.x;
+      switch (c) {
+        case ' ':
+          free_turn_flag = TRUE;
+          break;
+        case 'k':
+        case 'j':
+        case 'l':
+        case 'h':
+        case 'n':
+        case 'b':
+        case 'y':
+        case 'u':
+          mmove(map_roguedir(c) - '0', &y, &x);
+          break;
+        case 'c':
+          close_object();
+          break;
+        case 'd':
+          py_drop(y, x);
+          break;
+        case 'e': {
+          free_turn_flag = TRUE;
+          int count = py_inven(INVEN_EQUIP, MAX_INVEN);
+          MSG("You wearing %d items.", count);
+        } break;
+        case 'f':
+          bash(&y, &x);
+          break;
+        case 'i': {
+          free_turn_flag = TRUE;
+          int count = py_inven(0, INVEN_EQUIP);
+          MSG("You carrying %d items.", count);
+        } break;
+        case 'm':
+          // TEMP: testing tr_make_known
+          py_make_known();
+          break;
+        case 'o':
+          open_object();
+          break;
+        case 's':
+          search(y, x, 25);
+          break;
+        case 'w':
+          py_wear();
+          break;
+        case '<':
+          go_up();
+          break;
+        case '>':
+          go_down();
+          break;
+        case 'C':
+          py_screen();
+          break;
+        case 'D':
+          disarm_trap(&y, &x);
+          break;
+        case 'T':
+          py_takeoff();
+          break;
+        case 'W':
+          py_map();
+          break;
+        case CTRL('h'):
+          if (uD.mhp < 100) uD.mhp = 100;
+          uD.chp = uD.mhp;
+          msg_print("You are healed.");
+          break;
+        case CTRL('t'):
+          msg_print("teleport");
+          do {
+            x = randint(MAX_WIDTH - 2);
+            y = randint(MAX_HEIGHT - 2);
+          } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
+                   caveD[y][x].midx != 0);
+          break;
+        case CTRL('m'):
+          if (mon_usedD) {
+            int rv = randint(mon_usedD);
+            struct monS* mon = mon_get(monD[rv - 1]);
+            MSG("Teleport to monster id %d (%d/%d)", mon->id, rv, mon_usedD);
 
-            if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
+            int fy = mon->fy;
+            int fx = mon->fx;
+            py_teleport_near(fy, fx, &y, &x);
+          }
+          break;
+        case CTRL('o'): {
+          static int y_obj_teleportD;
+          static int x_obj_teleportD;
+          int row, col;
+          int fy, fx;
+          fy = y_obj_teleportD;
+          fx = x_obj_teleportD;
 
-            if (py_teleport_near(row, col, &y, &x)) {
-              MSG("Teleport to obj %d", oidx);
-              y_obj_teleportD = row;
-              x_obj_teleportD = col;
-              row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+          for (row = 1; row < MAX_HEIGHT - 1; ++row) {
+            for (col = 1; col < MAX_WIDTH - 1; ++col) {
+              int oidx = caveD[row][col].oidx;
+              if (!oidx) continue;
+              struct objS* obj = &entity_objD[oidx];
+              if (is_door(obj->tval)) continue;
+
+              if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
+
+              if (py_teleport_near(row, col, &y, &x)) {
+                MSG("Teleport to obj %d", oidx);
+                y_obj_teleportD = row;
+                x_obj_teleportD = col;
+                row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+              }
+            }
+          }
+          if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
+            y_obj_teleportD = x_obj_teleportD = 0;
+            msg_print("Reset object teleport");
+          }
+        } break;
+      }
+
+      if (uD.y != y || uD.x != x) {
+        struct caveS* c_ptr = &caveD[y][x];
+        if (c_ptr->midx) {
+          py_attack(y, x);
+        } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
+          struct objS* obj = &entity_objD[c_ptr->oidx];
+          uD.y = y;
+          uD.x = x;
+          panel_update(&panelD, uD.y, uD.x, FALSE);
+          if (obj->tval) {
+            if (obj->tval <= TV_MAX_PICK_UP) {
+              py_carry(y, x, TRUE);
+            } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
+              hit_trap(y, x);
             }
           }
         }
-        if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
-          y_obj_teleportD = x_obj_teleportD = 0;
-          msg_print("Reset object teleport");
-        }
-      } break;
-    }
-
-    if (uD.y != y || uD.x != x) {
-      struct caveS* c_ptr = &caveD[y][x];
-      if (c_ptr->midx) {
-        py_attack(y, x);
-      } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
-        struct objS* obj = &entity_objD[c_ptr->oidx];
-        uD.y = y;
-        uD.x = x;
-        panel_update(&panelD, uD.y, uD.x, FALSE);
-        if (obj->tval) {
-          if (obj->tval <= TV_MAX_PICK_UP) {
-            py_carry(y, x, TRUE);
-          } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
-            hit_trap(y, x);
-          }
-        }
       }
-    }
+    } while (free_turn_flag && !new_level_flag);
 
     if (new_level_flag) break;
-    if (free_turn_flag) continue;
     creatures(TRUE);
   }
 }

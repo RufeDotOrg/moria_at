@@ -12,6 +12,9 @@ struct uS {
   int ptodam;
   int pac;
   int ptoac;
+  // Status
+  int food;
+  int food_digested;
   uint8_t clidx;  // class
   uint8_t ridx;   // race
   // initialized by class/race
