@@ -94,7 +94,7 @@ struct caveS {
   uint8_t midx;  // monster
   uint8_t oidx;  // object
   uint8_t fval;  // floor
-  uint8_t lr : 1;
+  uint8_t cflag; // cave flag (CF_)
 };
 static struct caveS caveD[MAX_HEIGHT][MAX_WIDTH];
 
@@ -118,7 +118,7 @@ struct treasureS {
 
 struct objS {
   int id;
-  char* name2;
+  char *name2;
   uint32_t flags;
   uint8_t fy;
   uint8_t fx;
@@ -136,7 +136,7 @@ struct objS {
   int16_t toac;
   uint8_t damage[2];
   uint8_t level;
-  uint8_t idflag; // aka. ident
+  uint8_t idflag;  // aka. ident
 };
 
 struct creatureS {

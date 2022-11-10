@@ -426,7 +426,7 @@ static void build_room(yval, xval) int yval, xval;
     c_ptr = &caveD[i][x_left];
     for (j = x_left; j <= x_right; j++) {
       c_ptr->fval = floor;
-      c_ptr->lr = TRUE;
+      c_ptr->cflag |= CF_LITROOM;
       c_ptr++;
     }
   }
@@ -434,20 +434,20 @@ static void build_room(yval, xval) int yval, xval;
   for (i = (y_height - 1); i <= (y_depth + 1); i++) {
     c_ptr = &caveD[i][x_left - 1];
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->lr = TRUE;
+    c_ptr->cflag |= CF_LITROOM;
     c_ptr = &caveD[i][x_right + 1];
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->lr = TRUE;
+    c_ptr->cflag |= CF_LITROOM;
   }
 
   c_ptr = &caveD[y_height - 1][x_left];
   d_ptr = &caveD[y_depth + 1][x_left];
   for (i = x_left; i <= x_right; i++) {
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->lr = TRUE;
+    c_ptr->cflag |= CF_LITROOM;
     c_ptr++;
     d_ptr->fval = GRANITE_WALL;
-    d_ptr->lr = TRUE;
+    c_ptr->cflag |= CF_LITROOM;
     d_ptr++;
   }
 }
@@ -1439,7 +1439,12 @@ generate_cave()
   // a fresh cave!
   cave_gen();
 }
-
+BOOL
+cave_lit(cave)
+struct caveS* cave;
+{
+  return (cave->cflag & (CF_TEMP_LIGHT | CF_PERM_LIGHT)) != 0;
+}
 char
 get_sym(int row, int col)
 {
@@ -1452,16 +1457,16 @@ get_sym(int row, int col)
     struct creatureS* creature = &creatureD[mon->cidx];
     return creature->cchar;
   }
+  if (!cave_lit(cave_ptr)) return ' ';
   if (cave_ptr->oidx) {
     struct objS* obj = &entity_objD[cave_ptr->oidx];
     return obj->tchar;
   }
   switch (cave_ptr->fval) {
     case FLOOR_LIGHT:
-      return '.';
     case FLOOR_DARK:
     case FLOOR_CORR:
-      return ' ';
+      return '.';
     case FLOOR_OBST:
       return ';';
   }
@@ -2421,6 +2426,25 @@ calc_bonuses()
   // if (p_ptr->slow_digest) p_ptr->food_digest--;
   // if (p_ptr->regenerate) p_ptr->food_digest += 3;
 }
+void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
+{
+  int row, col;
+  for (row = y1 - 1; row <= y1 + 1; ++row) {
+    for (col = x1 - 1; col <= x1 + 1; ++col) {
+      caveD[row][col].cflag &= ~CF_TEMP_LIGHT;
+    }
+  }
+
+  for (row = y2 - 1; row <= y2 + 1; ++row) {
+    for (col = x2 - 1; col <= x2 + 1; ++col) {
+      struct caveS* cave = &caveD[row][col];
+      if (cave->fval >= MIN_WALL)
+        cave->cflag |= CF_PERM_LIGHT;
+      else
+        caveD[row][col].cflag |= CF_TEMP_LIGHT;
+    }
+  }
+}
 void
 py_init()
 {
@@ -2494,6 +2518,8 @@ py_init()
 
   uD.food = 7500;
   uD.food_digest = 2;
+
+  py_move_light(uD.y, uD.x, uD.y, uD.x);
 }
 int8_t
 modify_stat(stat, amount)
@@ -3950,6 +3976,7 @@ dungeon()
         if (c_ptr->midx) {
           py_attack(y, x);
         } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
+          py_move_light(uD.y, uD.x, y, x);
           struct objS* obj = &entity_objD[c_ptr->oidx];
           uD.y = y;
           uD.x = x;

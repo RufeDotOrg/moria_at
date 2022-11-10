@@ -25,6 +25,12 @@
 #define GRANITE_WALL 12
 #define BOUNDARY_WALL 15
 
+// Cave flags
+#define CF_LITROOM 0x1
+#define CF_TEMP_LIGHT 0x2
+#define CF_PERM_LIGHT 0x4
+#define CF_FIELDMARK 0x8 // Bypass normal visibility rules
+
 #define DUN_TUN_RND 9       /* 1/Chance of Random direction	       */
 #define DUN_TUN_CHG 70      /* Chance of changing direction (99 max) */
 #define DUN_TUN_CON 15      /* Chance of extra tunneling	       */
