@@ -6,12 +6,12 @@ static int death;
 static int dun_level;
 static int free_turn_flag;
 static int new_level_flag;
-static char statusD[SCREEN_HEIGHT][STATUS_WIDTH];
+static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
 static char symmapD[SCREEN_HEIGHT][SCREEN_WIDTH];
 static char screenD[19][80];
 static int screen_usedD[AL(screenD)];
-static char overlayD[SCREEN_HEIGHT][80 - STATUS_WIDTH];
-static int overlay_usedD[SCREEN_HEIGHT];
+static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
+static int overlay_usedD[STATUS_HEIGHT];
 static char descD[160];
 static char death_descD[160];
 static char logD[80];
@@ -62,7 +62,7 @@ draw()
     AC(screenD);
     AC(screen_usedD);
   } else if (overlay_usedD[0]) {
-    for (int row = 0; row < SCREEN_HEIGHT; ++row) {
+    for (int row = 0; row < STATUS_HEIGHT; ++row) {
       buffer_append(AP(tc_clear_lineD));
       buffer_append(AP(statusD[row]));
       buffer_append(overlayD[row], overlay_usedD[row]);
@@ -71,10 +71,10 @@ draw()
     AC(overlayD);
     AC(overlay_usedD);
   } else {
-    for (int row = 0; row < SCREEN_HEIGHT; ++row) {
+    for (int row = 0; row < STATUS_HEIGHT; ++row) {
       buffer_append(AP(tc_clear_lineD));
       buffer_append(AP(statusD[row]));
-      buffer_append(AP(symmapD[row]));
+      if (row < SCREEN_HEIGHT) buffer_append(AP(symmapD[row]));
       buffer_append(AP(tc_crlfD));
     }
   }
