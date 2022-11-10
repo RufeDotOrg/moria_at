@@ -3624,6 +3624,7 @@ status_update()
     line += 1;                                                  \
   }
   PR_STAT("CHP ", uD.chp);
+  PR_STAT("MHP ", uD.mhp);
   PR_STAT("LEV ", uD.lev);
   PR_STAT("EXP ", uD.exp);
   line += 1;
