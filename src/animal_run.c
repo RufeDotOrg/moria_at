@@ -2300,12 +2300,10 @@ static void mon_desc(midx) int midx;
   else
     snprintf(AP(death_descD), "A %s", cre->name);
 }
-void
-calc_hitpoints()
+void calc_hitpoints(level) int level;
 {
-  int hitpoints, level;
+  int hitpoints;
 
-  level = uD.lev;
   hitpoints = player_hpD[level - 1] + (con_adj() * level);
   /* always give at least one point per level + 1 */
   if (hitpoints < (level + 1)) hitpoints = level + 1;
@@ -2533,7 +2531,7 @@ void set_use_stat(stat) int stat;
   } else if (stat == A_DEX) {
     calc_bonuses();
   } else if (stat == A_CON)
-    calc_hitpoints();
+    calc_hitpoints(uD.lev);
   // else if (stat == A_INT) {
   //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
   //   calc_mana(A_INT);
@@ -2930,7 +2928,7 @@ py_experience()
 
     lev += 1;
     MSG("Welcome to level %d.", lev);
-    calc_hitpoints();
+    calc_hitpoints(lev);
 
     need_exp = player_exp[lev - 1] * expfact / 100;
     if (exp > need_exp) {
