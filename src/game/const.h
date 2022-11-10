@@ -1,12 +1,12 @@
 
 #define MAX_WIDTH 256
 #define MAX_HEIGHT 128
-#define SCREEN_HEIGHT 8
-#define SCREEN_WIDTH 16
+#define SCREEN_HEIGHT 16
+#define SCREEN_WIDTH 32
+#define SCREEN_COL (MAX_WIDTH / SCREEN_WIDTH * 2)
+#define SCREEN_ROW (MAX_HEIGHT / SCREEN_HEIGHT * 2)
 #define STATUS_HEIGHT 22
 #define STATUS_WIDTH 13
-#define MAX_COL (MAX_WIDTH / SCREEN_WIDTH * 2)
-#define MAX_ROW (MAX_HEIGHT / SCREEN_HEIGHT * 2)
 
 #define MODE_DFLT 0
 #define MODE_MAP 1
@@ -26,11 +26,18 @@
 #define BOUNDARY_WALL 15
 
 // Cave flags
-#define CF_LITROOM 0x1
+#define CF_ROOM 0x1
 #define CF_TEMP_LIGHT 0x2
 #define CF_PERM_LIGHT 0x4
-#define CF_FIELDMARK 0x8 // Bypass normal visibility rules
+#define CF_FIELDMARK 0x8  // Bypass normal visibility rules
 
+#define CHUNK_HEIGHT 16
+#define CHUNK_WIDTH 32
+#define CHUNK_COL (MAX_HEIGHT / CHUNK_HEIGHT)
+#define CHUNK_ROW (MAX_WIDTH / CHUNK_WIDTH)
+
+#define ROOM_WIDTH 11
+#define ROOM_HEIGHT 4
 #define DUN_TUN_RND 9       /* 1/Chance of Random direction	       */
 #define DUN_TUN_CHG 70      /* Chance of changing direction (99 max) */
 #define DUN_TUN_CON 15      /* Chance of extra tunneling	       */
@@ -206,16 +213,16 @@
 
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
 
-#define PLAYER_FOOD_FULL 10000/* Getting full			       */
-#define PLAYER_FOOD_MAX	 15000/* Maximum food value, beyond is wasted  */
-#define PLAYER_FOOD_FAINT  300/* Character begins fainting	       */
-#define PLAYER_FOOD_WEAK  1000/* Warn player that he is getting very low*/
-#define PLAYER_FOOD_ALERT 2000/* Warn player that he is getting low    */
-#define PLAYER_REGEN_FAINT    33   /* Regen factor*2^16 when fainting	 */
-#define PLAYER_REGEN_WEAK     98   /* Regen factor*2^16 when weak	 */
-#define PLAYER_REGEN_NORMAL  197   /* Regen factor*2^16 when full	 */
-#define PLAYER_REGEN_HPBASE  1442  /* Min amount hp regen*2^16		 */
-#define PLAYER_REGEN_MNBASE  524   /* Min amount mana regen*2^16	 */
+#define PLAYER_FOOD_FULL 10000   /* Getting full			       */
+#define PLAYER_FOOD_MAX 15000    /* Maximum food value, beyond is wasted  */
+#define PLAYER_FOOD_FAINT 300    /* Character begins fainting	       */
+#define PLAYER_FOOD_WEAK 1000    /* Warn player that he is getting very low*/
+#define PLAYER_FOOD_ALERT 2000   /* Warn player that he is getting low    */
+#define PLAYER_REGEN_FAINT 33    /* Regen factor*2^16 when fainting	 */
+#define PLAYER_REGEN_WEAK 98     /* Regen factor*2^16 when weak	 */
+#define PLAYER_REGEN_NORMAL 197  /* Regen factor*2^16 when full	 */
+#define PLAYER_REGEN_HPBASE 1442 /* Min amount hp regen*2^16		 */
+#define PLAYER_REGEN_MNBASE 524  /* Min amount mana regen*2^16	 */
 
 /* Class spell types */
 #define SP_MAGE 1

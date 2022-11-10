@@ -417,16 +417,16 @@ static void build_room(yval, xval) int yval, xval;
   else
     floor = FLOOR_DARK;
 
-  y_height = yval - randint(1);
-  y_depth = yval + randint(2);
-  x_left = xval - randint(2);
-  x_right = xval + randint(3);
+  y_height = yval - randint(ROOM_HEIGHT / 2);
+  y_depth = yval + randint(ROOM_HEIGHT / 2) - 1;
+  x_left = xval - randint(ROOM_WIDTH / 2);
+  x_right = xval + randint(ROOM_WIDTH / 2);
 
   for (i = y_height; i <= y_depth; i++) {
     c_ptr = &caveD[i][x_left];
     for (j = x_left; j <= x_right; j++) {
       c_ptr->fval = floor;
-      c_ptr->cflag |= CF_LITROOM;
+      c_ptr->cflag |= CF_ROOM;
       c_ptr++;
     }
   }
@@ -434,22 +434,44 @@ static void build_room(yval, xval) int yval, xval;
   for (i = (y_height - 1); i <= (y_depth + 1); i++) {
     c_ptr = &caveD[i][x_left - 1];
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->cflag |= CF_LITROOM;
+    c_ptr->cflag |= CF_ROOM;
     c_ptr = &caveD[i][x_right + 1];
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->cflag |= CF_LITROOM;
+    c_ptr->cflag |= CF_ROOM;
   }
 
   c_ptr = &caveD[y_height - 1][x_left];
   d_ptr = &caveD[y_depth + 1][x_left];
   for (i = x_left; i <= x_right; i++) {
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->cflag |= CF_LITROOM;
+    c_ptr->cflag |= CF_ROOM;
     c_ptr++;
     d_ptr->fval = GRANITE_WALL;
-    c_ptr->cflag |= CF_LITROOM;
+    d_ptr->cflag |= CF_ROOM;
     d_ptr++;
   }
+}
+void light_room(y, x) int y, x;
+{
+  register int i, j, start_col, end_col;
+  int tmp1, tmp2, start_row, end_row;
+  struct caveS* c_ptr;
+  int tval;
+
+  tmp1 = (SCREEN_HEIGHT / 2);
+  tmp2 = (SCREEN_WIDTH / 2);
+  start_row = (y / tmp1) * tmp1;
+  start_col = (x / tmp2) * tmp2;
+  end_row = start_row + tmp1 - 1;
+  end_col = start_col + tmp2 - 1;
+  for (i = start_row; i <= end_row; i++)
+    for (j = start_col; j <= end_col; j++) {
+      c_ptr = &caveD[i][j];
+      if ((c_ptr->cflag & CF_ROOM)) {
+        c_ptr->cflag |= CF_PERM_LIGHT;
+        if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
+      }
+    }
 }
 typedef struct {
   int y;
@@ -1352,7 +1374,7 @@ int typ, num;
 void
 cave_gen()
 {
-  int room_map[MAX_COL - 1][MAX_ROW - 1] = {0};
+  int room_map[CHUNK_COL][CHUNK_ROW] = {0};
   register int i, j, k;
   int y1, x1, y2, x2, pick1, pick2, tmp;
   int16_t yloc[400], xloc[400];
@@ -1364,8 +1386,8 @@ cave_gen()
   for (i = 0; i < AL(room_map); i++)
     for (j = 0; j < AL(room_map[0]); j++)
       if (room_map[i][j]) {
-        yloc[k] = i * (SCREEN_HEIGHT >> 1) + (SCREEN_HEIGHT >> 2);
-        xloc[k] = j * (SCREEN_WIDTH >> 1) + (SCREEN_WIDTH >> 2);
+        yloc[k] = i * CHUNK_HEIGHT + (CHUNK_HEIGHT >> 2);
+        xloc[k] = j * CHUNK_WIDTH + (CHUNK_WIDTH >> 2);
         build_room(yloc[k], xloc[k]);
         k++;
       }
@@ -1503,13 +1525,13 @@ panel_update(struct panelS* panel, int y, int x, BOOL force)
   BOOL yd = (y < panel->panel_row_min + 2 || y > panel->panel_row_max - 3);
   if (force || yd) {
     int prow = (y - SCREEN_HEIGHT / 4) / (SCREEN_HEIGHT / 2);
-    panel->panel_row = CLAMP(prow, 0, MAX_ROW);
+    panel->panel_row = CLAMP(prow, 0, SCREEN_ROW);
   }
 
   BOOL xd = (x < panel->panel_col_min + 2 || x > panel->panel_col_max - 3);
   if (force || xd) {
     int pcol = (x - SCREEN_WIDTH / 4) / (SCREEN_WIDTH / 2);
-    panel->panel_col = CLAMP(pcol, 0, MAX_COL - 2);
+    panel->panel_col = CLAMP(pcol, 0, SCREEN_COL - 2);
   }
 
   panel_bounds(panel);
@@ -2620,8 +2642,8 @@ py_map()
   int y, x, dir;
   while (get_dir("Map: Look which direction?", &dir)) {
     mmove(dir, &panelD.panel_row, &panelD.panel_col);
-    if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
-    if (panelD.panel_col > MAX_COL - 2) panelD.panel_col = MAX_COL - 2;
+    if (panelD.panel_row > SCREEN_ROW - 2) panelD.panel_row = SCREEN_ROW - 2;
+    if (panelD.panel_col > SCREEN_COL - 2) panelD.panel_col = SCREEN_COL - 2;
     panel_bounds(&panelD);
     symmap_update();
     draw();
@@ -3977,6 +3999,10 @@ dungeon()
           py_attack(y, x);
         } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
           py_move_light(uD.y, uD.x, y, x);
+          if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 &&
+              c_ptr->fval == FLOOR_LIGHT) {
+            light_room(y, x);
+          }
           struct objS* obj = &entity_objD[c_ptr->oidx];
           uD.y = y;
           uD.x = x;
