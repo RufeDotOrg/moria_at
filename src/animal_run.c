@@ -2956,10 +2956,55 @@ py_experience()
   uD.exp = exp;
   uD.lev = lev;
 }
+int
+attack_blows(weight, wtohit)
+int weight;
+int* wtohit;
+{
+  register int adj_weight;
+  register int str_index, dex_index, s, d;
+
+  s = statD.use_stat[A_STR];
+  d = statD.use_stat[A_DEX];
+  if (s * 15 < weight) {
+    *wtohit = s * 15 - weight;
+    return 1;
+  } else {
+    *wtohit = 0;
+    if (d < 10)
+      dex_index = 0;
+    else if (d < 19)
+      dex_index = 1;
+    else if (d < 68)
+      dex_index = 2;
+    else if (d < 108)
+      dex_index = 3;
+    else if (d < 118)
+      dex_index = 4;
+    else
+      dex_index = 5;
+    adj_weight = (s * 10 / weight);
+    if (adj_weight < 2)
+      str_index = 0;
+    else if (adj_weight < 3)
+      str_index = 1;
+    else if (adj_weight < 4)
+      str_index = 2;
+    else if (adj_weight < 5)
+      str_index = 3;
+    else if (adj_weight < 7)
+      str_index = 4;
+    else if (adj_weight < 9)
+      str_index = 5;
+    else
+      str_index = 6;
+    return blows_table[str_index][dex_index];
+  }
+}
 void py_attack(y, x) int y, x;
 {
   register int k, blows;
-  int base_tohit;
+  int base_tohit, tohit;
 
   int midx = caveD[y][x].midx;
   struct monS* mon = &entity_monD[midx];
@@ -2969,14 +3014,30 @@ void py_attack(y, x) int y, x;
   mon_desc(midx);
   descD[0] = tolower(descD[0]);
 
-  blows = 1;
-  base_tohit = 30;
+  switch (obj->tval) {
+    case 0:
+      blows = 2;
+      tohit = -3;
+      break;
+    case TV_SLING_AMMO:
+    case TV_BOLT:
+    case TV_ARROW:
+    case TV_SPIKE:
+      blows = 1;
+      tohit = 0;
+      break;
+    default:
+      blows = attack_blows(obj->weight, &tohit);
+      break;
+  }
+  // TBD: reduce hit if monster not lit
+  base_tohit = uD.bth;
 
   int adj = uD.lev * level_adj[uD.clidx][LA_BTH];
   int creature_ac = cre->ac;
   /* Loop for number of blows,  trying to hit the critter.	  */
   for (int it = 0; it < blows; ++it) {
-    if (test_hit(uD.bth, adj, 0, creature_ac)) {
+    if (test_hit(uD.bth, adj, tohit, creature_ac)) {
       MSG("You hit %s.", descD);
       if (obj->tval) {
         k = pdamroll(obj->damage);
