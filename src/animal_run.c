@@ -20,11 +20,12 @@ static int log_usedD;
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
 
-#define MSG(x, ...)                                                   \
-  {                                                                   \
-    char vtype[80];                                                   \
-    int len = snprintf(AP(vtype), "<%d>" x, __LINE__, ##__VA_ARGS__); \
-    msg_print2(vtype, len);                                           \
+#define MSG(x, ...)                                                        \
+  {                                                                        \
+    char vtype[80];                                                        \
+    int len =                                                              \
+        snprintf(vtype, sizeof(vtype), "<%d>" x, __LINE__, ##__VA_ARGS__); \
+    msg_print2(vtype, len);                                                \
   }
 
 // Inventory of object IDs; obj_get(id)
@@ -1995,6 +1996,20 @@ int midx, dam;
   mon_unuse(mon);
   return cidx;
 }
+BOOL
+is_a_vowel(c)
+char c;
+{
+  switch (c) {
+    case 'a':
+    case 'e':
+    case 'i':
+    case 'o':
+    case 'u':
+      return TRUE;
+  }
+  return FALSE;
+}
 // TBD: Refactor
 void obj_prefix(obj, prefix) struct objS* obj;
 BOOL prefix;
@@ -2268,20 +2283,6 @@ BOOL prefix;
   if (damstr[0]) strcat(descD, damstr);
   obj_prefix(obj, prefix);
   if (prefix) obj_detail(obj);
-}
-BOOL
-is_a_vowel(c)
-char c;
-{
-  switch (c) {
-    case 'a':
-    case 'e':
-    case 'i':
-    case 'o':
-    case 'u':
-      return TRUE;
-  }
-  return FALSE;
 }
 static void mon_desc(midx) int midx;
 {
@@ -3880,7 +3881,7 @@ dungeon()
           disarm_trap(&y, &x);
           break;
         case 'R':
-          uD.rest = INT32_MIN;
+          uD.rest = -9999;
           break;
         case 'T':
           py_takeoff();
