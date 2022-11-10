@@ -2540,8 +2540,6 @@ py_init()
 
   uD.food = 7500;
   uD.food_digest = 2;
-
-  py_move_light(uD.y, uD.x, uD.y, uD.x);
 }
 int8_t
 modify_stat(stat, amount)
@@ -3854,6 +3852,8 @@ dungeon()
 {
   int c, y, x;
   new_level_flag = FALSE;
+
+  py_move_light(uD.y, uD.x, uD.y, uD.x);
   while (1) {
     tick();
 
