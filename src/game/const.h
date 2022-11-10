@@ -218,11 +218,11 @@
 #define PLAYER_FOOD_FAINT 300    /* Character begins fainting	       */
 #define PLAYER_FOOD_WEAK 1000    /* Warn player that he is getting very low*/
 #define PLAYER_FOOD_ALERT 2000   /* Warn player that he is getting low    */
-#define PLAYER_REGEN_FAINT 33    /* Regen factor*2^16 when fainting	 */
-#define PLAYER_REGEN_WEAK 98     /* Regen factor*2^16 when weak	 */
-#define PLAYER_REGEN_NORMAL 197  /* Regen factor*2^16 when full	 */
-#define PLAYER_REGEN_HPBASE 1442 /* Min amount hp regen*2^16		 */
-#define PLAYER_REGEN_MNBASE 524  /* Min amount mana regen*2^16	 */
+#define PLAYER_REGEN_FAINT 33    /* Regen factor>>16 when fainting	 */
+#define PLAYER_REGEN_WEAK 98     /* Regen factor>>16 when weak	 */
+#define PLAYER_REGEN_NORMAL 197  /* Regen factor>>16 when full	 */
+#define PLAYER_REGEN_HPBASE 1442 /* Min amount hp regen>>16		 */
+#define PLAYER_REGEN_MNBASE 524  /* Min amount mana regen>>16	 */
 
 /* Class spell types */
 #define SP_MAGE 1
