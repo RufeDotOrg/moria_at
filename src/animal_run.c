@@ -3892,6 +3892,8 @@ dungeon()
               hit_trap(y, x);
             }
           }
+        } else {
+          free_turn_flag = TRUE;
         }
       }
     } while (free_turn_flag && !new_level_flag);
