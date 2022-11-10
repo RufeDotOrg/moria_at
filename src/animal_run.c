@@ -3847,13 +3847,21 @@ tick()
     if (uD.chp == uD.mhp) uD.rest = 0;
   }
 }
+void py_check_view(y, x) int y, x;
+{
+  panel_update(&panelD, y, x, TRUE);
+  py_move_light(y, x, y, x);
+  struct caveS* c_ptr = &caveD[y][x];
+  if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->fval == FLOOR_LIGHT) {
+    light_room(y, x);
+  }
+}
 void
 dungeon()
 {
   int c, y, x;
   new_level_flag = FALSE;
 
-  py_move_light(uD.y, uD.x, uD.y, uD.x);
   while (1) {
     tick();
 
@@ -4068,7 +4076,7 @@ main()
   py_init();
 
   while (!death) {
-    panel_update(&panelD, uD.y, uD.x, TRUE);
+    py_check_view(uD.y, uD.x);
     dungeon();
 
     if (!death) generate_cave();
