@@ -80,9 +80,8 @@ draw()
   }
   char line[80];
   int print_len =
-      snprintf(AP(line), "(%d,%d) xy (%d,%d) quadrant (%d) fval %d feet", uD.x,
-               uD.y, panelD.panel_col, panelD.panel_row, caveD[uD.y][uD.x].fval,
-               dun_level * 50);
+      snprintf(AP(line), "[%d,%d xy] [%d,%d quadrant] [%d turn] %d feet", uD.x,
+               uD.y, panelD.panel_col, panelD.panel_row, turnD, dun_level * 50);
   if (print_len < AL(line)) buffer_append(line, print_len);
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
@@ -402,6 +401,7 @@ register int weight, plus, dam;
 }
 void disturb(search, light) int search, light;
 {
+  if (uD.rest != 0) uD.rest = 0;
 }
 
 static void build_room(yval, xval) int yval, xval;
@@ -2326,8 +2326,8 @@ calc_bonuses()
   int it;
   // p_ptr = &py.flags;
   // m_ptr = &py.misc;
-  // if (p_ptr->slow_digest) p_ptr->food_digested++;
-  // if (p_ptr->regenerate) p_ptr->food_digested -= 3;
+  // if (p_ptr->slow_digest) p_ptr->food_digest++;
+  // if (p_ptr->regenerate) p_ptr->food_digest -= 3;
   // p_ptr->see_inv = FALSE;
   // p_ptr->teleport = FALSE;
   // p_ptr->free_act = FALSE;
@@ -2419,8 +2419,8 @@ calc_bonuses()
   //  i_ptr++;
   //}
 
-  // if (p_ptr->slow_digest) p_ptr->food_digested--;
-  // if (p_ptr->regenerate) p_ptr->food_digested += 3;
+  // if (p_ptr->slow_digest) p_ptr->food_digest--;
+  // if (p_ptr->regenerate) p_ptr->food_digest += 3;
 }
 void
 py_init()
@@ -2494,7 +2494,7 @@ py_init()
   calc_bonuses();
 
   uD.food = 7500;
-  uD.food_digested = 2;
+  uD.food_digest = 2;
 }
 int8_t
 modify_stat(stat, amount)
@@ -3783,7 +3783,7 @@ tick()
   else
     regen_amount = PLAYER_REGEN_NORMAL;
 
-  uD.food -= uD.food_digested;
+  uD.food -= uD.food_digest;
   if (uD.food < 0) {
     strcpy(death_descD, "starvation");
     py_take_hit(-uD.food / 16);
@@ -3791,12 +3791,16 @@ tick()
   }
 
   // if (uD.regenerate) regen_amount = regen_amount * 3 / 2;
-  // if (uD.rest != 0)
-  // || (py.flags.status & PY_SEARCH)
-  // regen_amount = regen_amount * 2;
+  if (uD.rest != 0)  // || (py.flags.status & PY_SEARCH)
+    regen_amount = regen_amount * 2;
   // if (py.flags.poisoned < 1)
   regenhp(regen_amount);
   // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
+
+  if (uD.rest < 0) {
+    uD.rest += 1;
+    if (uD.chp == uD.mhp) uD.rest = 0;
+  }
 }
 void
 dungeon()
@@ -3807,6 +3811,7 @@ dungeon()
     tick();
 
     do {
+      if (uD.rest != 0) break;
       status_update();
       symmap_update();
 
@@ -3875,6 +3880,9 @@ dungeon()
           break;
         case 'D':
           disarm_trap(&y, &x);
+          break;
+        case 'R':
+          uD.rest = INT32_MIN;
           break;
         case 'T':
           py_takeoff();
