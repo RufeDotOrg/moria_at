@@ -157,6 +157,7 @@
 #define MON_DRAIN_LIFE 2 /* Percent of player exp drained per hit */
 #define MAX_WIN_MON 2
 #define CRE_LEV_ADJ 3
+#define MAX_SIGHT	   20 /* Maximum dis a creature can be seen    */
 
 /* definitions for creatures, cmove field */
 #define CM_ALL_MV_FLAGS 0x0000003FL

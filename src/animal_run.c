@@ -1242,6 +1242,7 @@ int slp;
   else
     mon->hp = pdamroll(cre->hd);
   mon->cdis = distance(uD.y, uD.x, y, x);
+  mon->ml = FALSE;
 
   caveD[y][x].midx = mon_index(mon);
   return TRUE;
@@ -1477,7 +1478,7 @@ get_sym(int row, int col)
   if (cave_ptr->midx) {
     struct monS* mon = &entity_monD[cave_ptr->midx];
     struct creatureS* creature = &creatureD[mon->cidx];
-    return creature->cchar;
+    if (mon->ml) return creature->cchar;
   }
   if (!cave_lit(cave_ptr)) return ' ';
   if (cave_ptr->oidx) {
@@ -1518,6 +1519,17 @@ panel_bounds(struct panelS* panel)
   panel->panel_row_max = panel->panel_row_min + SCREEN_HEIGHT;
   panel->panel_col_min = panel_col * (SCREEN_WIDTH / 2);
   panel->panel_col_max = panel->panel_col_min + SCREEN_WIDTH;
+}
+BOOL
+panel_contains(panel, y, x)
+struct panelS* panel;
+int y, x;
+{
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+  return (y >= rmin && y < rmax && x >= cmin && x < cmax);
 }
 void
 panel_update(struct panelS* panel, int y, int x, BOOL force)
@@ -1742,8 +1754,49 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
   caveD[y1][x1].midx = 0;
   caveD[y2][x2].midx = tmp;
 }
-void update_mon(monptr) int monptr;
+void update_mon(midx) int midx;
 {
+  register int flag;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  m_ptr = &entity_monD[midx];
+  cr_ptr = &creatureD[m_ptr->cidx];
+  flag = FALSE;
+  if ((m_ptr->cdis <= MAX_SIGHT) &&
+      (panel_contains(&panelD, m_ptr->fy, m_ptr->fx))) {
+    // TBD: line-of-sight
+    // if (los(uD.y, uD.x, m_ptr->fy, m_ptr->fx)) {
+    c_ptr = &caveD[m_ptr->fy][m_ptr->fx];
+    /* Normal sight.       */
+    if (cave_lit(c_ptr)) {
+      if ((CM_INVISIBLE & cr_ptr->cmove) == 0) flag = TRUE;
+      // else if (py.flags.see_inv) {
+      //   flag = TRUE;
+      //   c_recall[m_ptr->mptr].r_cmove |= CM_INVISIBLE;
+      // }
+    }
+    /* Infra vision.   */
+    // else if ((py.flags.see_infra > 0) && (m_ptr->cdis <= py.flags.see_infra)
+    // &&
+    //          (CD_INFRA & cr_ptr->cdefense)) {
+    //   flag = TRUE;
+    //   c_recall[m_ptr->mptr].r_cdefense |= CD_INFRA;
+    // }
+    // }
+  }
+  /* Light it up.   */
+  if (flag) {
+    if (!m_ptr->ml) {
+      disturb(1, 0);
+      m_ptr->ml = TRUE;
+    }
+  }
+  /* Turn it off.   */
+  else if (m_ptr->ml) {
+    m_ptr->ml = FALSE;
+  }
 }
 int
 bth_adj(attype)
@@ -3681,10 +3734,7 @@ uint32_t* rcmove;
     if (do_move) {
       /* Move creature record  	       */
       move_rec(m_ptr->fy, m_ptr->fx, newy, newx);
-      // if (m_ptr->ml) {
-      //   m_ptr->ml = FALSE;
-      //   lite_spot((int)m_ptr->fy, (int)m_ptr->fx);
-      // }
+      m_ptr->ml = FALSE;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
       m_ptr->cdis = distance(uD.y, uD.x, newy, newx);

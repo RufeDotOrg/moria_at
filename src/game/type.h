@@ -169,4 +169,5 @@ struct monS {
   uint16_t cidx;  // creature definition
   int16_t hp;
   uint8_t cdis;
+  uint8_t ml; // monster lit
 };
