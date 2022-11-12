@@ -1537,7 +1537,7 @@ panel_update(struct panelS* panel, int y, int x, BOOL force)
   BOOL yd = (y < panel->panel_row_min + 2 || y > panel->panel_row_max - 3);
   if (force || yd) {
     int prow = (y - SCREEN_HEIGHT / 4) / (SCREEN_HEIGHT / 2);
-    panel->panel_row = CLAMP(prow, 0, SCREEN_ROW);
+    panel->panel_row = CLAMP(prow, 0, SCREEN_ROW - 2);
   }
 
   BOOL xd = (x < panel->panel_col_min + 2 || x > panel->panel_col_max - 3);
