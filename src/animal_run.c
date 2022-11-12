@@ -3750,18 +3750,34 @@ uint32_t* rcmove;
   get_moves(midx, mm);
   make_move(midx, mm, rcmove);
 }
+static int
+movement_rate(speed)
+int speed;
+{
+  if (speed > 0) {
+    if (uD.rest != 0)
+      return 1;
+    else
+      return speed;
+  } else {
+    /* speed must be negative here */
+    return ((turnD % (2 - speed)) == 0);
+  }
+}
 void creatures(move) int move;
 {
   uint32_t rcmove;
   int move_count;
-  struct creatureS* cre;
 
   FOR_EACH(mon, {
-    cre = &creatureD[mon->cidx];
+    struct creatureS* cr_ptr = &creatureD[mon->cidx];
     mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
     if (move) {
-      if ((cre->cmove & CM_ATTACK_ONLY) == 0 || mon->cdis < 2) {
-        mon_move(it_index, &rcmove);
+      if ((cr_ptr->cmove & CM_ATTACK_ONLY) == 0 || mon->cdis < 2) {
+        move_count = movement_rate(cr_ptr->speed - 10 + uD.pspeed);
+        for (; move_count > 0; --move_count) {
+          mon_move(it_index, &rcmove);
+        }
       }
     }
     update_mon(it_index);

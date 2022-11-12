@@ -12,6 +12,7 @@ struct uS {
   int ptodam;
   int pac;
   int ptoac;
+  int pspeed;
   // Status
   int food;
   int food_digest;
