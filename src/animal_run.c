@@ -2,6 +2,9 @@
 
 static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
+static int find_cut = 1;
+static int find_examine = 1;
+static int find_ignore_doors;
 static int find_direction;
 static int find_flag;
 static int find_openarea;
@@ -411,6 +414,7 @@ register int weight, plus, dam;
 void disturb(search, light) int search, light;
 {
   if (uD.rest != 0) uD.rest = 0;
+  find_flag = FALSE;
 }
 
 static void build_room(yval, xval) int yval, xval;
@@ -458,6 +462,17 @@ static void build_room(yval, xval) int yval, xval;
     d_ptr->cflag |= CF_ROOM;
     d_ptr++;
   }
+}
+BOOL
+near_light(y, x)
+int y, x;
+{
+  for (int row = y - 1; row <= y + 1; ++row) {
+    for (int col = x - 1; col <= x + 1; ++col) {
+      if (caveD[row][col].fval == FLOOR_LIGHT) return TRUE;
+    }
+  }
+  return FALSE;
 }
 void light_room(y, x) int y, x;
 {
@@ -1818,6 +1833,151 @@ int *y_ptr, *x_ptr;
       }
     } else
       find_openarea = TRUE;
+  }
+}
+static int
+see_nothing(dir, y, x)
+int dir, y, x;
+{
+  if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
+    return FALSE;
+  else if (get_sym(y, x) == ' ')
+    return TRUE;
+  else
+    return FALSE;
+}
+void find_event(y, x) int y, x;
+{
+  int dir, newdir, t, inv, check_dir, row, col;
+  register int i, max, option, option2;
+  struct caveS* c_ptr;
+
+  // if (py.flags.blind < 1)
+  option = 0;
+  option2 = 0;
+  dir = find_prevdir;
+  max = (dir & 1) + 1;
+  /* Look at every newly adjacent square. */
+  for (i = -max; i <= max; i++) {
+    newdir = cycle[chome[dir] + i];
+    row = y;
+    col = x;
+    if (mmove(newdir, &row, &col)) {
+      /* Objects player can see (Including doors?) cause a stop. */
+      c_ptr = &caveD[row][col];
+      // inv = TRUE;
+      // if (player_light || c_ptr->tl || c_ptr->pl || c_ptr->fm)
+      if (c_ptr->oidx != 0) {
+        t = entity_objD[c_ptr->oidx].tval;
+        if (t != TV_INVIS_TRAP && t != TV_SECRET_DOOR &&
+            (t != TV_OPEN_DOOR || !find_ignore_doors)) {
+          find_flag = FALSE;
+          return;
+        }
+      }
+      /* Also Creatures  	*/
+      /* the monster should be visible since update_mon() checks
+         for the special case of being in find mode */
+      if (c_ptr->midx != 0 && entity_monD[c_ptr->midx].ml) {
+        find_flag = FALSE;
+        return;
+      }
+      inv = FALSE;
+
+      if (c_ptr->fval <= MAX_OPEN_SPACE || inv) {
+        if (find_openarea) {
+          /* Have we found a break? */
+          if (i < 0) {
+            if (find_breakright) {
+              find_flag = FALSE;
+              return;
+            }
+          } else if (i > 0) {
+            if (find_breakleft) {
+              find_flag = FALSE;
+              return;
+            }
+          }
+        } else if (option == 0)
+          option = newdir; /* The first new direction. */
+        else if (option2 != 0) {
+          find_flag = FALSE; /* Three new directions. STOP. */
+          return;
+        } else if (option != cycle[chome[dir] + i - 1]) {
+          find_flag = FALSE; /* If not adjacent to prev, STOP */
+          return;
+        } else {
+          /* Two adjacent choices. Make option2 the diagonal,
+             and remember the other diagonal adjacent to the first
+             option. */
+          if ((newdir & 1) == 1) {
+            check_dir = cycle[chome[dir] + i - 2];
+            option2 = newdir;
+          } else {
+            check_dir = cycle[chome[dir] + i + 1];
+            option2 = option;
+            option = newdir;
+          }
+        }
+      } else if (find_openarea) {
+        /* We see an obstacle. In open area, STOP if on a side
+           previously open. */
+        if (i < 0) {
+          if (find_breakleft) {
+            find_flag = FALSE;
+            return;
+          }
+          find_breakright = TRUE;
+        } else if (i > 0) {
+          if (find_breakright) {
+            find_flag = FALSE;
+            return;
+          }
+          find_breakleft = TRUE;
+        }
+      }
+    }
+  }
+
+  if (find_openarea == FALSE) { /* choose a direction. */
+    if (option2 == 0 || (find_examine && !find_cut)) {
+      /* There is only one option, or if two, then we always examine
+         potential corners and never cur known corners, so you step
+         into the straight option. */
+      if (option != 0) find_direction = option;
+      if (option2 == 0)
+        find_prevdir = option;
+      else
+        find_prevdir = option2;
+    } else {
+      /* Two options! */
+      row = y;
+      col = x;
+      (void)mmove(option, &row, &col);
+      if (!see_wall(option, row, col) || !see_wall(check_dir, row, col)) {
+        /* Don't see that it is closed off.  This could be a
+           potential corner or an intersection. */
+        if (find_examine && see_nothing(option, row, col) &&
+            see_nothing(option2, row, col))
+        /* Can not see anything ahead and in the direction we are
+           turning, assume that it is a potential corner. */
+        {
+          find_direction = option;
+          find_prevdir = option2;
+        } else
+          /* STOP: we are next to an intersection or a room */
+          find_flag = FALSE;
+      } else if (find_cut) {
+        /* This corner is seen to be enclosed; we cut the corner. */
+        find_direction = option2;
+        find_prevdir = option2;
+      } else {
+        /* This corner is seen to be enclosed, and we deliberately
+           go the long way. */
+        find_direction = option;
+        find_prevdir = option2;
+      }
+    }
   }
 }
 void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
@@ -3754,11 +3914,12 @@ static void search(y, x, chance) int y, x, chance;
           obj->tval = TV_CLOSED_DOOR;
           obj->tchar = '+';
           // lite_spot(y,x);
-          // end_find();
+          find_flag = FALSE;
         } else if (obj->tval == TV_INVIS_TRAP) {
           msg_print("You have found a trap.");
           obj->tval = TV_VIS_TRAP;
           obj->tchar = '^';
+          find_flag = FALSE;
         }
       }
 }
@@ -3990,8 +4151,8 @@ void py_check_view(y, x) int y, x;
   panel_update(&panelD, y, x, TRUE);
   py_move_light(y, x, y, x);
   struct caveS* c_ptr = &caveD[y][x];
-  if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->fval == FLOOR_LIGHT) {
-    light_room(y, x);
+  if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
+    if (near_light(y, x)) light_room(y, x);
   }
 }
 void
@@ -4159,16 +4320,15 @@ dungeon()
           py_attack(y, x);
         } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
           py_move_light(uD.y, uD.x, y, x);
-          if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 &&
-              c_ptr->fval == FLOOR_LIGHT) {
-            light_room(y, x);
+          if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
+            if (near_light(y, x)) light_room(y, x);
           }
           struct objS* obj = &entity_objD[c_ptr->oidx];
           uD.y = y;
           uD.x = x;
           panel_update(&panelD, uD.y, uD.x, FALSE);
+          if (find_flag) find_event(y, x);
           if (obj->tval) {
-            find_flag = FALSE;
             if (obj->tval <= TV_MAX_PICK_UP) {
               py_carry(y, x, TRUE);
             } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
