@@ -1,5 +1,13 @@
 #include "game.c"
 
+static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
+static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
+static int find_direction;
+static int find_flag;
+static int find_openarea;
+static int find_breakright, find_breakleft;
+static int find_prevdir;
+
 static int turnD;
 static int player_hpD[AL(player_exp)];
 static int death;
@@ -1747,6 +1755,70 @@ register int *y, *x;
     b = TRUE;
   }
   return (b);
+}
+static int
+see_wall(dir, y, x)
+int dir, y, x;
+{
+  char c;
+  if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
+    return TRUE;
+  else if ((c = get_sym(y, x)) == '#' || c == '%')
+    return TRUE;
+  else
+    return FALSE;
+}
+void find_init(dir, y_ptr, x_ptr) int dir;
+int *y_ptr, *x_ptr;
+{
+  int deepleft, deepright;
+  int i, shortleft, shortright;
+
+  if (!mmove(dir, y_ptr, x_ptr))
+    find_flag = FALSE;
+  else {
+    find_direction = dir;
+    find_flag = 1;
+    find_breakright = find_breakleft = FALSE;
+    find_prevdir = dir;
+    // TBD: if (py.flags.blind < 1)
+    i = chome[dir];
+    deepleft = deepright = FALSE;
+    shortright = shortleft = FALSE;
+    if (see_wall(cycle[i + 1], uD.y, uD.x)) {
+      find_breakleft = TRUE;
+      shortleft = TRUE;
+    } else if (see_wall(cycle[i + 1], *y_ptr, *x_ptr)) {
+      find_breakleft = TRUE;
+      deepleft = TRUE;
+    }
+    if (see_wall(cycle[i - 1], uD.y, uD.x)) {
+      find_breakright = TRUE;
+      shortright = TRUE;
+    } else if (see_wall(cycle[i - 1], *y_ptr, *x_ptr)) {
+      find_breakright = TRUE;
+      deepright = TRUE;
+    }
+    if (find_breakleft && find_breakright) {
+      find_openarea = FALSE;
+      if (dir & 1) { /* a hack to allow angled corridor entry */
+        if (deepleft && !deepright)
+          find_prevdir = cycle[i - 1];
+        else if (deepright && !deepleft)
+          find_prevdir = cycle[i + 1];
+      }
+      /* else if there is a wall two spaces ahead and seem to be in a
+         corridor, then force a turn into the side corridor, must
+         be moving straight into a corridor here */
+      else if (see_wall(cycle[i], *y_ptr, *x_ptr)) {
+        if (shortleft && !shortright)
+          find_prevdir = cycle[i - 2];
+        else if (shortright && !shortleft)
+          find_prevdir = cycle[i + 2];
+      }
+    } else
+      find_openarea = TRUE;
+  }
 }
 void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 {
@@ -3939,137 +4011,151 @@ dungeon()
       draw();
       free_turn_flag = FALSE;
 
-      c = inkey();
-      if (c == -1) break;
-
       y = uD.y;
       x = uD.x;
-      switch (c) {
-        case ' ':
-          free_turn_flag = TRUE;
-          break;
-        case 'k':
-        case 'j':
-        case 'l':
-        case 'h':
-        case 'n':
-        case 'b':
-        case 'y':
-        case 'u':
-          mmove(map_roguedir(c) - '0', &y, &x);
-          break;
-        case 'c':
-          close_object();
-          break;
-        case 'd':
-          py_drop(y, x);
-          break;
-        case 'e': {
-          free_turn_flag = TRUE;
-          int count = py_inven(INVEN_EQUIP, MAX_INVEN);
-          MSG("You wearing %d items.", count);
-        } break;
-        case 'f':
-          bash(&y, &x);
-          break;
-        case 'i': {
-          free_turn_flag = TRUE;
-          int count = py_inven(0, INVEN_EQUIP);
-          MSG("You carrying %d items.", count);
-        } break;
-        case 'm':
-          // TEMP: testing tr_make_known
-          py_make_known();
-          break;
-        case 'o':
-          open_object();
-          break;
-        case 's':
-          search(y, x, 25);
-          break;
-        case 'w':
-          py_wear();
-          break;
-        case '<':
-          go_up();
-          break;
-        case '>':
-          go_down();
-          break;
-        case 'C':
-          py_screen();
-          break;
-        case 'D':
-          disarm_trap(&y, &x);
-          break;
-        case 'R':
-          uD.rest = -9999;
-          break;
-        case 'T':
-          py_takeoff();
-          break;
-        case 'W':
-          py_map();
-          break;
-        case CTRL('h'):
-          if (uD.mhp < 100) uD.mhp = 100;
-          uD.chp = uD.mhp;
-          msg_print("You are healed.");
-          break;
-        case CTRL('t'):
-          msg_print("teleport");
-          do {
-            x = randint(MAX_WIDTH - 2);
-            y = randint(MAX_HEIGHT - 2);
-          } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
-                   caveD[y][x].midx != 0);
-          break;
-        case CTRL('m'):
-          if (mon_usedD) {
-            int rv = randint(mon_usedD);
-            struct monS* mon = mon_get(monD[rv - 1]);
-            MSG("Teleport to monster id %d (%d/%d)", mon->id, rv, mon_usedD);
+      if (find_flag) {
+        mmove(find_prevdir, &y, &x);
+      } else {
+        c = inkey();
+        if (c == -1) break;
 
-            int fy = mon->fy;
-            int fx = mon->fx;
-            py_teleport_near(fy, fx, &y, &x);
-          }
-          break;
-        case CTRL('o'): {
-          static int y_obj_teleportD;
-          static int x_obj_teleportD;
-          int row, col;
-          int fy, fx;
-          fy = y_obj_teleportD;
-          fx = x_obj_teleportD;
+        switch (c) {
+          case ' ':
+            free_turn_flag = TRUE;
+            break;
+          case 'k':
+          case 'j':
+          case 'l':
+          case 'h':
+          case 'n':
+          case 'b':
+          case 'y':
+          case 'u':
+            mmove(map_roguedir(c) - '0', &y, &x);
+            break;
+          case 'K':
+          case 'J':
+          case 'L':
+          case 'H':
+          case 'N':
+          case 'B':
+          case 'Y':
+          case 'U':
+            find_init(map_roguedir(c | 0x20) - '0', &y, &x);
+            break;
+          case 'c':
+            close_object();
+            break;
+          case 'd':
+            py_drop(y, x);
+            break;
+          case 'e': {
+            free_turn_flag = TRUE;
+            int count = py_inven(INVEN_EQUIP, MAX_INVEN);
+            MSG("You wearing %d items.", count);
+          } break;
+          case 'f':
+            bash(&y, &x);
+            break;
+          case 'i': {
+            free_turn_flag = TRUE;
+            int count = py_inven(0, INVEN_EQUIP);
+            MSG("You carrying %d items.", count);
+          } break;
+          case 'm':
+            // TEMP: testing tr_make_known
+            py_make_known();
+            break;
+          case 'o':
+            open_object();
+            break;
+          case 's':
+            search(y, x, 25);
+            break;
+          case 'w':
+            py_wear();
+            break;
+          case '<':
+            go_up();
+            break;
+          case '>':
+            go_down();
+            break;
+          case 'C':
+            py_screen();
+            break;
+          case 'D':
+            disarm_trap(&y, &x);
+            break;
+          case 'R':
+            uD.rest = -9999;
+            break;
+          case 'T':
+            py_takeoff();
+            break;
+          case 'W':
+            py_map();
+            break;
+          case CTRL('h'):
+            if (uD.mhp < 100) uD.mhp = 100;
+            uD.chp = uD.mhp;
+            msg_print("You are healed.");
+            break;
+          case CTRL('t'):
+            msg_print("teleport");
+            do {
+              x = randint(MAX_WIDTH - 2);
+              y = randint(MAX_HEIGHT - 2);
+            } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
+                     caveD[y][x].midx != 0);
+            break;
+          case CTRL('m'):
+            if (mon_usedD) {
+              int rv = randint(mon_usedD);
+              struct monS* mon = mon_get(monD[rv - 1]);
+              MSG("Teleport to monster id %d (%d/%d)", mon->id, rv, mon_usedD);
 
-          for (row = 1; row < MAX_HEIGHT - 1; ++row) {
-            for (col = 1; col < MAX_WIDTH - 1; ++col) {
-              int oidx = caveD[row][col].oidx;
-              if (!oidx) continue;
-              struct objS* obj = &entity_objD[oidx];
-              if (is_door(obj->tval)) continue;
+              int fy = mon->fy;
+              int fx = mon->fx;
+              py_teleport_near(fy, fx, &y, &x);
+            }
+            break;
+          case CTRL('o'): {
+            static int y_obj_teleportD;
+            static int x_obj_teleportD;
+            int row, col;
+            int fy, fx;
+            fy = y_obj_teleportD;
+            fx = x_obj_teleportD;
 
-              if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
+            for (row = 1; row < MAX_HEIGHT - 1; ++row) {
+              for (col = 1; col < MAX_WIDTH - 1; ++col) {
+                int oidx = caveD[row][col].oidx;
+                if (!oidx) continue;
+                struct objS* obj = &entity_objD[oidx];
+                if (is_door(obj->tval)) continue;
 
-              if (py_teleport_near(row, col, &y, &x)) {
-                MSG("Teleport to obj %d", oidx);
-                y_obj_teleportD = row;
-                x_obj_teleportD = col;
-                row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+                if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
+
+                if (py_teleport_near(row, col, &y, &x)) {
+                  MSG("Teleport to obj %d", oidx);
+                  y_obj_teleportD = row;
+                  x_obj_teleportD = col;
+                  row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+                }
               }
             }
-          }
-          if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
-            y_obj_teleportD = x_obj_teleportD = 0;
-            msg_print("Reset object teleport");
-          }
-        } break;
+            if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
+              y_obj_teleportD = x_obj_teleportD = 0;
+              msg_print("Reset object teleport");
+            }
+          } break;
+        }
       }
 
       if (uD.y != y || uD.x != x) {
         struct caveS* c_ptr = &caveD[y][x];
-        if (c_ptr->midx) {
+        if (find_flag == 0 && c_ptr->midx) {
           py_attack(y, x);
         } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
           py_move_light(uD.y, uD.x, y, x);
@@ -4082,6 +4168,7 @@ dungeon()
           uD.x = x;
           panel_update(&panelD, uD.y, uD.x, FALSE);
           if (obj->tval) {
+            find_flag = FALSE;
             if (obj->tval <= TV_MAX_PICK_UP) {
               py_carry(y, x, TRUE);
             } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
@@ -4089,6 +4176,7 @@ dungeon()
             }
           }
         } else {
+          find_flag = FALSE;
           free_turn_flag = TRUE;
         }
       }
