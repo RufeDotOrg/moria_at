@@ -4391,8 +4391,13 @@ dungeon()
 
       if (uD.y != y || uD.x != x) {
         struct caveS* c_ptr = &caveD[y][x];
-        if (find_flag == 0 && c_ptr->midx) {
-          py_attack(y, x);
+        if (c_ptr->midx) {
+          if (find_flag) {
+            find_flag = FALSE;
+            free_turn_flag = TRUE;
+          } else {
+            py_attack(y, x);
+          }
         } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
           py_move_light(uD.y, uD.x, y, x);
           if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
