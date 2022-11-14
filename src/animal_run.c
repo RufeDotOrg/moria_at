@@ -1525,6 +1525,45 @@ get_sym(int row, int col)
   }
   return '#';
 }
+BOOL
+panel_contains(panel, y, x)
+struct panelS* panel;
+int y, x;
+{
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+  return (y >= rmin && y < rmax && x >= cmin && x < cmax);
+}
+void
+panel_bounds(struct panelS* panel)
+{
+  int panel_row = panel->panel_row;
+  int panel_col = panel->panel_col;
+  panel->panel_row_min = panel_row * (SCREEN_HEIGHT / 2);
+  panel->panel_row_max = panel->panel_row_min + SCREEN_HEIGHT;
+  panel->panel_col_min = panel_col * (SCREEN_WIDTH / 2);
+  panel->panel_col_max = panel->panel_col_min + SCREEN_WIDTH;
+}
+
+void
+panel_update(struct panelS* panel, int y, int x, BOOL force)
+{
+  BOOL yd = (y < panel->panel_row_min + 2 || y > panel->panel_row_max - 3);
+  if (force || yd) {
+    int prow = (y - SCREEN_HEIGHT / 4) / (SCREEN_HEIGHT / 2);
+    panel->panel_row = CLAMP(prow, 0, SCREEN_ROW - 2);
+  }
+
+  BOOL xd = (x < panel->panel_col_min + 2 || x > panel->panel_col_max - 3);
+  if (force || xd) {
+    int pcol = (x - SCREEN_WIDTH / 4) / (SCREEN_WIDTH / 2);
+    panel->panel_col = CLAMP(pcol, 0, SCREEN_COL - 2);
+  }
+
+  panel_bounds(panel);
+}
 void
 symmap_patch(y, x)
 {
@@ -1555,45 +1594,6 @@ symmap_update()
       *sym++ = get_sym(row, col);
     }
   }
-}
-
-void
-panel_bounds(struct panelS* panel)
-{
-  int panel_row = panel->panel_row;
-  int panel_col = panel->panel_col;
-  panel->panel_row_min = panel_row * (SCREEN_HEIGHT / 2);
-  panel->panel_row_max = panel->panel_row_min + SCREEN_HEIGHT;
-  panel->panel_col_min = panel_col * (SCREEN_WIDTH / 2);
-  panel->panel_col_max = panel->panel_col_min + SCREEN_WIDTH;
-}
-BOOL
-panel_contains(panel, y, x)
-struct panelS* panel;
-int y, x;
-{
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
-  return (y >= rmin && y < rmax && x >= cmin && x < cmax);
-}
-void
-panel_update(struct panelS* panel, int y, int x, BOOL force)
-{
-  BOOL yd = (y < panel->panel_row_min + 2 || y > panel->panel_row_max - 3);
-  if (force || yd) {
-    int prow = (y - SCREEN_HEIGHT / 4) / (SCREEN_HEIGHT / 2);
-    panel->panel_row = CLAMP(prow, 0, SCREEN_ROW - 2);
-  }
-
-  BOOL xd = (x < panel->panel_col_min + 2 || x > panel->panel_col_max - 3);
-  if (force || xd) {
-    int pcol = (x - SCREEN_WIDTH / 4) / (SCREEN_WIDTH / 2);
-    panel->panel_col = CLAMP(pcol, 0, SCREEN_COL - 2);
-  }
-
-  panel_bounds(panel);
 }
 
 static void get_moves(monptr, mm) int monptr;
