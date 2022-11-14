@@ -27,6 +27,7 @@ struct uS {
   uint8_t stealth;
   uint8_t save;
   uint8_t mult_exp;  // multiplier for exp-per-level
+  int wt;
 };
 static struct uS uD;
 

@@ -2844,6 +2844,12 @@ py_init()
   uD.disarm = r_ptr->dis;
   uD.stealth = r_ptr->stl;
   uD.mult_exp = r_ptr->b_exp;
+  int male = 1 - randint(2);
+  if (male) {
+    uD.wt = randnor(r_ptr->m_b_wt, r_ptr->m_m_wt);
+  } else {
+    uD.wt = randnor(r_ptr->f_b_wt, r_ptr->f_m_wt);
+  }
 
   py_stats(stat, AL(stat));
 
@@ -3859,7 +3865,7 @@ static void bash(uy, ux) int *uy, *ux;
     } else if (valid_obj) {
       if (obj->tval == TV_CLOSED_DOOR) {
         msg_print("You smash into the door!");
-        tmp = 100;  // py.stats.use_stat[A_STR] + py.misc.wt / 2;
+        tmp = statD.use_stat[A_STR] + uD.wt / 2;
         /* Use (roughly) similar method as for monsters. */
         if (randint(tmp * (20 + ABS(obj->p1))) < 10 * (tmp - ABS(obj->p1))) {
           msg_print("The door crashes open!");
