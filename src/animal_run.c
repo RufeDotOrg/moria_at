@@ -2771,14 +2771,40 @@ void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
     }
   }
 }
+int
+py_class_select()
+{
+  char c;
+  int line, it;
+  line = 0;
+  for (int it = 0; it < AL(classD); ++it) {
+    overlay_usedD[line] =
+        snprintf(AP(overlayD[line]), "%c) %s", 'a' + it, classD[it].title);
+    line += 1;
+  }
+
+  draw();
+  if (in_subcommand("Which character would you like to play?", &c)) {
+    int iidx = c - 'a';
+    return iidx;
+  }
+
+  exit(1);
+}
 void
 py_init()
 {
   int it, hitdie;
+  int csel, rsel;
   int8_t stat[MAX_A];
 
+  csel = py_class_select();
+  do {
+    rsel = randint(AL(raceD)) - 1;
+  } while ((raceD[rsel].rtclass & (1 << csel)) == 0);
+
   // Race & class
-  int ridx = randint(AL(raceD)) - 1;
+  int ridx = rsel;
   struct raceS* r_ptr = &raceD[ridx];
   hitdie = r_ptr->bhitdie;
   uD.ridx = ridx;
@@ -2793,7 +2819,7 @@ py_init()
     stat[it] = 15 + r_ptr->attr[it];
   }
 
-  int clidx = randint(AL(classD)) - 1;
+  int clidx = csel;
   struct classS* cl_ptr = &classD[clidx];
   hitdie += cl_ptr->adj_hd;
   uD.clidx = clidx;
@@ -3859,7 +3885,8 @@ open_object()
           i = 20;
           // p_ptr = &py.misc;
           // i = p_ptr->disarm + 2 * todis_adj() + stat_adj(A_INT) +
-          //     (class_level_adj[p_ptr->pclass][CLA_DISARM] * p_ptr->lev / 3);
+          //     (class_level_adj[p_ptr->pclass][CLA_DISARM] * p_ptr->lev /
+          //     3);
           // Too much whiskey
           // if (py.flags.confused > 0)
           //   msg_print("You are too confused to pick the lock.");
