@@ -1519,6 +1519,23 @@ get_sym(int row, int col)
   return '#';
 }
 void
+symmap_patch(y, x)
+{
+  char c = get_sym(y, x);
+  if (panel_contains(&panelD, y, x)) {
+    int ay = y - panelD.panel_row_min;
+    int ax = x - panelD.panel_col_min;
+    symmapD[ay][ax] = c;
+
+    int ty = ay + 2;
+    int tx = ax + STATUS_WIDTH + 1;
+
+    buffer_usedD = snprintf(AP(bufferD), "\x1b[%d;%dH", ty, tx);
+    buffer_append(&c, 1);
+    write(STDOUT_FILENO, bufferD, buffer_usedD);
+  }
+}
+void
 symmap_update()
 {
   int rmin = panelD.panel_row_min;
@@ -3927,7 +3944,7 @@ static void make_move(midx, mm, rcmove) int midx;
 int* mm;
 uint32_t* rcmove;
 {
-  int i, newy, newx, do_turn, do_move, stuck_door;
+  int i, fy, fx, newy, newx, do_turn, do_move, stuck_door;
   register struct caveS* c_ptr;
   register struct monS* m_ptr;
 
@@ -3937,8 +3954,8 @@ uint32_t* rcmove;
   m_ptr = &entity_monD[midx];
   for (int i = 0; i < 5; ++i) {
     /* Get new position  	*/
-    newy = m_ptr->fy;
-    newx = m_ptr->fx;
+    fy = newy = m_ptr->fy;
+    fx = newx = m_ptr->fx;
     mmove(mm[i], &newy, &newx);
     c_ptr = &caveD[newy][newx];
     if (c_ptr->fval == BOUNDARY_WALL) continue;
@@ -3966,7 +3983,9 @@ uint32_t* rcmove;
     /* Creature has been allowed move.   */
     if (do_move) {
       /* Move creature record  	       */
-      move_rec(m_ptr->fy, m_ptr->fx, newy, newx);
+      move_rec(fy, fx, newy, newx);
+      symmap_patch(fy, fx);
+      symmap_patch(newy, newx);
       m_ptr->ml = FALSE;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
@@ -4324,8 +4343,12 @@ dungeon()
             if (near_light(y, x)) light_room(y, x);
           }
           struct objS* obj = &entity_objD[c_ptr->oidx];
+          int oy = uD.y;
+          int ox = uD.x;
           uD.y = y;
           uD.x = x;
+          symmap_patch(oy, ox);
+          symmap_patch(y, x);
           panel_update(&panelD, uD.y, uD.x, FALSE);
           if (find_flag) find_event(y, x);
           if (obj->tval) {
