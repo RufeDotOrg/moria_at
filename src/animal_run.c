@@ -494,6 +494,12 @@ void light_room(y, x) int y, x;
         c_ptr->cflag |= CF_PERM_LIGHT;
         if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
       }
+      if (c_ptr->oidx) {
+        struct objS* obj = &entity_objD[c_ptr->oidx];
+        if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
+          c_ptr->cflag |= CF_FIELDMARK;
+        }
+      }
     }
 }
 typedef struct {
@@ -1503,7 +1509,8 @@ get_sym(int row, int col)
     struct creatureS* creature = &creatureD[mon->cidx];
     if (mon->ml) return creature->cchar;
   }
-  if (!cave_lit(cave_ptr)) return ' ';
+  if (((cave_ptr->cflag & CF_FIELDMARK) == 0) && !cave_lit(cave_ptr))
+    return ' ';
   if (cave_ptr->oidx) {
     struct objS* obj = &entity_objD[cave_ptr->oidx];
     return obj->tchar;
@@ -2768,6 +2775,12 @@ void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
         cave->cflag |= CF_PERM_LIGHT;
       else
         caveD[row][col].cflag |= CF_TEMP_LIGHT;
+      if (cave->oidx) {
+        struct objS* obj = &entity_objD[cave->oidx];
+        if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
+          cave->cflag |= CF_FIELDMARK;
+        }
+      }
     }
   }
 }

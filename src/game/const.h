@@ -29,7 +29,7 @@
 #define CF_ROOM 0x1
 #define CF_TEMP_LIGHT 0x2
 #define CF_PERM_LIGHT 0x4
-#define CF_FIELDMARK 0x8  // Bypass normal visibility rules
+#define CF_FIELDMARK 0x8  // Object bypasses normal visibility rules
 
 #define CHUNK_HEIGHT 16
 #define CHUNK_WIDTH 32
@@ -98,6 +98,9 @@
 // Items above cannot be lifted by the player
 #define TV_MAX_PICK_UP 100
 #define TV_INVIS_TRAP 101
+/* objects between TV_MIN_VISIBLE and TV_MAX_VISIBLE are always visible,
+   i.e. the cave fm flag is set when they are present */
+#define TV_MIN_VISIBLE 102
 #define TV_VIS_TRAP 102
 #define TV_RUBBLE 103
 #define TV_MIN_DOORS 104
@@ -106,6 +109,7 @@
 #define TV_UP_STAIR 107
 #define TV_DOWN_STAIR 108
 #define TV_SECRET_DOOR 109
+#define TV_MAX_VISIBLE 110
 
 #define MAX_TRAP 3
 #define MAX_OBJ_LEVEL 50
@@ -157,7 +161,7 @@
 #define MON_DRAIN_LIFE 2 /* Percent of player exp drained per hit */
 #define MAX_WIN_MON 2
 #define CRE_LEV_ADJ 3
-#define MAX_SIGHT	   20 /* Maximum dis a creature can be seen    */
+#define MAX_SIGHT 20 /* Maximum dis a creature can be seen    */
 
 /* definitions for creatures, cmove field */
 #define CM_ALL_MV_FLAGS 0x0000003FL
