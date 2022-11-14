@@ -2786,10 +2786,27 @@ py_class_select()
   draw();
   if (in_subcommand("Which character would you like to play?", &c)) {
     int iidx = c - 'a';
-    return iidx;
+    if (iidx > 0 && iidx < AL(classD)) return iidx;
   }
 
-  exit(1);
+  return 0;
+}
+static void py_stats(stats, len) int8_t* stats;
+int len;
+{
+  register int i, tot;
+  int dice[18];
+
+  do {
+    tot = 0;
+    for (i = 0; i < 18; i++) {
+      dice[i] = randint(3 + i % 3); /* Roll 3,4,5 sided dice once each */
+      tot += dice[i];
+    }
+  } while (tot <= 42 || tot >= 54);
+
+  for (i = 0; i < len; i++)
+    stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
 void
 py_init()
@@ -2815,9 +2832,7 @@ py_init()
   uD.stealth = r_ptr->stl;
   uD.mult_exp = r_ptr->b_exp;
 
-  for (int it = 0; it < MAX_A; ++it) {
-    stat[it] = 15 + r_ptr->attr[it];
-  }
+  py_stats(stat, AL(stat));
 
   int clidx = csel;
   struct classS* cl_ptr = &classD[clidx];
