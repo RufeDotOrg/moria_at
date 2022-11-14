@@ -2202,6 +2202,30 @@ con_adj()
     return (4);
 }
 int
+think_adj(stat)
+int stat;
+{
+  register int value;
+
+  value = statD.use_stat[stat];
+  if (value > 117)
+    return (7);
+  else if (value > 107)
+    return (6);
+  else if (value > 87)
+    return (5);
+  else if (value > 67)
+    return (4);
+  else if (value > 17)
+    return (3);
+  else if (value > 14)
+    return (2);
+  else if (value > 7)
+    return (1);
+  else
+    return (0);
+}
+int
 tohit_adj()
 {
   register int total, stat;
@@ -2270,6 +2294,37 @@ toac_adj()
     return (4);
   else
     return (5);
+}
+int
+todis_adj()
+{
+  register int stat;
+
+  stat = statD.use_stat[A_DEX];
+  if (stat < 4)
+    return (-8);
+  else if (stat == 4)
+    return (-6);
+  else if (stat == 5)
+    return (-4);
+  else if (stat == 6)
+    return (-2);
+  else if (stat == 7)
+    return (-1);
+  else if (stat < 13)
+    return (0);
+  else if (stat < 16)
+    return (1);
+  else if (stat < 18)
+    return (2);
+  else if (stat < 59)
+    return (4);
+  else if (stat < 94)
+    return (5);
+  else if (stat < 117)
+    return (6);
+  else
+    return (8);
 }
 int
 todam_adj()
@@ -3916,12 +3971,9 @@ open_object()
       } else if (obj->tval == TV_CLOSED_DOOR) {
         if (obj->p1 > 0) /* It's locked.  */
         {
-          i = 20;
-          // p_ptr = &py.misc;
-          // i = p_ptr->disarm + 2 * todis_adj() + stat_adj(A_INT) +
-          //     (class_level_adj[p_ptr->pclass][CLA_DISARM] * p_ptr->lev /
-          //     3);
-          // Too much whiskey
+          i = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+              (level_adj[uD.clidx][LA_DISARM] * uD.lev / 3);
+          // Could be the whiskey
           // if (py.flags.confused > 0)
           //   msg_print("You are too confused to pick the lock.");
           // else
