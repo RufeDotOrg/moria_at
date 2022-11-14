@@ -2005,7 +2005,7 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 }
 void update_mon(midx) int midx;
 {
-  register int flag;
+  register int flag, fy, fx;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -2013,11 +2013,12 @@ void update_mon(midx) int midx;
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
   flag = FALSE;
-  if ((m_ptr->cdis <= MAX_SIGHT) &&
-      (panel_contains(&panelD, m_ptr->fy, m_ptr->fx))) {
+  fy = m_ptr->fy;
+  fx = m_ptr->fx;
+  if ((m_ptr->cdis <= MAX_SIGHT) && (panel_contains(&panelD, fy, m_ptr->fx))) {
     // TBD: line-of-sight
-    // if (los(uD.y, uD.x, m_ptr->fy, m_ptr->fx)) {
-    c_ptr = &caveD[m_ptr->fy][m_ptr->fx];
+    // if (los(uD.y, uD.x, fy, m_ptr->fx)) {
+    c_ptr = &caveD[fy][fx];
     /* Normal sight.       */
     if (cave_lit(c_ptr)) {
       if ((CM_INVISIBLE & cr_ptr->cmove) == 0) flag = TRUE;
@@ -2046,6 +2047,7 @@ void update_mon(midx) int midx;
   else if (m_ptr->ml) {
     m_ptr->ml = FALSE;
   }
+  symmap_patch(fy, fx);
 }
 int
 bth_adj(attype)
@@ -3968,8 +3970,7 @@ uint32_t* rcmove;
         /* if the monster is not lit, must call update_mon, it may
            be faster than character, and hence could have just
            moved next to character this same turn */
-        // TBD:
-        // if (!m_ptr->ml) update_mon(midx);
+        if (!m_ptr->ml) update_mon(midx);
         mon_attack(midx);
         do_move = FALSE;
         do_turn = TRUE;
