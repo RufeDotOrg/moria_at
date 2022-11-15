@@ -329,7 +329,6 @@ int mean, stand;
   int16_t tmp;
 
   tmp = randint(MAX_S16);
-  tmp = MAX_S16;
 
   /* binary search normal normal_table to get index that matches tmp */
   /* this takes up to 8 iterations */
