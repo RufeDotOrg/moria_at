@@ -1,4 +1,5 @@
 
+// U the player
 struct uS {
   int y;
   int x;
@@ -31,6 +32,12 @@ struct uS {
   int wt;
 };
 static struct uS uD;
+
+// Counter for player status
+struct cS {
+  int poison;
+};
+static struct cS cD;
 
 struct raceS {
   char *trace;         /* Type of race			*/

@@ -2207,6 +2207,41 @@ con_adj()
     return (4);
 }
 int
+poison_adj()
+{
+  int i;
+
+  i = 0;
+  switch (con_adj()) {
+    case -4:
+      i = 4;
+      break;
+    case -3:
+    case -2:
+      i = 3;
+      break;
+    case -1:
+      i = 2;
+      break;
+    case 0:
+      i = 1;
+      break;
+    case 1:
+    case 2:
+    case 3:
+      i = ((turnD % 2) == 0);
+      break;
+    case 4:
+    case 5:
+      i = ((turnD % 3) == 0);
+      break;
+    case 6:
+      i = ((turnD % 4) == 0);
+      break;
+  }
+  return i;
+}
+int
 think_adj(stat)
 int stat;
 {
@@ -3732,9 +3767,8 @@ static void mon_attack(midx) int midx;
           break;
         case 14: /*Poison   */
           py_take_hit(damage);
-          // f_ptr = &py.flags;
-          // msg_print("You feel very sick.");
-          // f_ptr->poisoned += randint((int)r_ptr->level) + 5;
+          msg_print("You feel very sick.");
+          cD.poison += randint(cre->level) + 5;
           break;
         case 15: /*Lose dexterity */
           py_take_hit(damage);
@@ -4334,9 +4368,20 @@ tick()
   // if (uD.regenerate) regen_amount = regen_amount * 3 / 2;
   if (uD.rest != 0)  // || (py.flags.status & PY_SEARCH)
     regen_amount = regen_amount * 2;
-  // if (py.flags.poisoned < 1)
-  regenhp(regen_amount);
   // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
+
+  if (cD.poison == 0)
+    regenhp(regen_amount);
+  else if (cD.poison > 0) {
+    if (cD.poison == 1) {
+      msg_print("You feel better.");
+    } else {
+      strcpy(death_descD, "poison");
+      py_take_hit(poison_adj());
+    }
+    cD.poison -= 1;
+    disturb(1, 0);
+  }
 
   if (uD.rest < 0) {
     uD.rest += 1;
