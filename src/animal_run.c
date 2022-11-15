@@ -1816,7 +1816,7 @@ int *y_ptr, *x_ptr;
     find_flag = FALSE;
   else {
     find_direction = dir;
-    find_flag = 1;
+    find_flag = TRUE;
     find_breakright = find_breakleft = FALSE;
     find_prevdir = dir;
     // TBD: if (py.flags.blind < 1)
@@ -4342,7 +4342,7 @@ dungeon()
       y = uD.y;
       x = uD.x;
       if (find_flag) {
-        mmove(find_prevdir, &y, &x);
+        mmove(find_direction, &y, &x);
       } else {
         c = inkey();
         if (c == -1) break;
