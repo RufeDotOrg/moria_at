@@ -765,6 +765,7 @@ static void delete_object(y, x) int y, x;
   cave_ptr = &caveD[y][x];
   obj_unuse(&entity_objD[cave_ptr->oidx]);
   cave_ptr->oidx = 0;
+  cave_ptr->cflag &= ~CF_FIELDMARK;
 }
 static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
 {
