@@ -4508,6 +4508,7 @@ dungeon()
           panel_update(&panelD, uD.y, uD.x, FALSE);
           if (find_flag) find_event(y, x);
           if (obj->tval) {
+            find_flag = FALSE;
             if (obj->tval <= TV_MAX_PICK_UP) {
               py_carry(y, x, TRUE);
             } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
