@@ -4363,6 +4363,7 @@ dungeon()
 
     do {
       if (uD.rest != 0) break;
+      panel_update(&panelD, uD.y, uD.x, FALSE);
       status_update();
       symmap_update();
 
@@ -4535,7 +4536,6 @@ dungeon()
           uD.x = x;
           symmap_patch(oy, ox);
           symmap_patch(y, x);
-          panel_update(&panelD, uD.y, uD.x, FALSE);
           if (find_flag) find_event(y, x);
           if (obj->tval) {
             find_flag = FALSE;
