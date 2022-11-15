@@ -492,11 +492,11 @@ void light_room(y, x) int y, x;
       if ((c_ptr->cflag & CF_ROOM)) {
         c_ptr->cflag |= CF_PERM_LIGHT;
         if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
-      }
-      if (c_ptr->oidx) {
-        struct objS* obj = &entity_objD[c_ptr->oidx];
-        if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
-          c_ptr->cflag |= CF_FIELDMARK;
+        if (c_ptr->oidx) {
+          struct objS* obj = &entity_objD[c_ptr->oidx];
+          if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
+            c_ptr->cflag |= CF_FIELDMARK;
+          }
         }
       }
     }
