@@ -83,18 +83,20 @@ draw()
     AC(overlayD);
     AC(overlay_usedD);
   } else {
-    for (int row = 0; row < STATUS_HEIGHT; ++row) {
+    for (int row = 0; row < STATUS_HEIGHT - 1; ++row) {
       buffer_append(AP(tc_clear_lineD));
       buffer_append(AP(statusD[row]));
       if (row < SCREEN_HEIGHT) buffer_append(AP(symmapD[row]));
       buffer_append(AP(tc_crlfD));
     }
+    char line[80];
+    int print_len = snprintf(
+        AP(line), "[%d,%d xy] [%d,%d quadrant] [%d turn] %d feet", uD.x, uD.y,
+        panelD.panel_col, panelD.panel_row, turnD, dun_level * 50);
+    if (print_len < AL(line)) buffer_append(line, print_len);
+    buffer_append(AP(tc_crlfD));
   }
-  char line[80];
-  int print_len =
-      snprintf(AP(line), "[%d,%d xy] [%d,%d quadrant] [%d turn] %d feet", uD.x,
-               uD.y, panelD.panel_col, panelD.panel_row, turnD, dun_level * 50);
-  if (print_len < AL(line)) buffer_append(line, print_len);
+  if (cD.poison) buffer_append(AP("POISONED "));
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
