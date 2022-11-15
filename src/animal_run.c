@@ -2905,6 +2905,7 @@ py_init()
   } else {
     uD.wt = randnor(r_ptr->f_b_wt, r_ptr->f_m_wt);
   }
+  uD.male = male;
 
   py_stats(stat, AL(stat));
 
@@ -3181,17 +3182,51 @@ py_screen()
   screen_usedD[line] = snprintf(screenD[line] + (col_width * col), col_width, \
                                 FMT, ##__VA_ARGS__);                          \
   line += 1;
-  PY_STAT("Race: %s", raceD[uD.ridx].trace);
-  PY_STAT("Class: %s", classD[uD.clidx].title);
+  screen_usedD[line] =
+      snprintf(AP(screenD[line]),
+               "%-17.017s%c %-17.017s "
+               "%-10.010s%c %6.d "
+               " %-4.04s:%d %d",
+               "Name", ':', "...", "Age", ':', 16, stat_nameD[A_STR],
+               statD.use_stat[A_STR], statD.max_stat[A_STR]);
   line += 1;
-  for (int it = 0; it < MAX_A; ++it) {
-    if (statD.use_stat[it] == statD.max_stat[it]) {
-      PY_STAT("%s: %6d", stat_nameD[it], statD.use_stat[it]);
-    } else {
-      PY_STAT("%s: %6d %6d", stat_nameD[it], statD.use_stat[it],
-              statD.max_stat[it]);
-    }
-  }
+  screen_usedD[line] =
+      snprintf(AP(screenD[line]),
+               "%-17.017s%c %-17.017s "
+               "%-10.010s%c %6.d "
+               " %-4.04s:%d %d",
+               "Race", ':', raceD[uD.ridx].trace, "Height", ':', 74,
+               stat_nameD[A_INT], statD.use_stat[A_INT], statD.max_stat[A_INT]);
+  line += 1;
+  screen_usedD[line] =
+      snprintf(AP(screenD[line]),
+               "%-17.017s%c %-17.017s "
+               "%-10.010s%c %6.d "
+               " %-4.04s:%d %d",
+               "Gender", ':', uD.male ? "Male" : "Female", "Weight", ':', uD.wt,
+               stat_nameD[A_WIS], statD.use_stat[A_WIS], statD.max_stat[A_WIS]);
+  line += 1;
+  screen_usedD[line] =
+      snprintf(AP(screenD[line]),
+               "%-17.017s%c %-17.017s "
+               "%-10.010s%c %6.d "
+               " %-4.04s:%d %d",
+               "Class", ':', classD[uD.clidx].title, "Social Class", ':', 1,
+               stat_nameD[A_DEX], statD.use_stat[A_DEX], statD.max_stat[A_DEX]);
+  line += 1;
+  screen_usedD[line] = snprintf(AP(screenD[line]),
+                                "%-56.056s"
+                                " %-4.04s:%d %d",
+                                "", stat_nameD[A_CON], statD.use_stat[A_CON],
+                                statD.max_stat[A_CON]);
+  line += 1;
+  screen_usedD[line] = snprintf(AP(screenD[line]),
+                                "%-56.056s"
+                                " %-4.04s:%d %d",
+                                "", stat_nameD[A_CHR], statD.use_stat[A_CHR],
+                                statD.max_stat[A_CHR]);
+  line += 1;
+
   line += 1;
   PY_STAT("ToHit: %+6d", uD.ptohit);
   PY_STAT("ToDam: %+6d", uD.ptodam);

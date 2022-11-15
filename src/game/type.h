@@ -19,6 +19,7 @@ struct uS {
   int rest;
   uint8_t clidx;  // class
   uint8_t ridx;   // race
+  uint8_t male;
   // initialized by class/race
   uint8_t bth;
   uint8_t search;
@@ -93,10 +94,10 @@ struct panelS {
 static struct panelS panelD;
 
 struct caveS {
-  uint8_t midx;  // monster
-  uint8_t oidx;  // object
-  uint8_t fval;  // floor
-  uint8_t cflag; // cave flag (CF_)
+  uint8_t midx;   // monster
+  uint8_t oidx;   // object
+  uint8_t fval;   // floor
+  uint8_t cflag;  // cave flag (CF_)
 };
 static struct caveS caveD[MAX_HEIGHT][MAX_WIDTH];
 
@@ -171,5 +172,5 @@ struct monS {
   uint16_t cidx;  // creature definition
   int16_t hp;
   uint8_t cdis;
-  uint8_t ml; // monster lit
+  uint8_t ml;  // monster lit
 };
