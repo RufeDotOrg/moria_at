@@ -2511,7 +2511,7 @@ void obj_detail(obj) struct objS* obj;
 void obj_desc(obj, prefix) struct objS* obj;
 BOOL prefix;
 {
-  char *basenm, *modstr;
+  char* basenm;
   char damstr[80];
   int indexx, modify, append_name, tmp;
   struct treasureS* tr_ptr;
@@ -2519,7 +2519,6 @@ BOOL prefix;
   tr_ptr = &treasureD[obj->tidx];
   indexx = obj->subval & (ITEM_SINGLE_STACK_MIN - 1);
   basenm = tr_ptr->name;
-  modstr = 0;
   damstr[0] = 0;
   modify = tr_known(tr_ptr) ? FALSE : TRUE;
   append_name = FALSE;
@@ -2565,8 +2564,8 @@ BOOL prefix;
       break;
     case TV_AMULET:
       if (modify) {
-        basenm = "& %s Amulet";
-        modstr = amulets[indexx];
+        snprintf(AP(descD), "& %s Amulet", amulets[indexx]);
+        basenm = 0;
       } else {
         basenm = "& Amulet";
         append_name = TRUE;
@@ -2574,8 +2573,8 @@ BOOL prefix;
       break;
     case TV_RING:
       if (modify) {
-        basenm = "& %s Ring";
-        modstr = rocks[indexx];
+        basenm = 0;
+        snprintf(AP(descD), "& %s Ring", rocks[indexx]);
       } else {
         basenm = "& Ring";
         append_name = TRUE;
@@ -2583,8 +2582,8 @@ BOOL prefix;
       break;
     case TV_STAFF:
       if (modify) {
-        basenm = "& %s Staff";
-        modstr = woods[indexx];
+        basenm = 0;
+        snprintf(AP(descD), "& %s Staff", woods[indexx]);
       } else {
         basenm = "& Staff";
         append_name = TRUE;
@@ -2592,8 +2591,8 @@ BOOL prefix;
       break;
     case TV_WAND:
       if (modify) {
-        basenm = "& %s Wand";
-        modstr = metals[indexx];
+        basenm = 0;
+        snprintf(AP(descD), "& %s Wand", metals[indexx]);
       } else {
         basenm = "& Wand";
         append_name = TRUE;
@@ -2602,8 +2601,8 @@ BOOL prefix;
     case TV_SCROLL1:
     case TV_SCROLL2:
       if (modify) {
-        basenm = "& Scroll~ titled \"%s\"";
-        modstr = titles[indexx];
+        basenm = 0;
+        snprintf(AP(descD), "& Scroll~ titled \"%s\"", titles[indexx]);
       } else {
         basenm = "& Scroll~";
         append_name = TRUE;
@@ -2612,8 +2611,8 @@ BOOL prefix;
     case TV_POTION1:
     case TV_POTION2:
       if (modify) {
-        basenm = "& %s Potion~";
-        modstr = colors[indexx];
+        basenm = 0;
+        snprintf(AP(descD), "& %s Potion~", colors[indexx]);
       } else {
         basenm = "& Potion~";
         append_name = TRUE;
@@ -2624,10 +2623,10 @@ BOOL prefix;
     case TV_FOOD:
       if (modify) {
         if (indexx <= 15)
-          basenm = "& %s Mushroom~";
+          snprintf(AP(descD), "& %s Mushroom~", mushrooms[indexx]);
         else if (indexx <= 20)
-          basenm = "& Hairy %s Mold~";
-        if (indexx <= 20) modstr = mushrooms[indexx];
+          snprintf(AP(descD), "& Hairy %s Mold~", mushrooms[indexx]);
+        if (indexx <= 20) basenm = 0;
       } else {
         append_name = TRUE;
         if (indexx <= 15)
@@ -2640,13 +2639,13 @@ BOOL prefix;
       }
       break;
     case TV_MAGIC_BOOK:
-      modstr = basenm;
-      basenm = "& Book~ of Magic Spells %s";
+      snprintf(AP(descD), "& Book~ of Magic Spells %s", basenm);
+      basenm = 0;
       break;
     case TV_PRAYER_BOOK:
-      modstr = basenm;
-      basenm = "& Holy Book~ of Prayers %s";
-      break;
+      snprintf(AP(descD), "& Holy Book~ of Prayers %s", basenm);
+      basenm = 0;
+      return;
     case TV_OPEN_DOOR:
     case TV_CLOSED_DOOR:
     case TV_SECRET_DOOR:
@@ -2665,10 +2664,7 @@ BOOL prefix;
       strcpy(descD, "Error in objdes()");
       return;
   }
-  if (modstr != 0)
-    sprintf(descD, basenm, modstr);
-  else
-    strcpy(descD, basenm);
+  if (basenm) strcpy(descD, basenm);
   if (append_name) {
     strcat(descD, " of ");
     strcat(descD, tr_ptr->name);
