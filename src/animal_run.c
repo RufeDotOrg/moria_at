@@ -767,6 +767,11 @@ static void delete_object(y, x) int y, x;
   cave_ptr->oidx = 0;
   cave_ptr->cflag &= ~CF_FIELDMARK;
 }
+static void inven_destroy(iidx) int iidx;
+{
+  // TBD: destroy 1 of N
+  invenD[iidx] = 0;
+}
 static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
 {
   register struct objS* obj;
@@ -2951,6 +2956,9 @@ py_init()
   tr_obj_copy(30, dagger);
   dagger->idflag |= ID_REVEAL;
   invenD[INVEN_WIELD] = dagger->id;
+  struct objS* food = obj_use();
+  tr_obj_copy(345, food);
+  invenD[0] = food->id;
 
   calc_bonuses();
 
@@ -3082,6 +3090,29 @@ int begin, end;
     }
   }
   return line;
+}
+void
+py_eat()
+{
+  char c;
+  struct objS* obj;
+
+  int count = py_inven(0, INVEN_EQUIP);
+  draw();
+  if (count) {
+    if (in_subcommand("Eat what?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        struct objS* obj = obj_get(invenD[iidx]);
+        if (obj->tval == TV_FOOD) {
+          uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
+          inven_destroy(iidx);
+        } else {
+          msg_print("You can't eat that!");
+        }
+      }
+    }
+  }
 }
 void
 py_wear()
@@ -4413,6 +4444,9 @@ dungeon()
             break;
           case 'D':
             disarm_trap(&y, &x);
+            break;
+          case 'E':
+            py_eat();
             break;
           case 'R':
             uD.rest = -9999;
