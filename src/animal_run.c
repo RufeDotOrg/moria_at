@@ -17,16 +17,8 @@ static int death;
 static int dun_level;
 static int free_turn_flag;
 static int new_level_flag;
-static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
-static char symmapD[SCREEN_HEIGHT][SCREEN_WIDTH];
-static char screenD[19][80];
-static int screen_usedD[AL(screenD)];
-static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
-static int overlay_usedD[STATUS_HEIGHT];
 static char descD[160];
 static char death_descD[160];
-static char logD[80];
-static int log_usedD;
 
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
@@ -44,68 +36,6 @@ ARR_REUSE(mon, 256);
 // [INVEN_WIELD, INVEN_AUX] are equipment
 static int invenD[MAX_INVEN];
 
-static char bufferD[4 * 1024];
-static int buffer_usedD;
-int
-buffer_append(char* str, int str_len)
-{
-  if (buffer_usedD + str_len > sizeof(bufferD)) return 0;
-  memcpy(&bufferD[buffer_usedD], str, str_len);
-  buffer_usedD += str_len;
-  return 1;
-}
-static void
-draw()
-{
-  buffer_usedD = 0;
-  buffer_append(AP(tc_clearD));
-  buffer_append(AP(tc_move_cursorD));
-  if (log_usedD) {
-    buffer_append(logD, log_usedD);
-    log_usedD = 0;
-  }
-  buffer_append(AP(tc_crlfD));
-  if (screen_usedD[0]) {
-    for (int row = 0; row < AL(screenD); ++row) {
-      buffer_append(AP(tc_clear_lineD));
-      buffer_append(screenD[row], screen_usedD[row]);
-      buffer_append(AP(tc_crlfD));
-    }
-    AC(screenD);
-    AC(screen_usedD);
-  } else if (overlay_usedD[0]) {
-    for (int row = 0; row < STATUS_HEIGHT; ++row) {
-      buffer_append(AP(tc_clear_lineD));
-      buffer_append(AP(statusD[row]));
-      buffer_append(overlayD[row], overlay_usedD[row]);
-      buffer_append(AP(tc_crlfD));
-    }
-    AC(overlayD);
-    AC(overlay_usedD);
-  } else {
-    for (int row = 0; row < STATUS_HEIGHT - 1; ++row) {
-      buffer_append(AP(tc_clear_lineD));
-      buffer_append(AP(statusD[row]));
-      if (row < SCREEN_HEIGHT) buffer_append(AP(symmapD[row]));
-      buffer_append(AP(tc_crlfD));
-    }
-    char line[80];
-    int print_len = snprintf(
-        AP(line), "[%d,%d xy] [%d,%d quadrant] [%d turn] %d feet", uD.x, uD.y,
-        panelD.panel_col, panelD.panel_row, turnD, dun_level * 50);
-    if (print_len < AL(line)) buffer_append(line, print_len);
-    buffer_append(AP(tc_crlfD));
-  }
-  if (cD.poison) buffer_append(AP("POISONED "));
-  if (uD.food < PLAYER_FOOD_FAINT)
-    buffer_append(AP("FAINTING"));
-  else if (uD.food < PLAYER_FOOD_WEAK)
-    buffer_append(AP("WEAK"));
-  else if (uD.food < PLAYER_FOOD_ALERT)
-    buffer_append(AP("HUNGRY"));
-  buffer_append(AP(tc_move_cursorD));
-  write(STDOUT_FILENO, bufferD, buffer_usedD);
-}
 static char
 inkey()
 {
@@ -116,16 +46,6 @@ inkey()
     return -1;
   }
   return c;
-}
-static void
-im_print()
-{
-  buffer_usedD = 0;
-  buffer_append(AP(tc_move_cursorD));
-  buffer_append(AP(tc_clear_lineD));
-  buffer_append(logD, log_usedD);
-  buffer_append(AP(tc_move_cursorD));
-  write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
 void
 in_wait()
@@ -1578,23 +1498,6 @@ panel_update(struct panelS* panel, int y, int x, BOOL force)
   panel_bounds(panel);
 }
 void
-symmap_patch(y, x)
-{
-  char c = get_sym(y, x);
-  if (panel_contains(&panelD, y, x)) {
-    int ay = y - panelD.panel_row_min;
-    int ax = x - panelD.panel_col_min;
-    symmapD[ay][ax] = c;
-
-    int ty = ay + 2;
-    int tx = ax + STATUS_WIDTH + 1;
-
-    buffer_usedD = snprintf(AP(bufferD), "\x1b[%d;%dH", ty, tx);
-    buffer_append(&c, 1);
-    write(STDOUT_FILENO, bufferD, buffer_usedD);
-  }
-}
-void
 symmap_update()
 {
   int rmin = panelD.panel_row_min;
@@ -2067,7 +1970,7 @@ void update_mon(midx) int midx;
   else if (m_ptr->ml) {
     m_ptr->ml = FALSE;
   }
-  symmap_patch(fy, fx);
+  SYMMAP_PATCH(fy, fx);
 }
 int
 bth_adj(attype)
@@ -2895,7 +2798,7 @@ py_class_select()
     line += 1;
   }
 
-  draw();
+  platform_draw();
   if (in_subcommand("Which character would you like to play?", &c)) {
     int iidx = c - 'a';
     if (iidx > 0 && iidx < AL(classD)) return iidx;
@@ -3111,7 +3014,7 @@ py_map()
     if (panelD.panel_col > SCREEN_COL - 2) panelD.panel_col = SCREEN_COL - 2;
     panel_bounds(&panelD);
     symmap_update();
-    draw();
+    platform_draw();
   }
   panel_update(&panelD, uD.y, uD.x, TRUE);
   free_turn_flag = TRUE;
@@ -3141,7 +3044,7 @@ py_eat()
   struct objS* obj;
 
   int count = py_inven(0, INVEN_EQUIP);
-  draw();
+  platform_draw();
   if (count) {
     if (in_subcommand("Eat what?", &c)) {
       int iidx = c - 'a';
@@ -3164,7 +3067,7 @@ py_wear()
   struct objS* obj;
 
   int count = py_inven(0, INVEN_EQUIP);
-  draw();
+  platform_draw();
   if (count) {
     if (in_subcommand("Wear/Wield which item?", &c)) {
       int iidx = c - 'a';
@@ -3206,7 +3109,7 @@ static void py_drop(y, x) int y, x;
     MSG("You aren't carrying anything");
     return;
   }
-  draw();
+  platform_draw();
 
   if (in_subcommand("Drop which item?", &c)) {
     int iidx = c - 'a';
@@ -3314,7 +3217,7 @@ py_takeoff()
 
   int carry_count = py_carry_count();
   int equip_count = py_inven(INVEN_EQUIP, MAX_INVEN);
-  draw();
+  platform_draw();
   if (carry_count && equip_count) {
     if (in_subcommand("Take off which item?", &c)) {
       int iidx = INVEN_EQUIP + (c - 'a');
@@ -4117,7 +4020,7 @@ py_make_known()
 
   // TBD: filter?
   int count = py_inven(0, INVEN_EQUIP);
-  draw();
+  platform_draw();
   if (count) {
     if (in_subcommand("Make known which item?", &c)) {
       int iidx = c - 'a';
@@ -4204,8 +4107,8 @@ uint32_t* rcmove;
     if (do_move) {
       /* Move creature record  	       */
       move_rec(fy, fx, newy, newx);
-      symmap_patch(fy, fx);
-      symmap_patch(newy, newx);
+      SYMMAP_PATCH(fy, fx);
+      SYMMAP_PATCH(newy, newx);
       m_ptr->ml = FALSE;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
@@ -4420,7 +4323,10 @@ dungeon()
       status_update();
       symmap_update();
 
-      draw();
+      debug_usedD = snprintf(
+          AP(debugD), "[%d,%d xy] [%d,%d quadrant] [%d turn] %d feet", uD.x,
+          uD.y, panelD.panel_col, panelD.panel_row, turnD, dun_level * 50);
+      platform_draw();
       free_turn_flag = FALSE;
 
       y = uD.y;
@@ -4587,8 +4493,8 @@ dungeon()
           int ox = uD.x;
           uD.y = y;
           uD.x = x;
-          symmap_patch(oy, ox);
-          symmap_patch(y, x);
+          SYMMAP_PATCH(oy, ox);
+          SYMMAP_PATCH(y, x);
           if (find_flag) find_event(y, x);
           if (obj->tval) {
             find_flag = FALSE;

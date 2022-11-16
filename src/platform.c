@@ -3,14 +3,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-static struct termios save_termD;
-// Common terminal commands
-static char tc_crlfD[] = "\r\n";
-static char tc_clearD[] = "\x1b[2J";
-static char tc_clear_lineD[] = "\x1b[K";
-static char tc_move_cursorD[] = "\x1b[H";
-static char tc_hide_cursorD[] = "\x1b[?25l";
-static char tc_show_cursorD[] = "\x1b[?25h";
+#include "tty.c"
 
 char platform_readansi() {
   char c = 0;
