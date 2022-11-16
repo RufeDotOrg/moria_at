@@ -3653,6 +3653,7 @@ static void mon_attack(midx) int midx;
     if (test_hit(bth, adj, 0, uac)) flag = TRUE;
     if (flag) {
       int damage = damroll(attack->attack_dice, attack->attack_sides);
+      MSG("%s%s", descD, attack_string(attack_desc));
       switch (attack_type) {
         case 1: /*Normal attack  */
                 /* round half-way case down */
@@ -3914,7 +3915,6 @@ static void mon_attack(midx) int midx;
           //   notice = FALSE;
           break;
       }
-      MSG("%s%s", descD, attack_string(attack_desc));
     } else {
       MSG("%s misses you.", descD);
     }
