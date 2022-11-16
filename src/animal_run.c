@@ -4644,7 +4644,7 @@ obj_level_init()
 int
 main()
 {
-  platform_tty_init();
+  platform_init();
 
   dun_level = 1;
   mon_level_init();
@@ -4659,6 +4659,6 @@ main()
     if (!death) generate_cave();
   }
 
-  platform_tty_reset();
+  platform_reset();
   return 0;
 }

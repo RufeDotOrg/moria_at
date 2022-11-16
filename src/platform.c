@@ -21,7 +21,7 @@ char platform_readansi() {
   return c;
 }
 
-void platform_tty_init() {
+void platform_init() {
   ioctl(STDIN_FILENO, TCGETA, &save_termD);
 
   struct termios tbuf;
@@ -34,7 +34,7 @@ void platform_tty_init() {
   write(STDOUT_FILENO, tc_hide_cursorD, sizeof(tc_hide_cursorD));
 }
 
-void platform_tty_reset() {
+void platform_reset() {
   write(STDOUT_FILENO, tc_clearD, sizeof(tc_clearD));
   write(STDOUT_FILENO, tc_show_cursorD, sizeof(tc_show_cursorD));
 
