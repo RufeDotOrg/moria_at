@@ -9,7 +9,7 @@ static char tc_hide_cursorD[] = "\x1b[?25l";
 static char tc_show_cursorD[] = "\x1b[?25h";
 
 static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
-static char symmapD[SCREEN_HEIGHT][SCREEN_WIDTH];
+static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 static char screenD[19][80];
 static int screen_usedD[AL(screenD)];
 static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
@@ -61,7 +61,7 @@ platform_draw()
     for (int row = 0; row < STATUS_HEIGHT - 1; ++row) {
       buffer_append(AP(tc_clear_lineD));
       buffer_append(AP(statusD[row]));
-      if (row < SCREEN_HEIGHT) buffer_append(AP(symmapD[row]));
+      if (row < AL(symmapD)) buffer_append(AP(symmapD[row]));
       buffer_append(AP(tc_crlfD));
     }
     buffer_append(debugD, debug_usedD);

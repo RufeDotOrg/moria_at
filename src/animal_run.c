@@ -408,8 +408,8 @@ void light_room(y, x) int y, x;
   struct caveS* c_ptr;
   int tval;
 
-  tmp1 = (SCREEN_HEIGHT / 2);
-  tmp2 = (SCREEN_WIDTH / 2);
+  tmp1 = (SYMMAP_HEIGHT / 2);
+  tmp2 = (SYMMAP_WIDTH / 2);
   start_row = (y / tmp1) * tmp1;
   start_col = (x / tmp2) * tmp2;
   end_row = start_row + tmp1 - 1;
@@ -1474,10 +1474,10 @@ panel_bounds(struct panelS* panel)
 {
   int panel_row = panel->panel_row;
   int panel_col = panel->panel_col;
-  panel->panel_row_min = panel_row * (SCREEN_HEIGHT / 2);
-  panel->panel_row_max = panel->panel_row_min + SCREEN_HEIGHT;
-  panel->panel_col_min = panel_col * (SCREEN_WIDTH / 2);
-  panel->panel_col_max = panel->panel_col_min + SCREEN_WIDTH;
+  panel->panel_row_min = panel_row * (SYMMAP_HEIGHT / 2);
+  panel->panel_row_max = panel->panel_row_min + SYMMAP_HEIGHT;
+  panel->panel_col_min = panel_col * (SYMMAP_WIDTH / 2);
+  panel->panel_col_max = panel->panel_col_min + SYMMAP_WIDTH;
 }
 
 void
@@ -1485,14 +1485,14 @@ panel_update(struct panelS* panel, int y, int x, BOOL force)
 {
   BOOL yd = (y < panel->panel_row_min + 2 || y > panel->panel_row_max - 3);
   if (force || yd) {
-    int prow = (y - SCREEN_HEIGHT / 4) / (SCREEN_HEIGHT / 2);
-    panel->panel_row = CLAMP(prow, 0, SCREEN_ROW - 2);
+    int prow = (y - SYMMAP_HEIGHT / 4) / (SYMMAP_HEIGHT / 2);
+    panel->panel_row = CLAMP(prow, 0, MAX_ROW - 2);
   }
 
   BOOL xd = (x < panel->panel_col_min + 2 || x > panel->panel_col_max - 3);
   if (force || xd) {
-    int pcol = (x - SCREEN_WIDTH / 4) / (SCREEN_WIDTH / 2);
-    panel->panel_col = CLAMP(pcol, 0, SCREEN_COL - 2);
+    int pcol = (x - SYMMAP_WIDTH / 4) / (SYMMAP_WIDTH / 2);
+    panel->panel_col = CLAMP(pcol, 0, MAX_COL - 2);
   }
 
   panel_bounds(panel);
@@ -3010,8 +3010,8 @@ py_map()
   int y, x, dir;
   while (get_dir("Map: Look which direction?", &dir)) {
     mmove(dir, &panelD.panel_row, &panelD.panel_col);
-    if (panelD.panel_row > SCREEN_ROW - 2) panelD.panel_row = SCREEN_ROW - 2;
-    if (panelD.panel_col > SCREEN_COL - 2) panelD.panel_col = SCREEN_COL - 2;
+    if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
+    if (panelD.panel_col > MAX_COL - 2) panelD.panel_col = MAX_COL - 2;
     panel_bounds(&panelD);
     symmap_update();
     platform_draw();
