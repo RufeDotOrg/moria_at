@@ -97,6 +97,12 @@ draw()
     buffer_append(AP(tc_crlfD));
   }
   if (cD.poison) buffer_append(AP("POISONED "));
+  if (uD.food < PLAYER_FOOD_FAINT)
+    buffer_append(AP("FAINTING"));
+  else if (uD.food < PLAYER_FOOD_WEAK)
+    buffer_append(AP("WEAK"));
+  else if (uD.food < PLAYER_FOOD_ALERT)
+    buffer_append(AP("HUNGRY"));
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
