@@ -8,17 +8,6 @@ static char tc_move_cursorD[] = "\x1b[H";
 static char tc_hide_cursorD[] = "\x1b[?25l";
 static char tc_show_cursorD[] = "\x1b[?25h";
 
-static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
-static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-static char screenD[19][80];
-static int screen_usedD[AL(screenD)];
-static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
-static int overlay_usedD[STATUS_HEIGHT];
-static char logD[80];
-static int log_usedD;
-static char debugD[80];
-static int debug_usedD;
-
 static char bufferD[2 * 1024];
 static int buffer_usedD;
 int

@@ -11,15 +11,6 @@ static int find_openarea;
 static int find_breakright, find_breakleft;
 static int find_prevdir;
 
-static int turnD;
-static int player_hpD[AL(player_exp)];
-static int death;
-static int dun_level;
-static int free_turn_flag;
-static int new_level_flag;
-static char descD[160];
-static char death_descD[160];
-
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
 

@@ -1,4 +1,15 @@
 
+static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
+static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
+static char screenD[19][80];
+static int screen_usedD[AL(screenD)];
+static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
+static int overlay_usedD[STATUS_HEIGHT];
+static char logD[80];
+static int log_usedD;
+static char debugD[80];
+static int debug_usedD;
+
 uint32_t player_exp[MAX_PLAYER_LEVEL] = {
     10,      25,       45,       70,       100,      140,     200,
     280,     380,      500,      650,      850,      1100,    1400,
@@ -47,3 +58,12 @@ uint8_t blows_table[][6] = {
     /* <9 */ {1, 2, 2, 3, 4, 4},
     /* >9 */ {2, 2, 3, 3, 4, 4},
 };
+
+static int turnD;
+static int player_hpD[AL(player_exp)];
+static int death;
+static int dun_level;
+static int free_turn_flag;
+static int new_level_flag;
+static char descD[160];
+static char death_descD[160];
