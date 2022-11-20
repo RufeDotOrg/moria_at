@@ -30,7 +30,10 @@ static int invenD[MAX_INVEN];
 static char
 inkey()
 {
-  char c = platform_readansi();
+  char c;
+  do {
+    c = platform_readansi();
+  } while (c == 0);
   if (c == CTRL('c')) {
     death = 1;
     new_level_flag = TRUE;
@@ -77,10 +80,14 @@ in_subcommand(prompt, command)
 char* prompt;
 char* command;
 {
+  char c;
   if (log_usedD) im_print();
   log_usedD = snprintf(AP(logD), "%s", prompt);
   im_print();
-  *command = inkey();
+  do {
+    c = inkey();
+  } while (c == ' ');
+  *command = c;
   log_usedD = 0;
   return (*command != ESCAPE);
 }
@@ -2357,22 +2364,22 @@ BOOL prefix;
     if (obj_name[0] == '&') {
       /* use &obj_name[1], so that & does not appear in output */
       if (obj->number > 1)
-        sprintf(descD, "%d%s", (int)obj->number, &obj_name[1]);
+        snprintf(AP(descD), "%d%s", (int)obj->number, &obj_name[1]);
       else if (obj->number < 1)
-        sprintf(descD, "%s%s", "no more", &obj_name[1]);
+        snprintf(AP(descD), "%s%s", "no more", &obj_name[1]);
       else if (is_a_vowel(obj_name[2]))
-        sprintf(descD, "an%s", &obj_name[1]);
+        snprintf(AP(descD), "an%s", &obj_name[1]);
       else
-        sprintf(descD, "a%s", &obj_name[1]);
+        snprintf(AP(descD), "a%s", &obj_name[1]);
     }
     /* handle 'no more' case specially */
     else if (obj->number < 1) {
       /* check for "some" at start */
       if (!strncmp("some", obj_name, 4))
-        sprintf(descD, "no more %s", &obj_name[5]);
+        snprintf(AP(descD), "no more %s", &obj_name[5]);
       /* here if no article */
       else
-        sprintf(descD, "no more %s", obj_name);
+        snprintf(AP(descD), "no more %s", obj_name);
     } else
       strcpy(descD, obj_name);
   } else {
@@ -2395,26 +2402,26 @@ void obj_detail(obj) struct objS* obj;
   }
   if (obj_reveal(obj)) {
     if (oset_hitdam(obj))
-      sprintf(tmp_str, " (%+d,%+d)", obj->tohit, obj->todam);
+      snprintf(AP(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
     else if (obj->tohit != 0)
-      sprintf(tmp_str, " (%+d)", obj->tohit);
+      snprintf(AP(tmp_str), " (%+d)", obj->tohit);
     else if (obj->todam != 0)
-      sprintf(tmp_str, " (%+d)", obj->todam);
+      snprintf(AP(tmp_str), " (%+d)", obj->todam);
     else
       tmp_str[0] = '\0';
     strcat(descD, tmp_str);
   }
   /* Crowns have a zero base AC, so make a special test for them. */
   if (obj->ac != 0 || (obj->tval == TV_HELM)) {
-    sprintf(tmp_str, " [%d", obj->ac);
+    snprintf(AP(tmp_str), " [%d", obj->ac);
     strcat(descD, tmp_str);
     if (obj_reveal(obj)) {
-      sprintf(tmp_str, ",%+d", obj->toac);
+      snprintf(AP(tmp_str), ",%+d", obj->toac);
       strcat(descD, tmp_str);
     }
     strcat(descD, "]");
   } else if ((obj->toac != 0) && obj_reveal(obj)) {
-    sprintf(tmp_str, " [%+d]", obj->toac);
+    snprintf(AP(tmp_str), " [%+d]", obj->toac);
     strcat(descD, tmp_str);
   }
 
