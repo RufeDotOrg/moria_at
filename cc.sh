@@ -13,11 +13,19 @@ if [ -n "$ASAN" ]; then
 fi
 
 hash $CC || exit 1
-[ -z "$CFLAGS" ] && CFLAGS="-O${OPTLEVEL} -g${SYMLEVEL} -Isrc -fno-omit-frame-pointer -ferror-limit=3 "
+[ -z "$CFLAGS" ] && CFLAGS="-O${OPTLEVEL} -g${SYMLEVEL} -Isrc -fno-omit-frame-pointer "
 
 EXT=.${1##*.}
 OUTFILE=`basename $1 $EXT`
 
+case $CC in
+  gcc )
+    CFLAGS+=" -fmax-errors=3 "
+    ;;
+  clang )
+    CFLAGS+=" -ferror-limit=3 "
+    ;;
+esac
 case $EXT in
   .c )
     CFLAGS+=" -Wno-implicit-function-declaration "
