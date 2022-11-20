@@ -2801,6 +2801,8 @@ py_class_select()
     int iidx = c - 'a';
     if (iidx > 0 && iidx < AL(classD)) return iidx;
   }
+  AC(overlayD);
+  AC(overlay_usedD);
 
   return 0;
 }
@@ -4325,6 +4327,12 @@ dungeon()
           AP(debugD), "[%d,%d xy] [%d,%d quadrant] [%d turn] %d feet", uD.x,
           uD.y, panelD.panel_col, panelD.panel_row, turnD, dun_level * 50);
       platform_draw();
+      AC(screenD);
+      AC(screen_usedD);
+      AC(overlayD);
+      AC(overlay_usedD);
+      debug_usedD = 0;
+      log_usedD = 0;
       free_turn_flag = FALSE;
 
       y = uD.y;

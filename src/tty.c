@@ -26,7 +26,6 @@ platform_draw()
   buffer_append(AP(tc_move_cursorD));
   if (log_usedD) {
     buffer_append(logD, log_usedD);
-    log_usedD = 0;
   }
   buffer_append(AP(tc_crlfD));
   if (screen_usedD[0]) {
@@ -35,8 +34,6 @@ platform_draw()
       buffer_append(screenD[row], screen_usedD[row]);
       buffer_append(AP(tc_crlfD));
     }
-    AC(screenD);
-    AC(screen_usedD);
   } else if (overlay_usedD[0]) {
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
       buffer_append(AP(tc_clear_lineD));
@@ -44,8 +41,6 @@ platform_draw()
       buffer_append(overlayD[row], overlay_usedD[row]);
       buffer_append(AP(tc_crlfD));
     }
-    AC(overlayD);
-    AC(overlay_usedD);
   } else {
     for (int row = 0; row < STATUS_HEIGHT - 1; ++row) {
       buffer_append(AP(tc_clear_lineD));
