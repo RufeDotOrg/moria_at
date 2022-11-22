@@ -1256,7 +1256,7 @@ void place_gold(y, x) int y, x;
   obj->fx = x;
   obj->tval = TV_GOLD;
   obj->tchar = '$';
-  obj->cost = goldD[i];
+  obj->cost = 8 * randint(goldD[i]) + goldD[i] + randint(8);
   obj->subval = i;
   obj->number = 1;
   obj->level = 1;
