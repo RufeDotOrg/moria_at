@@ -1,39 +1,55 @@
 #include <errno.h>
+#include <fcntl.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
+#include "game/common.h"
+
 static struct termios save_termio;
 
-void init_raw() {
+void
+init_raw()
+{
   struct termios tbuf;
   tcgetattr(STDIN_FILENO, &tbuf);
   tbuf.c_iflag &= ~(ICRNL | IXON);
   tbuf.c_oflag &= ~(OPOST);
-  // ignore_signals: ISIG
-  tbuf.c_lflag &= ~(ECHO | ICANON);
+  // ignore_signals: bg/fg changes the terminal settings underneath you
+  tbuf.c_lflag &= ~(ECHO | ICANON | ISIG);
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &tbuf);
 }
 
-int main() {
+int
+main()
+{
   ioctl(0, TCGETA, &save_termio);
 
   init_raw();
 
-  char c;
+  fcntl(0, F_SETFL, O_NONBLOCK);
+  char prev = 0;
   while (1) {
-    int read_count = read(0, &c, 1);
-    if (read_count == -1) {
-      if (errno != EAGAIN)
-        break;
+    char text[8] = {0};
+    int len = 0;
+    len = read(STDIN_FILENO, AP(text));
+
+    if (len <= 0) {
+      nanosleep(&(struct timespec){0, 8e6}, 0);
       continue;
     }
-
-    if (iscntrl(c)) {
-      printf("%d\r\n", c);
+    if (iscntrl(text[0])) {
+      printf("code: ");
+      for (int it = 0; it < len; ++it) {
+        if (text[it]) printf("%x ", text[it]);
+      }
+      printf("\r\n");
     } else {
-      printf("%d ('%c')\r\n", c, c);
+      printf("%x ('%c')\r\n", text[0], text[0]);
     }
+
+    if (text[0] == CTRL('c') && prev == CTRL('c')) break;
+    prev = text[0];
   }
 
   ioctl(0, TCSETA, &save_termio);
