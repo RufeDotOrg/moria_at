@@ -46,6 +46,7 @@ in_wait()
 {
   char c;
   do {
+    im_print();
     c = inkey();
   } while (c != ' ');
 }
@@ -59,7 +60,6 @@ int msglen;
   // wait for user to acknowledge prior buffer -more-
   if (len + msglen >= maxlen) {
     log_usedD += snprintf(logD + len, AL(logD), "%s", log_extD);
-    im_print();
     in_wait();
     len = 0;
   } else if (len) {
@@ -83,10 +83,7 @@ char* command;
   char c;
   if (log_usedD) im_print();
   log_usedD = snprintf(AP(logD), "%s", prompt);
-  im_print();
-  do {
-    c = inkey();
-  } while (c == ' ');
+  in_wait();
   *command = c;
   log_usedD = 0;
   return (*command != ESCAPE);
@@ -2830,7 +2827,7 @@ py_init()
   int csel, rsel;
   int8_t stat[MAX_A];
 
-  csel = py_class_select();
+  csel = 0;  // py_class_select();
   do {
     rsel = randint(AL(raceD)) - 1;
   } while ((raceD[rsel].rtclass & (1 << csel)) == 0);
@@ -4347,7 +4344,7 @@ dungeon()
           case ' ':
             free_turn_flag = TRUE;
             break;
-          case '1'...'9':
+          case '1' ... '9':
             MSG("Numlock is required for arrowkey movement");
             free_turn_flag = TRUE;
             break;
