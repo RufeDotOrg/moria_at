@@ -41,26 +41,21 @@ inkey()
   }
   return c;
 }
-void
-in_wait()
-{
-  char c;
-  do {
-    im_print();
-    c = inkey();
-  } while (c != ' ');
-}
 char log_extD[] = " -more-";
 static void msg_print2(msg, msglen) char* msg;
 int msglen;
 {
+  char c;
   int len = log_usedD;
   int maxlen = AL(logD) - AL(log_extD);
 
   // wait for user to acknowledge prior buffer -more-
   if (len + msglen >= maxlen) {
     log_usedD += snprintf(logD + len, AL(logD), "%s", log_extD);
-    in_wait();
+    do {
+      im_print();
+      c = inkey();
+    } while (c != ' ');
     len = 0;
   } else if (len) {
     logD[len] = ' ';
@@ -81,9 +76,9 @@ char* prompt;
 char* command;
 {
   char c;
-  if (log_usedD) im_print();
   log_usedD = snprintf(AP(logD), "%s", prompt);
-  in_wait();
+  im_print();
+  c = inkey();
   *command = c;
   log_usedD = 0;
   return (*command != ESCAPE);
