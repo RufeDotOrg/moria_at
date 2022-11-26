@@ -4347,6 +4347,10 @@ dungeon()
           case ' ':
             free_turn_flag = TRUE;
             break;
+          case '1'...'9':
+            MSG("Numlock is required for arrowkey movement");
+            free_turn_flag = TRUE;
+            break;
           case 'k':
           case 'j':
           case 'l':
