@@ -84,32 +84,45 @@ void symmap_patch(y, x, c) char c;
   buffer_append(&c, 1);
   write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
+static char
+_from_vt100(char c)
+{
+  switch (c) {
+    case 'F':
+      return 'b';
+    case 'B':
+      return 'j';
+    case '6':
+      return 'n';
+    case 'D':
+      return 'h';
+    case 'E':
+      return '.';
+    case 'C':
+      return 'l';
+    case 'H':
+      return 'y';
+    case 'A':
+      return 'k';
+    case '5':
+      return 'u';
+  }
+  return 0;
+}
 char
 tty_translate(char* str, int len)
 {
-  if (len >= 3) {
-    switch (str[2]) {
-      case 'F':
-        return '1';
-      case 'B':
-        return '2';
-      case '6':
-        return '3';
-      case 'D':
-        return '4';
-      case 'E':
-        return '5';
-      case 'C':
-        return '6';
-      case 'H':
-        return '7';
-      case 'A':
-        return '8';
-      case '5':
-        return '9';
-    }
+  char c = 0;
+  char mask = -1;
+  if (len > 5) {
+    c = str[5];
+    if (c == '~') c = str[2];
+    mask = ~0x20;
+  } else if (len > 2) {
+    c = str[2];
   }
-  return -2;
+
+  return (_from_vt100(c) & mask);
 }
 #define SYMMAP_PATCH(y, x) \
   if (panel_contains(&panelD, y, x)) symmap_patch(y, x, get_sym(y, x))
