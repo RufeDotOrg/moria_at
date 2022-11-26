@@ -4,7 +4,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "game/common.h"
+#include "game.c"
 
 static struct termios save_termio;
 
@@ -46,6 +46,9 @@ main()
       printf("\r\n");
     } else {
       printf("%x ('%c')\r\n", text[0], text[0]);
+    }
+    if (len > 1) {
+      printf("tty_translate %c\r\n", tty_translate(text, len));
     }
 
     if (text[0] == CTRL('c') && prev == CTRL('c')) break;

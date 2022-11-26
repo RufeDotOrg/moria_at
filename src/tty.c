@@ -84,5 +84,32 @@ void symmap_patch(y, x, c) char c;
   buffer_append(&c, 1);
   write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
+char
+tty_translate(char* str, int len)
+{
+  if (len >= 3) {
+    switch (str[2]) {
+      case 'F':
+        return '1';
+      case 'B':
+        return '2';
+      case '6':
+        return '3';
+      case 'D':
+        return '4';
+      case 'E':
+        return '5';
+      case 'C':
+        return '6';
+      case 'H':
+        return '7';
+      case 'A':
+        return '8';
+      case '5':
+        return '9';
+    }
+  }
+  return -2;
+}
 #define SYMMAP_PATCH(y, x) \
   if (panel_contains(&panelD, y, x)) symmap_patch(y, x, get_sym(y, x))
