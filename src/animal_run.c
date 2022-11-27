@@ -4354,7 +4354,8 @@ dungeon()
             free_turn_flag = TRUE;
             break;
           case ',':
-            py_carry(y, x, TRUE);
+            if (caveD[y][x].oidx) py_carry(y, x, TRUE);
+            else free_turn_flag = TRUE;
             break;
           case '1' ... '9':
             MSG("Numlock is required for arrowkey movement");
