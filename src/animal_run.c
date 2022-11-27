@@ -3226,7 +3226,7 @@ py_takeoff()
   }
   calc_bonuses();
 }
-static void py_carry(y, x, pickup) int y, x;
+static void py_pickup(y, x, pickup) int y, x;
 int pickup;
 {
   struct caveS* c_ptr;
@@ -3237,6 +3237,10 @@ int pickup;
   obj = &entity_objD[c_ptr->oidx];
   obj_desc(obj, TRUE);
 
+  if (obj->tval == 0) {
+    msg_print("You see nothing here.");
+    free_turn_flag = TRUE;
+  }
   /* There's GOLD in them thar hills!      */
   if (obj->tval == TV_GOLD) {
     uD.gold += obj->cost;
@@ -4025,12 +4029,13 @@ py_make_known()
     }
   }
 }
-static void search(y, x, chance) int y, x, chance;
+static void py_search(y, x, chance) int y, x, chance;
 {
   register int i, j;
   struct caveS* c_ptr;
   struct objS* obj;
 
+  msg_print("You search the area.");
   // p_ptr = &py.flags;
   // if (p_ptr->confused > 0) chance = chance / 10;
   // if ((p_ptr->blind > 0) || no_light()) chance = chance / 10;
@@ -4339,14 +4344,14 @@ dungeon()
         if (c == '.') {
           struct caveS* c_ptr = &caveD[y][x];
           int tval = entity_objD[c_ptr->oidx].tval;
-          if (tval == TV_UP_STAIR)
+          if (tval == 0)
+            c = 's';
+          else if (tval == TV_UP_STAIR)
             c = '<';
           else if (tval == TV_DOWN_STAIR)
             c = '>';
           else if (tval <= TV_MAX_PICK_UP)
             c = ',';
-          else
-            c = 's';
         }
 
         switch (c) {
@@ -4354,8 +4359,7 @@ dungeon()
             free_turn_flag = TRUE;
             break;
           case ',':
-            if (caveD[y][x].oidx) py_carry(y, x, TRUE);
-            else free_turn_flag = TRUE;
+            py_pickup(y, x, TRUE);
             break;
           case '1' ... '9':
             MSG("Numlock is required for arrowkey movement");
@@ -4408,7 +4412,7 @@ dungeon()
             open_object();
             break;
           case 's':
-            search(y, x, 25);
+            py_search(y, x, 25);
             break;
           case 'w':
             py_wear();
@@ -4521,7 +4525,7 @@ dungeon()
             if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
               hit_trap(y, x);
             } else {
-              py_carry(y, x, FALSE);
+              py_pickup(y, x, FALSE);
             }
           }
         } else {
