@@ -4335,9 +4335,24 @@ dungeon()
         c = inkey();
         if (c == -1) break;
 
+        // AWN: Period attempts auto-detection of a situational command
+        if (c == '.') {
+          struct caveS* c_ptr = &caveD[y][x];
+          int tval = entity_objD[c_ptr->oidx].tval;
+          if (tval == TV_UP_STAIR)
+            c = '<';
+          else if (tval == TV_DOWN_STAIR)
+            c = '>';
+          else
+            c = ',';
+        }
+
         switch (c) {
           case ' ':
             free_turn_flag = TRUE;
+            break;
+          case ',':
+            if (tval <= TV_MAX_PICK_UP) py_carry(y, x, TRUE);
             break;
           case '1' ... '9':
             MSG("Numlock is required for arrowkey movement");
@@ -4500,9 +4515,7 @@ dungeon()
           if (find_flag) find_event(y, x);
           if (obj->tval) {
             find_flag = FALSE;
-            if (obj->tval <= TV_MAX_PICK_UP) {
-              py_carry(y, x, TRUE);
-            } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
+            if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
               hit_trap(y, x);
             }
           }
