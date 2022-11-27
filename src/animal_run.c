@@ -4519,6 +4519,8 @@ dungeon()
             find_flag = FALSE;
             if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
               hit_trap(y, x);
+            } else {
+              py_carry(y, x, FALSE);
             }
           }
         } else {
