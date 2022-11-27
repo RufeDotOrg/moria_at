@@ -3243,7 +3243,7 @@ int pickup;
     MSG("You have found %d gold pieces worth of %s.", obj->cost,
         gold_nameD[obj->subval]);
     delete_object(y, x);
-  } else {
+  } else if (obj->tval <= TV_MAX_PICK_UP) {
     // TBD: Merge items of the same type?
 
     if (pickup) {
@@ -4343,8 +4343,10 @@ dungeon()
             c = '<';
           else if (tval == TV_DOWN_STAIR)
             c = '>';
-          else
+          else if (tval <= TV_MAX_PICK_UP)
             c = ',';
+          else
+            c = 's';
         }
 
         switch (c) {
@@ -4352,7 +4354,7 @@ dungeon()
             free_turn_flag = TRUE;
             break;
           case ',':
-            if (tval <= TV_MAX_PICK_UP) py_carry(y, x, TRUE);
+            py_carry(y, x, TRUE);
             break;
           case '1' ... '9':
             MSG("Numlock is required for arrowkey movement");
