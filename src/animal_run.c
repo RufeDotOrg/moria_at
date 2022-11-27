@@ -3903,109 +3903,126 @@ void disarm_trap(uy, ux) int *uy, *ux;
     }
   }
 }
-static void bash(uy, ux) int *uy, *ux;
+static int
+bash(y, x)
 {
-  int y, x, dir, tmp;
-  int valid_obj;
+  int tmp, movement;
   struct caveS* c_ptr;
   struct objS* obj;
+
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
+
+  movement = 0;
+  if (c_ptr->midx) {
+    // TBD: py_bash() vs monster
+    py_attack(y, x);
+  } else if (c_ptr->oidx) {
+    if (obj->tval == TV_CLOSED_DOOR) {
+      msg_print("You smash into the door!");
+      tmp = statD.use_stat[A_STR] + uD.wt / 2;
+      /* Use (roughly) similar method as for monsters. */
+      if (randint(tmp * (20 + ABS(obj->p1))) < 10 * (tmp - ABS(obj->p1))) {
+        msg_print("The door crashes open!");
+        // invcopy(&t_list[c_ptr->tptr], OBJ_OPEN_DOOR);
+        obj->tval = TV_OPEN_DOOR;
+        obj->tchar = '\'';
+        obj->p1 = 1 - randint(2); /* 50% chance of breaking door */
+        c_ptr->fval = FLOOR_CORR;
+        // if (py.flags.confused == 0)
+        movement = 1;
+        // else
+        //   lite_spot(y, x);
+      } else if (randint(150) > 18) {  // py.stats.use_stat[A_DEX]) {
+        msg_print("You are off-balance.");
+        // py.flags.paralysis = 1 + randint(2);
+      } else
+        msg_print("The door holds firm.");
+    } else
+      /* Can't give free turn, or else player could try directions
+         until he found invisible creature */
+      msg_print("You bash it, but nothing interesting happens.");
+  } else /* same message for wall as for secret door */
+  {
+    msg_print("You bash it, but nothing interesting happens.");
+  }
+
+  return movement;
+}
+static void py_bash(uy, ux) int *uy, *ux;
+{
+  int y, x, dir;
 
   y = uD.y;
   x = uD.x;
   if (get_dir(0, &dir)) {
     // if (py.flags.confused > 0) ...
     mmove(dir, &y, &x);
-    c_ptr = &caveD[y][x];
-    obj = &entity_objD[c_ptr->oidx];
-    valid_obj = (obj->id != 0);
-
-    if (c_ptr->midx) {
-      // TBD: py_bash() vs monster
-      py_attack(y, x);
-    } else if (valid_obj) {
-      if (obj->tval == TV_CLOSED_DOOR) {
-        msg_print("You smash into the door!");
-        tmp = statD.use_stat[A_STR] + uD.wt / 2;
-        /* Use (roughly) similar method as for monsters. */
-        if (randint(tmp * (20 + ABS(obj->p1))) < 10 * (tmp - ABS(obj->p1))) {
-          msg_print("The door crashes open!");
-          // invcopy(&t_list[c_ptr->tptr], OBJ_OPEN_DOOR);
-          obj->tval = TV_OPEN_DOOR;
-          obj->tchar = '\'';
-          obj->p1 = 1 - randint(2); /* 50% chance of breaking door */
-          c_ptr->fval = FLOOR_CORR;
-          // if (py.flags.confused == 0)
-          *uy = y;
-          *ux = x;
-          // else
-          //   lite_spot(y, x);
-        } else if (randint(150) > 18) {  // py.stats.use_stat[A_DEX]) {
-          msg_print("You are off-balance.");
-          // py.flags.paralysis = 1 + randint(2);
-        } else
-          msg_print("The door holds firm.");
-      } else
-        /* Can't give free turn, or else player could try directions
-           until he found invisible creature */
-        msg_print("You bash it, but nothing interesting happens.");
-    } else /* same message for wall as for secret door */
-      msg_print("You bash it, but nothing interesting happens.");
+    if (bash(y, x)) {
+      *uy = y;
+      *ux = x;
+    }
   }
 }
 static void
-open_object()
+open_object(y, x)
 {
-  int y, x, i, dir;
-  int no_object, valid_object;
+  int i;
   struct caveS* c_ptr;
   struct objS* obj;
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
+
+  if (obj->tval == TV_CLOSED_DOOR) {
+    // Monster may be invisible and will retaliate
+    if (c_ptr->midx) {
+      msg_print("Something is in your way!");
+    } else {
+      /* Known to be locked */
+      if ((obj->idflag & ID_REVEAL) && obj->p1 > 0) {
+        i = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+            (level_adj[uD.clidx][LA_DISARM] * uD.lev / 3);
+        // Could be the whiskey
+        // if (py.flags.confused > 0)
+        //   msg_print("You are too confused to pick the lock.");
+        // else
+        if ((i - obj->p1) > randint(100)) {
+          msg_print("You have picked the lock.");
+          uD.exp += 1;
+          py_experience();
+          obj->p1 = 0;
+        } else
+          msg_print("You failed to pick the lock.");
+      } else if (obj->p1 > 0) {
+        msg_print("The door is locked.");
+        obj->idflag |= ID_REVEAL;
+      } else if (obj->p1 < 0) {
+        msg_print("The door is stuck.");
+        obj->idflag |= ID_REVEAL;
+      }
+
+      if (obj->p1 == 0) {
+        msg_print("You open the door.");
+        obj->tval = TV_OPEN_DOOR;
+        obj->tchar = '\'';
+        c_ptr->fval = FLOOR_CORR;
+      }
+    }
+  } else {
+    msg_print("I do not see anything you can open there.");
+    free_turn_flag = TRUE;
+  }
+}
+static void
+py_open()
+{
+  int y, x, dir;
 
   y = uD.y;
   x = uD.x;
   if (get_dir(0, &dir)) {
     mmove(dir, &y, &x);
-    c_ptr = &caveD[y][x];
-    obj = &entity_objD[c_ptr->oidx];
-    no_object = (obj->id == 0);
-    valid_object = (obj->tval == TV_CLOSED_DOOR);
-
-    if (valid_object) {
-      // Monster may be invisible and will retaliate
-      if (c_ptr->midx) {
-        msg_print("Something is in your way!");
-      } else if (obj->tval == TV_CLOSED_DOOR) {
-        if (obj->p1 > 0) /* It's locked.  */
-        {
-          i = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
-              (level_adj[uD.clidx][LA_DISARM] * uD.lev / 3);
-          // Could be the whiskey
-          // if (py.flags.confused > 0)
-          //   msg_print("You are too confused to pick the lock.");
-          // else
-          if ((i - obj->p1) > randint(100)) {
-            msg_print("You have picked the lock.");
-            uD.exp += 1;
-            py_experience();
-            obj->p1 = 0;
-          } else
-            msg_print("You failed to pick the lock.");
-        } else if (obj->p1 < 0) /* It's stuck    */
-          msg_print("It appears to be stuck.");
-        if (obj->p1 == 0) {
-          // invcopy(&t_list[c_ptr->tptr], OBJ_OPEN_DOOR);
-          obj->tval = TV_OPEN_DOOR;
-          obj->tchar = '\'';
-          c_ptr->fval = FLOOR_CORR;
-          // lite_spot(y, x);
-          // command_count = 0;
-        }
-      }
-    }
-
-    if (no_object) {
-      msg_print("I do not see anything you can open there.");
-      free_turn_flag = TRUE;
-    }
+    open_object(y, x);
   }
 }
 static void
@@ -4397,7 +4414,7 @@ dungeon()
             MSG("You wearing %d items.", count);
           } break;
           case 'f':
-            bash(&y, &x);
+            py_bash(&y, &x);
             break;
           case 'i': {
             free_turn_flag = TRUE;
@@ -4409,7 +4426,7 @@ dungeon()
             py_make_known();
             break;
           case 'o':
-            open_object();
+            py_open();
             break;
           case 's':
             py_search(y, x, 25);
@@ -4500,37 +4517,44 @@ dungeon()
 
       if (uD.y != y || uD.x != x) {
         struct caveS* c_ptr = &caveD[y][x];
-        if (c_ptr->midx) {
-          if (find_flag) {
-            find_flag = FALSE;
-            free_turn_flag = TRUE;
-          } else {
-            py_attack(y, x);
-          }
-        } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
-          py_move_light(uD.y, uD.x, y, x);
-          if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
-            if (near_light(y, x)) light_room(y, x);
-          }
-          struct objS* obj = &entity_objD[c_ptr->oidx];
-          int oy = uD.y;
-          int ox = uD.x;
-          uD.y = y;
-          uD.x = x;
-          SYMMAP_PATCH(oy, ox);
-          SYMMAP_PATCH(y, x);
-          if (find_flag) find_event(y, x);
-          if (obj->tval) {
-            find_flag = FALSE;
-            if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
-              hit_trap(y, x);
-            } else {
-              py_pickup(y, x, FALSE);
-            }
-          }
-        } else {
+
+        if (find_flag && (c_ptr->midx || c_ptr->fval > MAX_OPEN_SPACE)) {
           find_flag = FALSE;
           free_turn_flag = TRUE;
+        } else {
+          struct objS* obj = &entity_objD[c_ptr->oidx];
+          // doors known to be jammed are bashed prior to movement
+          if (obj->tval == TV_CLOSED_DOOR) {
+            if (obj->p1 < 0 && (obj->idflag & ID_REVEAL)) {
+              bash(y, x);
+            }
+          }
+
+          if (c_ptr->midx) {
+            py_attack(y, x);
+          } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
+            py_move_light(uD.y, uD.x, y, x);
+            if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
+              if (near_light(y, x)) light_room(y, x);
+            }
+            int oy = uD.y;
+            int ox = uD.x;
+            uD.y = y;
+            uD.x = x;
+            SYMMAP_PATCH(oy, ox);
+            SYMMAP_PATCH(y, x);
+            if (find_flag) find_event(y, x);
+            if (obj->tval) {
+              find_flag = FALSE;
+              if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
+                hit_trap(y, x);
+              } else {
+                py_pickup(y, x, FALSE);
+              }
+            }
+          } else if (obj->tval == TV_CLOSED_DOOR) {
+            open_object(y, x);
+          }
         }
       }
     } while (free_turn_flag && !new_level_flag);
