@@ -7,6 +7,7 @@
 #define MAX_ROW (MAX_HEIGHT / SYMMAP_HEIGHT * 2)
 #define STATUS_HEIGHT 22
 #define STATUS_WIDTH 13
+#define SCREEN_HEIGHT 23
 
 #define MODE_DFLT 0
 #define MODE_MAP 1

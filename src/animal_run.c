@@ -1044,9 +1044,9 @@ struct objS* obj;
     case TV_SCROLL1:
     case TV_SCROLL2:
     case TV_STAFF:
-      return true;
+      return TRUE;
   }
-  return false;
+  return FALSE;
 }
 int
 set_large(item)         /* Items too large to fit in chests   -DJG- */
@@ -2913,19 +2913,19 @@ py_init()
   tr_obj_copy(30, dagger);
   dagger->idflag |= ID_REVEAL;
   invenD[INVEN_WIELD] = dagger->id;
-  for (int it = 0; it < INVEN_EQUIP - 3; ++it) {
+  for (int it = 0; it < 1; ++it) {
     struct objS* food = obj_use();
     tr_obj_copy(345, food);
     invenD[it] = food->id;
   }
-  int actuate_test[] = {238, 185, 314};
-  for (int it = 0; it < AL(actuate_test); ++it) {
-    int iidx = INVEN_EQUIP - 3 + it;
-    if (iidx >= INVEN_EQUIP) break;
-    struct objS* obj = obj_use();
-    tr_obj_copy(actuate_test[it], obj);
-    invenD[iidx] = obj->id;
-  }
+  // int actuate_test[] = {238, 185, 314};
+  // for (int it = 0; it < AL(actuate_test); ++it) {
+  //   int iidx = INVEN_EQUIP - 3 + it;
+  //   if (iidx >= INVEN_EQUIP) break;
+  //   struct objS* obj = obj_use();
+  //   tr_obj_copy(actuate_test[it], obj);
+  //   invenD[iidx] = obj->id;
+  // }
 
   calc_bonuses();
 
@@ -3026,7 +3026,7 @@ int factor;
   // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
 }
 static void
-py_map()
+py_where()
 {
   int y, x, dir;
   while (get_dir("Map: Look which direction?", &dir)) {
@@ -3225,6 +3225,73 @@ int obj_id;
 char stat_nameD[MAX_A][5] = {
     "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
 };
+enum { RATIO = (MAX_WIDTH / SYMMAP_WIDTH) };
+#define TL 0 /* top left */
+#define TR 1
+#define BL 2
+#define BR 3
+#define HE 4 /* horizontal edge */
+#define VE 5
+#define CH(x) (screen_border[0][x])
+void
+py_map()
+{
+  register int i, j;
+  static uint8_t screen_border[][6] = {
+      {'+', '+', '+', '+', '-', '|'}, /* normal chars */
+  };
+  uint8_t map[MAX_WIDTH / RATIO + 1];
+  uint8_t tmp;
+  int priority[256];
+  int row, orow, col, myrow, mycol = 0;
+  char* iter;
+
+  for (i = 0; i < 256; i++) priority[i] = 0;
+  priority['<'] = 5;
+  priority['>'] = 5;
+  priority['@'] = 10;
+  priority[(unsigned char)240] = -5;
+  priority['.'] = -10;
+  priority['\''] = -3;
+  priority[' '] = -15;
+
+  iter = screenD[0];
+  *iter++ = CH(TL);
+  for (int it = 0; it < SYMMAP_WIDTH; ++it) *iter++ = CH(HE);
+  *iter++ = CH(TR);
+  screen_usedD[0] = (SYMMAP_WIDTH + 2);
+
+  orow = -1;
+  map[MAX_WIDTH / RATIO] = '\0';
+  for (i = 0; i < MAX_HEIGHT; i++) {
+    row = i / RATIO;
+    if (row != orow) {
+      if (orow >= 0) {
+        screen_usedD[orow + 1] =
+            snprintf(AP(screenD[orow + 1]), "%c%s%c", CH(VE), map, CH(VE));
+      }
+      for (j = 0; j < MAX_WIDTH / RATIO; j++) map[j] = ' ';
+      orow = row;
+    }
+    for (j = 0; j < MAX_WIDTH; j++) {
+      col = j / RATIO;
+      tmp = get_sym(i, j);
+      if (priority[map[col]] < priority[tmp]) map[col] = tmp;
+    }
+  }
+  if (orow >= 0) {
+    screen_usedD[orow + 1] =
+        snprintf(AP(screenD[orow + 1]), "%c%s%c", CH(VE), map, CH(VE));
+  }
+  iter = screenD[orow + 2];
+  *iter++ = CH(BL);
+  for (int it = 0; it < SYMMAP_WIDTH; ++it) *iter++ = CH(HE);
+  *iter++ = CH(BR);
+  screen_usedD[orow + 2] = (SYMMAP_WIDTH + 2);
+
+  free_turn_flag = TRUE;
+}
+
 void
 py_screen()
 {
@@ -4530,6 +4597,9 @@ dungeon()
           case 'E':
             choice_eat();
             break;
+          case 'M':
+            py_map();
+            break;
           case 'R':
             uD.rest = -9999;
             break;
@@ -4537,7 +4607,7 @@ dungeon()
             py_takeoff();
             break;
           case 'W':
-            py_map();
+            py_where();
             break;
           case CTRL('h'):
             if (uD.mhp < 100) uD.mhp = 100;
