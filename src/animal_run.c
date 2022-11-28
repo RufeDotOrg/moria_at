@@ -2894,9 +2894,11 @@ py_init()
   tr_obj_copy(30, dagger);
   dagger->idflag |= ID_REVEAL;
   invenD[INVEN_WIELD] = dagger->id;
-  struct objS* food = obj_use();
-  tr_obj_copy(345, food);
-  invenD[0] = food->id;
+  for (int it = 0; it < 1; ++it) {
+    struct objS* food = obj_use();
+    tr_obj_copy(345, food);
+    invenD[it] = food->id;
+  }
 
   calc_bonuses();
 
@@ -4345,7 +4347,7 @@ dungeon()
       AC(screen_usedD);
       AC(overlayD);
       AC(overlay_usedD);
-      log_usedD = 0;
+      if (!free_turn_flag) log_usedD = 0;
       free_turn_flag = FALSE;
 
       y = uD.y;
