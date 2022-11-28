@@ -77,8 +77,10 @@ char* command;
 {
   char c;
   log_usedD = snprintf(AP(logD), "%s", prompt);
-  im_print();
-  c = inkey();
+  do {
+    im_print();
+    c = inkey();
+  } while (c == ' ');
   *command = c;
   log_usedD = 0;
   return (*command != ESCAPE);
@@ -1032,6 +1034,21 @@ struct objS* obj;
   return FALSE;
 }
 int
+oset_actuate(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_FOOD:
+    case TV_POTION1:
+    case TV_POTION2:
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+    case TV_STAFF:
+      return true;
+  }
+  return false;
+}
+int
 set_large(item)         /* Items too large to fit in chests   -DJG- */
 struct treasureS* item; /* Use treasure_type since item not yet created */
 {
@@ -1271,8 +1288,8 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   obj->fy = y;
   obj->fx = x;
 
-  // TBD: the following is important for projectile count and special assignment
-  // magic_treasure(cur_pos, dun_level);
+  // TBD: the following is important for projectile count and special
+  // assignment magic_treasure(cur_pos, dun_level);
 
   if (uD.y == y && uD.x == x)
     msg_print("You feel something roll beneath your feet.");
@@ -1941,7 +1958,8 @@ void update_mon(midx) int midx;
       // }
     }
     /* Infra vision.   */
-    // else if ((py.flags.see_infra > 0) && (m_ptr->cdis <= py.flags.see_infra)
+    // else if ((py.flags.see_infra > 0) && (m_ptr->cdis <=
+    // py.flags.see_infra)
     // &&
     //          (CD_INFRA & cr_ptr->cdefense)) {
     //   flag = TRUE;
@@ -2434,7 +2452,8 @@ void obj_detail(obj) struct objS* obj;
   //     sprintf(tmp_str, " (%d charges)", obj->p1);
   //   else if (obj->p1 != 0) {
   //     if (p1_use == PLUSSES)
-  //       sprintf(tmp_str, " (%c%d)", (obj->p1 < 0) ? '-' : '+', abs(obj->p1));
+  //       sprintf(tmp_str, " (%c%d)", (obj->p1 < 0) ? '-' : '+',
+  //       abs(obj->p1));
   //     else if (p1_use == FLAGS) {
   //       if (obj->flags & TR_STR)
   //         sprintf(tmp_str, " (%c%d to STR)", (obj->p1 < 0) ? '-' : '+',
@@ -2894,10 +2913,18 @@ py_init()
   tr_obj_copy(30, dagger);
   dagger->idflag |= ID_REVEAL;
   invenD[INVEN_WIELD] = dagger->id;
-  for (int it = 0; it < 1; ++it) {
+  for (int it = 0; it < INVEN_EQUIP - 3; ++it) {
     struct objS* food = obj_use();
     tr_obj_copy(345, food);
     invenD[it] = food->id;
+  }
+  int actuate_test[] = {238, 185, 314};
+  for (int it = 0; it < AL(actuate_test); ++it) {
+    int iidx = INVEN_EQUIP - 3 + it;
+    if (iidx >= INVEN_EQUIP) break;
+    struct objS* obj = obj_use();
+    tr_obj_copy(actuate_test[it], obj);
+    invenD[iidx] = obj->id;
   }
 
   calc_bonuses();
@@ -3014,6 +3041,28 @@ py_map()
   free_turn_flag = TRUE;
 }
 static int
+py_inven_filter(begin, end, valid)
+int begin, end;
+int (*valid)();
+{
+  int line = 0;
+
+  for (int it = begin; it < end; ++it) {
+    int obj_id = invenD[it];
+    int len = 1;
+    overlayD[line][0] = ' ';
+    struct objS* obj = obj_get(obj_id);
+    if (valid(obj)) {
+      obj_desc(obj, TRUE);
+      len = snprintf(AP(overlayD[line]), "%c) %s", 'a' + it - begin, descD);
+    }
+
+    overlay_usedD[line] = len;
+    line += 1;
+  }
+  return line;
+}
+static int
 py_inven(begin, end)
 int begin, end;
 {
@@ -3021,18 +3070,34 @@ int begin, end;
 
   for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
+    int len = 1;
+    overlayD[line][0] = ' ';
+
     if (obj_id) {
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, TRUE);
-      overlay_usedD[line] =
-          snprintf(AP(overlayD[line]), "%c) %s", 'a' + it - begin, descD);
-      line += 1;
+      len = snprintf(AP(overlayD[line]), "%c) %s", 'a' + it - begin, descD);
     }
+
+    overlay_usedD[line] = len;
+    line += 1;
   }
   return line;
 }
 void
-py_eat()
+inven_eat(iidx)
+{
+  struct objS* obj = obj_get(invenD[iidx]);
+  if (obj->tval == TV_FOOD) {
+    uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
+    inven_destroy(iidx);
+    msg_print("nom nom nom!!");
+  } else {
+    msg_print("You can't eat that!");
+  }
+}
+void
+choice_eat()
 {
   char c;
   struct objS* obj;
@@ -3043,12 +3108,32 @@ py_eat()
     if (in_subcommand("Eat what?", &c)) {
       int iidx = c - 'a';
       if (iidx < INVEN_EQUIP) {
+        inven_eat(iidx);
+      }
+    }
+  }
+}
+void
+choice_actuate()
+{
+  char c;
+  struct objS* obj;
+
+  int count = py_inven_filter(0, INVEN_EQUIP, oset_actuate);
+  platform_draw();
+  if (count) {
+    if (in_subcommand("Use what?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
         struct objS* obj = obj_get(invenD[iidx]);
         if (obj->tval == TV_FOOD) {
-          uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
-          inven_destroy(iidx);
-        } else {
-          msg_print("You can't eat that!");
+          inven_eat(iidx);
+        } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+          MSG("would quaff %d", iidx);
+        } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+          MSG("would read %d", iidx);
+        } else if (obj->tval == TV_STAFF) {
+          MSG("would Zap_staff %d", iidx);
         }
       }
     }
@@ -4357,6 +4442,7 @@ dungeon()
       } else {
         c = inkey();
         if (c == -1) break;
+        prev_cmdD = c;
 
         // AWN: Period attempts auto-detection of a situational command
         if (c == '.') {
@@ -4431,6 +4517,10 @@ dungeon()
           case '>':
             go_down();
             break;
+          case 'A':
+            // Generalized inventory interaction
+            choice_actuate();
+            break;
           case 'C':
             py_screen();
             break;
@@ -4438,7 +4528,7 @@ dungeon()
             disarm_trap(&y, &x);
             break;
           case 'E':
-            py_eat();
+            choice_eat();
             break;
           case 'R':
             uD.rest = -9999;

@@ -1,4 +1,5 @@
 
+static char prev_cmdD;
 static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
 static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 static char screenD[19][80];
