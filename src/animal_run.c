@@ -4345,7 +4345,6 @@ dungeon()
       AC(screen_usedD);
       AC(overlayD);
       AC(overlay_usedD);
-      debug_usedD = 0;
       log_usedD = 0;
       free_turn_flag = FALSE;
 
