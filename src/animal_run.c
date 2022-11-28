@@ -4327,7 +4327,7 @@ void py_check_view(y, x) int y, x;
 void
 dungeon()
 {
-  int c, y, x;
+  int c, dir, y, x;
   new_level_flag = FALSE;
 
   while (1) {
@@ -4371,6 +4371,17 @@ dungeon()
             c = ',';
         }
 
+        dir = map_roguedir(c | 0x20) - '0';
+        if (dir <= 9) {
+          // Primary movement (lowercase)
+          if (c & 0x20) {
+            mmove(dir, &y, &x);
+          } else  // Secondary movement (uppercase)
+          {
+            find_init(dir, &y, &x);
+          }
+        }
+
         switch (c) {
           case ' ':
             free_turn_flag = TRUE;
@@ -4381,26 +4392,6 @@ dungeon()
           case '1' ... '9':
             MSG("Numlock is required for arrowkey movement");
             free_turn_flag = TRUE;
-            break;
-          case 'k':
-          case 'j':
-          case 'l':
-          case 'h':
-          case 'n':
-          case 'b':
-          case 'y':
-          case 'u':
-            mmove(map_roguedir(c) - '0', &y, &x);
-            break;
-          case 'K':
-          case 'J':
-          case 'L':
-          case 'H':
-          case 'N':
-          case 'B':
-          case 'Y':
-          case 'U':
-            find_init(map_roguedir(c | 0x20) - '0', &y, &x);
             break;
           case 'c':
             close_object();
