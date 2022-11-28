@@ -4362,14 +4362,15 @@ dungeon()
         if (c == '.') {
           struct caveS* c_ptr = &caveD[y][x];
           int tval = entity_objD[c_ptr->oidx].tval;
-          if (tval == 0)
-            c = 's';
-          else if (tval == TV_UP_STAIR)
-            c = '<';
-          else if (tval == TV_DOWN_STAIR)
-            c = '>';
-          else if (tval <= TV_MAX_PICK_UP)
-            c = ',';
+          c = 's';
+          if (tval) {
+            if (tval == TV_UP_STAIR)
+              c = '<';
+            else if (tval == TV_DOWN_STAIR)
+              c = '>';
+            else if (tval <= TV_MAX_PICK_UP)
+              c = ',';
+          }
         }
 
         switch (c) {
