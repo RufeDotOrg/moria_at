@@ -4545,6 +4545,8 @@ dungeon()
             }
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
+          } else {
+            free_turn_flag = TRUE;
           }
         }
       }
