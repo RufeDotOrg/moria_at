@@ -3242,7 +3242,7 @@ int pickup;
     free_turn_flag = TRUE;
   }
   /* There's GOLD in them thar hills!      */
-  if (obj->tval == TV_GOLD) {
+  else if (obj->tval == TV_GOLD) {
     uD.gold += obj->cost;
     MSG("You have found %d gold pieces worth of %s.", obj->cost,
         gold_nameD[obj->subval]);
