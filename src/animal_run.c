@@ -3016,16 +3016,6 @@ inven_ident(iidx)
   }
 }
 static int
-choice_ident()
-{
-  char c;
-  if (in_subcommand("Item you wish identified?", &c)) {
-    int iidx = c - 'a';
-    if (iidx < MAX_INVEN) return iidx;
-  }
-  return -1;
-}
-static int
 inven_enchant_hit(iidx)
 {
   struct objS* i_ptr = obj_get(invenD[iidx]);
@@ -3519,6 +3509,21 @@ int begin, end;
   }
   return count;
 }
+static int
+choice(char* prompt)
+{
+  char c;
+  int count = py_inven(0, INVEN_EQUIP);
+  if (count) {
+    platform_draw();
+    if (in_subcommand(prompt, &c)) {
+      int iidx = c - 'a';
+      if (iidx < MAX_INVEN) return iidx;
+    }
+  } else
+    msg_print("You are not carrying anything!");
+  return -1;
+}
 void
 inven_eat(iidx)
 {
@@ -3529,23 +3534,6 @@ inven_eat(iidx)
     msg_print("nom nom nom!!");
   } else {
     msg_print("You can't eat that!");
-  }
-}
-void
-choice_eat()
-{
-  char c;
-  struct objS* obj;
-
-  int count = py_inven(0, INVEN_EQUIP);
-  platform_draw();
-  if (count) {
-    if (in_subcommand("Eat what?", &c)) {
-      int iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        inven_eat(iidx);
-      }
-    }
   }
 }
 int
@@ -3818,23 +3806,6 @@ inven_quaff(iidx)
 
   return FALSE;
 }
-void
-choice_quaff()
-{
-  char c;
-  struct objS* obj;
-
-  int count = py_inven(0, INVEN_EQUIP);
-  platform_draw();
-  if (count) {
-    if (in_subcommand("Quaff what?", &c)) {
-      int iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        inven_quaff(iidx);
-      }
-    }
-  }
-}
 int
 inven_read(iidx)
 {
@@ -3874,7 +3845,7 @@ inven_read(iidx)
         case 4:
           msg_print("This is an identify scroll.");
           ident = TRUE;
-          l = choice_ident();
+          l = choice("Which item do you wish identified?");
           if (l >= 0) inven_ident(l);
           used_up = TRUE;
           break;
@@ -4172,23 +4143,6 @@ inven_read(iidx)
   }
 
   return FALSE;
-}
-void
-choice_read()
-{
-  char c;
-  struct objS* obj;
-
-  int count = py_inven(0, INVEN_EQUIP);
-  platform_draw();
-  if (count) {
-    if (in_subcommand("Read what?", &c)) {
-      int iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        inven_read(iidx);
-      }
-    }
-  }
 }
 void
 choice_actuate()
@@ -5537,7 +5491,7 @@ void py_check_view(y, x) int y, x;
 void
 dungeon()
 {
-  int c, y, x;
+  int c, y, x, iidx;
   uint32_t dir;
   new_level_flag = FALSE;
 
@@ -5629,10 +5583,12 @@ dungeon()
             py_make_known();
             break;
           case 'q':
-            choice_quaff();
+            iidx = choice("Quaff what?");
+            if (iidx >= 0) inven_quaff(iidx);
             break;
           case 'r':
-            choice_read();
+            iidx = choice("Read what?");
+            if (iidx >= 0) inven_read(iidx);
             break;
           case 'o':
             py_open();
@@ -5660,7 +5616,8 @@ dungeon()
             disarm_trap(&y, &x);
             break;
           case 'E':
-            choice_eat();
+            iidx = choice("Eat what?");
+            if (iidx >= 0) inven_eat(iidx);
             break;
           case 'M':
             py_map();
