@@ -3905,10 +3905,10 @@ int pickup;
         gold_nameD[obj->subval]);
     delete_object(y, x);
   } else if (obj->tval <= TV_MAX_PICK_UP) {
-    // TBD: Merge items of the same type?
 
     if (pickup) {
-      if (inven_merge(obj->id) >= 0 || inven_carry(obj->id) >= 0) {
+      if ((locn = inven_merge(obj->id)) >= 0 ||
+          (locn = inven_carry(obj->id)) >= 0) {
         MSG("You pickup %s (%c)", descD, locn + 'a');
         obj->fy = 0;
         obj->fx = 0;
