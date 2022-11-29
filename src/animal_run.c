@@ -3484,6 +3484,25 @@ py_lose_experience(amount)
     // prt_title();
   }
 }
+void py_teleport(dis, uy, ux) int dis;
+int *uy, *ux;
+{
+  int ty, tx, y, x;
+
+  y = uD.y;
+  x = uD.x;
+  do {
+    ty = randint(MAX_HEIGHT - 2);
+    tx = randint(MAX_WIDTH - 2);
+    while (distance(ty, tx, y, x) > dis) {
+      ty += ((y - ty) / 2);
+      tx += ((x - tx) / 2);
+    }
+  } while ((caveD[ty][tx].fval >= MIN_CLOSED_SPACE) ||
+           (caveD[ty][tx].midx != 0));
+  *uy = ty;
+  *ux = tx;
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -3807,7 +3826,8 @@ inven_quaff(iidx)
   return FALSE;
 }
 int
-inven_read(iidx)
+inven_read(iidx, uy, ux)
+int *uy, *ux;
 {
   uint32_t i;
   int j, k, y, x;
@@ -3865,14 +3885,14 @@ inven_read(iidx)
         //     ident |= summon_monster(&y, &x, FALSE);
         //   }
         //   break;
-        // case 8:
-        //  teleport(10);
-        //  ident = TRUE;
-        //  break;
-        // case 9:
-        //  teleport(100);
-        //  ident = TRUE;
-        //  break;
+        case 8:
+          py_teleport(10, uy, ux);
+          ident = TRUE;
+          break;
+        case 9:
+          py_teleport(100, uy, ux);
+          ident = TRUE;
+          break;
         case 10:
           dun_level += (-3) + 2 * randint(2);
           if (dun_level < 1) dun_level = 1;
@@ -5588,7 +5608,7 @@ dungeon()
             break;
           case 'r':
             iidx = choice("Read what?");
-            if (iidx >= 0) inven_read(iidx);
+            if (iidx >= 0) inven_read(iidx, &y, &x);
             break;
           case 'o':
             py_open();
