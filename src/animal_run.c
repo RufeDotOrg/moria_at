@@ -1355,6 +1355,63 @@ int slp;
   caveD[y][x].midx = mon_index(mon);
   return TRUE;
 }
+int
+summon_monster(y, x, slp)
+{
+  int i, j, k;
+  int l, summon;
+  struct caveS* cave_ptr;
+
+  i = 0;
+  summon = FALSE;
+  l = get_mon_num(dun_level + MON_SUMMON_ADJ);
+  for (int it = 0; it < 9; ++it) {
+    j = y - 2 + randint(3);
+    k = x - 2 + randint(3);
+    if (in_bounds(j, k)) {
+      cave_ptr = &caveD[j][k];
+      if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->midx == 0)) {
+        summon = (place_monster(j, k, l, slp));
+        break;
+      }
+    }
+  }
+  return (summon);
+}
+int
+summon_undead(y, x)
+{
+  int j, k, cidx;
+  int l, m, summon;
+  struct caveS* cave_ptr;
+
+  summon = FALSE;
+  l = m_level[MAX_MON_LEVEL];
+  while (l) {
+    m = randint(l) - 1;
+    for (int it = 0; it < 20; ++it) {
+      cidx = m + it;
+
+      if (cidx < l && creatureD[cidx].cdefense & CD_UNDEAD) {
+        l = 0;
+        break;
+      }
+    }
+  }
+
+  for (int it = 0; it < 9; ++it) {
+    j = y - 2 + randint(3);
+    k = x - 2 + randint(3);
+    if (in_bounds(j, k)) {
+      cave_ptr = &caveD[j][k];
+      if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->midx == 0)) {
+        summon = place_monster(j, k, cidx, FALSE);
+        break;
+      }
+    }
+  }
+  return (summon);
+}
 void alloc_mon(num, dis, slp) int num, dis;
 int slp;
 {
@@ -3228,14 +3285,14 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  // int actuate_test[] = {238, 185, 314};
-  // for (int it = 0; it < AL(actuate_test); ++it) {
-  //   int iidx = INVEN_EQUIP - 3 + it;
-  //   if (iidx >= INVEN_EQUIP) break;
-  //   struct objS* obj = obj_use();
-  //   tr_obj_copy(actuate_test[it], obj);
-  //   invenD[iidx] = obj->id;
-  // }
+   int actuate_test[] = {217, 185};//{238, 185, 314};
+   for (int it = 0; it < AL(actuate_test); ++it) {
+     int iidx = INVEN_EQUIP - 3 + it;
+     if (iidx >= INVEN_EQUIP) break;
+     struct objS* obj = obj_use();
+     tr_obj_copy(actuate_test[it], obj);
+     invenD[iidx] = obj->id;
+   }
 
   calc_bonuses();
 
@@ -3898,13 +3955,11 @@ int *uy, *ux;
         case 6:
           ident = light_area(uD.y, uD.x);
           break;
-        // case 7:
-        //   for (k = 0; k < randint(3); k++) {
-        //     y = char_row;
-        //     x = char_col;
-        //     ident |= summon_monster(&y, &x, FALSE);
-        //   }
-        //   break;
+        case 7:
+          for (k = 0; k < randint(3); k++) {
+            ident |= summon_monster(uD.y, uD.x, FALSE);
+          }
+          break;
         case 8:
           py_teleport(10, uy, ux);
           ident = TRUE;
@@ -4068,14 +4123,11 @@ int *uy, *ux;
         //    ident = TRUE;
         //  }
         //  break;
-        // case 37:
-        //  ident = FALSE;
-        //  for (k = 0; k < randint(3); k++) {
-        //    y = char_row;
-        //    x = char_col;
-        //    ident |= summon_undead(&y, &x);
-        //  }
-        //  break;
+        case 37:
+          for (k = 0; k < randint(3); k++) {
+            ident |= summon_undead(uD.y, uD.x);
+          }
+          break;
         // case 38:
         //  ident = TRUE;
         //  bless(randint(12) + 6);
