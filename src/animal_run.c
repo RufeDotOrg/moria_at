@@ -4940,7 +4940,8 @@ void py_check_view(y, x) int y, x;
 void
 dungeon()
 {
-  int c, dir, y, x;
+  int c, y, x;
+  uint32_t dir;
   new_level_flag = FALSE;
 
   while (1) {
