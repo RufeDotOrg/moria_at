@@ -76,7 +76,7 @@ char* prompt;
 char* command;
 {
   char c;
-  log_usedD = snprintf(AP(logD), "%s", prompt);
+  log_usedD = snprintf(logD, AL(logD), "%s", prompt);
   do {
     im_print();
     c = inkey();
@@ -2374,22 +2374,22 @@ BOOL prefix;
     if (obj_name[0] == '&') {
       /* use &obj_name[1], so that & does not appear in output */
       if (obj->number > 1)
-        snprintf(AP(descD), "%d%s", (int)obj->number, &obj_name[1]);
+        snprintf(descD, AL(descD), "%d%s", (int)obj->number, &obj_name[1]);
       else if (obj->number < 1)
-        snprintf(AP(descD), "%s%s", "no more", &obj_name[1]);
+        snprintf(descD, AL(descD), "%s%s", "no more", &obj_name[1]);
       else if (is_a_vowel(obj_name[2]))
-        snprintf(AP(descD), "an%s", &obj_name[1]);
+        snprintf(descD, AL(descD), "an%s", &obj_name[1]);
       else
-        snprintf(AP(descD), "a%s", &obj_name[1]);
+        snprintf(descD, AL(descD), "a%s", &obj_name[1]);
     }
     /* handle 'no more' case specially */
     else if (obj->number < 1) {
       /* check for "some" at start */
       if (!strncmp("some", obj_name, 4))
-        snprintf(AP(descD), "no more %s", &obj_name[5]);
+        snprintf(descD, AL(descD), "no more %s", &obj_name[5]);
       /* here if no article */
       else
-        snprintf(AP(descD), "no more %s", obj_name);
+        snprintf(descD, AL(descD), "no more %s", obj_name);
     } else
       strcpy(descD, obj_name);
   } else {
@@ -2412,26 +2412,26 @@ void obj_detail(obj) struct objS* obj;
   }
   if (obj_reveal(obj)) {
     if (oset_hitdam(obj))
-      snprintf(AP(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
+      snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
     else if (obj->tohit != 0)
-      snprintf(AP(tmp_str), " (%+d)", obj->tohit);
+      snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->tohit);
     else if (obj->todam != 0)
-      snprintf(AP(tmp_str), " (%+d)", obj->todam);
+      snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->todam);
     else
       tmp_str[0] = '\0';
     strcat(descD, tmp_str);
   }
   /* Crowns have a zero base AC, so make a special test for them. */
   if (obj->ac != 0 || (obj->tval == TV_HELM)) {
-    snprintf(AP(tmp_str), " [%d", obj->ac);
+    snprintf(tmp_str, AL(tmp_str), " [%d", obj->ac);
     strcat(descD, tmp_str);
     if (obj_reveal(obj)) {
-      snprintf(AP(tmp_str), ",%+d", obj->toac);
+      snprintf(tmp_str, AL(tmp_str), ",%+d", obj->toac);
       strcat(descD, tmp_str);
     }
     strcat(descD, "]");
   } else if ((obj->toac != 0) && obj_reveal(obj)) {
-    snprintf(AP(tmp_str), " [%+d]", obj->toac);
+    snprintf(tmp_str, AL(tmp_str), " [%+d]", obj->toac);
     strcat(descD, tmp_str);
   }
 
@@ -2489,7 +2489,7 @@ BOOL prefix;
     case TV_SLING_AMMO:
     case TV_BOLT:
     case TV_ARROW:
-      snprintf(AP(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
+      snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_LIGHT:
       break;
@@ -2504,15 +2504,15 @@ BOOL prefix;
         tmp = 4;
       else
         tmp = -1;
-      snprintf(AP(damstr), " (x%d)", tmp);
+      snprintf(damstr, AL(damstr), " (x%d)", tmp);
       break;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
-      snprintf(AP(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
+      snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_DIGGING:
-      snprintf(AP(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
+      snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_BOOTS:
     case TV_GLOVES:
@@ -2524,7 +2524,7 @@ BOOL prefix;
       break;
     case TV_AMULET:
       if (modify) {
-        snprintf(AP(descD), "& %s Amulet", amulets[indexx]);
+        snprintf(descD, AL(descD), "& %s Amulet", amulets[indexx]);
         basenm = 0;
       } else {
         basenm = "& Amulet";
@@ -2534,7 +2534,7 @@ BOOL prefix;
     case TV_RING:
       if (modify) {
         basenm = 0;
-        snprintf(AP(descD), "& %s Ring", rocks[indexx]);
+        snprintf(descD, AL(descD), "& %s Ring", rocks[indexx]);
       } else {
         basenm = "& Ring";
         append_name = TRUE;
@@ -2543,7 +2543,7 @@ BOOL prefix;
     case TV_STAFF:
       if (modify) {
         basenm = 0;
-        snprintf(AP(descD), "& %s Staff", woods[indexx]);
+        snprintf(descD, AL(descD), "& %s Staff", woods[indexx]);
       } else {
         basenm = "& Staff";
         append_name = TRUE;
@@ -2552,7 +2552,7 @@ BOOL prefix;
     case TV_WAND:
       if (modify) {
         basenm = 0;
-        snprintf(AP(descD), "& %s Wand", metals[indexx]);
+        snprintf(descD, AL(descD), "& %s Wand", metals[indexx]);
       } else {
         basenm = "& Wand";
         append_name = TRUE;
@@ -2562,7 +2562,7 @@ BOOL prefix;
     case TV_SCROLL2:
       if (modify) {
         basenm = 0;
-        snprintf(AP(descD), "& Scroll~ titled \"%s\"", titles[indexx]);
+        snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"", titles[indexx]);
       } else {
         basenm = "& Scroll~";
         append_name = TRUE;
@@ -2572,7 +2572,7 @@ BOOL prefix;
     case TV_POTION2:
       if (modify) {
         basenm = 0;
-        snprintf(AP(descD), "& %s Potion~", colors[indexx]);
+        snprintf(descD, AL(descD), "& %s Potion~", colors[indexx]);
       } else {
         basenm = "& Potion~";
         append_name = TRUE;
@@ -2583,9 +2583,9 @@ BOOL prefix;
     case TV_FOOD:
       if (modify) {
         if (indexx <= 15)
-          snprintf(AP(descD), "& %s Mushroom~", mushrooms[indexx]);
+          snprintf(descD, AL(descD), "& %s Mushroom~", mushrooms[indexx]);
         else if (indexx <= 20)
-          snprintf(AP(descD), "& Hairy %s Mold~", mushrooms[indexx]);
+          snprintf(descD, AL(descD), "& Hairy %s Mold~", mushrooms[indexx]);
         if (indexx <= 20) basenm = 0;
       } else {
         append_name = TRUE;
@@ -2599,11 +2599,11 @@ BOOL prefix;
       }
       break;
     case TV_MAGIC_BOOK:
-      snprintf(AP(descD), "& Book~ of Magic Spells %s", basenm);
+      snprintf(descD, AL(descD), "& Book~ of Magic Spells %s", basenm);
       basenm = 0;
       break;
     case TV_PRAYER_BOOK:
-      snprintf(AP(descD), "& Holy Book~ of Prayers %s", basenm);
+      snprintf(descD, AL(descD), "& Holy Book~ of Prayers %s", basenm);
       basenm = 0;
       return;
     case TV_OPEN_DOOR:
@@ -2641,14 +2641,14 @@ static void mon_desc(midx) int midx;
   // if (!mon->ml)
   //  strcpy(cdesc, "It ");
   // else
-  snprintf(AP(descD), "The %s", cre->name);
+  snprintf(descD, AL(descD), "The %s", cre->name);
 
   // if (CM_WIN & cre->cmove)
-  //  snprintf(AP(death_descD), "The %s", cre->name);
+  //  snprintf(death_descD, AL(death_descD), "The %s", cre->name);
   if (is_a_vowel(cre->name[0]))
-    snprintf(AP(death_descD), "An %s", cre->name);
+    snprintf(death_descD, AL(death_descD), "An %s", cre->name);
   else
-    snprintf(AP(death_descD), "A %s", cre->name);
+    snprintf(death_descD, AL(death_descD), "A %s", cre->name);
 }
 void calc_hitpoints(level) int level;
 {
@@ -2802,8 +2802,8 @@ py_class_select()
   int line, it;
   line = 0;
   for (int it = 0; it < AL(classD); ++it) {
-    overlay_usedD[line] =
-        snprintf(AP(overlayD[line]), "%c) %s", 'a' + it, classD[it].title);
+    overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]), "%c) %s",
+                                   'a' + it, classD[it].title);
     line += 1;
   }
 
@@ -3054,7 +3054,8 @@ int (*valid)();
     struct objS* obj = obj_get(obj_id);
     if (valid(obj)) {
       obj_desc(obj, TRUE);
-      len = snprintf(AP(overlayD[line]), "%c) %s", 'a' + it - begin, descD);
+      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %s",
+                     'a' + it - begin, descD);
     }
 
     overlay_usedD[line] = len;
@@ -3076,7 +3077,8 @@ int begin, end;
     if (obj_id) {
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, TRUE);
-      len = snprintf(AP(overlayD[line]), "%c) %s", 'a' + it - begin, descD);
+      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %s",
+                     'a' + it - begin, descD);
     }
 
     overlay_usedD[line] = len;
@@ -3268,7 +3270,8 @@ py_map()
     if (row != orow) {
       if (orow >= 0) {
         screen_usedD[orow + 1] =
-            snprintf(AP(screenD[orow + 1]), "%c%s%c", CH(VE), map, CH(VE));
+            snprintf(screenD[orow + 1], AL(screenD[orow + 1]), "%c%s%c", CH(VE),
+                     map, CH(VE));
       }
       for (j = 0; j < MAX_WIDTH / RATIO; j++) map[j] = ' ';
       orow = row;
@@ -3280,8 +3283,8 @@ py_map()
     }
   }
   if (orow >= 0) {
-    screen_usedD[orow + 1] =
-        snprintf(AP(screenD[orow + 1]), "%c%s%c", CH(VE), map, CH(VE));
+    screen_usedD[orow + 1] = snprintf(screenD[orow + 1], AL(screenD[orow + 1]),
+                                      "%c%s%c", CH(VE), map, CH(VE));
   }
   iter = screenD[orow + 2];
   *iter++ = CH(BL);
@@ -3304,7 +3307,7 @@ py_screen()
                                 FMT, ##__VA_ARGS__);                          \
   line += 1;
   screen_usedD[line] =
-      snprintf(AP(screenD[line]),
+      snprintf(screenD[line], AL(screenD[line]),
                "%-17.017s%c %-17.017s "
                "%-10.010s%c %6.d "
                " %-4.04s:%d %d",
@@ -3312,7 +3315,7 @@ py_screen()
                statD.use_stat[A_STR], statD.max_stat[A_STR]);
   line += 1;
   screen_usedD[line] =
-      snprintf(AP(screenD[line]),
+      snprintf(screenD[line], AL(screenD[line]),
                "%-17.017s%c %-17.017s "
                "%-10.010s%c %6.d "
                " %-4.04s:%d %d",
@@ -3320,7 +3323,7 @@ py_screen()
                stat_nameD[A_INT], statD.use_stat[A_INT], statD.max_stat[A_INT]);
   line += 1;
   screen_usedD[line] =
-      snprintf(AP(screenD[line]),
+      snprintf(screenD[line], AL(screenD[line]),
                "%-17.017s%c %-17.017s "
                "%-10.010s%c %6.d "
                " %-4.04s:%d %d",
@@ -3328,20 +3331,20 @@ py_screen()
                stat_nameD[A_WIS], statD.use_stat[A_WIS], statD.max_stat[A_WIS]);
   line += 1;
   screen_usedD[line] =
-      snprintf(AP(screenD[line]),
+      snprintf(screenD[line], AL(screenD[line]),
                "%-17.017s%c %-17.017s "
                "%-10.010s%c %6.d "
                " %-4.04s:%d %d",
                "Class", ':', classD[uD.clidx].title, "Social Class", ':', 1,
                stat_nameD[A_DEX], statD.use_stat[A_DEX], statD.max_stat[A_DEX]);
   line += 1;
-  screen_usedD[line] = snprintf(AP(screenD[line]),
+  screen_usedD[line] = snprintf(screenD[line], AL(screenD[line]),
                                 "%-56.056s"
                                 " %-4.04s:%d %d",
                                 "", stat_nameD[A_CON], statD.use_stat[A_CON],
                                 statD.max_stat[A_CON]);
   line += 1;
-  screen_usedD[line] = snprintf(AP(screenD[line]),
+  screen_usedD[line] = snprintf(screenD[line], AL(screenD[line]),
                                 "%-56.056s"
                                 " %-4.04s:%d %d",
                                 "", stat_nameD[A_CHR], statD.use_stat[A_CHR],
@@ -4332,11 +4335,11 @@ status_update()
   memset(statusD, '    ', sizeof(statusD));
   int count, line;
   line = 0;
-#define PR_STAT(ABBR, val)                                      \
-  {                                                             \
-    int count = snprintf(AP(statusD[line]), ABBR ": %6d", val); \
-    statusD[line][count] = ' ';                                 \
-    line += 1;                                                  \
+#define PR_STAT(ABBR, val)                                                     \
+  {                                                                            \
+    int count = snprintf(statusD[line], AL(statusD[line]), ABBR ": %6d", val); \
+    statusD[line][count] = ' ';                                                \
+    line += 1;                                                                 \
   }
   PR_STAT("CHP ", uD.chp);
   PR_STAT("MHP ", uD.mhp);

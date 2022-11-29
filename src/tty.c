@@ -80,7 +80,7 @@ void symmap_patch(y, x, c) char c;
   int ty = ay + 2;
   int tx = ax + STATUS_WIDTH + 1;
 
-  buffer_usedD = snprintf(AP(bufferD), "\x1b[%d;%dH", ty, tx);
+  buffer_usedD = snprintf(bufferD, AL(bufferD), "\x1b[%d;%dH", ty, tx);
   buffer_append(&c, 1);
   write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
