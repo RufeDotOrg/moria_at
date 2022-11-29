@@ -2959,11 +2959,9 @@ py_init()
   invenD[INVEN_WIELD] = dagger->id;
   for (int it = 0; it < 1; ++it) {
     struct objS* food = obj_use();
-    // 345 = 5 rations of food (used for shops)
     // 22 = 1 ration of food
     tr_obj_copy(22, food);
     invenD[it] = food->id;
-    Log("Food init %d number\n", food->number);
   }
   // int actuate_test[] = {238, 185, 314};
   // for (int it = 0; it < AL(actuate_test); ++it) {
@@ -3905,7 +3903,6 @@ int pickup;
         gold_nameD[obj->subval]);
     delete_object(y, x);
   } else if (obj->tval <= TV_MAX_PICK_UP) {
-
     if (pickup) {
       if ((locn = inven_merge(obj->id)) >= 0 ||
           (locn = inven_carry(obj->id)) >= 0) {
