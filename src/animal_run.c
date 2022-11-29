@@ -139,6 +139,24 @@ int* dir;
   free_turn_flag = TRUE;
   return FALSE;
 }
+int
+bit_pos(test)
+uint32_t* test;
+{
+  register int i;
+  register uint32_t mask = 0x1;
+
+  for (i = 0; i < sizeof(*test) * 8; i++) {
+    if (*test & mask) {
+      *test &= ~mask;
+      return (i);
+    }
+    mask <<= 1;
+  }
+
+  /* no one bits found */
+  return (-1);
+}
 static void
 go_up()
 {
@@ -1300,6 +1318,7 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   tr_obj_copy(z, obj);
   obj->fy = y;
   obj->fx = x;
+  struct treasureS* t_ptr = &treasureD[obj->tidx];
 
   if (oset_missile(obj)) {
     for (int it = 0; it < 7; ++it) obj->number += randint(6);
@@ -3030,6 +3049,39 @@ register int stat;
 
   return FALSE;
 }
+int
+inc_stat(stat)
+{
+  int tmp_stat, gain;
+
+  tmp_stat = statD.cur_stat[stat];
+  if (tmp_stat < 118) {
+    if (tmp_stat < 18)
+      tmp_stat++;
+    else if (tmp_stat < 116) {
+      /* stat increases by 1/6 to 1/3 of difference from max */
+      gain = ((118 - tmp_stat) / 3 + 1) >> 1;
+      tmp_stat += randint(gain) + gain;
+    } else
+      tmp_stat++;
+
+    statD.cur_stat[stat] = tmp_stat;
+    if (tmp_stat > statD.max_stat[stat]) statD.max_stat[stat] = tmp_stat;
+    set_use_stat(stat);
+    return TRUE;
+  } else
+    return FALSE;
+}
+int
+res_stat(stat)
+{
+  if (statD.max_stat[stat] != statD.cur_stat[stat]) {
+    statD.cur_stat[stat] = statD.max_stat[stat];
+    set_use_stat(stat);
+    return TRUE;
+  }
+  return FALSE;
+}
 void py_bonuses(obj, factor) struct objS* obj;
 int factor;
 {
@@ -3092,6 +3144,106 @@ int (*valid)();
   return line;
 }
 static int
+py_heal_hit(num)
+{
+  int res;
+
+  res = FALSE;
+  if (uD.chp < uD.mhp) {
+    uD.chp += num;
+    if (uD.chp > uD.mhp) {
+      uD.chp = uD.mhp;
+      uD.chp_frac = 0;
+    }
+
+    num = num / 5;
+    if (num < 3) {
+      if (num == 0)
+        msg_print("You feel a little better.");
+      else
+        msg_print("You feel better.");
+    } else {
+      if (num < 7)
+        msg_print("You feel much better.");
+      else
+        msg_print("You feel very good.");
+    }
+    res = TRUE;
+  }
+  return (res);
+}
+void
+py_experience()
+{
+  int exp = uD.exp;
+  int lev = uD.lev;
+  int expfact = uD.mult_exp;
+
+  if (exp > MAX_EXP) exp = MAX_EXP;
+
+  while ((lev < MAX_PLAYER_LEVEL) &&
+         (player_exp[lev - 1] * expfact / 100) <= exp) {
+    int dif_exp, need_exp;
+
+    lev += 1;
+    MSG("Welcome to level %d.", lev);
+    calc_hitpoints(lev);
+
+    need_exp = player_exp[lev - 1] * expfact / 100;
+    if (exp > need_exp) {
+      /* lose some of the 'extra' exp when gaining several levels at once */
+      dif_exp = exp - need_exp;
+      exp = need_exp + (dif_exp / 2);
+    }
+
+    // TBD: spell/mana
+    // c_ptr = &class[p_ptr->pclass];
+    // if (c_ptr->spell == MAGE) {
+    //   calc_spells(A_INT);
+    //   calc_mana(A_INT);
+    // } else if (c_ptr->spell == PRIEST) {
+    //   calc_spells(A_WIS);
+    //   calc_mana(A_WIS);
+    // }
+  }
+
+  // if (p_ptr->exp > p_ptr->max_exp) p_ptr->max_exp = p_ptr->exp;
+
+  // prt_long(p_ptr->exp, 14, STAT_COLUMN + 6);
+  uD.exp = exp;
+  uD.lev = lev;
+}
+void
+py_lose_experience(amount)
+{
+  int lev, exp;
+  struct classS* c_ptr;
+
+  exp = MAX(uD.exp - amount, 0);
+
+  lev = 0;
+  while ((player_exp[lev] * uD.mult_exp / 100) <= exp) lev++;
+  /* increment lev once more, because level 1 exp is stored in player_exp[0] */
+  lev++;
+
+  uD.exp = exp;
+  if (uD.lev != lev) {
+    uD.lev = lev;
+
+    calc_hitpoints(lev);
+    c_ptr = &classD[uD.clidx];
+    // if (c_ptr->spell == MAGE) {
+    //   calc_spells(A_INT);
+    //   calc_mana(A_INT);
+    // } else if (c_ptr->spell == PRIEST) {
+    //   calc_spells(A_WIS);
+    //   calc_mana(A_WIS);
+    // }
+    // prt_level();
+    // prt_title();
+  }
+}
+static int
 py_inven(begin, end)
 int begin, end;
 {
@@ -3145,6 +3297,297 @@ choice_eat()
       int iidx = c - 'a';
       if (iidx < INVEN_EQUIP) {
         inven_eat(iidx);
+      }
+    }
+  }
+}
+int
+inven_quaff(iidx)
+{
+  BOOL ident;
+  uint32_t i, j;
+  struct objS* obj = obj_get(invenD[iidx]);
+  if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+    uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
+    if (obj->number > 1) {
+      obj->number -= 1;
+    } else {
+      inven_destroy(iidx);
+    }
+
+    i = obj->flags;
+    MSG("flags %d", i);
+    if (i == 0) msg_print("You feel less thirsty.");
+    while (i != 0) {
+      j = bit_pos(&i) + 1;
+      j += (obj->tval == TV_POTION2) * 32;
+      switch (j) {
+        case 1:
+          if (inc_stat(A_STR)) {
+            msg_print("Wow!  What bulging muscles!");
+            ident = TRUE;
+          }
+          break;
+        case 2:
+          ident = TRUE;
+          // TBD: was lose_str(), diff?
+          dec_stat(A_STR);
+          break;
+        case 3:
+          if (res_stat(A_STR)) {
+            msg_print("You feel warm all over.");
+            ident = TRUE;
+          }
+          break;
+        case 4:
+          if (inc_stat(A_INT)) {
+            msg_print("Aren't you brilliant!");
+            ident = TRUE;
+          }
+          break;
+        case 5:
+          ident = TRUE;
+          // TBD: was lose_int();
+          dec_stat(A_INT);
+          break;
+        case 6:
+          if (res_stat(A_INT)) {
+            msg_print("You have have a warm feeling.");
+            ident = TRUE;
+          }
+          break;
+        case 7:
+          if (inc_stat(A_WIS)) {
+            msg_print("You suddenly have a profound thought!");
+            ident = TRUE;
+          }
+          break;
+        case 8:
+          ident = TRUE;
+          // TBD: lose_wis();
+          dec_stat(A_WIS);
+          break;
+        case 9:
+          if (res_stat(A_WIS)) {
+            msg_print("You feel your wisdom returning.");
+            ident = TRUE;
+          }
+          break;
+        case 10:
+          if (inc_stat(A_CHR)) {
+            msg_print("Gee, ain't you cute!");
+            ident = TRUE;
+          }
+          break;
+        case 11:
+          ident = TRUE;
+          // lose_chr();
+          dec_stat(A_CHR);
+          break;
+        case 12:
+          if (res_stat(A_CHR)) {
+            msg_print("You feel your looks returning.");
+            ident = TRUE;
+          }
+          break;
+        case 13:
+          ident = py_heal_hit(damroll(2, 7));
+          break;
+        case 14:
+          ident = py_heal_hit(damroll(4, 7));
+          break;
+        case 15:
+          ident = py_heal_hit(damroll(6, 7));
+          break;
+        case 16:
+          ident = py_heal_hit(1000);
+          break;
+        case 17:
+          if (inc_stat(A_CON)) {
+            msg_print("You feel tingly for a moment.");
+            ident = TRUE;
+          }
+          break;
+        case 18:
+          if (uD.exp < MAX_EXP) {
+            int l = (uD.exp / 2) + 10;
+            if (l > 100000L) l = 100000L;
+            uD.exp += l;
+            msg_print("You feel more experienced.");
+            py_experience();
+            ident = TRUE;
+          }
+          break;
+        // case 19:
+        //   f_ptr = &py.flags;
+        //   if (!f_ptr->free_act) {
+        //     /* paralysis must == 0, otherwise could not drink potion */
+        //     msg_print("You fall asleep.");
+        //     f_ptr->paralysis += randint(4) + 4;
+        //     ident = TRUE;
+        //   }
+        //   break;
+        // case 20:
+        //   f_ptr = &py.flags;
+        //   if (f_ptr->blind == 0) {
+        //     msg_print("You are covered by a veil of darkness.");
+        //     ident = TRUE;
+        //   }
+        //   f_ptr->blind += randint(100) + 100;
+        //   break;
+        // case 21:
+        //   f_ptr = &py.flags;
+        //   if (f_ptr->confused == 0) {
+        //     msg_print("Hey!  This is good stuff!  * Hick! *");
+        //     ident = TRUE;
+        //   }
+        //   f_ptr->confused += randint(20) + 12;
+        //   break;
+        // case 22:
+        //   f_ptr = &py.flags;
+        //   if (f_ptr->poisoned == 0) {
+        //     msg_print("You feel very sick.");
+        //     ident = TRUE;
+        //   }
+        //   f_ptr->poisoned += randint(15) + 10;
+        //   break;
+        // case 23:
+        //   if (py.flags.fast == 0) ident = TRUE;
+        //   py.flags.fast += randint(25) + 15;
+        //   break;
+        // case 24:
+        //   if (py.flags.slow == 0) ident = TRUE;
+        //   py.flags.slow += randint(25) + 15;
+        //   break;
+        case 26:
+          if (inc_stat(A_DEX)) {
+            msg_print("You feel more limber!");
+            ident = TRUE;
+          }
+          break;
+        case 27:
+          if (res_stat(A_DEX)) {
+            msg_print("You feel less clumsy.");
+            ident = TRUE;
+          }
+          break;
+        case 28:
+          if (res_stat(A_CON)) {
+            msg_print("You feel your health returning!");
+            ident = TRUE;
+          }
+          break;
+        // case 29:
+        //   ident = cure_blindness();
+        //   break;
+        // case 30:
+        //   ident = cure_confusion();
+        //   break;
+        // case 31:
+        //   ident = cure_poison();
+        //   break;
+        case 34:
+          if (uD.exp > 0) {
+            int m, scale;
+            msg_print("You feel your memories fade.");
+            /* Lose between 1/5 and 2/5 of your experience */
+            m = uD.exp / 5;
+            if (uD.exp > INT16_MAX) {
+              scale = INT32_MAX / uD.exp;
+              m += (randint((int)scale) * uD.exp) / (scale * 5);
+            } else
+              m += randint((int)uD.exp) / 5;
+            py_lose_experience(m);
+            ident = TRUE;
+          }
+          break;
+        // case 35:
+        //   f_ptr = &py.flags;
+        //   (void)cure_poison();
+        //   if (f_ptr->food > 150) f_ptr->food = 150;
+        //   f_ptr->paralysis = 4;
+        //   msg_print("The potion makes you vomit!");
+        //   ident = TRUE;
+        //   break;
+        // case 36:
+        //   if (py.flags.invuln == 0) ident = TRUE;
+        //   py.flags.invuln += randint(10) + 10;
+        //   break;
+        // case 37:
+        //   if (py.flags.hero == 0) ident = TRUE;
+        //   py.flags.hero += randint(25) + 25;
+        //   break;
+        // case 38:
+        //   if (py.flags.shero == 0) ident = TRUE;
+        //   py.flags.shero += randint(25) + 25;
+        //   break;
+        // case 39:
+        //   ident = remove_fear();
+        //   break;
+        // case 40:
+        //   ident = restore_level();
+        //   break;
+        // case 41:
+        //   f_ptr = &py.flags;
+        //   if (f_ptr->resist_heat == 0) ident = TRUE;
+        //   f_ptr->resist_heat += randint(10) + 10;
+        //   break;
+        // case 42:
+        //   f_ptr = &py.flags;
+        //   if (f_ptr->resist_cold == 0) ident = TRUE;
+        //   f_ptr->resist_cold += randint(10) + 10;
+        //   break;
+        // case 43:
+        //   if (py.flags.detect_inv == 0) ident = TRUE;
+        //   detect_inv2(randint(12) + 12);
+        //   break;
+        // case 44:
+        //   ident = slow_poison();
+        //   break;
+        // case 45:
+        //   ident = cure_poison();
+        //   break;
+        // case 46:
+        //   m_ptr = &py.misc;
+        //   if (m_ptr->cmana < m_ptr->mana) {
+        //     m_ptr->cmana = m_ptr->mana;
+        //     ident = TRUE;
+        //     msg_print("Your feel your head clear.");
+        //     prt_cmana();
+        //   }
+        //   break;
+        // case 47:
+        //   f_ptr = &py.flags;
+        //   if (f_ptr->tim_infra == 0) {
+        //     msg_print("Your eyes begin to tingle.");
+        //     ident = TRUE;
+        //   }
+        //   f_ptr->tim_infra += 100 + randint(100);
+        //   break;
+        default:
+          msg_print("Internal error in potion()");
+          break;
+      }
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
+void
+choice_quaff()
+{
+  char c;
+  struct objS* obj;
+
+  int count = py_inven(0, INVEN_EQUIP);
+  platform_draw();
+  if (count) {
+    if (in_subcommand("Quaff what?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        inven_quaff(iidx);
       }
     }
   }
@@ -3597,47 +4040,6 @@ corrode_gas()
   if (!minus_ac(TR_RES_ACID)) py_take_hit(randint(8));
   if (inven_damage(vuln_gas, 5) > 0)
     msg_print("There is an acrid smell coming from your pack.");
-}
-void
-py_experience()
-{
-  int exp = uD.exp;
-  int lev = uD.lev;
-  int expfact = uD.mult_exp;
-
-  if (exp > MAX_EXP) exp = MAX_EXP;
-
-  while ((lev < MAX_PLAYER_LEVEL) &&
-         (player_exp[lev - 1] * expfact / 100) <= exp) {
-    int dif_exp, need_exp;
-
-    lev += 1;
-    MSG("Welcome to level %d.", lev);
-    calc_hitpoints(lev);
-
-    need_exp = player_exp[lev - 1] * expfact / 100;
-    if (exp > need_exp) {
-      /* lose some of the 'extra' exp when gaining several levels at once */
-      dif_exp = exp - need_exp;
-      exp = need_exp + (dif_exp / 2);
-    }
-
-    // TBD: spell/mana
-    // c_ptr = &class[p_ptr->pclass];
-    // if (c_ptr->spell == MAGE) {
-    //   calc_spells(A_INT);
-    //   calc_mana(A_INT);
-    // } else if (c_ptr->spell == PRIEST) {
-    //   calc_spells(A_WIS);
-    //   calc_mana(A_WIS);
-    // }
-  }
-
-  // if (p_ptr->exp > p_ptr->max_exp) p_ptr->max_exp = p_ptr->exp;
-
-  // prt_long(p_ptr->exp, 14, STAT_COLUMN + 6);
-  uD.exp = exp;
-  uD.lev = lev;
 }
 int
 attack_blows(weight, wtohit)
@@ -4627,6 +5029,9 @@ dungeon()
           case 'm':
             // TEMP: testing tr_make_known
             py_make_known();
+            break;
+          case 'q':
+            choice_quaff();
             break;
           case 'o':
             py_open();
