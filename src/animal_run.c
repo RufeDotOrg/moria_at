@@ -2124,6 +2124,26 @@ void update_mon(midx) int midx;
   SYMMAP_PATCH(fy, fx);
 }
 int
+enchant(int16_t* bonus, int16_t limit)
+{
+  register int chance, res;
+
+  if (limit <= 0) /* avoid randint(0) call */
+    return (FALSE);
+  chance = 0;
+  res = FALSE;
+  if (*bonus > 0) {
+    chance = *bonus;
+    if (randint(100) == 1) /* very rarely allow enchantment over limit */
+      chance = randint(chance) - 1;
+  }
+  if (randint(limit) > chance) {
+    *bonus += 1;
+    res = TRUE;
+  }
+  return (res);
+}
+int
 bth_adj(attype)
 int attype;
 {
@@ -2922,14 +2942,60 @@ calc_bonuses()
   // if (p_ptr->slow_digest) p_ptr->food_digest--;
   // if (p_ptr->regenerate) p_ptr->food_digest += 3;
 }
-static void
+static int
+equip_cursed()
+{
+  for (int it = INVEN_EQUIP; it < MAX_INVEN; ++it) {
+    struct objS* obj = obj_get(invenD[it]);
+    if (obj->flags & TR_CURSED) return it;
+  }
+  return -1;
+}
+static int
 equip_enchant()
 {
+  struct objS* i_ptr;
+  int k, l, tmp[6];
+  k = 0;
+
+  l = equip_cursed();
+  if (l < 0) {
+    if (invenD[INVEN_BODY]) tmp[k++] = INVEN_BODY;
+    if (invenD[INVEN_ARM]) tmp[k++] = INVEN_ARM;
+    if (invenD[INVEN_OUTER]) tmp[k++] = INVEN_OUTER;
+    if (invenD[INVEN_HANDS]) tmp[k++] = INVEN_HANDS;
+    if (invenD[INVEN_HEAD]) tmp[k++] = INVEN_HEAD;
+    if (invenD[INVEN_FEET]) tmp[k++] = INVEN_FEET;
+
+    if (k > 0) l = tmp[randint(k) - 1];
+  }
+
+  if (l > 0) {
+    i_ptr = obj_get(invenD[l]);
+    obj_desc(i_ptr, FALSE);
+    MSG("Your %s glows faintly!", descD);
+    if (enchant(&i_ptr->toac, 10)) {
+      i_ptr->flags &= ~TR_CURSED;
+      calc_bonuses();
+    } else
+      msg_print("The enchantment fails.");
+    return TRUE;
+  }
+  return FALSE;
 }
 static int
 equip_remove_curse()
 {
-  return TRUE;
+  int l;
+  struct objS* i_ptr;
+
+  l = equip_cursed();
+  if (l > -1) {
+    i_ptr->flags &= ~TR_CURSED;
+    calc_bonuses();
+    return TRUE;
+  }
+  return FALSE;
 }
 static void
 inven_ident(iidx)
@@ -2959,13 +3025,47 @@ choice_ident()
   }
   return -1;
 }
-static void
+static int
 inven_enchant_hit(iidx)
 {
+  struct objS* i_ptr = obj_get(invenD[iidx]);
+
+  if (i_ptr->tval != TV_NOTHING) {
+    obj_desc(i_ptr, FALSE);
+    MSG("Your %s glows faintly!", descD);
+    if (enchant(&i_ptr->tohit, 10)) {
+      i_ptr->flags &= ~TR_CURSED;
+      calc_bonuses();
+    } else
+      msg_print("The enchantment fails.");
+    return TRUE;
+  }
+
+  return FALSE;
 }
-static void
+static int
 inven_enchant_dam(iidx)
 {
+  struct objS* i_ptr;
+  int limit;
+  i_ptr = obj_get(invenD[iidx]);
+  if (i_ptr->tval != TV_NOTHING) {
+    obj_desc(i_ptr, FALSE);
+    MSG("Your %s glows faintly!", descD);
+    if ((i_ptr->tval >= TV_HAFTED) && (i_ptr->tval <= TV_DIGGING))
+      limit = i_ptr->damage[0] * i_ptr->damage[1];
+    else /* Bows' and arrows' enchantments should not be limited
+            by their low base damages */
+      limit = 10;
+    if (enchant(&i_ptr->todam, limit)) {
+      i_ptr->flags &= ~TR_CURSED;
+      calc_bonuses();
+    } else
+      msg_print("The enchantment fails.");
+    return TRUE;
+  }
+
+  return FALSE;
 }
 void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
 {
@@ -3116,14 +3216,14 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  //int actuate_test[] = {238, 185, 314};
-  //for (int it = 0; it < AL(actuate_test); ++it) {
-  //  int iidx = INVEN_EQUIP - 3 + it;
-  //  if (iidx >= INVEN_EQUIP) break;
-  //  struct objS* obj = obj_use();
-  //  tr_obj_copy(actuate_test[it], obj);
-  //  invenD[iidx] = obj->id;
-  //}
+  // int actuate_test[] = {238, 185, 314};
+  // for (int it = 0; it < AL(actuate_test); ++it) {
+  //   int iidx = INVEN_EQUIP - 3 + it;
+  //   if (iidx >= INVEN_EQUIP) break;
+  //   struct objS* obj = obj_use();
+  //   tr_obj_copy(actuate_test[it], obj);
+  //   invenD[iidx] = obj->id;
+  // }
 
   calc_bonuses();
 
@@ -3740,7 +3840,7 @@ inven_read(iidx)
 {
   uint32_t i;
   int j, k, y, x;
-  int tmp[6], flag, used_up;
+  int flag, used_up;
   register int ident, l;
   struct objS* i_ptr;
   struct treasureS* t_ptr;
@@ -3761,79 +3861,15 @@ inven_read(iidx)
       MSG("j is %d", j);
       switch (j) {
         case 1:
-          if (invenD[INVEN_WIELD]) inven_enchant_hit(invenD[INVEN_WIELD]);
-          // if (i_ptr->tval != TV_NOTHING) {
-          //   objdes(tmp_str, i_ptr, FALSE);
-          //   sprintf(out_val, "Your %s glows faintly!", tmp_str);
-          //   msg_print(out_val);
-          //   if (enchant(&i_ptr->tohit, 10)) {
-          //     i_ptr->flags &= ~TR_CURSED;
-          //     calc_bonuses();
-          //   } else
-          //     msg_print("The enchantment fails.");
-          //   ident = TRUE;
-          // }
+          if (invenD[INVEN_WIELD])
+            ident = inven_enchant_hit(invenD[INVEN_WIELD]);
           break;
         case 2:
-          if (invenD[INVEN_WIELD]) inven_enchant_dam(invenD[INVEN_WIELD]);
-          // i_ptr = &inventory[INVEN_WIELD];
-          // if (i_ptr->tval != TV_NOTHING) {
-          //   objdes(tmp_str, i_ptr, FALSE);
-          //   (void)sprintf(out_val, "Your %s glows faintly!", tmp_str);
-          //   msg_print(out_val);
-          //   if ((i_ptr->tval >= TV_HAFTED) && (i_ptr->tval <= TV_DIGGING))
-          //     j = i_ptr->damage[0] * i_ptr->damage[1];
-          //   else /* Bows' and arrows' enchantments should not be limited
-          //           by their low base damages */
-          //     j = 10;
-          //   if (enchant(&i_ptr->todam, j)) {
-          //     i_ptr->flags &= ~TR_CURSED;
-          //     calc_bonuses();
-          //   } else
-          //     msg_print("The enchantment fails.");
-          //   ident = TRUE;
-          // }
+          if (invenD[INVEN_WIELD])
+            ident = inven_enchant_dam(invenD[INVEN_WIELD]);
           break;
         case 3:
-          equip_enchant();
-          // k = 0;
-          // l = 0;
-          // if (inventory[INVEN_BODY].tval != TV_NOTHING) tmp[k++] =
-          // INVEN_BODY; if (inventory[INVEN_ARM].tval != TV_NOTHING) tmp[k++] =
-          // INVEN_ARM; if (inventory[INVEN_OUTER].tval != TV_NOTHING) tmp[k++]
-          // = INVEN_OUTER; if (inventory[INVEN_HANDS].tval != TV_NOTHING)
-          // tmp[k++] = INVEN_HANDS; if (inventory[INVEN_HEAD].tval !=
-          // TV_NOTHING) tmp[k++] = INVEN_HEAD;
-          ///* also enchant boots */
-          // if (inventory[INVEN_FEET].tval != TV_NOTHING) tmp[k++] =
-          // INVEN_FEET;
-
-          // if (k > 0) l = tmp[randint(k) - 1];
-          // if (TR_CURSED & inventory[INVEN_BODY].flags)
-          //   l = INVEN_BODY;
-          // else if (TR_CURSED & inventory[INVEN_ARM].flags)
-          //   l = INVEN_ARM;
-          // else if (TR_CURSED & inventory[INVEN_OUTER].flags)
-          //   l = INVEN_OUTER;
-          // else if (TR_CURSED & inventory[INVEN_HEAD].flags)
-          //   l = INVEN_HEAD;
-          // else if (TR_CURSED & inventory[INVEN_HANDS].flags)
-          //   l = INVEN_HANDS;
-          // else if (TR_CURSED & inventory[INVEN_FEET].flags)
-          //   l = INVEN_FEET;
-
-          // if (l > 0) {
-          //   i_ptr = &inventory[l];
-          //   objdes(tmp_str, i_ptr, FALSE);
-          //   (void)sprintf(out_val, "Your %s glows faintly!", tmp_str);
-          //   msg_print(out_val);
-          //   if (enchant(&i_ptr->toac, 10)) {
-          //     i_ptr->flags &= ~TR_CURSED;
-          //     calc_bonuses();
-          //   } else
-          //     msg_print("The enchantment fails.");
-          //   ident = TRUE;
-          // }
+          ident = equip_enchant();
           break;
         case 4:
           msg_print("This is an identify scroll.");
