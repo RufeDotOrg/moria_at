@@ -1259,7 +1259,7 @@ struct treasureS treasureD[] = {
      '{', /* 80*/
      0,
      1,
-     193,
+     1,
      1,
      2,
      0,
@@ -1274,7 +1274,7 @@ struct treasureS treasureD[] = {
      '{', /* 81*/
      0,
      2,
-     193,
+     1,
      1,
      3,
      0,
@@ -1289,7 +1289,7 @@ struct treasureS treasureD[] = {
      '{', /* 82*/
      0,
      1,
-     193,
+     1,
      1,
      4,
      0,
@@ -1304,7 +1304,7 @@ struct treasureS treasureD[] = {
      '{', /* 83*/
      0,
      2,
-     194,
+     2,
      1,
      5,
      0,
@@ -1319,7 +1319,7 @@ struct treasureS treasureD[] = {
      '~', /* 84*/
      0,
      1,
-     193,
+     1,
      1,
      10,
      0,
@@ -1349,7 +1349,7 @@ struct treasureS treasureD[] = {
      '~', /* 86*/
      4000,
      2,
-     193,
+     1,
      1,
      30,
      0,
@@ -2220,7 +2220,7 @@ struct treasureS treasureD[] = {
      '{', /*144*/
      0,
      1,
-     193,
+     1,
      1,
      2,
      0,
@@ -2611,7 +2611,7 @@ struct treasureS treasureD[] = {
      '{', /*170*/
      0,
      2,
-     193,
+     1,
      1,
      3,
      0,
@@ -5540,7 +5540,7 @@ struct treasureS treasureD[] = {
      '~', /*365*/
      4000,
      2,
-     192,
+     0,
      5,
      30,
      0,

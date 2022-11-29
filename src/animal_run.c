@@ -1034,6 +1034,19 @@ struct objS* obj;
   return FALSE;
 }
 int
+oset_missile(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_SLING_AMMO:
+    case TV_SPIKE:
+    case TV_BOLT:
+    case TV_ARROW:
+      return TRUE;
+  }
+  return FALSE;
+}
+int
 oset_actuate(obj)
 struct objS* obj;
 {
@@ -1288,8 +1301,11 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   obj->fy = y;
   obj->fx = x;
 
-  // TBD: the following is important for projectile count and special
-  // assignment magic_treasure(cur_pos, dun_level);
+  if (oset_missile(obj)) {
+    for (int it = 0; it < 7; ++it) obj->number += randint(6);
+  }
+
+  // TBD: magic_treasure(cur_pos, dun_level);
 
   if (uD.y == y && uD.x == x)
     msg_print("You feel something roll beneath your feet.");
@@ -2477,7 +2493,7 @@ BOOL prefix;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
-  indexx = obj->subval & (ITEM_SINGLE_STACK_MIN - 1);
+  indexx = obj->subval & (ITEM_SINGLE_STACK - 1);
   basenm = tr_ptr->name;
   damstr[0] = 0;
   modify = tr_known(tr_ptr) ? FALSE : TRUE;
@@ -2915,8 +2931,11 @@ py_init()
   invenD[INVEN_WIELD] = dagger->id;
   for (int it = 0; it < 1; ++it) {
     struct objS* food = obj_use();
-    tr_obj_copy(345, food);
+    // 345 = 5 rations of food (used for shops)
+    // 22 = 1 ration of food
+    tr_obj_copy(22, food);
     invenD[it] = food->id;
+    Log("Food init %d number\n", food->number);
   }
   // int actuate_test[] = {238, 185, 314};
   // for (int it = 0; it < AL(actuate_test); ++it) {
@@ -3067,14 +3086,16 @@ static int
 py_inven(begin, end)
 int begin, end;
 {
-  int line = 0;
+  int line, count;
 
+  line = count = 0;
   for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
     int len = 1;
     overlayD[line][0] = ' ';
 
     if (obj_id) {
+      count += 1;
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, TRUE);
       len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %s",
@@ -3084,7 +3105,7 @@ int begin, end;
     overlay_usedD[line] = len;
     line += 1;
   }
-  return line;
+  return count;
 }
 void
 inven_eat(iidx)
@@ -3092,7 +3113,11 @@ inven_eat(iidx)
   struct objS* obj = obj_get(invenD[iidx]);
   if (obj->tval == TV_FOOD) {
     uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
-    inven_destroy(iidx);
+    if (obj->number > 1) {
+      obj->number -= 1;
+    } else {
+      inven_destroy(iidx);
+    }
     msg_print("nom nom nom!!");
   } else {
     msg_print("You can't eat that!");
@@ -3211,6 +3236,26 @@ py_carry_count()
     count += (invenD[it] == 0);
   }
   return count;
+}
+static int
+inven_merge(obj_id)
+{
+  int subval;
+  struct objS* obj = obj_get(obj_id);
+
+  subval = obj->subval;
+  if (subval >= ITEM_SINGLE_STACK) {
+    for (int it = 0; it < INVEN_EQUIP; ++it) {
+      struct objS* i_ptr = obj_get(invenD[it]);
+      if (i_ptr->subval == subval && i_ptr->number < 255) {
+        obj->number += i_ptr->number;
+        obj_unuse(i_ptr);
+        invenD[it] = obj_id;
+        return it;
+      }
+    }
+  }
+  return -1;
 }
 static int
 inven_carry(obj_id)
@@ -3372,12 +3417,15 @@ py_takeoff()
       int iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
         obj = obj_get(invenD[iidx]);
-        inven_carry(obj->id);
-        invenD[iidx] = 0;
+        if (inven_carry(obj->id) >= 0) {
+          invenD[iidx] = 0;
 
-        obj_desc(obj, TRUE);
-        py_bonuses(obj, -1);
-        MSG("You take off %s.", descD);
+          obj_desc(obj, TRUE);
+          py_bonuses(obj, -1);
+          MSG("You take off %s.", descD);
+        } else {
+          msg_print("You don't have room in your inventory.");
+        }
       }
     }
   }
@@ -3408,8 +3456,7 @@ int pickup;
     // TBD: Merge items of the same type?
 
     if (pickup) {
-      if (py_carry_count()) {
-        locn = inven_carry(obj->id);
+      if (inven_merge(obj->id) >= 0 || inven_carry(obj->id) >= 0) {
         MSG("You pickup %s (%c)", descD, locn + 'a');
         obj->fy = 0;
         obj->fx = 0;
@@ -4612,6 +4659,15 @@ dungeon()
           case 'W':
             py_where();
             break;
+          case CTRL('f'): {
+            struct objS* obj = obj_use();
+            caveD[y][x].oidx = obj_index(obj);
+
+            tr_obj_copy(22, obj);
+            obj->fy = y;
+            obj->fx = x;
+            msg_print("Food rolls beneath your feet.");
+          } break;
           case CTRL('h'):
             if (uD.mhp < 100) uD.mhp = 100;
             uD.chp = uD.mhp;

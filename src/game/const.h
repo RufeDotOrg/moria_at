@@ -274,15 +274,9 @@
 #define ITEM_NEVER_STACK_MAX 63
 /* these items always stack with others of same subval, always treated as
    single objects, must be power of 2 */
-#define ITEM_SINGLE_STACK_MIN 64
-#define ITEM_SINGLE_STACK_MAX 192 /* see NOTE below */
-/* these items stack with others only if have same subval and same p1,
-   they are treated as a group for wielding, etc. */
-#define ITEM_GROUP_MIN 192
-#define ITEM_GROUP_MAX 255
-/* NOTE: items with subval 192 are treated as single objects, but only stack
-   with others of same subval if have the same p1 value, only used for
-   torches */
+#define ITEM_SINGLE_STACK 64
+
+// ITEM_GROUP removed
 
 /* Stat indexes */
 #define A_STR 0
