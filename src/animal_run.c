@@ -2378,12 +2378,21 @@ char c;
   }
   return FALSE;
 }
-// TBD: Refactor
 void obj_prefix(obj, prefix) struct objS* obj;
 BOOL prefix;
 {
   char obj_name[160];
-  memcpy(obj_name, descD, sizeof(obj_name));
+
+  int offset = 0;
+  for (int it = 0; it < AL(descD); ++it) {
+    if (descD[it] != '~')
+      obj_name[it - offset] = descD[it];
+    else if (obj->number > 1)
+      obj_name[it - offset] = 's';
+    else
+      offset += 1;
+    if (descD[it] == 0) break;
+  }
 
   if (prefix) {
     /* ampersand is always the first character */
