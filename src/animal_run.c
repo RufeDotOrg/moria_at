@@ -439,6 +439,61 @@ void light_room(y, x) int y, x;
       }
     }
 }
+int
+light_area(y, x)
+{
+  if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
+  for (int col = y - 1; col <= y + 1; ++col) {
+    for (int row = x - 1; x <= x + 1; ++row) {
+      caveD[col][row].cflag |= CF_PERM_LIGHT;
+    }
+  }
+
+  // TBD: unknown when blind...  (py.flags.blind)
+  return TRUE;
+}
+void
+unlight_room(y, x)
+{
+  int i, j, start_col, end_col;
+  int tmp1, tmp2, start_row, end_row;
+  struct caveS* c_ptr;
+  int tval;
+
+  tmp1 = (SYMMAP_HEIGHT / 2);
+  tmp2 = (SYMMAP_WIDTH / 2);
+  start_row = (y / tmp1) * tmp1;
+  start_col = (x / tmp2) * tmp2;
+  end_row = start_row + tmp1 - 1;
+  end_col = start_col + tmp2 - 1;
+  for (i = start_row; i <= end_row; i++)
+    for (j = start_col; j <= end_col; j++) {
+      c_ptr = &caveD[i][j];
+      if ((c_ptr->cflag & CF_ROOM)) {
+        c_ptr->cflag &= ~CF_PERM_LIGHT;
+        if (c_ptr->fval == FLOOR_LIGHT) c_ptr->fval = FLOOR_DARK;
+        if (c_ptr->oidx) {
+          struct objS* obj = &entity_objD[c_ptr->oidx];
+          if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
+            c_ptr->cflag &= ~CF_FIELDMARK;
+          }
+        }
+      }
+    }
+}
+int
+unlight_area(y, x)
+{
+  if (caveD[y][x].cflag & CF_ROOM) unlight_room(y, x);
+  for (int col = y - 1; col <= y + 1; ++col) {
+    for (int row = x - 1; x <= x + 1; ++row) {
+      caveD[col][row].cflag &= ~CF_PERM_LIGHT;
+    }
+  }
+
+  // TBD: unknown when blind.. (py.flags.blind)
+  return TRUE;
+}
 typedef struct {
   int y;
   int x;
@@ -705,10 +760,63 @@ static void delete_object(y, x) int y, x;
   cave_ptr->oidx = 0;
   cave_ptr->cflag &= ~CF_FIELDMARK;
 }
-static void inven_destroy(iidx) int iidx;
+char*
+describe_use(iidx)
 {
-  // TBD: destroy 1 of N
-  invenD[iidx] = 0;
+  char* p;
+
+  switch (iidx) {
+    case INVEN_WIELD:
+      p = "wielding";
+      break;
+    case INVEN_HEAD:
+      p = "wearing on your head";
+      break;
+    case INVEN_NECK:
+      p = "wearing around your neck";
+      break;
+    case INVEN_BODY:
+      p = "wearing on your body";
+      break;
+    case INVEN_ARM:
+      p = "wearing on your arm";
+      break;
+    case INVEN_HANDS:
+      p = "wearing on your hands";
+      break;
+    case INVEN_RIGHT:
+      p = "wearing on your right hand";
+      break;
+    case INVEN_LEFT:
+      p = "wearing on your left hand";
+      break;
+    case INVEN_FEET:
+      p = "wearing on your feet";
+      break;
+    case INVEN_OUTER:
+      p = "wearing about your body";
+      break;
+    case INVEN_LIGHT:
+      p = "using to light the way";
+      break;
+    case INVEN_AUX:
+      p = "holding ready by your side";
+      break;
+    default:
+      p = "carrying in your pack";
+      break;
+  }
+  return p;
+}
+static void inven_destroy_one(iidx) int iidx;
+{
+  struct objS* obj = obj_get(invenD[iidx]);
+  if (obj->number > 1) {
+    obj->number -= 1;
+  } else {
+    obj_unuse(obj);
+    invenD[iidx] = 0;
+  }
 }
 static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
 {
@@ -2814,6 +2922,51 @@ calc_bonuses()
   // if (p_ptr->slow_digest) p_ptr->food_digest--;
   // if (p_ptr->regenerate) p_ptr->food_digest += 3;
 }
+static void
+equip_enchant()
+{
+}
+static int
+equip_remove_curse()
+{
+  return TRUE;
+}
+static void
+inven_ident(iidx)
+{
+  struct objS* obj;
+  struct treasureS* t_ptr;
+
+  obj = obj_get(invenD[iidx]);
+  t_ptr = &treasureD[obj->tidx];
+  tr_make_known(t_ptr);
+  obj->idflag |= ID_REVEAL;
+  obj_desc(obj, TRUE);
+  if (iidx >= INVEN_EQUIP) {
+    calc_bonuses();
+    MSG("%s: %s", describe_use(iidx), descD);
+  } else {
+    MSG("%c %s", iidx + 'a', descD);
+  }
+}
+static int
+choice_ident()
+{
+  char c;
+  if (in_subcommand("Item you wish identified?", &c)) {
+    int iidx = c - 'a';
+    if (iidx < MAX_INVEN) return iidx;
+  }
+  return -1;
+}
+static void
+inven_enchant_hit(iidx)
+{
+}
+static void
+inven_enchant_dam(iidx)
+{
+}
 void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
 {
   int row, col;
@@ -2963,14 +3116,14 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  // int actuate_test[] = {238, 185, 314};
-  // for (int it = 0; it < AL(actuate_test); ++it) {
-  //   int iidx = INVEN_EQUIP - 3 + it;
-  //   if (iidx >= INVEN_EQUIP) break;
-  //   struct objS* obj = obj_use();
-  //   tr_obj_copy(actuate_test[it], obj);
-  //   invenD[iidx] = obj->id;
-  // }
+  //int actuate_test[] = {238, 185, 314};
+  //for (int it = 0; it < AL(actuate_test); ++it) {
+  //  int iidx = INVEN_EQUIP - 3 + it;
+  //  if (iidx >= INVEN_EQUIP) break;
+  //  struct objS* obj = obj_use();
+  //  tr_obj_copy(actuate_test[it], obj);
+  //  invenD[iidx] = obj->id;
+  //}
 
   calc_bonuses();
 
@@ -3272,11 +3425,7 @@ inven_eat(iidx)
   struct objS* obj = obj_get(invenD[iidx]);
   if (obj->tval == TV_FOOD) {
     uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
-    if (obj->number > 1) {
-      obj->number -= 1;
-    } else {
-      inven_destroy(iidx);
-    }
+    inven_destroy_one(iidx);
     msg_print("nom nom nom!!");
   } else {
     msg_print("You can't eat that!");
@@ -3307,11 +3456,7 @@ inven_quaff(iidx)
   struct objS* obj = obj_get(invenD[iidx]);
   if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
     uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
-    if (obj->number > 1) {
-      obj->number -= 1;
-    } else {
-      inven_destroy(iidx);
-    }
+    inven_destroy_one(iidx);
 
     i = obj->flags;
     MSG("flags %d", i);
@@ -3586,6 +3731,425 @@ choice_quaff()
       int iidx = c - 'a';
       if (iidx < INVEN_EQUIP) {
         inven_quaff(iidx);
+      }
+    }
+  }
+}
+int
+inven_read(iidx)
+{
+  uint32_t i;
+  int j, k, y, x;
+  int tmp[6], flag, used_up;
+  register int ident, l;
+  struct objS* i_ptr;
+  struct treasureS* t_ptr;
+
+  i_ptr = obj_get(invenD[iidx]);
+  t_ptr = &treasureD[i_ptr->tidx];
+  if (i_ptr->tval == TV_SCROLL1 || i_ptr->tval == TV_SCROLL2) {
+    free_turn_flag = FALSE;
+    used_up = TRUE;
+    i = i_ptr->flags;
+    ident = FALSE;
+
+    while (i != 0) {
+      j = bit_pos(&i) + 1;
+      if (i_ptr->tval == TV_SCROLL2) j += 32;
+
+      /* Scrolls.  		*/
+      MSG("j is %d", j);
+      switch (j) {
+        case 1:
+          if (invenD[INVEN_WIELD]) inven_enchant_hit(invenD[INVEN_WIELD]);
+          // if (i_ptr->tval != TV_NOTHING) {
+          //   objdes(tmp_str, i_ptr, FALSE);
+          //   sprintf(out_val, "Your %s glows faintly!", tmp_str);
+          //   msg_print(out_val);
+          //   if (enchant(&i_ptr->tohit, 10)) {
+          //     i_ptr->flags &= ~TR_CURSED;
+          //     calc_bonuses();
+          //   } else
+          //     msg_print("The enchantment fails.");
+          //   ident = TRUE;
+          // }
+          break;
+        case 2:
+          if (invenD[INVEN_WIELD]) inven_enchant_dam(invenD[INVEN_WIELD]);
+          // i_ptr = &inventory[INVEN_WIELD];
+          // if (i_ptr->tval != TV_NOTHING) {
+          //   objdes(tmp_str, i_ptr, FALSE);
+          //   (void)sprintf(out_val, "Your %s glows faintly!", tmp_str);
+          //   msg_print(out_val);
+          //   if ((i_ptr->tval >= TV_HAFTED) && (i_ptr->tval <= TV_DIGGING))
+          //     j = i_ptr->damage[0] * i_ptr->damage[1];
+          //   else /* Bows' and arrows' enchantments should not be limited
+          //           by their low base damages */
+          //     j = 10;
+          //   if (enchant(&i_ptr->todam, j)) {
+          //     i_ptr->flags &= ~TR_CURSED;
+          //     calc_bonuses();
+          //   } else
+          //     msg_print("The enchantment fails.");
+          //   ident = TRUE;
+          // }
+          break;
+        case 3:
+          equip_enchant();
+          // k = 0;
+          // l = 0;
+          // if (inventory[INVEN_BODY].tval != TV_NOTHING) tmp[k++] =
+          // INVEN_BODY; if (inventory[INVEN_ARM].tval != TV_NOTHING) tmp[k++] =
+          // INVEN_ARM; if (inventory[INVEN_OUTER].tval != TV_NOTHING) tmp[k++]
+          // = INVEN_OUTER; if (inventory[INVEN_HANDS].tval != TV_NOTHING)
+          // tmp[k++] = INVEN_HANDS; if (inventory[INVEN_HEAD].tval !=
+          // TV_NOTHING) tmp[k++] = INVEN_HEAD;
+          ///* also enchant boots */
+          // if (inventory[INVEN_FEET].tval != TV_NOTHING) tmp[k++] =
+          // INVEN_FEET;
+
+          // if (k > 0) l = tmp[randint(k) - 1];
+          // if (TR_CURSED & inventory[INVEN_BODY].flags)
+          //   l = INVEN_BODY;
+          // else if (TR_CURSED & inventory[INVEN_ARM].flags)
+          //   l = INVEN_ARM;
+          // else if (TR_CURSED & inventory[INVEN_OUTER].flags)
+          //   l = INVEN_OUTER;
+          // else if (TR_CURSED & inventory[INVEN_HEAD].flags)
+          //   l = INVEN_HEAD;
+          // else if (TR_CURSED & inventory[INVEN_HANDS].flags)
+          //   l = INVEN_HANDS;
+          // else if (TR_CURSED & inventory[INVEN_FEET].flags)
+          //   l = INVEN_FEET;
+
+          // if (l > 0) {
+          //   i_ptr = &inventory[l];
+          //   objdes(tmp_str, i_ptr, FALSE);
+          //   (void)sprintf(out_val, "Your %s glows faintly!", tmp_str);
+          //   msg_print(out_val);
+          //   if (enchant(&i_ptr->toac, 10)) {
+          //     i_ptr->flags &= ~TR_CURSED;
+          //     calc_bonuses();
+          //   } else
+          //     msg_print("The enchantment fails.");
+          //   ident = TRUE;
+          // }
+          break;
+        case 4:
+          msg_print("This is an identify scroll.");
+          ident = TRUE;
+          l = choice_ident();
+          if (l >= 0) inven_ident(l);
+          used_up = TRUE;
+          break;
+        case 5:
+          if (equip_remove_curse()) {
+            msg_print("You feel as if someone is watching over you.");
+            ident = TRUE;
+          }
+          break;
+        case 6:
+          ident = light_area(uD.y, uD.x);
+          break;
+        // case 7:
+        //   for (k = 0; k < randint(3); k++) {
+        //     y = char_row;
+        //     x = char_col;
+        //     ident |= summon_monster(&y, &x, FALSE);
+        //   }
+        //   break;
+        // case 8:
+        //  teleport(10);
+        //  ident = TRUE;
+        //  break;
+        // case 9:
+        //  teleport(100);
+        //  ident = TRUE;
+        //  break;
+        case 10:
+          dun_level += (-3) + 2 * randint(2);
+          if (dun_level < 1) dun_level = 1;
+          new_level_flag = TRUE;
+          ident = TRUE;
+          break;
+        // case 11:
+        //   if (py.flags.confuse_monster == 0) {
+        //     msg_print("Your hands begin to glow.");
+        //     py.flags.confuse_monster = TRUE;
+        //     ident = TRUE;
+        //   }
+        //   break;
+        // case 12:
+        //   ident = TRUE;
+        //   map_area();
+        //   break;
+        // case 13:
+        //   ident = sleep_monsters1(char_row, char_col);
+        //   break;
+        // case 14:
+        //   ident = TRUE;
+        //   warding_glyph();
+        //   break;
+        // case 15:
+        //   ident = detect_treasure();
+        //   break;
+        // case 16:
+        //   ident = detect_object();
+        //   break;
+        // case 17:
+        //   ident = detect_trap();
+        //   break;
+        // case 18:
+        //   ident = detect_sdoor();
+        //   break;
+        // case 19:
+        //   msg_print("This is a mass genocide scroll.");
+        //   (void)mass_genocide();
+        //   ident = TRUE;
+        //   break;
+        // case 20:
+        //   ident = detect_invisible();
+        //   break;
+        // case 21:
+        //   msg_print("There is a high pitched humming noise.");
+        //   (void)aggravate_monster(20);
+        //   ident = TRUE;
+        //   break;
+        // case 22:
+        //   ident = trap_creation();
+        //   break;
+        // case 23:
+        //   ident = td_destroy();
+        //   break;
+        // case 24:
+        //   ident = door_creation();
+        //   break;
+        // case 25:
+        //   msg_print("This is a Recharge-Item scroll.");
+        //   ident = TRUE;
+        //   used_up = recharge(60);
+        //   break;
+        // case 26:
+        //   msg_print("This is a genocide scroll.");
+        //   (void)genocide();
+        //   ident = TRUE;
+        //   break;
+        case 27:
+          ident = unlight_area(uD.y, uD.x);
+          break;
+        // case 28:
+        //   ident = protect_evil();
+        //   break;
+        // case 29:
+        //   ident = TRUE;
+        //   create_food();
+        //   break;
+        // case 30:
+        //   ident = dispel_creature(CD_UNDEAD, 60);
+        //   break;
+        // case 33:
+        //   i_ptr = &inventory[INVEN_WIELD];
+        //   if (i_ptr->tval != TV_NOTHING) {
+        //     objdes(tmp_str, i_ptr, FALSE);
+        //     (void)sprintf(out_val, "Your %s glows brightly!", tmp_str);
+        //     msg_print(out_val);
+        //     flag = FALSE;
+        //     for (k = 0; k < randint(2); k++)
+        //       if (enchant(&i_ptr->tohit, 10)) flag = TRUE;
+        //     if ((i_ptr->tval >= TV_HAFTED) && (i_ptr->tval <= TV_DIGGING))
+        //       j = i_ptr->damage[0] * i_ptr->damage[1];
+        //     else /* Bows' and arrows' enchantments should not be limited
+        //             by their low base damages */
+        //       j = 10;
+        //     for (k = 0; k < randint(2); k++)
+        //       if (enchant(&i_ptr->todam, j)) flag = TRUE;
+        //     if (flag) {
+        //       i_ptr->flags &= ~TR_CURSED;
+        //       calc_bonuses();
+        //     } else
+        //       msg_print("The enchantment fails.");
+        //     ident = TRUE;
+        //   }
+        //   break;
+        // case 34:
+        //   i_ptr = &inventory[INVEN_WIELD];
+        //   if (i_ptr->tval != TV_NOTHING) {
+        //     objdes(tmp_str, i_ptr, FALSE);
+        //     (void)sprintf(out_val, "Your %s glows black, fades.", tmp_str);
+        //     msg_print(out_val);
+        //     unmagic_name(i_ptr);
+        //     i_ptr->tohit = -randint(5) - randint(5);
+        //     i_ptr->todam = -randint(5) - randint(5);
+        //     i_ptr->toac = 0;
+        //     /* Must call py_bonuses() before set (clear) flags, and
+        //        must call calc_bonuses() after set (clear) flags, so that
+        //        all attributes will be properly turned off. */
+        //     py_bonuses(i_ptr, -1);
+        //     i_ptr->flags = TR_CURSED;
+        //     calc_bonuses();
+        //     ident = TRUE;
+        //   }
+        //   break;
+        // case 35:
+        //   k = 0;
+        //   l = 0;
+        //   if (inventory[INVEN_BODY].tval != TV_NOTHING) tmp[k++] =
+        //   INVEN_BODY; if (inventory[INVEN_ARM].tval != TV_NOTHING) tmp[k++] =
+        //   INVEN_ARM; if (inventory[INVEN_OUTER].tval != TV_NOTHING) tmp[k++]
+        //   = INVEN_OUTER; if (inventory[INVEN_HANDS].tval != TV_NOTHING)
+        //   tmp[k++] = INVEN_HANDS; if (inventory[INVEN_HEAD].tval !=
+        //   TV_NOTHING) tmp[k++] = INVEN_HEAD;
+        //   /* also enchant boots */
+        //   if (inventory[INVEN_FEET].tval != TV_NOTHING) tmp[k++] =
+        //   INVEN_FEET;
+
+        //  if (k > 0) l = tmp[randint(k) - 1];
+        //  if (TR_CURSED & inventory[INVEN_BODY].flags)
+        //    l = INVEN_BODY;
+        //  else if (TR_CURSED & inventory[INVEN_ARM].flags)
+        //    l = INVEN_ARM;
+        //  else if (TR_CURSED & inventory[INVEN_OUTER].flags)
+        //    l = INVEN_OUTER;
+        //  else if (TR_CURSED & inventory[INVEN_HEAD].flags)
+        //    l = INVEN_HEAD;
+        //  else if (TR_CURSED & inventory[INVEN_HANDS].flags)
+        //    l = INVEN_HANDS;
+        //  else if (TR_CURSED & inventory[INVEN_FEET].flags)
+        //    l = INVEN_FEET;
+
+        //  if (l > 0) {
+        //    i_ptr = &inventory[l];
+        //    objdes(tmp_str, i_ptr, FALSE);
+        //    (void)sprintf(out_val, "Your %s glows brightly!", tmp_str);
+        //    msg_print(out_val);
+        //    flag = FALSE;
+        //    for (k = 0; k < randint(2) + 1; k++)
+        //      if (enchant(&i_ptr->toac, 10)) flag = TRUE;
+        //    if (flag) {
+        //      i_ptr->flags &= ~TR_CURSED;
+        //      calc_bonuses();
+        //    } else
+        //      msg_print("The enchantment fails.");
+        //    ident = TRUE;
+        //  }
+        //  break;
+        // case 36:
+        //  if ((inventory[INVEN_BODY].tval != TV_NOTHING) && (randint(4) == 1))
+        //    k = INVEN_BODY;
+        //  else if ((inventory[INVEN_ARM].tval != TV_NOTHING) &&
+        //           (randint(3) == 1))
+        //    k = INVEN_ARM;
+        //  else if ((inventory[INVEN_OUTER].tval != TV_NOTHING) &&
+        //           (randint(3) == 1))
+        //    k = INVEN_OUTER;
+        //  else if ((inventory[INVEN_HEAD].tval != TV_NOTHING) &&
+        //           (randint(3) == 1))
+        //    k = INVEN_HEAD;
+        //  else if ((inventory[INVEN_HANDS].tval != TV_NOTHING) &&
+        //           (randint(3) == 1))
+        //    k = INVEN_HANDS;
+        //  else if ((inventory[INVEN_FEET].tval != TV_NOTHING) &&
+        //           (randint(3) == 1))
+        //    k = INVEN_FEET;
+        //  else if (inventory[INVEN_BODY].tval != TV_NOTHING)
+        //    k = INVEN_BODY;
+        //  else if (inventory[INVEN_ARM].tval != TV_NOTHING)
+        //    k = INVEN_ARM;
+        //  else if (inventory[INVEN_OUTER].tval != TV_NOTHING)
+        //    k = INVEN_OUTER;
+        //  else if (inventory[INVEN_HEAD].tval != TV_NOTHING)
+        //    k = INVEN_HEAD;
+        //  else if (inventory[INVEN_HANDS].tval != TV_NOTHING)
+        //    k = INVEN_HANDS;
+        //  else if (inventory[INVEN_FEET].tval != TV_NOTHING)
+        //    k = INVEN_FEET;
+        //  else
+        //    k = 0;
+
+        //  if (k > 0) {
+        //    i_ptr = &inventory[k];
+        //    objdes(tmp_str, i_ptr, FALSE);
+        //    (void)sprintf(out_val, "Your %s glows black, fades.", tmp_str);
+        //    msg_print(out_val);
+        //    unmagic_name(i_ptr);
+        //    i_ptr->flags = TR_CURSED;
+        //    i_ptr->tohit = 0;
+        //    i_ptr->todam = 0;
+        //    i_ptr->toac = -randint(5) - randint(5);
+        //    calc_bonuses();
+        //    ident = TRUE;
+        //  }
+        //  break;
+        // case 37:
+        //  ident = FALSE;
+        //  for (k = 0; k < randint(3); k++) {
+        //    y = char_row;
+        //    x = char_col;
+        //    ident |= summon_undead(&y, &x);
+        //  }
+        //  break;
+        // case 38:
+        //  ident = TRUE;
+        //  bless(randint(12) + 6);
+        //  break;
+        // case 39:
+        //  ident = TRUE;
+        //  bless(randint(24) + 12);
+        //  break;
+        // case 40:
+        //  ident = TRUE;
+        //  bless(randint(48) + 24);
+        //  break;
+        // case 41:
+        //   ident = TRUE;
+        //   if (py.flags.word_recall == 0)
+        //     py.flags.word_recall = 25 + randint(30);
+        //   msg_print("The air about you becomes charged.");
+        //   break;
+        // case 42:
+        //   destroy_area(char_row, char_col);
+        //   ident = TRUE;
+        //   break;
+        default:
+          msg_print("Internal error in scroll()");
+          break;
+      }
+      /* End of Scrolls.  		       */
+    }
+    if (ident) {
+      if (!tr_known(t_ptr)) {
+        /* round half-way case up */
+        // TDB: xp tuning
+        uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
+
+        // identify(&item_val);
+        // i_ptr = &inventory[item_val];
+      }
+    }
+    // else if (!tr_known(t_ptr))
+    //   sample(i_ptr);
+    if (used_up) {
+      // desc_remain(item_val);
+      inven_destroy_one(iidx);
+    }
+    return TRUE;
+  }
+
+  return FALSE;
+}
+void
+choice_read()
+{
+  char c;
+  struct objS* obj;
+
+  int count = py_inven(0, INVEN_EQUIP);
+  platform_draw();
+  if (count) {
+    if (in_subcommand("Read what?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        inven_read(iidx);
       }
     }
   }
@@ -4277,7 +4841,7 @@ static void mon_attack(midx) int midx;
           //  msg_print("You grab hold of your backpack!");
           // else {
           //  i = randint(inven_ctr) - 1;
-          //  inven_destroy(i);
+          //  inven_destroy_one(i);
           //  msg_print("Your backpack feels lighter.");
           //}
           // if (randint(2) == 1) {
@@ -4395,7 +4959,7 @@ static void mon_attack(midx) int midx;
           break;
         case 22: /*Eat food     */
           // if (find_range(TV_FOOD, TV_NEVER, &i, &j)) {
-          //  inven_destroy(i);
+          //  inven_destroy_one(i);
           //  msg_print("It got at your rations!");
           //} else
           //  notice = FALSE;
@@ -5030,6 +5594,9 @@ dungeon()
             break;
           case 'q':
             choice_quaff();
+            break;
+          case 'r':
+            choice_read();
             break;
           case 'o':
             py_open();
