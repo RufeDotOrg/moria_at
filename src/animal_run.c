@@ -3026,8 +3026,7 @@ static int
 equip_enchant(amount)
 {
   struct objS* i_ptr;
-  int affect, k, l, tmp[6];
-  k = 0;
+  int affect, l;
 
   l = equip_cursed();
   if (l < 0) l = equip_random();
@@ -3046,6 +3045,28 @@ equip_enchant(amount)
       calc_bonuses();
     } else
       msg_print("The enchantment fails.");
+    return TRUE;
+  }
+
+  return FALSE;
+}
+static int
+equip_curse()
+{
+  struct objS* i_ptr;
+  int l;
+
+  l = equip_random();
+  if (l > 0) {
+    i_ptr = obj_get(invenD[l]);
+    obj_desc(i_ptr, FALSE);
+    MSG("Your %s glows black, fades.", descD);
+    i_ptr->name2 = 0;
+    i_ptr->flags = TR_CURSED;
+    i_ptr->tohit = 0;
+    i_ptr->todam = 0;
+    i_ptr->toac = -randint(5) - randint(5);
+    calc_bonuses();
     return TRUE;
   }
 
@@ -3285,14 +3306,14 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-   int actuate_test[] = {217, 185};//{238, 185, 314};
-   for (int it = 0; it < AL(actuate_test); ++it) {
-     int iidx = INVEN_EQUIP - 3 + it;
-     if (iidx >= INVEN_EQUIP) break;
-     struct objS* obj = obj_use();
-     tr_obj_copy(actuate_test[it], obj);
-     invenD[iidx] = obj->id;
-   }
+  int actuate_test[] = {177, 214};  //{238, 185, 314};
+  for (int it = 0; it < AL(actuate_test); ++it) {
+    int iidx = INVEN_EQUIP - 3 + it;
+    if (iidx >= INVEN_EQUIP) break;
+    struct objS* obj = obj_use();
+    tr_obj_copy(actuate_test[it], obj);
+    invenD[iidx] = obj->id;
+  }
 
   calc_bonuses();
 
@@ -3606,6 +3627,29 @@ int begin, end;
     line += 1;
   }
   return count;
+}
+int
+weapon_curse()
+{
+  struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
+  if (i_ptr->tval != TV_NOTHING) {
+    obj_desc(i_ptr, FALSE);
+    MSG("Your %s glows black, fades.", descD);
+    i_ptr->name2 = 0;
+    i_ptr->tohit = -randint(5) - randint(5);
+    i_ptr->todam = -randint(5) - randint(5);
+    i_ptr->toac = 0;
+
+    /* Must call py_bonuses() before set (clear) flags, and
+       must call calc_bonuses() after set (clear) flags, so that
+       all attributes will be properly turned off. */
+    py_bonuses(i_ptr, -1);
+    i_ptr->flags = TR_CURSED;
+    calc_bonuses();
+    return TRUE;
+  }
+
+  return FALSE;
 }
 static int
 choice(char* prompt)
@@ -4053,76 +4097,16 @@ int *uy, *ux;
           ident = tohit_enchant(randint(2));
           ident |= todam_enchant(randint(2));
           break;
-          // case 34:
-          //   i_ptr = &inventory[INVEN_WIELD];
-          //   if (i_ptr->tval != TV_NOTHING) {
-          //     objdes(tmp_str, i_ptr, FALSE);
-          //     (void)sprintf(out_val, "Your %s glows black, fades.", tmp_str);
-          //     msg_print(out_val);
-          //     unmagic_name(i_ptr);
-          //     i_ptr->tohit = -randint(5) - randint(5);
-          //     i_ptr->todam = -randint(5) - randint(5);
-          //     i_ptr->toac = 0;
-          //     /* Must call py_bonuses() before set (clear) flags, and
-          //        must call calc_bonuses() after set (clear) flags, so that
-          //        all attributes will be properly turned off. */
-          //     py_bonuses(i_ptr, -1);
-          //     i_ptr->flags = TR_CURSED;
-          //     calc_bonuses();
-          //     ident = TRUE;
-          //   }
-          //   break;
+        case 34:
+          ident = weapon_curse();
+          break;
         case 35:
           k = randint(2) + 1;
           ident = equip_enchant(k);
           break;
-        // case 36:
-        //  if ((inventory[INVEN_BODY].tval != TV_NOTHING) && (randint(4) == 1))
-        //    k = INVEN_BODY;
-        //  else if ((inventory[INVEN_ARM].tval != TV_NOTHING) &&
-        //           (randint(3) == 1))
-        //    k = INVEN_ARM;
-        //  else if ((inventory[INVEN_OUTER].tval != TV_NOTHING) &&
-        //           (randint(3) == 1))
-        //    k = INVEN_OUTER;
-        //  else if ((inventory[INVEN_HEAD].tval != TV_NOTHING) &&
-        //           (randint(3) == 1))
-        //    k = INVEN_HEAD;
-        //  else if ((inventory[INVEN_HANDS].tval != TV_NOTHING) &&
-        //           (randint(3) == 1))
-        //    k = INVEN_HANDS;
-        //  else if ((inventory[INVEN_FEET].tval != TV_NOTHING) &&
-        //           (randint(3) == 1))
-        //    k = INVEN_FEET;
-        //  else if (inventory[INVEN_BODY].tval != TV_NOTHING)
-        //    k = INVEN_BODY;
-        //  else if (inventory[INVEN_ARM].tval != TV_NOTHING)
-        //    k = INVEN_ARM;
-        //  else if (inventory[INVEN_OUTER].tval != TV_NOTHING)
-        //    k = INVEN_OUTER;
-        //  else if (inventory[INVEN_HEAD].tval != TV_NOTHING)
-        //    k = INVEN_HEAD;
-        //  else if (inventory[INVEN_HANDS].tval != TV_NOTHING)
-        //    k = INVEN_HANDS;
-        //  else if (inventory[INVEN_FEET].tval != TV_NOTHING)
-        //    k = INVEN_FEET;
-        //  else
-        //    k = 0;
-
-        //  if (k > 0) {
-        //    i_ptr = &inventory[k];
-        //    objdes(tmp_str, i_ptr, FALSE);
-        //    (void)sprintf(out_val, "Your %s glows black, fades.", tmp_str);
-        //    msg_print(out_val);
-        //    unmagic_name(i_ptr);
-        //    i_ptr->flags = TR_CURSED;
-        //    i_ptr->tohit = 0;
-        //    i_ptr->todam = 0;
-        //    i_ptr->toac = -randint(5) - randint(5);
-        //    calc_bonuses();
-        //    ident = TRUE;
-        //  }
-        //  break;
+        case 36:
+          ident = equip_curse();
+          break;
         case 37:
           for (k = 0; k < randint(3); k++) {
             ident |= summon_undead(uD.y, uD.x);
