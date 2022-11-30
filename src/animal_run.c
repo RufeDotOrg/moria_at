@@ -14,12 +14,11 @@ static int find_prevdir;
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
 
-#define MSG(x, ...)                                                        \
-  {                                                                        \
-    char vtype[80];                                                        \
-    int len =                                                              \
-        snprintf(vtype, sizeof(vtype), "<%d>" x, __LINE__, ##__VA_ARGS__); \
-    msg_print2(vtype, len);                                                \
+#define MSG(x, ...)                                             \
+  {                                                             \
+    char vtype[80];                                             \
+    int len = snprintf(vtype, sizeof(vtype), x, ##__VA_ARGS__); \
+    msg_print2(vtype, len);                                     \
   }
 
 // Inventory of object IDs; obj_get(id)
@@ -41,7 +40,8 @@ inkey()
   }
   return c;
 }
-char log_extD[] = " -more-";
+static char log_extD[] = " -more-";
+static int log_countD;
 static void msg_print2(msg, msglen) char* msg;
 int msglen;
 {
@@ -62,7 +62,11 @@ int msglen;
     len += 1;
   }
 
-  len += snprintf(logD + len, AL(logD), "%s", msg);
+  if (!len) {
+    log_countD += 1;
+    len = snprintf(logD, AL(logD), "%d| ", log_countD);
+  }
+  len += snprintf(logD + len, AL(logD) - len, "%s", msg);
   log_usedD = len;
 }
 static void
@@ -5529,6 +5533,7 @@ dungeon()
       AC(screen_usedD);
       AC(overlayD);
       AC(overlay_usedD);
+      log_countD = 0;
       if (!free_turn_flag) log_usedD = 0;
       free_turn_flag = FALSE;
 
