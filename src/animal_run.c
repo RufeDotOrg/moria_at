@@ -1001,8 +1001,8 @@ void tr_obj_copy(tidx, obj) int tidx;
 struct objS* obj;
 {
   struct treasureS* tr_ptr = &treasureD[tidx];
-  obj->name2 = 0;
   obj->flags = tr_ptr->flags;
+  obj->name2 = 0;
   obj->fy = 0;
   obj->fx = 0;
   obj->tval = tr_ptr->tval;
@@ -4102,7 +4102,18 @@ inven_random()
     if (invenD[it]) tmp[k++] = invenD[it];
   }
 
-  return tmp[randint(k) - 1];
+  if (k)
+    return tmp[randint(k) - 1];
+  else
+    return -1;
+}
+static int
+inven_slot()
+{
+  for (int it = 0; it < INVEN_EQUIP; ++it) {
+    if (!invenD[it]) return it;
+  }
+  return -1;
 }
 static int
 inven_food()
@@ -4333,21 +4344,26 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  int actuate_test[] = {214, 190};  //{238, 185, 314};
+  int actuate_test[] = {177};  //{238, 185, 314};
   for (int it = 0; it < AL(actuate_test); ++it) {
-    int iidx = INVEN_EQUIP - 3 + it;
-    if (iidx >= INVEN_EQUIP) break;
+    int iidx = inven_slot();
+    if (iidx == -1) break;
+
     struct objS* obj = obj_use();
     tr_obj_copy(actuate_test[it], obj);
     invenD[iidx] = obj->id;
   }
-  int magik_test[] = {91};
+  int magik_test[] = {92};
   for (int it = 0; it < AL(magik_test); ++it) {
+    int iidx = inven_slot();
+    if (iidx == -1) break;
+
     struct objS* obj = obj_use();
-    tr_obj_copy(actuate_test[it], obj);
     do {
+      tr_obj_copy(magik_test[it], obj);
       magic_treasure(obj, dun_level);
-    } while ((TR_SPEED & obj->flags) == 0);
+    } while ((TR_SPEED & obj->flags) == 0 || obj->p1 <= 0);
+    invenD[iidx] = obj->id;
   }
 
   calc_bonuses();
