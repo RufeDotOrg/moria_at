@@ -2215,28 +2215,29 @@ int level;
 }
 int
 place_monster(y, x, z, slp)
-register int y, x, z;
-int slp;
 {
   struct monS* mon;
   struct creatureS* cre;
 
   cre = &creatureD[z];
   mon = mon_use();
-  if (!mon) return FALSE;
-  // TBD: duck type
-  mon->fy = y;
-  mon->fx = x;
-  mon->cidx = z;
-  if (cre->cdefense & CD_MAX_HP)
-    mon->hp = cre->hd[0] * cre->hd[1];
-  else
-    mon->hp = pdamroll(cre->hd);
-  mon->cdis = distance(uD.y, uD.x, y, x);
-  mon->ml = FALSE;
 
-  caveD[y][x].midx = mon_index(mon);
-  return TRUE;
+  if (mon->id) {
+    // TBD: duck type
+    mon->fy = y;
+    mon->fx = x;
+    mon->cidx = z;
+    if (cre->cdefense & CD_MAX_HP)
+      mon->hp = cre->hd[0] * cre->hd[1];
+    else
+      mon->hp = pdamroll(cre->hd);
+    mon->cdis = distance(uD.y, uD.x, y, x);
+    mon->ml = FALSE;
+
+    caveD[y][x].midx = mon_index(mon);
+  }
+
+  return mon->id;
 }
 int
 summon_monster(y, x, slp)
@@ -2246,7 +2247,7 @@ summon_monster(y, x, slp)
   struct caveS* cave_ptr;
 
   i = 0;
-  summon = FALSE;
+  summon = 0;
   l = get_mon_num(dun_level + MON_SUMMON_ADJ);
   for (int it = 0; it < 9; ++it) {
     j = y - 2 + randint(3);
@@ -2254,12 +2255,12 @@ summon_monster(y, x, slp)
     if (in_bounds(j, k)) {
       cave_ptr = &caveD[j][k];
       if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->midx == 0)) {
-        summon = (place_monster(j, k, l, slp));
+        summon = place_monster(j, k, l, slp);
         break;
       }
     }
   }
-  return (summon);
+  return summon;
 }
 int
 summon_undead(y, x)
@@ -2268,7 +2269,7 @@ summon_undead(y, x)
   int l, m, summon;
   struct caveS* cave_ptr;
 
-  summon = FALSE;
+  summon = 0;
   l = m_level[MAX_MON_LEVEL];
   while (l) {
     m = randint(l) - 1;
@@ -2293,7 +2294,8 @@ summon_undead(y, x)
       }
     }
   }
-  return (summon);
+
+  return summon;
 }
 void alloc_mon(num, dis, slp) int num, dis;
 int slp;
@@ -3947,6 +3949,13 @@ int factor;
   // if ((TR_TIMID & obj->flags) && (factor > 0)) py.flags.afraid += 50;
   // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
 }
+BOOL
+player_saves()
+{
+  int adj = level_adj[uD.clidx][LA_SAVE];
+
+  return (randint(100) <= (uD.save + think_adj(A_WIS) + (adj * uD.lev / 3)));
+}
 static int
 equip_cursed()
 {
@@ -5167,7 +5176,7 @@ int *uy, *ux;
           break;
         case 7:
           for (k = 0; k < randint(3); k++) {
-            ident |= summon_monster(uD.y, uD.x, FALSE);
+            ident |= (summon_monster(uD.y, uD.x, FALSE) != 0);
           }
           break;
         case 8:
@@ -5275,7 +5284,7 @@ int *uy, *ux;
           break;
         case 37:
           for (k = 0; k < randint(3); k++) {
-            ident |= summon_undead(uD.y, uD.x);
+            ident |= (summon_undead(uD.y, uD.x) != 0);
           }
           break;
         // case 38:
@@ -5595,7 +5604,7 @@ void inven_invoke(iidx, uy, ux) int *uy, *ux;
         case 8:
           ident = FALSE;
           for (k = 0; k < randint(4); k++) {
-            ident |= summon_monster(uD.y, uD.x, FALSE);
+            ident |= (summon_monster(uD.y, uD.x, FALSE) != 0);
           }
           break;
           // case 10:
@@ -6733,12 +6742,197 @@ uint32_t* rcmove;
     if (do_turn) break;
   }
 }
+static int
+mon_cast_spell(midx)
+{
+  uint32_t i;
+  int k, y, x, chance, thrown_spell, r1;
+  int spell_choice[32];
+  int took_turn;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  if (death) return TRUE;
+
+  m_ptr = &entity_monD[midx];
+  cr_ptr = &creatureD[m_ptr->cidx];
+  chance = cr_ptr->spells & CS_FREQ;
+  /* 1 in x chance of casting spell  	   */
+  if (randint(chance) != 1) took_turn = FALSE;
+  /* Must be within certain range  	   */
+  else if (m_ptr->cdis > MAX_SIGHT)
+    took_turn = FALSE;
+  /* TBD: Must have unobstructed Line-Of-Sight     */
+  // else if (!los(char_row, char_col, (int)m_ptr->fy, (int)m_ptr->fx))
+  //   took_turn = FALSE;
+  else /* Creature is going to cast a spell   */
+  {
+    took_turn = TRUE;
+    mon_desc(midx);
+
+    /* Extract all possible spells into spell_choice */
+    i = (cr_ptr->spells & ~CS_FREQ);
+    k = 0;
+    while (i != 0) {
+      spell_choice[k] = bit_pos(&i);
+      k++;
+    }
+    /* Choose a spell to cast  		       */
+    thrown_spell = spell_choice[randint(k) - 1];
+    thrown_spell++;
+    /* all except teleport_away() and drain mana spells always disturb */
+    if (thrown_spell > 6 && thrown_spell != 17) disturb(1, 0);
+    /* save some code/data space here, with a small time penalty */
+    if ((thrown_spell < 14 && thrown_spell > 6) || (thrown_spell == 16)) {
+      MSG("%s casts a spell.", descD);
+    }
+    /* Cast the spell.  		     */
+    switch (thrown_spell) {
+      case 5: /*Teleport Short*/
+        teleport_away(midx, 5);
+        break;
+      case 6: /*Teleport Long */
+        teleport_away(midx, MAX_SIGHT);
+        break;
+      // case 7: /*Teleport To (aka. Summon)  */
+      //   teleport_to(m_ptr->fy, m_ptr->fx);
+      //   break;
+      case 8: /*Light Wound   */
+        if (player_saves())
+          msg_print("You resist the effects of the spell.");
+        else
+          py_take_hit(damroll(3, 8));
+        break;
+      case 9: /*Serious Wound */
+        if (player_saves())
+          msg_print("You resist the effects of the spell.");
+        else
+          py_take_hit(damroll(8, 8));
+        break;
+      // case 10: /*Hold Person    */
+      //   if (py.flags.free_act)
+      //     msg_print("You are unaffected.");
+      //   else if (player_saves())
+      //     msg_print("You resist the effects of the spell.");
+      //   else if (py.flags.paralysis > 0)
+      //     py.flags.paralysis += 2;
+      //   else
+      //     py.flags.paralysis = randint(5) + 4;
+      //   break;
+      // case 11: /*Cause Blindness*/
+      //   if (player_saves())
+      //     msg_print("You resist the effects of the spell.");
+      //   else if (py.flags.blind > 0)
+      //     py.flags.blind += 6;
+      //   else
+      //     py.flags.blind += 12 + randint(3);
+      //   break;
+      // case 12: /*Cause Confuse */
+      //   if (player_saves())
+      //     msg_print("You resist the effects of the spell.");
+      //   else if (py.flags.confused > 0)
+      //     py.flags.confused += 2;
+      //   else
+      //     py.flags.confused = randint(5) + 3;
+      //   break;
+      // case 13: /*Cause Fear    */
+      //   if (player_saves())
+      //     msg_print("You resist the effects of the spell.");
+      //   else if (py.flags.afraid > 0)
+      //     py.flags.afraid += 2;
+      //   else
+      //     py.flags.afraid = randint(5) + 3;
+      //   break;
+      case 14: /*Summon Monster*/
+      {
+        MSG("%s magically summons a monster!", descD);
+        int midx = summon_monster(uD.y, uD.x, FALSE);
+        update_mon(midx);
+      } break;
+      case 15: /*Summon Undead*/
+      {
+        MSG("%s magically summons an undead!", descD);
+        int midx = summon_undead(uD.y, uD.x);
+        update_mon(midx);
+      } break;
+      // case 16: /*Slow Person   */
+      //   if (py.flags.free_act)
+      //     msg_print("You are unaffected.");
+      //   else if (player_saves())
+      //     msg_print("You resist the effects of the spell.");
+      //   else if (py.flags.slow > 0)
+      //     py.flags.slow += 2;
+      //   else
+      //     py.flags.slow = randint(5) + 3;
+      //   break;
+      // case 17: /*Drain Mana   */
+      //   if (uD.cmana > 0) {
+      //     disturb(1, 0);
+      //     MSG("%sdraws psychic energy from you!", descD);
+      //     if (m_ptr->ml) {
+      //       MSG("%sappears healthier.", descD);
+      //     }
+      //     r1 = (randint(cr_ptr->level) >> 1) + 1;
+      //     if (r1 > uD.cmana) {
+      //       r1 = uD.cmana;
+      //       uD.cmana = 0;
+      //       uD.cmana_frac = 0;
+      //     } else
+      //       uD.cmana -= r1;
+      //     m_ptr->hp += 6 * (r1);
+      //   }
+      //   break;
+      // case 20: /*Breath Light */
+      //  MSG("%s breathes lightning.", descD);
+      //  breath(GF_LIGHTNING, uD.y, uD.x, (m_ptr->hp / 4), midx);
+      //  break;
+      // case 21: /*Breath Gas   */
+      //  MSG("%s breathes gas.", descD);
+      //  breath(GF_POISON_GAS, uD.y, uD.x, (m_ptr->hp / 3), midx);
+      //  break;
+      // case 22: /*Breath Acid   */
+      //  MSG("%s breathes acid.", descD);
+      //  breath(GF_ACID, uD.y, uD.x, (m_ptr->hp / 3), midx);
+      //  break;
+      // case 23: /*Breath Frost */
+      //  MSG("%s breathes frost.", descD);
+      //  breath(GF_FROST, uD.y, uD.x, (m_ptr->hp / 3), midx);
+      //  break;
+      // case 24: /*Breath Fire   */
+      //  MSG("%s breathes fire.", descD);
+      //  breath(GF_FIRE, uD.y, uD.x, (m_ptr->hp / 3), midx);
+      //  break;
+      default:
+        MSG("%s cast unknown spell.", descD);
+    }
+    /* End of spells  			       */
+    // if (m_ptr->ml) {
+    //   c_recall[m_ptr->mptr].r_spells |= 1L << (thrown_spell - 1);
+    //   if ((c_recall[m_ptr->mptr].r_spells & CS_FREQ) != CS_FREQ)
+    //     c_recall[m_ptr->mptr].r_spells++;
+    //   if (death && c_recall[m_ptr->mptr].r_deaths < MAX_SHORT)
+    //     c_recall[m_ptr->mptr].r_deaths++;
+    // }
+  }
+  return took_turn;
+}
 static void mon_move(midx, rcmove) int midx;
 uint32_t* rcmove;
 {
-  int mm[9];
-  get_moves(midx, mm);
-  make_move(midx, mm, rcmove);
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+  int took_turn;
+
+  m_ptr = &entity_monD[midx];
+  cr_ptr = &creatureD[m_ptr->cidx];
+
+  took_turn = FALSE;
+  if (cr_ptr->spells & CS_FREQ) took_turn = mon_cast_spell(midx);
+  if (!took_turn) {
+    int mm[9];
+    get_moves(midx, mm);
+    make_move(midx, mm, rcmove);
+  }
 }
 static int
 movement_rate(speed)
