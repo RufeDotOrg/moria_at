@@ -4964,7 +4964,7 @@ static void mon_attack(midx) int midx;
           break;
         case 19: /*Lose experience  */
           msg_print("You feel your life draining away!");
-          // lose_exp(damage + (uD.exp / 100) * MON_DRAIN_LIFE);
+          py_lose_experience(damage + (uD.exp / 100) * MON_DRAIN_LIFE);
           break;
         case 20: /*Aggravate monster*/
           // aggravate_monster(20);
