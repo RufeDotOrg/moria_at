@@ -3790,15 +3790,17 @@ int *uy, *ux;
 }
 void teleport_away(midx, dis) int midx, dis;
 {
-  int yn, xn, ctr;
+  int fy, fx, yn, xn, ctr;
   struct monS* m_ptr;
 
-  m_ptr = mon_get(midx);
+  m_ptr = &entity_monD[midx];
+  fy = m_ptr->fy;
+  fx = m_ptr->fx;
   ctr = 0;
   do {
     do {
-      yn = m_ptr->fy + (randint(2 * dis + 1) - (dis + 1));
-      xn = m_ptr->fx + (randint(2 * dis + 1) - (dis + 1));
+      yn = fy + (randint(2 * dis + 1) - (dis + 1));
+      xn = fx + (randint(2 * dis + 1) - (dis + 1));
     } while (!in_bounds(yn, xn));
     ctr++;
     if (ctr > 9) {
@@ -3807,9 +3809,10 @@ void teleport_away(midx, dis) int midx, dis;
     }
   } while ((caveD[yn][xn].fval >= MIN_CLOSED_SPACE) ||
            (caveD[yn][xn].midx != 0));
-  move_rec(m_ptr->fy, m_ptr->fx, yn, xn);
+  move_rec(fy, fx, yn, xn);
   m_ptr->fy = yn;
   m_ptr->fx = xn;
+  SYMMAP_PATCH(fy, fx);
 
   m_ptr->ml = FALSE;
   m_ptr->cdis = distance(uD.y, uD.x, yn, xn);
@@ -3887,7 +3890,7 @@ char* bolt_typ;
     else {
       if (c_ptr->midx) {
         flag = TRUE;
-        m_ptr = mon_get(c_ptr->midx);
+        m_ptr = &entity_monD[c_ptr->midx];
         cre = &creatureD[m_ptr->cidx];
 
         /* light up monster and draw monster, temporarily set
