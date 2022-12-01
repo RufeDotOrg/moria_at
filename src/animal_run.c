@@ -6047,7 +6047,14 @@ uint32_t typ_dam;
   }
   return (minus);
 }
-void fire_dam(dam) int dam;
+void
+poison_gas(dam)
+{
+  py_take_hit(dam);
+  // py.flags.poisoned += 12 + randint(dam);
+}
+void
+fire_dam(dam)
 {
   // TBD: Resistance
   // if (py.flags.fire_resist) dam = dam / 3;
@@ -6742,6 +6749,98 @@ uint32_t* rcmove;
     if (do_turn) break;
   }
 }
+void
+breath(typ, y, x, dam_hp, midx)
+{
+  int i, j;
+  int dam, max_dis, harm_type;
+  uint32_t weapon_type, tmp, treas;
+  int (*destroy)();
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  max_dis = 2;
+  get_flags(typ, &weapon_type, &harm_type, &destroy);
+  for (i = y - 2; i <= y + 2; i++)
+    for (j = x - 2; j <= x + 2; j++)
+      if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis)) {
+        //&& los(y, x, i, j)) {
+        c_ptr = &caveD[i][j];
+        if ((c_ptr->oidx != 0) && (*destroy)(&entity_objD[c_ptr->oidx]))
+          delete_object(i, j);
+        if (c_ptr->fval <= MAX_OPEN_SPACE) {
+          /* must test status bit, not py.flags.blind here, flag could have
+             been set by a previous monster, but the breath should still
+             be visible until the blindness takes effect */
+          // if (panel_contains(i, j) && !(py.flags.status & PY_BLIND))
+          //   print('*', i, j);
+          // if (c_ptr->midx) {
+          //   m_ptr = &entity_monD[c_ptr->midx];
+          //   cr_ptr = &c_list[m_ptr->mptr];
+          //   dam = dam_hp;
+          //   if (harm_type & cr_ptr->cdefense)
+          //     dam = dam * 2;
+          //   else if (weapon_type & cr_ptr->spells)
+          //     dam = (dam / 4);
+          //   dam = (dam / (distance(i, j, y, x) + 1));
+          //   /* can not call mon_take_hit here, since player does not
+          //      get experience for kill */
+          //   m_ptr->hp = m_ptr->hp - dam;
+          //   m_ptr->csleep = 0;
+          //   if (m_ptr->hp < 0) {
+          //     treas =
+          //         monster_death(m_ptr->fy, m_ptr->fx, cr_ptr->cmove);
+          //     if (m_ptr->ml) {
+          //       tmp = (c_recall[m_ptr->mptr].r_cmove & CM_TREASURE) >>
+          //             CM_TR_SHIFT;
+          //       if (tmp > ((treas & CM_TREASURE) >> CM_TR_SHIFT))
+          //         treas = (treas & ~CM_TREASURE) | (tmp << CM_TR_SHIFT);
+          //       c_recall[m_ptr->mptr].r_cmove =
+          //           treas | (c_recall[m_ptr->mptr].r_cmove & ~CM_TREASURE);
+          //     }
+
+          //    /* It ate an already processed monster.Handle normally.*/
+          //    if (midx < c_ptr->cptr) delete_monster((int)c_ptr->cptr);
+          //    /* If it eats this monster, an already processed monster
+          //       will take its place, causing all kinds of havoc.
+          //       Delay the kill a bit. */
+          //    else
+          //      fix1_delete_monster((int)c_ptr->cptr);
+          //  }
+          //} else
+
+          /* let's do at least one point of damage */
+          /* prevents randint(0) problem with poison_gas, also */
+          dam = MAX(dam_hp / (distance(i, j, y, x) + 1), 1);
+          switch (typ) {
+            case GF_LIGHTNING:
+              light_dam(dam);
+              break;
+            case GF_POISON_GAS:
+              poison_gas(dam);
+              break;
+            case GF_ACID:
+              acid_dam(dam);
+              break;
+            case GF_FROST:
+              cold_dam(dam);
+              break;
+            case GF_FIRE:
+              fire_dam(dam);
+              break;
+          }
+        }
+      }
+  /* show the ball of gas */
+  // put_qio();
+
+  // for (i = (y - 2); i <= (y + 2); i++)
+  //   for (j = (x - 2); j <= (x + 2); j++)
+  //     if (in_bounds(i, j) && panel_contains(i, j) &&
+  //         (distance(y, x, i, j) <= max_dis))
+  //       lite_spot(i, j);
+}
 static int
 mon_cast_spell(midx)
 {
@@ -6855,53 +6954,53 @@ mon_cast_spell(midx)
         int midx = summon_undead(uD.y, uD.x);
         update_mon(midx);
       } break;
-      // case 16: /*Slow Person   */
-      //   if (py.flags.free_act)
-      //     msg_print("You are unaffected.");
-      //   else if (player_saves())
-      //     msg_print("You resist the effects of the spell.");
-      //   else if (py.flags.slow > 0)
-      //     py.flags.slow += 2;
-      //   else
-      //     py.flags.slow = randint(5) + 3;
-      //   break;
-      // case 17: /*Drain Mana   */
-      //   if (uD.cmana > 0) {
-      //     disturb(1, 0);
-      //     MSG("%sdraws psychic energy from you!", descD);
-      //     if (m_ptr->ml) {
-      //       MSG("%sappears healthier.", descD);
-      //     }
-      //     r1 = (randint(cr_ptr->level) >> 1) + 1;
-      //     if (r1 > uD.cmana) {
-      //       r1 = uD.cmana;
-      //       uD.cmana = 0;
-      //       uD.cmana_frac = 0;
-      //     } else
-      //       uD.cmana -= r1;
-      //     m_ptr->hp += 6 * (r1);
-      //   }
-      //   break;
-      // case 20: /*Breath Light */
-      //  MSG("%s breathes lightning.", descD);
-      //  breath(GF_LIGHTNING, uD.y, uD.x, (m_ptr->hp / 4), midx);
-      //  break;
-      // case 21: /*Breath Gas   */
-      //  MSG("%s breathes gas.", descD);
-      //  breath(GF_POISON_GAS, uD.y, uD.x, (m_ptr->hp / 3), midx);
-      //  break;
-      // case 22: /*Breath Acid   */
-      //  MSG("%s breathes acid.", descD);
-      //  breath(GF_ACID, uD.y, uD.x, (m_ptr->hp / 3), midx);
-      //  break;
-      // case 23: /*Breath Frost */
-      //  MSG("%s breathes frost.", descD);
-      //  breath(GF_FROST, uD.y, uD.x, (m_ptr->hp / 3), midx);
-      //  break;
-      // case 24: /*Breath Fire   */
-      //  MSG("%s breathes fire.", descD);
-      //  breath(GF_FIRE, uD.y, uD.x, (m_ptr->hp / 3), midx);
-      //  break;
+        // case 16: /*Slow Person   */
+        //   if (py.flags.free_act)
+        //     msg_print("You are unaffected.");
+        //   else if (player_saves())
+        //     msg_print("You resist the effects of the spell.");
+        //   else if (py.flags.slow > 0)
+        //     py.flags.slow += 2;
+        //   else
+        //     py.flags.slow = randint(5) + 3;
+        //   break;
+        // case 17: /*Drain Mana   */
+        //   if (uD.cmana > 0) {
+        //     disturb(1, 0);
+        //     MSG("%sdraws psychic energy from you!", descD);
+        //     if (m_ptr->ml) {
+        //       MSG("%sappears healthier.", descD);
+        //     }
+        //     r1 = (randint(cr_ptr->level) >> 1) + 1;
+        //     if (r1 > uD.cmana) {
+        //       r1 = uD.cmana;
+        //       uD.cmana = 0;
+        //       uD.cmana_frac = 0;
+        //     } else
+        //       uD.cmana -= r1;
+        //     m_ptr->hp += 6 * (r1);
+        //   }
+        //   break;
+      case 20: /*Breath Light */
+        MSG("%s breathes lightning.", descD);
+        breath(GF_LIGHTNING, uD.y, uD.x, (m_ptr->hp / 4), midx);
+        break;
+      case 21: /*Breath Gas   */
+        MSG("%s breathes gas.", descD);
+        breath(GF_POISON_GAS, uD.y, uD.x, (m_ptr->hp / 3), midx);
+        break;
+      case 22: /*Breath Acid   */
+        MSG("%s breathes acid.", descD);
+        breath(GF_ACID, uD.y, uD.x, (m_ptr->hp / 3), midx);
+        break;
+      case 23: /*Breath Frost */
+        MSG("%s breathes frost.", descD);
+        breath(GF_FROST, uD.y, uD.x, (m_ptr->hp / 3), midx);
+        break;
+      case 24: /*Breath Fire   */
+        MSG("%s breathes fire.", descD);
+        breath(GF_FIRE, uD.y, uD.x, (m_ptr->hp / 3), midx);
+        break;
       default:
         MSG("%s cast unknown spell.", descD);
     }
