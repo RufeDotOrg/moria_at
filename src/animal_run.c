@@ -3878,6 +3878,75 @@ calc_bonuses()
   // if (p_ptr->slow_digest) p_ptr->food_digest--;
   // if (p_ptr->regenerate) p_ptr->food_digest += 3;
 }
+int8_t
+modify_stat(stat, amount)
+int stat, amount;
+{
+  int loop, i;
+  int8_t tmp_stat;
+
+  tmp_stat = statD.cur_stat[stat];
+  loop = (amount < 0 ? -amount : amount);
+  for (i = 0; i < loop; i++) {
+    if (amount > 0) {
+      if (tmp_stat < 18)
+        tmp_stat++;
+      else if (tmp_stat < 108)
+        tmp_stat += 10;
+      else
+        tmp_stat = 118;
+    } else {
+      if (tmp_stat > 27)
+        tmp_stat -= 10;
+      else if (tmp_stat > 18)
+        tmp_stat = 18;
+      else if (tmp_stat > 3)
+        tmp_stat--;
+    }
+  }
+  return tmp_stat;
+}
+void set_use_stat(stat) int stat;
+{
+  statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
+
+  if (stat == A_STR) {
+    calc_bonuses();
+  } else if (stat == A_DEX) {
+    calc_bonuses();
+  } else if (stat == A_CON)
+    calc_hitpoints(uD.lev);
+  // else if (stat == A_INT) {
+  //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
+  //   calc_mana(A_INT);
+  // } else if (stat == A_WIS) {
+  //   if (class[py.misc.pclass].spell == PRIEST) calc_spells(A_WIS);
+  //   calc_mana(A_WIS);
+  // }
+}
+void py_bonuses(obj, factor) struct objS* obj;
+int factor;
+{
+  int i, amount;
+
+  amount = obj->p1 * factor;
+  if (obj->flags & TR_STATS) {
+    for (i = 0; i < 6; i++)
+      if ((1 << i) & obj->flags) {
+        statD.mod_stat[i] += amount;
+        set_use_stat(i);
+      }
+  }
+  if (TR_SEARCH & obj->flags) {
+    uD.search += amount;
+    uD.fos -= amount;
+  }
+  if (TR_STEALTH & obj->flags) uD.stealth += amount;
+  if (TR_SPEED & obj->flags) uD.pspeed -= amount;
+  // if ((TR_BLIND & obj->flags) && (factor > 0)) py.flags.blind += 1000;
+  // if ((TR_TIMID & obj->flags) && (factor > 0)) py.flags.afraid += 50;
+  // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
+}
 static int
 equip_cursed()
 {
@@ -4306,52 +4375,6 @@ magic_init()
     strcat(titleD[h], string);
   }
 }
-int8_t
-modify_stat(stat, amount)
-int stat, amount;
-{
-  int loop, i;
-  int8_t tmp_stat;
-
-  tmp_stat = statD.cur_stat[stat];
-  loop = (amount < 0 ? -amount : amount);
-  for (i = 0; i < loop; i++) {
-    if (amount > 0) {
-      if (tmp_stat < 18)
-        tmp_stat++;
-      else if (tmp_stat < 108)
-        tmp_stat += 10;
-      else
-        tmp_stat = 118;
-    } else {
-      if (tmp_stat > 27)
-        tmp_stat -= 10;
-      else if (tmp_stat > 18)
-        tmp_stat = 18;
-      else if (tmp_stat > 3)
-        tmp_stat--;
-    }
-  }
-  return tmp_stat;
-}
-void set_use_stat(stat) int stat;
-{
-  statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
-
-  if (stat == A_STR) {
-    calc_bonuses();
-  } else if (stat == A_DEX) {
-    calc_bonuses();
-  } else if (stat == A_CON)
-    calc_hitpoints(uD.lev);
-  // else if (stat == A_INT) {
-  //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
-  //   calc_mana(A_INT);
-  // } else if (stat == A_WIS) {
-  //   if (class[py.misc.pclass].spell == PRIEST) calc_spells(A_WIS);
-  //   calc_mana(A_WIS);
-  // }
-}
 int
 dec_stat(stat)
 register int stat;
@@ -4408,29 +4431,6 @@ res_stat(stat)
     return TRUE;
   }
   return FALSE;
-}
-void py_bonuses(obj, factor) struct objS* obj;
-int factor;
-{
-  int i, amount;
-
-  amount = obj->p1 * factor;
-  if (obj->flags & TR_STATS) {
-    for (i = 0; i < 6; i++)
-      if ((1 << i) & obj->flags) {
-        statD.mod_stat[i] += amount;
-        set_use_stat(i);
-      }
-  }
-  if (TR_SEARCH & obj->flags) {
-    uD.search += amount;
-    uD.fos -= amount;
-  }
-  if (TR_STEALTH & obj->flags) uD.stealth += amount;
-  if (TR_SPEED & obj->flags) uD.pspeed -= amount;
-  // if ((TR_BLIND & obj->flags) && (factor > 0)) py.flags.blind += 1000;
-  // if ((TR_TIMID & obj->flags) && (factor > 0)) py.flags.afraid += 50;
-  // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
 }
 static void
 py_where()
