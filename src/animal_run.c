@@ -221,6 +221,16 @@ go_down()
     free_turn_flag = TRUE;
   }
 }
+int
+cave_floor_near(y, x)
+{
+  for (int col = y - 1; col <= y + 1; ++col) {
+    for (int row = x - 1; row <= x + 1; ++row) {
+      if (caveD[col][row].fval <= MAX_FLOOR) return TRUE;
+    }
+  }
+  return FALSE;
+}
 void
 cave_init()
 {
@@ -510,6 +520,30 @@ unlight_area(y, x)
 
   // TBD: unknown when blind.. (py.flags.blind)
   return TRUE;
+}
+void
+map_area()
+{
+  struct caveS* c_ptr;
+  int row, col;
+  int i, j, k, l;
+
+  // TBD: tuning
+  i = panelD.panel_row_min - randint(10);
+  j = panelD.panel_row_max + randint(10);
+  k = panelD.panel_col_min - randint(20);
+  l = panelD.panel_col_max + randint(20);
+  for (col = i; col <= j; col++)
+    for (row = k; row <= l; row++) {
+      c_ptr = &caveD[col][row];
+      if (in_bounds(col, row) && cave_floor_near(col, row)) {
+        if (c_ptr->fval >= MIN_WALL)
+          c_ptr->cflag |= CF_PERM_LIGHT;
+        else if ((c_ptr->oidx != 0) &&
+                 oset_always_visible(obj_get(c_ptr->oidx)))
+          c_ptr->cflag |= CF_FIELDMARK;
+      }
+    }
 }
 typedef struct {
   int y;
@@ -1157,6 +1191,12 @@ int tval;
       return TRUE;
   }
   return FALSE;
+}
+int
+oset_always_visible(obj)
+struct objS* obj;
+{
+  return (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE);
 }
 int
 oset_zap(obj)
@@ -3406,7 +3446,7 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  int actuate_test[] = {177, 214};  //{238, 185, 314};
+  int actuate_test[] = {177, 214, 190};  //{238, 185, 314};
   for (int it = 0; it < AL(actuate_test); ++it) {
     int iidx = INVEN_EQUIP - 3 + it;
     if (iidx >= INVEN_EQUIP) break;
@@ -4119,7 +4159,6 @@ int *uy, *ux;
       if (i_ptr->tval == TV_SCROLL2) j += 32;
 
       /* Scrolls.  		*/
-      MSG("j is %d", j);
       switch (j) {
         case 1:
           ident = tohit_enchant(1);
@@ -4165,17 +4204,17 @@ int *uy, *ux;
           new_level_flag = TRUE;
           ident = TRUE;
           break;
-        // case 11:
-        //   if (py.flags.confuse_monster == 0) {
-        //     msg_print("Your hands begin to glow.");
-        //     py.flags.confuse_monster = TRUE;
-        //     ident = TRUE;
-        //   }
-        //   break;
-        // case 12:
-        //   ident = TRUE;
-        //   map_area();
-        //   break;
+          // case 11:
+          //   if (py.flags.confuse_monster == 0) {
+          //     msg_print("Your hands begin to glow.");
+          //     py.flags.confuse_monster = TRUE;
+          //     ident = TRUE;
+          //   }
+          //   break;
+        case 12:
+          ident = TRUE;
+          map_area();
+          break;
         // case 13:
         //   ident = sleep_monsters1(char_row, char_col);
         //   break;
