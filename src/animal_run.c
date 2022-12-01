@@ -4456,6 +4456,55 @@ py_takeoff()
   }
   calc_bonuses();
 }
+static void
+py_help()
+{
+  int line = 0;
+#define ScreenMsg(text, ...)                                            \
+  {                                                                     \
+    int used = screen_usedD[line];                                      \
+    used += snprintf(screenD[line] + used, AL(screenD[0]) - used, text, \
+                     ##__VA_ARGS__);                                    \
+    screen_usedD[line++] = used;                                        \
+  }
+  ScreenMsg("? - help");
+  ScreenMsg(",: pickup object");
+  ScreenMsg("c: close object");
+  ScreenMsg("d: drop object");
+  ScreenMsg("e: equipment");
+  ScreenMsg("f: force Bash");
+  ScreenMsg("i: inventory");
+  ScreenMsg("q: quaff potion");
+  ScreenMsg("r: read scroll");
+  ScreenMsg("o: open object");
+  ScreenMsg("s: search for traps/doors");
+  ScreenMsg("w: wear object");
+  ScreenMsg("<: up stairs");
+  ScreenMsg(">: down stairs");
+  ScreenMsg("C: character screen");
+  ScreenMsg("D: disarm trap");
+  ScreenMsg("E: eat object");
+  ScreenMsg("M: map dungeon");
+  ScreenMsg("R: rest until healed");
+  ScreenMsg("T: take off equipment");
+  ScreenMsg("W: where about the dungeon");
+
+  for (int it = 0; it < AL(screenD); ++it) {
+    while (screen_usedD[it] < 30) {
+      screenD[it][screen_usedD[it]] = ' ';
+      screen_usedD[it] += 1;
+    }
+  }
+
+  line = 1;
+  ScreenMsg("CTRL('f'): food (cheat)");
+  ScreenMsg("CTRL('h'): heal (cheat)");
+  ScreenMsg("CTRL('t'): teleport (cheat)");
+  ScreenMsg("CTRL('m'): teleport-to-monster (cheat)");
+  ScreenMsg("CTRL('o'): teleport-to-object (cheat)");
+  ScreenMsg(".: object interaction (experimental)");
+  ScreenMsg("m: make_known (test_cmd)");
+}
 static void py_pickup(y, x, pickup) int y, x;
 int pickup;
 {
@@ -5571,6 +5620,9 @@ dungeon()
         }
 
         switch (c) {
+          case '?':
+            py_help();
+            break;
           case ' ':
             free_turn_flag = TRUE;
             break;
