@@ -20,6 +20,13 @@ ARR_REUSE(mon, 256);
     int len = snprintf(vtype, sizeof(vtype), x, ##__VA_ARGS__); \
     msg_print2(vtype, len);                                     \
   }
+#define BufMsg(name, text, ...)                                         \
+  {                                                                     \
+    int used = name##_usedD[line];                                      \
+    used += snprintf(name##D[line] + used, AL(name##D[0]) - used, text, \
+                     ##__VA_ARGS__);                                    \
+    name##_usedD[line++] = used;                                        \
+  }
 
 // Inventory of object IDs; obj_get(id)
 // Zero is an available or empty slot
@@ -4460,34 +4467,27 @@ static void
 py_help()
 {
   int line = 0;
-#define ScreenMsg(text, ...)                                            \
-  {                                                                     \
-    int used = screen_usedD[line];                                      \
-    used += snprintf(screenD[line] + used, AL(screenD[0]) - used, text, \
-                     ##__VA_ARGS__);                                    \
-    screen_usedD[line++] = used;                                        \
-  }
-  ScreenMsg("? - help");
-  ScreenMsg(",: pickup object");
-  ScreenMsg("c: close object");
-  ScreenMsg("d: drop object");
-  ScreenMsg("e: equipment");
-  ScreenMsg("f: force Bash");
-  ScreenMsg("i: inventory");
-  ScreenMsg("q: quaff potion");
-  ScreenMsg("r: read scroll");
-  ScreenMsg("o: open object");
-  ScreenMsg("s: search for traps/doors");
-  ScreenMsg("w: wear object");
-  ScreenMsg("<: up stairs");
-  ScreenMsg(">: down stairs");
-  ScreenMsg("C: character screen");
-  ScreenMsg("D: disarm trap");
-  ScreenMsg("E: eat object");
-  ScreenMsg("M: map dungeon");
-  ScreenMsg("R: rest until healed");
-  ScreenMsg("T: take off equipment");
-  ScreenMsg("W: where about the dungeon");
+  BufMsg(screen, "? - help");
+  BufMsg(screen, ",: pickup object");
+  BufMsg(screen, "c: close object");
+  BufMsg(screen, "d: drop object");
+  BufMsg(screen, "e: equipment");
+  BufMsg(screen, "f: force Bash");
+  BufMsg(screen, "i: inventory");
+  BufMsg(screen, "q: quaff potion");
+  BufMsg(screen, "r: read scroll");
+  BufMsg(screen, "o: open object");
+  BufMsg(screen, "s: search for traps/doors");
+  BufMsg(screen, "w: wear object");
+  BufMsg(screen, "<: up stairs");
+  BufMsg(screen, ">: down stairs");
+  BufMsg(screen, "C: character screen");
+  BufMsg(screen, "D: disarm trap");
+  BufMsg(screen, "E: eat object");
+  BufMsg(screen, "M: map dungeon");
+  BufMsg(screen, "R: rest until healed");
+  BufMsg(screen, "T: take off equipment");
+  BufMsg(screen, "W: where about the dungeon");
 
   for (int it = 0; it < AL(screenD); ++it) {
     while (screen_usedD[it] < 30) {
@@ -4497,13 +4497,13 @@ py_help()
   }
 
   line = 1;
-  ScreenMsg("CTRL('f'): food (cheat)");
-  ScreenMsg("CTRL('h'): heal (cheat)");
-  ScreenMsg("CTRL('t'): teleport (cheat)");
-  ScreenMsg("CTRL('m'): teleport-to-monster (cheat)");
-  ScreenMsg("CTRL('o'): teleport-to-object (cheat)");
-  ScreenMsg(".: object interaction (experimental)");
-  ScreenMsg("m: make_known (test_cmd)");
+  BufMsg(screen, "CTRL('f'): food (cheat)");
+  BufMsg(screen, "CTRL('h'): heal (cheat)");
+  BufMsg(screen, "CTRL('t'): teleport (cheat)");
+  BufMsg(screen, "CTRL('m'): teleport-to-monster (cheat)");
+  BufMsg(screen, "CTRL('o'): teleport-to-object (cheat)");
+  BufMsg(screen, ".: object interaction (experimental)");
+  BufMsg(screen, "m: make_known (test_cmd)");
 }
 static void py_pickup(y, x, pickup) int y, x;
 int pickup;
