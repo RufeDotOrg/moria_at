@@ -260,8 +260,6 @@
 #define INVEN_AUX 33
 #define MAX_INVEN 34
 
-#define MAX_TITLES 45 /* Used with scrolls     */
-
 #define ID_MAGIK 0x1  /* sense of magic */
 #define ID_DAMD 0x2   /* cursed */
 #define ID_EMPTY 0x4  /* reveal on use */

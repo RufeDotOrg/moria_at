@@ -2859,7 +2859,7 @@ BOOL prefix;
     case TV_SCROLL2:
       if (modify) {
         basenm = 0;
-        snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"", titles[indexx]);
+        snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"", titleD[indexx]);
       } else {
         basenm = "& Scroll~";
         append_name = TRUE;
@@ -3459,6 +3459,26 @@ py_init()
 
   uD.food = 7500;
   uD.food_digest = 2;
+}
+void
+magic_init()
+{
+  int i, j, k, h;
+  char string[80];
+  for (h = 0; h < AL(titleD); h++) {
+    string[0] = 0;
+    k = randint(2) + 1;
+    for (i = 0; i < k; i++) {
+      for (j = randint(2); j > 0; j--)
+        strcat(string, syllableD[randint(AL(syllableD)) - 1]);
+      if (i < k - 1) strcat(string, " ");
+    }
+    if (string[8] == ' ')
+      string[8] = '\0';
+    else
+      string[9] = '\0';
+    strcat(titleD[h], string);
+  }
 }
 int8_t
 modify_stat(stat, amount)
@@ -5939,6 +5959,7 @@ main()
   obj_level_init();
   generate_cave();
   py_init();
+  magic_init();
 
   while (!death) {
     py_check_view(uD.y, uD.x);

@@ -1,6 +1,4 @@
 
-char titles[MAX_TITLES][10];
-
 char* colors[] = {
     /* Do not move the first three */
     "Icky Green",
@@ -97,7 +95,7 @@ char* amulets[] = {
     "Bone",  "Brass",     "Bronze", "Pewter", "Tortoise Shell",
 };
 
-char* syllables[] = {
+char* syllableD[] = {
     "a",    "ab",   "ag",   "aks",  "ala",  "an",  "ankh", "app", "arg",
     "arze", "ash",  "aus",  "ban",  "bar",  "bat", "bek",  "bie", "bin",
     "bit",  "bjor", "blu",  "bot",  "bu",   "byt", "comp", "con", "cos",
@@ -116,3 +114,4 @@ char* syllables[] = {
     "um",   "un",   "uni",  "ur",   "val",  "viv", "vly",  "vom", "wah",
     "wed",  "werg", "wex",  "whon", "wun",  "x",   "yerg", "yp",  "zun",
 };
+char titleD[MAX_SUBVAL][10];
