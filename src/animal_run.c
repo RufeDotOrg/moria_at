@@ -4345,7 +4345,7 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  int actuate_test[] = {216};  //{238, 185, 314};
+  int actuate_test[] = {};
   for (int it = 0; it < AL(actuate_test); ++it) {
     int iidx = inven_slot();
     if (iidx == -1) break;
@@ -4355,7 +4355,7 @@ py_init()
     tr_make_known(&treasureD[obj->tidx]);
     invenD[iidx] = obj->id;
   }
-  int magik_test[] = {92};
+  int magik_test[] = {};
   for (int it = 0; it < AL(magik_test); ++it) {
     int iidx = inven_slot();
     if (iidx == -1) break;
