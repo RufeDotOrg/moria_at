@@ -3104,6 +3104,57 @@ equip_remove_curse()
   return FALSE;
 }
 static int
+equip_disenchant()
+{
+  int flag, i;
+  struct objS* obj;
+
+  flag = FALSE;
+  // INVEN_AUX is protected
+  switch (randint(7)) {
+    case 1:
+      i = INVEN_WIELD;
+      break;
+    case 2:
+      i = INVEN_BODY;
+      break;
+    case 3:
+      i = INVEN_ARM;
+      break;
+    case 4:
+      i = INVEN_OUTER;
+      break;
+    case 5:
+      i = INVEN_HANDS;
+      break;
+    case 6:
+      i = INVEN_HEAD;
+      break;
+    case 7:
+      i = INVEN_FEET;
+      break;
+  }
+  obj = obj_get(invenD[i]);
+
+  // Weapons may lose tohit/todam. Armor may lose toac.
+  // Ego weapon toac is protected.
+  // Gauntlets of Slaying tohit/todam are protected.
+  if (i == INVEN_WIELD) {
+    flag = (obj->tohit > 0 || obj->todam > 0);
+    obj->tohit -= randint(2);
+    obj->todam = MAX(obj->todam - randint(2), 0);
+  } else {
+    flag = (obj->toac > 0);
+    obj->toac = MAX(obj->toac - randint(2), 0);
+  }
+  if (flag) {
+    msg_print("There is a static feeling in the air.");
+    calc_bonuses();
+  }
+
+  return flag;
+}
+static int
 inven_random()
 {
   int k, tmp[INVEN_EQUIP];
@@ -4970,61 +5021,7 @@ static void mon_attack(midx) int midx;
           // aggravate_monster(20);
           break;
         case 21: /*Disenchant     */
-          // flag = FALSE;
-          // // INVEN_AUX is protected
-          // switch (randint(7)) {
-          //   case 1:
-          //     i = INVEN_WIELD;
-          //     break;
-          //   case 2:
-          //     i = INVEN_BODY;
-          //     break;
-          //   case 3:
-          //     i = INVEN_ARM;
-          //     break;
-          //   case 4:
-          //     i = INVEN_OUTER;
-          //     break;
-          //   case 5:
-          //     i = INVEN_HANDS;
-          //     break;
-          //   case 6:
-          //     i = INVEN_HEAD;
-          //     break;
-          //   case 7:
-          //     i = INVEN_FEET;
-          //     break;
-          // }
-          // i_ptr = &inventory[i];
-          // // Weapons may lose tohit/todam. Armor may lose toac.
-          // // Ego weapon toac is protected.
-          // // Gauntlets of Slaying tohit/todam are protected.
-          // if (i == INVEN_WIELD) {
-          //   if (i_ptr->tohit > 0) {
-          //     i_ptr->tohit -= randint(2);
-          //     /* don't send it below zero */
-          //     if (i_ptr->tohit < 0) i_ptr->tohit = 0;
-          //     flag = TRUE;
-          //   }
-          //   if (i_ptr->todam > 0) {
-          //     i_ptr->todam -= randint(2);
-          //     /* don't send it below zero */
-          //     if (i_ptr->todam < 0) i_ptr->todam = 0;
-          //     flag = TRUE;
-          //   }
-          // } else {
-          //   if (i_ptr->toac > 0) {
-          //     i_ptr->toac -= randint(2);
-          //     /* don't send it below zero */
-          //     if (i_ptr->toac < 0) i_ptr->toac = 0;
-          //     flag = TRUE;
-          //   }
-          // }
-          // if (flag) {
-          //   msg_print("There is a static feeling in the air.");
-          //   calc_bonuses();
-          // } else
-          //   notice = FALSE;
+          equip_disenchant();
           break;
         case 22: /*Eat food     */
           // if (find_range(TV_FOOD, TV_NEVER, &i, &j)) {
