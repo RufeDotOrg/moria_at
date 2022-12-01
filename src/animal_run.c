@@ -975,6 +975,11 @@ static void try_door(y, x) register int y, x;
     place_door(y, x);
 }
 int
+set_null()
+{
+  return FALSE;
+}
+int
 set_room(element)
 register int element;
 {
@@ -3446,7 +3451,7 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  int actuate_test[] = {177, 214, 190};  //{238, 185, 314};
+  int actuate_test[] = {214, 190};  //{238, 185, 314};
   for (int it = 0; it < AL(actuate_test); ++it) {
     int iidx = INVEN_EQUIP - 3 + it;
     if (iidx >= INVEN_EQUIP) break;
@@ -3809,6 +3814,119 @@ void teleport_away(midx, dis) int midx, dis;
   m_ptr->ml = FALSE;
   m_ptr->cdis = distance(uD.y, uD.x, yn, xn);
   update_mon(midx);
+}
+void
+get_flags(int typ, uint32_t* weapon_type, int* harm_type, int (**destroy)())
+{
+  // TBD:
+  *destroy = set_null;
+
+  switch (typ) {
+    case GF_MAGIC_MISSILE:
+      *weapon_type = 0;
+      *harm_type = 0;
+      //*destroy = set_null;
+      break;
+    case GF_LIGHTNING:
+      *weapon_type = CS_BR_LIGHT;
+      *harm_type = CD_LIGHT;
+      //*destroy = set_lightning_destroy;
+      break;
+    case GF_POISON_GAS:
+      *weapon_type = CS_BR_GAS;
+      *harm_type = CD_POISON;
+      //*destroy = set_null;
+      break;
+    case GF_ACID:
+      *weapon_type = CS_BR_ACID;
+      *harm_type = CD_ACID;
+      //*destroy = set_acid_destroy;
+      break;
+    case GF_FROST:
+      *weapon_type = CS_BR_FROST;
+      *harm_type = CD_FROST;
+      //*destroy = set_frost_destroy;
+      break;
+    case GF_FIRE:
+      *weapon_type = CS_BR_FIRE;
+      *harm_type = CD_FIRE;
+      //*destroy = set_fire_destroy;
+      break;
+    case GF_HOLY_ORB:
+      *weapon_type = 0;
+      *harm_type = CD_EVIL;
+      //*destroy = set_null;
+      break;
+    default:
+      msg_print("ERROR in get_flags()\n");
+  }
+}
+void fire_bolt(typ, dir, y, x, dam, bolt_typ) int typ, dir, y, x, dam;
+char* bolt_typ;
+{
+  int i, oldy, oldx, dist, flag;
+  uint32_t weapon_type;
+  int harm_type;
+  int (*dummy)();
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cre;
+
+  flag = FALSE;
+  get_flags(typ, &weapon_type, &harm_type, &dummy);
+  oldy = y;
+  oldx = x;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    // lite_spot(oldy, oldx);
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else {
+      if (c_ptr->midx) {
+        flag = TRUE;
+        m_ptr = mon_get(c_ptr->midx);
+        cre = &creatureD[m_ptr->cidx];
+
+        /* light up monster and draw monster, temporarily set
+           pl so that update_mon() will work */
+        i = c_ptr->cflag;
+        c_ptr->cflag |= CF_PERM_LIGHT;
+        update_mon(c_ptr->midx);
+        c_ptr->cflag = i;
+        /* draw monster and clear previous bolt */
+        // put_qio();
+
+        // TBD: lowercase
+        mon_desc(c_ptr->midx);
+        MSG("The %s strikes %s.", bolt_typ, descD);
+        if (harm_type & cre->cdefense) {
+          dam = dam * 2;
+          // if (m_ptr->ml) c_recall[m_ptr->mptr].r_cdefense |= harm_type;
+        } else if (weapon_type & cre->spells) {
+          dam = dam / 4;
+          // if (m_ptr->ml) c_recall[m_ptr->mptr].r_spells |= weapon_type;
+        }
+        mon_desc(c_ptr->midx);
+        i = mon_take_hit(c_ptr->midx, dam);
+        if (i >= 0) {
+          MSG("%s dies in a fit of agony.", descD);
+          py_experience();
+        } else if (dam > 0) {
+          MSG("%s screams in agony.", descD);
+        }
+      } else if (panel_contains(&panelD, y, x)) {
+        // TBD: && (py.flags.blind < 1)
+        // print('*', y, x);
+        /* show the bolt */
+        // put_qio();
+      }
+    }
+    oldy = y;
+    oldx = x;
+  } while (!flag);
 }
 static int
 py_inven(begin, end)
@@ -4374,10 +4492,12 @@ inven_zap_dir(iidx, dir)
   uint32_t flags, j;
   int y, x, ident, chance;
   struct objS* i_ptr;
+  struct treasureS* t_ptr;
 
   y = uD.y;
   x = uD.x;
   i_ptr = obj_get(invenD[iidx]);
+  t_ptr = &treasureD[i_ptr->tidx];
   ident = FALSE;
   chance = uD.save + think_adj(A_INT) - (int)i_ptr->level +
            (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
@@ -4399,18 +4519,18 @@ inven_zap_dir(iidx, dir)
         //   light_line(dir, char_row, char_col);
         //   ident = TRUE;
         //   break;
-        // case 2:
-        //   fire_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_names[8]);
-        //   ident = TRUE;
-        //   break;
-        // case 3:
-        //   fire_bolt(GF_FROST, dir, y, x, damroll(6, 8), spell_names[14]);
-        //   ident = TRUE;
-        //   break;
-        // case 4:
-        //   fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_names[22]);
-        //   ident = TRUE;
-        //   break;
+        case 2:
+          fire_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_nameD[8]);
+          ident = TRUE;
+          break;
+        case 3:
+          fire_bolt(GF_FROST, dir, y, x, damroll(6, 8), spell_nameD[14]);
+          ident = TRUE;
+          break;
+        case 4:
+          fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_nameD[22]);
+          ident = TRUE;
+          break;
         // case 5:
         //   ident = wall_to_mud(dir, y, x);
         //   break;
@@ -4438,9 +4558,10 @@ inven_zap_dir(iidx, dir)
         // case 13:
         //   ident = td_destroy2(dir, y, x);
         //   break;
-        // case 14:
-        //   fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6),
-        //   spell_names[0]); ident = TRUE; break;
+        case 14:
+          fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6), spell_nameD[0]);
+          ident = TRUE;
+          break;
         // case 15:
         //   ident = build_wall(dir, y, x);
         //   break;
@@ -4462,11 +4583,11 @@ inven_zap_dir(iidx, dir)
         //   ident = TRUE;
         //   break;
         // case 21:
-        //   fire_ball(GF_FIRE, dir, y, x, 72, spell_names[28]);
+        //   fire_ball(GF_FIRE, dir, y, x, 72, spell_nameD[28]);
         //   ident = TRUE;
         //   break;
         // case 22:
-        //   fire_ball(GF_POISON_GAS, dir, y, x, 12, spell_names[6]);
+        //   fire_ball(GF_POISON_GAS, dir, y, x, 12, spell_nameD[6]);
         //   ident = TRUE;
         //   break;
         // case 23:
@@ -4483,14 +4604,13 @@ inven_zap_dir(iidx, dir)
       /* End of Wands.  	    */
     }
     if (ident) {
-      if (!known1_p(i_ptr)) {
+      if (!tr_known(t_ptr)) {
         /* round half-way case up */
         // TBD: tuning
         uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
         py_experience();
 
-        // identify(&iidx);
-        // i_ptr = &inventory[item_val];
+        tr_make_known(t_ptr);
       }
     }
     // else if (!known1_p(i_ptr))

@@ -117,6 +117,15 @@
 
 #define OBJ_GREAT 12  // 1/x treasure is a big surprise!
 
+/* spell types used by get_flags(), breathe(), fire_bolt() and fire_ball() */
+#define GF_MAGIC_MISSILE 0
+#define GF_LIGHTNING	1
+#define GF_POISON_GAS	2
+#define GF_ACID		3
+#define GF_FROST	4
+#define GF_FIRE		5
+#define GF_HOLY_ORB	6
+
 // Wearable obj flags
 #define TR_STATS 0x0000003FL /* the stats must be the low 6 bits */
 #define TR_STR 0x00000001L
@@ -154,6 +163,8 @@
 #define TR_TUNNEL 0x20000000L
 #define TR_INFRA 0x40000000L
 #define TR_CURSED 0x80000000L
+
+#define OBJ_BOLT_RANGE	 18   /* Maximum range of bolts and balls      */
 
 /* Creature constants						*/
 #define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */
@@ -196,6 +207,30 @@
 #define CM_2D2_OBJ 0x20000000L
 #define CM_4D2_OBJ 0x40000000L
 #define CM_WIN 0x80000000L
+
+/* creature spell definitions */
+#define CS_FREQ		0x0000000FL
+#define CS_SPELLS	0x0001FFF0L
+#define CS_TEL_SHORT	0x00000010L
+#define CS_TEL_LONG	0x00000020L
+#define CS_TEL_TO	0x00000040L
+#define CS_LGHT_WND	0x00000080L
+#define CS_SER_WND	0x00000100L
+#define CS_HOLD_PER	0x00000200L
+#define CS_BLIND	0x00000400L
+#define CS_CONFUSE	0x00000800L
+#define CS_FEAR		0x00001000L
+#define CS_SUMMON_MON	0x00002000L
+#define CS_SUMMON_UND	0x00004000L
+#define CS_SLOW_PER	0x00008000L
+#define CS_DRAIN_MANA	0x00010000L
+
+#define CS_BREATHE	0x00F80000L /* may also just indicate resistance */
+#define CS_BR_LIGHT	0x00080000L /* if no spell frequency set */
+#define CS_BR_GAS	0x00100000L
+#define CS_BR_ACID	0x00200000L
+#define CS_BR_FROST	0x00400000L
+#define CS_BR_FIRE	0x00800000L
 
 /* creature defense flags */
 #define CD_DRAGON 0x0001
