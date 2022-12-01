@@ -5058,8 +5058,7 @@ py_help()
   BufMsg(screen, "o: open object");
   BufMsg(screen, "s: search for traps/doors");
   BufMsg(screen, "w: wear object");
-  BufMsg(screen, "<: up stairs");
-  BufMsg(screen, ">: down stairs");
+  BufMsg(screen, "z: zap wand");
   BufMsg(screen, "C: character screen");
   BufMsg(screen, "D: disarm trap");
   BufMsg(screen, "E: eat object");
@@ -5067,10 +5066,13 @@ py_help()
   BufMsg(screen, "R: rest until healed");
   BufMsg(screen, "T: take off equipment");
   BufMsg(screen, "W: where about the dungeon");
+  BufMsg(screen, "Z: staff invocation");
 
   BufPad(screen, AL(screenD), 30);
 
   line = 1;
+  BufMsg(screen, "<: up stairs");
+  BufMsg(screen, ">: down stairs");
   BufMsg(screen, "CTRL('f'): food (cheat)");
   BufMsg(screen, "CTRL('h'): heal (cheat)");
   BufMsg(screen, "CTRL('t'): teleport (cheat)");
