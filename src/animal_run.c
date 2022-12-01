@@ -4471,14 +4471,16 @@ int *uy, *ux;
         uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
         py_experience();
 
-        // identify(&item_val);
-        // i_ptr = &inventory[item_val];
+        tr_make_known(t_ptr);
       }
     }
     // else if (!tr_known(t_ptr))
     //   sample(i_ptr);
     if (used_up) {
-      // desc_remain(item_val);
+      i_ptr->number -= 1;
+      obj_desc(i_ptr, TRUE);
+      i_ptr->number += 1;
+      MSG("You have %s", descD);
       inven_destroy_one(iidx);
     }
     return TRUE;
