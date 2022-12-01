@@ -4272,6 +4272,14 @@ py_init()
     tr_obj_copy(actuate_test[it], obj);
     invenD[iidx] = obj->id;
   }
+  int magik_test[] = {91};
+  for (int it = 0; it < AL(magik_test); ++it) {
+    struct objS* obj = obj_use();
+    tr_obj_copy(actuate_test[it], obj);
+    do {
+      magic_treasure(obj, dun_level);
+    } while ((TR_SPEED & obj->flags) == 0);
+  }
 
   calc_bonuses();
 
@@ -4414,12 +4422,12 @@ int factor;
         set_use_stat(i);
       }
   }
-  // if (TR_SEARCH & obj->flags) {
-  //  py.misc.srh += amount;
-  //  py.misc.fos -= amount;
-  //}
-  // if (TR_STEALTH & obj->flags) py.misc.stl += amount;
-  // if (TR_SPEED & obj->flags) change_speed(-amount);
+  if (TR_SEARCH & obj->flags) {
+    uD.search += amount;
+    uD.fos -= amount;
+  }
+  if (TR_STEALTH & obj->flags) uD.stealth += amount;
+  if (TR_SPEED & obj->flags) uD.pspeed -= amount;
   // if ((TR_BLIND & obj->flags) && (factor > 0)) py.flags.blind += 1000;
   // if ((TR_TIMID & obj->flags) && (factor > 0)) py.flags.afraid += 50;
   // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
