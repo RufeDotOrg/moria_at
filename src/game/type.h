@@ -40,7 +40,7 @@ struct cS {
 static struct cS cD;
 
 struct raceS {
-  char *trace;         /* Type of race			*/
+  char *name;          /* Type of race			*/
   uint8_t attr[MAX_A]; /* Attribute adjustments */
   uint8_t b_age;       /* Base age of character		*/
   uint8_t m_age;       /* Maximum age of character	*/
@@ -66,7 +66,7 @@ struct raceS {
 };
 
 struct classS {
-  char *title;             /* type of class		*/
+  char *name;              /* type of class		*/
   uint8_t adj_hd;          /* Adjust hit points		*/
   uint8_t mdis;            /* mod disarming traps		*/
   uint8_t msrh;            /* modifier to searching	*/

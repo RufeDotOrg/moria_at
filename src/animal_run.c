@@ -27,6 +27,13 @@ ARR_REUSE(mon, 256);
                      ##__VA_ARGS__);                                    \
     name##_usedD[line++] = used;                                        \
   }
+#define BufPad(name, line, len)            \
+  for (int it = 0; it < line; ++it) {      \
+    while (name##_usedD[it] < len) {       \
+      name##D[it][name##_usedD[it]] = ' '; \
+      name##_usedD[it] += 1;               \
+    }                                      \
+  }
 
 // Inventory of object IDs; obj_get(id)
 // Zero is an available or empty slot
@@ -3201,7 +3208,7 @@ py_class_select()
   line = 0;
   for (int it = 0; it < AL(classD); ++it) {
     overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]), "%c) %s",
-                                   'a' + it, classD[it].title);
+                                   'a' + it, classD[it].name);
     line += 1;
   }
 
@@ -4373,66 +4380,39 @@ py_map()
 }
 
 void
-py_screen()
+py_character()
 {
   int line, col, col_width;
   col_width = 20;
   line = 0;
   col = 0;
-#define PY_STAT(FMT, ...)                                                     \
-  screen_usedD[line] = snprintf(screenD[line] + (col_width * col), col_width, \
-                                FMT, ##__VA_ARGS__);                          \
-  line += 1;
-  screen_usedD[line] =
-      snprintf(screenD[line], AL(screenD[line]),
-               "%-17.017s%c %-17.017s "
-               "%-10.010s%c %6.d "
-               " %-4.04s:%d %d",
-               "Name", ':', "...", "Age", ':', 16, stat_nameD[A_STR],
-               statD.use_stat[A_STR], statD.max_stat[A_STR]);
-  line += 1;
-  screen_usedD[line] =
-      snprintf(screenD[line], AL(screenD[line]),
-               "%-17.017s%c %-17.017s "
-               "%-10.010s%c %6.d "
-               " %-4.04s:%d %d",
-               "Race", ':', raceD[uD.ridx].trace, "Height", ':', 74,
-               stat_nameD[A_INT], statD.use_stat[A_INT], statD.max_stat[A_INT]);
-  line += 1;
-  screen_usedD[line] =
-      snprintf(screenD[line], AL(screenD[line]),
-               "%-17.017s%c %-17.017s "
-               "%-10.010s%c %6.d "
-               " %-4.04s:%d %d",
-               "Gender", ':', uD.male ? "Male" : "Female", "Weight", ':', uD.wt,
-               stat_nameD[A_WIS], statD.use_stat[A_WIS], statD.max_stat[A_WIS]);
-  line += 1;
-  screen_usedD[line] =
-      snprintf(screenD[line], AL(screenD[line]),
-               "%-17.017s%c %-17.017s "
-               "%-10.010s%c %6.d "
-               " %-4.04s:%d %d",
-               "Class", ':', classD[uD.clidx].title, "Social Class", ':', 1,
-               stat_nameD[A_DEX], statD.use_stat[A_DEX], statD.max_stat[A_DEX]);
-  line += 1;
-  screen_usedD[line] = snprintf(screenD[line], AL(screenD[line]),
-                                "%-56.056s"
-                                " %-4.04s:%d %d",
-                                "", stat_nameD[A_CON], statD.use_stat[A_CON],
-                                statD.max_stat[A_CON]);
-  line += 1;
-  screen_usedD[line] = snprintf(screenD[line], AL(screenD[line]),
-                                "%-56.056s"
-                                " %-4.04s:%d %d",
-                                "", stat_nameD[A_CHR], statD.use_stat[A_CHR],
-                                statD.max_stat[A_CHR]);
+
+  BufMsg(screen, "%-17.017s: %s", "Name", "...");
+  BufMsg(screen, "%-17.017s: %s", "Race", raceD[uD.ridx].name);
+  BufMsg(screen, "%-17.017s: %s", "Gender", uD.male ? "Male" : "Female");
+  BufMsg(screen, "%-17.017s: %s", "Class", classD[uD.clidx].name);
+
+  BufPad(screen, MAX_A, 38);
+
+  line = 0;
+  BufMsg(screen, "%-13.013s: %d", "Age", 16);
+  BufMsg(screen, "%-13.013s: %d", "Height", 74);
+  BufMsg(screen, "%-13.013s: %d", "Weight", uD.wt);
+  BufMsg(screen, "%-13.013s: %d", "Social Class", 1);
+
+  BufPad(screen, MAX_A, 61);
+
+  line = 0;
+  for (int it = 0; it < MAX_A; ++it) {
+    BufMsg(screen, "%-4.04s:%5d  %d", stat_nameD[it], statD.use_stat[it],
+           statD.max_stat[it]);
+  }
   line += 1;
 
-  line += 1;
-  PY_STAT("ToHit: %+6d", uD.ptohit);
-  PY_STAT("ToDam: %+6d", uD.ptodam);
-  PY_STAT("Ac   : %6d", uD.pac);
-  PY_STAT("ToAc : %+6d", uD.ptoac);
+  BufMsg(screen, "ToHit: %+6d", uD.ptohit);
+  BufMsg(screen, "ToDam: %+6d", uD.ptodam);
+  BufMsg(screen, "Ac   : %6d", uD.pac);
+  BufMsg(screen, "ToAc : %+6d", uD.ptoac);
   free_turn_flag = TRUE;
 }
 void
@@ -4489,12 +4469,7 @@ py_help()
   BufMsg(screen, "T: take off equipment");
   BufMsg(screen, "W: where about the dungeon");
 
-  for (int it = 0; it < AL(screenD); ++it) {
-    while (screen_usedD[it] < 30) {
-      screenD[it][screen_usedD[it]] = ' ';
-      screen_usedD[it] += 1;
-    }
-  }
+  BufPad(screen, AL(screenD), 30);
 
   line = 1;
   BufMsg(screen, "CTRL('f'): food (cheat)");
@@ -5684,7 +5659,7 @@ dungeon()
             choice_actuate();
             break;
           case 'C':
-            py_screen();
+            py_character();
             break;
           case 'D':
             disarm_trap(&y, &x);
