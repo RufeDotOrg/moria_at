@@ -3620,6 +3620,33 @@ int *uy, *ux;
   *uy = ty;
   *ux = tx;
 }
+void teleport_away(midx, dis) int midx, dis;
+{
+  int yn, xn, ctr;
+  struct monS* m_ptr;
+
+  m_ptr = mon_get(midx);
+  ctr = 0;
+  do {
+    do {
+      yn = m_ptr->fy + (randint(2 * dis + 1) - (dis + 1));
+      xn = m_ptr->fx + (randint(2 * dis + 1) - (dis + 1));
+    } while (!in_bounds(yn, xn));
+    ctr++;
+    if (ctr > 9) {
+      ctr = 0;
+      dis += 5;
+    }
+  } while ((caveD[yn][xn].fval >= MIN_CLOSED_SPACE) ||
+           (caveD[yn][xn].midx != 0));
+  move_rec(m_ptr->fy, m_ptr->fx, yn, xn);
+  m_ptr->fy = yn;
+  m_ptr->fx = xn;
+
+  m_ptr->ml = FALSE;
+  m_ptr->cdis = distance(uD.y, uD.x, yn, xn);
+  update_mon(midx);
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -4852,22 +4879,18 @@ static void mon_attack(midx) int midx;
           //  notice = FALSE;
           break;
         case 12: /*Steal Money    */
-          // if ((py.flags.paralysis < 1) &&
-          //    (randint(124) < py.stats.use_stat[A_DEX]))
-          //  msg_print("You quickly protect your money pouch!");
-          // else {
-          //  gold = (p_ptr->au / 10) + randint(25);
-          //  if (gold > p_ptr->au)
-          //    p_ptr->au = 0;
-          //  else
-          //    p_ptr->au -= gold;
-          //  msg_print("Your purse feels lighter.");
-          //  prt_gold();
-          //}
-          // if (randint(2) == 1) {
-          //  msg_print("There is a puff of smoke!");
-          //  teleport_away(monptr, MAX_SIGHT);
-          //}
+                 // if ((py.flags.paralysis < 1) &&
+          if (randint(124) < statD.use_stat[A_DEX])
+            msg_print("You quickly protect your money pouch!");
+          else {
+            int gold = (uD.gold / 10) + randint(25);
+            uD.gold = MAX(uD.gold - gold, 0);
+            msg_print("Your purse feels lighter.");
+          }
+          if (randint(2) == 1) {
+            msg_print("There is a puff of smoke!");
+            teleport_away(midx, MAX_SIGHT);
+          }
           break;
         case 13: /*Steal Object   */
           // if ((py.flags.paralysis < 1) &&
