@@ -1159,6 +1159,17 @@ int tval;
   return FALSE;
 }
 int
+oset_zap(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_WAND:
+    case TV_STAFF:
+      return TRUE;
+  }
+  return FALSE;
+}
+int
 oset_hitdam(obj)
 struct objS* obj;
 {
@@ -5041,30 +5052,27 @@ static void mon_attack(midx) int midx;
           }
         } break;
         case 23: /*Eat light     */
-          // i_ptr = &inventory[INVEN_LIGHT];
-          // if (i_ptr->p1 > 0) {
-          //   i_ptr->p1 -= (250 + randint(250));
-          //   if (i_ptr->p1 < 1) i_ptr->p1 = 1;
-          //   if (py.flags.blind < 1)
-          //     msg_print("Your light dims.");
-          //   else
-          //     notice = FALSE;
-          // } else
-          //   notice = FALSE;
-          break;
+        {
+          struct objS* obj = obj_get(invenD[INVEN_LIGHT]);
+          if (obj->p1 > 0) {
+            obj->p1 = MAX(obj->p1 - 250 + randint(250), 1);
+            // if (py.flags.blind < 1)
+            msg_print("Your light dims.");
+            // else
+            //   notice = FALSE;
+          }
+        } break;
         case 24: /*Eat charges    */
-          // i = randint(inven_ctr) - 1;
-          // j = r_ptr->level;
-          // i_ptr = &inventory[i];
-          // if (((i_ptr->tval == TV_STAFF) || (i_ptr->tval == TV_WAND)) &&
-          //     (i_ptr->p1 > 0)) {
-          //   m_ptr->hp += j * i_ptr->p1;
-          //   i_ptr->p1 = 0;
-          //   if (!known2_p(i_ptr)) add_inscribe(i_ptr, ID_EMPTY);
-          //   msg_print("Energy drains from your pack!");
-          // } else
-          //   notice = FALSE;
-          break;
+        {
+          int iidx = inven_random();
+          struct objS* obj = obj_get(invenD[iidx]);
+          if (oset_zap(obj) && obj->p1 > 0) {
+            mon->hp += cre->level * obj->p1;
+            obj->p1 = 0;
+            obj->idflag |= ID_EMPTY;
+            msg_print("Energy drains from your pack!");
+          }
+        } break;
       }
     } else {
       MSG("%s misses you.", descD);
