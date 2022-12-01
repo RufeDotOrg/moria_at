@@ -3166,6 +3166,15 @@ inven_random()
 
   return tmp[randint(k) - 1];
 }
+static int
+inven_food()
+{
+  for (int it = 0; it < INVEN_EQUIP; ++it) {
+    struct objS* obj = obj_get(invenD[it]);
+    if (obj->tval == TV_FOOD) return it;
+  }
+  return -1;
+}
 static void
 inven_ident(iidx)
 {
@@ -5024,12 +5033,13 @@ static void mon_attack(midx) int midx;
           equip_disenchant();
           break;
         case 22: /*Eat food     */
-          // if (find_range(TV_FOOD, TV_NEVER, &i, &j)) {
-          //  inven_destroy_one(i);
-          //  msg_print("It got at your rations!");
-          //} else
-          //  notice = FALSE;
-          break;
+        {
+          int l = inven_food();
+          if (l >= 0) {
+            inven_destroy_one(l);
+            msg_print("It got at your rations!");
+          }
+        } break;
         case 23: /*Eat light     */
           // i_ptr = &inventory[INVEN_LIGHT];
           // if (i_ptr->p1 > 0) {
