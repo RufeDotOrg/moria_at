@@ -6314,8 +6314,10 @@ static void mon_attack(midx) int midx;
             msg_print("You grab hold of your backpack!");
           else {
             int i = inven_random();
-            inven_destroy_one(i);
-            msg_print("Your backpack feels lighter.");
+            if (i >= 0) {
+              inven_destroy_one(i);
+              msg_print("Your backpack feels lighter.");
+            }
           }
           if (randint(2) == 1) {
             msg_print("There is a puff of smoke!");
@@ -6398,12 +6400,14 @@ static void mon_attack(midx) int midx;
         case 24: /*Eat charges    */
         {
           int iidx = inven_random();
-          struct objS* obj = obj_get(invenD[iidx]);
-          if (oset_zap(obj) && obj->p1 > 0) {
-            mon->hp += cre->level * obj->p1;
-            obj->p1 = 0;
-            obj->idflag |= ID_EMPTY;
-            msg_print("Energy drains from your pack!");
+          if (iidx >= 0) {
+            struct objS* obj = obj_get(invenD[iidx]);
+            if (oset_zap(obj) && obj->p1 > 0) {
+              mon->hp += cre->level * obj->p1;
+              obj->p1 = 0;
+              obj->idflag |= ID_EMPTY;
+              msg_print("Energy drains from your pack!");
+            }
           }
         } break;
       }
