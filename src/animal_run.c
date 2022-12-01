@@ -3103,6 +3103,18 @@ equip_remove_curse()
   }
   return FALSE;
 }
+static int
+inven_random()
+{
+  int k, tmp[INVEN_EQUIP];
+
+  k = 0;
+  for (int it = 0; it < INVEN_EQUIP; ++it) {
+    if (invenD[it]) tmp[k++] = invenD[it];
+  }
+
+  return tmp[randint(k) - 1];
+}
 static void
 inven_ident(iidx)
 {
@@ -4894,17 +4906,17 @@ static void mon_attack(midx) int midx;
           break;
         case 13: /*Steal Object   */
           // if ((py.flags.paralysis < 1) &&
-          //    (randint(124) < py.stats.use_stat[A_DEX]))
-          //  msg_print("You grab hold of your backpack!");
-          // else {
-          //  i = randint(inven_ctr) - 1;
-          //  inven_destroy_one(i);
-          //  msg_print("Your backpack feels lighter.");
-          //}
-          // if (randint(2) == 1) {
-          //  msg_print("There is a puff of smoke!");
-          //  teleport_away(monptr, MAX_SIGHT);
-          //}
+          if (randint(124) < statD.use_stat[A_DEX])
+            msg_print("You grab hold of your backpack!");
+          else {
+            int i = inven_random();
+            inven_destroy_one(i);
+            msg_print("Your backpack feels lighter.");
+          }
+          if (randint(2) == 1) {
+            msg_print("There is a puff of smoke!");
+            teleport_away(midx, MAX_SIGHT);
+          }
           break;
         case 14: /*Poison   */
           py_take_hit(damage);
