@@ -4699,6 +4699,143 @@ py_zap(iidx)
     inven_zap_dir(iidx, dir);
   }
 }
+void inven_invoke(iidx, uy, ux) int *uy, *ux;
+{
+  uint32_t flags, j;
+  int k, chance;
+  int ident;
+  struct objS* i_ptr;
+  struct treasureS* t_ptr;
+
+  i_ptr = obj_get(invenD[iidx]);
+  t_ptr = &treasureD[i_ptr->tidx];
+  free_turn_flag = FALSE;
+  chance = uD.save + think_adj(A_INT) - i_ptr->level - 5 +
+           (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
+  // if (py.flags.confused > 0) chance = chance / 2;
+  if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
+    chance = USE_DEVICE; /* Give everyone a slight chance */
+  if (chance <= 0) chance = 1;
+  if (randint(chance) < USE_DEVICE)
+    msg_print("You failed to use the staff properly.");
+  else if (i_ptr->p1 > 0) {
+    flags = i_ptr->flags;
+    ident = FALSE;
+    (i_ptr->p1)--;
+    while (flags != 0) {
+      j = bit_pos(&flags) + 1;
+      /* Staffs.  			*/
+      switch (j) {
+        case 1:
+          ident = light_area(uD.y, uD.x);
+          break;
+          // case 2:
+          //   ident = detect_sdoor();
+          //   break;
+          // case 3:
+          //   ident = detect_trap();
+          //   break;
+          // case 4:
+          //   ident = detect_treasure();
+          //   break;
+          // case 5:
+          //   ident = detect_object();
+          //   break;
+        case 6:
+          py_teleport(100, uy, ux);
+          ident = TRUE;
+          break;
+          // case 7:
+          //   ident = TRUE;
+          //   earthquake();
+          //   break;
+        case 8:
+          ident = FALSE;
+          for (k = 0; k < randint(4); k++) {
+            ident |= summon_monster(uD.y, uD.x, FALSE);
+          }
+          break;
+          // case 10:
+          //   ident = TRUE;
+          //   destroy_area(char_row, char_col);
+          //   break;
+          // case 11:
+          //   ident = TRUE;
+          //   starlite(char_row, char_col);
+          //   break;
+          // case 12:
+          //   ident = speed_monsters(1);
+          //   break;
+          // case 13:
+          //   ident = speed_monsters(-1);
+          //   break;
+          // case 14:
+          //   ident = sleep_monsters2();
+          //   break;
+        case 15:
+          ident = py_heal_hit(randint(8));
+          break;
+          // case 16:
+          //   ident = detect_invisible();
+          //   break;
+          // case 17:
+          //   if (py.flags.fast == 0) ident = TRUE;
+          //   py.flags.fast += randint(30) + 15;
+          //   break;
+          // case 18:
+          //   if (py.flags.slow == 0) ident = TRUE;
+          //   py.flags.slow += randint(30) + 15;
+          //   break;
+          // case 19:
+          //   ident = mass_poly();
+          //   break;
+        case 20:
+          if (equip_remove_curse()) {
+            // if (py.flags.blind < 1)
+            msg_print("The staff glows blue for a moment..");
+            ident = TRUE;
+          }
+          break;
+        // case 21:
+        //   ident = detect_evil();
+        //   break;
+        // case 22:
+        //   if ((cure_blindness()) || (cure_poison()) || (cure_confusion()))
+        //     ident = TRUE;
+        //   break;
+        // case 23:
+        //   ident = dispel_creature(CD_EVIL, 60);
+        //   break;
+        case 25:
+          ident = unlight_area(uD.y, uD.x);
+          break;
+        case 32:
+          /* store bought flag */
+          break;
+        default:
+          msg_print("Internal error in staffs()");
+          break;
+      }
+      /* End of staff actions.  	*/
+    }
+    if (ident) {
+      if (!tr_known(t_ptr)) {
+        /* round half-way case up */
+        uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
+        py_experience();
+
+        tr_make_known(t_ptr);
+      }
+    }
+    // else if (!known1_p(i_ptr))
+    //   sample(i_ptr);
+    if (i_ptr->idflag & ID_REVEAL)
+      MSG("You have %d charges remaining.", i_ptr->p1);
+  } else {
+    msg_print("The staff has no charges left.");
+    i_ptr->idflag |= ID_EMPTY;
+  }
+}
 static void py_drop(y, x) int y, x;
 {
   char c;
@@ -6046,6 +6183,10 @@ dungeon()
           case 'z':
             iidx = choice("Aim which wand?");
             if (iidx >= 0) py_zap(iidx);
+            break;
+          case 'Z':
+            iidx = choice("Invoke which staff?");
+            if (iidx >= 0) inven_invoke(iidx, &y, &x);
             break;
           case '<':
             go_up();
