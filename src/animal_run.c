@@ -3941,10 +3941,17 @@ equip_curse()
     obj_desc(i_ptr, FALSE);
     MSG("Your %s glows black, fades.", descD);
     i_ptr->name2 = 0;
-    i_ptr->flags = TR_CURSED;
     i_ptr->tohit = 0;
     i_ptr->todam = 0;
     i_ptr->toac = -randint(5) - randint(5);
+
+    // TBD: Test this, I believe moria contains a bug here;
+    // The behavior is changed to match curse weapon
+    // py_bonuses removes adjustments from obj->flags
+    // obj->flags are changed
+    // calc_bonuses() sum tohit, todam, toac
+    py_bonuses(i_ptr, -1);
+    i_ptr->flags = TR_CURSED;
     calc_bonuses();
     return TRUE;
   }
@@ -5481,6 +5488,7 @@ py_wear()
             if (invenD[slot + it] == 0) {
               invenD[slot] = obj->id;
               invenD[iidx] = 0;
+
               py_bonuses(obj, 1);
               obj_desc(obj, TRUE);
               MSG("You are wearing %s.", descD);
@@ -5840,8 +5848,8 @@ py_takeoff()
         if (inven_carry(obj->id) >= 0) {
           invenD[iidx] = 0;
 
-          obj_desc(obj, TRUE);
           py_bonuses(obj, -1);
+          obj_desc(obj, TRUE);
           MSG("You take off %s.", descD);
         } else {
           msg_print("You don't have room in your inventory.");
