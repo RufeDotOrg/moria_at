@@ -521,30 +521,6 @@ unlight_area(y, x)
   // TBD: unknown when blind.. (py.flags.blind)
   return TRUE;
 }
-void
-map_area()
-{
-  struct caveS* c_ptr;
-  int row, col;
-  int i, j, k, l;
-
-  // TBD: tuning
-  i = panelD.panel_row_min - randint(10);
-  j = panelD.panel_row_max + randint(10);
-  k = panelD.panel_col_min - randint(20);
-  l = panelD.panel_col_max + randint(20);
-  for (col = i; col <= j; col++)
-    for (row = k; row <= l; row++) {
-      c_ptr = &caveD[col][row];
-      if (in_bounds(col, row) && cave_floor_near(col, row)) {
-        if (c_ptr->fval >= MIN_WALL)
-          c_ptr->cflag |= CF_PERM_LIGHT;
-        else if ((c_ptr->oidx != 0) &&
-                 oset_always_visible(obj_get(c_ptr->oidx)))
-          c_ptr->cflag |= CF_FIELDMARK;
-      }
-    }
-}
 typedef struct {
   int y;
   int x;
@@ -1324,6 +1300,30 @@ int tval;
       break;
   }
   return slot;
+}
+void
+map_area()
+{
+  struct caveS* c_ptr;
+  int row, col;
+  int i, j, k, l;
+
+  // TBD: tuning
+  i = panelD.panel_row_min - randint(10);
+  j = panelD.panel_row_max + randint(10);
+  k = panelD.panel_col_min - randint(20);
+  l = panelD.panel_col_max + randint(20);
+  for (col = i; col <= j; col++)
+    for (row = k; row <= l; row++) {
+      c_ptr = &caveD[col][row];
+      if (in_bounds(col, row) && cave_floor_near(col, row)) {
+        if (c_ptr->fval >= MIN_WALL)
+          c_ptr->cflag |= CF_PERM_LIGHT;
+        else if ((c_ptr->oidx != 0) &&
+                 oset_always_visible(obj_get(c_ptr->oidx)))
+          c_ptr->cflag |= CF_FIELDMARK;
+      }
+    }
 }
 int
 get_obj_num(level, must_be_small)
