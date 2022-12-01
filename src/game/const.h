@@ -217,6 +217,7 @@
 /* Player constants */
 #define MAX_PLAYER_LEVEL 40
 #define MAX_EXP 999999
+#define USE_DEVICE	  3   /* x> Harder devices x< Easier devices   */
 
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
 

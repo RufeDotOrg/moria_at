@@ -4351,6 +4351,7 @@ int *uy, *ux;
         /* round half-way case up */
         // TDB: xp tuning
         uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
+        py_experience();
 
         // identify(&item_val);
         // i_ptr = &inventory[item_val];
@@ -4366,6 +4367,141 @@ int *uy, *ux;
   }
 
   return FALSE;
+}
+int
+inven_zap_dir(iidx, dir)
+{
+  uint32_t flags, j;
+  int y, x, ident, chance;
+  struct objS* i_ptr;
+
+  y = uD.y;
+  x = uD.x;
+  i_ptr = obj_get(invenD[iidx]);
+  ident = FALSE;
+  chance = uD.save + think_adj(A_INT) - (int)i_ptr->level +
+           (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
+  // if (py.flags.confused > 0) chance = chance / 2;
+  if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
+    chance = USE_DEVICE; /* Give everyone a slight chance */
+  if (chance <= 0) chance = 1;
+  if (randint(chance) < USE_DEVICE)
+    msg_print("You failed to use the wand properly.");
+  else if (i_ptr->p1 > 0) {
+    flags = i_ptr->flags;
+    (i_ptr->p1)--;
+    while (flags != 0) {
+      j = bit_pos(&flags) + 1;
+      /* Wands  		 */
+      switch (j) {
+        // case 1:
+        //   msg_print("A line of blue shimmering light appears.");
+        //   light_line(dir, char_row, char_col);
+        //   ident = TRUE;
+        //   break;
+        // case 2:
+        //   fire_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_names[8]);
+        //   ident = TRUE;
+        //   break;
+        // case 3:
+        //   fire_bolt(GF_FROST, dir, y, x, damroll(6, 8), spell_names[14]);
+        //   ident = TRUE;
+        //   break;
+        // case 4:
+        //   fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_names[22]);
+        //   ident = TRUE;
+        //   break;
+        // case 5:
+        //   ident = wall_to_mud(dir, y, x);
+        //   break;
+        // case 6:
+        //   ident = poly_monster(dir, y, x);
+        //   break;
+        // case 7:
+        //   ident = hp_monster(dir, y, x, -damroll(4, 6));
+        //   break;
+        // case 8:
+        //   ident = speed_monster(dir, y, x, 1);
+        //   break;
+        // case 9:
+        //   ident = speed_monster(dir, y, x, -1);
+        //   break;
+        // case 10:
+        //   ident = confuse_monster(dir, y, x);
+        //   break;
+        // case 11:
+        //   ident = sleep_monster(dir, y, x);
+        //   break;
+        // case 12:
+        //   ident = drain_life(dir, y, x);
+        //   break;
+        // case 13:
+        //   ident = td_destroy2(dir, y, x);
+        //   break;
+        // case 14:
+        //   fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6),
+        //   spell_names[0]); ident = TRUE; break;
+        // case 15:
+        //   ident = build_wall(dir, y, x);
+        //   break;
+        // case 16:
+        //   ident = clone_monster(dir, y, x);
+        //   break;
+        // case 17:
+        //   ident = teleport_monster(dir, y, x);
+        //   break;
+        // case 18:
+        //   ident = disarm_all(dir, y, x);
+        //   break;
+        // case 19:
+        //   fire_ball(GF_LIGHTNING, dir, y, x, 32, "Lightning Ball");
+        //   ident = TRUE;
+        //   break;
+        // case 20:
+        //   fire_ball(GF_FROST, dir, y, x, 48, "Cold Ball");
+        //   ident = TRUE;
+        //   break;
+        // case 21:
+        //   fire_ball(GF_FIRE, dir, y, x, 72, spell_names[28]);
+        //   ident = TRUE;
+        //   break;
+        // case 22:
+        //   fire_ball(GF_POISON_GAS, dir, y, x, 12, spell_names[6]);
+        //   ident = TRUE;
+        //   break;
+        // case 23:
+        //   fire_ball(GF_ACID, dir, y, x, 60, "Acid Ball");
+        //   ident = TRUE;
+        //   break;
+        // case 24:
+        //   flags = 1L << (randint(23) - 1);
+        //   break;
+        default:
+          msg_print("Internal error in wands()");
+          break;
+      }
+      /* End of Wands.  	    */
+    }
+    if (ident) {
+      if (!known1_p(i_ptr)) {
+        /* round half-way case up */
+        // TBD: tuning
+        uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
+        py_experience();
+
+        // identify(&iidx);
+        // i_ptr = &inventory[item_val];
+      }
+    }
+    // else if (!known1_p(i_ptr))
+    //   sample(i_ptr);
+    if (i_ptr->idflag & ID_REVEAL)
+      MSG("You have %d charges remaining.", i_ptr->p1);
+  } else {
+    msg_print("The wand has no charges left.");
+    i_ptr->idflag |= ID_EMPTY;
+  }
+  return ident;
 }
 void
 choice_actuate()
@@ -4424,6 +4560,22 @@ py_wear()
     }
   }
   calc_bonuses();
+}
+void
+py_zap(iidx)
+{
+  int dir;
+
+  free_turn_flag = FALSE;
+  if (get_dir(0, &dir)) {
+    // if (py.flags.confused > 0) {
+    //   msg_print("You are confused.");
+    //   do {
+    //     dir = randint(9);
+    //   } while (dir == 5);
+    // }
+    inven_zap_dir(iidx, dir);
+  }
 }
 static void py_drop(y, x) int y, x;
 {
@@ -5768,6 +5920,10 @@ dungeon()
             break;
           case 'w':
             py_wear();
+            break;
+          case 'z':
+            iidx = choice("Aim which wand?");
+            if (iidx >= 0) py_zap(iidx);
             break;
           case '<':
             go_up();
