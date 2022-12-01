@@ -5219,7 +5219,7 @@ struct treasureS treasureD[] = {
     // TBD: Store items
 };
 
-char* special_name[] = {
+char* special_nameD[] = {
     0,
     "(R)",
     "(RA)",

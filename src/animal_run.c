@@ -1022,6 +1022,816 @@ struct objS* obj;
   obj->idflag = 0;
 }
 int
+magik(chance)
+{
+  return (randint(100) <= chance);
+}
+int
+m_bonus(base, max_std, level)
+{
+  int x, stand_dev, tmp;
+
+  stand_dev = (OBJ_STD_ADJ * level / 100) + OBJ_STD_MIN;
+  /* Check for level > max_std since that may have generated an overflow.  */
+  if (stand_dev > max_std || level > max_std) stand_dev = max_std;
+  tmp = randnor(0, stand_dev);
+  x = (ABS(tmp) / 10) + base;
+  return (x);
+}
+#define SN(x) special_nameD[x]
+void magic_treasure(obj, level) struct objS* obj;
+{
+  int chance, special, cursed, i;
+  int tmp;
+
+  chance = OBJ_BASE_MAGIC + level;
+  if (chance > OBJ_BASE_MAX) chance = OBJ_BASE_MAX;
+  special = chance / OBJ_DIV_SPECIAL;
+  cursed = (10 * chance) / OBJ_DIV_CURSED;
+
+  /* Depending on treasure type, it can have certain magical properties*/
+  switch (obj->tval) {
+    case TV_SHIELD:
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+      if (magik(chance)) {
+        obj->toac += m_bonus(1, 30, level);
+        if (magik(special)) switch (randint(9)) {
+            case 1:
+              obj->flags |=
+                  (TR_RES_LIGHT | TR_RES_COLD | TR_RES_ACID | TR_RES_FIRE);
+              obj->name2 = SN(SN_R);
+              obj->toac += 5;
+              obj->cost += 2500;
+              break;
+            case 2: /* Resist Acid    */
+              obj->flags |= TR_RES_ACID;
+              obj->name2 = SN(SN_RA);
+              obj->cost += 1000;
+              break;
+            case 3:
+            case 4: /* Resist Fire    */
+              obj->flags |= TR_RES_FIRE;
+              obj->name2 = SN(SN_RF);
+              obj->cost += 600;
+              break;
+            case 5:
+            case 6: /* Resist Cold   */
+              obj->flags |= TR_RES_COLD;
+              obj->name2 = SN(SN_RC);
+              obj->cost += 600;
+              break;
+            case 7:
+            case 8:
+            case 9: /* Resist Lightning*/
+              obj->flags |= TR_RES_LIGHT;
+              obj->name2 = SN(SN_RL);
+              obj->cost += 500;
+              break;
+          }
+      } else if (magik(cursed)) {
+        obj->toac -= m_bonus(1, 40, level);
+        obj->cost = 0;
+        obj->flags |= TR_CURSED;
+      }
+      break;
+
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+      if (magik(chance)) {
+        obj->tohit += m_bonus(0, 40, level);
+        /* Magical damage bonus now proportional to weapon base damage */
+        tmp = obj->damage[0] * obj->damage[1];
+        obj->todam += m_bonus(0, 4 * tmp, tmp * level / 10);
+        /* the 3*special/2 is needed because weapons are not as common as
+           before change to treasure distribution, this helps keep same
+           number of ego weapons same as before, see also missiles */
+        if (magik(3 * special / 2)) switch (randint(16)) {
+            case 1: /* Holy Avenger   */
+              obj->flags |= (TR_SEE_INVIS | TR_SUST_STAT | TR_SLAY_UNDEAD |
+                             TR_SLAY_EVIL | TR_STR);
+              obj->tohit += 5;
+              obj->todam += 5;
+              obj->toac += randint(4);
+              /* the value in p1 is used for strength increase */
+              /* p1 is also used for sustain stat */
+              obj->p1 = randint(4);
+              obj->name2 = SN(SN_HA);
+              obj->cost += obj->p1 * 500;
+              obj->cost += 10000;
+              break;
+            case 2: /* Defender   */
+              obj->flags |= (TR_FFALL | TR_RES_LIGHT | TR_SEE_INVIS |
+                             TR_FREE_ACT | TR_RES_COLD | TR_RES_ACID |
+                             TR_RES_FIRE | TR_REGEN | TR_STEALTH);
+              obj->tohit += 3;
+              obj->todam += 3;
+              obj->toac += 5 + randint(5);
+              obj->name2 = SN(SN_DF);
+              /* the value in p1 is used for stealth */
+              obj->p1 = randint(3);
+              obj->cost += obj->p1 * 500;
+              obj->cost += 7500;
+              break;
+            case 3:
+            case 4: /* Slay Animal  */
+              obj->flags |= TR_SLAY_ANIMAL;
+              obj->tohit += 2;
+              obj->todam += 2;
+              obj->name2 = SN(SN_SA);
+              obj->cost += 3000;
+              break;
+            case 5:
+            case 6: /* Slay Dragon   */
+              obj->flags |= TR_SLAY_DRAGON;
+              obj->tohit += 3;
+              obj->todam += 3;
+              obj->name2 = SN(SN_SD);
+              obj->cost += 4000;
+              break;
+            case 7:
+            case 8: /* Slay Evil     */
+              obj->flags |= TR_SLAY_EVIL;
+              obj->tohit += 3;
+              obj->todam += 3;
+              obj->name2 = SN(SN_SE);
+              obj->cost += 4000;
+              break;
+            case 9:
+            case 10: /* Slay Undead    */
+              obj->flags |= (TR_SEE_INVIS | TR_SLAY_UNDEAD);
+              obj->tohit += 3;
+              obj->todam += 3;
+              obj->name2 = SN(SN_SU);
+              obj->cost += 5000;
+              break;
+            case 11:
+            case 12:
+            case 13: /* Flame Tongue  */
+              obj->flags |= TR_FLAME_TONGUE;
+              obj->tohit++;
+              obj->todam += 3;
+              obj->name2 = SN(SN_FT);
+              obj->cost += 2000;
+              break;
+            case 14:
+            case 15:
+            case 16: /* Frost Brand   */
+              obj->flags |= TR_FROST_BRAND;
+              obj->tohit++;
+              obj->todam++;
+              obj->name2 = SN(SN_FB);
+              obj->cost += 1200;
+              break;
+          }
+      } else if (magik(cursed)) {
+        obj->tohit -= m_bonus(1, 55, level);
+        /* Magical damage bonus now proportional to weapon base damage */
+        tmp = obj->damage[0] * obj->damage[1];
+        obj->todam -= m_bonus(1, 11 * tmp / 2, tmp * level / 10);
+        obj->flags |= TR_CURSED;
+        obj->cost = 0;
+      }
+      break;
+
+    case TV_BOW:
+      if (magik(chance)) {
+        obj->tohit += m_bonus(1, 30, level);
+        obj->todam += m_bonus(1, 20, level); /* add damage. -CJS- */
+      } else if (magik(cursed)) {
+        obj->tohit -= m_bonus(1, 50, level);
+        obj->todam -= m_bonus(1, 30, level); /* add damage. -CJS- */
+        obj->flags |= TR_CURSED;
+        obj->cost = 0;
+      }
+      break;
+
+    case TV_DIGGING:
+      if (magik(chance)) {
+        tmp = randint(3);
+        if (tmp < 3)
+          obj->p1 += m_bonus(0, 25, level);
+        else {
+          /* a cursed digging tool */
+          obj->p1 = -m_bonus(1, 30, level);
+          obj->cost = 0;
+          obj->flags |= TR_CURSED;
+        }
+      }
+      break;
+
+    case TV_GLOVES:
+      if (magik(chance)) {
+        obj->toac += m_bonus(1, 20, level);
+        if (magik(special)) {
+          if (randint(2) == 1) {
+            obj->flags |= TR_FREE_ACT;
+            obj->name2 = SN(SN_FREE_ACTION);
+            obj->cost += 1000;
+          } else {
+            obj->tohit += 1 + randint(3);
+            obj->todam += 1 + randint(3);
+            obj->name2 = SN(SN_SLAYING);
+            obj->cost += (obj->tohit + obj->todam) * 250;
+          }
+        }
+      } else if (magik(cursed)) {
+        if (magik(special)) {
+          if (randint(2) == 1) {
+            obj->flags |= TR_DEX;
+            obj->name2 = SN(SN_CLUMSINESS);
+          } else {
+            obj->flags |= TR_STR;
+            obj->name2 = SN(SN_WEAKNESS);
+          }
+          obj->p1 = -m_bonus(1, 10, level);
+        }
+        obj->toac -= m_bonus(1, 40, level);
+        obj->flags |= TR_CURSED;
+        obj->cost = 0;
+      }
+      break;
+
+    case TV_BOOTS:
+      if (magik(chance)) {
+        obj->toac += m_bonus(1, 20, level);
+        if (magik(special)) {
+          tmp = randint(12);
+          if (tmp > 5) {
+            obj->flags |= TR_FFALL;
+            obj->name2 = SN(SN_SLOW_DESCENT);
+            obj->cost += 250;
+          } else if (tmp == 1) {
+            obj->flags |= TR_SPEED;
+            obj->name2 = SN(SN_SPEED);
+            obj->p1 = 1;
+            obj->cost += 5000;
+          } else /* 2 - 5 */
+          {
+            obj->flags |= TR_STEALTH;
+            obj->p1 = randint(3);
+            obj->name2 = SN(SN_STEALTH);
+            obj->cost += 500;
+          }
+        }
+      } else if (magik(cursed)) {
+        tmp = randint(3);
+        if (tmp == 1) {
+          obj->flags |= TR_SPEED;
+          obj->name2 = SN(SN_SLOWNESS);
+          obj->p1 = -1;
+        } else if (tmp == 2) {
+          obj->flags |= TR_AGGRAVATE;
+          obj->name2 = SN(SN_NOISE);
+        } else {
+          obj->name2 = SN(SN_GREAT_MASS);
+          obj->weight = obj->weight * 5;
+        }
+        obj->cost = 0;
+        obj->toac -= m_bonus(2, 45, level);
+        obj->flags |= TR_CURSED;
+      }
+      break;
+
+    case TV_HELM: /* Helms */
+      if ((obj->subval >= 6) && (obj->subval <= 8)) {
+        /* give crowns a higher chance for magic */
+        chance += (int)(obj->cost / 100);
+        special += special;
+      }
+      if (magik(chance)) {
+        obj->toac += m_bonus(1, 20, level);
+        if (magik(special)) {
+          if (obj->subval < 6) {
+            tmp = randint(3);
+            if (tmp == 1) {
+              obj->p1 = randint(2);
+              obj->flags |= TR_INT;
+              obj->name2 = SN(SN_INTELLIGENCE);
+              obj->cost += obj->p1 * 500;
+            } else if (tmp == 2) {
+              obj->p1 = randint(2);
+              obj->flags |= TR_WIS;
+              obj->name2 = SN(SN_WISDOM);
+              obj->cost += obj->p1 * 500;
+            } else {
+              obj->p1 = 1 + randint(4);
+              obj->flags |= TR_INFRA;
+              obj->name2 = SN(SN_INFRAVISION);
+              obj->cost += obj->p1 * 250;
+            }
+          } else {
+            switch (randint(6)) {
+              case 1:
+                obj->p1 = randint(3);
+                obj->flags |= (TR_FREE_ACT | TR_CON | TR_DEX | TR_STR);
+                obj->name2 = SN(SN_MIGHT);
+                obj->cost += 1000 + obj->p1 * 500;
+                break;
+              case 2:
+                obj->p1 = randint(3);
+                obj->flags |= (TR_CHR | TR_WIS);
+                obj->name2 = SN(SN_LORDLINESS);
+                obj->cost += 1000 + obj->p1 * 500;
+                break;
+              case 3:
+                obj->p1 = randint(3);
+                obj->flags |= (TR_RES_LIGHT | TR_RES_COLD | TR_RES_ACID |
+                               TR_RES_FIRE | TR_INT);
+                obj->name2 = SN(SN_MAGI);
+                obj->cost += 3000 + obj->p1 * 500;
+                break;
+              case 4:
+                obj->p1 = randint(3);
+                obj->flags |= TR_CHR;
+                obj->name2 = SN(SN_BEAUTY);
+                obj->cost += 750;
+                break;
+              case 5:
+                obj->p1 = 5 * (1 + randint(4));
+                obj->flags |= (TR_SEE_INVIS | TR_SEARCH);
+                obj->name2 = SN(SN_SEEING);
+                obj->cost += 1000 + obj->p1 * 100;
+                break;
+              case 6:
+                obj->flags |= TR_REGEN;
+                obj->name2 = SN(SN_REGENERATION);
+                obj->cost += 1500;
+                break;
+            }
+          }
+        }
+      } else if (magik(cursed)) {
+        obj->toac -= m_bonus(1, 45, level);
+        obj->flags |= TR_CURSED;
+        obj->cost = 0;
+        if (magik(special)) switch (randint(7)) {
+            case 1:
+              obj->p1 = -randint(5);
+              obj->flags |= TR_INT;
+              obj->name2 = SN(SN_STUPIDITY);
+              break;
+            case 2:
+              obj->p1 = -randint(5);
+              obj->flags |= TR_WIS;
+              obj->name2 = SN(SN_DULLNESS);
+              break;
+            case 3:
+              obj->flags |= TR_BLIND;
+              obj->name2 = SN(SN_BLINDNESS);
+              break;
+            case 4:
+              obj->flags |= TR_TIMID;
+              obj->name2 = SN(SN_TIMIDNESS);
+              break;
+            case 5:
+              obj->p1 = -randint(5);
+              obj->flags |= TR_STR;
+              obj->name2 = SN(SN_WEAKNESS);
+              break;
+            case 6:
+              obj->flags |= TR_TELEPORT;
+              obj->name2 = SN(SN_TELEPORTATION);
+              break;
+            case 7:
+              obj->p1 = -randint(5);
+              obj->flags |= TR_CHR;
+              obj->name2 = SN(SN_UGLINESS);
+              break;
+          }
+      }
+      break;
+
+    case TV_RING: /* Rings        */
+      switch (obj->subval) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+          if (magik(cursed)) {
+            obj->p1 = -m_bonus(1, 20, level);
+#ifdef ATARIST_MWC
+            obj->flags |= TR_CURSED;
+#else
+            obj->flags |= TR_CURSED;
+#endif
+            obj->cost = -obj->cost;
+          } else {
+            obj->p1 = m_bonus(1, 10, level);
+            obj->cost += obj->p1 * 100;
+          }
+          break;
+        case 4:
+          if (magik(cursed)) {
+            obj->p1 = -randint(3);
+            obj->flags |= TR_CURSED;
+            obj->cost = -obj->cost;
+          } else
+            obj->p1 = 1;
+          break;
+        case 5:
+          obj->p1 = 5 * m_bonus(1, 20, level);
+          obj->cost += obj->p1 * 50;
+          if (magik(cursed)) {
+            obj->p1 = -obj->p1;
+            obj->flags |= TR_CURSED;
+            obj->cost = -obj->cost;
+          }
+          break;
+        case 19: /* Increase damage        */
+          obj->todam += m_bonus(1, 20, level);
+          obj->cost += obj->todam * 100;
+          if (magik(cursed)) {
+            obj->todam = -obj->todam;
+            obj->flags |= TR_CURSED;
+            obj->cost = -obj->cost;
+          }
+          break;
+        case 20: /* Increase To-Hit        */
+          obj->tohit += m_bonus(1, 20, level);
+          obj->cost += obj->tohit * 100;
+          if (magik(cursed)) {
+            obj->tohit = -obj->tohit;
+            obj->flags |= TR_CURSED;
+            obj->cost = -obj->cost;
+          }
+          break;
+        case 21: /* Protection        */
+          obj->toac += m_bonus(1, 20, level);
+          obj->cost += obj->toac * 100;
+          if (magik(cursed)) {
+            obj->toac = -obj->toac;
+            obj->flags |= TR_CURSED;
+            obj->cost = -obj->cost;
+          }
+          break;
+        case 24:
+        case 25:
+        case 26:
+        case 27:
+        case 28:
+        case 29:
+          break;
+        case 30: /* Slaying        */
+          obj->todam += m_bonus(1, 25, level);
+          obj->tohit += m_bonus(1, 25, level);
+          obj->cost += (obj->tohit + obj->todam) * 100;
+          if (magik(cursed)) {
+            obj->tohit = -obj->tohit;
+            obj->todam = -obj->todam;
+            obj->flags |= TR_CURSED;
+            obj->cost = -obj->cost;
+          }
+          break;
+        default:
+          break;
+      }
+      break;
+
+    case TV_AMULET: /* Amulets        */
+      if (obj->subval < 2) {
+        if (magik(cursed)) {
+          obj->p1 = -m_bonus(1, 20, level);
+          obj->flags |= TR_CURSED;
+          obj->cost = -obj->cost;
+        } else {
+          obj->p1 = m_bonus(1, 10, level);
+          obj->cost += obj->p1 * 100;
+        }
+      } else if (obj->subval == 2) {
+        obj->p1 = 5 * m_bonus(1, 25, level);
+        if (magik(cursed)) {
+          obj->p1 = -obj->p1;
+          obj->cost = -obj->cost;
+          obj->flags |= TR_CURSED;
+        } else
+          obj->cost += 50 * obj->p1;
+      } else if (obj->subval == 8) {
+        /* amulet of the magi is never cursed */
+        obj->p1 = 5 * m_bonus(1, 25, level);
+        obj->cost += 20 * obj->p1;
+      }
+      break;
+
+    case TV_LIGHT:
+      obj->p1 = randint(obj->p1);
+      break;
+
+    case TV_WAND:
+      switch (obj->subval) {
+        case 0:
+          obj->p1 = randint(10) + 6;
+          break;
+        case 1:
+          obj->p1 = randint(8) + 6;
+          break;
+        case 2:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 3:
+          obj->p1 = randint(8) + 6;
+          break;
+        case 4:
+          obj->p1 = randint(4) + 3;
+          break;
+        case 5:
+          obj->p1 = randint(8) + 6;
+          break;
+        case 6:
+          obj->p1 = randint(20) + 12;
+          break;
+        case 7:
+          obj->p1 = randint(20) + 12;
+          break;
+        case 8:
+          obj->p1 = randint(10) + 6;
+          break;
+        case 9:
+          obj->p1 = randint(12) + 6;
+          break;
+        case 10:
+          obj->p1 = randint(10) + 12;
+          break;
+        case 11:
+          obj->p1 = randint(3) + 3;
+          break;
+        case 12:
+          obj->p1 = randint(8) + 6;
+          break;
+        case 13:
+          obj->p1 = randint(10) + 6;
+          break;
+        case 14:
+          obj->p1 = randint(5) + 3;
+          break;
+        case 15:
+          obj->p1 = randint(5) + 3;
+          break;
+        case 16:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 17:
+          obj->p1 = randint(5) + 4;
+          break;
+        case 18:
+          obj->p1 = randint(8) + 4;
+          break;
+        case 19:
+          obj->p1 = randint(6) + 2;
+          break;
+        case 20:
+          obj->p1 = randint(4) + 2;
+          break;
+        case 21:
+          obj->p1 = randint(8) + 6;
+          break;
+        case 22:
+          obj->p1 = randint(5) + 2;
+          break;
+        case 23:
+          obj->p1 = randint(12) + 12;
+          break;
+        default:
+          break;
+      }
+      break;
+
+    case TV_STAFF:
+      switch (obj->subval) {
+        case 0:
+          obj->p1 = randint(20) + 12;
+          break;
+        case 1:
+          obj->p1 = randint(8) + 6;
+          break;
+        case 2:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 3:
+          obj->p1 = randint(20) + 12;
+          break;
+        case 4:
+          obj->p1 = randint(15) + 6;
+          break;
+        case 5:
+          obj->p1 = randint(4) + 5;
+          break;
+        case 6:
+          obj->p1 = randint(5) + 3;
+          break;
+        case 7:
+          obj->p1 = randint(3) + 1;
+          obj->level = 10;
+          break;
+        case 8:
+          obj->p1 = randint(3) + 1;
+          break;
+        case 9:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 10:
+          obj->p1 = randint(10) + 12;
+          break;
+        case 11:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 12:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 13:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 14:
+          obj->p1 = randint(10) + 12;
+          break;
+        case 15:
+          obj->p1 = randint(3) + 4;
+          break;
+        case 16:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 17:
+          obj->p1 = randint(5) + 6;
+          break;
+        case 18:
+          obj->p1 = randint(3) + 4;
+          break;
+        case 19:
+          obj->p1 = randint(10) + 12;
+          break;
+        case 20:
+          obj->p1 = randint(3) + 4;
+          break;
+        case 21:
+          obj->p1 = randint(3) + 4;
+          break;
+        case 22:
+          obj->p1 = randint(10) + 6;
+          obj->level = 5;
+          break;
+        default:
+          break;
+      }
+      break;
+
+    case TV_CLOAK:
+      if (magik(chance)) {
+        if (magik(special)) {
+          if (randint(2) == 1) {
+            obj->name2 = SN(SN_PROTECTION);
+            obj->toac += m_bonus(2, 40, level);
+            obj->cost += 250;
+          } else {
+            obj->toac += m_bonus(1, 20, level);
+            obj->p1 = randint(3);
+            obj->flags |= TR_STEALTH;
+            obj->name2 = SN(SN_STEALTH);
+            obj->cost += 500;
+          }
+        } else
+          obj->toac += m_bonus(1, 20, level);
+      } else if (magik(cursed)) {
+        tmp = randint(3);
+        if (tmp == 1) {
+          obj->flags |= TR_AGGRAVATE;
+          obj->name2 = SN(SN_IRRITATION);
+          obj->toac -= m_bonus(1, 10, level);
+          obj->tohit -= m_bonus(1, 10, level);
+          obj->todam -= m_bonus(1, 10, level);
+          obj->cost = 0;
+        } else if (tmp == 2) {
+          obj->name2 = SN(SN_VULNERABILITY);
+          obj->toac -= m_bonus(10, 100, level + 50);
+          obj->cost = 0;
+        } else {
+          obj->name2 = SN(SN_ENVELOPING);
+          obj->toac -= m_bonus(1, 10, level);
+          obj->tohit -= m_bonus(2, 40, level + 10);
+          obj->todam -= m_bonus(2, 40, level + 10);
+          obj->cost = 0;
+        }
+        obj->flags |= TR_CURSED;
+      }
+      break;
+
+      // case TV_CHEST:
+      //   switch (randint(level + 4)) {
+      //     case 1:
+      //       obj->flags = 0;
+      //       obj->name2 = SN(SN_EMPTY);
+      //       break;
+      //     case 2:
+      //       obj->flags |= CH_LOCKED;
+      //       obj->name2 = SN(SN_LOCKED);
+      //       break;
+      //     case 3:
+      //     case 4:
+      //       obj->flags |= (CH_LOSE_STR | CH_LOCKED);
+      //       obj->name2 = SN(SN_POISON_NEEDLE);
+      //       break;
+      //     case 5:
+      //     case 6:
+      //       obj->flags |= (CH_POISON | CH_LOCKED);
+      //       obj->name2 = SN(SN_POISON_NEEDLE);
+      //       break;
+      //     case 7:
+      //     case 8:
+      //     case 9:
+      //       obj->flags |= (CH_PARALYSED | CH_LOCKED);
+      //       obj->name2 = SN(SN_GAS_TRAP);
+      //       break;
+      //     case 10:
+      //     case 11:
+      //       obj->flags |= (CH_EXPLODE | CH_LOCKED);
+      //       obj->name2 = SN(SN_EXPLOSION_DEVICE);
+      //       break;
+      //     case 12:
+      //     case 13:
+      //     case 14:
+      //       obj->flags |= (CH_SUMMON | CH_LOCKED);
+      //       obj->name2 = SN(SN_SUMMONING_RUNES);
+      //       break;
+      //     case 15:
+      //     case 16:
+      //     case 17:
+      //       obj->flags |= (CH_PARALYSED | CH_POISON | CH_LOSE_STR |
+      //       CH_LOCKED); obj->name2 = SN(SN_MULTIPLE_TRAPS); break;
+      //     default:
+      //       obj->flags |= (CH_SUMMON | CH_EXPLODE | CH_LOCKED);
+      //       obj->name2 = SN(SN_MULTIPLE_TRAPS);
+      //       break;
+      //   }
+      //   break;
+
+    case TV_SLING_AMMO:
+    case TV_SPIKE:
+    case TV_BOLT:
+    case TV_ARROW:
+      if (obj->tval == TV_SLING_AMMO || obj->tval == TV_BOLT ||
+          obj->tval == TV_ARROW) {
+        if (magik(chance)) {
+          obj->tohit += m_bonus(1, 35, level);
+          obj->todam += m_bonus(1, 35, level);
+          /* see comment for weapons */
+          if (magik(3 * special / 2)) switch (randint(10)) {
+              case 1:
+              case 2:
+              case 3:
+                obj->name2 = SN(SN_SLAYING);
+                obj->tohit += 5;
+                obj->todam += 5;
+                obj->cost += 20;
+                break;
+              case 4:
+              case 5:
+                obj->flags |= TR_FLAME_TONGUE;
+                obj->tohit += 2;
+                obj->todam += 4;
+                obj->name2 = SN(SN_FIRE);
+                obj->cost += 25;
+                break;
+              case 6:
+              case 7:
+                obj->flags |= TR_SLAY_EVIL;
+                obj->tohit += 3;
+                obj->todam += 3;
+                obj->name2 = SN(SN_SLAY_EVIL);
+                obj->cost += 25;
+                break;
+              case 8:
+              case 9:
+                obj->flags |= TR_SLAY_ANIMAL;
+                obj->tohit += 2;
+                obj->todam += 2;
+                obj->name2 = SN(SN_SLAY_ANIMAL);
+                obj->cost += 30;
+                break;
+              case 10:
+                obj->flags |= TR_SLAY_DRAGON;
+                obj->tohit += 3;
+                obj->todam += 3;
+                obj->name2 = SN(SN_DRAGON_SLAYING);
+                obj->cost += 35;
+                break;
+            }
+        } else if (magik(cursed)) {
+          obj->tohit -= m_bonus(5, 55, level);
+          obj->todam -= m_bonus(5, 55, level);
+          obj->flags |= TR_CURSED;
+          obj->cost = 0;
+        }
+      }
+
+      obj->number = 0;
+      for (i = 0; i < 7; i++) obj->number += randint(6);
+      break;
+
+    default:
+      break;
+  }
+}
+int
 tr_subval(tr_ptr)
 struct treasureS* tr_ptr;
 {
@@ -1558,11 +2368,7 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   obj->fx = x;
   struct treasureS* t_ptr = &treasureD[obj->tidx];
 
-  if (oset_missile(obj)) {
-    for (int it = 0; it < 7; ++it) obj->number += randint(6);
-  }
-
-  // TBD: magic_treasure(cur_pos, dun_level);
+  magic_treasure(obj, dun_level);
 
   if (uD.y == y && uD.x == x)
     msg_print("You feel something roll beneath your feet.");
@@ -1576,7 +2382,7 @@ void place_trap(y, x, subval) int y, x, subval;
   obj->fy = y;
   obj->fx = x;
   obj->tval = TV_INVIS_TRAP;
-  obj->tchar = '%';
+  obj->tchar = '9';
   obj->subval = subval;
   obj->number = 1;
   obj->p1 = 2;

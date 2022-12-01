@@ -50,6 +50,63 @@
 #define TRUE 1
 #define FALSE 0
 
+/* indexes into the special name table */
+#define SN_R			1
+#define SN_RA			2
+#define SN_RF			3
+#define SN_RC			4
+#define SN_RL			5
+#define SN_HA			6
+#define SN_DF			7
+#define SN_SA			8
+#define SN_SD			9
+#define SN_SE			10
+#define SN_SU			11
+#define SN_FT			12
+#define SN_FB			13
+#define SN_FREE_ACTION		14
+#define SN_SLAYING		15
+#define SN_CLUMSINESS		16
+#define SN_WEAKNESS		17
+#define SN_SLOW_DESCENT		18
+#define SN_SPEED		19
+#define SN_STEALTH		20
+#define SN_SLOWNESS		21
+#define SN_NOISE		22
+#define SN_GREAT_MASS		23
+#define SN_INTELLIGENCE		24
+#define SN_WISDOM		25
+#define SN_INFRAVISION		26
+#define SN_MIGHT		27
+#define SN_LORDLINESS		28
+#define SN_MAGI			29
+#define SN_BEAUTY		30
+#define SN_SEEING		31
+#define SN_REGENERATION		32
+#define SN_STUPIDITY		33
+#define SN_DULLNESS		34
+#define SN_BLINDNESS		35
+#define SN_TIMIDNESS		36
+#define SN_TELEPORTATION	37
+#define SN_UGLINESS		38
+#define SN_PROTECTION		39
+#define SN_IRRITATION		40
+#define SN_VULNERABILITY	41
+#define SN_ENVELOPING		42
+#define SN_FIRE			43
+#define SN_SLAY_EVIL		44
+#define SN_DRAGON_SLAYING	45
+#define SN_EMPTY		46
+#define SN_LOCKED		47
+#define SN_POISON_NEEDLE	48
+#define SN_GAS_TRAP		49
+#define SN_EXPLOSION_DEVICE	50
+#define SN_SUMMONING_RUNES	51
+#define SN_MULTIPLE_TRAPS	52
+#define SN_DISARMED		53
+#define SN_UNLOCKED		54
+#define SN_SLAY_ANIMAL		55
+
 /* Treasure constants */
 #define TV_NOTHING 0
 #define TV_MISC 1
@@ -116,6 +173,17 @@
 #define MAX_OBJ_LEVEL 50
 
 #define OBJ_GREAT 12  // 1/x treasure is a big surprise!
+
+/* Magic Treasure Generation constants				*/
+/* Note: Number of special objects, and degree of enchantments	 */
+/*	 can be adjusted here.					 */
+#define OBJ_STD_ADJ	 125  /* Adjust STD per level * 100	       */
+#define OBJ_STD_MIN	 7    /* Minimum STD			       */
+#define OBJ_TOWN_LEVEL	 7    /* Town object generation level	       */
+#define OBJ_BASE_MAGIC	 15   /* Base amount of magic		       */
+#define OBJ_BASE_MAX	 70   /* Max amount of magic		       */
+#define OBJ_DIV_SPECIAL	 6    /* magic_chance/#	 special magic	      */
+#define OBJ_DIV_CURSED	 13   /* 10*magic_chance/#  cursed items	 */
 
 /* spell types used by get_flags(), breathe(), fire_bolt() and fire_ball() */
 #define GF_MAGIC_MISSILE 0

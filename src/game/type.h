@@ -129,8 +129,8 @@ struct treasureS {
 
 struct objS {
   int id;
-  char *name2;
   uint32_t flags;
+  char *name2;
   uint8_t fy;
   uint8_t fx;
   uint8_t tval;
