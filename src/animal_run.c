@@ -3648,11 +3648,31 @@ py_experience()
     // }
   }
 
-  // if (p_ptr->exp > p_ptr->max_exp) p_ptr->max_exp = p_ptr->exp;
-
-  // prt_long(p_ptr->exp, 14, STAT_COLUMN + 6);
   uD.exp = exp;
+  uD.max_exp = MAX(exp, uD.max_exp);
   uD.lev = lev;
+}
+int
+restore_level()
+{
+  int restore, lev, exp, expfact;
+
+  restore = FALSE;
+  if (uD.max_exp > uD.exp) {
+    restore = TRUE;
+    msg_print("You feel your life energies returning.");
+    exp = uD.max_exp;
+    expfact = uD.mult_exp;
+    lev = uD.lev;
+    while ((lev < MAX_PLAYER_LEVEL) &&
+           (player_exp[lev - 1] * expfact / 100) <= exp) {
+      lev += 1;
+      MSG("Welcome to level %d.", lev);
+    }
+    uD.exp = exp;
+    uD.lev = lev;
+  }
+  return (restore);
 }
 void
 py_lose_experience(amount)
@@ -3994,39 +4014,39 @@ inven_quaff(iidx)
             m = uD.exp / 5;
             if (uD.exp > INT16_MAX) {
               scale = INT32_MAX / uD.exp;
-              m += (randint((int)scale) * uD.exp) / (scale * 5);
+              m += (randint(scale) * uD.exp) / (scale * 5);
             } else
-              m += randint((int)uD.exp) / 5;
+              m += randint(uD.exp) / 5;
             py_lose_experience(m);
             ident = TRUE;
           }
           break;
-        // case 35:
-        //   f_ptr = &py.flags;
-        //   (void)cure_poison();
-        //   if (f_ptr->food > 150) f_ptr->food = 150;
-        //   f_ptr->paralysis = 4;
-        //   msg_print("The potion makes you vomit!");
-        //   ident = TRUE;
-        //   break;
-        // case 36:
-        //   if (py.flags.invuln == 0) ident = TRUE;
-        //   py.flags.invuln += randint(10) + 10;
-        //   break;
-        // case 37:
-        //   if (py.flags.hero == 0) ident = TRUE;
-        //   py.flags.hero += randint(25) + 25;
-        //   break;
-        // case 38:
-        //   if (py.flags.shero == 0) ident = TRUE;
-        //   py.flags.shero += randint(25) + 25;
-        //   break;
-        // case 39:
-        //   ident = remove_fear();
-        //   break;
-        // case 40:
-        //   ident = restore_level();
-        //   break;
+          // case 35:
+          //   f_ptr = &py.flags;
+          //   (void)cure_poison();
+          //   if (f_ptr->food > 150) f_ptr->food = 150;
+          //   f_ptr->paralysis = 4;
+          //   msg_print("The potion makes you vomit!");
+          //   ident = TRUE;
+          //   break;
+          // case 36:
+          //   if (py.flags.invuln == 0) ident = TRUE;
+          //   py.flags.invuln += randint(10) + 10;
+          //   break;
+          // case 37:
+          //   if (py.flags.hero == 0) ident = TRUE;
+          //   py.flags.hero += randint(25) + 25;
+          //   break;
+          // case 38:
+          //   if (py.flags.shero == 0) ident = TRUE;
+          //   py.flags.shero += randint(25) + 25;
+          //   break;
+          // case 39:
+          //   ident = remove_fear();
+          //   break;
+        case 40:
+          ident = restore_level();
+          break;
         // case 41:
         //   f_ptr = &py.flags;
         //   if (f_ptr->resist_heat == 0) ident = TRUE;

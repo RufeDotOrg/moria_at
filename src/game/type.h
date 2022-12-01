@@ -4,6 +4,7 @@ struct uS {
   int y;
   int x;
   int exp;
+  int max_exp;
   int lev;
   int chp;
   int chp_frac;
