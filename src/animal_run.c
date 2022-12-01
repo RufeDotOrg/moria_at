@@ -6765,7 +6765,7 @@ breath(typ, y, x, dam_hp, midx)
   for (i = y - 2; i <= y + 2; i++)
     for (j = x - 2; j <= x + 2; j++)
       if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis)) {
-        //&& los(y, x, i, j)) {
+        //&& los(y, x, i, j))
         c_ptr = &caveD[i][j];
         if ((c_ptr->oidx != 0) && (*destroy)(&entity_objD[c_ptr->oidx]))
           delete_object(i, j);
@@ -6775,63 +6775,57 @@ breath(typ, y, x, dam_hp, midx)
              be visible until the blindness takes effect */
           // if (panel_contains(i, j) && !(py.flags.status & PY_BLIND))
           //   print('*', i, j);
-          // if (c_ptr->midx) {
-          //   m_ptr = &entity_monD[c_ptr->midx];
-          //   cr_ptr = &c_list[m_ptr->mptr];
-          //   dam = dam_hp;
-          //   if (harm_type & cr_ptr->cdefense)
-          //     dam = dam * 2;
-          //   else if (weapon_type & cr_ptr->spells)
-          //     dam = (dam / 4);
-          //   dam = (dam / (distance(i, j, y, x) + 1));
-          //   /* can not call mon_take_hit here, since player does not
-          //      get experience for kill */
-          //   m_ptr->hp = m_ptr->hp - dam;
-          //   m_ptr->csleep = 0;
-          //   if (m_ptr->hp < 0) {
-          //     treas =
-          //         monster_death(m_ptr->fy, m_ptr->fx, cr_ptr->cmove);
-          //     if (m_ptr->ml) {
-          //       tmp = (c_recall[m_ptr->mptr].r_cmove & CM_TREASURE) >>
-          //             CM_TR_SHIFT;
-          //       if (tmp > ((treas & CM_TREASURE) >> CM_TR_SHIFT))
-          //         treas = (treas & ~CM_TREASURE) | (tmp << CM_TR_SHIFT);
-          //       c_recall[m_ptr->mptr].r_cmove =
-          //           treas | (c_recall[m_ptr->mptr].r_cmove & ~CM_TREASURE);
-          //     }
+          if (c_ptr->midx) {
+            m_ptr = &entity_monD[c_ptr->midx];
+            cr_ptr = &creatureD[m_ptr->cidx];
+            dam = dam_hp;
+            if (harm_type & cr_ptr->cdefense)
+              dam = dam * 2;
+            else if (weapon_type & cr_ptr->spells)
+              dam = (dam / 4);
+            dam = (dam / (distance(i, j, y, x) + 1));
+            /* can not call mon_take_hit here, since player does not
+               get experience for kill */
+            m_ptr->hp = m_ptr->hp - dam;
+            // TBD m_ptr->csleep = 0;
+            if (m_ptr->hp < 0) {
+              // TBD: treasure drop
+              // treas = monster_death(m_ptr->fy, m_ptr->fx, cr_ptr->cmove);
+              // if (m_ptr->ml) {
+              //   tmp = (c_recall[m_ptr->mptr].r_cmove & CM_TREASURE) >>
+              //         CM_TR_SHIFT;
+              //   if (tmp > ((treas & CM_TREASURE) >> CM_TR_SHIFT))
+              //     treas = (treas & ~CM_TREASURE) | (tmp << CM_TR_SHIFT);
+              //   c_recall[m_ptr->mptr].r_cmove =
+              //       treas | (c_recall[m_ptr->mptr].r_cmove & ~CM_TREASURE);
+              // }
 
-          //    /* It ate an already processed monster.Handle normally.*/
-          //    if (midx < c_ptr->cptr) delete_monster((int)c_ptr->cptr);
-          //    /* If it eats this monster, an already processed monster
-          //       will take its place, causing all kinds of havoc.
-          //       Delay the kill a bit. */
-          //    else
-          //      fix1_delete_monster((int)c_ptr->cptr);
-          //  }
-          //} else
-
-          /* let's do at least one point of damage */
-          /* prevents randint(0) problem with poison_gas, also */
-          dam = MAX(dam_hp / (distance(i, j, y, x) + 1), 1);
-          switch (typ) {
-            case GF_LIGHTNING:
-              light_dam(dam);
-              break;
-            case GF_POISON_GAS:
-              poison_gas(dam);
-              break;
-            case GF_ACID:
-              acid_dam(dam);
-              break;
-            case GF_FROST:
-              cold_dam(dam);
-              break;
-            case GF_FIRE:
-              fire_dam(dam);
-              break;
+              mon_unuse(m_ptr);
+            }
           }
         }
       }
+
+  /* let's do at least one point of damage to the player */
+  /* prevents randint(0) problem with poison_gas, also */
+  dam = MAX(dam_hp / (distance(i, j, y, x) + 1), 1);
+  switch (typ) {
+    case GF_LIGHTNING:
+      light_dam(dam);
+      break;
+    case GF_POISON_GAS:
+      poison_gas(dam);
+      break;
+    case GF_ACID:
+      acid_dam(dam);
+      break;
+    case GF_FROST:
+      cold_dam(dam);
+      break;
+    case GF_FIRE:
+      fire_dam(dam);
+      break;
+  }
   /* show the ball of gas */
   // put_qio();
 
