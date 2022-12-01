@@ -1,11 +1,12 @@
 
 static char prev_cmdD;
-static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
 static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
+static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
+static int status_usedD[AL(statusD)];
 static char screenD[SCREEN_HEIGHT][80];
 static int screen_usedD[AL(screenD)];
 static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
-static int overlay_usedD[STATUS_HEIGHT];
+static int overlay_usedD[AL(overlayD)];
 static char logD[80];
 static int log_usedD;
 static char debugD[80];

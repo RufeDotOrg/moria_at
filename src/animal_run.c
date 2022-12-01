@@ -276,7 +276,6 @@ int maxval;
   randval = rnd();
   return ((int)(randval % maxval) + 1);
 }
-#define MAX_S16 0x7fff
 int
 randnor(mean, stand)
 int mean, stand;
@@ -284,7 +283,7 @@ int mean, stand;
   register int offset, low, iindex, high;
   int16_t tmp;
 
-  tmp = randint(MAX_S16);
+  tmp = randint(INT16_MAX);
 
   /* binary search normal normal_table to get index that matches tmp */
   /* this takes up to 8 iterations */
@@ -311,7 +310,7 @@ int mean, stand;
   offset = ((stand * iindex) + (NORMAL_TABLE_SD >> 1)) / NORMAL_TABLE_SD;
 
   /* off scale, boost random value between 4 and 5 times SD */
-  if (tmp == MAX_S16) offset += randint(stand);
+  if (tmp == INT16_MAX) offset += randint(stand);
 
   /* one half should be negative */
   if (randint(2) == 1) offset = -offset;
@@ -5386,22 +5385,16 @@ void creatures(move) int move;
 void
 status_update()
 {
-  memset(statusD, '    ', sizeof(statusD));
-  int count, line;
-  line = 0;
-#define PR_STAT(ABBR, val)                                                     \
-  {                                                                            \
-    int count = snprintf(statusD[line], AL(statusD[line]), ABBR ": %6d", val); \
-    statusD[line][count] = ' ';                                                \
-    line += 1;                                                                 \
-  }
-  PR_STAT("CHP ", uD.chp);
-  PR_STAT("MHP ", uD.mhp);
-  PR_STAT("LEV ", uD.lev);
-  PR_STAT("EXP ", uD.exp);
+  int line = 0;
+  BufMsg(status, "CHP : %6d", uD.chp);
+  BufMsg(status, "MHP : %6d", uD.mhp);
+  BufMsg(status, "LEV : %6d", uD.lev);
+  BufMsg(status, "EXP : %6d", uD.exp);
   line += 1;
-  PR_STAT("GOLD", uD.gold);
-  PR_STAT("AC  ", uD.pac);
+  BufMsg(status, "GOLD: %6d", uD.gold);
+  BufMsg(status, "AC  : %6d", uD.pac);
+
+  BufPad(status, AL(statusD), AL(statusD[0]));
 }
 BOOL
 py_teleport_near(y, x, uy, ux)
@@ -5553,10 +5546,9 @@ dungeon()
           AP(debugD), "[%d,%d xy] [%d,%d quadrant] [%d turn] %d feet", uD.x,
           uD.y, panelD.panel_col, panelD.panel_row, turnD, dun_level * 50);
       platform_draw();
-      AC(screenD);
       AC(screen_usedD);
-      AC(overlayD);
       AC(overlay_usedD);
+      AC(status_usedD);
       log_countD = 0;
       if (!free_turn_flag) log_usedD = 0;
       free_turn_flag = FALSE;
