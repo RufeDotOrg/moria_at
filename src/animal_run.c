@@ -3961,6 +3961,7 @@ equip_random()
 {
   int tmp[6], k;
 
+  k = 0;
   if (invenD[INVEN_BODY]) tmp[k++] = INVEN_BODY;
   if (invenD[INVEN_ARM]) tmp[k++] = INVEN_ARM;
   if (invenD[INVEN_OUTER]) tmp[k++] = INVEN_OUTER;
@@ -4005,7 +4006,7 @@ equip_curse()
   int l;
 
   l = equip_random();
-  if (l > 0) {
+  if (l >= 0) {
     i_ptr = obj_get(invenD[l]);
     obj_desc(i_ptr, FALSE);
     MSG("Your %s glows black, fades.", descD);
@@ -4344,13 +4345,14 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  int actuate_test[] = {177};  //{238, 185, 314};
+  int actuate_test[] = {216};  //{238, 185, 314};
   for (int it = 0; it < AL(actuate_test); ++it) {
     int iidx = inven_slot();
     if (iidx == -1) break;
 
     struct objS* obj = obj_use();
     tr_obj_copy(actuate_test[it], obj);
+    tr_make_known(&treasureD[obj->tidx]);
     invenD[iidx] = obj->id;
   }
   int magik_test[] = {92};
@@ -5853,6 +5855,8 @@ py_character()
   BufMsg(screen, "ToDam: %+6d", uD.ptodam);
   BufMsg(screen, "Ac   : %6d", uD.pac);
   BufMsg(screen, "ToAc : %+6d", uD.ptoac);
+  // TBD: the rest
+  BufMsg(screen, "Speed: %+6d", uD.pspeed);
   free_turn_flag = TRUE;
 }
 void
