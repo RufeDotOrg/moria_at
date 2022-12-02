@@ -4607,6 +4607,30 @@ res_stat(stat)
   return FALSE;
 }
 static void
+py_death()
+{
+  char c;
+  int row, col;
+
+  MSG("Killed by %s.", death_descD);
+  row = col = 0;
+  for (int it = 0; it < AL(grave); ++it) {
+    if (grave[it] == '\n') {
+      screenD[row][col] = 0;
+      screen_usedD[row] = col;
+      row += 1;
+      col = 0;
+    } else {
+      screenD[row][col] = grave[it];
+      col += 1;
+    }
+  }
+  do {
+    im_print();
+    c = inkey();
+  } while (c != ' ');
+}
+static void
 py_where()
 {
   int y, x, dir;
@@ -7671,6 +7695,8 @@ main()
 
     if (!death) generate_cave();
   }
+
+  py_death();
 
   platform_reset();
   return 0;

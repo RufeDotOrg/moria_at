@@ -5,6 +5,7 @@
 
 #include "db/char.c"
 #include "db/desc.c"
+#include "db/grave.c"
 #include "db/mon.c"
 #include "db/obj.c"
 
