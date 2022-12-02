@@ -532,6 +532,154 @@ in_bounds(int row, int col)
   BOOL cc = (col > 0 && col < MAX_WIDTH - 1);
   return cc && rc;
 }
+/* A simple, fast, integer-based line-of-sight algorithm.  By Joseph Hall,
+   4116 Brewster Drive, Raleigh NC 27606.  Email to jnh@ecemwl.ncsu.edu.
+
+   Returns TRUE if a line of sight can be traced from x0, y0 to x1, y1.
+
+   The LOS begins at the center of the tile [x0, y0] and ends at
+   the center of the tile [x1, y1].  If los() is to return TRUE, all of
+   the tiles this line passes through must be transparent, WITH THE
+   EXCEPTIONS of the starting and ending tiles.
+
+   We don't consider the line to be "passing through" a tile if
+   it only passes across one corner of that tile. */
+
+/* Because this function uses (short) ints for all calculations, overflow
+   may occur if deltaX and deltaY exceed 90. */
+
+int
+los(fromY, fromX, toY, toX)
+int fromY, fromX, toY, toX;
+{
+  int tmp, deltaX, deltaY;
+
+  deltaX = toX - fromX;
+  deltaY = toY - fromY;
+
+  /* Adjacent? */
+  if ((deltaX < 2) && (deltaX > -2) && (deltaY < 2) && (deltaY > -2))
+    return TRUE;
+
+  /* Handle the cases where deltaX or deltaY == 0. */
+  if (deltaX == 0) {
+    int p_y; /* y position -- loop variable  */
+
+    if (deltaY < 0) {
+      tmp = fromY;
+      fromY = toY;
+      toY = tmp;
+    }
+    for (p_y = fromY + 1; p_y < toY; p_y++)
+      if (caveD[p_y][fromX].fval >= MIN_CLOSED_SPACE) return FALSE;
+    return TRUE;
+  } else if (deltaY == 0) {
+    int px; /* x position -- loop variable  */
+
+    if (deltaX < 0) {
+      tmp = fromX;
+      fromX = toX;
+      toX = tmp;
+    }
+    for (px = fromX + 1; px < toX; px++)
+      if (caveD[fromY][px].fval >= MIN_CLOSED_SPACE) return FALSE;
+    return TRUE;
+  }
+
+  /* Now, we've eliminated all the degenerate cases.
+     In the computations below, dy (or dx) and m are multiplied by a
+     scale factor, scale = ABS(deltaX * deltaY * 2), so that we can use
+     integer arithmetic. */
+
+  {
+    int px,     /* x position  			*/
+        p_y,    /* y position  			*/
+        scale2; /* above scale factor / 2  	*/
+    int scale,  /* above scale factor  		*/
+        xSign,  /* sign of deltaX  		*/
+        ySign,  /* sign of deltaY  		*/
+        m;      /* slope or 1/slope of LOS  	*/
+
+    scale2 = ABS(deltaX * deltaY);
+    scale = scale2 << 1;
+    xSign = (deltaX < 0) ? -1 : 1;
+    ySign = (deltaY < 0) ? -1 : 1;
+
+    /* Travel from one end of the line to the other, oriented along
+       the longer axis. */
+
+    if (ABS(deltaX) >= ABS(deltaY)) {
+      int dy; /* "fractional" y position  */
+      /* We start at the border between the first and second tiles,
+         where the y offset = .5 * slope.  Remember the scale
+         factor.  We have:
+
+         m = deltaY / deltaX * 2 * (deltaY * deltaX)
+           = 2 * deltaY * deltaY. */
+
+      dy = deltaY * deltaY;
+      m = dy << 1;
+      px = fromX + xSign;
+
+      /* Consider the special case where slope == 1. */
+      if (dy == scale2) {
+        p_y = fromY + ySign;
+        dy -= scale;
+      } else
+        p_y = fromY;
+
+      while (toX - px) {
+        if (caveD[p_y][px].fval >= MIN_CLOSED_SPACE) return FALSE;
+
+        dy += m;
+        if (dy < scale2)
+          px += xSign;
+        else if (dy > scale2) {
+          p_y += ySign;
+          if (caveD[p_y][px].fval >= MIN_CLOSED_SPACE) return FALSE;
+          px += xSign;
+          dy -= scale;
+        } else {
+          /* This is the case, dy == scale2, where the LOS
+             exactly meets the corner of a tile. */
+          px += xSign;
+          p_y += ySign;
+          dy -= scale;
+        }
+      }
+      return TRUE;
+    } else {
+      int dx; /* "fractional" x position  */
+      dx = deltaX * deltaX;
+      m = dx << 1;
+
+      p_y = fromY + ySign;
+      if (dx == scale2) {
+        px = fromX + xSign;
+        dx -= scale;
+      } else
+        px = fromX;
+
+      while (toY - p_y) {
+        if (caveD[p_y][px].fval >= MIN_CLOSED_SPACE) return FALSE;
+        dx += m;
+        if (dx < scale2)
+          p_y += ySign;
+        else if (dx > scale2) {
+          px += xSign;
+          if (caveD[p_y][px].fval >= MIN_CLOSED_SPACE) return FALSE;
+          p_y += ySign;
+          dx -= scale;
+        } else {
+          px += xSign;
+          p_y += ySign;
+          dx -= scale;
+        }
+      }
+      return TRUE;
+    }
+  }
+}
 static void rand_dir(rdir, cdir) int *rdir, *cdir;
 {
   register int tmp;
@@ -3027,26 +3175,25 @@ void update_mon(midx) int midx;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
   if ((m_ptr->cdis <= MAX_SIGHT) && (panel_contains(&panelD, fy, m_ptr->fx))) {
-    // TBD: line-of-sight
-    // if (los(uD.y, uD.x, fy, m_ptr->fx)) {
-    c_ptr = &caveD[fy][fx];
-    /* Normal sight.       */
-    if (cave_lit(c_ptr)) {
-      if ((CM_INVISIBLE & cr_ptr->cmove) == 0) flag = TRUE;
-      // else if (py.flags.see_inv) {
+    if (los(uD.y, uD.x, fy, fx)) {
+      c_ptr = &caveD[fy][fx];
+      /* Normal sight.       */
+      if (cave_lit(c_ptr)) {
+        if ((CM_INVISIBLE & cr_ptr->cmove) == 0) flag = TRUE;
+        // else if (py.flags.see_inv) {
+        //   flag = TRUE;
+        //   c_recall[m_ptr->mptr].r_cmove |= CM_INVISIBLE;
+        // }
+      }
+      /* Infra vision.   */
+      // else if ((py.flags.see_infra > 0) && (m_ptr->cdis <=
+      // py.flags.see_infra)
+      // &&
+      //          (CD_INFRA & cr_ptr->cdefense)) {
       //   flag = TRUE;
-      //   c_recall[m_ptr->mptr].r_cmove |= CM_INVISIBLE;
+      //   c_recall[m_ptr->mptr].r_cdefense |= CD_INFRA;
       // }
     }
-    /* Infra vision.   */
-    // else if ((py.flags.see_infra > 0) && (m_ptr->cdis <=
-    // py.flags.see_infra)
-    // &&
-    //          (CD_INFRA & cr_ptr->cdefense)) {
-    //   flag = TRUE;
-    //   c_recall[m_ptr->mptr].r_cdefense |= CD_INFRA;
-    // }
-    // }
   }
   /* Light it up.   */
   if (flag) {
@@ -6764,8 +6911,8 @@ breath(typ, y, x, dam_hp, midx)
   get_flags(typ, &weapon_type, &harm_type, &destroy);
   for (i = y - 2; i <= y + 2; i++)
     for (j = x - 2; j <= x + 2; j++)
-      if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis)) {
-        //&& los(y, x, i, j))
+      if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis) &&
+          los(y, x, i, j)) {
         c_ptr = &caveD[i][j];
         if ((c_ptr->oidx != 0) && (*destroy)(&entity_objD[c_ptr->oidx]))
           delete_object(i, j);
@@ -6855,9 +7002,9 @@ mon_cast_spell(midx)
   /* Must be within certain range  	   */
   else if (m_ptr->cdis > MAX_SIGHT)
     took_turn = FALSE;
-  /* TBD: Must have unobstructed Line-Of-Sight     */
-  // else if (!los(char_row, char_col, (int)m_ptr->fy, (int)m_ptr->fx))
-  //   took_turn = FALSE;
+  // Must have unobstructed Line-Of-Sight
+  else if (!los(uD.y, uD.x, m_ptr->fy, m_ptr->fx))
+    took_turn = FALSE;
   else /* Creature is going to cast a spell   */
   {
     took_turn = TRUE;
