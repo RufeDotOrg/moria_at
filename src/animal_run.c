@@ -2736,6 +2736,8 @@ panel_update(struct panelS* panel, int y, int x, BOOL force)
 void
 symmap_update()
 {
+  memset(cremapD, 0, sizeof(cremapD));
+
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
@@ -2744,6 +2746,17 @@ symmap_update()
   for (int row = rmin; row < rmax; ++row) {
     for (int col = cmin; col < cmax; ++col) {
       *sym++ = get_sym(row, col);
+    }
+  }
+  uint16_t* cre = &cremapD[0][0];
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      struct caveS* cave_ptr = &caveD[row][col];
+      if (cave_ptr->midx) {
+        struct monS* mon = &entity_monD[cave_ptr->midx];
+        if (mon->ml) *cre = mon->cidx;
+      }
+      cre += 1;
     }
   }
 }
