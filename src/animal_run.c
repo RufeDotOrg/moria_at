@@ -6749,7 +6749,12 @@ bash(y, x)
   movement = 0;
   if (c_ptr->midx) {
     // py.flags.afraid
-    py_shield_attack(y, x);
+    if (invenD[INVEN_ARM]) {
+      py_shield_attack(y, x);
+    } else {
+      MSG("You must wear a shield to bash monsters!");
+      free_turn_flag = TRUE;
+    }
   } else if (c_ptr->oidx) {
     if (obj->tval == TV_CLOSED_DOOR) {
       msg_print("You smash into the door!");
