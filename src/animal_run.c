@@ -7308,6 +7308,13 @@ status_update()
   BufMsg(status, "GOLD: %6d", uD.gold);
   BufMsg(status, "AC  : %6d", uD.pac);
 
+  line += 1;
+  BufMsg(status, "DEBUG");
+  BufMsg(status, "y,x :%3d,%3d", uD.y, uD.x);
+  BufMsg(status, "quad:%3d,%3d", panelD.panel_col, panelD.panel_row);
+  BufMsg(status, "feet: %6d", dun_level * 50);
+  BufMsg(status, "turn: %6d", turnD);
+
   BufPad(status, AL(statusD), AL(statusD[0]));
 }
 BOOL
@@ -7455,9 +7462,6 @@ dungeon()
       status_update();
       symmap_update();
 
-      debug_usedD = snprintf(
-          AP(debugD), "[%d,%d xy] [%d,%d quadrant] [%d turn] %d feet", uD.x,
-          uD.y, panelD.panel_col, panelD.panel_row, turnD, dun_level * 50);
       platform_draw();
       AC(screen_usedD);
       AC(overlay_usedD);
