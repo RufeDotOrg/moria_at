@@ -4920,7 +4920,6 @@ char* bolt_typ;
     mmove(dir, &y, &x);
     dist++;
     c_ptr = &caveD[y][x];
-    // lite_spot(oldy, oldx);
     if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
       flag = TRUE;
     else {
@@ -6626,7 +6625,6 @@ close_object()
           obj->tval = TV_CLOSED_DOOR;
           obj->tchar = '+';
           c_ptr->fval = FLOOR_OBST;
-          // lite_spot(y, x);
         } else
           msg_print("The door appears to be broken.");
       } else {
@@ -6714,8 +6712,6 @@ bash(y, x)
         c_ptr->fval = FLOOR_CORR;
         // if (py.flags.confused == 0)
         movement = 1;
-        // else
-        //   lite_spot(y, x);
       } else if (randint(150) > 18) {  // py.stats.use_stat[A_DEX]) {
         msg_print("You are off-balance.");
         // py.flags.paralysis = 1 + randint(2);
@@ -6851,7 +6847,6 @@ static void py_search(y, x, chance) int y, x, chance;
           msg_print("You have found a secret door.");
           obj->tval = TV_CLOSED_DOOR;
           obj->tchar = '+';
-          // lite_spot(y,x);
           find_flag = FALSE;
         } else if (obj->tval == TV_INVIS_TRAP) {
           msg_print("You have found a trap.");
@@ -6994,12 +6989,6 @@ breath(typ, y, x, dam_hp, midx)
   }
   /* show the ball of gas */
   // put_qio();
-
-  // for (i = (y - 2); i <= (y + 2); i++)
-  //   for (j = (x - 2); j <= (x + 2); j++)
-  //     if (in_bounds(i, j) && panel_contains(i, j) &&
-  //         (distance(y, x, i, j) <= max_dis))
-  //       lite_spot(i, j);
 }
 static int
 mon_cast_spell(midx)
@@ -7284,7 +7273,6 @@ static void hit_trap(y, x) int y, x;
   if (obj->tval == TV_INVIS_TRAP) {
     obj->tval = TV_VIS_TRAP;
     obj->tchar = '^';
-    // lite_spot(y, x);
   }
   dam = pdamroll(obj->damage);
   // TBD: dam may be conditional by trap subval
