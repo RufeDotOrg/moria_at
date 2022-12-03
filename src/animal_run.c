@@ -7242,7 +7242,17 @@ void creatures(move) int move;
       if ((cr_ptr->cmove & CM_ATTACK_ONLY) == 0 || mon->cdis < 2) {
         move_count = movement_rate(cr_ptr->speed - 10 + uD.pspeed);
         for (; move_count > 0; --move_count) {
-          mon_move(it_index, &rcmove);
+          if (mon->msleep) {
+            // py.flags.aggravate
+            // uD.rest paralysis
+            if (randint(50) == 1) {
+              int notice = randint(1024);
+              if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
+                mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
+              }
+            }
+          }
+          if (mon->msleep == 0) mon_move(it_index, &rcmove);
         }
       }
     }
