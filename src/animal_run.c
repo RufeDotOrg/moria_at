@@ -6308,7 +6308,59 @@ int* wtohit;
     return blows_table[str_index][dex_index];
   }
 }
-void py_attack(y, x) int y, x;
+void
+py_shield_attack(y, x)
+{
+  int midx, k, avg_max_hp, base_tohit, adj;
+  struct creatureS* cr_ptr;
+  struct monS* m_ptr;
+  struct objS* shield;
+
+  midx = caveD[y][x].midx;
+  m_ptr = &entity_monD[midx];
+  cr_ptr = &creatureD[m_ptr->cidx];
+  shield = obj_get(invenD[INVEN_ARM]);
+  m_ptr->msleep = 0;
+  mon_desc(midx);
+  base_tohit = statD.use_stat[A_STR] + shield->weight / 2 + uD.wt / 10;
+  adj = uD.lev * level_adj[uD.clidx][LA_BTH];
+  if (!m_ptr->ml)
+    base_tohit = (base_tohit / 2) -
+                 (statD.use_stat[A_DEX] * (BTH_PLUS_ADJ - 1)) - (adj / 2);
+
+  if (test_hit(base_tohit, adj, statD.use_stat[A_DEX], cr_ptr->ac)) {
+    MSG("You hit %s.", descD);
+    k = pdamroll(shield->damage);
+    k = critical_blow(shield->weight / 4 + statD.use_stat[A_STR], 0, k);
+    k += uD.wt / 60 + 3;
+    if (k < 0) k = 0;
+
+    /* See if we done it in.  			     */
+    if (mon_take_hit(midx, k) >= 0) {
+      MSG("You have slain %s.", descD);
+      py_experience();
+    } else {
+      /* Can not stun Balrog */
+      avg_max_hp = (cr_ptr->cdefense & CD_MAX_HP
+                        ? cr_ptr->hd[0] * cr_ptr->hd[1]
+                        : (cr_ptr->hd[0] * (cr_ptr->hd[1] + 1)) >> 1);
+      if ((100 + randint(400) + randint(400)) > (m_ptr->hp + avg_max_hp)) {
+        m_ptr->stunned += randint(3) + 1;
+        if (m_ptr->stunned > 24) m_ptr->stunned = 24;
+        MSG("%s appears stunned!", descD);
+      } else
+        MSG("%s ignores your bash!", descD);
+    }
+  } else {
+    MSG("You miss %s.", descD);
+  }
+  if (randint(150) > statD.use_stat[A_DEX]) {
+    msg_print("You are off balance.");
+    // py.flags.paralysis = 1 + randint(2);
+  }
+}
+void
+py_attack(y, x)
 {
   register int k, blows;
   int base_tohit, tohit;
@@ -6696,8 +6748,8 @@ bash(y, x)
 
   movement = 0;
   if (c_ptr->midx) {
-    // TBD: py_bash() vs monster
-    py_attack(y, x);
+    // py.flags.afraid
+    py_shield_attack(y, x);
   } else if (c_ptr->oidx) {
     if (obj->tval == TV_CLOSED_DOOR) {
       msg_print("You smash into the door!");
@@ -7218,7 +7270,21 @@ void creatures(move) int move;
               }
             }
           }
-          if (mon->msleep == 0) mon_move(it_index, &rcmove);
+          if (mon->stunned != 0) {
+            /* NOTE: Balrog = 100*100 = 10000, it always
+               recovers instantly */
+            if (randint(5000) < cr_ptr->level * cr_ptr->level)
+              mon->stunned = 0;
+            else
+              mon->stunned--;
+            if (mon->stunned == 0) {
+              if (mon->ml) {
+                MSG("The %s recovers and glares at you.", cr_ptr->name);
+              }
+            }
+          }
+          if (mon->msleep == 0 && mon->stunned == 0)
+            mon_move(it_index, &rcmove);
         }
       }
     }

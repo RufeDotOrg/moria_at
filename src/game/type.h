@@ -182,4 +182,5 @@ struct monS {
   uint8_t fx;
   uint8_t cdis;
   uint8_t ml;  // monster lit
+  uint8_t stunned;
 };
