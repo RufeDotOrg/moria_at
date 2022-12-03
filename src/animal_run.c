@@ -2371,14 +2371,17 @@ place_monster(y, x, z, slp)
   mon = mon_use();
 
   if (mon->id) {
-    // TBD: duck type
-    mon->fy = y;
-    mon->fx = x;
     mon->cidx = z;
+    if (!cre->sleep || !slp)
+      mon->msleep = 0;
+    else
+      mon->msleep = (cre->sleep * 2) + randint(cre->sleep * 10);
     if (cre->cdefense & CD_MAX_HP)
       mon->hp = cre->hd[0] * cre->hd[1];
     else
       mon->hp = pdamroll(cre->hd);
+    mon->fy = y;
+    mon->fx = x;
     mon->cdis = distance(uD.y, uD.x, y, x);
     mon->ml = FALSE;
 
@@ -2388,7 +2391,7 @@ place_monster(y, x, z, slp)
   return mon->id;
 }
 int
-summon_monster(y, x, slp)
+summon_monster(y, x)
 {
   int i, j, k;
   int l, summon;
@@ -2403,7 +2406,7 @@ summon_monster(y, x, slp)
     if (in_bounds(j, k)) {
       cave_ptr = &caveD[j][k];
       if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->midx == 0)) {
-        summon = place_monster(j, k, l, slp);
+        summon = place_monster(j, k, l, FALSE);
         break;
       }
     }
@@ -3599,6 +3602,7 @@ int midx, dam;
 {
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
+  mon->msleep = 0;
   mon->hp -= dam;
   if (mon->hp >= 0) return -1;
 
@@ -5360,7 +5364,7 @@ int *uy, *ux;
           break;
         case 7:
           for (k = 0; k < randint(3); k++) {
-            ident |= (summon_monster(uD.y, uD.x, FALSE) != 0);
+            ident |= (summon_monster(uD.y, uD.x) != 0);
           }
           break;
         case 8:
@@ -5788,7 +5792,7 @@ void inven_invoke(iidx, uy, ux) int *uy, *ux;
         case 8:
           ident = FALSE;
           for (k = 0; k < randint(4); k++) {
-            ident |= (summon_monster(uD.y, uD.x, FALSE) != 0);
+            ident |= (summon_monster(uD.y, uD.x) != 0);
           }
           break;
           // case 10:
@@ -6338,6 +6342,7 @@ void py_attack(y, x) int y, x;
   struct creatureS* cre = &creatureD[mon->cidx];
   struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
+  mon->msleep = 0;
   mon_desc(midx);
   descD[0] = tolower(descD[0]);
 
@@ -6971,7 +6976,7 @@ breath(typ, y, x, dam_hp, midx)
             /* can not call mon_take_hit here, since player does not
                get experience for kill */
             m_ptr->hp = m_ptr->hp - dam;
-            // TBD m_ptr->csleep = 0;
+            m_ptr->msleep = 0;
             if (m_ptr->hp < 0) {
               // TBD: treasure drop
               // treas = monster_death(m_ptr->fy, m_ptr->fx, cr_ptr->cmove);
@@ -7123,7 +7128,7 @@ mon_cast_spell(midx)
       case 14: /*Summon Monster*/
       {
         MSG("%s magically summons a monster!", descD);
-        int midx = summon_monster(uD.y, uD.x, FALSE);
+        int midx = summon_monster(uD.y, uD.x);
         update_mon(midx);
       } break;
       case 15: /*Summon Undead*/

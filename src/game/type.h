@@ -175,10 +175,11 @@ struct attackS {
 
 struct monS {
   int id;
+  uint16_t cidx;  // creature definition
+  uint16_t msleep;
+  int hp;
   uint8_t fy;
   uint8_t fx;
-  uint16_t cidx;  // creature definition
-  int16_t hp;
   uint8_t cdis;
   uint8_t ml;  // monster lit
 };
