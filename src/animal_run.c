@@ -6189,38 +6189,13 @@ int
 minus_ac(typ_dam)
 uint32_t typ_dam;
 {
-  register int i, j;
-  int tmp[6], minus;
+  register int j;
+  int minus;
   struct objS* obj;
 
-  i = 0;
-  if (invenD[INVEN_BODY]) {
-    tmp[i] = INVEN_BODY;
-    i++;
-  }
-  if (invenD[INVEN_ARM]) {
-    tmp[i] = INVEN_ARM;
-    i++;
-  }
-  if (invenD[INVEN_OUTER]) {
-    tmp[i] = INVEN_OUTER;
-    i++;
-  }
-  if (invenD[INVEN_HANDS]) {
-    tmp[i] = INVEN_HANDS;
-    i++;
-  }
-  if (invenD[INVEN_HEAD]) {
-    tmp[i] = INVEN_HEAD;
-    i++;
-  }
-  if (invenD[INVEN_FEET]) {
-    tmp[i] = INVEN_FEET;
-    i++;
-  }
   minus = FALSE;
-  if (i > 0) {
-    j = tmp[randint(i) - 1];
+  j = equip_random();
+  if (j >= 0) {
     obj = obj_get(invenD[j]);
     obj_desc(obj, FALSE);
     if (obj->flags & typ_dam) {
@@ -6231,6 +6206,8 @@ uint32_t typ_dam;
       obj->toac--;
       calc_bonuses();
       minus = TRUE;
+    } else if (typ_dam == TR_RES_ACID) {
+      MSG("Acid leaks through your damaged %s.", descD);
     }
   }
   return (minus);
