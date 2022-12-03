@@ -7478,14 +7478,21 @@ dungeon()
         // AWN: Period attempts auto-detection of a situational command
         if (c == '.') {
           struct caveS* c_ptr = &caveD[y][x];
-          int tval = entity_objD[c_ptr->oidx].tval;
-          c = 's';
-          if (tval == TV_UP_STAIR)
-            c = '<';
-          else if (tval == TV_DOWN_STAIR)
-            c = '>';
-          else if (tval - 1 < TV_MAX_PICK_UP)
-            c = ',';
+          uint8_t tval = entity_objD[c_ptr->oidx].tval;
+          switch (tval) {
+            case TV_UP_STAIR:
+              c = '<';
+              break;
+            case TV_DOWN_STAIR:
+              c = '>';
+              break;
+            case 1 ... TV_MAX_PICK_UP:
+              c = ',';
+              break;
+            default:
+              c = 's';
+              break;
+          }
         }
 
         dir = map_roguedir(c | 0x20) - '0';
