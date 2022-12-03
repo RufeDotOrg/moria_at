@@ -23,13 +23,13 @@ struct uS {
   uint8_t ridx;   // race
   uint8_t male;
   // initialized by class/race
-  uint8_t bth;
-  uint8_t search;
-  uint8_t fos;  // Frequency of search
-  uint8_t disarm;
-  uint8_t stealth;
-  uint8_t save;
-  uint8_t mult_exp;  // multiplier for exp-per-level
+  int bth;
+  int search;
+  int fos;  // Frequency of search
+  int disarm;
+  int stealth;
+  int save;
+  int mult_exp;  // multiplier for exp-per-level
   int wt;
 };
 static struct uS uD;
