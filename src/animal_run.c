@@ -377,7 +377,7 @@ register int weight, plus, dam;
 }
 void disturb(search, light) int search, light;
 {
-  if (uD.rest != 0) uD.rest = 0;
+  if (countD.rest != 0) countD.rest = 0;
   find_flag = FALSE;
 }
 
@@ -2762,6 +2762,50 @@ symmap_update()
       cre += 1;
     }
   }
+}
+static char* affectD[][16] = {
+    {"Hungry", "Weak", "Fainting"},
+    //"Blind",
+    // "Confused", "Fear",
+    {"Poison"},
+    //   "Paralysed",
+    // {"Resting"},
+    // "Searching",
+    {"Fast", "Very Fast", "Extremely Fast"},
+};
+void
+affect_update()
+{
+  int active[AL(affectD)];
+  int idx, count;
+
+  idx = 0;
+  active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
+  active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
+  active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
+  active[idx++] = (countD.poison != 0);
+  // Currently resting skips rendering
+  // active[idx++] = (countD.rest != 0);
+  active[idx] = (uD.pspeed > 0);
+  active[idx] += (uD.pspeed > 1);
+  active[idx++] += (uD.pspeed > 2);
+
+  int len = 0;
+  int sum = 0;
+  for (int it = 0; it < idx; ++it) {
+    if (active[it]) {
+      count = snprintf(&debugD[len], AL(debugD) - len, "%s ",
+                       affectD[it][active[it] - 1]);
+      if (count > 0) len += count;
+    }
+    while (len < it * AL(affectD[0])) {
+      if (len >= AL(debugD)) break;
+      debugD[len++] = ' ';
+    }
+  }
+  count = snprintf(&debugD[len], AL(debugD) - len, "%d feet", dun_level * 50);
+  if (count > 0) len += count;
+  debug_usedD = len;
 }
 
 static void get_moves(monptr, mm) int monptr;
@@ -6564,7 +6608,7 @@ static void mon_attack(midx) int midx;
         case 14: /*Poison   */
           py_take_hit(damage);
           msg_print("You feel very sick.");
-          cD.poison += randint(cre->level) + 5;
+          countD.poison += randint(cre->level) + 5;
           break;
         case 15: /*Lose dexterity */
           py_take_hit(damage);
@@ -7244,7 +7288,7 @@ movement_rate(speed)
 int speed;
 {
   if (speed > 0) {
-    if (uD.rest != 0)
+    if (countD.rest != 0)
       return 1;
     else
       return speed;
@@ -7267,7 +7311,7 @@ void creatures(move) int move;
         for (; move_count > 0; --move_count) {
           if (mon->msleep) {
             // py.flags.aggravate
-            // uD.rest paralysis
+            // countD.rest paralysis
             if (randint(50) == 1) {
               int notice = randint(1024);
               if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
@@ -7312,7 +7356,6 @@ status_update()
   BufMsg(status, "DEBUG");
   BufMsg(status, "y,x :%3d,%3d", uD.y, uD.x);
   BufMsg(status, "quad:%3d,%3d", panelD.panel_col, panelD.panel_row);
-  BufMsg(status, "feet: %6d", dun_level * 50);
   BufMsg(status, "turn: %6d", turnD);
 
   BufPad(status, AL(statusD), AL(statusD[0]));
@@ -7415,26 +7458,28 @@ tick()
   }
 
   // if (uD.regenerate) regen_amount = regen_amount * 3 / 2;
-  if (uD.rest != 0)  // || (py.flags.status & PY_SEARCH)
+  if (countD.rest != 0)  // || (py.flags.status & PY_SEARCH)
     regen_amount = regen_amount * 2;
   // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
 
-  if (cD.poison == 0)
+  if (countD.poison == 0)
     regenhp(regen_amount);
-  else if (cD.poison > 0) {
-    if (cD.poison == 1) {
+  else if (countD.poison > 0) {
+    if (countD.poison == 1) {
       msg_print("You feel better.");
     } else {
       strcpy(death_descD, "poison");
       py_take_hit(poison_adj());
     }
-    cD.poison -= 1;
+    countD.poison -= 1;
     disturb(1, 0);
   }
 
-  if (uD.rest < 0) {
-    uD.rest += 1;
-    if (uD.chp == uD.mhp) uD.rest = 0;
+  if (countD.rest < 0) {
+    countD.rest += 1;
+    if (uD.chp == uD.mhp) countD.rest = 0;
+  } else if (countD.rest > 0) {
+    countD.rest -= 1;
   }
 }
 void py_check_view(y, x) int y, x;
@@ -7457,10 +7502,11 @@ dungeon()
     tick();
 
     do {
-      if (uD.rest != 0) break;
+      if (countD.rest != 0) break;
       panel_update(&panelD, uD.y, uD.x, FALSE);
       status_update();
       symmap_update();
+      affect_update();
 
       platform_draw();
       AC(screen_usedD);
@@ -7596,7 +7642,7 @@ dungeon()
             py_map();
             break;
           case 'R':
-            uD.rest = -9999;
+            countD.rest = -9999;
             break;
           case 'T':
             py_takeoff();

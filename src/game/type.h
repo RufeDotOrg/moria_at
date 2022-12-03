@@ -18,7 +18,6 @@ struct uS {
   // Status
   int food;
   int food_digest;
-  int rest;
   uint8_t clidx;  // class
   uint8_t ridx;   // race
   uint8_t male;
@@ -34,11 +33,12 @@ struct uS {
 };
 static struct uS uD;
 
-// Counter for player status
-struct cS {
+// Count player status
+struct countS {
   int poison;
+  int rest;
 };
-static struct cS cD;
+static struct countS countD;
 
 struct raceS {
   char *name;          /* Type of race			*/
