@@ -5204,30 +5204,29 @@ inven_quaff(iidx)
           countD.paralysis += randint(4) + 4;
           ident = TRUE;
           break;
-        // case 20:
-        //   f_ptr = &py.flags;
-        //   if (f_ptr->blind == 0) {
-        //     msg_print("You are covered by a veil of darkness.");
-        //     ident = TRUE;
-        //   }
-        //   f_ptr->blind += randint(100) + 100;
-        //   break;
-        // case 21:
-        //   f_ptr = &py.flags;
-        //   if (f_ptr->confused == 0) {
-        //     msg_print("Hey!  This is good stuff!  * Hick! *");
-        //     ident = TRUE;
-        //   }
-        //   f_ptr->confused += randint(20) + 12;
-        //   break;
-        // case 22:
-        //   f_ptr = &py.flags;
-        //   if (f_ptr->poisoned == 0) {
-        //     msg_print("You feel very sick.");
-        //     ident = TRUE;
-        //   }
-        //   f_ptr->poisoned += randint(15) + 10;
-        //   break;
+          // case 20:
+          //   f_ptr = &py.flags;
+          //   if (f_ptr->blind == 0) {
+          //     msg_print("You are covered by a veil of darkness.");
+          //     ident = TRUE;
+          //   }
+          //   f_ptr->blind += randint(100) + 100;
+          //   break;
+          // case 21:
+          //   f_ptr = &py.flags;
+          //   if (f_ptr->confused == 0) {
+          //     msg_print("Hey!  This is good stuff!  * Hick! *");
+          //     ident = TRUE;
+          //   }
+          //   f_ptr->confused += randint(20) + 12;
+          //   break;
+        case 22:
+          if (countD.poison == 0) {
+            msg_print("You feel very sick.");
+            ident = TRUE;
+          }
+          countD.poison += randint(15) + 10;
+          break;
         // case 23:
         //   if (py.flags.fast == 0) ident = TRUE;
         //   py.flags.fast += randint(25) + 15;
@@ -5304,23 +5303,27 @@ inven_quaff(iidx)
         case 40:
           ident = restore_level();
           break;
-        // case 41:
-        //   f_ptr = &py.flags;
-        //   if (f_ptr->resist_heat == 0) ident = TRUE;
-        //   f_ptr->resist_heat += randint(10) + 10;
-        //   break;
-        // case 42:
-        //   f_ptr = &py.flags;
-        //   if (f_ptr->resist_cold == 0) ident = TRUE;
-        //   f_ptr->resist_cold += randint(10) + 10;
-        //   break;
-        // case 43:
-        //   if (py.flags.detect_inv == 0) ident = TRUE;
-        //   detect_inv2(randint(12) + 12);
-        //   break;
-        // case 44:
-        //   ident = slow_poison();
-        //   break;
+          // case 41:
+          //   f_ptr = &py.flags;
+          //   if (f_ptr->resist_heat == 0) ident = TRUE;
+          //   f_ptr->resist_heat += randint(10) + 10;
+          //   break;
+          // case 42:
+          //   f_ptr = &py.flags;
+          //   if (f_ptr->resist_cold == 0) ident = TRUE;
+          //   f_ptr->resist_cold += randint(10) + 10;
+          //   break;
+          // case 43:
+          //   if (py.flags.detect_inv == 0) ident = TRUE;
+          //   detect_inv2(randint(12) + 12);
+          //   break;
+        case 44:
+          if (countD.poison > 0) {
+            ident = TRUE;
+            msg_print("The effect of the poison has been reduced.");
+            countD.poison = MAX(countD.poison / 2, 1);
+          }
+          break;
         case 45:
           ident = countD.poison > 0;
           countD.poison = 1;
@@ -6258,7 +6261,7 @@ void
 poison_gas(dam)
 {
   py_take_hit(dam);
-  // py.flags.poisoned += 12 + randint(dam);
+  countD.poison += 12 + randint(dam);
 }
 void
 fire_dam(dam)
