@@ -37,6 +37,7 @@ static struct uS uD;
 struct countS {
   int poison;
   int rest;
+  int paralysis;
 };
 static struct countS countD;
 

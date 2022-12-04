@@ -6815,7 +6815,7 @@ bash(y, x)
         movement = 1;
       } else if (randint(150) > 18) {  // py.stats.use_stat[A_DEX]) {
         msg_print("You are off-balance.");
-        // py.flags.paralysis = 1 + randint(2);
+        countD.paralysis = 1 + randint(2);
       } else
         msg_print("The door holds firm.");
     } else
@@ -7449,6 +7449,8 @@ tick()
     regen_amount = PLAYER_REGEN_WEAK;
   else
     regen_amount = PLAYER_REGEN_NORMAL;
+  if (uD.food < PLAYER_FOOD_FAINT && randint(8) == 1)
+    countD.paralysis += randint(5);
 
   uD.food -= uD.food_digest;
   if (uD.food < 0) {
@@ -7481,6 +7483,7 @@ tick()
   } else if (countD.rest > 0) {
     countD.rest -= 1;
   }
+  if (countD.paralysis) countD.paralysis -= 1;
 }
 void py_check_view(y, x) int y, x;
 {
@@ -7503,6 +7506,7 @@ dungeon()
 
     do {
       if (countD.rest != 0) break;
+      if (countD.paralysis != 0) break;
       panel_update(&panelD, uD.y, uD.x, FALSE);
       status_update();
       symmap_update();
