@@ -63,6 +63,23 @@ msg_reset()
     AS(msglen_cqD, msg_writeD) = 0;
   }
 }
+void
+msg_history()
+{
+  char* log;
+  int log_used, line;
+
+  line = 0;
+  for (int it = 1; it < MAX_MSG; ++it) {
+    log = AS(msg_cqD, msg_writeD + it);
+    log_used = AS(msglen_cqD, msg_writeD + it);
+    if (log_used) {
+      memcpy(screenD[line], log, log_used);
+      screen_usedD[line] = log_used;
+      line += 1;
+    }
+  }
+}
 static char log_extD[] = " -more-";
 static void msg_print2(msg, msglen) char* msg;
 #define MAX_MSGLEN AL(msg_cqD[0])
@@ -7729,6 +7746,9 @@ dungeon()
               y_obj_teleportD = x_obj_teleportD = 0;
               msg_print("Reset object teleport");
             }
+          } break;
+          case CTRL('p'): {
+            msg_history();
           } break;
         }
       }
