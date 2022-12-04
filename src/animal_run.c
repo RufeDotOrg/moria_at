@@ -6984,6 +6984,43 @@ static void py_search(y, x, chance) int y, x, chance;
       }
 }
 static void
+py_look_mon()
+{
+  register int y, x, ly, lx, oy, ox;
+  int dir;
+
+  // if (py.flags.blind > 0)
+  //   msg_print("You can't see a damn thing!");
+  // else if (py.flags.image > 0)
+  //   msg_print("You can't believe what you are seeing! It's like a dream!");
+  if (get_dir("Look which direction?", &dir)) {
+    y = uD.y;
+    x = uD.x;
+    ly = dir_y(dir);
+    lx = dir_x(dir);
+    int seen = 0;
+    FOR_EACH(mon, {
+      if (mon->ml && distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) {
+        oy = -((mon->fy - y) < 0) + ((mon->fy - y) > 0);
+        ox = -((mon->fx - x) < 0) + ((mon->fx - x) > 0);
+        if (oy == ly && ox == lx && los(y, x, mon->fy, mon->fx)) {
+          seen += 1;
+          mon_desc(it_index);
+          MSG("You see %s. --pause--", descD);
+          im_print();
+          if (inkey() != ' ') break;
+          msg_reset();
+        }
+      }
+    });
+    if (seen > 0)
+      msg_print("That's all you see in that direction");
+    else
+      msg_print("You see nothing of interest in that direction.");
+  }
+  free_turn_flag = TRUE;
+}
+static void
 py_look_obj()
 {
   register int y, x, ly, lx, oy, ox;
@@ -7674,6 +7711,9 @@ dungeon()
             break;
           case 's':
             py_search(y, x, 25);
+            break;
+          case 'x':
+            py_look_mon();
             break;
           case 'X':
             py_look_obj();
