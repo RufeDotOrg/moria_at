@@ -24,8 +24,10 @@ platform_draw()
   buffer_usedD = 0;
   buffer_append(AP(tc_clearD));
   buffer_append(AP(tc_move_cursorD));
-  if (log_usedD) {
-    buffer_append(logD, log_usedD);
+  char* msg = AS(msg_cqD, msg_writeD);
+  int msg_used = AS(msglen_cqD, msg_writeD);
+  if (msg_used) {
+    buffer_append(msg, msg_used);
   }
   buffer_append(AP(tc_crlfD));
   if (screen_usedD[0]) {
@@ -57,10 +59,13 @@ platform_draw()
 static void
 im_print()
 {
+  char* msg = AS(msg_cqD, msg_writeD);
+  int msg_used = AS(msglen_cqD, msg_writeD);
+
   buffer_usedD = 0;
   buffer_append(AP(tc_move_cursorD));
   buffer_append(AP(tc_clear_lineD));
-  buffer_append(logD, log_usedD);
+  buffer_append(msg, msg_used);
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
 }

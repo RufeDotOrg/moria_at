@@ -8,10 +8,13 @@ static char screenD[SCREEN_HEIGHT][80];
 static int screen_usedD[AL(screenD)];
 static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
 static int overlay_usedD[AL(overlayD)];
-static char logD[80];
-static int log_usedD;
 static char debugD[80];
 static int debug_usedD;
+
+static char msg_cqD[MAX_MSG][80];
+static char msglen_cqD[MAX_MSG];
+static uint32_t msg_writeD;
+static uint32_t msg_countD;
 
 uint32_t player_exp[MAX_PLAYER_LEVEL] = {
     10,      25,       45,       70,       100,      140,     200,

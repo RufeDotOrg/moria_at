@@ -54,34 +54,49 @@ inkey()
   }
   return c;
 }
+void
+msg_reset()
+{
+  if (AS(msglen_cqD, msg_writeD)) {
+    msg_countD = 0;
+    msg_writeD += 1;
+    AS(msglen_cqD, msg_writeD) = 0;
+  }
+}
 static char log_extD[] = " -more-";
-static int log_countD;
 static void msg_print2(msg, msglen) char* msg;
+#define MAX_MSGLEN AL(msg_cqD[0])
 int msglen;
 {
   char c;
-  int len = log_usedD;
-  int maxlen = AL(logD) - AL(log_extD);
+  char* log;
+  int log_used;
 
-  // wait for user to acknowledge prior buffer -more-
-  if (len + msglen >= maxlen) {
-    log_usedD += snprintf(logD + len, AL(logD), "%s", log_extD);
+  log = AS(msg_cqD, msg_writeD);
+  log_used = AS(msglen_cqD, msg_writeD);
+  if (log_used + msglen + AL(log_extD) >= MAX_MSGLEN) {
+    log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, "%s", log_extD);
+    AS(msglen_cqD, msg_writeD) = log_used;
+
+    // wait for user to acknowledge prior buffer -more-
     do {
       im_print();
       c = inkey();
     } while (c != ' ');
-    len = 0;
-  } else if (len) {
-    logD[len] = ' ';
-    len += 1;
+    msg_writeD += 1;
+    log = AS(msg_cqD, msg_writeD);
+    log_used = 0;
+  } else if (log_used) {
+    log[log_used] = ' ';
+    log_used += 1;
   }
 
-  if (!len) {
-    log_countD += 1;
-    len = snprintf(logD, AL(logD), "%d| ", log_countD);
+  if (!log_used) {
+    msg_countD += 1;
+    log_used = snprintf(log, MAX_MSGLEN, "%d| ", msg_countD);
   }
-  len += snprintf(logD + len, AL(logD) - len, "%s", msg);
-  log_usedD = len;
+  log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, "%s", msg);
+  AS(msglen_cqD, msg_writeD) = log_used;
 }
 static void
 msg_print(char* text)
@@ -94,13 +109,12 @@ char* prompt;
 char* command;
 {
   char c;
-  log_usedD = snprintf(logD, AL(logD), "%s", prompt);
+  MSG("%s", prompt);
   do {
     im_print();
     c = inkey();
   } while (c == ' ');
   *command = c;
-  log_usedD = 0;
   return (*command != ESCAPE);
 }
 static char
@@ -7516,8 +7530,7 @@ dungeon()
       AC(screen_usedD);
       AC(overlay_usedD);
       AC(status_usedD);
-      log_countD = 0;
-      if (!free_turn_flag) log_usedD = 0;
+      if (!free_turn_flag) msg_reset();
       free_turn_flag = FALSE;
 
       y = uD.y;
