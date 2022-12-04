@@ -5198,15 +5198,12 @@ inven_quaff(iidx)
             ident = TRUE;
           }
           break;
-        // case 19:
-        //   f_ptr = &py.flags;
-        //   if (!f_ptr->free_act) {
-        //     /* paralysis must == 0, otherwise could not drink potion */
-        //     msg_print("You fall asleep.");
-        //     f_ptr->paralysis += randint(4) + 4;
-        //     ident = TRUE;
-        //   }
-        //   break;
+        case 19:
+          // if (!f_ptr->free_act)
+          msg_print("You fall asleep.");
+          countD.paralysis += randint(4) + 4;
+          ident = TRUE;
+          break;
         // case 20:
         //   f_ptr = &py.flags;
         //   if (f_ptr->blind == 0) {
@@ -5281,14 +5278,13 @@ inven_quaff(iidx)
             ident = TRUE;
           }
           break;
-          // case 35:
-          //   f_ptr = &py.flags;
-          //   (void)cure_poison();
-          //   if (f_ptr->food > 150) f_ptr->food = 150;
-          //   f_ptr->paralysis = 4;
-          //   msg_print("The potion makes you vomit!");
-          //   ident = TRUE;
-          //   break;
+        case 35:
+          // cure_poison();
+          if (uD.food > 150) uD.food = 150;
+          countD.paralysis = 4;
+          msg_print("The potion makes you vomit!");
+          ident = TRUE;
+          break;
           // case 36:
           //   if (py.flags.invuln == 0) ident = TRUE;
           //   py.flags.invuln += randint(10) + 10;
@@ -6400,7 +6396,7 @@ py_shield_attack(y, x)
   }
   if (randint(150) > statD.use_stat[A_DEX]) {
     msg_print("You are off balance.");
-    // py.flags.paralysis = 1 + randint(2);
+    countD.paralysis = 1 + randint(2);
   }
 }
 void
@@ -6562,22 +6558,20 @@ static void mon_attack(midx) int midx;
           break;
         case 11: /*Paralysis attack*/
           py_take_hit(damage);
-          // f_ptr = &py.flags;
-          // if (player_saves())
-          //  msg_print("You resist the effects!");
-          // else if (f_ptr->paralysis < 1) {
-          //  if (f_ptr->free_act)
-          //    msg_print("You are unaffected.");
-          //  else {
-          //    f_ptr->paralysis = randint((int)r_ptr->level) + 3;
-          //    msg_print("You are paralyzed.");
-          //  }
-          //} else
+          if (player_saves())
+            msg_print("You resist paralysis!");
+          else if (countD.paralysis < 1) {
+            // if (f_ptr->free_act)
+            //   msg_print("You are unaffected.");
+            // else
+            countD.paralysis = randint(cre->level) + 3;
+            msg_print("You are paralyzed.");
+          }
+          //else
           //  notice = FALSE;
           break;
         case 12: /*Steal Money    */
-                 // if ((py.flags.paralysis < 1) &&
-          if (randint(124) < statD.use_stat[A_DEX])
+          if (countD.paralysis < 1 && randint(124) < statD.use_stat[A_DEX])
             msg_print("You quickly protect your money pouch!");
           else {
             int gold = (uD.gold / 10) + randint(25);
@@ -6590,8 +6584,7 @@ static void mon_attack(midx) int midx;
           }
           break;
         case 13: /*Steal Object   */
-          // if ((py.flags.paralysis < 1) &&
-          if (randint(124) < statD.use_stat[A_DEX])
+          if (countD.paralysis < 1 && randint(124) < statD.use_stat[A_DEX])
             msg_print("You grab hold of your backpack!");
           else {
             int i = inven_random();
@@ -7158,16 +7151,17 @@ mon_cast_spell(midx)
         else
           py_take_hit(damroll(8, 8));
         break;
-      // case 10: /*Hold Person    */
-      //   if (py.flags.free_act)
-      //     msg_print("You are unaffected.");
-      //   else if (player_saves())
-      //     msg_print("You resist the effects of the spell.");
-      //   else if (py.flags.paralysis > 0)
-      //     py.flags.paralysis += 2;
-      //   else
-      //     py.flags.paralysis = randint(5) + 4;
-      //   break;
+      case 10: /*Hold Person    */
+               // if (py.flags.free_act)
+        //   msg_print("You are unaffected.");
+        // else
+        if (player_saves())
+          msg_print("You resist the effects of the spell.");
+        else if (countD.paralysis > 0)
+          countD.paralysis += 2;
+        else
+          countD.paralysis = randint(5) + 4;
+        break;
       // case 11: /*Cause Blindness*/
       //   if (player_saves())
       //     msg_print("You resist the effects of the spell.");
@@ -7311,7 +7305,7 @@ void creatures(move) int move;
         for (; move_count > 0; --move_count) {
           if (mon->msleep) {
             // py.flags.aggravate
-            // countD.rest paralysis
+            // countD.rest
             if (randint(50) == 1) {
               int notice = randint(1024);
               if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
