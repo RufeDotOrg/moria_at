@@ -2984,6 +2984,36 @@ register int* mm;
   }
 }
 int
+dir_x(dir)
+{
+  switch (dir) {
+    case 1:
+    case 4:
+    case 7:
+      return -1;
+    case 3:
+    case 6:
+    case 9:
+      return 1;
+  }
+  return 0;
+}
+int
+dir_y(dir)
+{
+  switch (dir) {
+    case 1:
+    case 2:
+    case 3:
+      return 1;
+    case 7:
+    case 8:
+    case 9:
+      return -1;
+  }
+  return 0;
+}
+int
 mmove(dir, y, x)
 int dir;
 register int *y, *x;
@@ -2991,44 +3021,10 @@ register int *y, *x;
   register int new_row, new_col;
   int b;
 
-  switch (dir) {
-    case 1:
-      new_row = *y + 1;
-      new_col = *x - 1;
-      break;
-    case 2:
-      new_row = *y + 1;
-      new_col = *x;
-      break;
-    case 3:
-      new_row = *y + 1;
-      new_col = *x + 1;
-      break;
-    case 4:
-      new_row = *y;
-      new_col = *x - 1;
-      break;
-    case 5:
-      new_row = *y;
-      new_col = *x;
-      break;
-    case 6:
-      new_row = *y;
-      new_col = *x + 1;
-      break;
-    case 7:
-      new_row = *y - 1;
-      new_col = *x - 1;
-      break;
-    case 8:
-      new_row = *y - 1;
-      new_col = *x;
-      break;
-    case 9:
-      new_row = *y - 1;
-      new_col = *x + 1;
-      break;
-  }
+  new_row = dir_y(dir);
+  new_col = dir_x(dir);
+  new_row += *y;
+  new_col += *x;
   b = FALSE;
   if ((new_row >= 0) && (new_row < MAX_HEIGHT) && (new_col >= 0) &&
       (new_col < MAX_WIDTH)) {
@@ -6987,6 +6983,44 @@ static void py_search(y, x, chance) int y, x, chance;
         }
       }
 }
+static void
+py_look_obj()
+{
+  register int y, x, ly, lx, oy, ox;
+  int dir;
+
+  // if (py.flags.blind > 0)
+  //   msg_print("You can't see a damn thing!");
+  // else if (py.flags.image > 0)
+  //   msg_print("You can't believe what you are seeing! It's like a dream!");
+  if (get_dir("Look which direction?", &dir)) {
+    y = uD.y;
+    x = uD.x;
+    ly = dir_y(dir);
+    lx = dir_x(dir);
+    int seen = 0;
+    FOR_EACH(obj, {
+      if (obj->tval > TV_MAX_OBJECT) continue;
+      if (obj->fy && distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
+        oy = -((obj->fy - y) < 0) + ((obj->fy - y) > 0);
+        ox = -((obj->fx - x) < 0) + ((obj->fx - x) > 0);
+        if (oy == ly && ox == lx && los(y, x, obj->fy, obj->fx)) {
+          seen += 1;
+          obj_desc(obj, TRUE);
+          MSG("You see %s. --pause--", descD);
+          im_print();
+          if (inkey() != ' ') break;
+          msg_reset();
+        }
+      }
+    });
+    if (seen > 0)
+      msg_print("That's all you see in that direction");
+    else
+      msg_print("You see nothing of interest in that direction.");
+  }
+  free_turn_flag = TRUE;
+}
 static void make_move(midx, mm, rcmove) int midx;
 int* mm;
 uint32_t* rcmove;
@@ -7640,6 +7674,9 @@ dungeon()
             break;
           case 's':
             py_search(y, x, 25);
+            break;
+          case 'X':
+            py_look_obj();
             break;
           case 'w':
             py_wear();
