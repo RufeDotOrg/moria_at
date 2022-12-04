@@ -5260,9 +5260,10 @@ inven_quaff(iidx)
         // case 30:
         //   ident = cure_confusion();
         //   break;
-        // case 31:
-        //   ident = cure_poison();
-        //   break;
+        case 31:
+          ident = countD.poison > 0;
+          countD.poison = 1;
+          break;
         case 34:
           if (uD.exp > 0) {
             int m, scale;
@@ -5279,7 +5280,7 @@ inven_quaff(iidx)
           }
           break;
         case 35:
-          // cure_poison();
+          countD.poison = 1;
           if (uD.food > 150) uD.food = 150;
           countD.paralysis = 4;
           msg_print("The potion makes you vomit!");
@@ -5320,9 +5321,10 @@ inven_quaff(iidx)
         // case 44:
         //   ident = slow_poison();
         //   break;
-        // case 45:
-        //   ident = cure_poison();
-        //   break;
+        case 45:
+          ident = countD.poison > 0;
+          countD.poison = 1;
+          break;
         // case 46:
         //   m_ptr = &py.misc;
         //   if (m_ptr->cmana < m_ptr->mana) {
@@ -5875,13 +5877,14 @@ void inven_invoke(iidx, uy, ux) int *uy, *ux;
             ident = TRUE;
           }
           break;
-        // case 21:
-        //   ident = detect_evil();
-        //   break;
-        // case 22:
-        //   if ((cure_blindness()) || (cure_poison()) || (cure_confusion()))
-        //     ident = TRUE;
-        //   break;
+          // case 21:
+          //   ident = detect_evil();
+          //   break;
+        case 22:
+          ident = countD.poison > 0;
+          countD.poison = 1;
+          // if ((cure_blindness()) || (cure_confusion())) ident = TRUE;
+          break;
         // case 23:
         //   ident = dispel_creature(CD_EVIL, 60);
         //   break;
@@ -6567,8 +6570,8 @@ static void mon_attack(midx) int midx;
             countD.paralysis = randint(cre->level) + 3;
             msg_print("You are paralyzed.");
           }
-          //else
-          //  notice = FALSE;
+          // else
+          //   notice = FALSE;
           break;
         case 12: /*Steal Money    */
           if (countD.paralysis < 1 && randint(124) < statD.use_stat[A_DEX])
