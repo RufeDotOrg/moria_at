@@ -1,5 +1,6 @@
 #!/bin/bash
 [ -d bin/ ] || mkdir bin
+readlink src/platform || ./init_platform.sh linux
 [ -z "$CC" ] && CC=clang
 
 SYMLEVEL=1
