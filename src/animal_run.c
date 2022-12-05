@@ -7929,6 +7929,12 @@ dungeon()
             case 'W':
               py_where();
               break;
+            case CTRL('a'): {
+              int* af_ptr = (void*)&countD;
+              for (int it = 0; it < sizeof(countD) / sizeof(int); ++it) {
+                af_ptr[it] = 1;
+              }
+            } break;
             case CTRL('f'): {
               struct objS* obj = obj_use();
               caveD[y][x].oidx = obj_index(obj);
