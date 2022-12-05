@@ -56,6 +56,137 @@ inkey()
   return c;
 }
 void
+status_update()
+{
+  int line = 0;
+  BufMsg(status, "CHP : %6d", uD.chp);
+  BufMsg(status, "MHP : %6d", uD.mhp);
+  BufMsg(status, "LEV : %6d", uD.lev);
+  BufMsg(status, "EXP : %6d", uD.exp);
+  line += 1;
+  BufMsg(status, "GOLD: %6d", uD.gold);
+  BufMsg(status, "AC  : %6d", uD.pac);
+
+  line += 1;
+  BufMsg(status, "DEBUG");
+  BufMsg(status, "y,x :%3d,%3d", uD.y, uD.x);
+  BufMsg(status, "quad:%3d,%3d", panelD.panel_col, panelD.panel_row);
+  BufMsg(status, "turn: %6d", turnD);
+
+  BufPad(status, AL(statusD), AL(statusD[0]));
+}
+char
+get_sym(int row, int col)
+{
+  register struct caveS* cave_ptr;
+
+  if (row == uD.y && col == uD.x) return '@';
+  cave_ptr = &caveD[row][col];
+  if (cave_ptr->midx) {
+    struct monS* mon = &entity_monD[cave_ptr->midx];
+    struct creatureS* creature = &creatureD[mon->cidx];
+    if (mon->ml) return creature->cchar;
+  }
+  if (((cave_ptr->cflag & CF_FIELDMARK) == 0) && !cave_lit(cave_ptr))
+    return ' ';
+  if (cave_ptr->oidx) {
+    struct objS* obj = &entity_objD[cave_ptr->oidx];
+    return obj->tchar;
+  }
+  switch (cave_ptr->fval) {
+    case FLOOR_LIGHT:
+    case FLOOR_DARK:
+    case FLOOR_CORR:
+      return '.';
+    case FLOOR_OBST:
+      return ';';
+  }
+  return '#';
+}
+void
+symmap_update()
+{
+  memset(cremapD, 0, sizeof(cremapD));
+
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+  char* sym = &symmapD[0][0];
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      *sym++ = get_sym(row, col);
+    }
+  }
+  uint16_t* cre = &cremapD[0][0];
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      struct caveS* cave_ptr = &caveD[row][col];
+      if (cave_ptr->midx) {
+        struct monS* mon = &entity_monD[cave_ptr->midx];
+        if (mon->ml) *cre = mon->cidx;
+      }
+      cre += 1;
+    }
+  }
+}
+static char* affectD[][16] = {
+    {"Hungry", "Weak", "Fainting"},
+    //"Blind",
+    // "Confused", "Fear",
+    {"Poison"},
+    //   "Paralysed",
+    // {"Resting"},
+    // "Searching",
+    {"Fast", "Very Fast", "Extremely Fast"},
+};
+void
+affect_update()
+{
+  int active[AL(affectD)];
+  int idx, count;
+
+  idx = 0;
+  active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
+  active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
+  active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
+  active[idx++] = (countD.poison != 0);
+  // Currently resting skips rendering
+  // active[idx++] = (countD.rest != 0);
+  active[idx] = (uD.pspeed > 0);
+  active[idx] += (uD.pspeed > 1);
+  active[idx++] += (uD.pspeed > 2);
+
+  int len = 0;
+  int sum = 0;
+  for (int it = 0; it < idx; ++it) {
+    if (active[it]) {
+      count = snprintf(&debugD[len], AL(debugD) - len, "%s ",
+                       affectD[it][active[it] - 1]);
+      if (count > 0) len += count;
+    }
+    while (len < it * AL(affectD[0])) {
+      if (len >= AL(debugD)) break;
+      debugD[len++] = ' ';
+    }
+  }
+  count = snprintf(&debugD[len], AL(debugD) - len, "%d feet", dun_level * 50);
+  if (count > 0) len += count;
+  debug_usedD = len;
+}
+static void
+draw()
+{
+  status_update();
+  symmap_update();
+  affect_update();
+
+  platform_draw();
+  AC(screen_usedD);
+  AC(overlay_usedD);
+  AC(status_usedD);
+}
+void
 msg_reset()
 {
   if (AS(msglen_cqD, msg_writeD)) {
@@ -2709,34 +2840,6 @@ struct caveS* cave;
 {
   return (cave->cflag & (CF_TEMP_LIGHT | CF_PERM_LIGHT)) != 0;
 }
-char
-get_sym(int row, int col)
-{
-  register struct caveS* cave_ptr;
-
-  if (row == uD.y && col == uD.x) return '@';
-  cave_ptr = &caveD[row][col];
-  if (cave_ptr->midx) {
-    struct monS* mon = &entity_monD[cave_ptr->midx];
-    struct creatureS* creature = &creatureD[mon->cidx];
-    if (mon->ml) return creature->cchar;
-  }
-  if (((cave_ptr->cflag & CF_FIELDMARK) == 0) && !cave_lit(cave_ptr))
-    return ' ';
-  if (cave_ptr->oidx) {
-    struct objS* obj = &entity_objD[cave_ptr->oidx];
-    return obj->tchar;
-  }
-  switch (cave_ptr->fval) {
-    case FLOOR_LIGHT:
-    case FLOOR_DARK:
-    case FLOOR_CORR:
-      return '.';
-    case FLOOR_OBST:
-      return ';';
-  }
-  return '#';
-}
 BOOL
 panel_contains(panel, y, x)
 struct panelS* panel;
@@ -2776,78 +2879,6 @@ panel_update(struct panelS* panel, int y, int x, BOOL force)
 
   panel_bounds(panel);
 }
-void
-symmap_update()
-{
-  memset(cremapD, 0, sizeof(cremapD));
-
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
-  char* sym = &symmapD[0][0];
-  for (int row = rmin; row < rmax; ++row) {
-    for (int col = cmin; col < cmax; ++col) {
-      *sym++ = get_sym(row, col);
-    }
-  }
-  uint16_t* cre = &cremapD[0][0];
-  for (int row = rmin; row < rmax; ++row) {
-    for (int col = cmin; col < cmax; ++col) {
-      struct caveS* cave_ptr = &caveD[row][col];
-      if (cave_ptr->midx) {
-        struct monS* mon = &entity_monD[cave_ptr->midx];
-        if (mon->ml) *cre = mon->cidx;
-      }
-      cre += 1;
-    }
-  }
-}
-static char* affectD[][16] = {
-    {"Hungry", "Weak", "Fainting"},
-    //"Blind",
-    // "Confused", "Fear",
-    {"Poison"},
-    //   "Paralysed",
-    // {"Resting"},
-    // "Searching",
-    {"Fast", "Very Fast", "Extremely Fast"},
-};
-void
-affect_update()
-{
-  int active[AL(affectD)];
-  int idx, count;
-
-  idx = 0;
-  active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
-  active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
-  active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
-  active[idx++] = (countD.poison != 0);
-  // Currently resting skips rendering
-  // active[idx++] = (countD.rest != 0);
-  active[idx] = (uD.pspeed > 0);
-  active[idx] += (uD.pspeed > 1);
-  active[idx++] += (uD.pspeed > 2);
-
-  int len = 0;
-  int sum = 0;
-  for (int it = 0; it < idx; ++it) {
-    if (active[it]) {
-      count = snprintf(&debugD[len], AL(debugD) - len, "%s ",
-                       affectD[it][active[it] - 1]);
-      if (count > 0) len += count;
-    }
-    while (len < it * AL(affectD[0])) {
-      if (len >= AL(debugD)) break;
-      debugD[len++] = ' ';
-    }
-  }
-  count = snprintf(&debugD[len], AL(debugD) - len, "%d feet", dun_level * 50);
-  if (count > 0) len += count;
-  debug_usedD = len;
-}
-
 static void get_moves(monptr, mm) int monptr;
 register int* mm;
 {
@@ -7585,26 +7616,6 @@ void creatures(move) int move;
     update_mon(it_index);
   });
 }
-void
-status_update()
-{
-  int line = 0;
-  BufMsg(status, "CHP : %6d", uD.chp);
-  BufMsg(status, "MHP : %6d", uD.mhp);
-  BufMsg(status, "LEV : %6d", uD.lev);
-  BufMsg(status, "EXP : %6d", uD.exp);
-  line += 1;
-  BufMsg(status, "GOLD: %6d", uD.gold);
-  BufMsg(status, "AC  : %6d", uD.pac);
-
-  line += 1;
-  BufMsg(status, "DEBUG");
-  BufMsg(status, "y,x :%3d,%3d", uD.y, uD.x);
-  BufMsg(status, "quad:%3d,%3d", panelD.panel_col, panelD.panel_row);
-  BufMsg(status, "turn: %6d", turnD);
-
-  BufPad(status, AL(statusD), AL(statusD[0]));
-}
 BOOL
 py_teleport_near(y, x, uy, ux)
 int y, x;
@@ -7753,14 +7764,7 @@ dungeon()
       if (countD.rest != 0) break;
       if (countD.paralysis != 0) break;
       panel_update(&panelD, uD.y, uD.x, FALSE);
-      status_update();
-      symmap_update();
-      affect_update();
-
-      platform_draw();
-      AC(screen_usedD);
-      AC(overlay_usedD);
-      AC(status_usedD);
+      draw();
       free_turn_flag = FALSE;
 
       y = uD.y;
