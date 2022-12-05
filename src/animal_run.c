@@ -7016,7 +7016,7 @@ py_look_mon()
     if (seen > 0)
       msg_print("That's all you see in that direction");
     else
-      msg_print("You see nothing of interest in that direction.");
+      msg_print("You see no monsters of interest in that direction.");
   }
   free_turn_flag = TRUE;
 }
@@ -7054,7 +7054,7 @@ py_look_obj()
     if (seen > 0)
       msg_print("That's all you see in that direction");
     else
-      msg_print("You see nothing of interest in that direction.");
+      msg_print("You see no objects of interest in that direction.");
   }
   free_turn_flag = TRUE;
 }
