@@ -5213,9 +5213,10 @@ inven_eat(iidx)
           ident = countD.fear > 0;
           countD.fear = MIN(countD.fear, 1);
           break;
-        // case 9:
-        //   ident = cure_confusion();
-        //   break;
+        case 9:
+          ident = countD.confusion > 0;
+          countD.confusion = MIN(countD.confusion, 1);
+          break;
         case 10:
           ident = TRUE;
           dec_stat(A_STR);
@@ -5472,9 +5473,10 @@ inven_quaff(iidx)
           ident = countD.blind > 0;
           countD.blind = MIN(countD.blind, 1);
           break;
-        // case 30:
-        //   ident = cure_confusion();
-        //   break;
+        case 30:
+          ident = countD.confusion > 0;
+          countD.confusion = MIN(countD.confusion, 1);
+          break;
         case 31:
           ident = countD.poison > 0;
           countD.poison = MIN(countD.poison, 1);
