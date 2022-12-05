@@ -77,6 +77,12 @@ status_update()
 
   BufPad(status, AL(statusD), AL(statusD[0]));
 }
+BOOL
+cave_lit(cave)
+struct caveS* cave;
+{
+  return (cave->cflag & (CF_TEMP_LIGHT | CF_PERM_LIGHT)) != 0;
+}
 char
 get_sym(int row, int col)
 {
@@ -2834,12 +2840,6 @@ generate_cave()
 
   // a fresh cave!
   cave_gen();
-}
-BOOL
-cave_lit(cave)
-struct caveS* cave;
-{
-  return (cave->cflag & (CF_TEMP_LIGHT | CF_PERM_LIGHT)) != 0;
 }
 BOOL
 panel_contains(panel, y, x)
