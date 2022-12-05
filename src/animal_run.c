@@ -58,6 +58,8 @@ inkey()
 void
 status_update()
 {
+  AC(status_usedD);
+
   int line = 0;
   BufMsg(status, "CHP : %6d", uD.chp);
   BufMsg(status, "MHP : %6d", uD.mhp);
@@ -184,7 +186,6 @@ draw()
   platform_draw();
   AC(screen_usedD);
   AC(overlay_usedD);
-  AC(status_usedD);
 }
 void
 msg_reset()
@@ -266,8 +267,8 @@ char* command;
   char* msg;
   msg = AS(msg_cqD, msg_writeD);
   AS(msglen_cqD, msg_writeD) = snprintf(msg, MAX_MSGLEN, "%s", prompt);
+  draw();
   do {
-    im_print();
     c = inkey();
   } while (c == ' ');
   *command = c;
@@ -4527,13 +4528,10 @@ py_class_select()
     line += 1;
   }
 
-  platform_draw();
   if (in_subcommand("Which character would you like to play?", &c)) {
     int iidx = c - 'a';
     if (iidx > 0 && iidx < AL(classD)) return iidx;
   }
-  AC(overlayD);
-  AC(overlay_usedD);
 
   return 0;
 }
@@ -4777,8 +4775,7 @@ py_where()
     if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
     if (panelD.panel_col > MAX_COL - 2) panelD.panel_col = MAX_COL - 2;
     panel_bounds(&panelD);
-    symmap_update();
-    platform_draw();
+    draw();
   }
   panel_update(&panelD, uD.y, uD.x, TRUE);
   free_turn_flag = TRUE;
@@ -5141,7 +5138,6 @@ choice(char* prompt)
   char c;
   int count = py_inven(0, INVEN_EQUIP);
   if (count) {
-    platform_draw();
     if (in_subcommand(prompt, &c)) {
       int iidx = c - 'a';
       if (iidx < MAX_INVEN) return iidx;
@@ -5923,7 +5919,6 @@ choice_actuate()
   struct objS* obj;
 
   int count = py_inven_filter(0, INVEN_EQUIP, oset_actuate);
-  platform_draw();
   if (count) {
     if (in_subcommand("Use what?", &c)) {
       int iidx = c - 'a';
@@ -5949,7 +5944,6 @@ py_wear()
   struct objS* obj;
 
   int count = py_inven(0, INVEN_EQUIP);
-  platform_draw();
   if (count) {
     if (in_subcommand("Wear/Wield which item?", &c)) {
       int iidx = c - 'a';
@@ -6146,7 +6140,6 @@ static void py_drop(y, x) int y, x;
     MSG("You aren't carrying anything");
     return;
   }
-  platform_draw();
 
   if (in_subcommand("Drop which item?", &c)) {
     int iidx = c - 'a';
@@ -6317,7 +6310,6 @@ py_takeoff()
 
   int carry_count = py_carry_count();
   int equip_count = py_inven(INVEN_EQUIP, MAX_INVEN);
-  platform_draw();
   if (carry_count && equip_count) {
     if (in_subcommand("Take off which item?", &c)) {
       int iidx = INVEN_EQUIP + (c - 'a');
@@ -7112,7 +7104,6 @@ py_make_known()
 
   // TBD: filter?
   int count = py_inven(0, INVEN_EQUIP);
-  platform_draw();
   if (count) {
     if (in_subcommand("Make known which item?", &c)) {
       int iidx = c - 'a';
