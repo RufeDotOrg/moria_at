@@ -182,7 +182,7 @@ affect_update()
   if (count > 0) len += count;
   debug_usedD = len;
 }
-static void
+void
 draw()
 {
   status_update();
