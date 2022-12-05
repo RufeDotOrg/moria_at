@@ -141,11 +141,11 @@ symmap_update()
 static char* affectD[][16] = {
     {"Hungry", "Weak", "Fainting"},
     //"Blind",
-    // "Confused",
     {"Poison"},
+    {"Confusion"},
     {"Fear"},
-    //   "Paralysed",
-    // {"Resting"},
+    // {"Paralysis"},
+    // {"Rest"},
     // "Searching",
     {"Fast", "Very Fast", "Extremely Fast"},
 };
@@ -160,8 +160,9 @@ affect_update()
   active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
   active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
   active[idx++] = (countD.poison != 0);
+  active[idx++] = (countD.confusion != 0);
   active[idx++] = (countD.fear != 0);
-  // Currently resting skips rendering
+  // Currently paralysis/rest skips rendering
   // active[idx++] = (countD.rest != 0);
   active[idx] = (uD.pspeed > 0);
   active[idx] += (uD.pspeed > 1);
@@ -5176,11 +5177,11 @@ inven_eat(iidx)
           msg_print("You feel terrified!");
           ident = TRUE;
           break;
-        // case 4:
-        //   f_ptr->confused += randint(10) + obj->level;
-        //   msg_print("You feel drugged.");
-        //   ident = TRUE;
-        //   break;
+        case 4:
+          countD.confusion += randint(10) + obj->level;
+          msg_print("You feel drugged.");
+          ident = TRUE;
+          break;
         // case 5:
 
         //  f_ptr->image += randint(200) + 25 * obj->level + 200;
@@ -5416,14 +5417,13 @@ inven_quaff(iidx)
           //   }
           //   f_ptr->blind += randint(100) + 100;
           //   break;
-          // case 21:
-          //
-          //   if (f_ptr->confused == 0) {
-          //     msg_print("Hey!  This is good stuff!  * Hick! *");
-          //     ident = TRUE;
-          //   }
-          //   f_ptr->confused += randint(20) + 12;
-          //   break;
+        case 21:
+          if (countD.confusion == 0) {
+            msg_print("Hey!  This is good stuff!  * Hick! *");
+            ident = TRUE;
+          }
+          countD.confusion += randint(20) + 12;
+          break;
         case 22:
           if (countD.poison == 0) {
             msg_print("You feel very sick.");
@@ -5790,7 +5790,7 @@ inven_zap_dir(iidx, dir)
   ident = FALSE;
   chance = uD.save + think_adj(A_INT) - (int)i_ptr->level +
            (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
-  // if (py.flags.confused > 0) chance = chance / 2;
+  if (countD.confusion) chance = chance / 2;
   if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
     chance = USE_DEVICE; /* Give everyone a slight chance */
   if (chance <= 0) chance = 1;
@@ -5976,12 +5976,12 @@ py_zap(iidx)
 
   free_turn_flag = FALSE;
   if (get_dir(0, &dir)) {
-    // if (py.flags.confused > 0) {
-    //   msg_print("You are confused.");
-    //   do {
-    //     dir = randint(9);
-    //   } while (dir == 5);
-    // }
+    if (countD.confusion) {
+      msg_print("You are confused.");
+      do {
+        dir = randint(9);
+      } while (dir == 5);
+    }
     inven_zap_dir(iidx, dir);
   }
 }
@@ -5998,7 +5998,7 @@ void inven_invoke(iidx, uy, ux) int *uy, *ux;
   free_turn_flag = FALSE;
   chance = uD.save + think_adj(A_INT) - i_ptr->level - 5 +
            (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
-  // if (py.flags.confused > 0) chance = chance / 2;
+  if (countD.confusion) chance = chance / 2;
   if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
     chance = USE_DEVICE; /* Give everyone a slight chance */
   if (chance <= 0) chance = 1;
@@ -6698,16 +6698,14 @@ static void mon_attack(midx) int midx;
           break;
         case 3: /*Confusion attack*/
           py_take_hit(damage);
-          //
-          // if (randint(2) == 1) {
-          //  if (f_ptr->confused < 1) {
-          //    msg_print("You feel confused.");
-          //    f_ptr->confused += randint((int)r_ptr->level);
-          //  } else
-          //    notice = FALSE;
-          //  f_ptr->confused += 3;
-          //} else
-          //  notice = FALSE;
+          if (randint(2) == 1) {
+            if (countD.confusion == 0) {
+              msg_print("You feel confused.");
+              countD.confusion += 3 + randint(cre->level);
+            } else {
+              countD.confusion += 3;
+            }
+          }
           break;
         case 4: /*Fear attack  */
           py_take_hit(damage);
@@ -6926,7 +6924,7 @@ close_object()
 }
 void disarm_trap(uy, ux) int *uy, *ux;
 {
-  int y, x, dir, valid, skill;
+  int y, x, dir, valid, chance;
   struct caveS* c_ptr;
   struct objS* obj;
 
@@ -6942,26 +6940,24 @@ void disarm_trap(uy, ux) int *uy, *ux;
       if (c_ptr->midx) {
         msg_print("Something is in your way!");
       } else if (obj->tval == TV_VIS_TRAP) {
-        skill = randint(100) - obj->level;
-        if (skill >= 0) {
+        // TBD: div is used; verify this number is positive. clean-up code.
+        chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+                 level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
+        if (countD.confusion) chance /= 8;
+        if (chance + 100 - obj->level > randint(100)) {
           msg_print("You have disarmed the trap.");
           uD.exp += obj->p1;
           delete_object(y, x);
           *uy = y;
           *ux = x;
           py_experience();
-        }
-        /* avoid randint(0) call */
-        else if (skill > -20)
+        } else if (chance > 5 && randint(chance) > 5)
           msg_print("You failed to disarm the trap.");
         else {
           msg_print("You set the trap off!");
-          /* make sure we move onto the trap even if confused */
-          // tmp = py.flags.confused;
-          // py.flags.confused = 0;
+          // Move onto the trap, even during confusion
           *uy = y;
           *ux = x;
-          // py.flags.confused += tmp;
         }
       }
     } else {
@@ -7003,8 +6999,7 @@ bash(y, x)
         obj->tchar = '\'';
         obj->p1 = 1 - randint(2); /* 50% chance of breaking door */
         c_ptr->fval = FLOOR_CORR;
-        // if (py.flags.confused == 0)
-        movement = 1;
+        if (countD.confusion == 0) movement = 1;
       } else if (randint(150) > 18) {  // py.stats.use_stat[A_DEX]) {
         msg_print("You are off-balance.");
         countD.paralysis = 1 + randint(2);
@@ -7028,7 +7023,12 @@ static void py_bash(uy, ux) int *uy, *ux;
   y = uD.y;
   x = uD.x;
   if (get_dir(0, &dir)) {
-    // if (py.flags.confused > 0) ...
+    if (countD.confusion) {
+      msg_print("You are confused.");
+      do {
+        dir = randint(9);
+      } while (dir == 5);
+    }
     mmove(dir, &y, &x);
     if (bash(y, x)) {
       *uy = y;
@@ -7039,7 +7039,7 @@ static void py_bash(uy, ux) int *uy, *ux;
 static void
 open_object(y, x)
 {
-  int i;
+  int chance;
   struct caveS* c_ptr;
   struct objS* obj;
   c_ptr = &caveD[y][x];
@@ -7052,13 +7052,11 @@ open_object(y, x)
     } else {
       /* Known to be locked */
       if ((obj->idflag & ID_REVEAL) && obj->p1 > 0) {
-        i = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
-            (level_adj[uD.clidx][LA_DISARM] * uD.lev / 3);
-        // Could be the whiskey
-        // if (py.flags.confused > 0)
-        //   msg_print("You are too confused to pick the lock.");
-        // else
-        if ((i - obj->p1) > randint(100)) {
+        chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+                 level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
+        if (countD.confusion)
+          msg_print("You are too confused to pick the lock.");
+        else if ((chance - obj->p1) > randint(100)) {
           msg_print("You have picked the lock.");
           uD.exp += 1;
           py_experience();
@@ -7124,8 +7122,8 @@ static void py_search(y, x, chance) int y, x, chance;
   struct objS* obj;
 
   msg_print("You search the area.");
-  // p_ptr = &py.flags;
-  // if (p_ptr->confused > 0) chance = chance / 10;
+  // TBD: tuning; used to divide by 10
+  if (countD.confusion) chance /= 8;
   // if ((p_ptr->blind > 0) || no_light()) chance = chance / 10;
   // if (p_ptr->image > 0) chance = chance / 10;
   for (i = (y - 1); i <= (y + 1); i++)
@@ -7442,14 +7440,14 @@ mon_cast_spell(midx)
         //   else
         //     py.flags.blind += 12 + randint(3);
         //   break;
-        // case 12: /*Cause Confuse */
-        //   if (player_saves())
-        //     msg_print("You resist the effects of the spell.");
-        //   else if (py.flags.confused > 0)
-        //     py.flags.confused += 2;
-        //   else
-        //     py.flags.confused = randint(5) + 3;
-        //   break;
+      case 12: /*Cause Confuse */
+        if (player_saves())
+          msg_print("You resist the effects of the spell.");
+        else if (countD.confusion)
+          countD.confusion += 2;
+        else
+          countD.confusion = randint(5) + 3;
+        break;
       case 13: /*Cause Fear    */
         if (player_saves())
           msg_print("You resist the effects of the spell.");
@@ -7723,6 +7721,13 @@ tick()
     disturb(1, 0);
   }
 
+  if (countD.confusion > 0) {
+    countD.confusion -= 1;
+    if (countD.confusion == 0) {
+      msg_print("You feel less confused.");
+      countD.rest = 0;
+    }
+  }
   if (countD.fear > 0) {
     countD.fear -= 1;
     if (countD.fear == 0) msg_print("You feel bolder now.");
@@ -7793,182 +7798,189 @@ dungeon()
 
         dir = map_roguedir(tolower(c)) - '0';
         if (dir <= 9) {
-          // Primary movement (lowercase)
+          // 75% random movement
+          if (countD.confusion) {
+            c = tolower(c);  // Can't run
+            if (randint(4) > 1) dir = randint(9);
+          }
+
+          // Primary movemenlowercase)
           if (c & 0x20) {
             mmove(dir, &y, &x);
           } else  // Secondary movement (uppercase)
           {
             find_init(dir, &y, &x);
           }
-        }
+        } else {
+          switch (c) {
+            case '?':
+              py_help();
+              break;
+            case ' ':
+              free_turn_flag = TRUE;
+              break;
+            case ',':
+              py_pickup(y, x, TRUE);
+              break;
+            case '1' ... '9':
+              MSG("Numlock is required for arrowkey movement");
+              free_turn_flag = TRUE;
+              break;
+            case 'c':
+              close_object();
+              break;
+            case 'd':
+              py_drop(y, x);
+              break;
+            case 'e': {
+              free_turn_flag = TRUE;
+              int count = py_inven(INVEN_EQUIP, MAX_INVEN);
+              MSG("You wearing %d items.", count);
+            } break;
+            case 'f':
+              py_bash(&y, &x);
+              break;
+            case 'i': {
+              free_turn_flag = TRUE;
+              int count = py_inven(0, INVEN_EQUIP);
+              MSG("You carrying %d items.", count);
+            } break;
+            case 'm':
+              // TEMP: testing tr_make_known
+              py_make_known();
+              break;
+            case 'q':
+              iidx = choice("Quaff what?");
+              if (iidx >= 0) inven_quaff(iidx);
+              break;
+            case 'r':
+              iidx = choice("Read what?");
+              if (iidx >= 0) inven_read(iidx, &y, &x);
+              break;
+            case 'o':
+              py_open();
+              break;
+            case 's':
+              py_search(y, x, 25);
+              break;
+            case 'x':
+              py_look_mon();
+              break;
+            case 'X':
+              py_look_obj();
+              break;
+            case 'w':
+              py_wear();
+              break;
+            case 'z':
+              iidx = choice("Aim which wand?");
+              if (iidx >= 0) py_zap(iidx);
+              break;
+            case 'Z':
+              iidx = choice("Invoke which staff?");
+              if (iidx >= 0) inven_invoke(iidx, &y, &x);
+              break;
+            case '<':
+              go_up();
+              break;
+            case '>':
+              go_down();
+              break;
+            case 'A':
+              // Generalized inventory interaction
+              choice_actuate();
+              break;
+            case 'C':
+              py_character();
+              break;
+            case 'D':
+              disarm_trap(&y, &x);
+              break;
+            case 'E':
+              iidx = choice("Eat what?");
+              if (iidx >= 0) inven_eat(iidx);
+              break;
+            case 'M':
+              py_map();
+              break;
+            case 'R':
+              countD.rest = -9999;
+              break;
+            case 'T':
+              py_takeoff();
+              break;
+            case 'W':
+              py_where();
+              break;
+            case CTRL('f'): {
+              struct objS* obj = obj_use();
+              caveD[y][x].oidx = obj_index(obj);
 
-        switch (c) {
-          case '?':
-            py_help();
-            break;
-          case ' ':
-            free_turn_flag = TRUE;
-            break;
-          case ',':
-            py_pickup(y, x, TRUE);
-            break;
-          case '1' ... '9':
-            MSG("Numlock is required for arrowkey movement");
-            free_turn_flag = TRUE;
-            break;
-          case 'c':
-            close_object();
-            break;
-          case 'd':
-            py_drop(y, x);
-            break;
-          case 'e': {
-            free_turn_flag = TRUE;
-            int count = py_inven(INVEN_EQUIP, MAX_INVEN);
-            MSG("You wearing %d items.", count);
-          } break;
-          case 'f':
-            py_bash(&y, &x);
-            break;
-          case 'i': {
-            free_turn_flag = TRUE;
-            int count = py_inven(0, INVEN_EQUIP);
-            MSG("You carrying %d items.", count);
-          } break;
-          case 'm':
-            // TEMP: testing tr_make_known
-            py_make_known();
-            break;
-          case 'q':
-            iidx = choice("Quaff what?");
-            if (iidx >= 0) inven_quaff(iidx);
-            break;
-          case 'r':
-            iidx = choice("Read what?");
-            if (iidx >= 0) inven_read(iidx, &y, &x);
-            break;
-          case 'o':
-            py_open();
-            break;
-          case 's':
-            py_search(y, x, 25);
-            break;
-          case 'x':
-            py_look_mon();
-            break;
-          case 'X':
-            py_look_obj();
-            break;
-          case 'w':
-            py_wear();
-            break;
-          case 'z':
-            iidx = choice("Aim which wand?");
-            if (iidx >= 0) py_zap(iidx);
-            break;
-          case 'Z':
-            iidx = choice("Invoke which staff?");
-            if (iidx >= 0) inven_invoke(iidx, &y, &x);
-            break;
-          case '<':
-            go_up();
-            break;
-          case '>':
-            go_down();
-            break;
-          case 'A':
-            // Generalized inventory interaction
-            choice_actuate();
-            break;
-          case 'C':
-            py_character();
-            break;
-          case 'D':
-            disarm_trap(&y, &x);
-            break;
-          case 'E':
-            iidx = choice("Eat what?");
-            if (iidx >= 0) inven_eat(iidx);
-            break;
-          case 'M':
-            py_map();
-            break;
-          case 'R':
-            countD.rest = -9999;
-            break;
-          case 'T':
-            py_takeoff();
-            break;
-          case 'W':
-            py_where();
-            break;
-          case CTRL('f'): {
-            struct objS* obj = obj_use();
-            caveD[y][x].oidx = obj_index(obj);
+              tr_obj_copy(22, obj);
+              obj->fy = y;
+              obj->fx = x;
+              msg_print("Food rolls beneath your feet.");
+            } break;
+            case CTRL('h'):
+              if (uD.mhp < 100) uD.mhp = 100;
+              uD.chp = uD.mhp;
+              msg_print("You are healed.");
+              break;
+            case CTRL('t'):
+              msg_print("teleport");
+              do {
+                x = randint(MAX_WIDTH - 2);
+                y = randint(MAX_HEIGHT - 2);
+              } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
+                       caveD[y][x].midx != 0);
+              break;
+            case CTRL('m'):
+              if (mon_usedD) {
+                int rv = randint(mon_usedD);
+                struct monS* mon = mon_get(monD[rv - 1]);
+                MSG("Teleport to monster id %d (%d/%d)", mon->id, rv,
+                    mon_usedD);
 
-            tr_obj_copy(22, obj);
-            obj->fy = y;
-            obj->fx = x;
-            msg_print("Food rolls beneath your feet.");
-          } break;
-          case CTRL('h'):
-            if (uD.mhp < 100) uD.mhp = 100;
-            uD.chp = uD.mhp;
-            msg_print("You are healed.");
-            break;
-          case CTRL('t'):
-            msg_print("teleport");
-            do {
-              x = randint(MAX_WIDTH - 2);
-              y = randint(MAX_HEIGHT - 2);
-            } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
-                     caveD[y][x].midx != 0);
-            break;
-          case CTRL('m'):
-            if (mon_usedD) {
-              int rv = randint(mon_usedD);
-              struct monS* mon = mon_get(monD[rv - 1]);
-              MSG("Teleport to monster id %d (%d/%d)", mon->id, rv, mon_usedD);
+                int fy = mon->fy;
+                int fx = mon->fx;
+                py_teleport_near(fy, fx, &y, &x);
+              }
+              break;
+            case CTRL('o'): {
+              static int y_obj_teleportD;
+              static int x_obj_teleportD;
+              int row, col;
+              int fy, fx;
+              fy = y_obj_teleportD;
+              fx = x_obj_teleportD;
 
-              int fy = mon->fy;
-              int fx = mon->fx;
-              py_teleport_near(fy, fx, &y, &x);
-            }
-            break;
-          case CTRL('o'): {
-            static int y_obj_teleportD;
-            static int x_obj_teleportD;
-            int row, col;
-            int fy, fx;
-            fy = y_obj_teleportD;
-            fx = x_obj_teleportD;
+              for (row = 1; row < MAX_HEIGHT - 1; ++row) {
+                for (col = 1; col < MAX_WIDTH - 1; ++col) {
+                  int oidx = caveD[row][col].oidx;
+                  if (!oidx) continue;
+                  struct objS* obj = &entity_objD[oidx];
+                  if (is_door(obj->tval)) continue;
 
-            for (row = 1; row < MAX_HEIGHT - 1; ++row) {
-              for (col = 1; col < MAX_WIDTH - 1; ++col) {
-                int oidx = caveD[row][col].oidx;
-                if (!oidx) continue;
-                struct objS* obj = &entity_objD[oidx];
-                if (is_door(obj->tval)) continue;
+                  if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
 
-                if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
-
-                if (py_teleport_near(row, col, &y, &x)) {
-                  MSG("Teleport to obj %d", oidx);
-                  y_obj_teleportD = row;
-                  x_obj_teleportD = col;
-                  row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+                  if (py_teleport_near(row, col, &y, &x)) {
+                    MSG("Teleport to obj %d", oidx);
+                    y_obj_teleportD = row;
+                    x_obj_teleportD = col;
+                    row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+                  }
                 }
               }
-            }
-            if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
-              y_obj_teleportD = x_obj_teleportD = 0;
-              msg_print("Reset object teleport");
-            }
-          } break;
-          case CTRL('p'): {
-            free_turn_flag = TRUE;
-            msg_history();
-          } break;
+              if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
+                y_obj_teleportD = x_obj_teleportD = 0;
+                msg_print("Reset object teleport");
+              }
+            } break;
+            case CTRL('p'): {
+              free_turn_flag = TRUE;
+              msg_history();
+            } break;
+          }
         }
       }
 
