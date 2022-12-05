@@ -141,8 +141,9 @@ symmap_update()
 static char* affectD[][16] = {
     {"Hungry", "Weak", "Fainting"},
     //"Blind",
-    // "Confused", "Fear",
+    // "Confused",
     {"Poison"},
+    {"Fear"},
     //   "Paralysed",
     // {"Resting"},
     // "Searching",
@@ -159,6 +160,7 @@ affect_update()
   active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
   active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
   active[idx++] = (countD.poison != 0);
+  active[idx++] = (countD.fear != 0);
   // Currently resting skips rendering
   // active[idx++] = (countD.rest != 0);
   active[idx] = (uD.pspeed > 0);
@@ -4223,7 +4225,7 @@ int factor;
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
   if (TR_SPEED & obj->flags) uD.pspeed -= amount;
   // if ((TR_BLIND & obj->flags) && (factor > 0)) py.flags.blind += 1000;
-  // if ((TR_TIMID & obj->flags) && (factor > 0)) py.flags.afraid += 50;
+  if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
   // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
 }
 BOOL
@@ -5163,17 +5165,17 @@ inven_eat(iidx)
           countD.poison += randint(10) + obj->level;
           ident = TRUE;
           break;
-        // case 2:
-        //   f_ptr->blind += randint(250) + 10 * obj->level + 100;
-        //   draw_cave();
-        //   msg_print("A veil of darkness surrounds you.");
-        //   ident = TRUE;
-        //   break;
-        // case 3:
-        //   f_ptr->afraid += randint(10) + obj->level;
-        //   msg_print("You feel terrified!");
-        //   ident = TRUE;
-        //   break;
+          // case 2:
+          //   f_ptr->blind += randint(250) + 10 * obj->level + 100;
+          //   draw_cave();
+          //   msg_print("A veil of darkness surrounds you.");
+          //   ident = TRUE;
+          //   break;
+        case 3:
+          countD.fear += randint(10) + obj->level;
+          msg_print("You feel terrified!");
+          ident = TRUE;
+          break;
         // case 4:
         //   f_ptr->confused += randint(10) + obj->level;
         //   msg_print("You feel drugged.");
@@ -5189,15 +5191,15 @@ inven_eat(iidx)
           ident = countD.poison > 0;
           countD.poison = 1;
           break;
-        // case 7:
-        //   ident = cure_blindness();
-        //   break;
-        // case 8:
-        //   if (f_ptr->afraid > 1) {
-        //     f_ptr->afraid = 1;
-        //     ident = TRUE;
-        //   }
-        //   break;
+          // case 7:
+          //   ident = cure_blindness();
+          //   break;
+        case 8:
+          if (countD.fear > 1) {
+            countD.fear = 1;
+            ident = TRUE;
+          }
+          break;
         // case 9:
         //   ident = cure_confusion();
         //   break;
@@ -6709,16 +6711,15 @@ static void mon_attack(midx) int midx;
           break;
         case 4: /*Fear attack  */
           py_take_hit(damage);
-          //
-          // if (player_saves())
-          //  msg_print("You resist the effects!");
-          // else if (f_ptr->afraid < 1) {
-          //  msg_print("You are suddenly afraid!");
-          //  f_ptr->afraid += 3 + randint((int)r_ptr->level);
-          //} else {
-          //  f_ptr->afraid += 3;
-          //  notice = FALSE;
-          //}
+
+          if (player_saves())
+            msg_print("You resist the urge to be afraid!");
+          else if (countD.fear == 0) {
+            msg_print("You are suddenly afraid!");
+            countD.fear += 3 + randint(cre->level);
+          } else {
+            countD.fear += 3;
+          }
           break;
         case 5: /*Fire attack  */
           msg_print("You are enveloped in flames!");
@@ -6981,12 +6982,14 @@ bash(y, x)
 
   movement = 0;
   if (c_ptr->midx) {
-    // py.flags.afraid
-    if (invenD[INVEN_ARM]) {
-      py_shield_attack(y, x);
-    } else {
+    if (countD.fear) {
+      MSG("You are too afraid to bash anyone!");
+      free_turn_flag = TRUE;
+    } else if (!invenD[INVEN_ARM]) {
       MSG("You must wear a shield to bash monsters!");
       free_turn_flag = TRUE;
+    } else {
+      py_shield_attack(y, x);
     }
   } else if (c_ptr->oidx) {
     if (obj->tval == TV_CLOSED_DOOR) {
@@ -7431,30 +7434,30 @@ mon_cast_spell(midx)
         else
           countD.paralysis = randint(5) + 4;
         break;
-      // case 11: /*Cause Blindness*/
-      //   if (player_saves())
-      //     msg_print("You resist the effects of the spell.");
-      //   else if (py.flags.blind > 0)
-      //     py.flags.blind += 6;
-      //   else
-      //     py.flags.blind += 12 + randint(3);
-      //   break;
-      // case 12: /*Cause Confuse */
-      //   if (player_saves())
-      //     msg_print("You resist the effects of the spell.");
-      //   else if (py.flags.confused > 0)
-      //     py.flags.confused += 2;
-      //   else
-      //     py.flags.confused = randint(5) + 3;
-      //   break;
-      // case 13: /*Cause Fear    */
-      //   if (player_saves())
-      //     msg_print("You resist the effects of the spell.");
-      //   else if (py.flags.afraid > 0)
-      //     py.flags.afraid += 2;
-      //   else
-      //     py.flags.afraid = randint(5) + 3;
-      //   break;
+        // case 11: /*Cause Blindness*/
+        //   if (player_saves())
+        //     msg_print("You resist the effects of the spell.");
+        //   else if (py.flags.blind > 0)
+        //     py.flags.blind += 6;
+        //   else
+        //     py.flags.blind += 12 + randint(3);
+        //   break;
+        // case 12: /*Cause Confuse */
+        //   if (player_saves())
+        //     msg_print("You resist the effects of the spell.");
+        //   else if (py.flags.confused > 0)
+        //     py.flags.confused += 2;
+        //   else
+        //     py.flags.confused = randint(5) + 3;
+        //   break;
+      case 13: /*Cause Fear    */
+        if (player_saves())
+          msg_print("You resist the effects of the spell.");
+        else if (countD.fear > 0)
+          countD.fear += 2;
+        else
+          countD.fear = randint(5) + 3;
+        break;
       case 14: /*Summon Monster*/
       {
         MSG("%s magically summons a monster!", descD);
@@ -7720,6 +7723,11 @@ tick()
     disturb(1, 0);
   }
 
+  if (countD.fear > 0) {
+    countD.fear -= 1;
+    if (countD.fear == 0) msg_print("You feel bolder now.");
+  }
+
   if (countD.rest < 0) {
     countD.rest += 1;
     if (uD.chp == uD.mhp) countD.rest = 0;
@@ -7980,7 +7988,10 @@ dungeon()
           }
 
           if (c_ptr->midx) {
-            py_attack(y, x);
+            if (countD.fear == 0)
+              py_attack(y, x);
+            else
+              msg_print("You are too afraid!");
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
             py_move_light(uD.y, uD.x, y, x);
             if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
