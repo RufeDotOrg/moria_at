@@ -4600,10 +4600,7 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  int actuate_test[20] = {};  // scrolls: 174 222
-  for (int it = 0; it < AL(actuate_test); ++it) {
-    actuate_test[it] = it + 202;
-  }
+  int actuate_test[] = {};  // scrolls: 174 222
   for (int it = 0; it < AL(actuate_test); ++it) {
     int iidx = inven_slot();
     if (iidx == -1) break;
