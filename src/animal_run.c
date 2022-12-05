@@ -127,12 +127,15 @@ char* prompt;
 char* command;
 {
   char c;
-  MSG("%s", prompt);
+  char* msg;
+  msg = AS(msg_cqD, msg_writeD);
+  AS(msglen_cqD, msg_writeD) = snprintf(msg, MAX_MSGLEN, "%s", prompt);
   do {
     im_print();
     c = inkey();
   } while (c == ' ');
   *command = c;
+  AS(msglen_cqD, msg_writeD) = 0;
   return (*command != ESCAPE);
 }
 static char
