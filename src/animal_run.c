@@ -7788,7 +7788,7 @@ dungeon()
           }
         }
 
-        dir = map_roguedir(c | 0x20) - '0';
+        dir = map_roguedir(toupper(c)) - '0';
         if (dir <= 9) {
           // Primary movement (lowercase)
           if (c & 0x20) {
