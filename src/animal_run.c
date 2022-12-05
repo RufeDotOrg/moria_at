@@ -503,7 +503,7 @@ light_area(y, x)
 {
   if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
   for (int col = y - 1; col <= y + 1; ++col) {
-    for (int row = x - 1; x <= x + 1; ++row) {
+    for (int row = x - 1; row <= x + 1; ++row) {
       caveD[col][row].cflag |= CF_PERM_LIGHT;
     }
   }
@@ -545,7 +545,7 @@ unlight_area(y, x)
 {
   if (caveD[y][x].cflag & CF_ROOM) unlight_room(y, x);
   for (int col = y - 1; col <= y + 1; ++col) {
-    for (int row = x - 1; x <= x + 1; ++row) {
+    for (int row = x - 1; row <= x + 1; ++row) {
       caveD[col][row].cflag &= ~CF_PERM_LIGHT;
     }
   }
@@ -4600,7 +4600,10 @@ py_init()
     tr_obj_copy(22, food);
     invenD[it] = food->id;
   }
-  int actuate_test[] = {};
+  int actuate_test[20] = {};  // scrolls: 174 222
+  for (int it = 0; it < AL(actuate_test); ++it) {
+    actuate_test[it] = it + 202;
+  }
   for (int it = 0; it < AL(actuate_test); ++it) {
     int iidx = inven_slot();
     if (iidx == -1) break;
