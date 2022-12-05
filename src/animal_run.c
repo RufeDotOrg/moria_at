@@ -7963,6 +7963,7 @@ dungeon()
             }
           } break;
           case CTRL('p'): {
+            free_turn_flag = TRUE;
             msg_history();
           } break;
         }
