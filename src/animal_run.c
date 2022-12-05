@@ -7750,7 +7750,6 @@ dungeon()
     do {
       if (countD.rest != 0) break;
       if (countD.paralysis != 0) break;
-      panel_update(&panelD, uD.y, uD.x, FALSE);
       draw();
       free_turn_flag = FALSE;
 
@@ -8006,6 +8005,7 @@ dungeon()
             free_turn_flag = TRUE;
           }
         }
+        panel_update(&panelD, uD.y, uD.x, FALSE);
       }
     } while (free_turn_flag && !new_level_flag);
 
