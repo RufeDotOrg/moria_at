@@ -5280,3 +5280,8 @@ char* special_nameD[] = {
 
 int sorted_objects[AL(treasureD)];
 int o_level[MAX_OBJ_LEVEL + 1];
+char* trap_nameD[] = {
+    "a pit",
+    "an arrow trap",
+    "a trap door",
+};

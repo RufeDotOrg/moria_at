@@ -3958,10 +3958,12 @@ BOOL prefix;
     case TV_RUBBLE:
     case TV_GOLD:
     case TV_INVIS_TRAP:
-    case TV_VIS_TRAP:
     case TV_UP_STAIR:
     case TV_DOWN_STAIR:
       descD[0] = 0;
+      return;
+    case TV_VIS_TRAP:
+      strcpy(descD, trap_nameD[indexx]);
       return;
     // case TV_STORE_DOOR:
     //   sprintf(descD, "the entrance to the %s.",
@@ -7007,7 +7009,8 @@ py_look_mon()
         if (oy == ly && ox == lx && los(y, x, mon->fy, mon->fx)) {
           seen += 1;
           mon_desc(it_index);
-          MSG("You see %s. --pause--", descD);
+          // hack: mon death_descD pronoun is a/an
+          MSG("You see %s. --pause--", death_descD);
           im_print();
           if (inkey() != ' ') break;
           msg_reset();
@@ -7038,7 +7041,7 @@ py_look_obj()
     lx = dir_x(dir);
     int seen = 0;
     FOR_EACH(obj, {
-      if (obj->tval > TV_MAX_OBJECT) continue;
+      if (obj->tval > TV_MAX_OBJECT && obj->tval != TV_VIS_TRAP) continue;
       if (obj->fy && distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
         oy = -((obj->fy - y) < 0) + ((obj->fy - y) > 0);
         ox = -((obj->fx - x) < 0) + ((obj->fx - x) > 0);
