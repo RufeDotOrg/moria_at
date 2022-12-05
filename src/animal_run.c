@@ -4468,6 +4468,14 @@ void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
     }
   }
 }
+static void py_take_hit(damage) int damage;
+{
+  uD.chp -= damage;
+  if (uD.chp < 0) {
+    death = TRUE;
+    new_level_flag = TRUE;
+  }
+}
 int
 py_class_select()
 {
@@ -5106,8 +5114,138 @@ choice(char* prompt)
 void
 inven_eat(iidx)
 {
+  uint32_t i;
+  int j, ident;
   struct objS* obj = obj_get(invenD[iidx]);
+  struct treasureS* tr_ptr = &treasureD[obj->tidx];
+
   if (obj->tval == TV_FOOD) {
+    i = obj->flags;
+    ident = FALSE;
+    while (i != 0) {
+      j = bit_pos(&i) + 1;
+      /* Foods  				*/
+      switch (j) {
+        case 1:
+          countD.poison += randint(10) + obj->level;
+          ident = TRUE;
+          break;
+        // case 2:
+        //   f_ptr->blind += randint(250) + 10 * obj->level + 100;
+        //   draw_cave();
+        //   msg_print("A veil of darkness surrounds you.");
+        //   ident = TRUE;
+        //   break;
+        // case 3:
+        //   f_ptr->afraid += randint(10) + obj->level;
+        //   msg_print("You feel terrified!");
+        //   ident = TRUE;
+        //   break;
+        // case 4:
+        //   f_ptr->confused += randint(10) + obj->level;
+        //   msg_print("You feel drugged.");
+        //   ident = TRUE;
+        //   break;
+        // case 5:
+
+        //  f_ptr->image += randint(200) + 25 * obj->level + 200;
+        //  msg_print("You feel drugged.");
+        //  ident = TRUE;
+        //  break;
+        case 6:
+          ident = countD.poison > 0;
+          countD.poison = 1;
+          break;
+        // case 7:
+        //   ident = cure_blindness();
+        //   break;
+        // case 8:
+        //   if (f_ptr->afraid > 1) {
+        //     f_ptr->afraid = 1;
+        //     ident = TRUE;
+        //   }
+        //   break;
+        // case 9:
+        //   ident = cure_confusion();
+        //   break;
+        case 10:
+          ident = TRUE;
+          dec_stat(A_STR);
+          break;
+        case 11:
+          ident = TRUE;
+          dec_stat(A_CON);
+          break;
+        case 16:
+          if (res_stat(A_STR)) {
+            msg_print("You feel your strength returning.");
+            ident = TRUE;
+          }
+          break;
+        case 17:
+          if (res_stat(A_CON)) {
+            msg_print("You feel your health returning.");
+            ident = TRUE;
+          }
+          break;
+        case 18:
+          if (res_stat(A_INT)) {
+            msg_print("Your head spins a moment.");
+            ident = TRUE;
+          }
+          break;
+        case 19:
+          if (res_stat(A_WIS)) {
+            msg_print("You feel your wisdom returning.");
+            ident = TRUE;
+          }
+          break;
+        case 20:
+          if (res_stat(A_DEX)) {
+            msg_print("You feel more dextrous.");
+            ident = TRUE;
+          }
+          break;
+        case 21:
+          if (res_stat(A_CHR)) {
+            msg_print("Your skin stops itching.");
+            ident = TRUE;
+          }
+          break;
+        case 22:
+          ident = py_heal_hit(randint(6));
+          break;
+        case 23:
+          ident = py_heal_hit(randint(12));
+          break;
+        case 24:
+          ident = py_heal_hit(randint(18));
+          break;
+        case 26:
+          ident = py_heal_hit(damroll(3, 12));
+          break;
+        case 27:
+          strcpy(death_descD, "poisonous food");
+          py_take_hit(randint(18));
+          ident = TRUE;
+          break;
+        default:
+          msg_print("Internal error in eat()");
+          break;
+      }
+      /* End of food actions.  			*/
+    }
+    if (ident) {
+      if (!tr_known(tr_ptr)) {
+        /* round half-way case up */
+        uD.exp += (obj->level + (uD.lev >> 1)) / uD.lev;
+        py_experience();
+
+        tr_make_known(tr_ptr);
+      }
+    }
+    // else if (!known1_p(obj))
+    //   sample(obj);
     uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
     inven_destroy_one(iidx);
     msg_print("nom nom nom!!");
@@ -5140,7 +5278,8 @@ inven_quaff(iidx)
           break;
         case 2:
           ident = TRUE;
-          // TBD: was lose_str(), diff?
+          // TBD: check sustain on each stat
+          // TBD: messaging
           dec_stat(A_STR);
           break;
         case 3:
@@ -5235,7 +5374,7 @@ inven_quaff(iidx)
           ident = TRUE;
           break;
           // case 20:
-          //   f_ptr = &py.flags;
+          //
           //   if (f_ptr->blind == 0) {
           //     msg_print("You are covered by a veil of darkness.");
           //     ident = TRUE;
@@ -5243,7 +5382,7 @@ inven_quaff(iidx)
           //   f_ptr->blind += randint(100) + 100;
           //   break;
           // case 21:
-          //   f_ptr = &py.flags;
+          //
           //   if (f_ptr->confused == 0) {
           //     msg_print("Hey!  This is good stuff!  * Hick! *");
           //     ident = TRUE;
@@ -5334,12 +5473,12 @@ inven_quaff(iidx)
           ident = restore_level();
           break;
           // case 41:
-          //   f_ptr = &py.flags;
+          //
           //   if (f_ptr->resist_heat == 0) ident = TRUE;
           //   f_ptr->resist_heat += randint(10) + 10;
           //   break;
           // case 42:
-          //   f_ptr = &py.flags;
+          //
           //   if (f_ptr->resist_cold == 0) ident = TRUE;
           //   f_ptr->resist_cold += randint(10) + 10;
           //   break;
@@ -5368,7 +5507,7 @@ inven_quaff(iidx)
         //   }
         //   break;
         // case 47:
-        //   f_ptr = &py.flags;
+        //
         //   if (f_ptr->tim_infra == 0) {
         //     msg_print("Your eyes begin to tingle.");
         //     ident = TRUE;
@@ -6235,14 +6374,6 @@ int pickup;
     }
   }
 }
-static void py_take_hit(damage) int damage;
-{
-  uD.chp -= damage;
-  if (uD.chp < 0) {
-    death = TRUE;
-    new_level_flag = TRUE;
-  }
-}
 int inven_damage(typ, perc) int (*typ)();
 register int perc;
 {
@@ -6536,7 +6667,7 @@ static void mon_attack(midx) int midx;
           break;
         case 3: /*Confusion attack*/
           py_take_hit(damage);
-          // f_ptr = &py.flags;
+          //
           // if (randint(2) == 1) {
           //  if (f_ptr->confused < 1) {
           //    msg_print("You feel confused.");
@@ -6549,7 +6680,7 @@ static void mon_attack(midx) int midx;
           break;
         case 4: /*Fear attack  */
           py_take_hit(damage);
-          // f_ptr = &py.flags;
+          //
           // if (player_saves())
           //  msg_print("You resist the effects!");
           // else if (f_ptr->afraid < 1) {
@@ -6583,7 +6714,7 @@ static void mon_attack(midx) int midx;
           break;
         case 10: /*Blindness attack*/
           py_take_hit(damage);
-          // f_ptr = &py.flags;
+          //
           // if (f_ptr->blind < 1) {
           //  f_ptr->blind += 10 + randint((int)r_ptr->level);
           //  msg_print("Your eyes begin to sting.");
@@ -6641,7 +6772,7 @@ static void mon_attack(midx) int midx;
           break;
         case 15: /*Lose dexterity */
           py_take_hit(damage);
-          // f_ptr = &py.flags;
+          //
           // if (f_ptr->sustain_dex)
           //  msg_print("You feel clumsy for a moment, but it passes.");
           // else {
@@ -6651,7 +6782,7 @@ static void mon_attack(midx) int midx;
           break;
         case 16: /*Lose constitution */
           py_take_hit(damage);
-          // f_ptr = &py.flags;
+          //
           // if (f_ptr->sustain_con)
           //  msg_print("Your body resists the effects of the disease.");
           // else {
@@ -6661,7 +6792,7 @@ static void mon_attack(midx) int midx;
           break;
         case 17: /*Lose intelligence */
           py_take_hit(damage);
-          // f_ptr = &py.flags;
+          //
           msg_print("You have trouble thinking clearly.");
           // if (f_ptr->sustain_int)
           //  msg_print("But your mind quickly clears.");
@@ -6670,7 +6801,7 @@ static void mon_attack(midx) int midx;
           break;
         case 18: /*Lose wisdom     */
           py_take_hit(damage);
-          // f_ptr = &py.flags;
+          //
           // if (f_ptr->sustain_wis)
           //  msg_print("Your wisdom is sustained.");
           // else {
