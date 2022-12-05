@@ -80,6 +80,11 @@ msg_history()
       line += 1;
     }
   }
+  if (!line) {
+    static char no_historyD[] = "No message history";
+    memcpy(screenD[0], AP(no_historyD));
+    screen_usedD[0] = AL(no_historyD);
+  }
 }
 static char log_extD[] = " -more-";
 static void msg_print2(msg, msglen) char* msg;
