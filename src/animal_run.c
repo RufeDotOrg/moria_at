@@ -7618,7 +7618,6 @@ dungeon()
       AC(screen_usedD);
       AC(overlay_usedD);
       AC(status_usedD);
-      if (!free_turn_flag) msg_reset();
       free_turn_flag = FALSE;
 
       y = uD.y;
@@ -7626,6 +7625,7 @@ dungeon()
       if (find_flag) {
         mmove(find_direction, &y, &x);
       } else {
+        msg_reset();
         c = inkey();
         if (c == -1) break;
         prev_cmdD = c;
