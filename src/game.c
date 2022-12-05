@@ -9,4 +9,4 @@
 #include "db/mon.c"
 #include "db/obj.c"
 
-#include "platform.c"
+#include "platform/platform.c"
