@@ -7757,7 +7757,7 @@ dungeon()
   uint32_t dir;
   new_level_flag = FALSE;
 
-  while (1) {
+  while (!new_level_flag) {
     tick();
 
     do {
@@ -8032,7 +8032,6 @@ dungeon()
       }
     } while (free_turn_flag && !new_level_flag);
 
-    if (new_level_flag) break;
     creatures(TRUE);
   }
 }
