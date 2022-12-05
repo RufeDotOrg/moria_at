@@ -48,6 +48,7 @@ inkey()
     c = platform_readansi();
   } while (c == 0);
   if (c == CTRL('c')) {
+    strcpy(death_descD, "quitting");
     death = 1;
     new_level_flag = TRUE;
     return -1;
