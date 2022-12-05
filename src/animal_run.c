@@ -3708,7 +3708,7 @@ BOOL prefix;
   for (int it = 0; it < AL(descD); ++it) {
     if (descD[it] != '~')
       obj_name[it - offset] = descD[it];
-    else if (obj->number > 1)
+    else if (obj->number != 1)
       obj_name[it - offset] = 's';
     else
       offset += 1;
@@ -5732,7 +5732,7 @@ int *uy, *ux;
       i_ptr->number -= 1;
       obj_desc(i_ptr, TRUE);
       i_ptr->number += 1;
-      MSG("You have %s", descD);
+      MSG("You have %s.", descD);
       inven_destroy_one(iidx);
     }
     return TRUE;
