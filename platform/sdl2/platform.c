@@ -17,8 +17,6 @@
 #endif
 
 #define CTRL(x) (x & 037)
-#define SYMMAP_PATCH(y, x) \
-  if (panel_contains(&panelD, y, x)) symmap_patch(y, x, get_sym(y, x))
 #define STATIC
 #define INLINE
 #define LOG 1

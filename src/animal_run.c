@@ -234,8 +234,8 @@ int msglen;
     AS(msglen_cqD, msg_writeD) = log_used;
 
     // wait for user to acknowledge prior buffer -more-
+    im_print();
     do {
-      im_print();
       c = inkey();
     } while (c != ' ');
     msg_writeD += 1;
@@ -3334,7 +3334,6 @@ void update_mon(midx) int midx;
   else if (m_ptr->ml) {
     m_ptr->ml = FALSE;
   }
-  SYMMAP_PATCH(fy, fx);
 }
 int
 enchant(int16_t* bonus, int16_t limit)
@@ -4761,8 +4760,8 @@ py_death()
       col += 1;
     }
   }
+  im_print();
   do {
-    im_print();
     c = inkey();
   } while (c != ' ');
 }
@@ -4966,7 +4965,6 @@ void teleport_away(midx, dis) int midx, dis;
   move_rec(fy, fx, yn, xn);
   m_ptr->fy = yn;
   m_ptr->fx = xn;
-  SYMMAP_PATCH(fy, fx);
 
   m_ptr->ml = FALSE;
   m_ptr->cdis = distance(uD.y, uD.x, yn, xn);
@@ -7266,8 +7264,6 @@ uint32_t* rcmove;
     if (do_move) {
       /* Move creature record  	       */
       move_rec(fy, fx, newy, newx);
-      SYMMAP_PATCH(fy, fx);
-      SYMMAP_PATCH(newy, newx);
       m_ptr->ml = FALSE;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
@@ -7995,8 +7991,6 @@ dungeon()
             int ox = uD.x;
             uD.y = y;
             uD.x = x;
-            SYMMAP_PATCH(oy, ox);
-            SYMMAP_PATCH(y, x);
             if (find_flag) find_event(y, x);
             if (obj->tval) {
               find_flag = FALSE;

@@ -122,5 +122,3 @@ tty_translate(char* str, int len)
 
   return (_from_vt100(c) & mask);
 }
-#define SYMMAP_PATCH(y, x) \
-  if (panel_contains(&panelD, y, x)) symmap_patch(y, x, get_sym(y, x))
