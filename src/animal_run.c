@@ -89,6 +89,9 @@ get_sym(int row, int col)
   register struct caveS* cave_ptr;
 
   if (row == uD.y && col == uD.x) return '@';
+  // else if (countD.blind)
+  //   return ' ';
+
   cave_ptr = &caveD[row][col];
   if (cave_ptr->midx) {
     struct monS* mon = &entity_monD[cave_ptr->midx];
@@ -140,8 +143,8 @@ symmap_update()
 }
 static char* affectD[][16] = {
     {"Hungry", "Weak", "Fainting"},
-    //"Blind",
     {"Poison"},
+    {"Blind"},
     {"Confusion"},
     {"Fear"},
     // {"Paralysis"},
@@ -160,6 +163,7 @@ affect_update()
   active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
   active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
   active[idx++] = (countD.poison != 0);
+  active[idx++] = (countD.blind != 0);
   active[idx++] = (countD.confusion != 0);
   active[idx++] = (countD.fear != 0);
   // Currently paralysis/rest skips rendering
@@ -266,6 +270,13 @@ static void
 msg_print(char* text)
 {
   msg_print2(text, strlen(text));
+}
+static int
+see_print(char* text)
+{
+  BOOL see = (countD.blind == 0);
+  if (see) msg_print(text);
+  return see;
 }
 int
 in_subcommand(prompt, command)
@@ -657,8 +668,7 @@ light_area(y, x)
     }
   }
 
-  // TBD: unknown when blind...  (py.flags.blind)
-  return TRUE;
+  return countD.blind == 0;
 }
 void
 unlight_room(y, x)
@@ -699,8 +709,7 @@ unlight_area(y, x)
     }
   }
 
-  // TBD: unknown when blind.. (py.flags.blind)
-  return TRUE;
+  return countD.blind == 0;
 }
 typedef struct {
   int y;
@@ -3103,43 +3112,44 @@ int *y_ptr, *x_ptr;
     find_flag = TRUE;
     find_breakright = find_breakleft = FALSE;
     find_prevdir = dir;
-    // TBD: if (py.flags.blind < 1)
-    i = chome[dir];
-    deepleft = deepright = FALSE;
-    shortright = shortleft = FALSE;
-    if (see_wall(cycle[i + 1], uD.y, uD.x)) {
-      find_breakleft = TRUE;
-      shortleft = TRUE;
-    } else if (see_wall(cycle[i + 1], *y_ptr, *x_ptr)) {
-      find_breakleft = TRUE;
-      deepleft = TRUE;
-    }
-    if (see_wall(cycle[i - 1], uD.y, uD.x)) {
-      find_breakright = TRUE;
-      shortright = TRUE;
-    } else if (see_wall(cycle[i - 1], *y_ptr, *x_ptr)) {
-      find_breakright = TRUE;
-      deepright = TRUE;
-    }
-    if (find_breakleft && find_breakright) {
-      find_openarea = FALSE;
-      if (dir & 1) { /* a hack to allow angled corridor entry */
-        if (deepleft && !deepright)
-          find_prevdir = cycle[i - 1];
-        else if (deepright && !deepleft)
-          find_prevdir = cycle[i + 1];
+    if (countD.blind == 0) {
+      i = chome[dir];
+      deepleft = deepright = FALSE;
+      shortright = shortleft = FALSE;
+      if (see_wall(cycle[i + 1], uD.y, uD.x)) {
+        find_breakleft = TRUE;
+        shortleft = TRUE;
+      } else if (see_wall(cycle[i + 1], *y_ptr, *x_ptr)) {
+        find_breakleft = TRUE;
+        deepleft = TRUE;
       }
-      /* else if there is a wall two spaces ahead and seem to be in a
-         corridor, then force a turn into the side corridor, must
-         be moving straight into a corridor here */
-      else if (see_wall(cycle[i], *y_ptr, *x_ptr)) {
-        if (shortleft && !shortright)
-          find_prevdir = cycle[i - 2];
-        else if (shortright && !shortleft)
-          find_prevdir = cycle[i + 2];
+      if (see_wall(cycle[i - 1], uD.y, uD.x)) {
+        find_breakright = TRUE;
+        shortright = TRUE;
+      } else if (see_wall(cycle[i - 1], *y_ptr, *x_ptr)) {
+        find_breakright = TRUE;
+        deepright = TRUE;
       }
-    } else
-      find_openarea = TRUE;
+      if (find_breakleft && find_breakright) {
+        find_openarea = FALSE;
+        if (dir & 1) { /* a hack to allow angled corridor entry */
+          if (deepleft && !deepright)
+            find_prevdir = cycle[i - 1];
+          else if (deepright && !deepleft)
+            find_prevdir = cycle[i + 1];
+        }
+        /* else if there is a wall two spaces ahead and seem to be in a
+           corridor, then force a turn into the side corridor, must
+           be moving straight into a corridor here */
+        else if (see_wall(cycle[i], *y_ptr, *x_ptr)) {
+          if (shortleft && !shortright)
+            find_prevdir = cycle[i - 2];
+          else if (shortright && !shortleft)
+            find_prevdir = cycle[i + 2];
+        }
+      } else
+        find_openarea = TRUE;
+    }
   }
 }
 static int
@@ -3159,7 +3169,6 @@ void find_event(y, x) int y, x;
   register int i, max, option, option2;
   struct caveS* c_ptr;
 
-  // if (py.flags.blind < 1)
   option = 0;
   option2 = 0;
   dir = find_prevdir;
@@ -4225,7 +4234,7 @@ int factor;
   }
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
   if (TR_SPEED & obj->flags) uD.pspeed -= amount;
-  // if ((TR_BLIND & obj->flags) && (factor > 0)) py.flags.blind += 1000;
+  if ((TR_BLIND & obj->flags) && (factor > 0)) countD.blind += 1000;
   if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
   // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
 }
@@ -4497,16 +4506,21 @@ void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
   for (row = y2 - 1; row <= y2 + 1; ++row) {
     for (col = x2 - 1; col <= x2 + 1; ++col) {
       struct caveS* cave = &caveD[row][col];
-      if (cave->fval >= MIN_WALL)
-        cave->cflag |= CF_PERM_LIGHT;
-      else
-        caveD[row][col].cflag |= CF_TEMP_LIGHT;
-      if (cave->oidx) {
-        struct objS* obj = &entity_objD[cave->oidx];
-        if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
-          cave->cflag |= CF_FIELDMARK;
+      uint32_t cflag = cave->cflag;
+
+      if (countD.blind == 0) {
+        if (cave->fval >= MIN_WALL)
+          cflag |= CF_PERM_LIGHT;
+        else
+          cflag |= CF_TEMP_LIGHT;
+        if (cave->oidx) {
+          struct objS* obj = &entity_objD[cave->oidx];
+          if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
+            cflag |= CF_FIELDMARK;
+          }
         }
       }
+      cave->cflag = cflag;
     }
   }
 }
@@ -5166,12 +5180,11 @@ inven_eat(iidx)
           countD.poison += randint(10) + obj->level;
           ident = TRUE;
           break;
-          // case 2:
-          //   f_ptr->blind += randint(250) + 10 * obj->level + 100;
-          //   draw_cave();
-          //   msg_print("A veil of darkness surrounds you.");
-          //   ident = TRUE;
-          //   break;
+        case 2:
+          countD.blind += randint(250) + 10 * obj->level + 100;
+          msg_print("A veil of darkness surrounds you.");
+          ident = TRUE;
+          break;
         case 3:
           countD.fear += randint(10) + obj->level;
           msg_print("You feel terrified!");
@@ -5190,16 +5203,15 @@ inven_eat(iidx)
         //  break;
         case 6:
           ident = countD.poison > 0;
-          countD.poison = 1;
+          countD.poison = MIN(countD.poison, 1);
           break;
-          // case 7:
-          //   ident = cure_blindness();
-          //   break;
+        case 7:
+          ident = countD.blind > 0;
+          countD.blind = MIN(countD.blind, 1);
+          break;
         case 8:
-          if (countD.fear > 1) {
-            countD.fear = 1;
-            ident = TRUE;
-          }
+          ident = countD.fear > 0;
+          countD.fear = MIN(countD.fear, 1);
           break;
         // case 9:
         //   ident = cure_confusion();
@@ -5409,14 +5421,13 @@ inven_quaff(iidx)
           countD.paralysis += randint(4) + 4;
           ident = TRUE;
           break;
-          // case 20:
-          //
-          //   if (f_ptr->blind == 0) {
-          //     msg_print("You are covered by a veil of darkness.");
-          //     ident = TRUE;
-          //   }
-          //   f_ptr->blind += randint(100) + 100;
-          //   break;
+        case 20:
+          if (countD.blind == 0) {
+            msg_print("You are covered by a veil of darkness.");
+            ident = TRUE;
+          }
+          countD.blind += randint(100) + 100;
+          break;
         case 21:
           if (countD.confusion == 0) {
             msg_print("Hey!  This is good stuff!  * Hick! *");
@@ -5457,15 +5468,16 @@ inven_quaff(iidx)
             ident = TRUE;
           }
           break;
-        // case 29:
-        //   ident = cure_blindness();
-        //   break;
+        case 29:
+          ident = countD.blind > 0;
+          countD.blind = MIN(countD.blind, 1);
+          break;
         // case 30:
         //   ident = cure_confusion();
         //   break;
         case 31:
           ident = countD.poison > 0;
-          countD.poison = 1;
+          countD.poison = MIN(countD.poison, 1);
           break;
         case 34:
           if (uD.exp > 0) {
@@ -5530,7 +5542,7 @@ inven_quaff(iidx)
           break;
         case 45:
           ident = countD.poison > 0;
-          countD.poison = 1;
+          countD.poison = MIN(countD.poison, 1);
           break;
         // case 46:
         //   m_ptr = &py.misc;
@@ -6077,18 +6089,17 @@ void inven_invoke(iidx, uy, ux) int *uy, *ux;
           //   break;
         case 20:
           if (equip_remove_curse()) {
-            // if (py.flags.blind < 1)
-            msg_print("The staff glows blue for a moment..");
-            ident = TRUE;
+            ident = see_print("The staff glows blue for a moment..");
           }
           break;
           // case 21:
           //   ident = detect_evil();
           //   break;
         case 22:
-          ident = countD.poison > 0;
+          ident = countD.poison > 0 || countD.blind > 0 || countD.confusion > 0;
           countD.poison = 1;
-          // if ((cure_blindness()) || (cure_confusion())) ident = TRUE;
+          countD.blind = 1;
+          countD.confusion = 1;
           break;
         // case 23:
         //   ident = dispel_creature(CD_EVIL, 60);
@@ -6742,14 +6753,12 @@ static void mon_attack(midx) int midx;
           break;
         case 10: /*Blindness attack*/
           py_take_hit(damage);
-          //
-          // if (f_ptr->blind < 1) {
-          //  f_ptr->blind += 10 + randint((int)r_ptr->level);
-          //  msg_print("Your eyes begin to sting.");
-          //} else {
-          //  f_ptr->blind += 5;
-          //  notice = FALSE;
-          //}
+          if (countD.blind < 1) {
+            countD.blind += 10 + randint(cre->level);
+            msg_print("Your eyes begin to sting.");
+          } else {
+            countD.blind += 5;
+          }
           break;
         case 11: /*Paralysis attack*/
           py_take_hit(damage);
@@ -6860,10 +6869,7 @@ static void mon_attack(midx) int midx;
           struct objS* obj = obj_get(invenD[INVEN_LIGHT]);
           if (obj->p1 > 0) {
             obj->p1 = MAX(obj->p1 - 250 + randint(250), 1);
-            // if (py.flags.blind < 1)
-            msg_print("Your light dims.");
-            // else
-            //   notice = FALSE;
+            see_print("Your light dims.");
           }
         } break;
         case 24: /*Eat charges    */
@@ -7124,7 +7130,7 @@ static void py_search(y, x, chance) int y, x, chance;
   msg_print("You search the area.");
   // TBD: tuning; used to divide by 10
   if (countD.confusion) chance /= 8;
-  // if ((p_ptr->blind > 0) || no_light()) chance = chance / 10;
+  if (countD.blind || invenD[INVEN_LIGHT] == 0) chance /= 8;
   // if (p_ptr->image > 0) chance = chance / 10;
   for (i = (y - 1); i <= (y + 1); i++)
     for (j = (x - 1); j <= (x + 1); j++)
@@ -7152,11 +7158,10 @@ py_look_mon()
   register int y, x, ly, lx, oy, ox;
   int dir;
 
-  // if (py.flags.blind > 0)
-  //   msg_print("You can't see a damn thing!");
+  if (countD.blind) msg_print("You can't see a damn thing!");
   // else if (py.flags.image > 0)
   //   msg_print("You can't believe what you are seeing! It's like a dream!");
-  if (get_dir("Look which direction?", &dir)) {
+  else if (get_dir("Look which direction?", &dir)) {
     y = uD.y;
     x = uD.x;
     ly = dir_y(dir);
@@ -7190,11 +7195,10 @@ py_look_obj()
   register int y, x, ly, lx, oy, ox;
   int dir;
 
-  // if (py.flags.blind > 0)
-  //   msg_print("You can't see a damn thing!");
+  if (countD.blind) msg_print("You can't see a damn thing!");
   // else if (py.flags.image > 0)
   //   msg_print("You can't believe what you are seeing! It's like a dream!");
-  if (get_dir("Look which direction?", &dir)) {
+  else if (get_dir("Look which direction?", &dir)) {
     y = uD.y;
     x = uD.x;
     ly = dir_y(dir);
@@ -7432,14 +7436,14 @@ mon_cast_spell(midx)
         else
           countD.paralysis = randint(5) + 4;
         break;
-        // case 11: /*Cause Blindness*/
-        //   if (player_saves())
-        //     msg_print("You resist the effects of the spell.");
-        //   else if (py.flags.blind > 0)
-        //     py.flags.blind += 6;
-        //   else
-        //     py.flags.blind += 12 + randint(3);
-        //   break;
+      case 11: /*Cause Blindness*/
+        if (player_saves())
+          msg_print("You resist the effects of the spell.");
+        else if (countD.blind)
+          countD.blind += 6;
+        else
+          countD.blind += 12 + randint(3);
+        break;
       case 12: /*Cause Confuse */
         if (player_saves())
           msg_print("You resist the effects of the spell.");
@@ -7632,7 +7636,6 @@ static void hit_trap(y, x) int y, x;
   struct objS* obj;
 
   tac = uD.pac + uD.ptoac;
-  // end_find();
   c_ptr = &caveD[y][x];
   obj = &entity_objD[c_ptr->oidx];
   if (obj->tval == TV_INVIS_TRAP) {
@@ -7659,6 +7662,8 @@ static void hit_trap(y, x) int y, x;
       dun_level += 1;
       break;
   }
+
+  find_flag = FALSE;
 }
 static void regenhp(percent) int percent;
 {
@@ -7678,6 +7683,15 @@ static void regenhp(percent) int percent;
 
   uD.chp = chp;
   uD.chp_frac = chp_frac;
+}
+void
+py_check_view(y, x)
+{
+  py_move_light(y, x, y, x);
+  struct caveS* c_ptr = &caveD[y][x];
+  if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
+    if (near_light(y, x)) light_room(y, x);
+  }
 }
 void
 tick()
@@ -7721,16 +7735,28 @@ tick()
     disturb(1, 0);
   }
 
+  if (countD.blind) {
+    countD.blind -= 1;
+    if (countD.blind == 0) {
+      msg_print("The veil of darkness lifts.");
+      disturb(0, 1);
+      py_check_view(uD.y, uD.x);
+    }
+  }
+
   if (countD.confusion > 0) {
     countD.confusion -= 1;
     if (countD.confusion == 0) {
       msg_print("You feel less confused.");
-      countD.rest = 0;
+      disturb(0, 0);
     }
   }
   if (countD.fear > 0) {
     countD.fear -= 1;
-    if (countD.fear == 0) msg_print("You feel bolder now.");
+    if (countD.fear == 0) {
+      msg_print("You feel bolder now.");
+      disturb(0, 0);
+    }
   }
 
   if (countD.rest < 0) {
@@ -7740,15 +7766,6 @@ tick()
     countD.rest -= 1;
   }
   if (countD.paralysis) countD.paralysis -= 1;
-}
-void py_check_view(y, x) int y, x;
-{
-  panel_update(&panelD, y, x, TRUE);
-  py_move_light(y, x, y, x);
-  struct caveS* c_ptr = &caveD[y][x];
-  if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
-    if (near_light(y, x)) light_room(y, x);
-  }
 }
 void
 dungeon()
@@ -8006,19 +8023,22 @@ dungeon()
               msg_print("You are too afraid!");
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
             py_move_light(uD.y, uD.x, y, x);
-            if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
+            if (countD.blind == 0 && ((c_ptr->cflag & CF_PERM_LIGHT) == 0 &&
+                                      c_ptr->cflag & CF_ROOM)) {
               if (near_light(y, x)) light_room(y, x);
             }
             int oy = uD.y;
             int ox = uD.x;
             uD.y = y;
             uD.x = x;
-            if (find_flag) find_event(y, x);
-            if (obj->tval) {
-              find_flag = FALSE;
-              if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
-                hit_trap(y, x);
-              } else {
+
+            if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
+              hit_trap(y, x);
+            }
+            if (countD.blind == 0) {
+              if (find_flag) find_event(y, x);
+              if (obj->tval) {
+                find_flag = FALSE;
                 py_pickup(y, x, FALSE);
               }
             }
@@ -8080,6 +8100,7 @@ main()
   magic_init();
 
   while (!death) {
+    panel_update(&panelD, uD.y, uD.x, TRUE);
     py_check_view(uD.y, uD.x);
     dungeon();
 

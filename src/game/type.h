@@ -36,6 +36,7 @@ static struct uS uD;
 // Count player status
 struct countS {
   int poison;
+  int blind;
   int confusion;
   int fear;
   int rest;
