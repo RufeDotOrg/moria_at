@@ -5605,16 +5605,14 @@ inven_quaff(iidx)
         case 40:
           ident = restore_level();
           break;
-          // case 41:
-          //
-          //   if (f_ptr->resist_heat == 0) ident = TRUE;
-          //   f_ptr->resist_heat += randint(10) + 10;
-          //   break;
-          // case 42:
-          //
-          //   if (f_ptr->resist_cold == 0) ident = TRUE;
-          //   f_ptr->resist_cold += randint(10) + 10;
-          //   break;
+        case 41:
+          if (maD[MA_AFIRE] == 0) ident = TRUE;
+          maD[MA_AFIRE] += randint(10) + 10;
+          break;
+        case 42:
+          if (maD[MA_AFROST] == 0) ident = TRUE;
+          maD[MA_AFROST] += randint(10) + 10;
+          break;
           // case 43:
           //   if (py.flags.detect_inv == 0) ident = TRUE;
           //   detect_inv2(randint(12) + 12);
@@ -6557,7 +6555,7 @@ fire_dam(dam)
 {
   // TBD: Resistance
   // if (py.flags.fire_resist) dam = dam / 3;
-  // if (py.flags.resist_heat > 0) dam = dam / 3;
+  if (maD[MA_AFIRE]) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_fire, 3) > 0)
     msg_print("There is smoke coming from your pack!");
@@ -6574,10 +6572,10 @@ void acid_dam(dam) int dam;
   if (inven_damage(vuln_acid, 3) > 0)
     msg_print("There is an acrid smell coming from your pack!");
 }
-void cold_dam(dam) int dam;
+void frost_dam(dam) int dam;
 {
   // if (py.flags.cold_resist) dam = dam / 3;
-  // if (py.flags.resist_cold > 0) dam = dam / 3;
+  if (maD[MA_AFROST] > 0) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_frost, 5) > 0)
     msg_print("Something shatters inside your pack!");
@@ -6824,9 +6822,9 @@ static void mon_attack(midx) int midx;
           msg_print("You are covered in acid!");
           acid_dam(damage);
           break;
-        case 7: /*Cold attack  */
+        case 7: /*Frost attack  */
           msg_print("You are covered with frost!");
-          cold_dam(damage);
+          frost_dam(damage);
           break;
         case 8: /*Lightning attack*/
           msg_print("Lightning strikes you!");
@@ -7435,7 +7433,7 @@ breath(typ, y, x, dam_hp, midx)
       acid_dam(dam);
       break;
     case GF_FROST:
-      cold_dam(dam);
+      frost_dam(dam);
       break;
     case GF_FIRE:
       fire_dam(dam);
