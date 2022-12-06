@@ -5203,6 +5203,46 @@ speed_monsters(spd)
   });
   return (see_count);
 }
+// TBD: very similar bolt()
+int
+speed_monster(dir, y, x, spd)
+int dir, y, x, spd;
+{
+  int flag, dist, see_count;
+  register struct caveS* c_ptr;
+  register struct monS* m_ptr;
+  register struct creatureS* cr_ptr;
+
+  see_count = 0;
+  flag = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else if (c_ptr->midx) {
+      flag = TRUE;
+      m_ptr->msleep = 0;
+      mon_desc(c_ptr->midx);
+      m_ptr = &entity_monD[c_ptr->midx];
+      cr_ptr = &creatureD[m_ptr->cidx];
+      if (spd > 0) {
+        m_ptr->mspeed += spd;
+        MSG("%s starts moving faster.", descD);
+        see_count += 1;
+      } else if (randint(MAX_MON_LEVEL) > cr_ptr->level) {
+        m_ptr->mspeed += spd;
+        MSG("%s starts moving slower.", descD);
+        see_count += 1;
+      } else {
+        MSG("%s is unaffected.", descD);
+      }
+    }
+  } while (!flag);
+  return (see_count);
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -5937,21 +5977,21 @@ inven_zap_dir(iidx, dir)
           fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_nameD[22]);
           ident = TRUE;
           break;
-        // case 5:
-        //   ident = wall_to_mud(dir, y, x);
-        //   break;
-        // case 6:
-        //   ident = poly_monster(dir, y, x);
-        //   break;
-        // case 7:
-        //   ident = hp_monster(dir, y, x, -damroll(4, 6));
-        //   break;
-        // case 8:
-        //   ident = speed_monster(dir, y, x, 1);
-        //   break;
-        // case 9:
-        //   ident = speed_monster(dir, y, x, -1);
-        //   break;
+          // case 5:
+          //   ident = wall_to_mud(dir, y, x);
+          //   break;
+          // case 6:
+          //   ident = poly_monster(dir, y, x);
+          //   break;
+          // case 7:
+          //   ident = hp_monster(dir, y, x, -damroll(4, 6));
+          //   break;
+        case 8:
+          ident = speed_monster(dir, y, x, 1);
+          break;
+        case 9:
+          ident = speed_monster(dir, y, x, -1);
+          break;
         // case 10:
         //   ident = confuse_monster(dir, y, x);
         //   break;
