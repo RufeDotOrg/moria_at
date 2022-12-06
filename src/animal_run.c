@@ -4070,7 +4070,7 @@ void calc_hitpoints(level) int level;
 void
 calc_bonuses()
 {
-  int it;
+  int val;
   // p_ptr = &py.flags;
   // m_ptr = &py.misc;
   // if (p_ptr->slow_digest) p_ptr->food_digest++;
@@ -4097,7 +4097,7 @@ calc_bonuses()
   uD.ptodam = todam_adj(); /* Real To Dam   */
   uD.ptoac = toac_adj();   /* Real To AC    */
   uD.pac = 0;              /* Real AC       */
-  for (it = INVEN_WIELD; it < INVEN_LIGHT; it++) {
+  for (int it = INVEN_WIELD; it < INVEN_LIGHT; it++) {
     struct objS* obj = obj_get(invenD[it]);
     uD.ptohit += obj->tohit;
     if (obj->tval != TV_BOW) /* Bows can't damage. -CJS- */
@@ -4111,15 +4111,22 @@ calc_bonuses()
   //      (py.stats.use_stat[A_STR] * 15 - inventory[INVEN_WIELD].weight);
 
   /* Add in temporary spell increases  */
-  // if (p_ptr->invuln > 0) {
-  //  m_ptr->pac += 100;
-  //  m_ptr->dis_ac += 100;
-  //}
-  // if (p_ptr->blessed > 0) {
-  //  m_ptr->pac += 2;
-  //  m_ptr->dis_ac += 2;
-  //}
-  // if (p_ptr->detect_inv > 0) p_ptr->see_inv = TRUE;
+  val = 0;
+  for (uint32_t it = 1; it != 0; it <<= 1, val += 1) {
+    if (uD.mflag & it) {
+      switch (val) {
+        case MA_INVULN:
+          uD.pac += 100;
+          // m_ptr->dis_ac += 100;
+          break;
+        case MA_BLESS:
+          uD.pac += 2;
+          // uD.dis_ac += 2;
+          break;
+      }
+    }
+  }
+  // TBD: if (p_ptr->detect_inv > 0) p_ptr->see_inv = TRUE;
 
   // item_flags = 0;
   // i_ptr = &inventory[INVEN_WIELD];
@@ -4239,6 +4246,7 @@ int factor;
   // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
 }
 // TBD: various
+// Combat bonuses are applied in calc_bonuses
 void
 ma_bonuses(maffect, factor)
 {
@@ -4247,8 +4255,6 @@ ma_bonuses(maffect, factor)
     case MA_BLESS:
       uD.bth += factor * 5;
       // uD.bthb += factor * 5;
-      uD.pac += factor * 2;
-      // uD.dis_ac += factor * 2;
       if (factor > 0)
         msg_print("You feel righteous!");
       else if (factor < 0)
@@ -4301,8 +4307,6 @@ ma_bonuses(maffect, factor)
         msg_print("You no longer feel safe from cold.");
       break;
     case MA_INVULN:
-      uD.pac += factor * 100;
-      // uD.dis_ac += factor * 100;
       if (factor > 0)
         msg_print("Your skin turns into steel!");
       else if (factor < 0)
@@ -7804,6 +7808,7 @@ ma_tick()
     }
   }
   uD.mflag = new_mflag;
+  if (delta) calc_bonuses();
 }
 void
 tick()
