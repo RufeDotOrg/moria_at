@@ -15,6 +15,8 @@ struct uS {
   int pac;
   int ptoac;
   int pspeed;
+  // Magic affects from spells
+  int ma_ac;
   // Status
   int mflag;
   int food;

@@ -4069,7 +4069,6 @@ void calc_hitpoints(level) int level;
 void
 calc_bonuses()
 {
-  int val;
   // p_ptr = &py.flags;
   // m_ptr = &py.misc;
   // if (p_ptr->slow_digest) p_ptr->food_digest++;
@@ -4110,21 +4109,8 @@ calc_bonuses()
   //      (py.stats.use_stat[A_STR] * 15 - inventory[INVEN_WIELD].weight);
 
   /* Add in temporary spell increases  */
-  val = 0;
-  for (uint32_t it = 1; it != 0; it <<= 1, val += 1) {
-    if (uD.mflag & it) {
-      switch (val) {
-        case MA_INVULN:
-          uD.pac += 100;
-          // m_ptr->dis_ac += 100;
-          break;
-        case MA_BLESS:
-          uD.pac += 2;
-          // uD.dis_ac += 2;
-          break;
-      }
-    }
-  }
+  uD.pac += uD.ma_ac;
+  // uD.dis_ac += uD.ma_ac;
   // TBD: if (p_ptr->detect_inv > 0) p_ptr->see_inv = TRUE;
 
   // item_flags = 0;
@@ -4253,6 +4239,7 @@ ma_bonuses(maffect, factor)
   disturb(0, 0);
   switch (maffect) {
     case MA_BLESS:
+      uD.ma_ac += factor * 2;
       uD.bth += factor * 5;
       // uD.bthb += factor * 5;
       if (factor > 0)
@@ -4307,6 +4294,7 @@ ma_bonuses(maffect, factor)
         msg_print("You no longer feel safe from cold.");
       break;
     case MA_INVULN:
+      uD.ma_ac += factor * 100;
       if (factor > 0)
         msg_print("Your skin turns into steel!");
       else if (factor < 0)
