@@ -4238,6 +4238,54 @@ int factor;
   if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
   // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
 }
+// TBD: various
+void
+ma_bonuses(maffect, factor)
+{
+  disturb(0, 0);
+  switch (maffect) {
+    case MA_BLESS:
+      uD.bth += factor * 5;
+      // uD.bthb += factor * 5;
+      uD.pac += factor * 2;
+      // uD.dis_ac += factor * 2;
+      break;
+    case MA_HERO:
+      uD.chp += (factor > 0) * 10;
+      uD.mhp += factor * 10;
+      uD.bth += factor * 12;
+      // uD.bthb += factor * 12;
+      break;
+    case MA_SUPERHERO:
+      uD.chp += (factor > 0) * 20;
+      uD.mhp += factor * 20;
+      uD.bth += factor * 24;
+      // uD.bthb += factor * 24;
+      break;
+    case MA_FAST:
+      uD.pspeed -= factor * 1;
+      break;
+    case MA_SLOW:
+      uD.pspeed += factor * 1;
+      break;
+    case MA_AFIRE:
+      break;
+    case MA_AFROST:
+      break;
+    case MA_INVULN:
+      uD.pac += factor * 100;
+      // uD.dis_ac += factor * 100;
+      break;
+    case MA_SEE_INVIS:
+      break;
+    case MA_SEE_HEAT:
+      // uD.see_infra += factor * 3;
+      break;
+    default:
+      msg_print("Error in ma_bonuses()");
+      break;
+  }
+}
 BOOL
 player_saves()
 {
