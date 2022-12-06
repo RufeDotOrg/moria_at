@@ -4057,9 +4057,8 @@ void calc_hitpoints(level) int level;
   /* always give at least one point per level + 1 */
   if (hitpoints < (level + 1)) hitpoints = level + 1;
 
-  // TBD: heroism
-  // if (py.flags.status & PY_HERO) hitpoints += 10;
-  // if (py.flags.status & PY_SHERO) hitpoints += 20;
+  if (uD.mflag & (1 << MA_HERO)) hitpoints += 10;
+  if (uD.mflag & (1 << MA_SUPERHERO)) hitpoints += 20;
 
   // Scale current hp to the new maximum
   int value = ((uD.chp << 16) + uD.chp_frac) / uD.mhp * hitpoints;
@@ -4247,6 +4246,7 @@ int factor;
 }
 // TBD: various
 // Combat bonuses are applied in calc_bonuses
+// Hp bonuses are reapplied in calc_hitpoints
 void
 ma_bonuses(maffect, factor)
 {
@@ -5591,14 +5591,14 @@ inven_quaff(iidx)
           //   if (py.flags.invuln == 0) ident = TRUE;
           //   py.flags.invuln += randint(10) + 10;
           //   break;
-          // case 37:
-          //   if (py.flags.hero == 0) ident = TRUE;
-          //   py.flags.hero += randint(25) + 25;
-          //   break;
-          // case 38:
-          //   if (py.flags.shero == 0) ident = TRUE;
-          //   py.flags.shero += randint(25) + 25;
-          //   break;
+        case 37:
+          if (maD[MA_HERO] == 0) ident = TRUE;
+          maD[MA_HERO] += randint(25) + 25;
+          break;
+        case 38:
+          if (maD[MA_SUPERHERO] == 0) ident = TRUE;
+          maD[MA_SUPERHERO] += randint(25) + 25;
+          break;
           // case 39:
           //   ident = remove_fear();
           //   break;
@@ -5821,15 +5821,15 @@ int *uy, *ux;
             ident |= (summon_undead(uD.y, uD.x) != 0);
           }
           break;
-         case 38:
+        case 38:
           ident = TRUE;
           maD[MA_BLESS] += (randint(12) + 6);
           break;
-         case 39:
+        case 39:
           ident = TRUE;
           maD[MA_BLESS] += (randint(24) + 12);
           break;
-         case 40:
+        case 40:
           ident = TRUE;
           maD[MA_BLESS] += (randint(48) + 24);
           break;
@@ -7869,6 +7869,7 @@ tick()
     }
   }
   if (countD.fear > 0) {
+    if (maD[MA_HERO] || maD[MA_SUPERHERO]) countD.fear = 1;
     countD.fear -= 1;
     if (countD.fear == 0) {
       msg_print("You feel bolder now.");
