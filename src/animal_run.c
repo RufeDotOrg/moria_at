@@ -5587,10 +5587,10 @@ inven_quaff(iidx)
           msg_print("The potion makes you vomit!");
           ident = TRUE;
           break;
-          // case 36:
-          //   if (py.flags.invuln == 0) ident = TRUE;
-          //   py.flags.invuln += randint(10) + 10;
-          //   break;
+        case 36:
+          if (maD[MA_INVULN] == 0) ident = TRUE;
+          maD[MA_INVULN] += randint(10) + 10;
+          break;
         case 37:
           if (maD[MA_HERO] == 0) ident = TRUE;
           maD[MA_HERO] += randint(25) + 25;
