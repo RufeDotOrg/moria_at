@@ -7643,9 +7643,9 @@ void creatures(move) int move;
         move_count = movement_rate(cr_ptr->speed - 10 + uD.pspeed);
         for (; move_count > 0; --move_count) {
           if (mon->msleep) {
-            // py.flags.aggravate
-            // countD.rest
-            if (randint(50) == 1) {
+            if (uD.tflag & TR_AGGRAVATE)
+              mon->msleep = 0;
+            else if (randint(50) == 1) {
               int notice = randint(1024);
               if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
                 mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
