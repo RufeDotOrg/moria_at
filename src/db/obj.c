@@ -3971,7 +3971,7 @@ struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"Resist Heat",
+    {"Fire Absorbtion",
      0x00000100L,
      TV_POTION2,
      '!', /*261*/
@@ -3986,7 +3986,7 @@ struct treasureS treasureD[] = {
      0,
      {1, 1},
      1},
-    {"Resist Cold",
+    {"Frost Absorbtion",
      0x00000200L,
      TV_POTION2,
      '!', /*262*/
