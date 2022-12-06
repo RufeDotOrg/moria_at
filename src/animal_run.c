@@ -5527,14 +5527,14 @@ inven_quaff(iidx)
           }
           countD.poison += randint(15) + 10;
           break;
-        // case 23:
-        //   if (py.flags.fast == 0) ident = TRUE;
-        //   py.flags.fast += randint(25) + 15;
-        //   break;
-        // case 24:
-        //   if (py.flags.slow == 0) ident = TRUE;
-        //   py.flags.slow += randint(25) + 15;
-        //   break;
+        case 23:
+          if (maD[MA_FAST] == 0) ident = TRUE;
+          maD[MA_FAST] += randint(25) + 15;
+          break;
+        case 24:
+          if (maD[MA_SLOW] == 0) ident = TRUE;
+          maD[MA_SLOW] += randint(25) + 15;
+          break;
         case 26:
           if (inc_stat(A_DEX)) {
             msg_print("You feel more limber!");
@@ -6162,14 +6162,14 @@ void inven_invoke(iidx, uy, ux) int *uy, *ux;
           // case 16:
           //   ident = detect_invisible();
           //   break;
-          // case 17:
-          //   if (py.flags.fast == 0) ident = TRUE;
-          //   py.flags.fast += randint(30) + 15;
-          //   break;
-          // case 18:
-          //   if (py.flags.slow == 0) ident = TRUE;
-          //   py.flags.slow += randint(30) + 15;
-          //   break;
+        case 17:
+          if (maD[MA_FAST] == 0) ident = TRUE;
+          maD[MA_FAST] += randint(30) + 15;
+          break;
+        case 18:
+          if (maD[MA_SLOW] == 0) ident = TRUE;
+          maD[MA_SLOW] += randint(30) + 15;
+          break;
           // case 19:
           //   ident = mass_poly();
           //   break;
@@ -7558,16 +7558,17 @@ mon_cast_spell(midx)
         int midx = summon_undead(uD.y, uD.x);
         update_mon(midx);
       } break;
-        // case 16: /*Slow Person   */
-        //   if (py.flags.free_act)
-        //     msg_print("You are unaffected.");
-        //   else if (player_saves())
-        //     msg_print("You resist the effects of the spell.");
-        //   else if (py.flags.slow > 0)
-        //     py.flags.slow += 2;
-        //   else
-        //     py.flags.slow = randint(5) + 3;
-        //   break;
+      case 16: /*Slow Person   */
+        // if (py.flags.free_act)
+        //   msg_print("You are unaffected.");
+        // else
+        if (player_saves())
+          msg_print("You resist the effects of the spell.");
+        else if (maD[MA_SLOW] > 0)
+          maD[MA_SLOW] += 2;
+        else
+          maD[MA_SLOW] = randint(5) + 3;
+        break;
         // case 17: /*Drain Mana   */
         //   if (uD.cmana > 0) {
         //     disturb(1, 0);
