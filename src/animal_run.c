@@ -5821,18 +5821,18 @@ int *uy, *ux;
             ident |= (summon_undead(uD.y, uD.x) != 0);
           }
           break;
-        // case 38:
-        //  ident = TRUE;
-        //  bless(randint(12) + 6);
-        //  break;
-        // case 39:
-        //  ident = TRUE;
-        //  bless(randint(24) + 12);
-        //  break;
-        // case 40:
-        //  ident = TRUE;
-        //  bless(randint(48) + 24);
-        //  break;
+         case 38:
+          ident = TRUE;
+          maD[MA_BLESS] += (randint(12) + 6);
+          break;
+         case 39:
+          ident = TRUE;
+          maD[MA_BLESS] += (randint(24) + 12);
+          break;
+         case 40:
+          ident = TRUE;
+          maD[MA_BLESS] += (randint(48) + 24);
+          break;
         // case 41:
         //   ident = TRUE;
         //   if (py.flags.word_recall == 0)
