@@ -5169,6 +5169,40 @@ aggravate_monster(dis_affect)
   if (count) msg_print("You hear a sudden stirring in the distance!");
   return (count > 0);
 }
+int
+speed_monsters(spd)
+{
+  register int y, x, see_count;
+  struct creatureS* cr_ptr;
+
+  y = uD.y;
+  x = uD.x;
+  see_count = 0;
+  FOR_EACH(mon, {
+    if (distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT &&
+        los(y, x, mon->fy, mon->fx)) {
+      mon->msleep = 0;
+      mon_desc(it_index);
+      cr_ptr = &creatureD[mon->cidx];
+      if (spd > 0) {
+        mon->mspeed += spd;
+        if (mon->ml) {
+          see_count += 1;
+          MSG("%s starts moving faster.", descD);
+        }
+      } else if (randint(MAX_MON_LEVEL) > cr_ptr->level) {
+        mon->mspeed += spd;
+        if (mon->ml) {
+          MSG("%s starts moving slower.", descD);
+          see_count += 1;
+        }
+      } else if (mon->ml) {
+        MSG("%s resists the affects.", descD);
+      }
+    }
+  });
+  return (see_count);
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -6132,12 +6166,12 @@ void inven_invoke(iidx, uy, ux) int *uy, *ux;
           //   ident = TRUE;
           //   starlite(char_row, char_col);
           //   break;
-          // case 12:
-          //   ident = speed_monsters(1);
-          //   break;
-          // case 13:
-          //   ident = speed_monsters(-1);
-          //   break;
+        case 12:
+          ident = speed_monsters(1);
+          break;
+        case 13:
+          ident = speed_monsters(-1);
+          break;
           // case 14:
           //   ident = sleep_monsters2();
           //   break;
