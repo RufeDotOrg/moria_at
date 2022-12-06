@@ -4069,40 +4069,28 @@ void calc_hitpoints(level) int level;
 void
 calc_bonuses()
 {
-  // p_ptr = &py.flags;
-  // m_ptr = &py.misc;
+  int equip_tflag;
+  struct objS* obj;
+
+  // TBD: edge trigger on regen/slow_digest
   // if (p_ptr->slow_digest) p_ptr->food_digest++;
   // if (p_ptr->regenerate) p_ptr->food_digest -= 3;
-  // p_ptr->see_inv = FALSE;
-  // p_ptr->teleport = FALSE;
-  // p_ptr->free_act = FALSE;
-  // p_ptr->slow_digest = FALSE;
-  // p_ptr->aggravate = FALSE;
-  // p_ptr->sustain_str = FALSE;
-  // p_ptr->sustain_int = FALSE;
-  // p_ptr->sustain_wis = FALSE;
-  // p_ptr->sustain_con = FALSE;
-  // p_ptr->sustain_dex = FALSE;
-  // p_ptr->sustain_chr = FALSE;
-  // p_ptr->fire_resist = FALSE;
-  // p_ptr->acid_resist = FALSE;
-  // p_ptr->cold_resist = FALSE;
-  // p_ptr->regenerate = FALSE;
-  // p_ptr->lght_resist = FALSE;
-  // p_ptr->ffall = FALSE;
 
   uD.ptohit = tohit_adj(); /* Real To Hit   */
   uD.ptodam = todam_adj(); /* Real To Dam   */
   uD.ptoac = toac_adj();   /* Real To AC    */
   uD.pac = 0;              /* Real AC       */
-  for (int it = INVEN_WIELD; it < INVEN_LIGHT; it++) {
+  equip_tflag = 0;
+  for (int it = INVEN_EQUIP; it < MAX_INVEN; it++) {
     struct objS* obj = obj_get(invenD[it]);
     uD.ptohit += obj->tohit;
     if (obj->tval != TV_BOW) /* Bows can't damage. -CJS- */
       uD.ptodam += obj->todam;
     uD.ptoac += obj->toac;
     uD.pac += obj->ac;
+    equip_tflag |= obj->flags;
   }
+  uD.tflag = equip_tflag & ~TR_STATS;
 
   // if (weapon_heavy)
   //  uD.dis_th +=
@@ -4113,27 +4101,10 @@ calc_bonuses()
   // uD.dis_ac += uD.ma_ac;
   // TBD: if (p_ptr->detect_inv > 0) p_ptr->see_inv = TRUE;
 
-  // item_flags = 0;
-  // i_ptr = &inventory[INVEN_WIELD];
-  // for (i = INVEN_WIELD; i < INVEN_LIGHT; i++) {
-  //  item_flags |= i_ptr->flags;
-  //  i_ptr++;
-  //}
-  // if (TR_SLOW_DIGEST & item_flags) p_ptr->slow_digest = TRUE;
-  // if (TR_AGGRAVATE & item_flags) p_ptr->aggravate = TRUE;
-  // if (TR_TELEPORT & item_flags) p_ptr->teleport = TRUE;
-  // if (TR_REGEN & item_flags) p_ptr->regenerate = TRUE;
-  // if (TR_RES_FIRE & item_flags) p_ptr->fire_resist = TRUE;
-  // if (TR_RES_ACID & item_flags) p_ptr->acid_resist = TRUE;
-  // if (TR_RES_COLD & item_flags) p_ptr->cold_resist = TRUE;
-  // if (TR_FREE_ACT & item_flags) p_ptr->free_act = TRUE;
-  // if (TR_SEE_INVIS & item_flags) p_ptr->see_inv = TRUE;
-  // if (TR_RES_LIGHT & item_flags) p_ptr->lght_resist = TRUE;
-  // if (TR_FFALL & item_flags) p_ptr->ffall = TRUE;
-
-  // i_ptr = &inventory[INVEN_WIELD];
-  // for (i = INVEN_WIELD; i < INVEN_LIGHT; i++) {
-  //  if (TR_SUST_STAT & i_ptr->flags) switch (i_ptr->p1) {
+  // TBD: sustain stat
+  // obj = &inventory[INVEN_WIELD];
+  // for (i = INVEN_EQUIP; i < MAX_INVEN; i++) { //  if (TR_SUST_STAT &
+  // obj->flags) switch (obj->p1) {
   //      case 1:
   //        p_ptr->sustain_str = TRUE;
   //        break;
@@ -4155,9 +4126,10 @@ calc_bonuses()
   //      default:
   //        break;
   //    }
-  //  i_ptr++;
+  //  obj++;
   //}
 
+  // TBD: edge trigger on regen/slow_digest
   // if (p_ptr->slow_digest) p_ptr->food_digest--;
   // if (p_ptr->regenerate) p_ptr->food_digest += 3;
 }

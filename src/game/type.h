@@ -15,6 +15,8 @@ struct uS {
   int pac;
   int ptoac;
   int pspeed;
+  // Treasure flags from equipment
+  int tflag;
   // Magic affects from spells
   int ma_ac;
   // Status
