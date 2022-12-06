@@ -233,6 +233,18 @@
 #define TR_INFRA 0x40000000L
 #define TR_CURSED 0x80000000L
 
+#define MA_BLESS 0
+#define MA_HERO 1
+#define MA_SUPERHERO 2
+#define MA_FAST 3
+#define MA_SLOW 4
+#define MA_AFIRE 5
+#define MA_AFROST 6
+#define MA_INVULN 7
+#define MA_SEE_INVIS 8
+#define MA_SEE_HEAT 9
+#define MA_COUNT 10
+
 #define OBJ_BOLT_RANGE	 18   /* Maximum range of bolts and balls      */
 
 /* Creature constants						*/

@@ -33,7 +33,7 @@ struct uS {
 };
 static struct uS uD;
 
-// Count player status
+// Player ailment counters
 struct countS {
   int poison;
   int blind;
@@ -43,6 +43,8 @@ struct countS {
   int paralysis;
 };
 static struct countS countD;
+// Magic affect counters
+static int maD[MA_COUNT];
 
 struct raceS {
   char *name;          /* Type of race			*/
