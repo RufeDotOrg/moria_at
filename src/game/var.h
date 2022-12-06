@@ -16,6 +16,9 @@ static char msglen_cqD[MAX_MSG];
 static uint32_t msg_writeD;
 static uint32_t msg_countD;
 
+// Magic affect counters & names
+static int maD[MA_COUNT];
+
 uint32_t player_exp[MAX_PLAYER_LEVEL] = {
     10,      25,       45,       70,       100,      140,     200,
     280,     380,      500,      650,      850,      1100,    1400,

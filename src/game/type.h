@@ -16,6 +16,7 @@ struct uS {
   int ptoac;
   int pspeed;
   // Status
+  int mflag;
   int food;
   int food_digest;
   uint8_t clidx;  // class
@@ -43,8 +44,6 @@ struct countS {
   int paralysis;
 };
 static struct countS countD;
-// Magic affect counters
-static int maD[MA_COUNT];
 
 struct raceS {
   char *name;          /* Type of race			*/

@@ -4249,32 +4249,64 @@ ma_bonuses(maffect, factor)
       // uD.bthb += factor * 5;
       uD.pac += factor * 2;
       // uD.dis_ac += factor * 2;
+      if (factor > 0)
+        msg_print("You feel righteous!");
+      else if (factor < 0)
+        msg_print("The prayer has expired.");
       break;
     case MA_HERO:
       uD.chp += (factor > 0) * 10;
       uD.mhp += factor * 10;
       uD.bth += factor * 12;
       // uD.bthb += factor * 12;
+      if (factor > 0)
+        msg_print("You feel like a HERO!");
+      else if (factor < 0)
+        msg_print("The heroism wears off.");
       break;
     case MA_SUPERHERO:
       uD.chp += (factor > 0) * 20;
       uD.mhp += factor * 20;
       uD.bth += factor * 24;
       // uD.bthb += factor * 24;
+      if (factor > 0)
+        msg_print("You feel like a SUPER-HERO!");
+      else if (factor < 0)
+        msg_print("The super heroism wears off.");
       break;
     case MA_FAST:
       uD.pspeed -= factor * 1;
+      if (factor > 0)
+        msg_print("You feel yourself moving faster.");
+      else if (factor < 0)
+        msg_print("You feel yourself slow down.");
       break;
     case MA_SLOW:
       uD.pspeed += factor * 1;
+      if (factor > 0)
+        msg_print("You feel yourself moving slower.");
+      else if (factor < 0)
+        msg_print("You feel yourself speed up.");
       break;
     case MA_AFIRE:
+      if (factor > 0)
+        msg_print("You feel safe from flame.");
+      else if (factor < 0)
+        msg_print("You no longer feel safe from flame.");
       break;
     case MA_AFROST:
+      if (factor > 0)
+        msg_print("You feel safe from cold.");
+      else if (factor < 0)
+        msg_print("You no longer feel safe from cold.");
       break;
     case MA_INVULN:
       uD.pac += factor * 100;
       // uD.dis_ac += factor * 100;
+      if (factor > 0)
+        msg_print("Your skin turns into steel!");
+      else if (factor < 0)
+        msg_print("Your skin returns to normal.");
       break;
     case MA_SEE_INVIS:
       break;
@@ -7744,6 +7776,36 @@ py_check_view(y, x)
   }
 }
 void
+ma_tick()
+{
+  uint32_t mflag, new_mflag, delta;
+  int val;
+
+  mflag = uD.mflag;
+  new_mflag = 0;
+  for (int it = 0; it < AL(maD); ++it) {
+    val = maD[it];
+    if (val) {
+      val -= 1;
+      maD[it] = val;
+      new_mflag |= (1 << it);
+    }
+  }
+
+  delta = mflag ^ new_mflag;
+  val = 0;
+  for (uint32_t it = 1; it != 0; it <<= 1, val += 1) {
+    if (delta & it) {
+      if (new_mflag & it) {
+        ma_bonuses(val, 1);
+      } else {
+        ma_bonuses(val, -1);
+      }
+    }
+  }
+  uD.mflag = new_mflag;
+}
+void
 tick()
 {
   int regen_amount;
@@ -7816,6 +7878,8 @@ tick()
     countD.rest -= 1;
   }
   if (countD.paralysis) countD.paralysis -= 1;
+
+  ma_tick();
 }
 void
 dungeon()
