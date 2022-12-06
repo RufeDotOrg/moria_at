@@ -4081,7 +4081,7 @@ calc_bonuses()
   uD.ptoac = toac_adj();   /* Real To AC    */
   uD.pac = 0;              /* Real AC       */
   equip_tflag = 0;
-  for (int it = INVEN_EQUIP; it < MAX_INVEN; it++) {
+  for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
     uD.ptohit += obj->tohit;
     if (obj->tval != TV_BOW) /* Bows can't damage. -CJS- */
@@ -4103,7 +4103,7 @@ calc_bonuses()
 
   // TBD: sustain stat
   // obj = &inventory[INVEN_WIELD];
-  // for (i = INVEN_EQUIP; i < MAX_INVEN; i++) { //  if (TR_SUST_STAT &
+  // for (i = INVEN_EQUIP; i < INVEN_EQUIP_END; i++) { //  if (TR_SUST_STAT &
   // obj->flags) switch (obj->p1) {
   //      case 1:
   //        p_ptr->sustain_str = TRUE;
@@ -4292,7 +4292,7 @@ player_saves()
 static int
 equip_cursed()
 {
-  for (int it = INVEN_EQUIP; it < MAX_INVEN; ++it) {
+  for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
     struct objS* obj = obj_get(invenD[it]);
     if (obj->flags & TR_CURSED) return it;
   }

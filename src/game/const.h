@@ -374,6 +374,7 @@
 #define INVEN_FEET 30
 #define INVEN_OUTER 31
 #define INVEN_LIGHT 32
+#define INVEN_EQUIP_END 33
 #define INVEN_AUX 33
 #define MAX_INVEN 34
 
