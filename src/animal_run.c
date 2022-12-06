@@ -5143,6 +5143,25 @@ char* bolt_typ;
     oldx = x;
   } while (!flag);
 }
+int
+aggravate_monster(dis_affect)
+{
+  register int y, x, count;
+
+  y = uD.y;
+  x = uD.x;
+  count = 0;
+  FOR_EACH(mon, {
+    mon->msleep = 0;
+    if (distance(mon->fy, mon->fx, y, x) <= dis_affect) {
+      count += 1;
+      // TBD: monster speed / spell affects
+      // if (mon->cspeed < 2) mon->cspeed += 1;
+    }
+  });
+  if (count) msg_print("You hear a sudden stirring in the distance!");
+  return (count > 0);
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -5723,11 +5742,12 @@ int *uy, *ux;
         // case 20:
         //   ident = detect_invisible();
         //   break;
-        // case 21:
-        //   msg_print("There is a high pitched humming noise.");
-        //   (void)aggravate_monster(20);
-        //   ident = TRUE;
-        //   break;
+        case 21:
+          if (aggravate_monster(20)) {
+            msg_print("There is a high pitched humming noise.");
+            ident = TRUE;
+          }
+          break;
         // case 22:
         //   ident = trap_creation();
         //   break;
@@ -6895,7 +6915,7 @@ static void mon_attack(midx) int midx;
           py_lose_experience(damage + (uD.exp / 100) * MON_DRAIN_LIFE);
           break;
         case 20: /*Aggravate monster*/
-          // aggravate_monster(20);
+          aggravate_monster(20);
           break;
         case 21: /*Disenchant     */
           equip_disenchant();
