@@ -187,6 +187,7 @@ struct monS {
   uint16_t cidx;  // creature definition
   uint16_t msleep;
   int hp;
+  int mspeed;
   uint8_t fy;
   uint8_t fx;
   uint8_t cdis;

@@ -5144,9 +5144,17 @@ char* bolt_typ;
   } while (!flag);
 }
 int
+mon_speed(mon)
+struct monS* mon;
+{
+  struct creatureS* cr_ptr;
+  cr_ptr = &creatureD[mon->cidx];
+  return mon->mspeed + cr_ptr->speed - 10 + uD.pspeed;
+}
+int
 aggravate_monster(dis_affect)
 {
-  register int y, x, count;
+  register int y, x, count, mspeed;
 
   y = uD.y;
   x = uD.x;
@@ -5155,8 +5163,7 @@ aggravate_monster(dis_affect)
     mon->msleep = 0;
     if (distance(mon->fy, mon->fx, y, x) <= dis_affect) {
       count += 1;
-      // TBD: monster speed / spell affects
-      // if (mon->cspeed < 2) mon->cspeed += 1;
+      if (mon_speed(mon) < 2) mon->mspeed += 1;
     }
   });
   if (count) msg_print("You hear a sudden stirring in the distance!");
@@ -7640,7 +7647,7 @@ void creatures(move) int move;
     mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
     if (move) {
       if ((cr_ptr->cmove & CM_ATTACK_ONLY) == 0 || mon->cdis < 2) {
-        move_count = movement_rate(cr_ptr->speed - 10 + uD.pspeed);
+        move_count = movement_rate(mon_speed(mon));
         for (; move_count > 0; --move_count) {
           if (mon->msleep) {
             if (uD.tflag & TR_AGGRAVATE)
