@@ -7634,7 +7634,7 @@ breath(typ, y, x, dam_hp, midx)
   // put_qio();
 }
 static int
-mon_cast_spell(midx)
+mon_try_spell(midx)
 {
   uint32_t i;
   int k, y, x, chance, thrown_spell, r1;
@@ -7643,13 +7643,16 @@ mon_cast_spell(midx)
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
 
-  if (death) return TRUE;
-
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
+
   chance = cr_ptr->spells & CS_FREQ;
+
+  /* confused monsters don't cast; including turn undead */
+  if (m_ptr->mconfused) took_turn = FALSE;
   /* 1 in x chance of casting spell  	   */
-  if (randint(chance) != 1) took_turn = FALSE;
+  else if (randint(chance) != 1)
+    took_turn = FALSE;
   /* Must be within certain range  	   */
   else if (m_ptr->cdis > MAX_SIGHT)
     took_turn = FALSE;
@@ -7812,17 +7815,54 @@ uint32_t* rcmove;
 {
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
-  int took_turn;
+  int mm[9];
+  int took_turn, random, flee;
 
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
-
+  AC(mm);
   took_turn = FALSE;
-  if (cr_ptr->spells & CS_FREQ) took_turn = mon_cast_spell(midx);
+  random = FALSE;
+  flee = FALSE;
+
+  // multiply monster
+
+  if (cr_ptr->spells & CS_FREQ) took_turn = mon_try_spell(midx);
+
   if (!took_turn) {
-    int mm[9];
-    get_moves(midx, mm);
-    make_move(midx, mm, rcmove);
+    if (m_ptr->mconfused) {
+      m_ptr->mconfused -= 1;
+      random = TRUE;
+      // Undead are confused by turn undead and should flee below
+      flee = (cr_ptr->cdefense & CD_UNDEAD);
+    } else if ((cr_ptr->cmove & CM_75_RANDOM) && randint(100) < 75) {
+      random = TRUE;
+    } else if ((cr_ptr->cmove & CM_40_RANDOM) && randint(100) < 40) {
+      random = TRUE;
+    } else if ((cr_ptr->cmove & CM_20_RANDOM) && randint(100) < 20) {
+      random = TRUE;
+    } else if ((cr_ptr->cmove & CM_MOVE_NORMAL) && randint(200) == 1) {
+      random = TRUE;
+    }
+
+    if (flee) {
+      get_moves(midx, mm);
+      mm[0] = 10 - mm[0];
+      mm[1] = 10 - mm[1];
+      mm[2] = 10 - mm[2];
+      mm[3] = randint(9); /* May attack only if cornered */
+      mm[4] = randint(9);
+    } else if (random) {
+      for (int it = 0; it < 5; ++it) {
+        mm[it] = randint(9);
+      }
+    } else if (m_ptr->cdis < 2 || (cr_ptr->cmove & CM_ATTACK_ONLY) == 0) {
+      get_moves(midx, mm);
+    }
+
+    if (mm[0]) {
+      make_move(midx, mm, rcmove);
+    }
   }
 }
 static int
@@ -7848,34 +7888,32 @@ creatures()
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
-    if ((cr_ptr->cmove & CM_ATTACK_ONLY) == 0 || mon->cdis < 2) {
-      move_count = movement_rate(mon_speed(mon));
-      for (; move_count > 0; --move_count) {
-        if (mon->msleep) {
-          if (uD.tflag & TR_AGGRAVATE)
-            mon->msleep = 0;
-          else if (randint(50) == 1) {
-            int notice = randint(1024);
-            if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
-              mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
-            }
+    move_count = movement_rate(mon_speed(mon));
+    for (; move_count > 0; --move_count) {
+      if (mon->msleep) {
+        if (uD.tflag & TR_AGGRAVATE)
+          mon->msleep = 0;
+        else if (randint(50) == 1) {
+          int notice = randint(1024);
+          if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
+            mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
           }
         }
-        if (mon->stunned != 0) {
-          /* NOTE: Balrog = 100*100 = 10000, it always
-             recovers instantly */
-          if (randint(5000) < cr_ptr->level * cr_ptr->level)
-            mon->stunned = 0;
-          else
-            mon->stunned--;
-          if (mon->stunned == 0) {
-            if (mon->ml) {
-              MSG("The %s recovers and glares at you.", cr_ptr->name);
-            }
-          }
-        }
-        if (mon->msleep == 0 && mon->stunned == 0) mon_move(it_index, &rcmove);
       }
+      if (mon->stunned != 0) {
+        /* NOTE: Balrog = 100*100 = 10000, it always
+           recovers instantly */
+        if (randint(5000) < cr_ptr->level * cr_ptr->level)
+          mon->stunned = 0;
+        else
+          mon->stunned--;
+        if (mon->stunned == 0) {
+          if (mon->ml) {
+            MSG("The %s recovers and glares at you.", cr_ptr->name);
+          }
+        }
+      }
+      if (mon->msleep == 0 && mon->stunned == 0) mon_move(it_index, &rcmove);
     }
 
     update_mon(it_index);
