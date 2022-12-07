@@ -3805,26 +3805,26 @@ int bth, level_adj, pth, ac;
   else
     return FALSE;
 }
-static void mon_death(y, x) int y, x;
-{
-  caveD[y][x].midx = 0;
-}
 static int
 mon_take_hit(midx, dam)
-int midx, dam;
 {
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
+  int death_blow;
+
   mon->msleep = 0;
   mon->hp -= dam;
-  if (mon->hp >= 0) return -1;
+  death_blow = mon->hp < 0;
 
-  mon_death(mon->fy, mon->fx);
-  // TBD: frac_exp
-  uD.exp += (cre->mexp * cre->level) / uD.lev;
-  int cidx = mon->cidx;
-  mon_unuse(mon);
-  return cidx;
+  if (death_blow) {
+    // TBD: frac_exp
+    uD.exp += (cre->mexp * cre->level) / uD.lev;
+
+    caveD[mon->fy][mon->fx].midx = 0;
+    mon_unuse(mon);
+  }
+
+  return death_blow;
 }
 BOOL
 is_a_vowel(c)
@@ -5213,8 +5213,7 @@ char* bolt_typ;
           // if (m_ptr->ml) c_recall[m_ptr->mptr].r_spells |= weapon_type;
         }
         mon_desc(c_ptr->midx);
-        i = mon_take_hit(c_ptr->midx, dam);
-        if (i >= 0) {
+        if (mon_take_hit(c_ptr->midx, dam)) {
           MSG("%s dies in a fit of agony.", descD);
           py_experience();
         } else if (dam > 0) {
@@ -7049,7 +7048,7 @@ py_shield_attack(y, x)
     if (k < 0) k = 0;
 
     /* See if we done it in.  			     */
-    if (mon_take_hit(midx, k) >= 0) {
+    if (mon_take_hit(midx, k)) {
       MSG("You have slain %s.", descD);
       py_experience();
     } else {
@@ -7141,7 +7140,7 @@ py_attack(y, x)
       }
 
       /* See if we done it in.  			 */
-      if (mon_take_hit(midx, k) >= 0) {
+      if (mon_take_hit(midx, k)) {
         MSG("You have slain %s.", descD);
         py_experience();
         blows = 0;
