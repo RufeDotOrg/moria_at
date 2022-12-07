@@ -3319,11 +3319,10 @@ void update_mon(midx) int midx;
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
       if (cave_lit(c_ptr)) {
-        if ((CM_INVISIBLE & cr_ptr->cmove) == 0) flag = TRUE;
-        // else if (py.flags.see_inv) {
-        //   flag = TRUE;
-        //   c_recall[m_ptr->mptr].r_cmove |= CM_INVISIBLE;
-        // }
+        if ((CM_INVISIBLE & cr_ptr->cmove) == 0)
+          flag = TRUE;
+        else if (uD.tflag & TR_SEE_INVIS)
+          flag = TRUE;
       }
       /* Infra vision.   */
       // else if ((py.flags.see_infra > 0) && (m_ptr->cdis <=
@@ -4099,7 +4098,7 @@ calc_bonuses()
   /* Add in temporary spell increases  */
   uD.pac += uD.ma_ac;
   // uD.dis_ac += uD.ma_ac;
-  // TBD: if (p_ptr->detect_inv > 0) p_ptr->see_inv = TRUE;
+  if (maD[MA_SEE_INVIS]) uD.tflag |= TR_SEE_INVIS;
 
   // TBD: sustain stat
   // obj = &inventory[INVEN_WIELD];
@@ -4273,6 +4272,7 @@ ma_bonuses(maffect, factor)
         msg_print("Your skin returns to normal.");
       break;
     case MA_SEE_INVIS:
+      FOR_EACH(mon, { update_mon(it_index); });
       break;
     case MA_SEE_HEAT:
       // uD.see_infra += factor * 3;
@@ -5673,10 +5673,10 @@ inven_quaff(iidx)
           if (maD[MA_AFROST] == 0) ident = TRUE;
           maD[MA_AFROST] += randint(10) + 10;
           break;
-          // case 43:
-          //   if (py.flags.detect_inv == 0) ident = TRUE;
-          //   detect_inv2(randint(12) + 12);
-          //   break;
+        case 43:
+          if ((uD.tflag & TR_SEE_INVIS) == 0) ident = TRUE;
+          maD[MA_SEE_INVIS] += randint(12) + 12;
+          break;
         case 44:
           if (countD.poison > 0) {
             ident = TRUE;
@@ -7711,7 +7711,8 @@ int speed;
     return ((turnD % (2 - speed)) == 0);
   }
 }
-void creatures(move) int move;
+void
+creatures()
 {
   uint32_t rcmove;
   int move_count;
@@ -7719,38 +7720,36 @@ void creatures(move) int move;
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
-    if (move) {
-      if ((cr_ptr->cmove & CM_ATTACK_ONLY) == 0 || mon->cdis < 2) {
-        move_count = movement_rate(mon_speed(mon));
-        for (; move_count > 0; --move_count) {
-          if (mon->msleep) {
-            if (uD.tflag & TR_AGGRAVATE)
-              mon->msleep = 0;
-            else if (randint(50) == 1) {
-              int notice = randint(1024);
-              if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
-                mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
-              }
+    if ((cr_ptr->cmove & CM_ATTACK_ONLY) == 0 || mon->cdis < 2) {
+      move_count = movement_rate(mon_speed(mon));
+      for (; move_count > 0; --move_count) {
+        if (mon->msleep) {
+          if (uD.tflag & TR_AGGRAVATE)
+            mon->msleep = 0;
+          else if (randint(50) == 1) {
+            int notice = randint(1024);
+            if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
+              mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
             }
           }
-          if (mon->stunned != 0) {
-            /* NOTE: Balrog = 100*100 = 10000, it always
-               recovers instantly */
-            if (randint(5000) < cr_ptr->level * cr_ptr->level)
-              mon->stunned = 0;
-            else
-              mon->stunned--;
-            if (mon->stunned == 0) {
-              if (mon->ml) {
-                MSG("The %s recovers and glares at you.", cr_ptr->name);
-              }
-            }
-          }
-          if (mon->msleep == 0 && mon->stunned == 0)
-            mon_move(it_index, &rcmove);
         }
+        if (mon->stunned != 0) {
+          /* NOTE: Balrog = 100*100 = 10000, it always
+             recovers instantly */
+          if (randint(5000) < cr_ptr->level * cr_ptr->level)
+            mon->stunned = 0;
+          else
+            mon->stunned--;
+          if (mon->stunned == 0) {
+            if (mon->ml) {
+              MSG("The %s recovers and glares at you.", cr_ptr->name);
+            }
+          }
+        }
+        if (mon->msleep == 0 && mon->stunned == 0) mon_move(it_index, &rcmove);
       }
     }
+
     update_mon(it_index);
   });
 }
@@ -8238,7 +8237,7 @@ dungeon()
       }
     } while (free_turn_flag && !new_level_flag);
 
-    creatures(TRUE);
+    creatures();
   }
 }
 void
