@@ -19,10 +19,11 @@ struct uS {
   int tflag;
   // Magic affects from spells
   int ma_ac;
-  // Status
   int mflag;
+  // Status
   int food;
   int food_digest;
+  uint8_t confuse_monster;
   uint8_t clidx;  // class
   uint8_t ridx;   // race
   uint8_t male;

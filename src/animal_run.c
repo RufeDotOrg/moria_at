@@ -5938,13 +5938,13 @@ int *uy, *ux;
           new_level_flag = TRUE;
           ident = TRUE;
           break;
-          // case 11:
-          //   if (py.flags.confuse_monster == 0) {
-          //     msg_print("Your hands begin to glow.");
-          //     py.flags.confuse_monster = TRUE;
-          //     ident = TRUE;
-          //   }
-          //   break;
+        case 11:
+          if (uD.confuse_monster == 0) {
+            msg_print("Your hands begin to glow.");
+            uD.confuse_monster = 1;
+            ident = TRUE;
+          }
+          break;
         case 12:
           ident = TRUE;
           map_area();
@@ -6961,6 +6961,18 @@ py_attack(y, x)
       // k += p_ptr->ptodam;
       if (k < 0) k = 0;
 
+      if (uD.confuse_monster) {
+        uD.confuse_monster = 0;
+        msg_print("Your hands stop glowing.");
+        if ((cre->cdefense & CD_NO_SLEEP) ||
+            randint(MAX_MON_LEVEL) < cre->level) {
+          MSG("%s is unaffected by confusion.", descD);
+        } else {
+          MSG("%s appears confused.", descD);
+          mon->mconfused += 2 + randint(16);
+        }
+      }
+
       /* See if we done it in.  			 */
       if (mon_take_hit(midx, k) >= 0) {
         MSG("You have slain %s.", descD);
@@ -7160,6 +7172,18 @@ static void mon_attack(midx) int midx;
             }
           }
         } break;
+      }
+
+      if (uD.confuse_monster) {
+        uD.confuse_monster = 0;
+        msg_print("Your hands stop glowing.");
+        if ((cre->cdefense & CD_NO_SLEEP) ||
+            randint(MAX_MON_LEVEL) < cre->level) {
+          MSG("%s is unaffected by confusion.", descD);
+        } else {
+          MSG("%s appears confused.", descD);
+          mon->mconfused += 2 + randint(16);
+        }
       }
     } else {
       MSG("%s misses you.", descD);
