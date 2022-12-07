@@ -3395,9 +3395,9 @@ void update_mon(midx) int midx;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
   if ((panel_contains(&panelD, fy, fx))) {
-    if ((uD.mflag & (1 << MA_SEE_EVIL)) && (CD_EVIL & cr_ptr->cdefense)) {
+    if ((uD.mflag & (1 << MA_DETECT_EVIL)) && (CD_EVIL & cr_ptr->cdefense)) {
       flag = TRUE;
-    } else if ((uD.mflag & (1 << MA_SEE_MON)) &&
+    } else if ((uD.mflag & (1 << MA_DETECT_MON)) &&
                ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
       flag = TRUE;
     } else if ((m_ptr->cdis <= MAX_SIGHT) && los(uD.y, uD.x, fy, fx)) {
@@ -4342,9 +4342,9 @@ ma_bonuses(maffect, factor)
     case MA_SEE_INFRA:
       uD.see_infra += factor * 3;
       break;
-    case MA_SEE_MON:
+    case MA_DETECT_MON:
       break;
-    case MA_SEE_EVIL:
+    case MA_DETECT_EVIL:
       break;
     default:
       msg_print("Error in ma_bonuses()");
@@ -6071,7 +6071,7 @@ int *uy, *ux;
         case 20:
           if (detect_mon(crset_visible)) {
             ident = TRUE;
-            maD[MA_SEE_MON] = 1;
+            maD[MA_DETECT_MON] = 1;
             msg_print("You sense the presence of monsters!");
           }
           break;
@@ -6500,7 +6500,7 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
         case 21:
           if (detect_mon(crset_evil)) {
             ident = TRUE;
-            maD[MA_SEE_EVIL] = 1;
+            maD[MA_DETECT_EVIL] = 1;
             msg_print("You sense the presence of evil!");
           }
           break;
@@ -8466,7 +8466,7 @@ dungeon()
               detect_obj(oset_pickup);
               detect_obj(oset_trap);
               detect_obj(oset_sdoor);
-              maD[MA_SEE_MON] = 1;
+              maD[MA_DETECT_MON] = 1;
               maD[MA_SEE_INVIS] = 1;
             } break;
             case CTRL('f'): {
