@@ -2330,6 +2330,12 @@ struct creatureS* cre;
   return (cre->cmove & CM_INVISIBLE) == 0;
 }
 int
+crset_invisible(cre)
+struct creatureS* cre;
+{
+  return (cre->cmove & CM_INVISIBLE);
+}
+int
 oset_always_visible(obj)
 struct objS* obj;
 {
@@ -6470,9 +6476,12 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
         case 15:
           ident = py_heal_hit(randint(8));
           break;
-          // case 16:
-          //   ident = detect_invisible();
-          //   break;
+        case 16:
+          if (detect_mon(crset_invisible)) {
+            ident = TRUE;
+            maD[MA_SEE_INVIS] = 1;
+          }
+          break;
         case 17:
           if ((uD.mflag & (1 << MA_FAST)) == 0) ident = TRUE;
           maD[MA_FAST] += randint(30) + 15;
@@ -8459,6 +8468,7 @@ dungeon()
               detect_obj(oset_trap);
               detect_obj(oset_sdoor);
               maD[MA_SEE_MON] = 1;
+              maD[MA_SEE_INVIS] = 1;
             } break;
             case CTRL('f'): {
               struct objS* obj = obj_use();
