@@ -5237,6 +5237,31 @@ sleep_adjacent(y, x)
   return (sleep);
 }
 int
+td_destroy(y, x)
+{
+  register int i, j, destroy;
+  register struct caveS* c_ptr;
+  register struct objS* obj;
+
+  destroy = FALSE;
+  for (i = y - 1; i <= y + 1; i++)
+    for (j = x - 1; j <= x + 1; j++) {
+      c_ptr = &caveD[i][j];
+      obj = &entity_objD[c_ptr->oidx];
+      if (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_OPEN_DOOR ||
+          obj->tval == TV_SECRET_DOOR) {
+        delete_object(i, j);
+        destroy = TRUE;
+      }
+      if (obj->tval == TV_VIS_TRAP || obj->tval == TV_INVIS_TRAP) {
+        delete_object(i, j);
+        destroy = TRUE;
+      }
+      // TBD: Chests?
+    }
+  return (destroy);
+}
+int
 mon_speed(mon)
 struct monS* mon;
 {
@@ -5940,9 +5965,9 @@ int *uy, *ux;
         // case 22:
         //   ident = trap_creation();
         //   break;
-        // case 23:
-        //   ident = td_destroy();
-        //   break;
+        case 23:
+          ident = td_destroy(uD.y, uD.x);
+          break;
         case 24:
           ident = door_creation();
           break;
