@@ -5853,9 +5853,10 @@ int *uy, *ux;
         case 27:
           ident = unlight_area(uD.y, uD.x);
           break;
-          // case 28:
-          //   ident = protect_evil();
-          //   break;
+        case 28:
+          ident = (countD.protevil == 0);
+          countD.protevil += randint(25) + 3 * uD.lev;
+          break;
           // case 29:
           //   ident = TRUE;
           //   create_food();
@@ -7914,6 +7915,10 @@ tick()
     countD.rest -= 1;
   }
   if (countD.paralysis) countD.paralysis -= 1;
+  if (countD.protevil > 0) {
+    countD.protevil -= 1;
+    if (countD.protevil == 0) msg_print("You no longer feel safe from evil.");
+  }
 
   ma_tick();
 }

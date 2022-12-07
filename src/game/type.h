@@ -39,14 +39,16 @@ struct uS {
 };
 static struct uS uD;
 
-// Player ailment counters
 struct countS {
+  // Player ailment counters
   int poison;
   int blind;
   int confusion;
   int fear;
   int rest;
   int paralysis;
+  // Player protection counters
+  int protevil;
 };
 static struct countS countD;
 
