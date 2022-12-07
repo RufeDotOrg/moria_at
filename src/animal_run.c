@@ -5642,9 +5642,10 @@ inven_quaff(iidx)
           if (maD[MA_SUPERHERO] == 0) ident = TRUE;
           maD[MA_SUPERHERO] += randint(25) + 25;
           break;
-          // case 39:
-          //   ident = remove_fear();
-          //   break;
+        case 39:
+          ident = countD.fear > 0;
+          countD.fear = MIN(countD.fear, 1);
+          break;
         case 40:
           ident = restore_level();
           break;
@@ -5671,13 +5672,11 @@ inven_quaff(iidx)
           ident = countD.poison > 0;
           countD.poison = MIN(countD.poison, 1);
           break;
-          case 46:
-          //   m_ptr = &py.misc;
+        case 46:
           //   if (m_ptr->cmana < m_ptr->mana) {
           //     m_ptr->cmana = m_ptr->mana;
           //     ident = TRUE;
-          //     msg_print("Your feel your head clear.");
-          //     prt_cmana();
+          msg_print("Your feel your head clear.");
           //   }
           break;
         case 47:
