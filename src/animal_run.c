@@ -3350,8 +3350,8 @@ detect_obj(int (*valid)())
   int cmax = panelD.panel_col_max;
 
   detect = FALSE;
-  for (i = rmin; i <= rmax; i++)
-    for (j = cmin; j <= cmax; j++) {
+  for (i = rmin; i < rmax; i++)
+    for (j = cmin; j < cmax; j++) {
       c_ptr = &caveD[i][j];
       obj = &entity_objD[c_ptr->oidx];
       if (valid(obj)) {
