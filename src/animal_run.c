@@ -5158,6 +5158,25 @@ dispel_creature(cflag, damage)
   });
   return (dispel);
 }
+int
+mass_genocide(y, x)
+{
+  register int count;
+  register struct creatureS* cr_ptr;
+
+  count = 0;
+  FOR_EACH(mon, {
+    if (distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) {
+      cr_ptr = &creatureD[mon->cidx];
+      if ((cr_ptr->cmove & CM_WIN) == 0) {
+        caveD[mon->fy][mon->fx].midx = 0;
+        mon_unuse(mon);
+        count += 1;
+      }
+    }
+  });
+  return count > 0;
+}
 void
 inven_recharge(iidx, amount)
 {
@@ -5855,30 +5874,30 @@ int *uy, *ux;
           ident = TRUE;
           map_area();
           break;
-        // case 13:
-        //   ident = sleep_monsters1(char_row, char_col);
-        //   break;
-        // case 14:
-        //   ident = TRUE;
-        //   warding_glyph();
-        //   break;
-        // case 15:
-        //   ident = detect_treasure();
-        //   break;
-        // case 16:
-        //   ident = detect_object();
-        //   break;
-        // case 17:
-        //   ident = detect_trap();
-        //   break;
-        // case 18:
-        //   ident = detect_sdoor();
-        //   break;
-        // case 19:
-        //   msg_print("This is a mass genocide scroll.");
-        //   (void)mass_genocide();
-        //   ident = TRUE;
-        //   break;
+          // case 13:
+          //   ident = sleep_monsters1(char_row, char_col);
+          //   break;
+          // case 14:
+          //   ident = TRUE;
+          //   warding_glyph();
+          //   break;
+          // case 15:
+          //   ident = detect_treasure();
+          //   break;
+          // case 16:
+          //   ident = detect_object();
+          //   break;
+          // case 17:
+          //   ident = detect_trap();
+          //   break;
+          // case 18:
+          //   ident = detect_sdoor();
+          //   break;
+        case 19:
+          msg_print("This is a mass genocide scroll.");
+          mass_genocide(uD.y, uD.x);
+          ident = TRUE;
+          break;
         // case 20:
         //   ident = detect_invisible();
         //   break;
