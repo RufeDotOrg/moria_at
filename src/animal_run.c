@@ -3805,6 +3805,74 @@ int bth, level_adj, pth, ac;
   else
     return FALSE;
 }
+// TBD: rewrite
+static void summon_object(y, x, num, typ) int y, x, num, typ;
+{
+  register int i, j, k;
+  register struct caveS* c_ptr;
+  int real_typ;
+
+  if ((typ == 1) || (typ == 5))
+    real_typ = 1; /* typ == 1 -> objects */
+  else
+    real_typ = 256; /* typ == 2 -> gold */
+  do {
+    i = 0;
+    do {
+      j = y - 3 + randint(5);
+      k = x - 3 + randint(5);
+      if (in_bounds(j, k) && los(y, x, j, k)) {
+        c_ptr = &caveD[j][k];
+        if (c_ptr->fval <= MAX_OPEN_SPACE && (c_ptr->oidx == 0)) {
+          if ((typ == 3) || (typ == 7))
+          /* typ == 3 -> 50% objects, 50% gold */
+          {
+            if (randint(100) < 50)
+              real_typ = 1;
+            else
+              real_typ = 256;
+          }
+          if (real_typ == 1)
+            place_object(j, k, (typ >= 4));
+          else
+            place_gold(j, k);
+          // if (test_light(j, k)) res += real_typ;
+          i = 20;
+        }
+      }
+      i++;
+    } while (i <= 20);
+    num--;
+  } while (num != 0);
+}
+void
+mon_death(y, x, flags)
+{
+  int i, number;
+
+  if (flags & CM_CARRY_OBJ)
+    i = 1;
+  else
+    i = 0;
+  if (flags & CM_CARRY_GOLD) i += 2;
+  if (flags & CM_SMALL_OBJ) i += 4;
+
+  number = 0;
+  if ((flags & CM_60_RANDOM) && (randint(100) < 60)) number++;
+  if ((flags & CM_90_RANDOM) && (randint(100) < 90)) number++;
+  if (flags & CM_1D2_OBJ) number += randint(2);
+  if (flags & CM_2D2_OBJ) number += damroll(2, 2);
+  if (flags & CM_4D2_OBJ) number += damroll(4, 2);
+  if (number > 0) summon_object(y, x, number, i);
+
+  if (flags & CM_WIN)
+    if (!death) /* maybe the player died in mid-turn */
+    {
+      total_winner = TRUE;
+      msg_print("*** CONGRATULATIONS *** You have won the game.");
+      msg_print("You cannot save this game, but you may retire when ready.");
+    }
+}
 static int
 mon_take_hit(midx, dam)
 {
@@ -3821,6 +3889,7 @@ mon_take_hit(midx, dam)
     uD.exp += (cre->mexp * cre->level) / uD.lev;
 
     caveD[mon->fy][mon->fx].midx = 0;
+    mon_death(mon->fy, mon->fx, cre->cmove);
     mon_unuse(mon);
   }
 
@@ -5193,24 +5262,16 @@ char* bolt_typ;
         m_ptr = &entity_monD[c_ptr->midx];
         cre = &creatureD[m_ptr->cidx];
 
-        /* light up monster and draw monster, temporarily set
-           pl so that update_mon() will work */
-        i = c_ptr->cflag;
-        c_ptr->cflag |= CF_PERM_LIGHT;
-        update_mon(c_ptr->midx);
-        c_ptr->cflag = i;
-        /* draw monster and clear previous bolt */
-        // put_qio();
+        // TBD: animate?
+        m_ptr->ml = TRUE;
 
         // TBD: lowercase
         mon_desc(c_ptr->midx);
         MSG("The %s strikes %s.", bolt_typ, descD);
         if (harm_type & cre->cdefense) {
           dam = dam * 2;
-          // if (m_ptr->ml) c_recall[m_ptr->mptr].r_cdefense |= harm_type;
         } else if (weapon_type & cre->spells) {
           dam = dam / 4;
-          // if (m_ptr->ml) c_recall[m_ptr->mptr].r_spells |= weapon_type;
         }
         mon_desc(c_ptr->midx);
         if (mon_take_hit(c_ptr->midx, dam)) {
@@ -5222,7 +5283,7 @@ char* bolt_typ;
       } else if (panel_contains(&panelD, y, x)) {
         // TBD: && (py.flags.blind < 1)
         // print('*', y, x);
-        /* show the bolt */
+        /* show the fire_bolt */
         // put_qio();
       }
     }

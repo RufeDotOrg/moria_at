@@ -71,6 +71,7 @@ uint8_t blows_table[][6] = {
 static int turnD;
 static int player_hpD[AL(player_exp)];
 static int death;
+static int total_winner;
 static int dun_level;
 static int free_turn_flag;
 static int new_level_flag;
