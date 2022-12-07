@@ -2443,7 +2443,7 @@ struct treasureS treasureD[] = {
      0x00400000L,
      TV_RING,
      '=', /*159*/
-     4,
+     5,
      750,
      27,
      1,
@@ -2458,7 +2458,7 @@ struct treasureS treasureD[] = {
      0x00400000L,
      TV_RING,
      '=', /*160*/
-     5,
+     4,
      750,
      28,
      1,

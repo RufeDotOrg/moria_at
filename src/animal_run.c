@@ -4069,7 +4069,7 @@ void calc_hitpoints(level) int level;
 void
 calc_bonuses()
 {
-  int equip_tflag;
+  int tflag;
   struct objS* obj;
 
   // TBD: edge trigger on regen/slow_digest
@@ -4080,7 +4080,7 @@ calc_bonuses()
   uD.ptodam = todam_adj(); /* Real To Dam   */
   uD.ptoac = toac_adj();   /* Real To AC    */
   uD.pac = 0;              /* Real AC       */
-  equip_tflag = 0;
+  tflag = 0;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
     uD.ptohit += obj->tohit;
@@ -4088,9 +4088,8 @@ calc_bonuses()
       uD.ptodam += obj->todam;
     uD.ptoac += obj->toac;
     uD.pac += obj->ac;
-    equip_tflag |= obj->flags;
+    tflag |= obj->flags;
   }
-  uD.tflag = equip_tflag & ~TR_STATS;
 
   // if (weapon_heavy)
   //  uD.dis_th +=
@@ -4099,35 +4098,14 @@ calc_bonuses()
   /* Add in temporary spell increases  */
   uD.pac += uD.ma_ac;
   // uD.dis_ac += uD.ma_ac;
-  if (maD[MA_SEE_INVIS]) uD.tflag |= TR_SEE_INVIS;
+  if (maD[MA_SEE_INVIS]) tflag |= TR_SEE_INVIS;
 
-  // TBD: sustain stat
-  // obj = &inventory[INVEN_WIELD];
-  // for (i = INVEN_EQUIP; i < INVEN_EQUIP_END; i++) { //  if (TR_SUST_STAT &
-  // obj->flags) switch (obj->p1) {
-  //      case 1:
-  //        p_ptr->sustain_str = TRUE;
-  //        break;
-  //      case 2:
-  //        p_ptr->sustain_int = TRUE;
-  //        break;
-  //      case 3:
-  //        p_ptr->sustain_wis = TRUE;
-  //        break;
-  //      case 4:
-  //        p_ptr->sustain_con = TRUE;
-  //        break;
-  //      case 5:
-  //        p_ptr->sustain_dex = TRUE;
-  //        break;
-  //      case 6:
-  //        p_ptr->sustain_chr = TRUE;
-  //        break;
-  //      default:
-  //        break;
-  //    }
-  //  obj++;
-  //}
+  tflag &= ~TR_STATS;
+  for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
+    struct objS* obj = obj_get(invenD[it]);
+    if (TR_SUST_STAT & obj->flags) tflag |= sustain_stat(obj->p1 - 1);
+  }
+  uD.tflag = tflag;
 
   // TBD: edge trigger on regen/slow_digest
   // if (p_ptr->slow_digest) p_ptr->food_digest--;
