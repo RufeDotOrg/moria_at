@@ -3400,6 +3400,9 @@ void update_mon(midx) int midx;
     } else if ((uD.mflag & (1 << MA_DETECT_MON)) &&
                ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
       flag = TRUE;
+    } else if ((uD.mflag & (1 << MA_DETECT_INVIS)) &&
+               (CM_INVISIBLE & cr_ptr->cmove)) {
+      flag = true;
     } else if ((m_ptr->cdis <= MAX_SIGHT) && los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
@@ -4345,6 +4348,8 @@ ma_bonuses(maffect, factor)
     case MA_DETECT_MON:
       break;
     case MA_DETECT_EVIL:
+      break;
+    case MA_DETECT_INVIS:
       break;
     default:
       msg_print("Error in ma_bonuses()");
@@ -6478,7 +6483,7 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
         case 16:
           if (detect_mon(crset_invisible)) {
             ident = TRUE;
-            maD[MA_SEE_INVIS] = 1;
+            maD[MA_DETECT_INVIS] = 1;
           }
           break;
         case 17:
@@ -8467,7 +8472,8 @@ dungeon()
               detect_obj(oset_trap);
               detect_obj(oset_sdoor);
               maD[MA_DETECT_MON] = 1;
-              maD[MA_SEE_INVIS] = 1;
+              maD[MA_DETECT_INVIS] = 1;
+              maD[MA_DETECT_EVIL] = 1;
             } break;
             case CTRL('f'): {
               struct objS* obj = obj_use();

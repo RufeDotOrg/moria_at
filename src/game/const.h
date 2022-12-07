@@ -245,7 +245,8 @@
 #define MA_SEE_INFRA 9
 #define MA_DETECT_MON 10
 #define MA_DETECT_EVIL 11
-#define MA_COUNT 12
+#define MA_DETECT_INVIS 12
+#define MA_COUNT 13
 
 #define OBJ_BOLT_RANGE	 18   /* Maximum range of bolts and balls      */
 
