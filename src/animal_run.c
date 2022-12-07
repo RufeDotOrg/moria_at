@@ -4181,7 +4181,7 @@ calc_bonuses()
   /* Add in temporary spell increases  */
   uD.pac += uD.ma_ac;
   // uD.dis_ac += uD.ma_ac;
-  if (maD[MA_SEE_INVIS]) tflag |= TR_SEE_INVIS;
+  if (uD.mflag & (1 << MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
 
   tflag &= ~TR_STATS;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
@@ -5833,11 +5833,11 @@ inven_quaff(iidx)
           countD.poison += randint(15) + 10;
           break;
         case 23:
-          if (maD[MA_FAST] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_FAST)) == 0) ident = TRUE;
           maD[MA_FAST] += randint(25) + 15;
           break;
         case 24:
-          if (maD[MA_SLOW] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_SLOW)) == 0) ident = TRUE;
           maD[MA_SLOW] += randint(25) + 15;
           break;
         case 26:
@@ -5893,15 +5893,15 @@ inven_quaff(iidx)
           ident = TRUE;
           break;
         case 36:
-          if (maD[MA_INVULN] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_INVULN)) == 0) ident = TRUE;
           maD[MA_INVULN] += randint(10) + 10;
           break;
         case 37:
-          if (maD[MA_HERO] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_HERO)) == 0) ident = TRUE;
           maD[MA_HERO] += randint(25) + 25;
           break;
         case 38:
-          if (maD[MA_SUPERHERO] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_SUPERHERO)) == 0) ident = TRUE;
           maD[MA_SUPERHERO] += randint(25) + 25;
           break;
         case 39:
@@ -5912,11 +5912,11 @@ inven_quaff(iidx)
           ident = restore_level();
           break;
         case 41:
-          if (maD[MA_AFIRE] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_AFIRE)) == 0) ident = TRUE;
           maD[MA_AFIRE] += randint(10) + 10;
           break;
         case 42:
-          if (maD[MA_AFROST] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_AFROST)) == 0) ident = TRUE;
           maD[MA_AFROST] += randint(10) + 10;
           break;
         case 43:
@@ -5942,7 +5942,7 @@ inven_quaff(iidx)
           //   }
           break;
         case 47:
-          if (maD[MA_SEE_INFRA] == 0) {
+          if ((uD.mflag & (1 << MA_SEE_INFRA)) == 0) {
             msg_print("Your eyes begin to tingle.");
             ident = TRUE;
           }
@@ -6474,11 +6474,11 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
           //   ident = detect_invisible();
           //   break;
         case 17:
-          if (maD[MA_FAST] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_FAST)) == 0) ident = TRUE;
           maD[MA_FAST] += randint(30) + 15;
           break;
         case 18:
-          if (maD[MA_SLOW] == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_SLOW)) == 0) ident = TRUE;
           maD[MA_SLOW] += randint(30) + 15;
           break;
           // case 19:
@@ -6872,7 +6872,7 @@ fire_dam(dam)
 {
   // TBD: Resistance
   // if (py.flags.fire_resist) dam = dam / 3;
-  if (maD[MA_AFIRE]) dam = dam / 3;
+  if (uD.mflag & (1 << MA_AFIRE)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_fire, 3) > 0)
     msg_print("There is smoke coming from your pack!");
@@ -6892,7 +6892,7 @@ void acid_dam(dam) int dam;
 void frost_dam(dam) int dam;
 {
   // if (py.flags.cold_resist) dam = dam / 3;
-  if (maD[MA_AFROST] > 0) dam = dam / 3;
+  if (uD.mflag & (1 << MA_AFROST)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_frost, 5) > 0)
     msg_print("Something shatters inside your pack!");
@@ -7919,7 +7919,7 @@ mon_try_spell(midx)
           msg_print("You are unaffected by the spell.");
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
-        else if (maD[MA_SLOW] > 0)
+        else if (uD.mflag & (1 << MA_SLOW))
           maD[MA_SLOW] += 2;
         else
           maD[MA_SLOW] = randint(5) + 3;
@@ -8262,7 +8262,8 @@ tick()
     }
   }
   if (countD.fear > 0) {
-    if (maD[MA_HERO] || maD[MA_SUPERHERO]) countD.fear = 1;
+    if ((uD.mflag & (1 << MA_HERO)) || (uD.mflag & (1 << MA_SUPERHERO)))
+      countD.fear = 1;
     countD.fear -= 1;
     if (countD.fear == 0) {
       msg_print("You feel bolder now.");
