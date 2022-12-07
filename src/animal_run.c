@@ -4066,16 +4066,26 @@ void calc_hitpoints(level) int level;
   uD.chp_frac = value & 0xFFFF;
   uD.mhp = hitpoints;
 }
+int
+weight_tohit_adj()
+{
+  struct objS* obj;
+  int use_weight = statD.use_stat[A_STR] * 15;
+
+  obj = obj_get(invenD[INVEN_WIELD]);
+  if (use_weight < obj->weight) return use_weight - obj->weight;
+  return 0;
+}
 void
 calc_bonuses()
 {
   int tflag;
   struct objS* obj;
 
-  uD.ptohit = tohit_adj(); /* Real To Hit   */
-  uD.ptodam = todam_adj(); /* Real To Dam   */
-  uD.ptoac = toac_adj();   /* Real To AC    */
-  uD.pac = 0;              /* Real AC       */
+  uD.ptohit = weight_tohit_adj() + tohit_adj(); /* Real To Hit   */
+  uD.ptodam = todam_adj();                      /* Real To Dam   */
+  uD.ptoac = toac_adj();                        /* Real To AC    */
+  uD.pac = 0;                                   /* Real AC       */
   tflag = 0;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
@@ -4086,10 +4096,6 @@ calc_bonuses()
     uD.pac += obj->ac;
     tflag |= obj->flags;
   }
-
-  // if (weapon_heavy)
-  //  uD.dis_th +=
-  //      (py.stats.use_stat[A_STR] * 15 - inventory[INVEN_WIELD].weight);
 
   /* Add in temporary spell increases  */
   uD.pac += uD.ma_ac;
@@ -6816,49 +6822,42 @@ corrode_gas()
     msg_print("There is an acrid smell coming from your pack.");
 }
 int
-attack_blows(weight, wtohit)
-int weight;
-int* wtohit;
+attack_blows(weight)
 {
   register int adj_weight;
   register int str_index, dex_index, s, d;
 
-  s = statD.use_stat[A_STR];
   d = statD.use_stat[A_DEX];
-  if (s * 15 < weight) {
-    *wtohit = s * 15 - weight;
-    return 1;
-  } else {
-    *wtohit = 0;
-    if (d < 10)
-      dex_index = 0;
-    else if (d < 19)
-      dex_index = 1;
-    else if (d < 68)
-      dex_index = 2;
-    else if (d < 108)
-      dex_index = 3;
-    else if (d < 118)
-      dex_index = 4;
-    else
-      dex_index = 5;
-    adj_weight = (s * 10 / weight);
-    if (adj_weight < 2)
-      str_index = 0;
-    else if (adj_weight < 3)
-      str_index = 1;
-    else if (adj_weight < 4)
-      str_index = 2;
-    else if (adj_weight < 5)
-      str_index = 3;
-    else if (adj_weight < 7)
-      str_index = 4;
-    else if (adj_weight < 9)
-      str_index = 5;
-    else
-      str_index = 6;
-    return blows_table[str_index][dex_index];
-  }
+  if (d < 10)
+    dex_index = 0;
+  else if (d < 19)
+    dex_index = 1;
+  else if (d < 68)
+    dex_index = 2;
+  else if (d < 108)
+    dex_index = 3;
+  else if (d < 118)
+    dex_index = 4;
+  else
+    dex_index = 5;
+
+  s = statD.use_stat[A_STR];
+  adj_weight = (s * 10 / weight);
+  if (adj_weight < 2)
+    str_index = 0;
+  else if (adj_weight < 3)
+    str_index = 1;
+  else if (adj_weight < 4)
+    str_index = 2;
+  else if (adj_weight < 5)
+    str_index = 3;
+  else if (adj_weight < 7)
+    str_index = 4;
+  else if (adj_weight < 9)
+    str_index = 5;
+  else
+    str_index = 6;
+  return blows_table[str_index][dex_index];
 }
 void
 py_shield_attack(y, x)
@@ -6925,21 +6924,21 @@ py_attack(y, x)
   mon->msleep = 0;
   mon_desc(midx);
   descD[0] = tolower(descD[0]);
+  tohit = uD.ptohit;
 
   switch (obj->tval) {
+    default:
+      blows = attack_blows(obj->weight);
+      break;
     case 0:
       blows = 2;
-      tohit = -3;
+      tohit -= 3;
       break;
     case TV_SLING_AMMO:
     case TV_BOLT:
     case TV_ARROW:
     case TV_SPIKE:
       blows = 1;
-      tohit = 0;
-      break;
-    default:
-      blows = attack_blows(obj->weight, &tohit);
       break;
   }
   // TBD: reduce hit if monster not lit
@@ -6958,7 +6957,7 @@ py_attack(y, x)
         k = damroll(1, 1);
         k = critical_blow(1, 0, k);
       }
-      // k += p_ptr->ptodam;
+      k += uD.ptodam;
       if (k < 0) k = 0;
 
       if (uD.confuse_monster) {
