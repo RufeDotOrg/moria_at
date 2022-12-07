@@ -5131,6 +5131,34 @@ char* bolt_typ;
   } while (!flag);
 }
 int
+dispel_creature(cflag, damage)
+{
+  int y, x, dispel;
+  register struct creatureS* cr_ptr;
+
+  y = uD.y;
+  x = uD.x;
+  dispel = FALSE;
+  FOR_EACH(mon, {
+    cr_ptr = &creatureD[mon->cidx];
+    if ((cflag & cr_ptr->cdefense) && (mon->cdis <= MAX_SIGHT) &&
+        los(y, x, mon->fy, mon->fx)) {
+      dispel = TRUE;
+      // c_recall[mon->mptr].r_cdefense |= cflag;
+      mon_desc(it_index);
+      /* Should get these messages even if the monster is not
+         visible.  */
+      if (mon_take_hit(it_index, randint(damage))) {
+        MSG("%s dissolves!", descD);
+        py_experience();
+      } else {
+        MSG("%s shudders.", descD);
+      }
+    }
+  });
+  return (dispel);
+}
+int
 mon_speed(mon)
 struct monS* mon;
 {
@@ -5857,13 +5885,13 @@ int *uy, *ux;
           ident = (countD.protevil == 0);
           countD.protevil += randint(25) + 3 * uD.lev;
           break;
-          // case 29:
-          //   ident = TRUE;
-          //   create_food();
-          //   break;
-          // case 30:
-          //   ident = dispel_creature(CD_UNDEAD, 60);
-          //   break;
+        // case 29:
+        //   ident = TRUE;
+        //   create_food();
+        //   break;
+        case 30:
+          ident = dispel_creature(CD_UNDEAD, 60);
+          break;
         case 33:
           ident = tohit_enchant(randint(2));
           ident |= todam_enchant(randint(2));
