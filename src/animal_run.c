@@ -4629,6 +4629,7 @@ py_init()
   uD.fos = r_ptr->fos;
   uD.disarm = r_ptr->dis;
   uD.stealth = r_ptr->stl;
+  uD.save = r_ptr->bsav;
   uD.see_infra = r_ptr->infra;
   uD.mult_exp = r_ptr->b_exp;
   int male = 1 - randint(2);
