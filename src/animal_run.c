@@ -3395,7 +3395,12 @@ void update_mon(midx) int midx;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
   if ((panel_contains(&panelD, fy, fx))) {
-    if ((m_ptr->cdis <= MAX_SIGHT) && los(uD.y, uD.x, fy, fx)) {
+    if ((uD.mflag & (1 << MA_SEE_EVIL)) && (CD_EVIL & cr_ptr->cdefense)) {
+      flag = TRUE;
+    } else if ((uD.mflag & (1 << MA_SEE_MON)) &&
+               ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
+      flag = TRUE;
+    } else if ((m_ptr->cdis <= MAX_SIGHT) && los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
       if (cave_lit(c_ptr)) {
@@ -3407,12 +3412,6 @@ void update_mon(midx) int midx;
                  (m_ptr->cdis <= uD.see_infra)) {
         flag = TRUE;
       }
-    } else if ((uD.mflag & (1 << MA_SEE_EVIL)) &&
-               (CD_EVIL & cr_ptr->cdefense)) {
-      flag = TRUE;
-    } else if ((uD.mflag & (1 << MA_SEE_MON)) &&
-               ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
-      flag = TRUE;
     }
   }
 
