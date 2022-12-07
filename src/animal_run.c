@@ -6093,7 +6093,7 @@ int *uy, *ux;
   return FALSE;
 }
 int
-inven_zap_dir(iidx, dir)
+inven_try_wand_dir(iidx, dir)
 {
   uint32_t flags, j;
   int y, x, ident, chance;
@@ -6299,10 +6299,10 @@ py_zap(iidx)
         dir = randint(9);
       } while (dir == 5);
     }
-    inven_zap_dir(iidx, dir);
+    inven_try_wand_dir(iidx, dir);
   }
 }
-void inven_invoke(iidx, uy, ux) int *uy, *ux;
+void inven_try_staff(iidx, uy, ux) int *uy, *ux;
 {
   uint32_t flags, j;
   int k, chance;
@@ -8311,7 +8311,7 @@ dungeon()
               break;
             case 'Z':
               iidx = choice("Invoke which staff?");
-              if (iidx >= 0) inven_invoke(iidx, &y, &x);
+              if (iidx >= 0) inven_try_staff(iidx, &y, &x);
               break;
             case '<':
               go_up();
