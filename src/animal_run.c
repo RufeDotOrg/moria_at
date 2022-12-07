@@ -4248,7 +4248,7 @@ ma_bonuses(maffect, factor)
     case MA_SEE_INVIS:
       FOR_EACH(mon, { update_mon(it_index); });
       break;
-    case MA_SEE_HEAT:
+    case MA_SEE_INFRA:
       uD.see_infra += factor * 3;
       break;
     default:
@@ -5671,23 +5671,22 @@ inven_quaff(iidx)
           ident = countD.poison > 0;
           countD.poison = MIN(countD.poison, 1);
           break;
-        // case 46:
-        //   m_ptr = &py.misc;
-        //   if (m_ptr->cmana < m_ptr->mana) {
-        //     m_ptr->cmana = m_ptr->mana;
-        //     ident = TRUE;
-        //     msg_print("Your feel your head clear.");
-        //     prt_cmana();
-        //   }
-        //   break;
-        // case 47:
-        //
-        //   if (f_ptr->tim_infra == 0) {
-        //     msg_print("Your eyes begin to tingle.");
-        //     ident = TRUE;
-        //   }
-        //   f_ptr->tim_infra += 100 + randint(100);
-        //   break;
+          case 46:
+          //   m_ptr = &py.misc;
+          //   if (m_ptr->cmana < m_ptr->mana) {
+          //     m_ptr->cmana = m_ptr->mana;
+          //     ident = TRUE;
+          //     msg_print("Your feel your head clear.");
+          //     prt_cmana();
+          //   }
+          break;
+        case 47:
+          if (maD[MA_SEE_INFRA] == 0) {
+            msg_print("Your eyes begin to tingle.");
+            ident = TRUE;
+          }
+          maD[MA_SEE_INFRA] += 100 + randint(100);
+          break;
         default:
           msg_print("Internal error in potion()");
           break;

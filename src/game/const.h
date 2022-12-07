@@ -242,7 +242,7 @@
 #define MA_AFROST 6
 #define MA_INVULN 7
 #define MA_SEE_INVIS 8
-#define MA_SEE_HEAT 9
+#define MA_SEE_INFRA 9
 #define MA_COUNT 10
 
 #define OBJ_BOLT_RANGE	 18   /* Maximum range of bolts and balls      */
