@@ -6914,17 +6914,23 @@ void
 py_attack(y, x)
 {
   register int k, blows;
-  int base_tohit, tohit;
+  int base_tohit, lev_adj, tohit, todam, creature_ac;
 
   int midx = caveD[y][x].midx;
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
   struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
-  mon->msleep = 0;
-  mon_desc(midx);
-  descD[0] = tolower(descD[0]);
   tohit = uD.ptohit;
+  todam = uD.ptodam;
+  base_tohit = uD.bth;
+  lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
+  // reduce hit if monster not lit
+  if (mon->ml == 0) {
+    tohit = 0;
+    base_tohit /= 2;
+    lev_adj /= 2;
+  }
 
   switch (obj->tval) {
     default:
@@ -6941,14 +6947,14 @@ py_attack(y, x)
       blows = 1;
       break;
   }
-  // TBD: reduce hit if monster not lit
-  base_tohit = uD.bth;
 
-  int adj = uD.lev * level_adj[uD.clidx][LA_BTH];
-  int creature_ac = cre->ac;
+  mon->msleep = 0;
+  mon_desc(midx);
+  descD[0] = tolower(descD[0]);
+  creature_ac = cre->ac;
   /* Loop for number of blows,  trying to hit the critter.	  */
   for (int it = 0; it < blows; ++it) {
-    if (test_hit(uD.bth, adj, tohit, creature_ac)) {
+    if (test_hit(base_tohit, lev_adj, tohit, creature_ac)) {
       MSG("You hit %s.", descD);
       if (obj->tval) {
         k = pdamroll(obj->damage);
@@ -6957,7 +6963,7 @@ py_attack(y, x)
         k = damroll(1, 1);
         k = critical_blow(1, 0, k);
       }
-      k += uD.ptodam;
+      k += todam;
       if (k < 0) k = 0;
 
       if (uD.confuse_monster) {
