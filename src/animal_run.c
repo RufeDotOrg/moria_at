@@ -2324,6 +2324,27 @@ struct objS* obj;
   return (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE);
 }
 int
+oset_pickup(obj)
+struct objS* obj;
+{
+  // Underflow to exclude 0
+  uint8_t tval = obj->tval - 1;
+  return (tval < TV_MAX_PICK_UP);
+}
+int
+oset_trap(obj)
+struct objS* obj;
+{
+  return (obj->tval == TV_INVIS_TRAP || obj->tval == TV_CHEST);
+}
+int
+oset_sdoor(obj)
+struct objS* obj;
+{
+  return (obj->tval == TV_SECRET_DOOR || obj->tval == TV_UP_STAIR ||
+          obj->tval == TV_DOWN_STAIR);
+}
+int
 oset_zap(obj)
 struct objS* obj;
 {
@@ -2379,6 +2400,12 @@ struct objS* obj;
       return TRUE;
   }
   return FALSE;
+}
+int
+oset_gold(obj)
+struct objS* obj;
+{
+  return obj->tval == TV_GOLD;
 }
 int
 set_large(item)         /* Items too large to fit in chests   -DJG- */
@@ -3291,6 +3318,30 @@ void find_event(y, x) int y, x;
       }
     }
   }
+}
+int
+detect_obj(int (*valid)())
+{
+  register int i, j, detect;
+  register struct caveS* c_ptr;
+  struct objS* obj;
+
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+
+  detect = FALSE;
+  for (i = rmin; i <= rmax; i++)
+    for (j = cmin; j <= cmax; j++) {
+      c_ptr = &caveD[i][j];
+      obj = &entity_objD[c_ptr->oidx];
+      if (valid(obj)) {
+        c_ptr->cflag |= CF_FIELDMARK;
+        detect = TRUE;
+      }
+    }
+  return (detect);
 }
 void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 {
@@ -5958,18 +6009,18 @@ int *uy, *ux;
           //   ident = TRUE;
           //   warding_glyph();
           //   break;
-          // case 15:
-          //   ident = detect_treasure();
-          //   break;
-          // case 16:
-          //   ident = detect_object();
-          //   break;
-          // case 17:
-          //   ident = detect_trap();
-          //   break;
-          // case 18:
-          //   ident = detect_sdoor();
-          //   break;
+        case 15:
+          ident = detect_obj(oset_gold);
+          break;
+        case 16:
+          ident = detect_obj(oset_pickup);
+          break;
+        case 17:
+          ident = detect_obj(oset_trap);
+          break;
+        case 18:
+          ident = detect_obj(oset_sdoor);
+          break;
         case 19:
           msg_print("This is a mass genocide scroll.");
           mass_genocide(uD.y, uD.x);
@@ -6332,18 +6383,18 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
         case 1:
           ident = light_area(uD.y, uD.x);
           break;
-          // case 2:
-          //   ident = detect_sdoor();
-          //   break;
-          // case 3:
-          //   ident = detect_trap();
-          //   break;
-          // case 4:
-          //   ident = detect_treasure();
-          //   break;
-          // case 5:
-          //   ident = detect_object();
-          //   break;
+        case 2:
+          ident = detect_obj(oset_sdoor);
+          break;
+        case 3:
+          ident = detect_obj(oset_trap);
+          break;
+        case 4:
+          ident = detect_obj(oset_gold);
+          break;
+        case 5:
+          ident = detect_obj(oset_pickup);
+          break;
         case 6:
           py_teleport(100, uy, ux);
           ident = TRUE;
