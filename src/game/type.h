@@ -33,6 +33,7 @@ struct uS {
   int disarm;
   int stealth;
   int save;
+  int see_infra;
   int mult_exp;  // multiplier for exp-per-level
   int wt;
 };

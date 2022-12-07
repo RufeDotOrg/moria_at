@@ -3323,15 +3323,10 @@ void update_mon(midx) int midx;
           flag = TRUE;
         else if (uD.tflag & TR_SEE_INVIS)
           flag = TRUE;
+      } else if ((CD_INFRA & cr_ptr->cdefense) &&
+                 (m_ptr->cdis <= uD.see_infra)) {
+        flag = TRUE;
       }
-      /* Infra vision.   */
-      // else if ((py.flags.see_infra > 0) && (m_ptr->cdis <=
-      // py.flags.see_infra)
-      // &&
-      //          (CD_INFRA & cr_ptr->cdefense)) {
-      //   flag = TRUE;
-      //   c_recall[m_ptr->mptr].r_cdefense |= CD_INFRA;
-      // }
     }
   }
   /* Light it up.   */
@@ -4199,7 +4194,7 @@ int factor;
   if (TR_SPEED & obj->flags) uD.pspeed -= amount;
   if ((TR_BLIND & obj->flags) && (factor > 0)) countD.blind += 1000;
   if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
-  // if (TR_INFRA & obj->flags) py.flags.see_infra += amount;
+  if (TR_INFRA & obj->flags) uD.see_infra += amount;
 }
 // TBD: various
 // Combat bonuses are applied in calc_bonuses
@@ -4275,7 +4270,7 @@ ma_bonuses(maffect, factor)
       FOR_EACH(mon, { update_mon(it_index); });
       break;
     case MA_SEE_HEAT:
-      // uD.see_infra += factor * 3;
+      uD.see_infra += factor * 3;
       break;
     default:
       msg_print("Error in ma_bonuses()");
@@ -4634,6 +4629,7 @@ py_init()
   uD.fos = r_ptr->fos;
   uD.disarm = r_ptr->dis;
   uD.stealth = r_ptr->stl;
+  uD.see_infra = r_ptr->infra;
   uD.mult_exp = r_ptr->b_exp;
   int male = 1 - randint(2);
   if (male) {
