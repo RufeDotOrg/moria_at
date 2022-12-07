@@ -5237,6 +5237,26 @@ sleep_adjacent(y, x)
   return (sleep);
 }
 int
+trap_creation(y, x)
+{
+  register int i, j, trap;
+  register struct caveS* c_ptr;
+
+  trap = FALSE;
+  for (i = y - 1; i <= y + 1; i++)
+    for (j = x - 1; j <= x + 1; j++) {
+      if (i != y && j != x) {
+        c_ptr = &caveD[i][j];
+        if (c_ptr->fval <= MAX_FLOOR) {
+          if (c_ptr->oidx) delete_object(i, j);
+          place_trap(i, j, randint(MAX_TRAP) - 1);
+          trap = TRUE;
+        }
+      }
+    }
+  return (trap);
+}
+int
 td_destroy(y, x)
 {
   register int i, j, destroy;
@@ -5962,9 +5982,9 @@ int *uy, *ux;
             ident = TRUE;
           }
           break;
-        // case 22:
-        //   ident = trap_creation();
-        //   break;
+        case 22:
+          ident = trap_creation(uD.y, uD.x);
+          break;
         case 23:
           ident = td_destroy(uD.y, uD.x);
           break;
