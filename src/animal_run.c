@@ -7481,7 +7481,8 @@ static void py_search(y, x, chance) int y, x, chance;
   msg_print("You search the area.");
   // TBD: tuning; used to divide by 10
   if (countD.confusion) chance /= 8;
-  if (countD.blind || invenD[INVEN_LIGHT] == 0) chance /= 8;
+  // TBD: light also reduced search, like blindness
+  if (countD.blind) chance /= 8;
   // if (p_ptr->image > 0) chance = chance / 10;
   for (i = (y - 1); i <= (y + 1); i++)
     for (j = (x - 1); j <= (x + 1); j++)
