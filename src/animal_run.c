@@ -2318,6 +2318,18 @@ int tval;
   return FALSE;
 }
 int
+crset_evil(cre)
+struct creatureS* cre;
+{
+  return (cre->cdefense & CD_EVIL);
+}
+int
+crset_visible(cre)
+struct creatureS* cre;
+{
+  return (cre->cmove & CM_INVISIBLE) == 0;
+}
+int
 oset_always_visible(obj)
 struct objS* obj;
 {
@@ -3343,6 +3355,21 @@ detect_obj(int (*valid)())
     }
   return (detect);
 }
+int
+detect_mon(int (*valid)())
+{
+  struct creatureS* cr_ptr;
+
+  FOR_EACH(mon, {
+    if (panel_contains(&panelD, mon->fy, mon->fx)) {
+      cr_ptr = &creatureD[mon->cidx];
+      if (valid(cr_ptr)) {
+        return TRUE;
+      }
+    }
+  });
+  return FALSE;
+}
 void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 {
   int tmp = caveD[y1][x1].midx;
@@ -3361,8 +3388,8 @@ void update_mon(midx) int midx;
   flag = FALSE;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
-  if ((m_ptr->cdis <= MAX_SIGHT) && (panel_contains(&panelD, fy, fx))) {
-    if (los(uD.y, uD.x, fy, fx)) {
+  if ((panel_contains(&panelD, fy, fx))) {
+    if ((m_ptr->cdis <= MAX_SIGHT) && los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
       if (cave_lit(c_ptr)) {
@@ -3374,8 +3401,15 @@ void update_mon(midx) int midx;
                  (m_ptr->cdis <= uD.see_infra)) {
         flag = TRUE;
       }
+    } else if ((uD.mflag & (1 << MA_SEE_EVIL)) &&
+               (CD_EVIL & cr_ptr->cdefense)) {
+      flag = TRUE;
+    } else if ((uD.mflag & (1 << MA_SEE_MON)) &&
+               ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
+      flag = TRUE;
     }
   }
+
   /* Light it up.   */
   if (flag) {
     if (!m_ptr->ml) {
@@ -4299,10 +4333,13 @@ ma_bonuses(maffect, factor)
         msg_print("Your skin returns to normal.");
       break;
     case MA_SEE_INVIS:
-      FOR_EACH(mon, { update_mon(it_index); });
       break;
     case MA_SEE_INFRA:
       uD.see_infra += factor * 3;
+      break;
+    case MA_SEE_MON:
+      break;
+    case MA_SEE_EVIL:
       break;
     default:
       msg_print("Error in ma_bonuses()");
@@ -6026,9 +6063,13 @@ int *uy, *ux;
           mass_genocide(uD.y, uD.x);
           ident = TRUE;
           break;
-        // case 20:
-        //   ident = detect_invisible();
-        //   break;
+        case 20:
+          if (detect_mon(crset_visible)) {
+            ident = TRUE;
+            maD[MA_SEE_MON] = 1;
+            msg_print("You sense the presence of monsters!");
+          }
+          break;
         case 21:
           if (aggravate_monster(20)) {
             msg_print("There is a high pitched humming noise.");
@@ -6448,9 +6489,13 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             ident = see_print("The staff glows blue for a moment..");
           }
           break;
-          // case 21:
-          //   ident = detect_evil();
-          //   break;
+        case 21:
+          if (detect_mon(crset_evil)) {
+            ident = TRUE;
+            maD[MA_SEE_EVIL] = 1;
+            msg_print("You sense the presence of evil!");
+          }
+          break;
         case 22:
           ident = countD.poison > 0 || countD.blind > 0 || countD.confusion > 0;
           countD.poison = 1;
@@ -8152,7 +8197,11 @@ ma_tick()
     }
   }
   uD.mflag = new_mflag;
-  if (delta) calc_bonuses();
+  if (delta) {
+    calc_bonuses();
+    // Vision changes, TBD: optimize?
+    FOR_EACH(mon, { update_mon(it_index); });
+  }
 }
 void
 tick()
@@ -8408,6 +8457,7 @@ dungeon()
               detect_obj(oset_pickup);
               detect_obj(oset_trap);
               detect_obj(oset_sdoor);
+              maD[MA_SEE_MON] = 1;
             } break;
             case CTRL('f'): {
               struct objS* obj = obj_use();
