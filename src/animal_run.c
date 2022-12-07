@@ -3487,6 +3487,12 @@ int adesc;
   }
   return " hits you.";
 }
+uint32_t
+sustain_stat(sidx)
+uint32_t sidx;
+{
+  return ((1 << sidx) | TR_SUST_STAT);
+}
 int
 con_adj()
 {
@@ -4789,6 +4795,17 @@ inc_stat(stat)
   } else
     return FALSE;
 }
+void
+lose_stat(sidx)
+{
+  uint32_t sustain = sustain_stat(sidx);
+  if (uD.tflag & sustain) {
+    MSG("%s for a moment,  it passes.", stat_lossD[sidx]);
+  } else {
+    dec_stat(sidx);
+    MSG("%s.", stat_lossD[sidx]);
+  }
+}
 int
 res_stat(stat)
 {
@@ -5360,11 +5377,11 @@ inven_eat(iidx)
           break;
         case 10:
           ident = TRUE;
-          dec_stat(A_STR);
+          lose_stat(A_STR);
           break;
         case 11:
           ident = TRUE;
-          dec_stat(A_CON);
+          lose_stat(A_CON);
           break;
         case 16:
           if (res_stat(A_STR)) {
@@ -5468,9 +5485,7 @@ inven_quaff(iidx)
           break;
         case 2:
           ident = TRUE;
-          // TBD: check sustain on each stat
-          // TBD: messaging
-          dec_stat(A_STR);
+          lose_stat(A_STR);
           break;
         case 3:
           if (res_stat(A_STR)) {
@@ -5486,8 +5501,7 @@ inven_quaff(iidx)
           break;
         case 5:
           ident = TRUE;
-          // TBD: was lose_int();
-          dec_stat(A_INT);
+          lose_stat(A_INT);
           break;
         case 6:
           if (res_stat(A_INT)) {
@@ -5503,8 +5517,7 @@ inven_quaff(iidx)
           break;
         case 8:
           ident = TRUE;
-          // TBD: lose_wis();
-          dec_stat(A_WIS);
+          lose_stat(A_WIS);
           break;
         case 9:
           if (res_stat(A_WIS)) {
@@ -5520,8 +5533,7 @@ inven_quaff(iidx)
           break;
         case 11:
           ident = TRUE;
-          // lose_chr();
-          dec_stat(A_CHR);
+          lose_stat(A_CHR);
           break;
         case 12:
           if (res_stat(A_CHR)) {
@@ -6843,12 +6855,9 @@ static void mon_attack(midx) int midx;
           break;
         case 2: /*Lose Strength*/
           py_take_hit(damage);
-          // if (py.flags.sustain_str)
-          //  msg_print("You feel weaker for a moment, but it passes.");
-          // else if (randint(2) == 1) {
-          msg_print("You feel weaker.");
-          dec_stat(A_STR);
-          // }
+          if (randint(2) == 1) {
+            lose_stat(A_STR);
+          }
           break;
         case 3: /*Confusion attack*/
           py_take_hit(damage);
@@ -6949,42 +6958,19 @@ static void mon_attack(midx) int midx;
           break;
         case 15: /*Lose dexterity */
           py_take_hit(damage);
-          //
-          // if (f_ptr->sustain_dex)
-          //  msg_print("You feel clumsy for a moment, but it passes.");
-          // else {
-          msg_print("You feel more clumsy.");
-          dec_stat(A_DEX);
-          //}
+          lose_stat(A_DEX);
           break;
         case 16: /*Lose constitution */
           py_take_hit(damage);
-          //
-          // if (f_ptr->sustain_con)
-          //  msg_print("Your body resists the effects of the disease.");
-          // else {
-          msg_print("Your health is damaged!");
-          dec_stat(A_CON);
-          //}
+          lose_stat(A_CON);
           break;
         case 17: /*Lose intelligence */
           py_take_hit(damage);
-          //
-          msg_print("You have trouble thinking clearly.");
-          // if (f_ptr->sustain_int)
-          //  msg_print("But your mind quickly clears.");
-          // else
           dec_stat(A_INT);
           break;
         case 18: /*Lose wisdom     */
           py_take_hit(damage);
-          //
-          // if (f_ptr->sustain_wis)
-          //  msg_print("Your wisdom is sustained.");
-          // else {
-          msg_print("Your wisdom is drained.");
           dec_stat(A_WIS);
-          //}
           break;
         case 19: /*Lose experience  */
           msg_print("You feel your life draining away!");

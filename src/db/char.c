@@ -272,3 +272,9 @@ char* spell_nameD[] = {
     "Glyph of Warding",
     "Holy Word",
 };
+
+char* stat_lossD[] = {
+    "You feel weaker",        "You have trouble thinking clearly",
+    "You feel very naive",    "You feel clumsy",
+    "Your health is damaged", "Your skin starts to itch",
+};
