@@ -5558,10 +5558,11 @@ inven_quaff(iidx)
           }
           break;
         case 19:
-          // if (!f_ptr->free_act)
-          msg_print("You fall asleep.");
-          countD.paralysis += randint(4) + 4;
-          ident = TRUE;
+          if ((uD.tflag & TR_FREE_ACT) == 0) {
+            msg_print("You fall asleep.");
+            countD.paralysis += randint(4) + 4;
+            ident = TRUE;
+          }
           break;
         case 20:
           if (countD.blind == 0) {
@@ -6904,17 +6905,14 @@ static void mon_attack(midx) int midx;
           break;
         case 11: /*Paralysis attack*/
           py_take_hit(damage);
-          if (player_saves())
+          if (uD.tflag & TR_FREE_ACT)
+            msg_print("You are unaffected by paralysis.");
+          else if (player_saves())
             msg_print("You resist paralysis!");
           else if (countD.paralysis < 1) {
-            // if (f_ptr->free_act)
-            //   msg_print("You are unaffected.");
-            // else
             countD.paralysis = randint(cre->level) + 3;
             msg_print("You are paralyzed.");
           }
-          // else
-          //   notice = FALSE;
           break;
         case 12: /*Steal Money    */
           if (countD.paralysis < 1 && randint(124) < statD.use_stat[A_DEX])
@@ -7568,10 +7566,9 @@ mon_cast_spell(midx)
           py_take_hit(damroll(8, 8));
         break;
       case 10: /*Hold Person    */
-               // if (py.flags.free_act)
-        //   msg_print("You are unaffected.");
-        // else
-        if (player_saves())
+        if (uD.tflag & TR_FREE_ACT)
+          msg_print("You are unaffected by paralysis.");
+        else if (player_saves())
           msg_print("You resist the effects of the spell.");
         else if (countD.paralysis > 0)
           countD.paralysis += 2;
@@ -7615,10 +7612,9 @@ mon_cast_spell(midx)
         update_mon(midx);
       } break;
       case 16: /*Slow Person   */
-        // if (py.flags.free_act)
-        //   msg_print("You are unaffected.");
-        // else
-        if (player_saves())
+        if (uD.tflag & TR_FREE_ACT)
+          msg_print("You are unaffected by the spell.");
+        else if (player_saves())
           msg_print("You resist the effects of the spell.");
         else if (maD[MA_SLOW] > 0)
           maD[MA_SLOW] += 2;
