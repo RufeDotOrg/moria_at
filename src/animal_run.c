@@ -1749,11 +1749,7 @@ void magic_treasure(obj, level) struct objS* obj;
         case 3:
           if (magik(cursed)) {
             obj->p1 = -m_bonus(1, 20, level);
-#ifdef ATARIST_MWC
             obj->flags |= TR_CURSED;
-#else
-            obj->flags |= TR_CURSED;
-#endif
             obj->cost = -obj->cost;
           } else {
             obj->p1 = m_bonus(1, 10, level);
@@ -7663,6 +7659,49 @@ breath(typ, y, x, dam_hp, midx)
   // put_qio();
 }
 static int
+mon_multiply(mon)
+struct monS* mon;
+{
+  register int y, x, fy, fx, i, j, k;
+  register struct caveS* c_ptr;
+  int count;
+
+  y = uD.y;
+  x = uD.x;
+  fy = mon->fy;
+  fx = mon->fx;
+  i = 0;
+  count = 0;
+  do {
+    j = fy - 2 + randint(3);
+    k = fx - 2 + randint(3);
+    // don't create a new creature on top of the old one
+    // don't create a creature on top of the player
+    if ((j != fy || k != fx) && (j != y || k != x)) {
+      c_ptr = &caveD[j][k];
+      if (c_ptr->fval <= MAX_OPEN_SPACE) {
+        // TBD: CM_EATS_OTHER
+        if (c_ptr->midx == 0) {
+          return place_monster(j, k, mon->cidx, FALSE);
+        }
+      }
+    }
+    i++;
+  } while (i <= 18);
+  return FALSE;
+}
+static void mon_try_multiply(mon) struct monS* mon;
+{
+  int i, j, k;
+
+  k = 0;
+  for (i = mon->fy - 1; i <= mon->fy + 1; i++)
+    for (j = mon->fx - 1; j <= mon->fx + 1; j++)
+      if (caveD[i][j].midx) k++;
+
+  if ((k < 4) && (randint((k + 1) * MON_MULT_ADJ) == 1)) mon_multiply(mon);
+}
+static int
 mon_try_spell(midx)
 {
   uint32_t i;
@@ -7854,8 +7893,7 @@ uint32_t* rcmove;
   random = FALSE;
   flee = FALSE;
 
-  // multiply monster
-
+  if (cr_ptr->cmove & CM_MULTIPLY) mon_try_multiply(m_ptr);
   if (cr_ptr->spells & CS_FREQ) took_turn = mon_try_spell(midx);
 
   if (!took_turn) {
