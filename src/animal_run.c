@@ -7621,7 +7621,7 @@ mon_cast_spell(midx)
         else
           maD[MA_SLOW] = randint(5) + 3;
         break;
-        // case 17: /*Drain Mana   */
+      case 17: /*Drain Mana   */
         //   if (uD.cmana > 0) {
         //     disturb(1, 0);
         //     MSG("%sdraws psychic energy from you!", descD);
@@ -7637,7 +7637,7 @@ mon_cast_spell(midx)
         //       uD.cmana -= r1;
         //     m_ptr->hp += 6 * (r1);
         //   }
-        //   break;
+        break;
       case 20: /*Breath Light */
         MSG("%s breathes lightning.", descD);
         breath(GF_LIGHTNING, uD.y, uD.x, (m_ptr->hp / 4), midx);
