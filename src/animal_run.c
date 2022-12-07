@@ -5207,6 +5207,36 @@ inven_recharge(iidx, amount)
   }
 }
 int
+sleep_adjacent(y, x)
+{
+  register int i, j;
+  register struct caveS* c_ptr;
+  register struct monS* m_ptr;
+  register struct creatureS* cr_ptr;
+  int sleep;
+
+  sleep = FALSE;
+  for (i = y - 1; i <= y + 1; i++)
+    for (j = x - 1; j <= x + 1; j++) {
+      c_ptr = &caveD[i][j];
+      if (c_ptr->midx) {
+        m_ptr = &entity_monD[c_ptr->midx];
+        cr_ptr = &creatureD[m_ptr->cidx];
+
+        mon_desc(c_ptr->midx);
+        if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
+            (CD_NO_SLEEP & cr_ptr->cdefense)) {
+          MSG("%s is unaffected.", descD);
+        } else {
+          sleep = TRUE;
+          m_ptr->msleep = 500;
+          MSG("%s falls asleep.", descD);
+        }
+      }
+    }
+  return (sleep);
+}
+int
 mon_speed(mon)
 struct monS* mon;
 {
@@ -5874,9 +5904,9 @@ int *uy, *ux;
           ident = TRUE;
           map_area();
           break;
-          // case 13:
-          //   ident = sleep_monsters1(char_row, char_col);
-          //   break;
+        case 13:
+          ident = sleep_adjacent(uD.y, uD.x);
+          break;
           // case 14:
           //   ident = TRUE;
           //   warding_glyph();
