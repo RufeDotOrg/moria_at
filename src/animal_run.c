@@ -8403,6 +8403,12 @@ dungeon()
                 af_ptr[it] = 1;
               }
             } break;
+            case CTRL('d'): {
+              detect_obj(oset_gold);
+              detect_obj(oset_pickup);
+              detect_obj(oset_trap);
+              detect_obj(oset_sdoor);
+            } break;
             case CTRL('f'): {
               struct objS* obj = obj_use();
               caveD[y][x].oidx = obj_index(obj);
