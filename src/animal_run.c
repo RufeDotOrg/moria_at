@@ -7796,6 +7796,7 @@ breath(typ, y, x, dam_hp, midx)
               // }
 
               mon_unuse(m_ptr);
+              c_ptr->midx = 0;
             }
           }
         }
