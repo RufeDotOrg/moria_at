@@ -1117,7 +1117,8 @@ static void fill_cave(fval) register int fval;
     }
   }
 }
-static void delete_object(y, x) int y, x;
+static void
+delete_object(y, x)
 {
   register struct caveS* cave_ptr;
   cave_ptr = &caveD[y][x];
@@ -5502,6 +5503,62 @@ int dir, y, x, spd;
   } while (!flag);
   return (see_count);
 }
+static void
+replace_spot(y, x, typ)
+{
+  register struct caveS* c_ptr;
+
+  c_ptr = &caveD[y][x];
+  switch (typ) {
+    case 1:
+    case 2:
+    case 3:
+      c_ptr->fval = FLOOR_CORR;
+      break;
+    case 4:
+    case 7:
+    case 10:
+      // c_ptr->fval = QUARTZ_WALL;
+      // break;
+    case 5:
+    case 8:
+    case 11:
+      // c_ptr->fval = MAGMA_WALL;
+      // break;
+    case 6:
+    case 9:
+    case 12:
+      c_ptr->fval = GRANITE_WALL;
+      break;
+  }
+  c_ptr->cflag = 0; /* this is no longer part of a room */
+  if (c_ptr->oidx) delete_object(y, x);
+  if (c_ptr->midx) {
+    mon_unuse(&entity_monD[c_ptr->midx]);
+    c_ptr->midx = 0;
+  }
+}
+void
+destroy_area(y, x)
+{
+  register int i, j, k;
+
+  if (dun_level > 0) {
+    for (i = (y - 15); i <= (y + 15); i++)
+      for (j = (x - 15); j <= (x + 15); j++)
+        if (in_bounds(i, j) && (caveD[i][j].fval != BOUNDARY_WALL)) {
+          k = distance(i, j, y, x);
+          if (k == 0) /* clear player's spot, but don't put wall there */
+            replace_spot(i, j, 1);
+          else if (k < 13)
+            replace_spot(i, j, randint(6));
+          else if (k < 16)
+            replace_spot(i, j, randint(9));
+        }
+  }
+  msg_print("There is a searing blast of light!");
+  countD.blind += 10 + randint(10);
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -6154,16 +6211,16 @@ int *uy, *ux;
           ident = TRUE;
           maD[MA_BLESS] += (randint(48) + 24);
           break;
-        // case 41:
-        //   ident = TRUE;
-        //   if (py.flags.word_recall == 0)
-        //     py.flags.word_recall = 25 + randint(30);
-        //   msg_print("The air about you becomes charged.");
-        //   break;
-        // case 42:
-        //   destroy_area(char_row, char_col);
-        //   ident = TRUE;
-        //   break;
+          // case 41:
+          //   ident = TRUE;
+          //   if (py.flags.word_recall == 0)
+          //     py.flags.word_recall = 25 + randint(30);
+          //   msg_print("The air about you becomes charged.");
+          //   break;
+        case 42:
+          destroy_area(uD.y, uD.x);
+          ident = TRUE;
+          break;
         default:
           msg_print("Internal error in scroll()");
           break;
@@ -6460,10 +6517,10 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             ident |= (summon_monster(uD.y, uD.x) != 0);
           }
           break;
-          // case 10:
-          //   ident = TRUE;
-          //   destroy_area(char_row, char_col);
-          //   break;
+        case 10:
+          ident = TRUE;
+          destroy_area(uD.y, uD.x);
+          break;
           // case 11:
           //   ident = TRUE;
           //   starlite(char_row, char_col);
