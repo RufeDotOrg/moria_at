@@ -3314,7 +3314,7 @@ void update_mon(midx) int midx;
   flag = FALSE;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
-  if ((m_ptr->cdis <= MAX_SIGHT) && (panel_contains(&panelD, fy, m_ptr->fx))) {
+  if ((m_ptr->cdis <= MAX_SIGHT) && (panel_contains(&panelD, fy, fx))) {
     if (los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
