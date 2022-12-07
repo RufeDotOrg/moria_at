@@ -5157,6 +5157,27 @@ aggravate_monster(dis_affect)
   return (count > 0);
 }
 int
+door_creation()
+{
+  register int y, x, i, j, door;
+  register struct caveS* c_ptr;
+
+  door = FALSE;
+  y = uD.y;
+  x = uD.x;
+  for (i = y - 1; i <= y + 1; i++)
+    for (j = x - 1; j <= x + 1; j++)
+      if ((i != y) || (j != x)) {
+        c_ptr = &caveD[i][j];
+        if (c_ptr->fval <= MAX_FLOOR) {
+          door = TRUE;
+          if (c_ptr->oidx != 0) delete_object(i, j);
+          place_closed_door(0, i, j);
+        }
+      }
+  return (door);
+}
+int
 speed_monsters(spd)
 {
   register int y, x, see_count;
@@ -5816,9 +5837,9 @@ int *uy, *ux;
         // case 23:
         //   ident = td_destroy();
         //   break;
-        // case 24:
-        //   ident = door_creation();
-        //   break;
+        case 24:
+          ident = door_creation();
+          break;
         // case 25:
         //   msg_print("This is a Recharge-Item scroll.");
         //   ident = TRUE;
