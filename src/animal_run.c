@@ -5158,6 +5158,35 @@ dispel_creature(cflag, damage)
   });
   return (dispel);
 }
+void
+inven_recharge(iidx, amount)
+{
+  int chance;
+  register int res;
+  register struct objS* i_ptr;
+
+  i_ptr = obj_get(invenD[iidx]);
+  /* recharge I = recharge(20) = 1/6 failure for empty 10th level wand */
+  /* recharge II = recharge(60) = 1/10 failure for empty 10th level wand*/
+  /* make it harder to recharge high level, and highly charged wands, note
+     that chance can be negative, so check its value before trying to call
+     randint().  */
+  chance = amount + 50 - i_ptr->level - i_ptr->p1;
+  if (chance < 19)
+    chance = 1; /* Automatic failure.  */
+  else
+    chance = randint(chance / 10);
+
+  if (chance == 1) {
+    msg_print("There is a bright flash of light.");
+    obj_unuse(i_ptr);
+    invenD[iidx] = 0;
+  } else {
+    amount = (amount / (i_ptr->level + 2)) + 1;
+    i_ptr->p1 += 2 + randint(amount);
+    i_ptr->idflag &= ~(ID_REVEAL | ID_EMPTY);
+  }
+}
 int
 mon_speed(mon)
 struct monS* mon;
@@ -5868,11 +5897,15 @@ int *uy, *ux;
         case 24:
           ident = door_creation();
           break;
-        // case 25:
-        //   msg_print("This is a Recharge-Item scroll.");
-        //   ident = TRUE;
-        //   used_up = recharge(60);
-        //   break;
+        case 25:
+          msg_print("This is a Recharge-Item scroll.");
+          ident = TRUE;
+          iidx = choice("Recharge which item?");
+          if (iidx >= 0) {
+            used_up = TRUE;
+            inven_recharge(iidx, 60);
+          }
+          break;
         // case 26:
         //   msg_print("This is a genocide scroll.");
         //   (void)genocide();
