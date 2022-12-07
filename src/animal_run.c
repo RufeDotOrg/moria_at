@@ -6974,7 +6974,7 @@ py_attack(y, x)
 }
 static void mon_attack(midx) int midx;
 {
-  int bth;
+  int bth, flag;
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
@@ -6990,9 +6990,10 @@ static void mon_attack(midx) int midx;
     int attack_desc = attack->attack_desc;
     bth = bth_adj(attack_type);
     disturb(1, 0);
-    int flag = FALSE;
-    if (test_hit(bth, adj, 0, uac)) flag = TRUE;
-    if (flag) {
+    flag = test_hit(bth, adj, 0, uac);
+    if (countD.protevil && (cre->cdefense & CD_EVIL) && uD.lev <= cre->level) {
+      MSG("%s%s", descD, attack_string(99));
+    } else if (flag) {
       int damage = damroll(attack->attack_dice, attack->attack_sides);
       MSG("%s%s", descD, attack_string(attack_desc));
       switch (attack_type) {
