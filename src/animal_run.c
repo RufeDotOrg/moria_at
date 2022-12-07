@@ -4072,10 +4072,6 @@ calc_bonuses()
   int tflag;
   struct objS* obj;
 
-  // TBD: edge trigger on regen/slow_digest
-  // if (p_ptr->slow_digest) p_ptr->food_digest++;
-  // if (p_ptr->regenerate) p_ptr->food_digest -= 3;
-
   uD.ptohit = tohit_adj(); /* Real To Hit   */
   uD.ptodam = todam_adj(); /* Real To Dam   */
   uD.ptoac = toac_adj();   /* Real To AC    */
@@ -4106,10 +4102,6 @@ calc_bonuses()
     if (TR_SUST_STAT & obj->flags) tflag |= sustain_stat(obj->p1 - 1);
   }
   uD.tflag = tflag;
-
-  // TBD: edge trigger on regen/slow_digest
-  // if (p_ptr->slow_digest) p_ptr->food_digest--;
-  // if (p_ptr->regenerate) p_ptr->food_digest += 3;
 }
 int8_t
 modify_stat(stat, amount)
@@ -4160,14 +4152,19 @@ void set_use_stat(stat) int stat;
 void py_bonuses(obj, factor) struct objS* obj;
 int factor;
 {
-  int i, amount;
+  int amount;
+
+  if ((TR_BLIND & obj->flags) && (factor > 0)) countD.blind += 1000;
+  if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
+  if (TR_SLOW_DIGEST & obj->flags) uD.food_digest -= factor;
+  if (TR_REGEN & obj->flags) uD.food_digest += factor * 3;
 
   amount = obj->p1 * factor;
   if (obj->flags & TR_STATS) {
-    for (i = 0; i < 6; i++)
-      if ((1 << i) & obj->flags) {
-        statD.mod_stat[i] += amount;
-        set_use_stat(i);
+    for (int it = 0; it < MAX_A; it++)
+      if ((1 << it) & obj->flags) {
+        statD.mod_stat[it] += amount;
+        set_use_stat(it);
       }
   }
   if (TR_SEARCH & obj->flags) {
@@ -4176,8 +4173,6 @@ int factor;
   }
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
   if (TR_SPEED & obj->flags) uD.pspeed -= amount;
-  if ((TR_BLIND & obj->flags) && (factor > 0)) countD.blind += 1000;
-  if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
   if (TR_INFRA & obj->flags) uD.see_infra += amount;
 }
 // TBD: various
