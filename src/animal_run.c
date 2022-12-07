@@ -6897,8 +6897,8 @@ py_shield_attack(y, x)
                         ? cr_ptr->hd[0] * cr_ptr->hd[1]
                         : (cr_ptr->hd[0] * (cr_ptr->hd[1] + 1)) >> 1);
       if ((100 + randint(400) + randint(400)) > (m_ptr->hp + avg_max_hp)) {
-        m_ptr->stunned += randint(3) + 1;
-        if (m_ptr->stunned > 24) m_ptr->stunned = 24;
+        m_ptr->mstunned += randint(3) + 1;
+        if (m_ptr->mstunned > 24) m_ptr->mstunned = 24;
         MSG("%s appears stunned!", descD);
       } else
         MSG("%s ignores your bash!", descD);
@@ -7900,20 +7900,20 @@ creatures()
           }
         }
       }
-      if (mon->stunned != 0) {
+      if (mon->mstunned != 0) {
         /* NOTE: Balrog = 100*100 = 10000, it always
            recovers instantly */
         if (randint(5000) < cr_ptr->level * cr_ptr->level)
-          mon->stunned = 0;
+          mon->mstunned = 0;
         else
-          mon->stunned--;
-        if (mon->stunned == 0) {
+          mon->mstunned--;
+        if (mon->mstunned == 0) {
           if (mon->ml) {
             MSG("The %s recovers and glares at you.", cr_ptr->name);
           }
         }
       }
-      if (mon->msleep == 0 && mon->stunned == 0) mon_move(it_index, &rcmove);
+      if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index, &rcmove);
     }
 
     update_mon(it_index);
