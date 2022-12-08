@@ -5833,7 +5833,6 @@ inven_quaff(iidx)
     inven_destroy_one(iidx);
 
     i = obj->flags;
-    MSG("flags %d", i);
     if (i == 0) msg_print("You feel less thirsty.");
     while (i != 0) {
       j = bit_pos(&i) + 1;
