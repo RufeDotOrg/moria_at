@@ -8661,6 +8661,10 @@ dungeon()
               free_turn_flag = TRUE;
               msg_history();
             } break;
+            case CTRL('w'): {
+              dun_level = 50;
+              new_level_flag = TRUE;
+            } break;
           }
         }
       }
