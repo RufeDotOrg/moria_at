@@ -4841,6 +4841,7 @@ py_init()
     struct objS* food = obj_use();
     // 22 = 1 ration of food
     tr_obj_copy(22, food);
+    food->number = 5;
     invenD[it] = food->id;
   }
   int actuate_test[] = {};  // scrolls: 174 222
