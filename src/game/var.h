@@ -8,7 +8,7 @@ static char screenD[SCREEN_HEIGHT][80];
 static int screen_usedD[AL(screenD)];
 static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
 static int overlay_usedD[AL(overlayD)];
-static char debugD[80];
+static char debugD[160];
 static int debug_usedD;
 
 static char msg_cqD[MAX_MSG][80];
