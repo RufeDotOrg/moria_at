@@ -222,8 +222,8 @@ bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
 
 #define ART_W 32
 #define ART_H 64
-#define MAX_ART 90
-static uint8_t artD[32 * 1024];
+#define MAX_ART 279
+static uint8_t artD[96 * 1024];
 static uint64_t art_usedD;
 static struct SDL_Texture *art_textureD[MAX_ART];
 STATIC bool
