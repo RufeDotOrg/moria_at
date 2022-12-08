@@ -435,8 +435,7 @@ platform_draw()
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, statusD[row], AL(statusD[0]), p);
     }
-    SDL_Point p = (SDL_Point){display_rectD.w / 2 - map_rectD.w,
-                              display_rectD.h - height};
+    SDL_Point p = (SDL_Point){0, display_rectD.h - height};
     render_font_string(rendererD, &fontD, debugD, debug_usedD, p);
   }
   SDL_SetRenderTarget(rendererD, 0);
