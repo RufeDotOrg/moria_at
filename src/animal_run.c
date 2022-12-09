@@ -3403,7 +3403,7 @@ void update_mon(midx) int midx;
       flag = TRUE;
     } else if ((uD.mflag & (1 << MA_DETECT_INVIS)) &&
                (CM_INVISIBLE & cr_ptr->cmove)) {
-      flag = true;
+      flag = TRUE;
     } else if ((m_ptr->cdis <= MAX_SIGHT) && los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */

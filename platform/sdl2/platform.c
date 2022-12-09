@@ -1,5 +1,3 @@
-#include <stdbool.h>
-#include <stdint.h>
 #include <time.h>
 
 #include "SDL.h"
@@ -9,21 +7,11 @@
 
 #include "../third_party/zlib/puff.c"
 
-#ifndef MAX
-#define MAX(a, b) (a > b ? a : b)
-#endif
-#ifndef MIN
-#define MIN(a, b) (a < b ? a : b)
-#endif
-
 #define CTRL(x) (x & 037)
-#define STATIC
-#define INLINE
-#define LOG 1
 #define Log SDL_Log
 #define R(r) r.x, r.y, r.w, r.h
 
-INLINE bool
+inline BOOL
 char_visible(char c)
 {
   uint8_t vis = c - 0x21;
@@ -38,11 +26,11 @@ static uint32_t texture_formatD;
 static SDL_PixelFormat *pixel_formatD;
 static SDL_Color bg_colorD;
 
-STATIC bool
+BOOL
 render_init()
 {
   windowD = SDL_CreateWindow("", 0, 0, 1920, 1080, SDL_WINDOW_FULLSCREEN);
-  if (!windowD) return false;
+  if (!windowD) return FALSE;
 
   int num_display = SDL_GetNumVideoDisplays();
   for (int it = 0; it < num_display; ++it) {
@@ -73,51 +61,38 @@ render_init()
     }
   }
   rendererD = SDL_CreateRenderer(windowD, -1, 0);
-  if (!rendererD) return false;
+  if (!rendererD) return FALSE;
 
-  if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return false;
+  if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return FALSE;
 
-  if (LOG) {
-    Log("SDL RendererInfo "
-        "[ rinfo.name %s ] "
-        "[ rinfo.flags 0x%08x ] "
-        "[ max texture %d %d ] "
-        "\n",
-        rinfo.name, rinfo.flags, rinfo.max_texture_width,
-        rinfo.max_texture_height);
-  }
+  Log("SDL RendererInfo "
+      "[ rinfo.name %s ] "
+      "[ rinfo.flags 0x%08x ] "
+      "[ max texture %d %d ] "
+      "\n",
+      rinfo.name, rinfo.flags, rinfo.max_texture_width,
+      rinfo.max_texture_height);
   texture_formatD = rinfo.texture_formats[0];
   pixel_formatD = SDL_AllocFormat(rinfo.texture_formats[0]);
 
   {
     int w, h;
-    if (SDL_GetRendererOutputSize(rendererD, &w, &h) != 0) return false;
+    if (SDL_GetRendererOutputSize(rendererD, &w, &h) != 0) return FALSE;
     Log("Renderer output size %d %d\n", w, h);
   }
 
   Log("display_rectD %d %d\n", display_rectD.w, display_rectD.h);
 
-  return true;
+  return TRUE;
 }
 
-STATIC void
+void
 render_update()
 {
   SDL_Renderer *r = rendererD;
   SDL_RenderPresent(r);
   SDL_SetRenderDrawColor(r, bg_colorD.r, bg_colorD.g, bg_colorD.b, bg_colorD.a);
   SDL_RenderClear(r);
-}
-
-STATIC void
-rect_debug(SDL_Rect *r)
-{
-  Log("[ %d x ] "
-      "[ %d y ] "
-      "[ %d w ] "
-      "[ %d h ] "
-      "\n",
-      r->x, r->y, r->w, r->h);
 }
 
 // font.c
@@ -146,7 +121,7 @@ struct glyphS {
   uint32_t bitmap_offset;
 };
 
-STATIC void
+void
 glyph_debug(struct glyphS *g)
 {
   Log("glyph "
@@ -175,7 +150,7 @@ static const SDL_Color whiteD = {0xff, 0xff, 0xff, 0xff};
 static struct SDL_Texture *font_textureD[MAX_GLYPH];
 int rowD, colD;
 
-STATIC void
+void
 font_debug(struct fontS *font)
 {
   Log("font "
@@ -196,14 +171,14 @@ font_debug(struct fontS *font)
       MAX_FOOTPRINT - MAX_BITMAP - GLYPH_BYTE_COUNT);
 }
 
-STATIC bool
+BOOL
 font_load()
 {
   return puff((void *)&fontD, &(uint64_t){sizeof(fontD)}, font_zip,
               &(uint64_t){sizeof(font_zip)}) == 0;
 }
 
-STATIC void
+void
 bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
                        struct SDL_Surface *surface)
 {
@@ -220,13 +195,14 @@ bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
   }
 }
 
+// art.c
 #define ART_W 32
 #define ART_H 64
 #define MAX_ART 279
 static uint8_t artD[96 * 1024];
 static uint64_t art_usedD;
 static struct SDL_Texture *art_textureD[MAX_ART];
-STATIC bool
+BOOL
 art_io()
 {
   int rc = -1;
@@ -236,7 +212,7 @@ art_io()
   return rc == 0;
 }
 
-STATIC void
+void
 bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
 {
   int byte_count = bitmap_size / 8;
@@ -246,7 +222,7 @@ bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
     }
   }
 }
-STATIC bool
+BOOL
 art_init()
 {
   struct SDL_Renderer *renderer = rendererD;
@@ -269,20 +245,20 @@ art_init()
   SDL_FreeSurface(surface);
 
   for (int it = 0; it < AL(art_textureD); ++it) {
-    if (!art_textureD[it]) return false;
+    if (!art_textureD[it]) return FALSE;
   }
   Log("Art textures available %ju", AL(art_textureD));
 
-  return true;
+  return TRUE;
 }
 
-STATIC bool
+BOOL
 font_init(struct fontS *font)
 {
   struct SDL_Renderer *renderer = rendererD;
   uint32_t format = texture_formatD;
 
-  if (font_textureD[0]) return false;
+  if (font_textureD[0]) return FALSE;
 
   int16_t width = font->max_pixel_width;
   int16_t height = font->max_pixel_height;
@@ -313,13 +289,13 @@ font_init(struct fontS *font)
 
   for (int i = START_GLYPH; i < END_GLYPH; ++i) {
     uint64_t glyph_index = i - START_GLYPH;
-    if (font_textureD[glyph_index] == 0) return false;
+    if (font_textureD[glyph_index] == 0) return FALSE;
   }
 
-  return true;
+  return TRUE;
 }
 
-STATIC SDL_Rect
+SDL_Rect
 font_string_rect(struct fontS *font, const char *string)
 {
   uint64_t width = 0;
@@ -343,7 +319,7 @@ font_string_rect(struct fontS *font, const char *string)
                     .h = font->max_pixel_height};
 }
 
-STATIC void
+void
 render_font_string(struct SDL_Renderer *renderer, struct fontS *font,
                    const char *string, int len, SDL_Point origin)
 {
@@ -568,6 +544,8 @@ dir_by_yx(y, x)
     dir -= 1;
   return dir;
 }
+
+// Game interface
 char
 platform_readansi()
 {
@@ -621,7 +599,7 @@ platform_readansi()
           yscale = (float)(dy - py * 2 - 8) / my;
         }
 
-        scale = MIN(xscale, yscale);
+        scale = SDL_min(xscale, yscale);
         mx = map_rectD.w * scale * 2;
         my = map_rectD.h * scale * 2;
         scale_rectD.x = dx / 2 - mx / 2;
@@ -731,29 +709,3 @@ platform_reset()
   // otherwise main() may resume with stale memory
   exit(0);
 }
-void symmap_patch(y, x, c) char c;
-{
-  int ay = y - panelD.panel_row_min;
-  int ax = x - panelD.panel_col_min;
-  symmapD[ay][ax] = c;
-}
-
-#ifdef MAIN
-int
-main()
-{
-  platform_init();
-
-  Log("colD %d rowD %d\n", colD, rowD);
-
-  for (int it = 0; it < 3; ++it) {
-    platform_draw();
-
-    nanosleep(&(struct timespec){1, 0}, NULL);
-  }
-
-  platform_reset();
-
-  return 0;
-}
-#endif

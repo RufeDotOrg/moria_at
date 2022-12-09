@@ -47,6 +47,7 @@ typedef __INT64_TYPE__ int64_t;
 #define ABS(x) (x >= 0 ? x : -x)
 #define CLAMP(x, min, max) (x < min ? min : x > max ? max : x)
 #define MAX(x, y) ((x > y) ? x : y)
+#define MIN(x, y) ((x < y) ? x : y)
 #define OF2(x) (((x - 1) & x) == 0)
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
