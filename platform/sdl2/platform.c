@@ -356,8 +356,8 @@ void
 texture_init()
 {
   int w, h;
-  w = SYMMAP_WIDTH * fontD.max_pixel_width;
-  h = SYMMAP_HEIGHT * fontD.max_pixel_height;
+  w = SYMMAP_WIDTH * ART_W;
+  h = SYMMAP_HEIGHT * ART_H;
   map_rectD = (SDL_Rect){.w = w, .h = h};
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, w, h);
@@ -418,21 +418,18 @@ platform_draw()
   SDL_RenderCopy(rendererD, text_textureD, NULL, &text_rectD);
 
   if (show_map) {
-    int w, h;
     SDL_Rect sprite_rect;
-    w = fontD.max_pixel_width;
-    h = fontD.max_pixel_height;
-    sprite_rect.w = w;
-    sprite_rect.h = h;
+    sprite_rect.w = ART_W;
+    sprite_rect.h = ART_H;
     SDL_SetRenderTarget(rendererD, map_textureD);
     SDL_RenderFillRect(rendererD, &map_rectD);
     for (int row = 0; row < AL(symmapD); ++row) {
-      sprite_rect.y = row * h;
+      sprite_rect.y = row * ART_H;
       for (int col = 0; col < SYMMAP_WIDTH; ++col) {
         uint64_t cridx = cremapD[row][col];
         char sym = symmapD[row][col];
         SDL_Texture *srct;
-        sprite_rect.x = col * w;
+        sprite_rect.x = col * ART_W;
         // Creature art overlay
         if (cridx && cridx < AL(art_textureD)) {
           srct = art_textureD[cridx - 1];
@@ -583,8 +580,8 @@ platform_readansi()
         px = fontD.max_pixel_width;
         py = fontD.max_pixel_height;
         int mx, my;
-        mx = map_rectD.w * 2;
-        my = map_rectD.h * 2;
+        mx = map_rectD.w;
+        my = map_rectD.h;
 
         float xscale, yscale, scale;
         // reserve space for status width (left)
@@ -602,8 +599,8 @@ platform_readansi()
         }
 
         scale = SDL_min(xscale, yscale);
-        mx = map_rectD.w * scale * 2;
-        my = map_rectD.h * scale * 2;
+        mx = map_rectD.w * scale;
+        my = map_rectD.h * scale;
         scale_rectD.x = dx / 2 - mx / 2;
         scale_rectD.y = dy / 2 - my / 2;
         scale_rectD.w = my;
