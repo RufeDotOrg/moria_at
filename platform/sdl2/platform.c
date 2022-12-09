@@ -369,15 +369,15 @@ texture_init()
                                     SDL_TEXTUREACCESS_TARGET, w, h);
 }
 
-void
-char_texture_ref(char c, SDL_Texture **tout)
+SDL_Texture *
+texture_by_sym(char c)
 {
   SDL_Texture *t = 0;
   if (char_visible(c)) {
     uint64_t glyph_index = c - START_GLYPH;
     t = font_textureD[glyph_index];
   }
-  *tout = t;
+  return t;
 }
 
 void
@@ -427,17 +427,19 @@ platform_draw()
     SDL_SetRenderTarget(rendererD, map_textureD);
     SDL_RenderFillRect(rendererD, &map_rectD);
     for (int row = 0; row < AL(symmapD); ++row) {
-      SDL_Point p = {0, row * height};
-      render_font_string(rendererD, &fontD, symmapD[row], AL(symmapD[0]), p);
-      // Creature art overlay
       sprite_rect.y = row * h;
       for (int col = 0; col < SYMMAP_WIDTH; ++col) {
         uint64_t cridx = cremapD[row][col];
+        char sym = symmapD[row][col];
+        SDL_Texture *srct;
+        sprite_rect.x = col * w;
+        // Creature art overlay
         if (cridx && cridx < AL(art_textureD)) {
-          sprite_rect.x = col * w;
-          SDL_RenderCopy(rendererD, art_textureD[cridx - 1], NULL,
-                         &sprite_rect);
+          srct = art_textureD[cridx - 1];
+        } else {
+          srct = texture_by_sym(sym);
         }
+        SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
       }
     }
     SDL_SetRenderTarget(rendererD, 0);
