@@ -544,6 +544,54 @@ dir_by_yx(y, x)
   return dir;
 }
 
+#define xrange 0.33f
+#define yrange 0.28f
+char
+touch(finger, ty, tx)
+float ty, tx;
+{
+  int y, x;
+  char c;
+
+  if (prev_cmdD == 'A') {
+    float row = ty * rowD;
+    int r = row;
+    Log("Actuate row %f r %d\n", row, r);
+    // -1 for line prompt
+    if (r > 0) return 'a' + r - 1;
+    return ESCAPE;
+  }
+
+  x = y = 0;
+  if (ty <= yrange)
+    y = -1;
+  else if (ty >= (1.0 - yrange))
+    y = 1;
+  if (tx <= xrange)
+    x = -1;
+  else if (tx >= (1.0 - xrange))
+    x = 1;
+  c = char_by_dir(dir_by_yx(y, x));
+  Log("touch "
+      "[ finger %d ] "
+      "[ ty tx %f %f ] "
+      "[ dir_by_yx %d,%d ] "
+      "[ char %d ] "
+      "",
+      finger, ty, tx, y, x, c);
+
+  switch (finger) {
+    case 0:
+      return c;
+    case 1:
+      if (x || y) return c & ~0x20;
+      return '.';
+    case 2:
+      return 'A';
+  }
+  return ' ';
+}
+
 // Game interface
 char
 platform_readansi()
@@ -629,46 +677,20 @@ platform_readansi()
     }
     // Prototyping choice menu
     if (event.type == SDL_MOUSEBUTTONDOWN) {
-      Log("MouseDown %d\n", event.button.button);
-      if (event.button.button == 2) {
-        return 'A';
-      }
-      if (prev_cmdD == 'A' && event.button.button == 1) {
-        int16_t height = fontD.max_pixel_height;
-        int y = event.button.y / height;
-        Log("Actuate %d", y);
-        return 'a' + y - 1;
-      }
-      return ' ';
+      float x, y, w, h;
+      x = 1.f + event.button.x;
+      y = 1.f + event.button.y;
+      w = display_rectD.w + 1.f;
+      h = display_rectD.h + 1.f;
+      Log("MouseDown "
+          "[ button %d ] "
+          "[ %fy, %fx ]"
+          "\n",
+          event.button.button, y / h, x / w);
+      return touch(event.button.button - 1, y / h, x / w);
     }
     if (event.type == SDL_FINGERDOWN) {
-      int y, x;
-      int64_t finger;
-#define xrange 0.33f
-#define yrange 0.28f
-      x = y = 0;
-      finger = event.tfinger.fingerId;
-      if (event.tfinger.y <= yrange)
-        y = -1;
-      else if (event.tfinger.y >= (1.0 - yrange))
-        y = 1;
-      if (event.tfinger.x <= xrange)
-        x = -1;
-      else if (event.tfinger.x >= (1.0 - xrange))
-        x = 1;
-      char c = char_by_dir(dir_by_yx(y, x));
-      Log("Touch event "
-          "[ finger %jd ] "
-          "[ fx fy %f %f ] "
-          "[ dir_by_yx %d,%d ] "
-          "[ char %d ] "
-          "",
-          finger, event.tfinger.x, event.tfinger.y, y, x, c);
-      if (finger == 0) return c;
-      if (finger > 0) {
-        if (x || y) return c & ~0x20;
-        return '.';
-      }
+      return touch(event.tfinger.fingerId, event.tfinger.y, event.tfinger.x);
     }
   } else {
     nanosleep(&(struct timespec){0, 8e6}, 0);
