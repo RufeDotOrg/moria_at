@@ -6449,31 +6449,6 @@ inven_try_wand_dir(iidx, dir)
   return ident;
 }
 void
-choice_actuate()
-{
-  char c;
-  struct objS* obj;
-
-  int count = py_inven_filter(0, INVEN_EQUIP, oset_actuate);
-  if (count) {
-    if (in_subcommand("Use what?", &c)) {
-      int iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        struct objS* obj = obj_get(invenD[iidx]);
-        if (obj->tval == TV_FOOD) {
-          inven_eat(iidx);
-        } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-          MSG("would quaff %d", iidx);
-        } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-          MSG("would read %d", iidx);
-        } else if (obj->tval == TV_STAFF) {
-          MSG("would Zap_staff %d", iidx);
-        }
-      }
-    }
-  }
-}
-void
 py_wear()
 {
   char c;
@@ -6531,138 +6506,165 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
 
   i_ptr = obj_get(invenD[iidx]);
   t_ptr = &treasureD[i_ptr->tidx];
-  free_turn_flag = FALSE;
-  chance = uD.save + think_adj(A_INT) - i_ptr->level - 5 +
-           (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
-  if (countD.confusion) chance = chance / 2;
-  if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
-    chance = USE_DEVICE; /* Give everyone a slight chance */
-  if (chance <= 0) chance = 1;
-  if (randint(chance) < USE_DEVICE)
-    msg_print("You failed to use the staff properly.");
-  else if (i_ptr->p1 > 0) {
-    flags = i_ptr->flags;
-    ident = FALSE;
-    (i_ptr->p1)--;
-    while (flags != 0) {
-      j = bit_pos(&flags) + 1;
-      /* Staffs.  			*/
-      switch (j) {
-        case 1:
-          ident = light_area(uD.y, uD.x);
-          break;
-        case 2:
-          ident = detect_obj(oset_sdoor);
-          break;
-        case 3:
-          ident = detect_obj(oset_trap);
-          break;
-        case 4:
-          ident = detect_obj(oset_gold);
-          break;
-        case 5:
-          ident = detect_obj(oset_pickup);
-          break;
-        case 6:
-          py_teleport(100, uy, ux);
-          ident = TRUE;
-          break;
-          // case 7:
-          //   ident = TRUE;
-          //   earthquake();
-          //   break;
-        case 8:
-          ident = FALSE;
-          for (k = 0; k < randint(4); k++) {
-            ident |= (summon_monster(uD.y, uD.x) != 0);
-          }
-          break;
-        case 10:
-          ident = TRUE;
-          destroy_area(uD.y, uD.x);
-          break;
-          // case 11:
-          //   ident = TRUE;
-          //   starlite(char_row, char_col);
-          //   break;
-        case 12:
-          ident = speed_monsters(1);
-          break;
-        case 13:
-          ident = speed_monsters(-1);
-          break;
-          // case 14:
-          //   ident = sleep_monsters2();
-          //   break;
-        case 15:
-          ident = py_heal_hit(randint(8));
-          break;
-        case 16:
-          if (detect_mon(crset_invisible)) {
+  if (i_ptr->tval == TV_STAFF) {
+    free_turn_flag = FALSE;
+    chance = uD.save + think_adj(A_INT) - i_ptr->level - 5 +
+             (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
+    if (countD.confusion) chance = chance / 2;
+    if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
+      chance = USE_DEVICE; /* Give everyone a slight chance */
+    if (chance <= 0) chance = 1;
+    if (randint(chance) < USE_DEVICE)
+      msg_print("You failed to use the staff properly.");
+    else if (i_ptr->p1 > 0) {
+      flags = i_ptr->flags;
+      ident = FALSE;
+      (i_ptr->p1)--;
+      while (flags != 0) {
+        j = bit_pos(&flags) + 1;
+        /* Staffs.  			*/
+        switch (j) {
+          case 1:
+            ident = light_area(uD.y, uD.x);
+            break;
+          case 2:
+            ident = detect_obj(oset_sdoor);
+            break;
+          case 3:
+            ident = detect_obj(oset_trap);
+            break;
+          case 4:
+            ident = detect_obj(oset_gold);
+            break;
+          case 5:
+            ident = detect_obj(oset_pickup);
+            break;
+          case 6:
+            py_teleport(100, uy, ux);
             ident = TRUE;
-            maD[MA_DETECT_INVIS] = 1;
-          }
-          break;
-        case 17:
-          if ((uD.mflag & (1 << MA_FAST)) == 0) ident = TRUE;
-          maD[MA_FAST] += randint(30) + 15;
-          break;
-        case 18:
-          if ((uD.mflag & (1 << MA_SLOW)) == 0) ident = TRUE;
-          maD[MA_SLOW] += randint(30) + 15;
-          break;
-          // case 19:
-          //   ident = mass_poly();
-          //   break;
-        case 20:
-          if (equip_remove_curse()) {
-            ident = see_print("The staff glows blue for a moment..");
-          }
-          break;
-        case 21:
-          if (detect_mon(crset_evil)) {
+            break;
+            // case 7:
+            //   ident = TRUE;
+            //   earthquake();
+            //   break;
+          case 8:
+            ident = FALSE;
+            for (k = 0; k < randint(4); k++) {
+              ident |= (summon_monster(uD.y, uD.x) != 0);
+            }
+            break;
+          case 10:
             ident = TRUE;
-            maD[MA_DETECT_EVIL] = 1;
-            msg_print("You sense the presence of evil!");
-          }
-          break;
-        case 22:
-          ident = countD.poison > 0 || countD.blind > 0 || countD.confusion > 0;
-          countD.poison = 1;
-          countD.blind = 1;
-          countD.confusion = 1;
-          break;
-        // case 23:
-        //   ident = dispel_creature(CD_EVIL, 60);
-        //   break;
-        case 25:
-          ident = unlight_area(uD.y, uD.x);
-          break;
-        case 32:
-          /* store bought flag */
-          break;
-        default:
-          msg_print("Internal error in staffs()");
-          break;
+            destroy_area(uD.y, uD.x);
+            break;
+            // case 11:
+            //   ident = TRUE;
+            //   starlite(char_row, char_col);
+            //   break;
+          case 12:
+            ident = speed_monsters(1);
+            break;
+          case 13:
+            ident = speed_monsters(-1);
+            break;
+            // case 14:
+            //   ident = sleep_monsters2();
+            //   break;
+          case 15:
+            ident = py_heal_hit(randint(8));
+            break;
+          case 16:
+            if (detect_mon(crset_invisible)) {
+              ident = TRUE;
+              maD[MA_DETECT_INVIS] = 1;
+            }
+            break;
+          case 17:
+            if ((uD.mflag & (1 << MA_FAST)) == 0) ident = TRUE;
+            maD[MA_FAST] += randint(30) + 15;
+            break;
+          case 18:
+            if ((uD.mflag & (1 << MA_SLOW)) == 0) ident = TRUE;
+            maD[MA_SLOW] += randint(30) + 15;
+            break;
+            // case 19:
+            //   ident = mass_poly();
+            //   break;
+          case 20:
+            if (equip_remove_curse()) {
+              ident = see_print("The staff glows blue for a moment..");
+            }
+            break;
+          case 21:
+            if (detect_mon(crset_evil)) {
+              ident = TRUE;
+              maD[MA_DETECT_EVIL] = 1;
+              msg_print("You sense the presence of evil!");
+            }
+            break;
+          case 22:
+            ident =
+                countD.poison > 0 || countD.blind > 0 || countD.confusion > 0;
+            countD.poison = 1;
+            countD.blind = 1;
+            countD.confusion = 1;
+            break;
+          // case 23:
+          //   ident = dispel_creature(CD_EVIL, 60);
+          //   break;
+          case 25:
+            ident = unlight_area(uD.y, uD.x);
+            break;
+          case 32:
+            /* store bought flag */
+            break;
+          default:
+            msg_print("Internal error in staffs()");
+            break;
+        }
+        /* End of staff actions.  	*/
       }
-      /* End of staff actions.  	*/
-    }
-    if (ident) {
-      if (!tr_known(t_ptr)) {
-        /* round half-way case up */
-        uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
-        py_experience();
+      if (ident) {
+        if (!tr_known(t_ptr)) {
+          /* round half-way case up */
+          uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
+          py_experience();
 
-        tr_make_known(t_ptr);
+          tr_make_known(t_ptr);
+        }
+      }
+      // else if (!known1_p(i_ptr))
+      //   sample(i_ptr);
+      if (i_ptr->idflag & ID_REVEAL)
+        MSG("You have %d charges remaining.", i_ptr->p1);
+    } else {
+      msg_print("The staff has no charges left.");
+      i_ptr->idflag |= ID_EMPTY;
+    }
+  }
+}
+void choice_actuate(uy, ux) int *uy, *ux;
+{
+  char c;
+  struct objS* obj;
+
+  int count = py_inven_filter(0, INVEN_EQUIP, oset_actuate);
+  if (count) {
+    if (in_subcommand("Use what?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        struct objS* obj = obj_get(invenD[iidx]);
+        if (obj->tval == TV_FOOD) {
+          inven_eat(iidx);
+        } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+          inven_quaff(iidx);
+        } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+          inven_read(iidx, uy, ux);
+        } else if (obj->tval == TV_STAFF) {
+          inven_try_staff(iidx, uy, ux);
+        }
       }
     }
-    // else if (!known1_p(i_ptr))
-    //   sample(i_ptr);
-    if (i_ptr->idflag & ID_REVEAL)
-      MSG("You have %d charges remaining.", i_ptr->p1);
-  } else {
-    msg_print("The staff has no charges left.");
-    i_ptr->idflag |= ID_EMPTY;
   }
 }
 static void py_drop(y, x) int y, x;
@@ -8554,7 +8556,7 @@ dungeon()
               break;
             case 'A':
               // Generalized inventory interaction
-              choice_actuate();
+              choice_actuate(&y, &x);
               break;
             case 'C':
               py_character();
