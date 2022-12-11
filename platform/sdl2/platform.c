@@ -602,7 +602,7 @@ platform_readansi()
       Log("SDL_QUIT");
       death = 1;
       new_level_flag = TRUE;
-      return -1;
+      return CTRL('c');
     }
     // Spacebar yields to the game without causing a turn to pass
     if (event.type == SDL_WINDOWEVENT) {
