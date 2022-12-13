@@ -8777,7 +8777,7 @@ main()
     if (!death) generate_cave();
   }
 
-  py_death();
+  if (strcmp("quitting", death_descD) != 0) py_death();
 
   platform_reset();
   return 0;
