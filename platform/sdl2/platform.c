@@ -150,6 +150,7 @@ static struct fontS fontD;
 static const SDL_Color whiteD = {0xff, 0xff, 0xff, 0xff};
 static struct SDL_Texture *font_textureD[MAX_GLYPH];
 int rowD, colD;
+float rfD, cfD;
 
 void
 font_debug(struct fontS *font)
@@ -729,6 +730,14 @@ platform_readansi()
         int mx, my;
         mx = map_rectD.w;
         my = map_rectD.h;
+
+        // Console row/col
+        rowD = display_rectD.h / py;
+        colD = display_rectD.w / px;
+        rfD = 1.0f / rowD;
+        cfD = 1.0f / colD;
+        Log("font %dw %dh console %drow %dcol rf/cf %f %f\n", px, py, rowD,
+            colD, rfD, cfD);
 
         float xscale, yscale, scale;
         // reserve space for status width (left)
