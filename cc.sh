@@ -14,7 +14,7 @@ if [ -n "$ASAN" ]; then
 fi
 
 hash $CC || exit 1
-[ -z "$CFLAGS" ] && CFLAGS="-O${OPTLEVEL} -g${SYMLEVEL} -Isrc -fno-omit-frame-pointer "
+[ -z "$CFLAGS" ] && CFLAGS="-O${OPTLEVEL} -g${SYMLEVEL} -I. -fno-omit-frame-pointer "
 
 EXT=.${1##*.}
 OUTFILE=`basename $1 $EXT`

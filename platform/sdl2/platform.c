@@ -2,16 +2,17 @@
 
 #include "SDL.h"
 
-#include "platform/art.c"
-#include "platform/font_zip.c"
+#include "art.c"
+#include "font_zip.c"
 
-#include "../third_party/zlib/puff.c"
+#include "third_party/zlib/puff.c"
 
 #define CTRL(x) (x & 037)
 #define Log SDL_Log
 #define R(r) r.x, r.y, r.w, r.h
+#define C(c) c.r, c.g, c.b, c.a
 
-inline BOOL
+BOOL
 char_visible(char c)
 {
   uint8_t vis = c - 0x21;
@@ -347,10 +348,38 @@ render_font_string(struct SDL_Renderer *renderer, struct fontS *font,
 // Texture
 SDL_Texture *map_textureD;
 SDL_Rect map_rectD;
+SDL_Color mapbgD;
 SDL_Rect scale_rectD;
 float scaleD;
 SDL_Texture *text_textureD;
 SDL_Rect text_rectD;
+
+SDL_Rect widgetD[3];
+enum {
+  CH_WALK,
+  CH_RUN,
+  CH_BASH,
+  CH_ZAP,
+  CH_WEAR,
+  CH_TAKEOFF,
+  CH_ACTUATE,
+  CH_DROP
+};
+int inputD[AL(widgetD)];
+int slide_rangeD;
+int slide_incrementD;
+int *ch_ptrD;
+
+SDL_Rect
+subrect_xy_wh(SDL_FPoint xy, SDL_FPoint wh)
+{
+  SDL_Rect r;
+  r.w = wh.x * display_rectD.w;
+  r.h = wh.y * display_rectD.h;
+  r.x = xy.x * display_rectD.w - r.w / 2;
+  r.y = xy.y * display_rectD.h - r.h / 2;
+  return r;
+}
 
 void
 texture_init()
@@ -361,9 +390,10 @@ texture_init()
   map_rectD = (SDL_Rect){.w = w, .h = h};
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, w, h);
+  mapbgD = (SDL_Color){15, 15, 15, 0};
 
-  w = 4 * 1024;  // display_rectD.w;
-  h = 4 * 1024;  // display_rectD.h;
+  w = 4 * 1024;
+  h = 4 * 1024;
   text_rectD = (SDL_Rect){.w = w, .h = h};
   text_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                     SDL_TEXTUREACCESS_TARGET, w, h);
@@ -422,6 +452,7 @@ platform_draw()
     sprite_rect.w = ART_W;
     sprite_rect.h = ART_H;
     SDL_SetRenderTarget(rendererD, map_textureD);
+    SDL_SetRenderDrawColor(rendererD, C(mapbgD));
     SDL_RenderFillRect(rendererD, &map_rectD);
     for (int row = 0; row < AL(symmapD); ++row) {
       sprite_rect.y = row * ART_H;
@@ -443,6 +474,42 @@ platform_draw()
 
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
   }
+
+  if (slide_incrementD) {
+    SDL_Color c = {0, 0, 78, 0};
+    SDL_SetRenderDrawColor(rendererD, C(c));
+    for (int it = 0; it < AL(widgetD); ++it) {
+      SDL_RenderFillRect(rendererD, &widgetD[it]);
+      SDL_Point p = {widgetD[it].x, widgetD[it].y};
+      switch (inputD[it] / slide_incrementD + (it > 1) * CH_WEAR) {
+        case 0:
+          render_font_string(rendererD, &fontD, AP("Walk"), p);
+          break;
+        case 1:
+          render_font_string(rendererD, &fontD, AP("Run"), p);
+          break;
+        case 2:
+          render_font_string(rendererD, &fontD, AP("Bash"), p);
+          break;
+        case 3:
+          render_font_string(rendererD, &fontD, AP("Zap"), p);
+          break;
+        case 4:
+          render_font_string(rendererD, &fontD, AP("Wear"), p);
+          break;
+        case 5:
+          render_font_string(rendererD, &fontD, AP("Takeoff"), p);
+          break;
+        case 6:
+          render_font_string(rendererD, &fontD, AP("Activate"), p);
+          break;
+        case 7:
+          render_font_string(rendererD, &fontD, AP("Drop"), p);
+          break;
+      };
+    }
+  }
+
   char *msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
   render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
@@ -547,20 +614,11 @@ dir_by_yx(y, x)
 #define xrange 0.33f
 #define yrange 0.28f
 char
-touch(finger, ty, tx)
+map_touch(finger, ty, tx)
 float ty, tx;
 {
   int y, x;
   char c;
-
-  if (prev_cmdD == 'A') {
-    float row = ty * rowD;
-    int r = row;
-    Log("Actuate row %f r %d\n", row, r);
-    // -1 for line prompt
-    if (r > 0) return 'a' + r - 1;
-    return ESCAPE;
-  }
 
   x = y = 0;
   if (ty <= yrange)
@@ -589,7 +647,48 @@ float ty, tx;
     case 2:
       return 'A';
   }
-  return ' ';
+  return -1;
+}
+
+char
+touch(finger, ty, tx)
+float ty, tx;
+{
+  if (prev_cmdD == 'A') {
+    float row = ty * rowD;
+    int r = row;
+    // -1 for line prompt
+    if (r > 0) return 'a' + r - 1;
+    return ESCAPE;
+  }
+
+  SDL_Point p = {tx * display_rectD.w, ty * display_rectD.h};
+
+  if (SDL_PointInRect(&p, &scale_rectD)) {
+    tx = (float)(p.x - scale_rectD.x) / scale_rectD.w;
+    ty = (float)(p.y - scale_rectD.y) / scale_rectD.h;
+    return map_touch(finger, ty, tx);
+  } else if (p.x > (scale_rectD.x + scale_rectD.w)) {
+    if (finger == 0) {
+      int i = ty * AL(inputD);
+      ch_ptrD = &inputD[i];
+      Log("Finger on right margin %d widget %d\n", finger, i);
+    }
+    return ' ';
+  }
+  return -1;
+}
+
+char
+motion(xrel, yrel)
+{
+  int delta = *ch_ptrD;
+  int prev = delta / slide_incrementD;
+  delta = CLAMP(delta + xrel, 1, slide_rangeD);
+  *ch_ptrD = delta;
+  if (prev != delta / slide_incrementD) return ' ';
+
+  return 0;
 }
 
 // Game interface
@@ -656,6 +755,18 @@ platform_readansi()
         scaleD = scale;
         Log("Scale %.3f (%.3fx %.3fy) %dx %dy %dw %dh", scale, xscale, yscale,
             R(scale_rectD));
+
+        // Input constraints
+        for (int it = 0; it < AL(widgetD); ++it) {
+          widgetD[it] = subrect_xy_wh((SDL_FPoint){.85, .3 + .2 * it},
+                                      (SDL_FPoint){.1, .05});
+        }
+
+        slide_rangeD = (display_rectD.w - scale_rectD.w) / 2 - 2 * px;
+        slide_incrementD = slide_rangeD / 4 + 1;
+        for (int it = 0; it < AL(inputD); ++it) {
+          inputD[it] = 1 + slide_incrementD * it;
+        }
       }
       return ' ';
     }
@@ -691,6 +802,26 @@ platform_readansi()
     }
     if (event.type == SDL_FINGERDOWN) {
       return touch(event.tfinger.fingerId, event.tfinger.y, event.tfinger.x);
+    }
+    if (event.type == SDL_MOUSEMOTION) {
+      if (ch_ptrD) {
+        char m = motion(event.motion.xrel, event.motion.yrel);
+        if (m) return m;
+      }
+    }
+    if (event.type == SDL_FINGERMOTION) {
+      if (ch_ptrD) {
+        char m = motion(event.tfinger.dx * display_rectD.w,
+                        event.tfinger.dy * display_rectD.h);
+        if (m) return m;
+      }
+    }
+    if (event.type == SDL_MOUSEBUTTONUP) {
+      ch_ptrD = 0;
+    }
+    if (event.type == SDL_FINGERUP) {
+      Log("finger up %jd\n", event.tfinger.fingerId);
+      ch_ptrD = 0;
     }
   } else {
     nanosleep(&(struct timespec){0, 8e6}, 0);
