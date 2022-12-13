@@ -337,6 +337,7 @@ int* dir;
 {
   char command;
 
+  prev_cmdD = 0;
   if (!prompt) prompt = "Which direction?";
   if (in_subcommand(prompt, &command)) {
     command = map_roguedir(command);
@@ -2416,6 +2417,7 @@ struct objS* obj;
     case TV_SCROLL1:
     case TV_SCROLL2:
     case TV_STAFF:
+    case TV_WAND:
       return TRUE;
   }
   return FALSE;
@@ -6647,6 +6649,7 @@ void choice_actuate(uy, ux) int *uy, *ux;
 {
   char c;
   struct objS* obj;
+  int dir;
 
   int count = py_inven_filter(0, INVEN_EQUIP, oset_actuate);
   if (count) {
@@ -6662,6 +6665,8 @@ void choice_actuate(uy, ux) int *uy, *ux;
           inven_read(iidx, uy, ux);
         } else if (obj->tval == TV_STAFF) {
           inven_try_staff(iidx, uy, ux);
+        } else if (obj->tval == TV_WAND) {
+          py_zap(iidx);
         }
       }
     }
