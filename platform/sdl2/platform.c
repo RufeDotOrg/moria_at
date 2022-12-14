@@ -728,6 +728,12 @@ platform_readansi()
     static int ltD;
     if (event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+      if (prev_cmdD == 'A') {
+        int row = (tp.y * rowD);
+        // -1 for line prompt
+        if (row > 0) return 'a' + row - 1;
+        return ESCAPE;
+      }
       if (SDL_PointInFRect(&tp, &padD)) {
         SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
         char c = map_touch(event.tfinger.fingerId, rp.y, rp.x);
