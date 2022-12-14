@@ -6450,43 +6450,6 @@ inven_try_wand_dir(iidx, dir)
   return ident;
 }
 void
-inven_wear(iidx)
-{
-  struct objS* obj;
-  obj = obj_get(invenD[iidx]);
-  int slot = slot_equip(obj->tval);
-  if (slot > 0) {
-    int slot_count = (slot == INVEN_RING) ? 2 : 1;
-    // TBD: Replace equipped item?
-    for (int it = 0; it < slot_count; ++it) {
-      if (invenD[slot + it] == 0) {
-        invenD[slot] = obj->id;
-        invenD[iidx] = 0;
-
-        py_bonuses(obj, 1);
-        obj_desc(obj, TRUE);
-        MSG("You are wearing %s.", descD);
-      }
-    }
-  }
-}
-void
-py_wear()
-{
-  char c;
-
-  int count = py_inven(0, INVEN_EQUIP);
-  if (count) {
-    if (in_subcommand("Wear/Wield which item?", &c)) {
-      int iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        inven_wear(iidx);
-      }
-    }
-  }
-  calc_bonuses();
-}
-void
 py_zap(iidx)
 {
   int dir;
@@ -6649,35 +6612,6 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
     }
   }
 }
-void choice_actuate(uy, ux) int *uy, *ux;
-{
-  char c;
-  struct objS* obj;
-  int dir;
-
-  int count = py_inven(0, INVEN_EQUIP);
-  if (count) {
-    if (in_subcommand("Use what?", &c)) {
-      int iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        struct objS* obj = obj_get(invenD[iidx]);
-        if (obj->tval == TV_FOOD) {
-          inven_eat(iidx);
-        } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-          inven_quaff(iidx);
-        } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-          inven_read(iidx, uy, ux);
-        } else if (obj->tval == TV_STAFF) {
-          inven_try_staff(iidx, uy, ux);
-        } else if (obj->tval == TV_WAND) {
-          py_zap(iidx);
-        } else {
-          inven_wear(iidx);
-        }
-      }
-    }
-  }
-}
 static void py_drop(y, x) int y, x;
 {
   char c;
@@ -6747,6 +6681,89 @@ int obj_id;
     }
   }
   return -1;
+}
+void
+equip_takeoff(iidx)
+{
+  struct objS* obj;
+  obj = obj_get(invenD[iidx]);
+  if (inven_carry(obj->id) >= 0) {
+    invenD[iidx] = 0;
+
+    py_bonuses(obj, -1);
+    obj_desc(obj, TRUE);
+    MSG("You take off %s.", descD);
+  } else {
+    msg_print("You don't have room in your inventory.");
+  }
+}
+void
+inven_wear(iidx)
+{
+  struct objS* obj;
+  obj = obj_get(invenD[iidx]);
+  int slot = slot_equip(obj->tval);
+  if (slot > 0) {
+    int slot_count = (slot == INVEN_RING) ? 2 : 1;
+    if (invenD[slot]) equip_takeoff(slot);
+    if (invenD[slot] == 0) {
+      for (int it = 0; it < slot_count; ++it) {
+        if (invenD[slot + it] == 0) {
+          invenD[slot] = obj->id;
+          invenD[iidx] = 0;
+
+          py_bonuses(obj, 1);
+          obj_desc(obj, TRUE);
+          MSG("You are wearing %s.", descD);
+        }
+      }
+    }
+  }
+}
+void
+py_wear()
+{
+  char c;
+
+  int count = py_inven(0, INVEN_EQUIP);
+  if (count) {
+    if (in_subcommand("Wear/Wield which item?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        inven_wear(iidx);
+      }
+    }
+  }
+  calc_bonuses();
+}
+void choice_actuate(uy, ux) int *uy, *ux;
+{
+  char c;
+  struct objS* obj;
+  int dir;
+
+  int count = py_inven(0, INVEN_EQUIP);
+  if (count) {
+    if (in_subcommand("Use what?", &c)) {
+      int iidx = c - 'a';
+      if (iidx < INVEN_EQUIP) {
+        struct objS* obj = obj_get(invenD[iidx]);
+        if (obj->tval == TV_FOOD) {
+          inven_eat(iidx);
+        } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+          inven_quaff(iidx);
+        } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+          inven_read(iidx, uy, ux);
+        } else if (obj->tval == TV_STAFF) {
+          inven_try_staff(iidx, uy, ux);
+        } else if (obj->tval == TV_WAND) {
+          py_zap(iidx);
+        } else {
+          inven_wear(iidx);
+        }
+      }
+    }
+  }
 }
 char stat_nameD[MAX_A][5] = {
     "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
@@ -6861,7 +6878,6 @@ void
 py_takeoff()
 {
   char c;
-  struct objS* obj;
 
   int carry_count = py_carry_count();
   int equip_count = py_inven(INVEN_EQUIP, MAX_INVEN);
@@ -6869,16 +6885,7 @@ py_takeoff()
     if (in_subcommand("Take off which item?", &c)) {
       int iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
-        obj = obj_get(invenD[iidx]);
-        if (inven_carry(obj->id) >= 0) {
-          invenD[iidx] = 0;
-
-          py_bonuses(obj, -1);
-          obj_desc(obj, TRUE);
-          MSG("You take off %s.", descD);
-        } else {
-          msg_print("You don't have room in your inventory.");
-        }
+        if (invenD[iidx]) equip_takeoff(iidx);
       }
     }
   }
