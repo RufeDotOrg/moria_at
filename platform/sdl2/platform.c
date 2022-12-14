@@ -151,8 +151,9 @@ struct fontS {
 static struct fontS fontD;
 static const SDL_Color whiteD = {0xff, 0xff, 0xff, 0xff};
 static struct SDL_Texture *font_textureD[MAX_GLYPH];
-int rowD, colD;
-float rfD, cfD;
+static int rowD, colD;
+static float rfD, cfD;
+static char prev_charD;
 
 void
 font_debug(struct fontS *font)
@@ -441,8 +442,6 @@ platform_draw()
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, statusD[row], AL(statusD[0]), p);
     }
-    SDL_Point p = (SDL_Point){0, display_rectD.h - height};
-    render_font_string(rendererD, &fontD, debugD, debug_usedD, p);
   }
   SDL_SetRenderTarget(rendererD, 0);
   SDL_RenderCopy(rendererD, text_textureD, NULL, &text_rectD);
@@ -490,6 +489,9 @@ platform_draw()
   char *msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
   render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
+
+  SDL_Point p = {0, display_rectD.h - height};
+  render_font_string(rendererD, &fontD, debugD, debug_usedD, p);
 
   render_update();
 }
@@ -619,8 +621,8 @@ float ty, tx;
     case 0:
       return c;
     case 1:
-      if (x || y) return c & ~0x20;
-      return '.';
+      if (x || y) c &= ~0x20;
+      return c;
     case 2:
       return 'A';
   }
@@ -629,7 +631,7 @@ float ty, tx;
 
 // Game interface
 char
-platform_readansi()
+sdl_pump()
 {
   SDL_Event event;
   if (SDL_PollEvent(&event)) {
@@ -728,7 +730,7 @@ platform_readansi()
     static int ltD;
     if (event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (prev_cmdD == 'A') {
+      if (prev_charD == 'A') {
         int row = (tp.y * rowD);
         // -1 for line prompt
         if (row > 0) return 'a' + row - 1;
@@ -771,6 +773,14 @@ platform_readansi()
   }
 
   return 0;
+}
+
+char
+platform_readansi()
+{
+  char c = sdl_pump();
+  prev_charD = c;
+  return c;
 }
 
 void
