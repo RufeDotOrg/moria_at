@@ -473,17 +473,18 @@ platform_draw()
     SDL_SetRenderTarget(rendererD, 0);
 
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
-  }
 
-  SDL_Color c = {0, 0, 78, 0};
-  SDL_SetRenderDrawColor(rendererD, C(c));
+    // Input viz
+    SDL_Color c = {0, 0, 78, 0};
+    SDL_SetRenderDrawColor(rendererD, C(c));
 
-  SDL_Rect pr = {RS(padD, display_rectD)};
-  SDL_RenderFillRect(rendererD, &pr);
+    SDL_Rect pr = {RS(padD, display_rectD)};
+    SDL_RenderFillRect(rendererD, &pr);
 
-  for (int it = 0; it < AL(buttonD); ++it) {
-    SDL_Rect r = {RS(buttonD[it], display_rectD)};
-    SDL_RenderFillRect(rendererD, &r);
+    for (int it = 0; it < AL(buttonD); ++it) {
+      SDL_Rect r = {RS(buttonD[it], display_rectD)};
+      SDL_RenderFillRect(rendererD, &r);
+    }
   }
 
   char *msg = AS(msg_cqD, msg_writeD);
