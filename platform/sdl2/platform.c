@@ -153,7 +153,7 @@ static const SDL_Color whiteD = {0xff, 0xff, 0xff, 0xff};
 static struct SDL_Texture *font_textureD[MAX_GLYPH];
 static int rowD, colD;
 static float rfD, cfD;
-static char prev_charD;
+static int menuD;
 
 void
 font_debug(struct fontS *font)
@@ -414,10 +414,11 @@ texture_by_sym(char c)
 void
 platform_draw()
 {
-  int show_map, height, width;
+  int show_map, menu, height, width;
   struct SDL_Texture *texture;
 
   show_map = 1;
+  menu = 0;
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
 
@@ -432,6 +433,7 @@ platform_draw()
     }
   } else if (overlay_usedD[0]) {
     show_map = 0;
+    menu = 1;
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
@@ -494,6 +496,8 @@ platform_draw()
   render_font_string(rendererD, &fontD, debugD, debug_usedD, p);
 
   render_update();
+
+  menuD = menu;
 }
 void
 im_print()
@@ -730,7 +734,7 @@ sdl_pump()
     static int ltD;
     if (event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (prev_charD == 'A') {
+      if (menuD) {
         int row = (tp.y * rowD);
         // -1 for line prompt
         if (row > 0) return 'a' + row - 1;
@@ -778,9 +782,7 @@ sdl_pump()
 char
 platform_readansi()
 {
-  char c = sdl_pump();
-  prev_charD = c;
-  return c;
+  return sdl_pump();
 }
 
 void
