@@ -358,7 +358,7 @@ SDL_Texture *text_textureD;
 SDL_Rect text_rectD;
 
 SDL_FRect padD;
-SDL_Rect widgetD[3];
+SDL_FRect buttonD[2];
 enum {
   CH_WALK,
   CH_RUN,
@@ -369,10 +369,6 @@ enum {
   CH_ACTUATE,
   CH_DROP
 };
-int inputD[AL(widgetD)];
-int slide_rangeD;
-int slide_incrementD;
-int *ch_ptrD;
 
 SDL_Rect
 subrect_xy_wh(SDL_FPoint xy, SDL_FPoint wh)
@@ -479,43 +475,15 @@ platform_draw()
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
   }
 
-  if (slide_incrementD) {
-    SDL_Color c = {0, 0, 78, 0};
-    SDL_SetRenderDrawColor(rendererD, C(c));
+  SDL_Color c = {0, 0, 78, 0};
+  SDL_SetRenderDrawColor(rendererD, C(c));
 
-    SDL_Rect pr = {RS(padD, display_rectD)};
-    SDL_RenderFillRect(rendererD, &pr);
+  SDL_Rect pr = {RS(padD, display_rectD)};
+  SDL_RenderFillRect(rendererD, &pr);
 
-    for (int it = 0; it < AL(widgetD); ++it) {
-      SDL_RenderFillRect(rendererD, &widgetD[it]);
-      SDL_Point p = {widgetD[it].x, widgetD[it].y};
-      switch (inputD[it] / slide_incrementD + (it > 1) * CH_WEAR) {
-        case 0:
-          render_font_string(rendererD, &fontD, AP("Walk"), p);
-          break;
-        case 1:
-          render_font_string(rendererD, &fontD, AP("Run"), p);
-          break;
-        case 2:
-          render_font_string(rendererD, &fontD, AP("Bash"), p);
-          break;
-        case 3:
-          render_font_string(rendererD, &fontD, AP("Zap"), p);
-          break;
-        case 4:
-          render_font_string(rendererD, &fontD, AP("Wear"), p);
-          break;
-        case 5:
-          render_font_string(rendererD, &fontD, AP("Takeoff"), p);
-          break;
-        case 6:
-          render_font_string(rendererD, &fontD, AP("Activate"), p);
-          break;
-        case 7:
-          render_font_string(rendererD, &fontD, AP("Drop"), p);
-          break;
-      };
-    }
+  for (int it = 0; it < AL(buttonD); ++it) {
+    SDL_Rect r = {RS(buttonD[it], display_rectD)};
+    SDL_RenderFillRect(rendererD, &r);
   }
 
   char *msg = AS(msg_cqD, msg_writeD);
@@ -658,47 +626,6 @@ float ty, tx;
   return -1;
 }
 
-char
-touch(finger, ty, tx)
-float ty, tx;
-{
-  if (prev_cmdD == 'A') {
-    float row = ty * rowD;
-    int r = row;
-    // -1 for line prompt
-    if (r > 0) return 'a' + r - 1;
-    return ESCAPE;
-  }
-
-  SDL_Point p = {tx * display_rectD.w, ty * display_rectD.h};
-
-  if (SDL_PointInRect(&p, &scale_rectD)) {
-    tx = (float)(p.x - scale_rectD.x) / scale_rectD.w;
-    ty = (float)(p.y - scale_rectD.y) / scale_rectD.h;
-    return map_touch(finger, ty, tx);
-  } else if (p.x > (scale_rectD.x + scale_rectD.w)) {
-    if (finger == 0) {
-      int i = ty * AL(inputD);
-      ch_ptrD = &inputD[i];
-      Log("Finger on right margin %d widget %d\n", finger, i);
-    }
-    return ' ';
-  }
-  return -1;
-}
-
-char
-motion(xrel, yrel)
-{
-  int delta = *ch_ptrD;
-  int prev = delta / slide_incrementD;
-  delta = CLAMP(delta + xrel, 1, slide_rangeD);
-  *ch_ptrD = delta;
-  if (prev != delta / slide_incrementD) return ' ';
-
-  return 0;
-}
-
 // Game interface
 char
 platform_readansi()
@@ -774,15 +701,8 @@ platform_readansi()
 
         // Input constraints
         padD = (SDL_FRect){0, .5, .25, .5};
-        for (int it = 0; it < AL(widgetD); ++it) {
-          widgetD[it] = subrect_xy_wh((SDL_FPoint){.85, .3 + .2 * it},
-                                      (SDL_FPoint){.1, .05});
-        }
-
-        slide_rangeD = (display_rectD.w - scale_rectD.w) / 2 - 2 * px;
-        slide_incrementD = slide_rangeD / 4 + 1;
-        for (int it = 0; it < AL(inputD); ++it) {
-          inputD[it] = 1 + slide_incrementD * it;
+        for (int it = 0; it < AL(buttonD); ++it) {
+          buttonD[it] = (SDL_FRect){.75 + (.1 * it), .75 - (.2 * it), .1, .2};
         }
       }
       return ' ';
@@ -812,6 +732,16 @@ platform_readansi()
         char c = map_touch(event.tfinger.fingerId, rp.y, rp.x);
         ltD = c;
         return c;
+      }
+      for (int it = 0; it < AL(buttonD); ++it) {
+        if (SDL_PointInFRect(&tp, &buttonD[it])) {
+          switch (it) {
+            case 0:
+              return 'A';
+            case 1:
+              return '.';
+          }
+        }
       }
     }
     if (event.type == SDL_FINGERMOTION) {
