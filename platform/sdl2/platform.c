@@ -9,7 +9,9 @@
 
 #define CTRL(x) (x & 037)
 #define Log SDL_Log
+#define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
+#define RS(r, s) (r.x * s.w), (r.y * s.h), (r.w * s.w), (r.h * s.h)
 #define C(c) c.r, c.g, c.b, c.a
 
 BOOL
@@ -355,6 +357,7 @@ float scaleD;
 SDL_Texture *text_textureD;
 SDL_Rect text_rectD;
 
+SDL_FRect padD;
 SDL_Rect widgetD[3];
 enum {
   CH_WALK,
@@ -479,6 +482,10 @@ platform_draw()
   if (slide_incrementD) {
     SDL_Color c = {0, 0, 78, 0};
     SDL_SetRenderDrawColor(rendererD, C(c));
+
+    SDL_Rect pr = {RS(padD, display_rectD)};
+    SDL_RenderFillRect(rendererD, &pr);
+
     for (int it = 0; it < AL(widgetD); ++it) {
       SDL_RenderFillRect(rendererD, &widgetD[it]);
       SDL_Point p = {widgetD[it].x, widgetD[it].y};
@@ -766,6 +773,7 @@ platform_readansi()
             R(scale_rectD));
 
         // Input constraints
+        padD = (SDL_FRect){0, .5, .25, .5};
         for (int it = 0; it < AL(widgetD); ++it) {
           widgetD[it] = subrect_xy_wh((SDL_FPoint){.85, .3 + .2 * it},
                                       (SDL_FPoint){.1, .05});
@@ -796,41 +804,30 @@ platform_readansi()
       }
     }
     // Prototyping choice menu
-    if (event.type == SDL_MOUSEBUTTONDOWN) {
-      float x, y, w, h;
-      x = 1.f + event.button.x;
-      y = 1.f + event.button.y;
-      w = display_rectD.w + 1.f;
-      h = display_rectD.h + 1.f;
-      Log("MouseDown "
-          "[ button %d ] "
-          "[ %fy, %fx ]"
-          "\n",
-          event.button.button, y / h, x / w);
-      return touch(event.button.button - 1, y / h, x / w);
-    }
+    static int ltD;
     if (event.type == SDL_FINGERDOWN) {
-      return touch(event.tfinger.fingerId, event.tfinger.y, event.tfinger.x);
-    }
-    if (event.type == SDL_MOUSEMOTION) {
-      if (ch_ptrD) {
-        char m = motion(event.motion.xrel, event.motion.yrel);
-        if (m) return m;
+      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+      if (SDL_PointInFRect(&tp, &padD)) {
+        SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
+        char c = map_touch(event.tfinger.fingerId, rp.y, rp.x);
+        ltD = c;
+        return c;
       }
     }
     if (event.type == SDL_FINGERMOTION) {
-      if (ch_ptrD) {
-        char m = motion(event.tfinger.dx * display_rectD.w,
-                        event.tfinger.dy * display_rectD.h);
-        if (m) return m;
+      static uint32_t tsD;
+      if (event.tfinger.timestamp - tsD > 1000) {
+        tsD = event.tfinger.timestamp;
       }
     }
-    if (event.type == SDL_MOUSEBUTTONUP) {
-      ch_ptrD = 0;
-    }
     if (event.type == SDL_FINGERUP) {
-      Log("finger up %jd\n", event.tfinger.fingerId);
-      ch_ptrD = 0;
+      if (ltD == ' ') {
+        SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+        if (SDL_PointInFRect(&tp, &padD)) {
+          SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
+          return map_touch(1, rp.y, rp.x);
+        }
+      }
     }
   } else {
     nanosleep(&(struct timespec){0, 8e6}, 0);
