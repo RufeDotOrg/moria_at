@@ -1,5 +1,4 @@
 
-static char prev_cmdD;
 static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 static uint16_t cremapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 static char statusD[STATUS_HEIGHT][STATUS_WIDTH];

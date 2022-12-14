@@ -337,7 +337,6 @@ int* dir;
 {
   char command;
 
-  prev_cmdD = 0;
   if (!prompt) prompt = "Which direction?";
   if (in_subcommand(prompt, &command)) {
     command = map_roguedir(command);
@@ -8447,7 +8446,6 @@ dungeon()
         msg_reset();
         c = inkey();
         if (c == -1) break;
-        prev_cmdD = c;
 
         // AWN: Period attempts auto-detection of a situational command
         if (c == '.') {
