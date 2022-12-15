@@ -8330,6 +8330,7 @@ py_check_view(y, x)
   if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
     if (near_light(y, x)) light_room(y, x);
   }
+  FOR_EACH(mon, { update_mon(it_index); });
 }
 void
 ma_tick()
