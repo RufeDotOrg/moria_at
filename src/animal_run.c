@@ -4747,7 +4747,7 @@ py_class_select()
   }
 
   if (in_subcommand("Which character would you like to play?", &c)) {
-    int iidx = c - 'a';
+    uint8_t iidx = c - 'a';
     if (iidx > 0 && iidx < AL(classD)) return iidx;
   }
 
@@ -5690,7 +5690,7 @@ choice(char* prompt)
   int count = py_inven(0, INVEN_EQUIP);
   if (count) {
     if (in_subcommand(prompt, &c)) {
-      int iidx = c - 'a';
+      uint8_t iidx = c - 'a';
       if (iidx < MAX_INVEN) return iidx;
     }
   } else
@@ -6645,7 +6645,7 @@ static void py_drop(y, x) int y, x;
   }
 
   if (in_subcommand("Drop which item?", &c)) {
-    int iidx = c - 'a';
+    uint8_t iidx = c - 'a';
     if (iidx < INVEN_EQUIP) {
       obj = obj_get(invenD[iidx]);
       obj->fy = y;
@@ -6744,7 +6744,7 @@ py_wear()
   int count = py_inven(0, INVEN_EQUIP);
   if (count) {
     if (in_subcommand("Wear/Wield which item?", &c)) {
-      int iidx = c - 'a';
+      uint8_t iidx = c - 'a';
       if (iidx < INVEN_EQUIP) {
         inven_wear(iidx);
       }
@@ -6761,7 +6761,7 @@ void choice_actuate(uy, ux) int *uy, *ux;
   int count = py_inven(0, INVEN_EQUIP);
   if (count) {
     if (in_subcommand("Use what?", &c)) {
-      int iidx = c - 'a';
+      uint8_t iidx = c - 'a';
       if (iidx < INVEN_EQUIP) {
         struct objS* obj = obj_get(invenD[iidx]);
         if (obj->tval == TV_FOOD) {
@@ -6899,7 +6899,7 @@ py_takeoff()
   int equip_count = py_inven(INVEN_EQUIP, MAX_INVEN);
   if (carry_count && equip_count) {
     if (in_subcommand("Take off which item?", &c)) {
-      int iidx = INVEN_EQUIP + (c - 'a');
+      uint8_t iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
         if (invenD[iidx]) equip_takeoff(iidx);
       }
@@ -7673,7 +7673,7 @@ py_make_known()
   int count = py_inven(0, INVEN_EQUIP);
   if (count) {
     if (in_subcommand("Make known which item?", &c)) {
-      int iidx = c - 'a';
+      uint8_t iidx = c - 'a';
       if (iidx < INVEN_EQUIP) {
         obj = obj_get(invenD[iidx]);
         struct treasureS* tr_ptr = &treasureD[obj->tidx];
