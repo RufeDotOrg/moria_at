@@ -8704,12 +8704,13 @@ dungeon()
 
       if (uD.y != y || uD.x != x) {
         struct caveS* c_ptr = &caveD[y][x];
+        struct monS* mon = &entity_monD[c_ptr->midx];
+        struct objS* obj = &entity_objD[c_ptr->oidx];
 
-        if (find_flag && (c_ptr->midx || c_ptr->fval > MAX_OPEN_SPACE)) {
+        if (find_flag && (mon->ml || c_ptr->fval > MAX_OPEN_SPACE)) {
           find_flag = FALSE;
           free_turn_flag = TRUE;
         } else {
-          struct objS* obj = &entity_objD[c_ptr->oidx];
           // doors known to be jammed are bashed prior to movement
           if (obj->tval == TV_CLOSED_DOOR) {
             if (obj->p1 < 0 && (obj->idflag & ID_REVEAL)) {
@@ -8717,7 +8718,7 @@ dungeon()
             }
           }
 
-          if (c_ptr->midx) {
+          if (mon->id) {
             if (countD.fear == 0)
               py_attack(y, x);
             else
