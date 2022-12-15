@@ -4865,6 +4865,7 @@ py_init()
 
     struct objS* obj = obj_use();
     tr_obj_copy(actuate_test[it], obj);
+    magic_treasure(obj, dun_level);
     tr_make_known(&treasureD[obj->tidx]);
     invenD[iidx] = obj->id;
   }
