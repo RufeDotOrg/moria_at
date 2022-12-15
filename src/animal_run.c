@@ -5010,7 +5010,6 @@ py_where()
     if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
     if (panelD.panel_col > MAX_COL - 2) panelD.panel_col = MAX_COL - 2;
     panel_bounds(&panelD);
-    draw(0);
   }
   panel_update(&panelD, uD.y, uD.x, TRUE);
   free_turn_flag = TRUE;
