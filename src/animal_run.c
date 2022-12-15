@@ -192,17 +192,15 @@ affect_update()
   affectinfo_usedD = len;
 }
 void
-draw(clear)
+draw()
 {
   status_update();
   symmap_update();
   affect_update();
 
   platform_draw();
-  if (clear) {
-    AC(screen_usedD);
-    AC(overlay_usedD);
-  }
+  AC(screen_usedD);
+  AC(overlay_usedD);
 }
 
 static char log_extD[] = " -more-";
@@ -229,7 +227,7 @@ msg_pause()
     AS(msglen_cqD, msg_writeD) = log_used;
 
     // wait for user to acknowledge prior buffer -more-
-    draw(0);
+    draw();
     do {
       c = inkey();
     } while (c != ' ');
@@ -302,7 +300,7 @@ char* command;
   msg = AS(msg_cqD, msg_writeD);
   AS(msglen_cqD, msg_writeD) =
       snprintf(msg, MAX_MSGLEN, "%s", prompt ? prompt : "");
-  draw(0);
+  draw();
   do {
     c = inkey();
   } while (c == ' ');
@@ -4998,7 +4996,7 @@ py_death()
   }
 
   // TBD: platform considerations...
-  draw(0);
+  draw();
   c = inkey();
 }
 static void
@@ -8463,7 +8461,7 @@ dungeon()
     do {
       if (countD.rest != 0) break;
       if (countD.paralysis != 0) break;
-      draw(1);
+      draw();
       free_turn_flag = FALSE;
 
       y = uD.y;
