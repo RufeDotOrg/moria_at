@@ -298,15 +298,17 @@ char* command;
 {
   char c;
   char* msg;
+
   msg = AS(msg_cqD, msg_writeD);
-  AS(msglen_cqD, msg_writeD) = snprintf(msg, MAX_MSGLEN, "%s", prompt);
+  AS(msglen_cqD, msg_writeD) =
+      snprintf(msg, MAX_MSGLEN, "%s", prompt ? prompt : "");
   draw(0);
   do {
     c = inkey();
   } while (c == ' ');
   *command = c;
   AS(msglen_cqD, msg_writeD) = 0;
-  return (*command != ESCAPE);
+  return (c != ESCAPE);
 }
 static char
 map_roguedir(comval)
@@ -4977,9 +4979,9 @@ res_stat(stat)
 static void
 py_death()
 {
+  char c;
   int row, col;
 
-  msg_pause();
   row = col = 0;
   for (int it = 0; it < AL(grave); ++it) {
     if (grave[it] == '\n') {
@@ -4992,8 +4994,12 @@ py_death()
       col += 1;
     }
   }
-  MSG("Killed by %s.", death_descD);
+
   msg_pause();
+  MSG("Killed by %s.", death_descD);
+  do {
+    in_subcommand(0, &c);
+  } while (c != ESCAPE);
 }
 static void
 py_where()
