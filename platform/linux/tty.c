@@ -51,7 +51,6 @@ platform_draw()
       buffer_append(AP(tc_crlfD));
     }
     buffer_append(debugD, debug_usedD);
-    buffer_append(AP(tc_crlfD));
   }
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
