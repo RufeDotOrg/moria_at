@@ -7,6 +7,9 @@
 
 #include "third_party/zlib/puff.c"
 
+#ifndef ANDROID
+enum { ANDROID };
+#endif
 #define CTRL(x) (x & 037)
 #define Log SDL_Log
 #define P(p) p.x, p.y
@@ -476,16 +479,18 @@ platform_draw()
 
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
 
-    // Input viz
-    SDL_Color c = {0, 0, 78, 0};
-    SDL_SetRenderDrawColor(rendererD, C(c));
+    if (ANDROID) {
+      // Input viz
+      SDL_Color c = {0, 0, 78, 0};
+      SDL_SetRenderDrawColor(rendererD, C(c));
 
-    SDL_Rect pr = {RS(padD, display_rectD)};
-    SDL_RenderFillRect(rendererD, &pr);
+      SDL_Rect pr = {RS(padD, display_rectD)};
+      SDL_RenderFillRect(rendererD, &pr);
 
-    for (int it = 0; it < AL(buttonD); ++it) {
-      SDL_Rect r = {RS(buttonD[it], display_rectD)};
-      SDL_RenderFillRect(rendererD, &r);
+      for (int it = 0; it < AL(buttonD); ++it) {
+        SDL_Rect r = {RS(buttonD[it], display_rectD)};
+        SDL_RenderFillRect(rendererD, &r);
+      }
     }
   }
 
