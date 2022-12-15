@@ -5845,9 +5845,6 @@ inven_quaff(iidx)
   uint32_t i, j;
   struct objS* obj = obj_get(invenD[iidx]);
   if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-    uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
-    inven_destroy_one(iidx);
-
     i = obj->flags;
     if (i == 0) msg_print("You feel less thirsty.");
     while (i != 0) {
@@ -6095,6 +6092,9 @@ inven_quaff(iidx)
           break;
       }
     }
+
+    uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
+    inven_destroy_one(iidx);
 
     return TRUE;
   }
