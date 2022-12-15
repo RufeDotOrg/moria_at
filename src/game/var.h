@@ -1,15 +1,19 @@
 
+// Visual info
 static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 static uint16_t cremapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-static char statusD[STATUS_HEIGHT][STATUS_WIDTH];
-static int status_usedD[AL(statusD)];
+static char vitalinfoD[STATUS_HEIGHT][STATUS_WIDTH];
+static int vitalinfo_usedD[AL(vitalinfoD)];
+static char affectinfoD[160];
+static int affectinfo_usedD;
+
+// Full-screen & overlay (choice)
 static char screenD[SCREEN_HEIGHT][80];
 static int screen_usedD[AL(screenD)];
 static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
 static int overlay_usedD[AL(overlayD)];
-static char debugD[160];
-static int debug_usedD;
 
+// Gameplay messages write to a circular queue
 static char msg_cqD[MAX_MSG][80];
 static char msglen_cqD[MAX_MSG];
 static uint32_t msg_writeD;

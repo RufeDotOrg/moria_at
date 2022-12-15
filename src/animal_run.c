@@ -58,24 +58,24 @@ inkey()
 void
 status_update()
 {
-  AC(status_usedD);
+  AC(vitalinfo_usedD);
 
   int line = 0;
-  BufMsg(status, "CHP : %6d", uD.chp);
-  BufMsg(status, "MHP : %6d", uD.mhp);
-  BufMsg(status, "LEV : %6d", uD.lev);
-  BufMsg(status, "EXP : %6d", uD.exp);
+  BufMsg(vitalinfo, "CHP : %6d", uD.chp);
+  BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
+  BufMsg(vitalinfo, "LEV : %6d", uD.lev);
+  BufMsg(vitalinfo, "EXP : %6d", uD.exp);
   line += 1;
-  BufMsg(status, "GOLD: %6d", uD.gold);
-  BufMsg(status, "AC  : %6d", uD.pac);
+  BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
+  BufMsg(vitalinfo, "AC  : %6d", uD.pac);
 
   line += 1;
-  BufMsg(status, "DEBUG");
-  BufMsg(status, "y,x :%3d,%3d", uD.y, uD.x);
-  BufMsg(status, "quad:%3d,%3d", panelD.panel_col, panelD.panel_row);
-  BufMsg(status, "turn: %6d", turnD);
+  BufMsg(vitalinfo, "DEBUG");
+  BufMsg(vitalinfo, "y,x :%3d,%3d", uD.y, uD.x);
+  BufMsg(vitalinfo, "quad:%3d,%3d", panelD.panel_col, panelD.panel_row);
+  BufMsg(vitalinfo, "turn: %6d", turnD);
 
-  BufPad(status, AL(statusD), AL(statusD[0]));
+  BufPad(vitalinfo, AL(vitalinfoD), AL(vitalinfoD[0]));
 }
 BOOL
 cave_lit(cave)
@@ -176,18 +176,19 @@ affect_update()
   int sum = 0;
   for (int it = 0; it < idx; ++it) {
     if (active[it]) {
-      count = snprintf(&debugD[len], AL(debugD) - len, "%s ",
+      count = snprintf(&affectinfoD[len], AL(affectinfoD) - len, "%s ",
                        affectD[it][active[it] - 1]);
       if (count > 0) len += count;
     }
     while (len < it * AL(affectD[0])) {
-      if (len >= AL(debugD)) break;
-      debugD[len++] = ' ';
+      if (len >= AL(affectinfoD)) break;
+      affectinfoD[len++] = ' ';
     }
   }
-  count = snprintf(&debugD[len], AL(debugD) - len, "%d feet", dun_level * 50);
+  count = snprintf(&affectinfoD[len], AL(affectinfoD) - len, "%d feet",
+                   dun_level * 50);
   if (count > 0) len += count;
-  debug_usedD = len;
+  affectinfo_usedD = len;
 }
 void
 draw()

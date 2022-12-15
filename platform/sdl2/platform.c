@@ -442,7 +442,8 @@ platform_draw()
   } else {
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
       SDL_Point p = {0, (row + 1) * height};
-      render_font_string(rendererD, &fontD, statusD[row], AL(statusD[0]), p);
+      render_font_string(rendererD, &fontD, vitalinfoD[row], AL(vitalinfoD[0]),
+                         p);
     }
   }
   SDL_SetRenderTarget(rendererD, 0);
@@ -493,7 +494,7 @@ platform_draw()
   render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
 
   SDL_Point p = {0, display_rectD.h - height};
-  render_font_string(rendererD, &fontD, debugD, debug_usedD, p);
+  render_font_string(rendererD, &fontD, affectinfoD, affectinfo_usedD, p);
 
   render_update();
 

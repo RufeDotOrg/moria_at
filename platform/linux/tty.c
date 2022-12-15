@@ -39,18 +39,18 @@ platform_draw()
   } else if (overlay_usedD[0]) {
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
       buffer_append(AP(tc_clear_lineD));
-      buffer_append(AP(statusD[row]));
+      buffer_append(AP(vitalinfoD[row]));
       buffer_append(overlayD[row], overlay_usedD[row]);
       buffer_append(AP(tc_crlfD));
     }
   } else {
     for (int row = 0; row < STATUS_HEIGHT - 1; ++row) {
       buffer_append(AP(tc_clear_lineD));
-      buffer_append(AP(statusD[row]));
+      buffer_append(AP(vitalinfoD[row]));
       if (row < AL(symmapD)) buffer_append(AP(symmapD[row]));
       buffer_append(AP(tc_crlfD));
     }
-    buffer_append(debugD, debug_usedD);
+    buffer_append(affectinfoD, affectinfo_usedD);
   }
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
