@@ -5559,10 +5559,10 @@ int dir, y, x, spd;
       flag = TRUE;
     else if (c_ptr->midx) {
       flag = TRUE;
-      m_ptr->msleep = 0;
-      mon_desc(c_ptr->midx);
       m_ptr = &entity_monD[c_ptr->midx];
       cr_ptr = &creatureD[m_ptr->cidx];
+      m_ptr->msleep = 0;
+      mon_desc(c_ptr->midx);
       if (spd > 0) {
         m_ptr->mspeed += spd;
         MSG("%s starts moving faster.", descD);
