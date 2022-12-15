@@ -6654,14 +6654,16 @@ py_carry_count()
 static int
 inven_merge(obj_id)
 {
-  int subval;
+  int tval, subval;
   struct objS* obj = obj_get(obj_id);
 
+  tval = obj->tval;
   subval = obj->subval;
   if (subval >= ITEM_SINGLE_STACK) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
-      if (i_ptr->subval == subval && i_ptr->number < 255) {
+      if (tval == i_ptr->tval && i_ptr->subval == subval &&
+          i_ptr->number < 255) {
         obj->number += i_ptr->number;
         obj_unuse(i_ptr);
         invenD[it] = obj_id;
