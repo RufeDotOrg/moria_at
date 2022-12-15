@@ -18,8 +18,9 @@ ARR_REUSE(mon, 256);
   {                                                             \
     char vtype[80];                                             \
     int len = snprintf(vtype, sizeof(vtype), x, ##__VA_ARGS__); \
-    msg_print2(vtype, len);                                     \
+    msg_game(vtype, len);                                       \
   }
+
 #define BufMsg(name, text, ...)                                         \
   {                                                                     \
     int used = name##_usedD[line];                                      \
@@ -203,14 +204,70 @@ draw(clear)
     AC(overlay_usedD);
   }
 }
+
+static char log_extD[] = " -more-";
+#define MAX_MSGLEN AL(msg_cqD[0])
 void
-msg_reset()
+msg_advance()
 {
-  if (AS(msglen_cqD, msg_writeD)) {
-    msg_countD = 0;
-    msg_writeD += 1;
-    AS(msglen_cqD, msg_writeD) = 0;
+  int log_used;
+  log_used = AS(msglen_cqD, msg_writeD);
+  msg_writeD += (log_used != 0);
+  AS(msglen_cqD, msg_writeD) = 0;
+}
+void
+msg_pause()
+{
+  char c;
+  int log_used;
+  char* log;
+
+  log_used = AS(msglen_cqD, msg_writeD);
+  if (log_used) {
+    log = AS(msg_cqD, msg_writeD);
+    log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, "%s", log_extD);
+    AS(msglen_cqD, msg_writeD) = log_used;
+
+    // wait for user to acknowledge prior buffer -more-
+    draw(0);
+    do {
+      c = inkey();
+    } while (c != ' ');
+    msg_advance();
   }
+}
+static void msg_game(msg, msglen) char* msg;
+{
+  char* log;
+  int log_used;
+
+  log_used = AS(msglen_cqD, msg_writeD);
+  if (log_used + msglen + AL(log_extD) >= MAX_MSGLEN) {
+    msg_pause();
+    msg_countD += 1;
+  }
+
+  log = AS(msg_cqD, msg_writeD);
+  log_used = AS(msglen_cqD, msg_writeD);
+  if (log_used) {
+    log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, " %s", msg);
+  } else {
+    log_used = snprintf(log, MAX_MSGLEN, "%d| %s", msg_countD, msg);
+  }
+
+  if (log_used > 0) AS(msglen_cqD, msg_writeD) = log_used;
+}
+static void
+msg_print(char* text)
+{
+  msg_game(text, strlen(text));
+}
+static int
+see_print(char* text)
+{
+  BOOL see = (countD.blind == 0);
+  if (see) msg_print(text);
+  return see;
 }
 void
 msg_history()
@@ -233,53 +290,6 @@ msg_history()
     memcpy(screenD[0], AP(no_historyD));
     screen_usedD[0] = AL(no_historyD);
   }
-}
-static char log_extD[] = " -more-";
-static void msg_print2(msg, msglen) char* msg;
-#define MAX_MSGLEN AL(msg_cqD[0])
-int msglen;
-{
-  char c;
-  char* log;
-  int log_used;
-
-  log = AS(msg_cqD, msg_writeD);
-  log_used = AS(msglen_cqD, msg_writeD);
-  if (log_used + msglen + AL(log_extD) >= MAX_MSGLEN) {
-    log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, "%s", log_extD);
-    AS(msglen_cqD, msg_writeD) = log_used;
-
-    // wait for user to acknowledge prior buffer -more-
-    draw(0);
-    do {
-      c = inkey();
-    } while (c != ' ');
-    msg_writeD += 1;
-    log = AS(msg_cqD, msg_writeD);
-    log_used = 0;
-  } else if (log_used) {
-    log[log_used] = ' ';
-    log_used += 1;
-  }
-
-  if (!log_used) {
-    msg_countD += 1;
-    log_used = snprintf(log, MAX_MSGLEN, "%d| ", msg_countD);
-  }
-  log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, "%s", msg);
-  AS(msglen_cqD, msg_writeD) = log_used;
-}
-static void
-msg_print(char* text)
-{
-  msg_print2(text, strlen(text));
-}
-static int
-see_print(char* text)
-{
-  BOOL see = (countD.blind == 0);
-  if (see) msg_print(text);
-  return see;
 }
 int
 in_subcommand(prompt, command)
@@ -4967,10 +4977,9 @@ res_stat(stat)
 static void
 py_death()
 {
-  char c;
   int row, col;
 
-  MSG("Killed by %s.", death_descD);
+  msg_pause();
   row = col = 0;
   for (int it = 0; it < AL(grave); ++it) {
     if (grave[it] == '\n') {
@@ -4983,10 +4992,8 @@ py_death()
       col += 1;
     }
   }
-  im_print();
-  do {
-    c = inkey();
-  } while (c != ' ');
+  MSG("Killed by %s.", death_descD);
+  msg_pause();
 }
 static void
 py_where()
@@ -7727,10 +7734,8 @@ py_look_mon()
           seen += 1;
           mon_desc(it_index);
           // hack: mon death_descD pronoun is a/an
-          MSG("You see %s. --pause--", death_descD);
-          im_print();
-          if (inkey() != ' ') break;
-          msg_reset();
+          MSG("You see %s.", death_descD);
+          msg_pause();
         }
       }
     });
@@ -7764,10 +7769,8 @@ py_look_obj()
         if (oy == ly && ox == lx && los(y, x, obj->fy, obj->fx)) {
           seen += 1;
           obj_desc(obj, TRUE);
-          MSG("You see %s. --pause--", descD);
-          im_print();
-          if (inkey() != ' ') break;
-          msg_reset();
+          MSG("You see %s.", descD);
+          msg_pause();
         }
       }
     });
@@ -8450,6 +8453,7 @@ dungeon()
 
   while (!new_level_flag) {
     tick();
+    msg_countD = 1;
 
     do {
       if (countD.rest != 0) break;
@@ -8462,7 +8466,7 @@ dungeon()
       if (find_flag) {
         mmove(find_direction, &y, &x);
       } else {
-        msg_reset();
+        msg_advance();
         c = inkey();
         if (c == -1) break;
 

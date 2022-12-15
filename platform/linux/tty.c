@@ -55,11 +55,6 @@ platform_draw()
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
 }
-static void
-im_print()
-{
-  platform_draw();
-}
 static char
 _from_vt100(char c)
 {

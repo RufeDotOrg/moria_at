@@ -500,11 +500,6 @@ platform_draw()
 
   menuD = menu;
 }
-void
-im_print()
-{
-  platform_draw();
-}
 
 char
 sym_shift(char c)
