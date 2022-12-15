@@ -58,28 +58,7 @@ platform_draw()
 static void
 im_print()
 {
-  char* msg = AS(msg_cqD, msg_writeD);
-  int msg_used = AS(msglen_cqD, msg_writeD);
-
-  buffer_usedD = 0;
-  buffer_append(AP(tc_move_cursorD));
-  buffer_append(AP(tc_clear_lineD));
-  buffer_append(msg, msg_used);
-  buffer_append(AP(tc_move_cursorD));
-  write(STDOUT_FILENO, bufferD, buffer_usedD);
-}
-void symmap_patch(y, x, c) char c;
-{
-  int ay = y - panelD.panel_row_min;
-  int ax = x - panelD.panel_col_min;
-  symmapD[ay][ax] = c;
-
-  int ty = ay + 2;
-  int tx = ax + STATUS_WIDTH + 1;
-
-  buffer_usedD = snprintf(bufferD, AL(bufferD), "\x1b[%d;%dH", ty, tx);
-  buffer_append(&c, 1);
-  write(STDOUT_FILENO, bufferD, buffer_usedD);
+  platform_draw();
 }
 static char
 _from_vt100(char c)

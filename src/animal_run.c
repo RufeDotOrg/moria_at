@@ -191,15 +191,17 @@ affect_update()
   affectinfo_usedD = len;
 }
 void
-draw()
+draw(clear)
 {
   status_update();
   symmap_update();
   affect_update();
 
   platform_draw();
-  AC(screen_usedD);
-  AC(overlay_usedD);
+  if (clear) {
+    AC(screen_usedD);
+    AC(overlay_usedD);
+  }
 }
 void
 msg_reset()
@@ -248,7 +250,7 @@ int msglen;
     AS(msglen_cqD, msg_writeD) = log_used;
 
     // wait for user to acknowledge prior buffer -more-
-    im_print();
+    draw(0);
     do {
       c = inkey();
     } while (c != ' ');
@@ -288,7 +290,7 @@ char* command;
   char* msg;
   msg = AS(msg_cqD, msg_writeD);
   AS(msglen_cqD, msg_writeD) = snprintf(msg, MAX_MSGLEN, "%s", prompt);
-  draw();
+  draw(0);
   do {
     c = inkey();
   } while (c == ' ');
@@ -4995,7 +4997,7 @@ py_where()
     if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
     if (panelD.panel_col > MAX_COL - 2) panelD.panel_col = MAX_COL - 2;
     panel_bounds(&panelD);
-    draw();
+    draw(0);
   }
   panel_update(&panelD, uD.y, uD.x, TRUE);
   free_turn_flag = TRUE;
@@ -8452,7 +8454,7 @@ dungeon()
     do {
       if (countD.rest != 0) break;
       if (countD.paralysis != 0) break;
-      draw();
+      draw(1);
       free_turn_flag = FALSE;
 
       y = uD.y;
