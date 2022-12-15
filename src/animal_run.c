@@ -4982,6 +4982,8 @@ py_death()
   char c;
   int row, col;
 
+  msg_pause();
+  MSG("Killed by %s.", death_descD);
   row = col = 0;
   for (int it = 0; it < AL(grave); ++it) {
     if (grave[it] == '\n') {
@@ -4995,11 +4997,9 @@ py_death()
     }
   }
 
-  msg_pause();
-  MSG("Killed by %s.", death_descD);
-  do {
-    in_subcommand(0, &c);
-  } while (c != ESCAPE);
+  // TBD: platform considerations...
+  draw(0);
+  c = inkey();
 }
 static void
 py_where()
