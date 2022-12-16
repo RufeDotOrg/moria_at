@@ -8806,6 +8806,9 @@ main()
 {
   platform_init();
 
+  // Burn randomness after platform seed
+  for (int it = randint(100); it != 0; --it) rnd();
+
   dun_level = 1;
   mon_level_init();
   obj_level_init();
