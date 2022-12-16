@@ -71,6 +71,8 @@ uint8_t blows_table[][6] = {
     /* >9 */ {2, 2, 3, 3, 4, 4},
 };
 
+// Game
+static uint32_t rnd_seed;
 static int turnD;
 static int player_hpD[AL(player_exp)];
 static int death;

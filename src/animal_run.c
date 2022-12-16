@@ -466,7 +466,6 @@ place_boundary()
 #define RNG_A 16807L
 #define RNG_Q 127773L /* m div a */
 #define RNG_R 2836L   /* m mod a */
-static uint32_t rnd_seed = 3123;
 int
 rnd()
 {

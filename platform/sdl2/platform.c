@@ -1,3 +1,4 @@
+#include <sys/auxv.h>
 #include <time.h>
 
 #include "SDL.h"
@@ -789,6 +790,11 @@ platform_readansi()
 void
 platform_init()
 {
+  // Game rng
+  void *p = (void *)getauxval(AT_RANDOM);
+  memcpy(&rnd_seed, p, sizeof(rnd_seed));
+
+  // SDL config
   SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
   SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 
@@ -796,7 +802,7 @@ platform_init()
   SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
   SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
 
-  // Ugh
+  // Platform Input isolation
   SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
   SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
 
