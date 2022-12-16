@@ -6980,10 +6980,13 @@ int pickup;
     if (pickup) {
       if ((locn = inven_merge(obj->id)) >= 0 ||
           (locn = inven_carry(obj->id)) >= 0) {
-        MSG("You pickup %s (%c)", descD, locn + 'a');
         obj->fy = 0;
         obj->fx = 0;
         caveD[y][x].oidx = 0;
+
+        // Redescribe the merged object
+        obj_desc(obj, TRUE);
+        MSG("You have %s (%c)", descD, locn + 'a');
       } else {
         MSG("You can't carry %s", descD);
       }
