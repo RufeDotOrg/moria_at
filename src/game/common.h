@@ -63,8 +63,8 @@ typedef __INT64_TYPE__ int64_t;
   struct type##S* type##_use()                                               \
   {                                                                          \
     int it = type##_usedD;                                                   \
-    if (it >= max) return &entity_##type##D[0];                              \
     int next = it + 1;                                                       \
+    if (next >= max) return &entity_##type##D[0];                            \
     int eid = type##D[it];                                                   \
     if (!eid) {                                                              \
       eid = next;                                                            \
