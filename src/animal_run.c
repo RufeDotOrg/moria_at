@@ -4035,7 +4035,9 @@ void obj_detail(obj) struct objS* obj;
   // }
   // strcat(descD, tmp_str);
 
-  // TBD: magik empty damned
+  if (obj->idflag & ID_MAGIK) strcat(descD, "{magik}");
+  if (obj->idflag & ID_EMPTY) strcat(descD, "{empty}");
+  if (obj->idflag & ID_DAMD) strcat(descD, "{damned}");
 }
 void obj_desc(obj, prefix) struct objS* obj;
 BOOL prefix;
@@ -6712,7 +6714,9 @@ equip_takeoff(iidx)
 {
   struct objS* obj;
   obj = obj_get(invenD[iidx]);
-  if (inven_carry(obj->id) >= 0) {
+  if (obj->flags & TR_CURSED) {
+    msg_print("Hmm, it seems to be cursed.");
+  } else if (inven_carry(obj->id) >= 0) {
     invenD[iidx] = 0;
 
     py_bonuses(obj, -1);
@@ -6740,6 +6744,11 @@ inven_wear(iidx)
           py_bonuses(obj, 1);
           obj_desc(obj, TRUE);
           MSG("You are wearing %s.", descD);
+          if (obj->flags & TR_CURSED) {
+            msg_print("Oops! It feels deathly cold!");
+            obj->cost = -1;
+            obj->idflag |= ID_DAMD;
+          }
         }
       }
     }
