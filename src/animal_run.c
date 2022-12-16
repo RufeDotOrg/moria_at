@@ -146,12 +146,13 @@ static char* affectD[][16] = {
     {"Hungry", "Weak", "Fainting"},
     {"Poison"},
     {"Blind"},
-    {"Confusion"},
-    {"Fear"},
+    {"Confused"},
+    {"Afraid"},
     // {"Paralysis"},
     // {"Rest"},
     // "Searching",
-    {"Fast", "Very Fast", "Extremely Fast"},
+    {"Slow"},
+    {"Fast"},
 };
 void
 affect_update()
@@ -169,9 +170,8 @@ affect_update()
   active[idx++] = (countD.fear != 0);
   // Currently paralysis/rest skips rendering
   // active[idx++] = (countD.rest != 0);
-  active[idx] = (uD.pspeed > 0);
-  active[idx] += (uD.pspeed > 1);
-  active[idx++] += (uD.pspeed > 2);
+  active[idx++] = (uD.mflag & (1 << MA_SLOW)) != 0;
+  active[idx++] = (uD.mflag & (1 << MA_FAST)) != 0;
 
   int len = 0;
   int sum = 0;
