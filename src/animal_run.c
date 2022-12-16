@@ -7798,9 +7798,8 @@ py_look_obj()
   }
   free_turn_flag = TRUE;
 }
-static void make_move(midx, mm, rcmove) int midx;
+static void make_move(midx, mm) int midx;
 int* mm;
-uint32_t* rcmove;
 {
   int i, fy, fx, newy, newx, do_turn, do_move, stuck_door;
   register struct caveS* c_ptr;
@@ -8151,8 +8150,7 @@ mon_try_spell(midx)
   }
   return took_turn;
 }
-static void mon_move(midx, rcmove) int midx;
-uint32_t* rcmove;
+static void mon_move(midx) int midx;
 {
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -8201,7 +8199,7 @@ uint32_t* rcmove;
     }
 
     if (mm[0]) {
-      make_move(midx, mm, rcmove);
+      make_move(midx, mm);
     }
   }
 }
@@ -8222,7 +8220,6 @@ int speed;
 void
 creatures()
 {
-  uint32_t rcmove;
   int move_count;
 
   FOR_EACH(mon, {
@@ -8253,7 +8250,7 @@ creatures()
           }
         }
       }
-      if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index, &rcmove);
+      if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index);
     }
 
     update_mon(it_index);
