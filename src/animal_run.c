@@ -2649,7 +2649,7 @@ summon_monster(y, x)
   for (int it = 0; it < 9; ++it) {
     j = y - 2 + randint(3);
     k = x - 2 + randint(3);
-    if (j != y && k != x) {
+    if (j != y || k != x) {
       cave_ptr = &caveD[j][k];
       if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->midx == 0)) {
         summon = place_monster(j, k, l, FALSE);
@@ -2683,7 +2683,7 @@ summon_undead(y, x)
   for (int it = 0; it < 9; ++it) {
     j = y - 2 + randint(3);
     k = x - 2 + randint(3);
-    if (j != y && k != x) {
+    if (j != y || k != x) {
       cave_ptr = &caveD[j][k];
       if (cave_ptr->fval <= MAX_OPEN_SPACE && (cave_ptr->midx == 0)) {
         summon = place_monster(j, k, cidx, FALSE);
