@@ -5844,6 +5844,7 @@ inven_quaff(iidx)
   BOOL ident;
   uint32_t i, j;
   struct objS* obj = obj_get(invenD[iidx]);
+  struct treasureS* tr_ptr = &treasureD[obj->tidx];
   if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
     i = obj->flags;
     if (i == 0) msg_print("You feel less thirsty.");
@@ -6092,6 +6093,13 @@ inven_quaff(iidx)
           break;
       }
     }
+    if (!tr_known(tr_ptr)) {
+      if (ident) {
+        // TBD: XP tuning
+        tr_make_known(tr_ptr);
+      }
+      // else sample(...);
+    }
 
     uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
     inven_destroy_one(iidx);
@@ -6302,8 +6310,8 @@ int *uy, *ux;
       }
       /* End of Scrolls.  		       */
     }
-    if (ident) {
-      if (!tr_known(t_ptr)) {
+    if (!tr_known(t_ptr)) {
+      if (ident) {
         /* round half-way case up */
         // TDB: xp tuning
         uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
@@ -6311,9 +6319,9 @@ int *uy, *ux;
 
         tr_make_known(t_ptr);
       }
+      // else
+      //   sample(i_ptr);
     }
-    // else if (!tr_known(t_ptr))
-    //   sample(i_ptr);
     if (used_up) {
       i_ptr->number -= 1;
       obj_desc(i_ptr, TRUE);
