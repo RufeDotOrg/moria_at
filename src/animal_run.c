@@ -4186,7 +4186,7 @@ BOOL prefix;
       descD[0] = 0;
       return;
     case TV_VIS_TRAP:
-      strcpy(descD, trap_nameD[indexx]);
+      strcpy(descD, trap_nameD[indexx - 1]);
       return;
     // case TV_STORE_DOOR:
     //   sprintf(descD, "the entrance to the %s.",
@@ -5427,7 +5427,7 @@ trap_creation(y, x)
         c_ptr = &caveD[i][j];
         if (c_ptr->fval <= MAX_FLOOR) {
           if (c_ptr->oidx) delete_object(i, j);
-          place_trap(i, j, randint(MAX_TRAP) - 1);
+          place_trap(i, j, randint(MAX_TRAP));
           trap = TRUE;
         }
       }
@@ -8746,8 +8746,7 @@ dungeon()
 
             if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
               hit_trap(y, x);
-            }
-            if (countD.blind == 0) {
+            } else if (countD.blind == 0) {
               if (find_flag) find_event(y, x);
               if (obj->tval) {
                 find_flag = FALSE;
