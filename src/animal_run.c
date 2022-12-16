@@ -5176,7 +5176,7 @@ int *uy, *ux;
 }
 void teleport_away(midx, dis) int midx, dis;
 {
-  int fy, fx, yn, xn, ctr;
+  int fy, fx, yn, xn, ctr, cdis;
   struct monS* m_ptr;
 
   m_ptr = &entity_monD[midx];
@@ -5185,22 +5185,24 @@ void teleport_away(midx, dis) int midx, dis;
   ctr = 0;
   do {
     do {
-      yn = fy + (randint(2 * dis + 1) - (dis + 1));
-      xn = fx + (randint(2 * dis + 1) - (dis + 1));
-    } while (!in_bounds(yn, xn));
-    ctr++;
-    if (ctr > 9) {
-      ctr = 0;
-      dis += 5;
-    }
-  } while ((caveD[yn][xn].fval >= MIN_CLOSED_SPACE) ||
-           (caveD[yn][xn].midx != 0));
+      do {
+        yn = fy + (randint(2 * dis + 1) - (dis + 1));
+        xn = fx + (randint(2 * dis + 1) - (dis + 1));
+      } while (!in_bounds(yn, xn));
+      ctr++;
+      if (ctr > 9) {
+        ctr = 0;
+        dis += 5;
+      }
+    } while ((caveD[yn][xn].fval >= MIN_CLOSED_SPACE) ||
+             (caveD[yn][xn].midx != 0));
+    cdis = distance(uD.y, uD.x, yn, xn);
+  } while (cdis < 1);
+
   move_rec(fy, fx, yn, xn);
   m_ptr->fy = yn;
   m_ptr->fx = xn;
-
-  m_ptr->ml = FALSE;
-  m_ptr->cdis = distance(uD.y, uD.x, yn, xn);
+  m_ptr->cdis = cdis;
   update_mon(midx);
 }
 void
