@@ -7297,9 +7297,10 @@ static void mon_attack(midx) int midx;
         case 4: /*Fear attack  */
           py_take_hit(damage);
 
-          if (player_saves())
-            msg_print("You resist the urge to be afraid!");
-          else if (countD.fear == 0) {
+          if (player_saves()) {
+            if (countD.fear == 0)
+              msg_print("You resist the urge to be afraid!");
+          } else if (countD.fear == 0) {
             msg_print("You are suddenly afraid!");
             countD.fear += 3 + randint(cre->level);
           } else {
