@@ -6731,27 +6731,33 @@ equip_takeoff(iidx)
 void
 inven_wear(iidx)
 {
+  int slot, slot_count;
   struct objS* obj;
-  obj = obj_get(invenD[iidx]);
-  int slot = slot_equip(obj->tval);
-  if (slot > 0) {
-    int slot_count = (slot == INVEN_RING) ? 2 : 1;
-    if (invenD[slot]) equip_takeoff(slot);
-    if (invenD[slot] == 0) {
-      for (int it = 0; it < slot_count; ++it) {
-        if (invenD[slot + it] == 0) {
-          invenD[slot] = obj->id;
-          invenD[iidx] = 0;
 
-          py_bonuses(obj, 1);
-          obj_desc(obj, TRUE);
-          MSG("You are wearing %s.", descD);
-          if (obj->flags & TR_CURSED) {
-            msg_print("Oops! It feels deathly cold!");
-            obj->cost = -1;
-            obj->idflag |= ID_DAMD;
-          }
+  obj = obj_get(invenD[iidx]);
+  slot = slot_equip(obj->tval);
+  if (slot >= 0) {
+    if (slot == INVEN_RING) {
+      slot_count = 2;
+    } else {
+      slot_count = 1;
+      if (invenD[slot]) equip_takeoff(slot);
+    }
+
+    for (int it = 0; it < slot_count; ++it, ++slot) {
+      if (invenD[slot] == 0) {
+        invenD[slot] = obj->id;
+        invenD[iidx] = 0;
+
+        py_bonuses(obj, 1);
+        obj_desc(obj, TRUE);
+        MSG("You are wearing %s.", descD);
+        if (obj->flags & TR_CURSED) {
+          msg_print("Oops! It feels deathly cold!");
+          obj->cost = -1;
+          obj->idflag |= ID_DAMD;
         }
+        break;
       }
     }
   }
