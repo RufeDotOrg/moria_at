@@ -3418,7 +3418,8 @@ void update_mon(midx) int midx;
     } else if ((uD.mflag & (1 << MA_DETECT_INVIS)) &&
                (CM_INVISIBLE & cr_ptr->cmove)) {
       flag = TRUE;
-    } else if ((m_ptr->cdis <= MAX_SIGHT) && los(uD.y, uD.x, fy, fx)) {
+    } else if (countD.blind == 0 && (m_ptr->cdis <= MAX_SIGHT) &&
+               los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
       if (cave_lit(c_ptr)) {
@@ -4212,10 +4213,10 @@ static void mon_desc(midx) int midx;
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
-  // if (!mon->ml)
-  //  strcpy(cdesc, "It ");
-  // else
-  snprintf(descD, AL(descD), "The %s", cre->name);
+  if (mon->ml)
+    snprintf(descD, AL(descD), "The %s", cre->name);
+  else
+    strcpy(descD, "It");
 
   // if (CM_WIN & cre->cmove)
   //  snprintf(death_descD, AL(death_descD), "The %s", cre->name);
