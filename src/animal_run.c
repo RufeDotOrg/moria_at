@@ -4861,13 +4861,13 @@ py_init()
     food->number = 5;
     invenD[it] = food->id;
   }
-  int actuate_test[] = {};  // scrolls: 174 222
-  for (int it = 0; it < AL(actuate_test); ++it) {
+  int inven_test[] = {};  // scrolls: 174 222
+  for (int it = 0; it < AL(inven_test); ++it) {
     int iidx = inven_slot();
     if (iidx == -1) break;
 
     struct objS* obj = obj_use();
-    tr_obj_copy(actuate_test[it], obj);
+    tr_obj_copy(inven_test[it], obj);
     magic_treasure(obj, dun_level);
     tr_make_known(&treasureD[obj->tidx]);
     invenD[iidx] = obj->id;
