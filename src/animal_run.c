@@ -8306,7 +8306,8 @@ static void hit_trap(y, x) int y, x;
   py_take_hit(dam);
   switch (obj->subval) {
     case 1:
-      msg_print("You fell into a covered pit");
+      msg_print("You fell into a pit.");
+      obj->tchar = ' ';
       break;
     case 2:
       if (test_hit(125, 0, 0, tac)) {
