@@ -2215,7 +2215,7 @@ struct treasureS* tr_ptr;
   }
 }
 BOOL
-tr_known(tr_ptr)
+tr_is_known(tr_ptr)
 struct treasureS* tr_ptr;
 {
   int krow = tr_known_row(tr_ptr);
@@ -4053,7 +4053,7 @@ BOOL prefix;
   indexx = obj->subval & (ITEM_SINGLE_STACK - 1);
   basenm = tr_ptr->name;
   damstr[0] = 0;
-  modify = tr_known(tr_ptr) ? FALSE : TRUE;
+  modify = tr_is_known(tr_ptr) ? FALSE : TRUE;
   append_name = FALSE;
   switch (obj->tval) {
     case TV_MISC:
@@ -5826,7 +5826,7 @@ inven_eat(iidx)
       /* End of food actions.  			*/
     }
     if (ident) {
-      if (!tr_known(tr_ptr)) {
+      if (!tr_is_known(tr_ptr)) {
         /* round half-way case up */
         uD.exp += (obj->level + (uD.lev >> 1)) / uD.lev;
         py_experience();
@@ -6098,7 +6098,7 @@ inven_quaff(iidx)
           break;
       }
     }
-    if (!tr_known(tr_ptr)) {
+    if (!tr_is_known(tr_ptr)) {
       if (ident) {
         // TBD: XP tuning
         tr_make_known(tr_ptr);
@@ -6315,7 +6315,7 @@ int *uy, *ux;
       }
       /* End of Scrolls.  		       */
     }
-    if (!tr_known(t_ptr)) {
+    if (!tr_is_known(t_ptr)) {
       if (ident) {
         /* round half-way case up */
         // TDB: xp tuning
@@ -6457,7 +6457,7 @@ inven_try_wand_dir(iidx, dir)
       /* End of Wands.  	    */
     }
     if (ident) {
-      if (!tr_known(t_ptr)) {
+      if (!tr_is_known(t_ptr)) {
         /* round half-way case up */
         // TBD: tuning
         uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
@@ -6621,7 +6621,7 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
         /* End of staff actions.  	*/
       }
       if (ident) {
-        if (!tr_known(t_ptr)) {
+        if (!tr_is_known(t_ptr)) {
           /* round half-way case up */
           uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
           py_experience();
