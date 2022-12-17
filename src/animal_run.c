@@ -2765,7 +2765,7 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   tr_obj_copy(z, obj);
   obj->fy = y;
   obj->fx = x;
-  struct treasureS* t_ptr = &treasureD[obj->tidx];
+  struct treasureS* tr_ptr = &treasureD[obj->tidx];
 
   magic_treasure(obj, dun_level);
 
@@ -4632,11 +4632,11 @@ static void
 inven_ident(iidx)
 {
   struct objS* obj;
-  struct treasureS* t_ptr;
+  struct treasureS* tr_ptr;
 
   obj = obj_get(invenD[iidx]);
-  t_ptr = &treasureD[obj->tidx];
-  tr_make_known(t_ptr);
+  tr_ptr = &treasureD[obj->tidx];
+  tr_make_known(tr_ptr);
   obj->idflag |= ID_REVEAL;
   obj_desc(obj, TRUE);
   if (iidx >= INVEN_EQUIP) {
@@ -6123,10 +6123,10 @@ int *uy, *ux;
   int flag, used_up;
   register int ident, l;
   struct objS* i_ptr;
-  struct treasureS* t_ptr;
+  struct treasureS* tr_ptr;
 
   i_ptr = obj_get(invenD[iidx]);
-  t_ptr = &treasureD[i_ptr->tidx];
+  tr_ptr = &treasureD[i_ptr->tidx];
   if (i_ptr->tval == TV_SCROLL1 || i_ptr->tval == TV_SCROLL2) {
     free_turn_flag = FALSE;
     used_up = TRUE;
@@ -6315,14 +6315,14 @@ int *uy, *ux;
       }
       /* End of Scrolls.  		       */
     }
-    if (!tr_is_known(t_ptr)) {
+    if (!tr_is_known(tr_ptr)) {
       if (ident) {
         /* round half-way case up */
         // TDB: xp tuning
         uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
         py_experience();
 
-        tr_make_known(t_ptr);
+        tr_make_known(tr_ptr);
       }
       // else
       //   sample(i_ptr);
@@ -6345,12 +6345,12 @@ inven_try_wand_dir(iidx, dir)
   uint32_t flags, j;
   int y, x, ident, chance;
   struct objS* i_ptr;
-  struct treasureS* t_ptr;
+  struct treasureS* tr_ptr;
 
   y = uD.y;
   x = uD.x;
   i_ptr = obj_get(invenD[iidx]);
-  t_ptr = &treasureD[i_ptr->tidx];
+  tr_ptr = &treasureD[i_ptr->tidx];
   ident = FALSE;
   chance = uD.save + think_adj(A_INT) - (int)i_ptr->level +
            (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
@@ -6457,13 +6457,13 @@ inven_try_wand_dir(iidx, dir)
       /* End of Wands.  	    */
     }
     if (ident) {
-      if (!tr_is_known(t_ptr)) {
+      if (!tr_is_known(tr_ptr)) {
         /* round half-way case up */
         // TBD: tuning
         uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
         py_experience();
 
-        tr_make_known(t_ptr);
+        tr_make_known(tr_ptr);
       }
     }
     // else if (!known1_p(i_ptr))
@@ -6498,10 +6498,10 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
   int k, chance;
   int ident;
   struct objS* i_ptr;
-  struct treasureS* t_ptr;
+  struct treasureS* tr_ptr;
 
   i_ptr = obj_get(invenD[iidx]);
-  t_ptr = &treasureD[i_ptr->tidx];
+  tr_ptr = &treasureD[i_ptr->tidx];
   if (i_ptr->tval == TV_STAFF) {
     free_turn_flag = FALSE;
     chance = uD.save + think_adj(A_INT) - i_ptr->level - 5 +
@@ -6621,12 +6621,12 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
         /* End of staff actions.  	*/
       }
       if (ident) {
-        if (!tr_is_known(t_ptr)) {
+        if (!tr_is_known(tr_ptr)) {
           /* round half-way case up */
           uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
           py_experience();
 
-          tr_make_known(t_ptr);
+          tr_make_known(tr_ptr);
         }
       }
       // else if (!known1_p(i_ptr))
