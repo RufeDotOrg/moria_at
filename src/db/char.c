@@ -273,6 +273,9 @@ char* spell_nameD[] = {
     "Holy Word",
 };
 
+char stat_nameD[MAX_A][5] = {
+    "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
+};
 char* stat_lossD[] = {
     "You feel weaker",        "You have trouble thinking clearly",
     "You feel very naive",    "You feel clumsy",

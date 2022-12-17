@@ -62,14 +62,17 @@ status_update()
   AC(vitalinfo_usedD);
 
   int line = 0;
-  BufMsg(vitalinfo, "CHP : %6d", uD.chp);
-  BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
+  for (int it = 0; it < MAX_A; ++it) {
+    BufMsg(vitalinfo, "%-4.04s: %6d", stat_nameD[it], statD.use_stat[it]);
+  }
+  line += 1;
   BufMsg(vitalinfo, "LEV : %6d", uD.lev);
   BufMsg(vitalinfo, "EXP : %6d", uD.exp);
+  BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
+  BufMsg(vitalinfo, "CHP : %6d", uD.chp);
   line += 1;
-  BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
   BufMsg(vitalinfo, "AC  : %6d", uD.pac);
-
+  BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
   line += 1;
   BufMsg(vitalinfo, "DEBUG");
   BufMsg(vitalinfo, "y,x :%3d,%3d", uD.y, uD.x);
@@ -6807,9 +6810,6 @@ void choice_actuate(uy, ux) int *uy, *ux;
     }
   }
 }
-char stat_nameD[MAX_A][5] = {
-    "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
-};
 enum { RATIO = (MAX_WIDTH / SYMMAP_WIDTH) };
 #define TL 0 /* top left */
 #define TR 1
