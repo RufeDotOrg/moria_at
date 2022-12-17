@@ -89,9 +89,10 @@ get_sym(int row, int col)
 {
   register struct caveS* cave_ptr;
 
-  if (row == uD.y && col == uD.x) return '@';
-  // else if (countD.blind)
-  //   return ' ';
+  if (row == uD.y && col == uD.x)
+    return '@';
+  else if (countD.blind)
+    return ' ';
 
   cave_ptr = &caveD[row][col];
   if (cave_ptr->midx) {
