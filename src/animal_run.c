@@ -5427,7 +5427,7 @@ trap_creation(y, x)
   trap = FALSE;
   for (i = y - 1; i <= y + 1; i++)
     for (j = x - 1; j <= x + 1; j++) {
-      if (i != y && j != x) {
+      if (i != y || j != x) {
         c_ptr = &caveD[i][j];
         if (c_ptr->fval <= MAX_FLOOR) {
           if (c_ptr->oidx) delete_object(i, j);
@@ -7514,47 +7514,61 @@ close_object()
     }
   }
 }
-void disarm_trap(uy, ux) int *uy, *ux;
+void
+disarm_trap(y, x)
 {
-  int y, x, dir, valid, chance;
+  int chance;
   struct caveS* c_ptr;
   struct objS* obj;
 
-  y = uD.y;
-  x = uD.x;
-  if (get_dir(0, &dir)) {
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
+
+  if (obj->tval == TV_VIS_TRAP) {
+    // TBD: div is used; verify this number is positive. clean-up code.
+    chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+             level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
+    if (countD.confusion) chance /= 8;
+    if (chance + 100 - obj->level > randint(100)) {
+      msg_print("You have disarmed the trap.");
+      uD.exp += obj->p1;
+      delete_object(y, x);
+      py_experience();
+    }
+    // TBD: balance tuning; harmless failure to disarm is gone
+    // else if (chance > 5 && randint(chance) > 5)
+    //    msg_print("You failed to disarm the trap.");
+    else {
+      msg_print("You fail to disarm the trap.");
+    }
+  }
+}
+void py_disarm(uy, ux) int *uy, *ux;
+{
+  int y, x, dir;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  y = *uy;
+  x = *ux;
+  if (countD.confusion) {
+    msg_print("You are too confused to disarm.");
+    free_turn_flag = TRUE;
+  } else if (get_dir(0, &dir)) {
     mmove(dir, &y, &x);
     c_ptr = &caveD[y][x];
     obj = &entity_objD[c_ptr->oidx];
-    valid = (obj->tval == TV_VIS_TRAP);
 
-    if (valid) {
-      if (c_ptr->midx) {
-        msg_print("Something is in your way!");
-      } else if (obj->tval == TV_VIS_TRAP) {
-        // TBD: div is used; verify this number is positive. clean-up code.
-        chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
-                 level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
-        if (countD.confusion) chance /= 8;
-        if (chance + 100 - obj->level > randint(100)) {
-          msg_print("You have disarmed the trap.");
-          uD.exp += obj->p1;
-          delete_object(y, x);
-          *uy = y;
-          *ux = x;
-          py_experience();
-        } else if (chance > 5 && randint(chance) > 5)
-          msg_print("You failed to disarm the trap.");
-        else {
-          msg_print("You set the trap off!");
-          // Move onto the trap, even during confusion
-          *uy = y;
-          *ux = x;
-        }
-      }
-    } else {
+    if (obj->tval != TV_VIS_TRAP) {
       msg_print("I do not see anything to disarm there.");
       free_turn_flag = TRUE;
+    } else if (c_ptr->midx) {
+      // Prevent invis-detection via disarm: no free turn
+      msg_print("Something is in your way!");
+    } else {
+      disarm_trap(y, x);
+      *uy = y;
+      *ux = x;
     }
   }
 }
@@ -8615,7 +8629,7 @@ dungeon()
               py_character();
               break;
             case 'D':
-              disarm_trap(&y, &x);
+              py_disarm(&y, &x);
               break;
             case 'E':
               iidx = choice("Eat what?");
@@ -8746,6 +8760,9 @@ dungeon()
             else
               msg_print("You are too afraid!");
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
+            if (obj->tval == TV_VIS_TRAP) {
+              disarm_trap(y, x);
+            }
             py_move_light(uD.y, uD.x, y, x);
             if (countD.blind == 0 && ((c_ptr->cflag & CF_PERM_LIGHT) == 0 &&
                                       c_ptr->cflag & CF_ROOM)) {
