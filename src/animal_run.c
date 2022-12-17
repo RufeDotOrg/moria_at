@@ -104,7 +104,7 @@ get_sym(int row, int col)
     return ' ';
   if (cave_ptr->oidx) {
     struct objS* obj = &entity_objD[cave_ptr->oidx];
-    return obj->tchar;
+    if (obj->tval != TV_INVIS_TRAP) return obj->tchar;
   }
   switch (cave_ptr->fval) {
     case FLOOR_LIGHT:
