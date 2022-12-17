@@ -73,7 +73,7 @@ status_update()
   line += 1;
   BufMsg(vitalinfo, "DEBUG");
   BufMsg(vitalinfo, "y,x :%3d,%3d", uD.y, uD.x);
-  BufMsg(vitalinfo, "quad:%3d,%3d", panelD.panel_col, panelD.panel_row);
+  BufMsg(vitalinfo, "sec :%3d,%3d", panelD.panel_col, panelD.panel_row);
   BufMsg(vitalinfo, "turn: %6d", turnD);
 
   BufPad(vitalinfo, AL(vitalinfoD), AL(vitalinfoD[0]));
