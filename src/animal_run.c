@@ -6809,7 +6809,8 @@ void choice_actuate(uy, ux) int *uy, *ux;
     }
   }
 }
-enum { RATIO = (MAX_WIDTH / SYMMAP_WIDTH) };
+enum { MINIMAP_WIDTH = SYMMAP_WIDTH };
+enum { RATIO = (MAX_WIDTH / MINIMAP_WIDTH) };
 #define TL 0 /* top left */
 #define TR 1
 #define BL 2
@@ -6827,7 +6828,7 @@ py_map()
   uint8_t map[MAX_WIDTH / RATIO + 1];
   uint8_t tmp;
   int priority[256];
-  int row, orow, col, myrow, mycol = 0;
+  int row, orow, col;
   char* iter;
 
   for (i = 0; i < 256; i++) priority[i] = 0;
@@ -6841,9 +6842,9 @@ py_map()
 
   iter = screenD[0];
   *iter++ = CH(TL);
-  for (int it = 0; it < SYMMAP_WIDTH; ++it) *iter++ = CH(HE);
+  for (int it = 0; it < MINIMAP_WIDTH; ++it) *iter++ = CH(HE);
   *iter++ = CH(TR);
-  screen_usedD[0] = (SYMMAP_WIDTH + 2);
+  screen_usedD[0] = (MINIMAP_WIDTH + 2);
 
   orow = -1;
   map[MAX_WIDTH / RATIO] = '\0';
@@ -6870,9 +6871,9 @@ py_map()
   }
   iter = screenD[orow + 2];
   *iter++ = CH(BL);
-  for (int it = 0; it < SYMMAP_WIDTH; ++it) *iter++ = CH(HE);
+  for (int it = 0; it < MINIMAP_WIDTH; ++it) *iter++ = CH(HE);
   *iter++ = CH(BR);
-  screen_usedD[orow + 2] = (SYMMAP_WIDTH + 2);
+  screen_usedD[orow + 2] = (MINIMAP_WIDTH + 2);
 
   free_turn_flag = TRUE;
 }
