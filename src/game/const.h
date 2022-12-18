@@ -50,6 +50,7 @@
 #define TREAS_GOLD_ALLOC 4  // TBD: retune
 #define TRUE 1
 #define FALSE 0
+#define MAX_SHOP 6
 
 /* indexes into the special name table */
 #define SN_R			1
@@ -168,6 +169,7 @@
 #define TV_UP_STAIR 107
 #define TV_DOWN_STAIR 108
 #define TV_SECRET_DOOR 109
+#define TV_STORE_DOOR 110
 #define TV_MAX_VISIBLE 110
 
 #define MAX_TRAP 3

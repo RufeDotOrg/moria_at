@@ -643,6 +643,47 @@ static void build_room(yval, xval) int yval, xval;
     d_ptr++;
   }
 }
+static void
+build_store(store_num, y, x)
+{
+  int yval, y_height, y_depth;
+  int xval, x_left, x_right;
+  int i, j, tmp;
+  struct objS* obj;
+
+  yval = y * 7 + 4;
+  xval = x * 8 + 8;
+  y_height = yval - randint(2);
+  y_depth = yval + randint(2);
+  x_left = xval - randint(3);
+  x_right = xval + randint(3);
+  for (i = y_height; i <= y_depth; i++)
+    for (j = x_left; j <= x_right; j++) caveD[i][j].fval = BOUNDARY_WALL;
+  tmp = randint(4);
+  if (tmp < 3) {
+    i = randint(y_depth - y_height) + y_height - 1;
+    if (tmp == 1)
+      j = x_left;
+    else
+      j = x_right;
+  } else {
+    j = randint(x_right - x_left) + x_left - 1;
+    if (tmp == 3)
+      i = y_depth;
+    else
+      i = y_height;
+  }
+
+  obj = obj_use();
+  obj->fy = i;
+  obj->fx = j;
+  obj->tval = TV_STORE_DOOR;
+  obj->tchar = '0' + store_num;
+  obj->subval = 100 + store_num;
+  obj->number = 1;
+  caveD[i][j].oidx = obj_index(obj);
+  caveD[i][j].fval = FLOOR_CORR;
+}
 BOOL
 near_light(y, x)
 int y, x;
@@ -2903,8 +2944,10 @@ cave_gen()
 void
 town_gen()
 {
-  int i, j;
+  int i, j, k;
   struct caveS* c_ptr;
+  int room[MAX_SHOP];
+  int room_used;
 
   for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
     for (int col = 0; col < SYMMAP_WIDTH; ++col) {
@@ -2919,14 +2962,19 @@ town_gen()
     }
   }
 
-  do {
-    i = randint(SYMMAP_HEIGHT - 2);
-    j = randint(SYMMAP_WIDTH - 2);
-    c_ptr = &caveD[i][j];
-  } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
-           (c_ptr->midx != 0));
-  uD.y = i;
-  uD.x = j;
+  for (i = 0; i < MAX_SHOP; ++i) room[i] = i + 1;
+  room_used = MAX_SHOP;
+  for (i = 0; i < 2; i++)
+    for (j = 0; j < 3; j++) {
+      k = randint(room_used) - 1;
+
+      build_store(room[k], i, j);
+      while (k < MAX_SHOP - 1) {
+        room[k] = room[k + 1];
+        k += 1;
+      }
+      room_used -= 1;
+    }
 
   do {
     i = randint(SYMMAP_HEIGHT - 2);
@@ -2935,6 +2983,15 @@ town_gen()
   } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
            (c_ptr->midx != 0));
   place_stair_tval_tchar(i, j, TV_DOWN_STAIR, '>');
+
+  do {
+    i = randint(SYMMAP_HEIGHT - 2);
+    j = randint(SYMMAP_WIDTH - 2);
+    c_ptr = &caveD[i][j];
+  } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
+           (c_ptr->midx != 0));
+  uD.y = i;
+  uD.x = j;
 }
 void
 generate_cave()
