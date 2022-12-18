@@ -190,8 +190,16 @@ affect_update()
       affectinfoD[len++] = ' ';
     }
   }
-  count = snprintf(&affectinfoD[len], AL(affectinfoD) - len, "%d feet",
-                   dun_level * 50);
+
+  static char d0[] = "Town Level";
+  if (dun_level != 0) {
+    count = snprintf(&affectinfoD[len], AL(affectinfoD) - len, "%d feet",
+                     dun_level * 50);
+  } else if (AL(affectinfoD) - len > AL(d0)) {
+    count = AL(d0);
+    strcpy(&affectinfoD[len], d0);
+  }
+
   if (count > 0) len += count;
   affectinfo_usedD = len;
 }
