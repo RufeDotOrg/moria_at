@@ -3430,8 +3430,7 @@ void update_mon(midx) int midx;
           flag = TRUE;
         else if (uD.tflag & TR_SEE_INVIS)
           flag = TRUE;
-      } else if ((CD_INFRA & cr_ptr->cdefense) &&
-                 (m_ptr->cdis <= uD.see_infra)) {
+      } else if ((CD_INFRA & cr_ptr->cdefense) && (m_ptr->cdis <= uD.infra)) {
         flag = TRUE;
       }
     }
@@ -4358,7 +4357,7 @@ int factor;
   }
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
   if (TR_SPEED & obj->flags) uD.pspeed -= amount;
-  if (TR_INFRA & obj->flags) uD.see_infra += amount;
+  if (TR_INFRA & obj->flags) uD.infra += amount;
 }
 // TBD: various
 // Combat bonuses are applied in calc_bonuses
@@ -4433,7 +4432,7 @@ ma_bonuses(maffect, factor)
     case MA_SEE_INVIS:
       break;
     case MA_SEE_INFRA:
-      uD.see_infra += factor * 3;
+      uD.infra += factor * 3;
       break;
     case MA_DETECT_MON:
       break;
@@ -4799,7 +4798,7 @@ py_init()
   uD.disarm = r_ptr->dis;
   uD.stealth = r_ptr->stl;
   uD.save = r_ptr->bsav;
-  uD.see_infra = r_ptr->infra;
+  uD.infra = r_ptr->infra;
   uD.mult_exp = r_ptr->b_exp;
   int male = 1 - randint(2);
   if (male) {
@@ -5071,24 +5070,27 @@ py_heal_hit(num)
   }
   return (res);
 }
+int
+lev_exp(lev)
+{
+  return player_exp[lev - 1] * uD.mult_exp / 100;
+}
 void
 py_experience()
 {
   int exp = uD.exp;
   int lev = uD.lev;
-  int expfact = uD.mult_exp;
 
   if (exp > MAX_EXP) exp = MAX_EXP;
 
-  while ((lev < MAX_PLAYER_LEVEL) &&
-         (player_exp[lev - 1] * expfact / 100) <= exp) {
+  while ((lev < MAX_PLAYER_LEVEL) && lev_exp(lev) <= exp) {
     int dif_exp, need_exp;
 
     lev += 1;
     MSG("Welcome to level %d.", lev);
     calc_hitpoints(lev);
 
-    need_exp = player_exp[lev - 1] * expfact / 100;
+    need_exp = lev_exp(lev);
     if (exp > need_exp) {
       /* lose some of the 'extra' exp when gaining several levels at once */
       dif_exp = exp - need_exp;
@@ -5122,8 +5124,7 @@ restore_level()
     exp = uD.max_exp;
     expfact = uD.mult_exp;
     lev = uD.lev;
-    while ((lev < MAX_PLAYER_LEVEL) &&
-           (player_exp[lev - 1] * expfact / 100) <= exp) {
+    while ((lev < MAX_PLAYER_LEVEL) && lev_exp(lev) <= exp) {
       lev += 1;
       MSG("Welcome to level %d.", lev);
     }
@@ -5140,10 +5141,8 @@ py_lose_experience(amount)
 
   exp = MAX(uD.exp - amount, 0);
 
-  lev = 0;
-  while ((player_exp[lev] * uD.mult_exp / 100) <= exp) lev++;
-  /* increment lev once more, because level 1 exp is stored in player_exp[0] */
-  lev++;
+  lev = 1;
+  while (lev_exp(lev) <= exp) lev++;
 
   uD.exp = exp;
   if (uD.lev != lev) {
@@ -6906,14 +6905,49 @@ py_character()
     BufMsg(screen, "%-4.04s:%5d  %d", stat_nameD[it], statD.use_stat[it],
            statD.max_stat[it]);
   }
-  line += 1;
 
-  BufMsg(screen, "ToHit: %+6d", uD.ptohit);
-  BufMsg(screen, "ToDam: %+6d", uD.ptodam);
-  BufMsg(screen, "Ac   : %6d", uD.pac);
-  BufMsg(screen, "ToAc : %+6d", uD.ptoac);
-  // TBD: the rest
-  BufMsg(screen, "Speed: %+6d", uD.pspeed);
+  line = MAX_A + 1;
+  BufMsg(screen, "%-13.013s: %6d", "+ To Hit", uD.ptohit);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Damage", uD.ptodam);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Armor", uD.ptoac);
+  BufMsg(screen, "%-13.013s: %6d", "Total Armor", uD.pac + uD.ptoac);
+
+  BufPad(screen, MAX_A * 2, 28);
+
+  line = MAX_A + 1;
+  BufMsg(screen, "%-11.011s: %6d", "Level", uD.lev);
+  BufMsg(screen, "%-11.011s: %6d", "Experience", uD.exp);
+  BufMsg(screen, "%-11.011s: %6d", "Max Exp", uD.max_exp);
+  BufMsg(screen, "%-11.011s: %6d", "Exp to Adv", lev_exp(uD.lev) - uD.exp);
+  BufMsg(screen, "%-11.011s: %6d", "Gold", uD.gold);
+
+  BufPad(screen, MAX_A * 2, 52);
+
+  line = MAX_A + 1;
+  BufMsg(screen, "%-15.015s: %6d", "Max Hit Points", uD.mhp);
+  BufMsg(screen, "%-15.015s: %6d", "Cur Hit Points", uD.chp);
+  BufMsg(screen, "%-15.015s: %6d", "Max Mana", 0);
+  BufMsg(screen, "%-15.015s: %6d", "Cur Mana", 0);
+  BufMsg(screen, "%-15.015s: %6d", "Speed", -uD.pspeed);
+
+  line = 2 * MAX_A + 1;
+  BufMsg(screen, "%-13.013s: %6d", "Fighting", uD.bth);
+  BufMsg(screen, "%-13.013s: %6d", "Bows", 0);
+  BufMsg(screen, "%-13.013s: %6d", "Saving Throw", uD.save);
+  BufPad(screen, MAX_A * 3, 28);
+
+  line = 2 * MAX_A + 1;
+  // TBD: xdev calc from wand/staff
+  BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
+  BufMsg(screen, "%-12.012s: %6d", "Disarming", uD.disarm);
+  BufMsg(screen, "%-12.012s: %6d", "Magic Device", uD.save);
+  BufPad(screen, MAX_A * 3, 55);
+
+  line = 2 * MAX_A + 1;
+  BufMsg(screen, "%-12.012s: %6d", "Perception", MAX(40 - uD.fos, 0));
+  BufMsg(screen, "%-12.012s: %6d", "Searching", uD.search);
+  BufMsg(screen, "%-12.012s: %d feet", "Infra-Vision", uD.infra * 10);
+
   free_turn_flag = TRUE;
 }
 void
