@@ -2893,6 +2893,42 @@ cave_gen()
   // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
 }
 void
+town_gen()
+{
+  int i, j;
+  struct caveS* c_ptr;
+
+  for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
+    for (int col = 0; col < SYMMAP_WIDTH; ++col) {
+      c_ptr = &caveD[row][col];
+      if ((row == 0 || row + 1 == SYMMAP_HEIGHT) ||
+          (col == 0 || col + 1 == SYMMAP_WIDTH)) {
+        c_ptr->fval = BOUNDARY_WALL;
+      } else {
+        c_ptr->fval = FLOOR_LIGHT;
+      }
+      c_ptr->cflag |= CF_PERM_LIGHT;
+    }
+  }
+
+  do {
+    i = randint(SYMMAP_HEIGHT - 2);
+    j = randint(SYMMAP_WIDTH - 2);
+    c_ptr = &caveD[i][j];
+  } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
+           (c_ptr->midx != 0));
+  uD.y = i;
+  uD.x = j;
+
+  do {
+    i = randint(SYMMAP_HEIGHT - 2);
+    j = randint(SYMMAP_WIDTH - 2);
+    c_ptr = &caveD[i][j];
+  } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
+           (c_ptr->midx != 0));
+  place_stair_tval_tchar(i, j, TV_DOWN_STAIR, '>');
+}
+void
 generate_cave()
 {
   // Clear the cave
@@ -2910,7 +2946,10 @@ generate_cave()
   memset(entity_monD, 0, sizeof(entity_monD));
 
   // a fresh cave!
-  cave_gen();
+  if (dun_level != 0)
+    cave_gen();
+  else
+    town_gen();
 }
 BOOL
 panel_contains(panel, y, x)
@@ -2937,16 +2976,21 @@ panel_bounds(struct panelS* panel)
 void
 panel_update(struct panelS* panel, int y, int x, BOOL force)
 {
-  BOOL yd = (y < panel->panel_row_min + 2 || y > panel->panel_row_max - 3);
-  if (force || yd) {
-    int prow = (y - SYMMAP_HEIGHT / 4) / (SYMMAP_HEIGHT / 2);
-    panel->panel_row = CLAMP(prow, 0, MAX_ROW - 2);
-  }
+  if (dun_level != 0) {
+    BOOL yd = (y < panel->panel_row_min + 2 || y > panel->panel_row_max - 3);
+    if (force || yd) {
+      int prow = (y - SYMMAP_HEIGHT / 4) / (SYMMAP_HEIGHT / 2);
+      panel->panel_row = CLAMP(prow, 0, MAX_ROW - 2);
+    }
 
-  BOOL xd = (x < panel->panel_col_min + 2 || x > panel->panel_col_max - 3);
-  if (force || xd) {
-    int pcol = (x - SYMMAP_WIDTH / 4) / (SYMMAP_WIDTH / 2);
-    panel->panel_col = CLAMP(pcol, 0, MAX_COL - 2);
+    BOOL xd = (x < panel->panel_col_min + 2 || x > panel->panel_col_max - 3);
+    if (force || xd) {
+      int pcol = (x - SYMMAP_WIDTH / 4) / (SYMMAP_WIDTH / 2);
+      panel->panel_col = CLAMP(pcol, 0, MAX_COL - 2);
+    }
+  } else {
+    panel->panel_row = 0;
+    panel->panel_col = 0;
   }
 
   panel_bounds(panel);
@@ -8876,7 +8920,7 @@ main()
   // Burn randomness after platform seed
   for (int it = randint(100); it != 0; --it) rnd();
 
-  dun_level = 1;
+  dun_level = 0;
   mon_level_init();
   obj_level_init();
   generate_cave();
