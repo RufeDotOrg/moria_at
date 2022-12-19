@@ -82,3 +82,8 @@ static int free_turn_flag;
 static int new_level_flag;
 static char descD[160];
 static char death_descD[160];
+
+// Inventory of object IDs; obj_get(id)
+// Zero is an available or empty slot
+// [INVEN_WIELD, INVEN_AUX] are equipment
+static int invenD[MAX_INVEN];

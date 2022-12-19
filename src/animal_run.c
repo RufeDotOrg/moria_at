@@ -36,11 +36,6 @@ ARR_REUSE(mon, 256);
     }                                      \
   }
 
-// Inventory of object IDs; obj_get(id)
-// Zero is an available or empty slot
-// [INVEN_WIELD, INVEN_AUX] are equipment
-static int invenD[MAX_INVEN];
-
 static char
 inkey()
 {
