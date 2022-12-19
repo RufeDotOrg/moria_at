@@ -2991,11 +2991,11 @@ town_gen()
   int room[MAX_STORE];
   int room_used;
 
-  for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
-    for (int col = 0; col < SYMMAP_WIDTH; ++col) {
+  for (int row = 0; row < MAX_HEIGHT; ++row) {
+    for (int col = 0; col < MAX_WIDTH; ++col) {
       c_ptr = &caveD[row][col];
-      if ((row == 0 || row + 1 == SYMMAP_HEIGHT) ||
-          (col == 0 || col + 1 == SYMMAP_WIDTH)) {
+      if ((row == 0 || row + 1 >= SYMMAP_HEIGHT) ||
+          (col == 0 || col + 1 >= SYMMAP_WIDTH)) {
         c_ptr->fval = BOUNDARY_WALL;
       } else {
         c_ptr->fval = FLOOR_LIGHT;
