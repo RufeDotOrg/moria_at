@@ -53,6 +53,8 @@
 
 #define MAX_STORE 6
 #define MAX_STORE_INVEN 16
+#define MIN_STORE_INVEN 8
+#define STORE_TURN_AROUND 9
 
 /* indexes into the special name table */
 #define SN_R			1

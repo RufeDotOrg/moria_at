@@ -2558,6 +2558,53 @@ int tval;
   return slot;
 }
 void
+store_maint()
+{
+  int i, j, k, store_ctr;
+  struct objS* obj;
+
+  for (i = 0; i < MAX_STORE; i++) {
+    store_ctr = 0;
+    for (j = 0; j < MAX_STORE_INVEN; ++j) {
+      store_ctr += (storeD[i][j] != 0);
+    }
+
+    if (store_ctr >= MIN_STORE_INVEN) {
+      j = randint(STORE_TURN_AROUND);
+      store_ctr -= j;
+
+      do {
+        k = randint(MAX_STORE_INVEN) - 1;
+        obj = obj_get(storeD[i][k]);
+        if (obj->id) {
+          obj_unuse(obj);
+          j -= 1;
+        }
+      } while (j > 0);
+    }
+
+    if (store_ctr < MAX_STORE_INVEN) {
+      j = 0;
+      if (store_ctr < MIN_STORE_INVEN) j = MIN_STORE_INVEN;
+      j += randint(STORE_TURN_AROUND);
+      store_ctr += j;
+
+      do {
+        k = randint(MAX_STORE_INVEN) - 1;
+        if (storeD[i][k] == 0) {
+          // store_create(i)
+          obj = obj_use();
+          tr_obj_copy(randint(AL(treasureD) - 1), obj);
+          magic_treasure(obj, dun_level);
+          obj->idflag = ID_REVEAL;
+          storeD[i][k] = obj->id;
+          j -= 1;
+        }
+      } while (j > 0);
+    }
+  }
+}
+void
 map_area()
 {
   struct caveS* c_ptr;
@@ -2987,6 +3034,8 @@ town_gen()
            (c_ptr->midx != 0));
   uD.y = i;
   uD.x = j;
+
+  store_maint();
 }
 void
 generate_cave()
