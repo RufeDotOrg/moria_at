@@ -2859,7 +2859,6 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   tr_obj_copy(z, obj);
   obj->fy = y;
   obj->fx = x;
-  struct treasureS* tr_ptr = &treasureD[obj->tidx];
 
   magic_treasure(obj, dun_level);
 
@@ -4205,7 +4204,7 @@ BOOL prefix;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
-  indexx = obj->subval & (ITEM_SINGLE_STACK - 1);
+  indexx = obj->subval & MASK_SUBVAL;
   basenm = tr_ptr->name;
   damstr[0] = 0;
   unknown = !(tr_is_known(tr_ptr) || (obj->idflag & ID_REVEAL));
@@ -8569,14 +8568,9 @@ enter_store(sidx)
     uint8_t item = c - 'a';
     if (item < MAX_STORE_INVEN) {
       obj = obj_get(storeD[sidx][item]);
-      if (obj->number > 1) {
-        msg_print("unhandled...");
-        continue;
-      }
-
       if (obj->id) {
         if (uD.gold >= store_cost(obj)) {
-          if (inven_carry(obj->id)) {
+          if (inven_merge(obj->id) >= 0 || inven_carry(obj->id) >= 0) {
             obj_desc(obj, TRUE);
             MSG("You have %s.", descD);
             uD.gold -= store_cost(obj);
