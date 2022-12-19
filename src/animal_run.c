@@ -2941,7 +2941,7 @@ town_gen()
 {
   int i, j, k;
   struct caveS* c_ptr;
-  int room[MAX_SHOP];
+  int room[MAX_STORE];
   int room_used;
 
   for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
@@ -2957,14 +2957,14 @@ town_gen()
     }
   }
 
-  for (i = 0; i < MAX_SHOP; ++i) room[i] = i;
-  room_used = MAX_SHOP;
+  for (i = 0; i < MAX_STORE; ++i) room[i] = i;
+  room_used = MAX_STORE;
   for (i = 0; i < 2; i++)
     for (j = 0; j < 3; j++) {
       k = randint(room_used) - 1;
 
       build_store(room[k], i, j);
-      while (k < MAX_SHOP - 1) {
+      while (k < MAX_STORE - 1) {
         room[k] = room[k + 1];
         k += 1;
       }
@@ -8488,10 +8488,19 @@ static void
 display_store(sidx)
 {
   int line;
+  struct objS* obj;
+
   line = 0;
   BufMsg(screen, "%-17.017s: %s", "OwnerName", "...");
   line += 1;
   BufMsg(screen, "   Item");
+  for (int it = 0; it < AL(storeD[0]); ++it) {
+    obj = obj_get(storeD[sidx][it]);
+    if (obj->id) {
+      obj_desc(obj, TRUE);
+      BufMsg(screen, "%s", descD);
+    }
+  }
 }
 static void
 enter_store(sidx)

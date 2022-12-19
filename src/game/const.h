@@ -50,7 +50,9 @@
 #define TREAS_GOLD_ALLOC 4  // TBD: retune
 #define TRUE 1
 #define FALSE 0
-#define MAX_SHOP 6
+
+#define MAX_STORE 6
+#define MAX_STORE_INVEN 16
 
 /* indexes into the special name table */
 #define SN_R			1
