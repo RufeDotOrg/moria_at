@@ -644,7 +644,7 @@ static void build_room(yval, xval) int yval, xval;
   }
 }
 static void
-build_store(store_num, y, x)
+build_store(sidx, y, x)
 {
   int yval, y_height, y_depth;
   int xval, x_left, x_right;
@@ -678,8 +678,8 @@ build_store(store_num, y, x)
   obj->fy = i;
   obj->fx = j;
   obj->tval = TV_STORE_DOOR;
-  obj->tchar = '0' + store_num;
-  obj->subval = 100 + store_num;
+  obj->tchar = '0' + sidx + 1;
+  obj->subval = 100 + sidx + 1;
   obj->number = 1;
   caveD[i][j].oidx = obj_index(obj);
   caveD[i][j].fval = FLOOR_CORR;
@@ -2962,7 +2962,7 @@ town_gen()
     }
   }
 
-  for (i = 0; i < MAX_SHOP; ++i) room[i] = i + 1;
+  for (i = 0; i < MAX_SHOP; ++i) room[i] = i;
   room_used = MAX_SHOP;
   for (i = 0; i < 2; i++)
     for (j = 0; j < 3; j++) {
@@ -8489,6 +8489,25 @@ static void hit_trap(y, x) int y, x;
 
   find_flag = FALSE;
 }
+static void
+display_store(sidx)
+{
+  int line;
+  line = 0;
+  BufMsg(screen, "%-17.017s: %s", "OwnerName", "...");
+  line += 1;
+  BufMsg(screen, "   Item");
+}
+static void
+enter_store(sidx)
+{
+  char c;
+
+  while (1) {
+    display_store(sidx);
+    if (!in_subcommand("What would you like to purchase?", &c)) break;
+  }
+}
 static void regenhp(percent) int percent;
 {
   uint32_t new_value;
@@ -8925,6 +8944,8 @@ dungeon()
 
             if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
               hit_trap(y, x);
+            } else if (obj->tval == TV_STORE_DOOR) {
+              enter_store(obj->tchar - '1');
             } else if (countD.blind == 0) {
               if (find_flag) find_event(y, x);
               if (obj->tval) {
