@@ -47,13 +47,13 @@ inkey()
   char c;
   do {
     c = platform_readansi();
+    if (c == CTRL('c')) {
+      strcpy(death_descD, "quitting");
+      death = 1;
+      new_level_flag = TRUE;
+      break;
+    }
   } while (c == 0);
-  if (c == CTRL('c')) {
-    strcpy(death_descD, "quitting");
-    death = 1;
-    new_level_flag = TRUE;
-    return -1;
-  }
   return c;
 }
 void
@@ -318,7 +318,7 @@ char* command;
   } while (c == ' ');
   *command = c;
   AS(msglen_cqD, msg_writeD) = 0;
-  return (c != ESCAPE);
+  return (c != ESCAPE && c != CTRL('c'));
 }
 static char
 map_roguedir(comval)
