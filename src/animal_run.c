@@ -2585,7 +2585,7 @@ store_maint()
 
     if (store_ctr < MAX_STORE_INVEN) {
       j = 0;
-      if (store_ctr < MIN_STORE_INVEN) j = MIN_STORE_INVEN;
+      if (store_ctr < MIN_STORE_INVEN) j = MIN_STORE_INVEN - store_ctr;
       j += randint(STORE_TURN_AROUND);
       store_ctr += j;
 
@@ -4201,14 +4201,14 @@ BOOL prefix;
 {
   char* basenm;
   char damstr[80];
-  int indexx, modify, append_name, tmp;
+  int indexx, unknown, append_name, tmp;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
   indexx = obj->subval & (ITEM_SINGLE_STACK - 1);
   basenm = tr_ptr->name;
   damstr[0] = 0;
-  modify = tr_is_known(tr_ptr) ? FALSE : TRUE;
+  unknown = !(tr_is_known(tr_ptr) || (obj->idflag & ID_REVEAL));
   append_name = FALSE;
   switch (obj->tval) {
     case TV_MISC:
@@ -4251,7 +4251,7 @@ BOOL prefix;
     case TV_SOFT_ARMOR:
       break;
     case TV_AMULET:
-      if (modify) {
+      if (unknown) {
         snprintf(descD, AL(descD), "& %s Amulet", amulets[indexx]);
         basenm = 0;
       } else {
@@ -4260,7 +4260,7 @@ BOOL prefix;
       }
       break;
     case TV_RING:
-      if (modify) {
+      if (unknown) {
         basenm = 0;
         snprintf(descD, AL(descD), "& %s Ring", rocks[indexx]);
       } else {
@@ -4269,7 +4269,7 @@ BOOL prefix;
       }
       break;
     case TV_STAFF:
-      if (modify) {
+      if (unknown) {
         basenm = 0;
         snprintf(descD, AL(descD), "& %s Staff", woods[indexx]);
       } else {
@@ -4278,7 +4278,7 @@ BOOL prefix;
       }
       break;
     case TV_WAND:
-      if (modify) {
+      if (unknown) {
         basenm = 0;
         snprintf(descD, AL(descD), "& %s Wand", metals[indexx]);
       } else {
@@ -4288,7 +4288,7 @@ BOOL prefix;
       break;
     case TV_SCROLL1:
     case TV_SCROLL2:
-      if (modify) {
+      if (unknown) {
         basenm = 0;
         snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"", titleD[indexx]);
       } else {
@@ -4298,7 +4298,7 @@ BOOL prefix;
       break;
     case TV_POTION1:
     case TV_POTION2:
-      if (modify) {
+      if (unknown) {
         basenm = 0;
         snprintf(descD, AL(descD), "& %s Potion~", colors[indexx]);
       } else {
@@ -4309,7 +4309,7 @@ BOOL prefix;
     case TV_FLASK:
       break;
     case TV_FOOD:
-      if (modify) {
+      if (unknown) {
         if (indexx <= 15)
           snprintf(descD, AL(descD), "& %s Mushroom~", mushrooms[indexx]);
         else if (indexx <= 20)
@@ -5044,6 +5044,7 @@ py_init()
 
   uD.food = 7500;
   uD.food_digest = 2;
+  uD.gold = 100;
 }
 void
 magic_init()
@@ -6856,7 +6857,6 @@ inven_merge(obj_id)
 }
 static int
 inven_carry(obj_id)
-int obj_id;
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     if (!invenD[it]) {
@@ -8533,6 +8533,12 @@ static void hit_trap(y, x) int y, x;
 
   find_flag = FALSE;
 }
+static int
+store_cost(obj)
+struct objS* obj;
+{
+  return obj->cost;
+}
 static void
 display_store(sidx)
 {
@@ -8547,7 +8553,7 @@ display_store(sidx)
     obj = obj_get(storeD[sidx][it]);
     if (obj->id) {
       obj_desc(obj, TRUE);
-      BufMsg(screen, "%s", descD);
+      BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, store_cost(obj));
     }
   }
 }
@@ -8555,10 +8561,35 @@ static void
 enter_store(sidx)
 {
   char c;
+  struct objS* obj;
 
   while (1) {
     display_store(sidx);
     if (!in_subcommand("What would you like to purchase?", &c)) break;
+    uint8_t item = c - 'a';
+    if (item < MAX_STORE_INVEN) {
+      obj = obj_get(storeD[sidx][item]);
+      if (obj->number > 1) {
+        msg_print("unhandled...");
+        continue;
+      }
+
+      if (obj->id) {
+        if (uD.gold >= store_cost(obj)) {
+          if (inven_carry(obj->id)) {
+            obj_desc(obj, TRUE);
+            MSG("You have %s.", descD);
+            uD.gold -= store_cost(obj);
+            storeD[sidx][item] = 0;
+          } else {
+            msg_print("You don't have room in your inventory!");
+          }
+        } else {
+          msg_print("You can't afford that!");
+        }
+        msg_pause();
+      }
+    }
   }
 }
 static void regenhp(percent) int percent;
