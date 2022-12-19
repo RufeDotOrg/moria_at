@@ -2594,8 +2594,10 @@ store_maint()
         if (storeD[i][k] == 0) {
           // store_create(i)
           obj = obj_use();
-          tr_obj_copy(randint(AL(treasureD) - 1), obj);
-          magic_treasure(obj, dun_level);
+          do {
+            tr_obj_copy(randint(AL(treasureD) - 1), obj);
+            magic_treasure(obj, dun_level);
+          } while (obj->cost <= 0);
           obj->idflag = ID_REVEAL;
           storeD[i][k] = obj->id;
           j -= 1;
