@@ -1313,7 +1313,7 @@ struct treasureS treasureD[] = {
      0,
      {1, 3},
      3},
-    {"& Iron Spike~",
+    {"& Door Spike~",
      0x00000000L,
      TV_SPIKE,
      '~', /* 84*/
