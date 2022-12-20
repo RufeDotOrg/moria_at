@@ -2605,7 +2605,7 @@ store_tr(sidx, tr_index)
   struct objS* obj;
 
   tr_ptr = &treasureD[tr_index];
-  if (tr_ptr->flags & STACK_SINGLE) {
+  if (tr_ptr->subval & STACK_SINGLE) {
     for (int it = 0; it < AL(store_objD[0]); ++it) {
       obj = &store_objD[sidx][it];
       if (obj->tidx == tr_index) {
