@@ -1244,6 +1244,24 @@ static void inven_destroy_one(iidx) int iidx;
     invenD[iidx] = 0;
   }
 }
+static int
+inven_copy(iidx, copy)
+struct objS* copy;
+{
+  struct objS* obj;
+  int id;
+
+  obj = obj_use();
+  id = obj->id;
+  if (id) {
+    *obj = *copy;
+    obj->id = id;
+    obj->number = 1;
+    invenD[iidx] = id;
+  }
+
+  return id != 0;
+}
 static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
 {
   register struct objS* obj;
@@ -2558,29 +2576,23 @@ int tval;
   return slot;
 }
 int
-store_destroy(sidx, item)
+store_item_destroy(sidx, item, count)
 {
   struct objS* obj;
-  int n;
+  int tidx;
 
-  obj = obj_get(storeD[sidx][item]);
-  if (obj->id) {
-    if (obj->number > 1) {
-      n = randint(obj->number);
-    } else {
-      n = 1;
-    }
-    if (obj->number <= n) {
-      obj_unuse(obj);
-      storeD[sidx][item] = 0;
-    } else {
-      obj->number -= n;
-    }
+  obj = &store_objD[sidx][item];
+  tidx = obj->tidx;
 
-    return TRUE;
+  if (tidx) {
+    if (obj->number <= count) {
+      store_objD[sidx][item] = DFT(struct objS);
+    } else {
+      obj->number -= count;
+    }
   }
 
-  return FALSE;
+  return tidx;
 }
 void
 store_maint()
@@ -2591,18 +2603,18 @@ store_maint()
   for (i = 0; i < MAX_STORE; i++) {
     store_ctr = 0;
     for (j = 0; j < MAX_STORE_INVEN; ++j) {
-      store_ctr += (storeD[i][j] != 0);
+      store_ctr += (store_objD[i][j].tidx != 0);
     }
 
-    if (store_ctr >= MIN_STORE_INVEN) {
-      j = randint(STORE_TURN_AROUND);
-      store_ctr -= j;
+    // if (store_ctr >= MIN_STORE_INVEN) {
+    //   j = randint(STORE_TURN_AROUND);
+    //   store_ctr -= j;
 
-      do {
-        k = randint(MAX_STORE_INVEN) - 1;
-        j -= store_destroy(i, k);
-      } while (j > 0);
-    }
+    //  do {
+    //    k = randint(MAX_STORE_INVEN) - 1;
+    //    j -= store_destroy(i, k);
+    //  } while (j > 0);
+    //}
 
     if (store_ctr < MAX_STORE_INVEN) {
       j = 0;
@@ -2612,15 +2624,14 @@ store_maint()
 
       do {
         k = randint(MAX_STORE_INVEN) - 1;
-        if (storeD[i][k] == 0) {
+        obj = &store_objD[i][k];
+        if (obj->tidx == 0) {
           // store_create(i)
-          obj = obj_use();
           do {
             tr_obj_copy(randint(AL(treasureD) - 1), obj);
-            magic_treasure(obj, dun_level);
+            magic_treasure(obj, OBJ_TOWN_LEVEL);
           } while (obj->cost <= 0);
           obj->idflag = ID_REVEAL;
-          storeD[i][k] = obj->id;
           j -= 1;
         }
       } while (j > 0);
@@ -4797,6 +4808,26 @@ inven_slot()
   return -1;
 }
 static int
+inven_merge_slot(obj)
+struct objS* obj;
+{
+  int tval, subval, number;
+
+  tval = obj->tval;
+  subval = obj->subval;
+  number = obj->number;
+  if (subval >= ITEM_SINGLE_STACK) {
+    for (int it = 0; it < INVEN_EQUIP; ++it) {
+      struct objS* i_ptr = obj_get(invenD[it]);
+      if (tval == i_ptr->tval && subval == i_ptr->subval &&
+          number + i_ptr->number < 256) {
+        return it;
+      }
+    }
+  }
+  return -1;
+}
+static int
 inven_food()
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
@@ -6858,7 +6889,7 @@ py_carry_count()
 static int
 inven_merge(obj_id)
 {
-  int tval, subval, number, total;
+  int tval, subval, number;
   struct objS* obj = obj_get(obj_id);
 
   tval = obj->tval;
@@ -8572,9 +8603,9 @@ store_display(sidx)
   BufMsg(screen, "%-17.017s: %s", "OwnerName", "...");
   line += 1;
   BufMsg(screen, "   Item");
-  for (int it = 0; it < AL(storeD[0]); ++it) {
-    obj = obj_get(storeD[sidx][it]);
-    if (obj->id) {
+  for (int it = 0; it < AL(store_objD[0]); ++it) {
+    obj = &store_objD[sidx][it];
+    if (obj->tidx) {
       obj_desc(obj, TRUE);
       BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, store_cost(obj));
     } else {
@@ -8583,37 +8614,50 @@ store_display(sidx)
   }
 }
 static void
+store_item_purchase(sidx, item)
+{
+  int iidx, flag;
+  struct objS* obj;
+
+  flag = FALSE;
+  if (item < MAX_STORE_INVEN) {
+    obj = &store_objD[sidx][item];
+    if (obj->tidx) {
+      if (uD.gold >= store_cost(obj)) {
+        // inven_merge(obj->id) >= 0 ||
+        if ((iidx = inven_merge_slot(obj)) >= 0) {
+          obj_get(invenD[iidx])->number += 1;
+          flag = TRUE;
+        } else if ((iidx = inven_slot()) >= 0) {
+          flag = inven_copy(iidx, obj);
+        } else {
+          msg_print("You don't have room in your inventory!");
+        }
+      } else {
+        msg_print("You can't afford that!");
+      }
+
+      if (flag) {
+        obj_desc(obj_get(invenD[iidx]), TRUE);
+        MSG("You have %s.", descD);
+        uD.gold -= store_cost(obj);
+        store_item_destroy(sidx, item, 1);
+      }
+      msg_pause();
+    }
+  }
+}
+static void
 store_entrance(sidx)
 {
   char c;
-  struct objS* obj;
 
   while (1) {
     store_display(sidx);
     if (!in_subcommand("What would you like to purchase?", &c)) break;
     uint8_t item = c - 'a';
-    if (item < MAX_STORE_INVEN) {
-      obj = obj_get(storeD[sidx][item]);
-      if (obj->id) {
-        if (uD.gold >= store_cost(obj)) {
-          if (inven_merge(obj->id) >= 0 || inven_carry(obj->id) >= 0) {
-            obj_desc(obj, TRUE);
-            MSG("You have %s.", descD);
-            uD.gold -= store_cost(obj);
-            if (obj->number > 1) {
-              obj->number -= 1;
-            } else {
-              obj_unuse(obj);
-            }
-          } else {
-            msg_print("You don't have room in your inventory!");
-          }
-        } else {
-          msg_print("You can't afford that!");
-        }
-        msg_pause();
-      }
-    }
+
+    store_item_purchase(sidx, item);
   }
 }
 static void regenhp(percent) int percent;
