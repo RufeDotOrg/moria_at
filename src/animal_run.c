@@ -4219,36 +4219,23 @@ void obj_detail(obj) struct objS* obj;
     strcat(descD, tmp_str);
   }
 
-  /* override defaults, check for p1 flags in the ident field */
-  // if (obj->ident & ID_NOSHOW_P1)
-  //   p1_use = IGNORED;
-  // else if (obj->ident & ID_SHOW_P1)
-  //   p1_use = Z_PLUSSES;
-  // tmp_str[0] = '\0';
-  // if (p1_use == LIGHT)
-  //   sprintf(tmp_str, " with %d turns of light", obj->p1);
-  // else if (p1_use == IGNORED)
-  //   ;
-  // else if (known2_p(obj)) {
-  //   if (p1_use == Z_PLUSSES)
-  //     sprintf(tmp_str, " (%c%d)", (obj->p1 < 0) ? '-' : '+', abs(obj->p1));
-  //   else if (p1_use == CHARGES)
-  //     sprintf(tmp_str, " (%d charges)", obj->p1);
-  //   else if (obj->p1 != 0) {
-  //     if (p1_use == PLUSSES)
-  //       sprintf(tmp_str, " (%c%d)", (obj->p1 < 0) ? '-' : '+',
-  //       abs(obj->p1));
-  //     else if (p1_use == FLAGS) {
-  //       if (obj->flags & TR_STR)
-  //         sprintf(tmp_str, " (%c%d to STR)", (obj->p1 < 0) ? '-' : '+',
-  //                 abs(obj->p1));
-  //       else if (obj->flags & TR_STEALTH)
-  //         sprintf(tmp_str, " (%c%d to stealth)", (obj->p1 < 0) ? '-' : '+',
-  //                 abs(obj->p1));
-  //     }
-  //   }
-  // }
-  // strcat(descD, tmp_str);
+  // Check p1 value
+  tmp_str[0] = 0;
+  if (obj->idflag & ID_REVEAL) {
+    if (obj->tval == TV_DIGGING || obj->tval == TV_AMULET ||
+        obj->tval == TV_RING) {
+      sprintf(tmp_str, " (%+d)", obj->p1);
+    } else if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
+      sprintf(tmp_str, " (%d charges)", obj->p1);
+    } else if (obj->tval == TV_HAFTED || obj->tval == TV_POLEARM ||
+               obj->tval == TV_SWORD) {
+      if (obj->flags & TR_STR)
+        sprintf(tmp_str, " (%+d to STR)", obj->p1);
+      else if (obj->flags & TR_STEALTH)
+        sprintf(tmp_str, " (%+d to stealth)", obj->p1);
+    }
+  }
+  strcat(descD, tmp_str);
 
   if (obj->idflag & ID_MAGIK) strcat(descD, "{magik}");
   if (obj->idflag & ID_EMPTY) strcat(descD, "{empty}");
