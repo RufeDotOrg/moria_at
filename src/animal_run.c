@@ -8527,11 +8527,12 @@ creatures()
     mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
     move_count = movement_rate(mon_speed(mon));
     for (; move_count > 0; --move_count) {
+      // TBD: check aaf or mlit
       if (mon->msleep) {
         if (uD.tflag & TR_AGGRAVATE)
           mon->msleep = 0;
-        else if (randint(50) == 1) {
-          int notice = randint(1024);
+        else {
+          uint32_t notice = randint(1024);
           if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
             mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
           }
