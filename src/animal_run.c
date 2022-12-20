@@ -2557,6 +2557,31 @@ int tval;
   }
   return slot;
 }
+int
+store_destroy(sidx, item)
+{
+  struct objS* obj;
+  int n;
+
+  obj = obj_get(storeD[sidx][item]);
+  if (obj->id) {
+    if (obj->number > 1) {
+      n = randint(obj->number);
+    } else {
+      n = 1;
+    }
+    if (obj->number <= n) {
+      obj_unuse(obj);
+      storeD[sidx][item] = 0;
+    } else {
+      obj->number -= n;
+    }
+
+    return TRUE;
+  }
+
+  return FALSE;
+}
 void
 store_maint()
 {
@@ -2575,11 +2600,7 @@ store_maint()
 
       do {
         k = randint(MAX_STORE_INVEN) - 1;
-        obj = obj_get(storeD[i][k]);
-        if (obj->id) {
-          obj_unuse(obj);
-          j -= 1;
-        }
+        j -= store_destroy(i, k);
       } while (j > 0);
     }
 
@@ -6837,16 +6858,17 @@ py_carry_count()
 static int
 inven_merge(obj_id)
 {
-  int tval, subval;
+  int tval, subval, number, total;
   struct objS* obj = obj_get(obj_id);
 
   tval = obj->tval;
   subval = obj->subval;
+  number = obj->number;
   if (subval >= ITEM_SINGLE_STACK) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
-      if (tval == i_ptr->tval && i_ptr->subval == subval &&
-          i_ptr->number < 255) {
+      if (tval == i_ptr->tval && subval == i_ptr->subval &&
+          number + i_ptr->number < 256) {
         obj->number += i_ptr->number;
         obj_unuse(i_ptr);
         invenD[it] = obj_id;
@@ -8541,7 +8563,7 @@ struct objS* obj;
   return obj->cost;
 }
 static void
-display_store(sidx)
+store_display(sidx)
 {
   int line;
   struct objS* obj;
@@ -8555,17 +8577,19 @@ display_store(sidx)
     if (obj->id) {
       obj_desc(obj, TRUE);
       BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, store_cost(obj));
+    } else {
+      line += 1;
     }
   }
 }
 static void
-enter_store(sidx)
+store_entrance(sidx)
 {
   char c;
   struct objS* obj;
 
   while (1) {
-    display_store(sidx);
+    store_display(sidx);
     if (!in_subcommand("What would you like to purchase?", &c)) break;
     uint8_t item = c - 'a';
     if (item < MAX_STORE_INVEN) {
@@ -8576,7 +8600,11 @@ enter_store(sidx)
             obj_desc(obj, TRUE);
             MSG("You have %s.", descD);
             uD.gold -= store_cost(obj);
-            storeD[sidx][item] = 0;
+            if (obj->number > 1) {
+              obj->number -= 1;
+            } else {
+              obj_unuse(obj);
+            }
           } else {
             msg_print("You don't have room in your inventory!");
           }
@@ -9025,7 +9053,7 @@ dungeon()
             if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
               hit_trap(y, x);
             } else if (obj->tval == TV_STORE_DOOR) {
-              enter_store(obj->tchar - '1');
+              store_entrance(obj->tchar - '1');
             } else if (countD.blind == 0) {
               if (find_flag) find_event(y, x);
               if (obj->tval) {
