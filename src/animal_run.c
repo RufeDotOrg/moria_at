@@ -2579,20 +2579,17 @@ int
 store_item_destroy(sidx, item, count)
 {
   struct objS* obj;
-  int tidx;
+  int consume;
 
   obj = &store_objD[sidx][item];
-  tidx = obj->tidx;
 
-  if (tidx) {
-    if (obj->number <= count) {
-      store_objD[sidx][item] = DFT(struct objS);
-    } else {
-      obj->number -= count;
-    }
+  consume = obj->number <= count;
+  if (consume) {
+    store_objD[sidx][item] = DFT(struct objS);
+  } else {
+    obj->number -= count;
   }
-
-  return tidx;
+  return consume;
 }
 void
 store_maint()
@@ -2606,15 +2603,18 @@ store_maint()
       store_ctr += (store_objD[i][j].tidx != 0);
     }
 
-    // if (store_ctr >= MIN_STORE_INVEN) {
-    //   j = randint(STORE_TURN_AROUND);
-    //   store_ctr -= j;
+    if (store_ctr >= MIN_STORE_INVEN) {
+      j = randint(STORE_TURN_AROUND);
 
-    //  do {
-    //    k = randint(MAX_STORE_INVEN) - 1;
-    //    j -= store_destroy(i, k);
-    //  } while (j > 0);
-    //}
+      do {
+        k = randint(MAX_STORE_INVEN) - 1;
+        obj = &store_objD[i][k];
+        if (obj->number) {
+          store_ctr -= store_item_destroy(i, k, randint(obj->number));
+          j -= 1;
+        }
+      } while (j > 0);
+    }
 
     if (store_ctr < MAX_STORE_INVEN) {
       j = 0;
