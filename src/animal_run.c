@@ -2457,6 +2457,9 @@ oset_hitdam(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
+    case TV_ARROW:
+    case TV_BOLT:
+    case TV_SLING_AMMO:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
@@ -2466,7 +2469,10 @@ struct objS* obj;
     case TV_GLOVES:
       return (obj->tohit || obj->todam);
     case TV_RING:
-      return (obj->tohit && obj->todam);
+      return (obj->tohit || obj->todam);
+    case TV_SOFT_ARMOR:
+    case TV_HARD_ARMOR:
+      return (obj->tohit || obj->todam);
   }
   return FALSE;
 }
@@ -4194,17 +4200,6 @@ void obj_detail(obj) struct objS* obj;
     strcat(descD, " ");
     strcat(descD, obj->name2);
   }
-  if (obj_reveal(obj)) {
-    if (oset_hitdam(obj))
-      snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
-    else if (obj->tohit != 0)
-      snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->tohit);
-    else if (obj->todam != 0)
-      snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->todam);
-    else
-      tmp_str[0] = '\0';
-    strcat(descD, tmp_str);
-  }
   /* Crowns have a zero base AC, so make a special test for them. */
   if (obj->ac != 0 || (obj->tval == TV_HELM)) {
     snprintf(tmp_str, AL(tmp_str), " [%d", obj->ac);
@@ -4218,13 +4213,20 @@ void obj_detail(obj) struct objS* obj;
     snprintf(tmp_str, AL(tmp_str), " [%+d]", obj->toac);
     strcat(descD, tmp_str);
   }
+  if (obj_reveal(obj)) {
+    if (oset_hitdam(obj)) {
+      snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
+      strcat(descD, tmp_str);
+    }
+  }
 
   // Check p1 value
   tmp_str[0] = 0;
   if (obj->idflag & ID_REVEAL) {
     if (obj->tval == TV_DIGGING || obj->tval == TV_AMULET ||
         obj->tval == TV_RING) {
-      sprintf(tmp_str, " (%+d)", obj->p1);
+      if (obj->p1 && (obj->flags & TR_SUST_STAT) == 0)
+        sprintf(tmp_str, " (%+d)", obj->p1);
     } else if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
       sprintf(tmp_str, " (%d charges)", obj->p1);
     } else if (obj->tval == TV_HAFTED || obj->tval == TV_POLEARM ||
