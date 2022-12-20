@@ -2591,6 +2591,38 @@ store_item_destroy(sidx, item, count)
   }
   return consume;
 }
+int
+store_tr(sidx, tr_index)
+{
+  int item;
+  struct treasureS* tr_ptr;
+  struct objS* obj;
+
+  tr_ptr = &treasureD[tr_index];
+  if (tr_ptr->flags & STACK_SINGLE) {
+    for (int it = 0; it < AL(store_objD[0]); ++it) {
+      obj = &store_objD[sidx][it];
+      if (obj->tidx == tr_index) {
+        obj->number += 1;
+        return FALSE;
+      }
+    }
+  }
+
+  for (int it = 0; it < AL(store_objD[0]); ++it) {
+    obj = &store_objD[sidx][it];
+    if (obj->tidx == 0) {
+      do {
+        tr_obj_copy(tr_index, obj);
+        magic_treasure(obj, OBJ_TOWN_LEVEL);
+      } while (obj->cost <= 0);
+      obj->idflag = ID_REVEAL;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
 void
 store_maint()
 {
@@ -2620,18 +2652,11 @@ store_maint()
       j = 0;
       if (store_ctr < MIN_STORE_INVEN) j = MIN_STORE_INVEN - store_ctr;
       j += randint(STORE_TURN_AROUND);
-      store_ctr += j;
 
       do {
-        k = randint(MAX_STORE_INVEN) - 1;
-        obj = &store_objD[i][k];
-        if (obj->tidx == 0) {
-          // store_create(i)
-          do {
-            tr_obj_copy(randint(AL(treasureD) - 1), obj);
-            magic_treasure(obj, OBJ_TOWN_LEVEL);
-          } while (obj->cost <= 0);
-          obj->idflag = ID_REVEAL;
+        k = randint(AL(treasureD) - 1);
+        if (treasureD[k].cost > 0) {
+          store_ctr += store_tr(i, k);
           j -= 1;
         }
       } while (j > 0);
@@ -4811,15 +4836,16 @@ static int
 inven_merge_slot(obj)
 struct objS* obj;
 {
-  int tval, subval, number;
+  int tval, p1, subval, number;
 
   tval = obj->tval;
+  p1 = obj->p1;
   subval = obj->subval;
   number = obj->number;
   if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
-      if (tval == i_ptr->tval && subval == i_ptr->subval &&
+      if (tval == i_ptr->tval && p1 == i_ptr->p1 && subval == i_ptr->subval &&
           number + i_ptr->number < 256) {
         return it;
       }
@@ -6889,16 +6915,17 @@ py_carry_count()
 static int
 inven_merge(obj_id)
 {
-  int tval, subval, number;
+  int tval, p1, subval, number;
   struct objS* obj = obj_get(obj_id);
 
   tval = obj->tval;
+  p1 = obj->p1;
   subval = obj->subval;
   number = obj->number;
   if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
-      if (tval == i_ptr->tval && subval == i_ptr->subval &&
+      if (tval == i_ptr->tval && p1 == i_ptr->p1 && subval == i_ptr->subval &&
           number + i_ptr->number < 256) {
         obj->number += i_ptr->number;
         obj_unuse(i_ptr);
