@@ -1245,7 +1245,7 @@ static void inven_destroy_one(iidx) int iidx;
   }
 }
 static int
-inven_copy(iidx, copy)
+inven_copy_num(iidx, copy, num)
 struct objS* copy;
 {
   struct objS* obj;
@@ -1256,7 +1256,7 @@ struct objS* copy;
   if (id) {
     *obj = *copy;
     obj->id = id;
-    obj->number = 1;
+    obj->number = num;
     invenD[iidx] = id;
   }
 
@@ -4816,7 +4816,7 @@ struct objS* obj;
   tval = obj->tval;
   subval = obj->subval;
   number = obj->number;
-  if (subval >= ITEM_SINGLE_STACK) {
+  if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
       if (tval == i_ptr->tval && subval == i_ptr->subval &&
@@ -6895,7 +6895,7 @@ inven_merge(obj_id)
   tval = obj->tval;
   subval = obj->subval;
   number = obj->number;
-  if (subval >= ITEM_SINGLE_STACK) {
+  if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
       if (tval == i_ptr->tval && subval == i_ptr->subval &&
@@ -8616,20 +8616,20 @@ store_display(sidx)
 static void
 store_item_purchase(sidx, item)
 {
-  int iidx, flag;
+  int iidx, count, flag;
   struct objS* obj;
 
   flag = FALSE;
   if (item < MAX_STORE_INVEN) {
     obj = &store_objD[sidx][item];
     if (obj->tidx) {
+      count = obj->subval & STACK_BATCH ? obj->number : 1;
       if (uD.gold >= store_cost(obj)) {
-        // inven_merge(obj->id) >= 0 ||
         if ((iidx = inven_merge_slot(obj)) >= 0) {
-          obj_get(invenD[iidx])->number += 1;
+          obj_get(invenD[iidx])->number += count;
           flag = TRUE;
         } else if ((iidx = inven_slot()) >= 0) {
-          flag = inven_copy(iidx, obj);
+          flag = inven_copy_num(iidx, obj, count);
         } else {
           msg_print("You don't have room in your inventory!");
         }
@@ -8641,7 +8641,7 @@ store_item_purchase(sidx, item)
         obj_desc(obj_get(invenD[iidx]), TRUE);
         MSG("You have %s.", descD);
         uD.gold -= store_cost(obj);
-        store_item_destroy(sidx, item, 1);
+        store_item_destroy(sidx, item, count);
       }
       msg_pause();
     }

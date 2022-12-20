@@ -393,15 +393,15 @@
 #define ID_EMPTY 0x4  /* reveal on use */
 #define ID_REVEAL 0x8 /* Object ident is known */
 
-/* inventory stacking subvals */
+/* tval sub type */
 #define MAX_SUBVAL 64
 #define MASK_SUBVAL (MAX_SUBVAL - 1)
-/* these never stack */
-#define ITEM_NEVER_STACK_MIN 0
-#define ITEM_NEVER_STACK_MAX 63
-/* these items always stack with others of same subval, always treated as
-   single objects, must be power of 2 */
-#define ITEM_SINGLE_STACK 64
+
+// Potion/Scroll/Food: single slot; +/-1 per interaction
+#define STACK_SINGLE 0x40
+// Arrows/Bolts/Pebbles/Spike: single slot; +/- obj->number on interaction
+#define STACK_BATCH 0x80
+#define STACK_ANY 0xc0
 
 // ITEM_GROUP removed
 
