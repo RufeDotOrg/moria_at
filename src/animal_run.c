@@ -4164,7 +4164,7 @@ BOOL prefix;
     if (obj_name[0] == '&') {
       /* use &obj_name[1], so that & does not appear in output */
       if (obj->number > 1)
-        snprintf(descD, AL(descD), "%d%s", (int)obj->number, &obj_name[1]);
+        snprintf(descD, AL(descD), "%d%s", obj->number, &obj_name[1]);
       else if (obj->number < 1)
         snprintf(descD, AL(descD), "%s%s", "no more", &obj_name[1]);
       else if (is_a_vowel(obj_name[2]))
@@ -4380,7 +4380,7 @@ BOOL prefix;
     case TV_PRAYER_BOOK:
       snprintf(descD, AL(descD), "& Holy Book~ of Prayers %s", basenm);
       basenm = 0;
-      return;
+      break;
     case TV_OPEN_DOOR:
     case TV_CLOSED_DOOR:
     case TV_SECRET_DOOR:
