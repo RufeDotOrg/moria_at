@@ -2799,7 +2799,6 @@ place_monster(y, x, z, slp)
       mon->hp = pdamroll(cre->hd);
     mon->fy = y;
     mon->fx = x;
-    mon->cdis = distance(uD.y, uD.x, y, x);
     mon->mlit = FALSE;
 
     caveD[y][x].midx = mon_index(mon);
@@ -3631,7 +3630,7 @@ void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
 }
 void update_mon(midx) int midx;
 {
-  register int flag, fy, fx;
+  int flag, fy, fx, cdis;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -3641,6 +3640,7 @@ void update_mon(midx) int midx;
   flag = FALSE;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
+  cdis = distance(uD.y, uD.x, fy, fx);
   if ((panel_contains(&panelD, fy, fx))) {
     if ((uD.mflag & (1 << MA_DETECT_EVIL)) && (CD_EVIL & cr_ptr->cdefense)) {
       flag = TRUE;
@@ -3650,7 +3650,7 @@ void update_mon(midx) int midx;
     } else if ((uD.mflag & (1 << MA_DETECT_INVIS)) &&
                (CM_INVISIBLE & cr_ptr->cmove)) {
       flag = TRUE;
-    } else if (countD.blind == 0 && (m_ptr->cdis <= MAX_SIGHT) &&
+    } else if (countD.blind == 0 && (cdis <= MAX_SIGHT) &&
                los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
@@ -3659,7 +3659,7 @@ void update_mon(midx) int midx;
           flag = TRUE;
         else if (uD.tflag & TR_SEE_INVIS)
           flag = TRUE;
-      } else if ((CD_INFRA & cr_ptr->cdefense) && (m_ptr->cdis <= uD.infra)) {
+      } else if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= uD.infra)) {
         flag = TRUE;
       }
     }
@@ -5437,7 +5437,6 @@ void teleport_away(midx, dis) int midx, dis;
   move_rec(fy, fx, yn, xn);
   m_ptr->fy = yn;
   m_ptr->fx = xn;
-  m_ptr->cdis = cdis;
   update_mon(midx);
 }
 void
@@ -5554,7 +5553,8 @@ dispel_creature(cflag, damage)
   dispel = FALSE;
   FOR_EACH(mon, {
     cr_ptr = &creatureD[mon->cidx];
-    if ((cflag & cr_ptr->cdefense) && (mon->cdis <= MAX_SIGHT) &&
+    if ((cflag & cr_ptr->cdefense) &&
+        (distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) &&
         los(y, x, mon->fy, mon->fx)) {
       dispel = TRUE;
       // c_recall[mon->mptr].r_cdefense |= cflag;
@@ -7992,7 +7992,8 @@ py_make_known()
     }
   }
 }
-static void py_search(y, x)
+static void
+py_search(y, x)
 {
   int i, j, chance;
   struct caveS* c_ptr;
@@ -8140,7 +8141,6 @@ int* mm;
       m_ptr->mlit = FALSE;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
-      m_ptr->cdis = distance(uD.y, uD.x, newy, newx);
       do_turn = TRUE;
     }
     if (do_turn) break;
@@ -8271,7 +8271,7 @@ static void mon_try_multiply(mon) struct monS* mon;
   if ((k < 4) && (randint((k + 1) * MON_MULT_ADJ) == 1)) mon_multiply(mon);
 }
 static int
-mon_try_spell(midx)
+mon_try_spell(midx, cdis)
 {
   uint32_t i;
   int k, y, x, chance, thrown_spell, r1;
@@ -8291,7 +8291,7 @@ mon_try_spell(midx)
   else if (randint(chance) != 1)
     took_turn = FALSE;
   /* Must be within certain range  	   */
-  else if (m_ptr->cdis > MAX_SIGHT)
+  else if (cdis > MAX_SIGHT)
     took_turn = FALSE;
   // Must have unobstructed Line-Of-Sight
   else if (!los(uD.y, uD.x, m_ptr->fy, m_ptr->fx))
@@ -8447,7 +8447,8 @@ mon_try_spell(midx)
   }
   return took_turn;
 }
-static void mon_move(midx) int midx;
+static void
+mon_move(midx, cdis)
 {
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -8462,7 +8463,7 @@ static void mon_move(midx) int midx;
   flee = FALSE;
 
   if (cr_ptr->cmove & CM_MULTIPLY) mon_try_multiply(m_ptr);
-  if (cr_ptr->spells & CS_FREQ) took_turn = mon_try_spell(midx);
+  if (cr_ptr->spells & CS_FREQ) took_turn = mon_try_spell(midx, cdis);
 
   if (!took_turn) {
     if (m_ptr->mconfused) {
@@ -8491,7 +8492,7 @@ static void mon_move(midx) int midx;
       for (int it = 0; it < 5; ++it) {
         mm[it] = randint(9);
       }
-    } else if (m_ptr->cdis < 2 || (cr_ptr->cmove & CM_ATTACK_ONLY) == 0) {
+    } else if (cdis < 2 || (cr_ptr->cmove & CM_ATTACK_ONLY) == 0) {
       get_moves(midx, mm);
     }
 
@@ -8517,21 +8518,23 @@ int speed;
 void
 creatures()
 {
-  int move_count;
+  int move_count, y, x, cdis;
 
+  y = uD.y;
+  x = uD.x;
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
-    mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
     move_count = movement_rate(mon_speed(mon));
     for (; move_count > 0; --move_count) {
-      if (mon->mlit || mon->cdis <= cr_ptr->aaf) {
+      cdis = distance(y, x, mon->fy, mon->fx);
+      if (mon->mlit || cdis <= cr_ptr->aaf) {
         if (mon->msleep) {
           if (uD.tflag & TR_AGGRAVATE)
             mon->msleep = 0;
           else {
             uint32_t notice = randint(1024);
             if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
-              mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
+              mon->msleep = MAX(mon->msleep - (100 / cdis), 0);
             }
           }
         }
@@ -8549,7 +8552,7 @@ creatures()
           }
         }
       }
-      if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index);
+      if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index, cdis);
     }
 
     update_mon(it_index);

@@ -194,7 +194,6 @@ struct monS {
   int hp;
   uint8_t fy;
   uint8_t fx;
-  uint8_t cdis;
   uint8_t mlit;
   uint8_t mstunned;
   uint8_t mconfused;
