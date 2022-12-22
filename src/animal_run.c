@@ -9182,7 +9182,7 @@ main()
   // Burn randomness after platform seed
   for (int it = randint(100); it != 0; --it) rnd();
 
-  dun_level = 0;
+  dun_level = 1;
   mon_level_init();
   obj_level_init();
   generate_cave();
