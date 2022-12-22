@@ -99,7 +99,7 @@ get_sym(int row, int col)
   if (cave_ptr->midx) {
     struct monS* mon = &entity_monD[cave_ptr->midx];
     struct creatureS* creature = &creatureD[mon->cidx];
-    if (mon->ml) return creature->cchar;
+    if (mon->mlit) return creature->cchar;
   }
   if (((cave_ptr->cflag & CF_FIELDMARK) == 0) && !cave_lit(cave_ptr))
     return ' ';
@@ -138,7 +138,7 @@ symmap_update()
       struct caveS* cave_ptr = &caveD[row][col];
       if (cave_ptr->midx) {
         struct monS* mon = &entity_monD[cave_ptr->midx];
-        if (mon->ml) *cre = mon->cidx;
+        if (mon->mlit) *cre = mon->cidx;
       }
       cre += 1;
     }
@@ -2800,7 +2800,7 @@ place_monster(y, x, z, slp)
     mon->fy = y;
     mon->fx = x;
     mon->cdis = distance(uD.y, uD.x, y, x);
-    mon->ml = FALSE;
+    mon->mlit = FALSE;
 
     caveD[y][x].midx = mon_index(mon);
   }
@@ -3482,7 +3482,7 @@ void find_event(y, x) int y, x;
       /* Also Creatures  	*/
       /* the monster should be visible since update_mon() checks
          for the special case of being in find mode */
-      if (c_ptr->midx != 0 && entity_monD[c_ptr->midx].ml) {
+      if (c_ptr->midx != 0 && entity_monD[c_ptr->midx].mlit) {
         find_flag = FALSE;
         return;
       }
@@ -3667,14 +3667,14 @@ void update_mon(midx) int midx;
 
   /* Light it up.   */
   if (flag) {
-    if (!m_ptr->ml) {
+    if (!m_ptr->mlit) {
       disturb(1, 0);
-      m_ptr->ml = TRUE;
+      m_ptr->mlit = TRUE;
     }
   }
   /* Turn it off.   */
-  else if (m_ptr->ml) {
-    m_ptr->ml = FALSE;
+  else if (m_ptr->mlit) {
+    m_ptr->mlit = FALSE;
   }
 }
 int
@@ -4427,7 +4427,7 @@ static void mon_desc(midx) int midx;
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
-  if (mon->ml)
+  if (mon->mlit)
     snprintf(descD, AL(descD), "The %s", cre->name);
   else
     strcpy(descD, "It");
@@ -5515,7 +5515,7 @@ char* bolt_typ;
         cre = &creatureD[m_ptr->cidx];
 
         // TBD: animate?
-        m_ptr->ml = TRUE;
+        m_ptr->mlit = TRUE;
 
         // TBD: lowercase
         mon_desc(c_ptr->midx);
@@ -5758,17 +5758,17 @@ speed_monsters(spd)
       cr_ptr = &creatureD[mon->cidx];
       if (spd > 0) {
         mon->mspeed += spd;
-        if (mon->ml) {
+        if (mon->mlit) {
           see_count += 1;
           MSG("%s starts moving faster.", descD);
         }
       } else if (randint(MAX_MON_LEVEL) > cr_ptr->level) {
         mon->mspeed += spd;
-        if (mon->ml) {
+        if (mon->mlit) {
           MSG("%s starts moving slower.", descD);
           see_count += 1;
         }
-      } else if (mon->ml) {
+      } else if (mon->mlit) {
         MSG("%s resists the affects.", descD);
       }
     }
@@ -7427,7 +7427,7 @@ py_shield_attack(y, x)
   mon_desc(midx);
   base_tohit = statD.use_stat[A_STR] + shield->weight / 2 + uD.wt / 10;
   adj = uD.lev * level_adj[uD.clidx][LA_BTH];
-  if (!m_ptr->ml)
+  if (!m_ptr->mlit)
     base_tohit = (base_tohit / 2) -
                  (statD.use_stat[A_DEX] * (BTH_PLUS_ADJ - 1)) - (adj / 2);
 
@@ -7478,7 +7478,7 @@ py_attack(y, x)
   base_tohit = uD.bth;
   lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
   // reduce hit if monster not lit
-  if (mon->ml == 0) {
+  if (mon->mlit == 0) {
     tohit = 0;
     base_tohit /= 2;
     lev_adj /= 2;
@@ -8040,7 +8040,7 @@ py_look_mon()
     lx = dir_x(dir);
     int seen = 0;
     FOR_EACH(mon, {
-      if (mon->ml && distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) {
+      if (mon->mlit && distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) {
         oy = -((mon->fy - y) < 0) + ((mon->fy - y) > 0);
         ox = -((mon->fx - x) < 0) + ((mon->fx - x) > 0);
         if (oy == ly && ox == lx && los(y, x, mon->fy, mon->fx)) {
@@ -8121,7 +8121,7 @@ int* mm;
         /* if the monster is not lit, must call update_mon, it may
            be faster than character, and hence could have just
            moved next to character this same turn */
-        if (!m_ptr->ml) update_mon(midx);
+        if (!m_ptr->mlit) update_mon(midx);
         mon_attack(midx);
         do_move = FALSE;
         do_turn = TRUE;
@@ -8136,7 +8136,7 @@ int* mm;
     if (do_move) {
       /* Move creature record  	       */
       move_rec(fy, fx, newy, newx);
-      m_ptr->ml = FALSE;
+      m_ptr->mlit = FALSE;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
       m_ptr->cdis = distance(uD.y, uD.x, newy, newx);
@@ -8187,7 +8187,7 @@ breath(typ, y, x, dam_hp, midx)
             if (m_ptr->hp < 0) {
               // TBD: treasure drop
               // treas = monster_death(m_ptr->fy, m_ptr->fx, cr_ptr->cmove);
-              // if (m_ptr->ml) {
+              // if (m_ptr->mlit) {
               //   tmp = (c_recall[m_ptr->mptr].r_cmove & CM_TREASURE) >>
               //         CM_TR_SHIFT;
               //   if (tmp > ((treas & CM_TREASURE) >> CM_TR_SHIFT))
@@ -8399,7 +8399,7 @@ mon_try_spell(midx)
         //   if (uD.cmana > 0) {
         //     disturb(1, 0);
         //     MSG("%sdraws psychic energy from you!", descD);
-        //     if (m_ptr->ml) {
+        //     if (m_ptr->mlit) {
         //       MSG("%sappears healthier.", descD);
         //     }
         //     r1 = (randint(cr_ptr->level) >> 1) + 1;
@@ -8436,7 +8436,7 @@ mon_try_spell(midx)
         MSG("%s cast unknown spell.", descD);
     }
     /* End of spells  			       */
-    // if (m_ptr->ml) {
+    // if (m_ptr->mlit) {
     //   c_recall[m_ptr->mptr].r_spells |= 1L << (thrown_spell - 1);
     //   if ((c_recall[m_ptr->mptr].r_spells & CS_FREQ) != CS_FREQ)
     //     c_recall[m_ptr->mptr].r_spells++;
@@ -8523,14 +8523,15 @@ creatures()
     mon->cdis = distance(uD.y, uD.x, mon->fy, mon->fx);
     move_count = movement_rate(mon_speed(mon));
     for (; move_count > 0; --move_count) {
-      // TBD: check aaf or mlit
-      if (mon->msleep) {
-        if (uD.tflag & TR_AGGRAVATE)
-          mon->msleep = 0;
-        else {
-          uint32_t notice = randint(1024);
-          if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
-            mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
+      if (mon->mlit || mon->cdis <= cr_ptr->aaf) {
+        if (mon->msleep) {
+          if (uD.tflag & TR_AGGRAVATE)
+            mon->msleep = 0;
+          else {
+            uint32_t notice = randint(1024);
+            if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
+              mon->msleep = MAX(mon->msleep - (100 / mon->cdis), 0);
+            }
           }
         }
       }
@@ -8542,7 +8543,7 @@ creatures()
         else
           mon->mstunned--;
         if (mon->mstunned == 0) {
-          if (mon->ml) {
+          if (mon->mlit) {
             MSG("The %s recovers and glares at you.", cr_ptr->name);
           }
         }
@@ -9088,7 +9089,7 @@ dungeon()
         struct monS* mon = &entity_monD[c_ptr->midx];
         struct objS* obj = &entity_objD[c_ptr->oidx];
 
-        if (find_flag && (mon->ml || c_ptr->fval > MAX_OPEN_SPACE)) {
+        if (find_flag && (mon->mlit || c_ptr->fval > MAX_OPEN_SPACE)) {
           find_flag = FALSE;
           free_turn_flag = TRUE;
         } else {
