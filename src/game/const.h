@@ -53,6 +53,7 @@
 
 #define MAX_STORE 6
 #define MAX_STORE_INVEN 16
+#define MAX_STORE_CHOICE 26
 #define MIN_STORE_INVEN 8
 #define STORE_TURN_AROUND 8
 

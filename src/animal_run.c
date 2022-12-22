@@ -1,5 +1,6 @@
 #include "game.c"
 
+enum { WIZARD = 0 };
 static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
 static int find_cut = 1;
@@ -2659,13 +2660,21 @@ store_maint()
       if (store_ctr < MIN_STORE_INVEN) j = MIN_STORE_INVEN - store_ctr;
       j += randint(STORE_TURN_AROUND);
 
-      do {
-        k = randint(MAX_DUNGEON_OBJ - 1);
-        if (treasureD[k].cost > 0) {
-          store_ctr += store_tr(i, k);
+      if (WIZARD) {
+        do {
+          k = randint(MAX_DUNGEON_OBJ - 1);
+          if (treasureD[k].cost > 0) {
+            store_ctr += store_tr(i, k);
+            j -= 1;
+          }
+        } while (j > 0);
+      } else {
+        do {
+          k = randint(MAX_STORE_CHOICE - 1);
+          store_ctr += store_tr(i, store_choiceD[i][k]);
           j -= 1;
-        }
-      } while (j > 0);
+        } while (j > 0);
+      }
     }
   }
 }
