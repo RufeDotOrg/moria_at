@@ -4730,11 +4730,6 @@ equip_curse()
     i_ptr->todam = 0;
     i_ptr->toac = -randint(5) - randint(5);
 
-    // TBD: Test this, I believe moria contains a bug here;
-    // The behavior is changed to match curse weapon
-    // py_bonuses removes adjustments from obj->flags
-    // obj->flags are changed
-    // calc_bonuses() sum tohit, todam, toac
     py_bonuses(i_ptr, -1);
     i_ptr->flags = TR_CURSED;
     calc_bonuses();
@@ -6995,6 +6990,7 @@ inven_wear(iidx)
         break;
       }
     }
+    calc_bonuses();
   }
 }
 void
@@ -7011,7 +7007,6 @@ py_wear()
       }
     }
   }
-  calc_bonuses();
 }
 void choice_actuate(uy, ux) int *uy, *ux;
 {
@@ -7196,10 +7191,10 @@ py_takeoff()
       uint8_t iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
         if (invenD[iidx]) equip_takeoff(iidx);
+        calc_bonuses();
       }
     }
   }
-  calc_bonuses();
 }
 static void
 py_help()
