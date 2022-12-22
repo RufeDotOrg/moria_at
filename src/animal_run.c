@@ -2599,7 +2599,7 @@ store_item_destroy(sidx, item, count)
   return consume;
 }
 int
-store_tr(sidx, tr_index)
+store_tr_stack(sidx, tr_index, stack)
 {
   int item;
   struct treasureS* tr_ptr;
@@ -2610,7 +2610,7 @@ store_tr(sidx, tr_index)
     for (int it = 0; it < AL(store_objD[0]); ++it) {
       obj = &store_objD[sidx][it];
       if (obj->tidx == tr_index) {
-        obj->number += 1;
+        obj->number += stack;
         return FALSE;
       }
     }
@@ -2664,14 +2664,15 @@ store_maint()
         do {
           k = randint(MAX_DUNGEON_OBJ - 1);
           if (treasureD[k].cost > 0) {
-            store_ctr += store_tr(i, k);
+            store_ctr += store_tr_stack(i, k, 1);
             j -= 1;
           }
         } while (j > 0);
       } else {
         do {
           k = randint(MAX_STORE_CHOICE - 1);
-          store_ctr += store_tr(i, store_choiceD[i][k]);
+          store_ctr +=
+              store_tr_stack(i, store_choiceD[i][k], store_stockD[i][k]);
           j -= 1;
         } while (j > 0);
       }
