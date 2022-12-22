@@ -2660,7 +2660,7 @@ store_maint()
       j += randint(STORE_TURN_AROUND);
 
       do {
-        k = randint(AL(treasureD) - 1);
+        k = randint(MAX_DUNGEON_OBJ - 1);
         if (treasureD[k].cost > 0) {
           store_ctr += store_tr(i, k);
           j -= 1;
@@ -9154,14 +9154,14 @@ obj_level_init()
   int tmp[MAX_OBJ_LEVEL + 1];
 
   for (i = 0; i <= MAX_OBJ_LEVEL; i++) o_level[i] = 0;
-  for (i = 1; i < AL(treasureD); i++) o_level[treasureD[i].level]++;
+  for (i = 1; i < MAX_DUNGEON_OBJ; i++) o_level[treasureD[i].level]++;
   for (i = 1; i <= MAX_OBJ_LEVEL; i++) o_level[i] += o_level[i - 1];
 
   /* now produce an array with object indexes sorted by level, by using
      the info in o_level, this is an O(n) sort! */
   /* this is not a stable sort, but that does not matter */
   for (i = 0; i <= MAX_OBJ_LEVEL; i++) tmp[i] = 1;
-  for (i = 1; i < AL(treasureD); i++) {
+  for (i = 1; i < MAX_DUNGEON_OBJ; i++) {
     l = treasureD[i].level;
     sorted_objects[o_level[l] - tmp[l]] = i;
     tmp[l]++;

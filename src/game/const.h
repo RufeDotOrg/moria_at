@@ -178,7 +178,7 @@
 
 #define MAX_TRAP 3
 #define MAX_OBJ_LEVEL 50
-
+#define MAX_DUNGEON_OBJ 345
 #define OBJ_GREAT 12  // 1/x treasure is a big surprise!
 
 /* Magic Treasure Generation constants				*/
