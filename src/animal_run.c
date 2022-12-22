@@ -7992,12 +7992,13 @@ py_make_known()
     }
   }
 }
-static void py_search(y, x, chance) int y, x, chance;
+static void py_search(y, x)
 {
-  register int i, j;
+  int i, j, chance;
   struct caveS* c_ptr;
   struct objS* obj;
 
+  chance = uD.search;
   msg_print("You search the area.");
   // TBD: tuning; used to divide by 10
   if (countD.confusion) chance /= 8;
@@ -8942,7 +8943,7 @@ dungeon()
               py_open();
               break;
             case 's':
-              py_search(y, x, 25);
+              py_search(y, x);
               break;
             case 'x':
               py_look_mon();
