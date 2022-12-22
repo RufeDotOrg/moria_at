@@ -7999,7 +7999,6 @@ py_search(y, x)
   struct objS* obj;
 
   chance = uD.search;
-  msg_print("You search the area.");
   // TBD: tuning; used to divide by 10
   if (countD.confusion) chance /= 8;
   // TBD: light also reduced search, like blindness
@@ -8946,6 +8945,7 @@ dungeon()
               break;
             case 's':
               py_search(y, x);
+              msg_print("You search the area.");
               break;
             case 'x':
               py_look_mon();
@@ -9133,6 +9133,7 @@ dungeon()
                 py_pickup(y, x, FALSE);
               }
             }
+            if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
           } else {
