@@ -7837,7 +7837,6 @@ void py_disarm(uy, ux) int *uy, *ux;
       // Prevent invis-detection via disarm: no free turn
       msg_print("Something is in your way!");
     } else {
-      disarm_trap(y, x);
       *uy = y;
       *ux = x;
     }
