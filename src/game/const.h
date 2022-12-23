@@ -195,6 +195,7 @@
 #define OBJ_DIV_CURSED	 13   /* 10*magic_chance/#  cursed items	 */
 
 #define OBJ_RUNE_TIDX 351 /* Rune of protection treasure index */
+#define OBJ_MUSH_TIDX 352 /* Create food treasure index */
 
 /* spell types used by get_flags(), breathe(), fire_bolt() and fire_ball() */
 #define GF_MAGIC_MISSILE 0

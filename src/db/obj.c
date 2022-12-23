@@ -5322,6 +5322,21 @@ struct treasureS treasureD[] = {
      0,
      {0, 0},
      10},
+    {"& Pint~ of Fine Grade Mush",
+     0x00000000L,
+     TV_FOOD,
+     ',', /* 351 */
+     1500,
+     1,
+     97,
+     1,
+     1,
+     0,
+     0,
+     0,
+     0,
+     {1, 1},
+     1},
 };
 
 char* special_nameD[] = {

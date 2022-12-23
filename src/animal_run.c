@@ -5696,6 +5696,25 @@ sleep_adjacent(y, x)
   return (sleep);
 }
 void
+create_food(y, x)
+{
+  struct objS* obj;
+
+  if (caveD[y][x].oidx) {
+    msg_print("There is already an object under you.");
+    return;
+  }
+
+  obj = obj_use();
+  if (obj->id) {
+    caveD[y][x].oidx = obj_index(obj);
+    tr_obj_copy(OBJ_MUSH_TIDX, obj);
+    obj->fy = y;
+    obj->fx = x;
+    msg_print("Food rolls beneath your feet.");
+  }
+}
+void
 warding_glyph(y, x)
 {
   struct objS* obj;
@@ -6551,10 +6570,10 @@ int *uy, *ux;
           ident = (countD.protevil == 0);
           countD.protevil += randint(25) + 3 * uD.lev;
           break;
-        // case 29:
-        //   ident = TRUE;
-        //   create_food();
-        //   break;
+        case 29:
+          ident = TRUE;
+          create_food(uD.y, uD.x);
+          break;
         case 30:
           ident = dispel_creature(CD_UNDEAD, 60);
           break;
@@ -9178,13 +9197,7 @@ dungeon()
               maD[MA_DETECT_EVIL] = 1;
             } break;
             case CTRL('f'): {
-              struct objS* obj = obj_use();
-              caveD[y][x].oidx = obj_index(obj);
-
-              tr_obj_copy(22, obj);
-              obj->fy = y;
-              obj->fx = x;
-              msg_print("Food rolls beneath your feet.");
+              create_food(y, x);
             } break;
             case CTRL('h'):
               if (uD.mhp < 100) uD.mhp = 100;
