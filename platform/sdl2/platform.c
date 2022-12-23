@@ -5,8 +5,9 @@
 
 #include "art.c"
 #include "dungeon.c"
-#include "treasure.c"
 #include "font_zip.c"
+#include "player.c"
+#include "treasure.c"
 
 #include "third_party/zlib/puff.c"
 
@@ -274,7 +275,8 @@ tart_io()
 {
   int rc = -1;
   tart_usedD = AL(tartD);
-  rc = puff((void *)&tartD, &tart_usedD, treasureZ, &(uint64_t){sizeof(treasureZ)});
+  rc = puff((void *)&tartD, &tart_usedD, treasureZ,
+            &(uint64_t){sizeof(treasureZ)});
   Log("tart_io() [ rc %d ] [ tart_usedD %ju ]\n", rc, tart_usedD);
   return rc == 0;
 }
@@ -297,7 +299,7 @@ tart_init()
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
                            surface);
     tart_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_SetTextureBlendMode(tart_textureD[it], SDL_BLENDMODE_NONE);
+    SDL_SetTextureBlendMode(tart_textureD[it], SDL_BLENDMODE_BLEND);
   }
   SDL_FreeSurface(surface);
 
@@ -305,6 +307,51 @@ tart_init()
     if (!tart_textureD[it]) return FALSE;
   }
   Log("Treasure Art textures available %ju", AL(tart_textureD));
+
+  return TRUE;
+}
+
+// player
+#define MAX_PART 13
+static uint8_t partD[4 * 1024];
+static uint64_t part_usedD;
+static struct SDL_Texture *part_textureD[MAX_PART];
+BOOL
+part_io()
+{
+  int rc = -1;
+  part_usedD = AL(partD);
+  rc = puff((void *)&partD, &part_usedD, playerZ, &(uint64_t){sizeof(playerZ)});
+  Log("part_io() [ rc %d ] [ part_usedD %ju ]\n", rc, part_usedD);
+  return rc == 0;
+}
+
+BOOL
+part_init()
+{
+  struct SDL_Renderer *renderer = rendererD;
+  int byte_count = part_usedD;
+  uint8_t bitmap[ART_H][ART_W];
+
+  struct SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
+      SDL_SWSURFACE, ART_W, ART_H, 0, texture_formatD);
+  uint64_t byte_used = 0;
+  for (int it = 0; it < AL(part_textureD);
+       ++it, byte_used += (ART_W * ART_H / 8)) {
+    if (byte_used >= byte_count) break;
+    bitfield_to_bitmap(&partD[byte_used], &bitmap[0][0], ART_W * ART_H);
+    memset(surface->pixels, 0, surface->h * surface->pitch);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
+                           surface);
+    part_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_SetTextureBlendMode(part_textureD[it], SDL_BLENDMODE_BLEND);
+  }
+  SDL_FreeSurface(surface);
+
+  for (int it = 0; it < AL(part_textureD); ++it) {
+    if (!part_textureD[it]) return FALSE;
+  }
+  Log("Player Art textures available %ju", AL(part_textureD));
 
   return TRUE;
 }
@@ -548,6 +595,7 @@ texture_by_sym(char c)
     case 's':
       return tart_textureD[24];
   }
+  if (c == '@') return part_textureD[0 + 4];
   if (char_visible(c)) {
     uint64_t glyph_index = c - START_GLYPH;
     t = font_textureD[glyph_index];
@@ -864,7 +912,7 @@ sdl_pump()
       if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
         SDL_Keymod km = SDL_GetModState();
         int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
-        // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 8;
+        // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 13;
         if (isalpha(event.key.keysym.sym)) {
           if (km & KMOD_CTRL) return (event.key.keysym.sym & 037);
           return event.key.keysym.sym ^ shift;
@@ -959,6 +1007,7 @@ platform_init()
 
   if (!dungeon_io() || !dungeon_init()) exit(5);
   if (!tart_io() || !tart_init()) return;
+  if (!part_io() || !part_init()) return;
 }
 void
 platform_reset()
