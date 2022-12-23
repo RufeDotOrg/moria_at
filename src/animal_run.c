@@ -8631,10 +8631,97 @@ static void hit_trap(y, x) int y, x;
   find_flag = FALSE;
 }
 static int
-store_cost(obj)
+obj_value(obj)
 struct objS* obj;
 {
-  return obj->cost;
+  int value;
+  struct treasureS* tr_ptr;
+
+  tr_ptr = &treasureD[obj->tidx];
+  value = obj->cost;
+  /* don't purchase known cursed items */
+  if (obj->idflag & ID_DAMD)
+    value = 0;
+  else if (((obj->tval >= TV_BOW) && (obj->tval <= TV_SWORD)) ||
+           ((obj->tval >= TV_BOOTS) &&
+            (obj->tval <= TV_SOFT_ARMOR))) { /* Weapons and armor  */
+    if ((obj->idflag & ID_REVEAL) == 0)
+      value = tr_ptr->cost;
+    else if ((obj->tval >= TV_BOW) && (obj->tval <= TV_SWORD)) {
+      if (obj->tohit < 0)
+        value = 0;
+      else if (obj->todam < 0)
+        value = 0;
+      else if (obj->toac < 0)
+        value = 0;
+      else
+        value = obj->cost + (obj->tohit + obj->todam + obj->toac) * 100;
+    } else {
+      if (obj->toac < 0)
+        value = 0;
+      else
+        value = obj->cost + obj->toac * 100;
+    }
+  } else if ((obj->tval >= TV_SLING_AMMO) &&
+             (obj->tval <= TV_SPIKE)) { /* Ammo  		*/
+    if ((obj->idflag & ID_REVEAL) == 0)
+      value = tr_ptr->cost;
+    else {
+      if (obj->tohit < 0)
+        value = 0;
+      else if (obj->todam < 0)
+        value = 0;
+      else if (obj->toac < 0)
+        value = 0;
+      else
+        /* use 5, because missiles generally appear in groups of 20,
+           so 20 * 5 == 100, which is comparable to weapon bonus above */
+        value = obj->cost + (obj->tohit + obj->todam + obj->toac) * 5;
+    }
+  } else if ((obj->tval == TV_SCROLL1) || (obj->tval == TV_SCROLL2) ||
+             (obj->tval == TV_POTION1) ||
+             (obj->tval == TV_POTION2)) { /* Potions, Scrolls, and Food  */
+    if (!tr_is_known(tr_ptr)) value = 20;
+  } else if (obj->tval == TV_FOOD) {
+    if (!tr_is_known(tr_ptr)) value = 1;
+  } else if ((obj->tval == TV_AMULET) ||
+             (obj->tval == TV_RING)) { /* Rings and amulets  */
+    if (!tr_is_known(tr_ptr))
+      /* player does not know what type of ring/amulet this is */
+      value = 45;
+    else if ((obj->idflag & ID_REVEAL) == 0)
+      /* player knows what type of ring, but does not know whether it is
+         cursed or not, if refuse to buy cursed objects here, then
+         player can use this to 'identify' cursed objects */
+      value = tr_ptr->cost;
+  } else if ((obj->tval == TV_STAFF) ||
+             (obj->tval == TV_WAND)) { /* Wands and staffs*/
+    if (!tr_is_known(tr_ptr)) {
+      if (obj->tval == TV_WAND)
+        value = 50;
+      else
+        value = 70;
+    } else if ((obj->idflag & ID_REVEAL) == 0)
+      value = obj->cost + (obj->cost / 20) * obj->p1;
+  }
+  /* picks and shovels */
+  else if (obj->tval == TV_DIGGING) {
+    if ((obj->idflag & ID_REVEAL) == 0)
+      value = tr_ptr->cost;
+    else {
+      if (obj->p1 < 0)
+        value = 0;
+      else {
+        /* some digging tools start with non-zero p1 values, so only
+           multiply the plusses by 100, make sure result is positive */
+        value = obj->cost + (obj->p1 - tr_ptr->p1) * 100;
+        if (value < 0) value = 0;
+      }
+    }
+  }
+  /* multiply value by number of items if it is a batch stack item */
+  if (obj->subval & STACK_BATCH) value = value * obj->number;
+  return (value);
 }
 static void
 store_display(sidx)
@@ -8650,7 +8737,7 @@ store_display(sidx)
     obj = &store_objD[sidx][it];
     if (obj->tidx) {
       obj_desc(obj, TRUE);
-      BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, store_cost(obj));
+      BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, obj_value(obj));
     } else {
       line += 1;
     }
@@ -8659,7 +8746,7 @@ store_display(sidx)
 static void
 store_item_purchase(sidx, item)
 {
-  int iidx, count, flag;
+  int iidx, count, cost, flag;
   struct objS* obj;
 
   flag = FALSE;
@@ -8667,7 +8754,8 @@ store_item_purchase(sidx, item)
     obj = &store_objD[sidx][item];
     if (obj->tidx) {
       count = obj->subval & STACK_BATCH ? obj->number : 1;
-      if (uD.gold >= store_cost(obj)) {
+      cost = obj_value(obj);
+      if (uD.gold >= cost) {
         if ((iidx = inven_merge_slot(obj)) >= 0) {
           obj_get(invenD[iidx])->number += count;
           flag = TRUE;
@@ -8683,7 +8771,7 @@ store_item_purchase(sidx, item)
       if (flag) {
         obj_desc(obj_get(invenD[iidx]), TRUE);
         MSG("You have %s.", descD);
-        uD.gold -= store_cost(obj);
+        uD.gold -= cost;
         store_item_destroy(sidx, item, count);
       }
       msg_pause();
