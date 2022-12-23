@@ -2603,6 +2603,12 @@ store_init()
   for (j = 0; j < AL(storeD); ++j) {
     storeD[j] = MAX_STORE * (randint(i) - 1) + j;
   }
+
+  if (WIZARD) {
+    for (j = 0; j < AL(ownerD); ++j) {
+      ownerD[j].max_cost = INT16_MAX;
+    }
+  }
 }
 int
 store_item_destroy(sidx, item, count)
