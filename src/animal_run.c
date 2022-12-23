@@ -656,7 +656,10 @@ build_store(sidx, y, x)
   x_left = xval - randint(3);
   x_right = xval + randint(3);
   for (i = y_height; i <= y_depth; i++)
-    for (j = x_left; j <= x_right; j++) caveD[i][j].fval = BOUNDARY_WALL;
+    for (j = x_left; j <= x_right; j++) {
+      caveD[i][j].fval = BOUNDARY_WALL;
+      caveD[i][j].cflag |= CF_PERM_LIGHT;
+    }
   tmp = randint(4);
   if (tmp < 3) {
     i = randint(y_depth - y_height) + y_height - 1;
@@ -3058,6 +3061,11 @@ cave_gen()
   alloc_obj(set_floor, 1, randint(alloc_level));
   // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
 }
+static int
+town_night()
+{
+  return ((turnD / (1 << 12)) & 0x1);
+}
 void
 town_gen()
 {
@@ -3066,16 +3074,18 @@ town_gen()
   int room[MAX_STORE];
   int room_used;
 
+  uint8_t cflag = town_night() ? 0 : CF_PERM_LIGHT;
   for (int row = 0; row < MAX_HEIGHT; ++row) {
     for (int col = 0; col < MAX_WIDTH; ++col) {
       c_ptr = &caveD[row][col];
       if ((row == 0 || row + 1 >= SYMMAP_HEIGHT) ||
           (col == 0 || col + 1 >= SYMMAP_WIDTH)) {
         c_ptr->fval = BOUNDARY_WALL;
+        c_ptr->cflag = CF_PERM_LIGHT;
       } else {
-        c_ptr->fval = FLOOR_LIGHT;
+        c_ptr->fval = FLOOR_DARK;
+        c_ptr->cflag = cflag;
       }
-      c_ptr->cflag |= CF_PERM_LIGHT;
     }
   }
 
