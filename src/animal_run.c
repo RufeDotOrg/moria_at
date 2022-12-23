@@ -576,9 +576,9 @@ register int weight, plus, dam;
   if (randint(5000) <= (int)(weight + 5 * plus)) {
     //  + (class_level_adj[py.misc.pclass][attack_type] * py.misc.lev)
     weight += randint(650);
-    // 380 max itemization (you can wield iron chests apparently)
-    // 280 for two-handed great flail (TV_HAFTED)
+    // 1000 max itemization (you can wield iron chests apparently)
     // 300 for lance (TV_POLEARM)
+    // 280 for two-handed great flail (TV_HAFTED)
     // 280 for zweihander (TV_SWORD)
 
     if (weight < 400) {
