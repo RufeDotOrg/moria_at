@@ -5,6 +5,7 @@
 
 #include "art.c"
 #include "dungeon.c"
+#include "treasure.c"
 #include "font_zip.c"
 
 #include "third_party/zlib/puff.c"
@@ -263,6 +264,51 @@ art_init()
   return TRUE;
 }
 
+// treasure
+#define MAX_TART 25
+static uint8_t tartD[8 * 1024];
+static uint64_t tart_usedD;
+static struct SDL_Texture *tart_textureD[MAX_TART];
+BOOL
+tart_io()
+{
+  int rc = -1;
+  tart_usedD = AL(tartD);
+  rc = puff((void *)&tartD, &tart_usedD, treasureZ, &(uint64_t){sizeof(treasureZ)});
+  Log("tart_io() [ rc %d ] [ tart_usedD %ju ]\n", rc, tart_usedD);
+  return rc == 0;
+}
+
+BOOL
+tart_init()
+{
+  struct SDL_Renderer *renderer = rendererD;
+  int byte_count = tart_usedD;
+  uint8_t bitmap[ART_H][ART_W];
+
+  struct SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
+      SDL_SWSURFACE, ART_W, ART_H, 0, texture_formatD);
+  uint64_t byte_used = 0;
+  for (int it = 0; it < AL(tart_textureD);
+       ++it, byte_used += (ART_W * ART_H / 8)) {
+    if (byte_used >= byte_count) break;
+    bitfield_to_bitmap(&tartD[byte_used], &bitmap[0][0], ART_W * ART_H);
+    memset(surface->pixels, 0, surface->h * surface->pitch);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
+                           surface);
+    tart_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_SetTextureBlendMode(tart_textureD[it], SDL_BLENDMODE_NONE);
+  }
+  SDL_FreeSurface(surface);
+
+  for (int it = 0; it < AL(tart_textureD); ++it) {
+    if (!tart_textureD[it]) return FALSE;
+  }
+  Log("Treasure Art textures available %ju", AL(tart_textureD));
+
+  return TRUE;
+}
+
 #define MAX_DUNGEON 36
 static uint8_t dungeonD[16 * 1024];
 static uint64_t dungeon_usedD;
@@ -461,6 +507,47 @@ texture_by_sym(char c)
   if (c == '<') return dungeon_textureD[13 + 4];
   if (c == '\'') return dungeon_textureD[18 + 1];
   if (c == '+') return dungeon_textureD[21 + 1];
+  switch (c) {
+    case '&':
+    case '(':
+      return tart_textureD[0];
+    case ')':
+      return tart_textureD[1];
+    case '"':
+      return tart_textureD[2];
+    case '!':
+      return tart_textureD[3];
+    case '-':
+      return tart_textureD[4];
+    case '/':
+      return tart_textureD[5];
+    case '=':
+      return tart_textureD[6];
+    case '?':
+      return tart_textureD[7];
+    case '[':
+      return tart_textureD[8];
+    case '\\':
+      return tart_textureD[9];
+    case ']':
+      return tart_textureD[10];
+    case '_':
+      return tart_textureD[11];
+    case '{':
+      return tart_textureD[12];
+    case '|':
+      return tart_textureD[13];
+    case '}':
+      return tart_textureD[14];
+    case '$':
+      return tart_textureD[15];
+    case ',':
+      return tart_textureD[18];
+    case '~':
+      return tart_textureD[20];
+    case 's':
+      return tart_textureD[24];
+  }
   if (char_visible(c)) {
     uint64_t glyph_index = c - START_GLYPH;
     t = font_textureD[glyph_index];
@@ -871,6 +958,7 @@ platform_init()
   if (!art_io() || !art_init()) return;
 
   if (!dungeon_io() || !dungeon_init()) exit(5);
+  if (!tart_io() || !tart_init()) return;
 }
 void
 platform_reset()
