@@ -5666,6 +5666,23 @@ inven_recharge(iidx, amount)
   }
 }
 int
+extermination()
+{
+  struct creatureS* cr_ptr;
+  int count;
+
+  count = 0;
+  FOR_EACH(mon, {
+    cr_ptr = &creatureD[mon->cidx];
+    if (cr_ptr->cmove & CM_MULTIPLY) {
+      caveD[mon->fy][mon->fx].midx = 0;
+      mon_unuse(mon);
+      count += 1;
+    }
+  });
+  return count;
+}
+int
 sleep_adjacent(y, x)
 {
   register int i, j;
@@ -6558,11 +6575,13 @@ int *uy, *ux;
             inven_recharge(iidx, 60);
           }
           break;
-        // case 26:
-        //   msg_print("This is a genocide scroll.");
-        //   (void)genocide();
-        //   ident = TRUE;
-        //   break;
+        case 26:
+          ident = extermination();
+          if (ident) {
+            msg_print("This is an extermination scroll.");
+            ident = TRUE;
+          }
+          break;
         case 27:
           ident = unlight_area(uD.y, uD.x);
           break;

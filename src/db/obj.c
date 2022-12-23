@@ -3160,7 +3160,7 @@ struct treasureS treasureD[] = {
      0,
      {0, 0},
      40},
-    {"Genocide",
+    {"Extermination",
      0x02000000L,
      TV_SCROLL1,
      '?', /*207*/
