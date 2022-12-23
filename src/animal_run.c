@@ -4679,6 +4679,19 @@ ma_bonuses(maffect, factor)
       break;
     case MA_DETECT_INVIS:
       break;
+    case MA_RECALL:
+      if (factor < 0) {
+        new_level_flag = 1;
+        countD.paralysis += 1;
+        if (dun_level) {
+          dun_level = 0;
+          msg_print("You feel yourself yanked upwards!");
+        } else {
+          dun_level = uD.max_dlv;
+          msg_print("You feel yourself yanked downwards!");
+        }
+      }
+      break;
     default:
       msg_print("Error in ma_bonuses()");
       break;
@@ -6555,12 +6568,12 @@ int *uy, *ux;
           ident = TRUE;
           maD[MA_BLESS] += (randint(48) + 24);
           break;
-          // case 41:
-          //   ident = TRUE;
-          //   if (py.flags.word_recall == 0)
-          //     py.flags.word_recall = 25 + randint(30);
-          //   msg_print("The air about you becomes charged.");
-          //   break;
+        case 41:
+          ident = TRUE;
+          if ((uD.mflag & (1 << MA_RECALL)) == 0)
+            maD[MA_RECALL] += 25 + randint(30);
+          msg_print("The air about you becomes charged.");
+          break;
         case 42:
           destroy_area(uD.y, uD.x);
           ident = TRUE;
@@ -8956,6 +8969,7 @@ dungeon()
   uint32_t dir;
   new_level_flag = FALSE;
 
+  uD.max_dlv = MAX(uD.max_dlv, dun_level);
   while (!new_level_flag) {
     tick();
     msg_countD = 1;

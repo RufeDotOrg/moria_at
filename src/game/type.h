@@ -6,6 +6,7 @@ struct uS {
   int exp;
   int max_exp;
   int lev;
+  int max_dlv;
   int chp;
   int chp_frac;
   int mhp;
