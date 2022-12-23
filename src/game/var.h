@@ -2,6 +2,7 @@
 // Visual info
 static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 static uint16_t cremapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
+static uint8_t litmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 static char vitalinfoD[STATUS_HEIGHT][STATUS_WIDTH];
 static int vitalinfo_usedD[AL(vitalinfoD)];
 static char affectinfoD[160];

@@ -121,6 +121,7 @@ void
 symmap_update()
 {
   memset(cremapD, 0, sizeof(cremapD));
+  memset(litmapD, 0, sizeof(litmapD));
 
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
@@ -143,6 +144,13 @@ symmap_update()
       cre += 1;
     }
   }
+  uint8_t* lit = &litmapD[0][0];
+  for (int row = rmin; row < rmax; ++row)
+    for (int col = cmin; col < cmax; ++col) {
+      int cflag = caveD[row][col].cflag;
+      *lit = cflag;
+      lit += 1;
+    }
 }
 static char* affectD[][16] = {
     {"Hungry", "Weak", "Fainting"},
@@ -3074,7 +3082,7 @@ town_gen()
   int room[MAX_STORE];
   int room_used;
 
-  uint8_t cflag = town_night() ? 0 : CF_PERM_LIGHT;
+  uint8_t cflag = town_night() ? 0 : (CF_PERM_LIGHT | CF_ROOM);
   for (int row = 0; row < MAX_HEIGHT; ++row) {
     for (int col = 0; col < MAX_WIDTH; ++col) {
       c_ptr = &caveD[row][col];
@@ -4954,10 +4962,8 @@ void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
       uint32_t cflag = cave->cflag;
 
       if (countD.blind == 0) {
-        if (cave->fval >= MIN_WALL)
-          cflag |= CF_PERM_LIGHT;
-        else
-          cflag |= CF_TEMP_LIGHT;
+        cflag |= CF_TEMP_LIGHT;
+        if (cave->fval >= MIN_WALL) cflag |= CF_PERM_LIGHT;
         if (cave->oidx) {
           struct objS* obj = &entity_objD[cave->oidx];
           if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {

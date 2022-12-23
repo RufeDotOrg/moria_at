@@ -20,6 +20,7 @@ enum { ANDROID };
 #define R(r) r.x, r.y, r.w, r.h
 #define RS(r, s) (r.x * s.w), (r.y * s.h), (r.w * s.w), (r.h * s.h)
 #define C(c) c.r, c.g, c.b, c.a
+#define C3(c) c.r, c.g, c.b
 
 BOOL
 char_visible(char c)
@@ -497,6 +498,8 @@ render_font_string(struct SDL_Renderer *renderer, struct fontS *font,
 SDL_Texture *map_textureD;
 SDL_Rect map_rectD;
 SDL_Color mapbgD;
+SDL_Color fogbgD;
+SDL_Color losbgD;
 SDL_Rect scale_rectD;
 float scaleD;
 SDL_Texture *text_textureD;
@@ -536,6 +539,8 @@ texture_init()
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, w, h);
   mapbgD = (SDL_Color){15, 15, 15, 0};
+  fogbgD = (SDL_Color){41, 0, 41, 60};
+  losbgD = (SDL_Color){41, 41, 0, 30};
 
   w = 4 * 1024;
   h = 4 * 1024;
@@ -596,6 +601,7 @@ texture_by_sym(char c)
       return tart_textureD[24];
   }
   if (c == '@') return part_textureD[0 + 4];
+  if (c == '.') return 0;
   if (char_visible(c)) {
     uint64_t glyph_index = c - START_GLYPH;
     t = font_textureD[glyph_index];
@@ -648,6 +654,7 @@ platform_draw()
     SDL_SetRenderTarget(rendererD, map_textureD);
     SDL_SetRenderDrawColor(rendererD, C(mapbgD));
     SDL_RenderFillRect(rendererD, &map_rectD);
+    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
     for (int row = 0; row < AL(symmapD); ++row) {
       sprite_rect.y = row * ART_H;
       for (int col = 0; col < SYMMAP_WIDTH; ++col) {
@@ -662,8 +669,21 @@ platform_draw()
           srct = texture_by_sym(sym);
         }
         SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
+        int litroom = (CF_PERM_LIGHT | CF_ROOM);
+        if (litmapD[row][col] & CF_TEMP_LIGHT) {
+        } else if ((litmapD[row][col] & litroom) == litroom) {
+          if (!los(uD.y, uD.x, panelD.panel_row_min + row,
+                   panelD.panel_col_min + col)) {
+            SDL_SetRenderDrawColor(rendererD, C(losbgD));
+            SDL_RenderFillRect(rendererD, &sprite_rect);
+          }
+        } else {
+          SDL_SetRenderDrawColor(rendererD, C(fogbgD));
+          SDL_RenderFillRect(rendererD, &sprite_rect);
+        }
       }
     }
+    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
     SDL_SetRenderTarget(rendererD, 0);
 
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
