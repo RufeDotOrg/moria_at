@@ -2595,6 +2595,15 @@ int tval;
   }
   return slot;
 }
+void
+store_init()
+{
+  int i, j;
+  i = AL(ownerD) / AL(storeD);
+  for (j = 0; j < AL(storeD); ++j) {
+    storeD[j] = MAX_STORE * (randint(i) - 1) + j;
+  }
+}
 int
 store_item_destroy(sidx, item, count)
 {
@@ -8730,7 +8739,7 @@ store_display(sidx)
   struct objS* obj;
 
   line = 0;
-  BufMsg(screen, "%-17.017s: %s", "OwnerName", "...");
+  BufMsg(screen, "%-17.017s: %s", "OwnerName", ownerD[storeD[sidx]].name);
   line += 1;
   BufMsg(screen, "   Item");
   for (int it = 0; it < AL(store_objD[0]); ++it) {
@@ -9292,6 +9301,7 @@ main()
   for (int it = randint(100); it != 0; --it) rnd();
 
   dun_level = 1;
+  store_init();
   mon_level_init();
   obj_level_init();
   generate_cave();

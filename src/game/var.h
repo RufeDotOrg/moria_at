@@ -88,4 +88,5 @@ static char death_descD[160];
 // Zero is an available or empty slot
 // [INVEN_WIELD, INVEN_AUX] are equipment
 static int invenD[MAX_INVEN];
+static int storeD[MAX_STORE];
 static struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];

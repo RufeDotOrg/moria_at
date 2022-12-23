@@ -198,3 +198,13 @@ struct monS {
   uint8_t mstunned;
   uint8_t mconfused;
 };
+
+struct ownerS {
+  char *name;
+  int16_t max_cost;
+  uint8_t max_inflate;
+  uint8_t min_inflate;
+  uint8_t haggle_per;
+  uint8_t owner_race;
+  uint8_t insult_max;
+};
