@@ -5307,6 +5307,21 @@ struct treasureS treasureD[] = {
      0,
      {1, 3},
      5},
+    {"a glyph of protection",
+     0x00000000L,
+     TV_GLYPH,
+     '^', /* 350 */
+     3000,
+     0,
+     1,
+     1,
+     0,
+     0,
+     0,
+     0,
+     0,
+     {0, 0},
+     10},
 };
 
 char* special_nameD[] = {

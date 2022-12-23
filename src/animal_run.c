@@ -4442,8 +4442,10 @@ BOOL prefix;
     // case TV_STORE_DOOR:
     //   sprintf(descD, "the entrance to the %s.",
     //   object_list[obj->index].name); return;
+    case TV_GLYPH:
+      break;
     default:
-      strcpy(descD, "Error in objdes()");
+      snprintf(descD, AL(descD), "Error in objdes(): %d", obj->tval);
       return;
   }
   if (basenm) strcpy(descD, basenm);
@@ -5693,6 +5695,19 @@ sleep_adjacent(y, x)
     }
   return (sleep);
 }
+void
+warding_glyph(y, x)
+{
+  struct objS* obj;
+
+  obj = obj_use();
+  if (obj->id) {
+    caveD[y][x].oidx = obj_index(obj);
+    tr_obj_copy(OBJ_RUNE_TIDX, obj);
+    obj->fy = y;
+    obj->fx = x;
+  }
+}
 int
 trap_creation(y, x)
 {
@@ -6472,10 +6487,10 @@ int *uy, *ux;
         case 13:
           ident = sleep_adjacent(uD.y, uD.x);
           break;
-          // case 14:
-          //   ident = TRUE;
-          //   warding_glyph();
-          //   break;
+        case 14:
+          ident = TRUE;
+          warding_glyph(uD.y, uD.x);
+          break;
         case 15:
           ident = detect_obj(oset_gold);
           break;
@@ -8138,18 +8153,20 @@ py_look_obj()
   }
   free_turn_flag = TRUE;
 }
-static void make_move(midx, mm) int midx;
-int* mm;
+static void make_move(midx, mm, tries) int* mm;
 {
   int i, fy, fx, newy, newx, do_turn, do_move, stuck_door;
   register struct caveS* c_ptr;
   register struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+  struct objS* obj;
 
   i = 0;
   do_turn = FALSE;
   do_move = FALSE;
   m_ptr = &entity_monD[midx];
-  for (int i = 0; i < 5; ++i) {
+  cr_ptr = &creatureD[m_ptr->cidx];
+  for (int i = 0; i < tries; ++i) {
     /* Get new position  	*/
     fy = newy = m_ptr->fy;
     fx = newx = m_ptr->fx;
@@ -8159,8 +8176,19 @@ int* mm;
 
     /* Floor is open?  	   */
     if (c_ptr->fval <= MAX_OPEN_SPACE) do_move = TRUE;
-    /* Creature has attempted to move on player?     */
+    if (do_move && c_ptr->oidx != 0) {
+      obj = &entity_objD[c_ptr->oidx];
+      if (obj->tval == TV_GLYPH) {
+        if (randint(obj->p1) < cr_ptr->level) {
+          msg_print("The glyph of protection is broken!");
+          delete_object(newy, newx);
+        } else {
+          do_move = FALSE;
+        }
+      }
+    }
     if (do_move) {
+      /* Creature has attempted to move on player?     */
       if (newy == uD.y && newx == uD.x) {
         /* if the monster is not lit, must call update_mon, it may
            be faster than character, and hence could have just
@@ -8172,7 +8200,7 @@ int* mm;
       }
       /* Creature is attempting to move on other creature?     */
       else if (c_ptr->midx && c_ptr->midx != midx) {
-        //   // TBD: Creatures can eat creatures
+        // TBD: Creatures can eat creatures
         do_move = FALSE;
       }
     }
@@ -8495,11 +8523,12 @@ mon_move(midx, cdis)
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
   int mm[9];
-  int took_turn, random, flee;
+  int tries, took_turn, random, flee;
 
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
   AC(mm);
+  tries = 5;
   took_turn = FALSE;
   random = FALSE;
   flee = FALSE;
@@ -8536,10 +8565,11 @@ mon_move(midx, cdis)
       }
     } else if (cdis < 2 || (cr_ptr->cmove & CM_ATTACK_ONLY) == 0) {
       get_moves(midx, mm);
+      tries = 1;
     }
 
     if (mm[0]) {
-      make_move(midx, mm);
+      make_move(midx, mm, tries);
     }
   }
 }

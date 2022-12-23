@@ -175,7 +175,8 @@
 #define TV_DOWN_STAIR 108
 #define TV_SECRET_DOOR 109
 #define TV_STORE_DOOR 110
-#define TV_MAX_VISIBLE 110
+#define TV_GLYPH 111
+#define TV_MAX_VISIBLE 111
 
 #define MAX_TRAP 3
 #define MAX_OBJ_LEVEL 50
@@ -192,6 +193,8 @@
 #define OBJ_BASE_MAX	 70   /* Max amount of magic		       */
 #define OBJ_DIV_SPECIAL	 6    /* magic_chance/#	 special magic	      */
 #define OBJ_DIV_CURSED	 13   /* 10*magic_chance/#  cursed items	 */
+
+#define OBJ_RUNE_TIDX 351 /* Rune of protection treasure index */
 
 /* spell types used by get_flags(), breathe(), fire_bolt() and fire_ball() */
 #define GF_MAGIC_MISSILE 0
