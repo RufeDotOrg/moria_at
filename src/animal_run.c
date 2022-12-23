@@ -8644,10 +8644,12 @@ obj_value(obj)
 struct objS* obj;
 {
   int value;
+  int known;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
   value = obj->cost;
+  known = ((obj->idflag & ID_REVEAL) != 0) || tr_is_known(tr_ptr);
   /* don't purchase known cursed items */
   if (obj->idflag & ID_DAMD)
     value = 0;
@@ -8690,13 +8692,12 @@ struct objS* obj;
   } else if ((obj->tval == TV_SCROLL1) || (obj->tval == TV_SCROLL2) ||
              (obj->tval == TV_POTION1) ||
              (obj->tval == TV_POTION2)) { /* Potions, Scrolls, and Food  */
-    if (!tr_is_known(tr_ptr)) value = 20;
+    if (!known) value = 20;
   } else if (obj->tval == TV_FOOD) {
-    if (!tr_is_known(tr_ptr)) value = 1;
+    if (!known) value = 1;
   } else if ((obj->tval == TV_AMULET) ||
              (obj->tval == TV_RING)) { /* Rings and amulets  */
-    if (!tr_is_known(tr_ptr))
-      /* player does not know what type of ring/amulet this is */
+    if (!known) /* player does not know what type of ring/amulet this is */
       value = 45;
     else if ((obj->idflag & ID_REVEAL) == 0)
       /* player knows what type of ring, but does not know whether it is
@@ -8705,7 +8706,7 @@ struct objS* obj;
       value = tr_ptr->cost;
   } else if ((obj->tval == TV_STAFF) ||
              (obj->tval == TV_WAND)) { /* Wands and staffs*/
-    if (!tr_is_known(tr_ptr)) {
+    if (!known) {
       if (obj->tval == TV_WAND)
         value = 50;
       else
@@ -8736,6 +8737,7 @@ static void
 store_display(sidx)
 {
   int line;
+  int cost;
   struct objS* obj;
 
   line = 0;
@@ -8744,9 +8746,10 @@ store_display(sidx)
   BufMsg(screen, "   Item");
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     obj = &store_objD[sidx][it];
+    cost = obj_value(obj) * ownerD[storeD[sidx]].min_inflate / 100;
     if (obj->tidx) {
       obj_desc(obj, TRUE);
-      BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, obj_value(obj));
+      BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, cost);
     } else {
       line += 1;
     }
