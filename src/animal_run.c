@@ -5531,6 +5531,51 @@ get_flags(int typ, uint32_t* weapon_type, int* harm_type, int (**destroy)())
       msg_print("ERROR in get_flags()\n");
   }
 }
+void
+light_line(dir, y, x)
+{
+  int i;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+  int dist, flag;
+
+  dist = -1;
+  flag = FALSE;
+  do {
+    /* put mmove at end because want to light up current spot */
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else {
+      if ((c_ptr->cflag & CF_PERM_LIGHT) == 0) {
+        if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
+        if ((c_ptr->cflag & CF_ROOM) != 0 && panel_contains(&panelD, y, x))
+          light_room(y, x);
+      }
+      c_ptr->cflag |= CF_PERM_LIGHT;
+
+      if (c_ptr->midx) {
+        m_ptr = &entity_monD[c_ptr->midx];
+        cr_ptr = &creatureD[m_ptr->cidx];
+        mon_desc(c_ptr->midx);
+        /* light up and draw monster */
+        update_mon(c_ptr->midx);
+        if (CD_LIGHT & cr_ptr->cdefense) {
+          i = mon_take_hit(c_ptr->midx, damroll(2, 8));
+          if (i >= 0) {
+            MSG("%s shrivels away in the light!", descD);
+            py_experience();
+          } else {
+            MSG("%s cringes from the light!", descD);
+          }
+        }
+      }
+    }
+    (void)mmove(dir, &y, &x);
+  } while (!flag);
+}
 void fire_bolt(typ, dir, y, x, dam, bolt_typ) int typ, dir, y, x, dam;
 char* bolt_typ;
 {
@@ -6695,11 +6740,11 @@ inven_try_wand_dir(iidx, dir)
       j = bit_pos(&flags) + 1;
       /* Wands  		 */
       switch (j) {
-        // case 1:
-        //   msg_print("A line of blue shimmering light appears.");
-        //   light_line(dir, char_row, char_col);
-        //   ident = TRUE;
-        //   break;
+        case 1:
+          msg_print("A line of blue shimmering light appears.");
+          light_line(dir, uD.y, uD.x);
+          ident = TRUE;
+          break;
         case 2:
           fire_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_nameD[8]);
           ident = TRUE;
