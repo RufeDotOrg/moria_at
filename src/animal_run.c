@@ -6070,6 +6070,60 @@ td_destroy2(dir, y, x)
   return (destroy2);
 }
 int
+build_wall(dir, y, x)
+{
+  int i;
+  int build, damage, dist, flag;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  build = FALSE;
+  dist = 0;
+  flag = FALSE;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else {
+      if (c_ptr->oidx) delete_object(y, x);
+      if (c_ptr->midx) {
+        /* stop the wall building */
+        flag = TRUE;
+        m_ptr = &entity_monD[c_ptr->midx];
+        cr_ptr = &creatureD[m_ptr->cidx];
+        mon_desc(c_ptr->midx);
+
+        if (!(cr_ptr->cmove & CM_PHASE)) {
+          /* monster does not move, can't escape the wall */
+          if (cr_ptr->cmove & CM_ATTACK_ONLY)
+            damage = 3000; /* this will kill everything */
+          else
+            damage = damroll(4, 8);
+
+          MSG("%s wails out in pain!", descD);
+          if (mon_take_hit(c_ptr->midx, damage)) {
+            MSG("%s is embedded in the rock.", descD);
+            py_experience();
+          }
+        } else if (cr_ptr->cchar == 'E' || cr_ptr->cchar == 'X') {
+          MSG("%s grows larger.", descD);
+          /* must be an earth elemental or an earth spirit, or a Xorn
+             increase its hit points */
+          m_ptr->hp += damroll(4, 8);
+        }
+      }
+      c_ptr->fval = GRANITE_WALL;  // TBD: was MAGMA_WALL;
+      c_ptr->cflag &= ~CF_FIELDMARK;
+      i++;
+      build = TRUE;
+    }
+  } while (!flag);
+  return (build);
+}
+int
 clone_monster(dir, y, x)
 {
   struct caveS* c_ptr;
@@ -7307,9 +7361,9 @@ inven_try_wand_dir(iidx, dir)
           fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6), spell_nameD[0]);
           ident = TRUE;
           break;
-        // case 15:
-        //   ident = build_wall(dir, y, x);
-        //   break;
+        case 15:
+          ident = build_wall(dir, y, x);
+          break;
         case 16:
           ident = clone_monster(dir, y, x);
           break;
