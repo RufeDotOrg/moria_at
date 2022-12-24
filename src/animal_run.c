@@ -5999,6 +5999,34 @@ sleep_monster(dir, y, x)
   return (sleep);
 }
 int
+sleep_monster_aoe()
+{
+  int y, x, i, sleep, cdis;
+  struct creatureS* cr_ptr;
+
+  y = uD.y;
+  x = uD.x;
+  sleep = FALSE;
+  FOR_EACH(mon, {
+    cr_ptr = &creatureD[mon->cidx];
+    mon_desc(it_index);
+    cdis = distance(y, x, mon->fy, mon->fx);
+    if ((cdis > MAX_SIGHT) || !los(y, x, mon->fy, mon->fx)) continue;
+
+    if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
+        (CD_NO_SLEEP & cr_ptr->cdefense)) {
+      if (mon->mlit) MSG("%s is unaffected.", descD);
+    } else {
+      mon->msleep = 500;
+      if (mon->mlit) {
+        MSG("%s falls asleep.", descD);
+        sleep = TRUE;
+      }
+    }
+  });
+  return (sleep);
+}
+int
 drain_life(dir, y, x)
 {
   int i;
@@ -7509,9 +7537,9 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
           case 13:
             ident = speed_monsters(-1);
             break;
-            // case 14:
-            //   ident = sleep_monsters2();
-            //   break;
+          case 14:
+            ident = sleep_monster_aoe();
+            break;
           case 15:
             ident = py_heal_hit(randint(8));
             break;
