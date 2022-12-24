@@ -5795,7 +5795,7 @@ hp_monster(dir, y, x, dam)
       cr_ptr = &creatureD[m_ptr->cidx];
       mon_desc(c_ptr->midx);
       monster = TRUE;
-      if (mon_take_hit(c_ptr->cptr, dam)) {
+      if (mon_take_hit(c_ptr->midx, dam)) {
         MSG("%s dies in a fit of agony.", descD);
         py_experience();
       } else if (dam > 0) {
@@ -5804,6 +5804,47 @@ hp_monster(dir, y, x, dam)
     }
   } while (!flag);
   return (monster);
+}
+int
+confuse_monster(dir, y, x)
+{
+  int flag, dist, confuse;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  confuse = FALSE;
+  flag = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else if (c_ptr->midx) {
+      m_ptr = &entity_monD[c_ptr->midx];
+      cr_ptr = &creatureD[m_ptr->cidx];
+      mon_desc(c_ptr->midx);
+      flag = TRUE;
+      if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
+          (CD_NO_SLEEP & cr_ptr->cdefense)) {
+        /* Monsters which resisted the attack should wake up.
+           Monsters with innate resistence ignore the attack.  */
+        if (!(CD_NO_SLEEP & cr_ptr->cdefense)) m_ptr->msleep = 0;
+        MSG("%s is unaffected.", descD);
+      } else {
+        if (m_ptr->mconfused)
+          m_ptr->mconfused += 3;
+        else
+          m_ptr->mconfused = 2 + randint(16);
+        confuse = TRUE;
+        m_ptr->msleep = 0;
+        MSG("%s appears confused.", descD);
+      }
+    }
+  } while (!flag);
+  return (confuse);
 }
 int
 dispel_creature(cflag, damage)
@@ -6944,9 +6985,9 @@ inven_try_wand_dir(iidx, dir)
         case 9:
           ident = speed_monster(dir, y, x, -1);
           break;
-        // case 10:
-        //   ident = confuse_monster(dir, y, x);
-        //   break;
+        case 10:
+          ident = confuse_monster(dir, y, x);
+          break;
         // case 11:
         //   ident = sleep_monster(dir, y, x);
         //   break;
