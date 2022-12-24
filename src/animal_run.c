@@ -5847,6 +5847,40 @@ confuse_monster(dir, y, x)
   return (confuse);
 }
 int
+sleep_monster(dir, y, x)
+{
+  int flag, dist, sleep;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  sleep = FALSE;
+  flag = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else if (c_ptr->midx) {
+      m_ptr = &entity_monD[c_ptr->midx];
+      cr_ptr = &creatureD[m_ptr->cidx];
+      flag = TRUE;
+      mon_desc(c_ptr->midx);
+      if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
+          (CD_NO_SLEEP & cr_ptr->cdefense)) {
+        MSG("%s is unaffected.", descD);
+      } else {
+        m_ptr->msleep = 500;
+        sleep = TRUE;
+        MSG("%s falls asleep.", descD);
+      }
+    }
+  } while (!flag);
+  return (sleep);
+}
+int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
@@ -6988,9 +7022,9 @@ inven_try_wand_dir(iidx, dir)
         case 10:
           ident = confuse_monster(dir, y, x);
           break;
-        // case 11:
-        //   ident = sleep_monster(dir, y, x);
-        //   break;
+        case 11:
+          ident = sleep_monster(dir, y, x);
+          break;
         // case 12:
         //   ident = drain_life(dir, y, x);
         //   break;
