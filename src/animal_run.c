@@ -6114,6 +6114,45 @@ teleport_monster(dir, y, x)
   return (result);
 }
 int
+disarm_all(dir, y, x)
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+  int disarm, dist;
+
+  disarm = FALSE;
+  dist = -1;
+  do {
+    /* put mmove at end, in case standing on a trap */
+    dist++;
+    c_ptr = &caveD[y][x];
+    obj = &entity_objD[c_ptr->oidx];
+    /* note, must continue upto and including the first non open space,
+       because closed doors have fval greater than MAX_OPEN_SPACE */
+    if ((obj->tval == TV_INVIS_TRAP) || (obj->tval == TV_VIS_TRAP)) {
+      delete_object(y, x);
+      disarm = TRUE;
+    } else if (obj->tval == TV_CLOSED_DOOR)
+      obj->p1 = 0; /* Locked or jammed doors become merely closed. */
+    else if (obj->tval == TV_SECRET_DOOR) {
+      c_ptr->cflag |= CF_FIELDMARK;
+      obj->tval = TV_CLOSED_DOOR;
+      obj->tchar = '+';
+      disarm = TRUE;
+    }
+    // else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
+    //   msg_print("Click!");
+    //   obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
+    //   disarm = TRUE;
+    //   obj->name2 = SN_UNLOCKED;
+    //   known2(obj);
+    // }
+
+    mmove(dir, &y, &x);
+  } while ((dist <= OBJ_BOLT_RANGE) && c_ptr->fval <= MAX_OPEN_SPACE);
+  return (disarm);
+}
+int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
@@ -7277,9 +7316,9 @@ inven_try_wand_dir(iidx, dir)
         case 17:
           ident = teleport_monster(dir, y, x);
           break;
-        // case 18:
-        //   ident = disarm_all(dir, y, x);
-        //   break;
+        case 18:
+          ident = disarm_all(dir, y, x);
+          break;
         case 19:
           fire_ball(GF_LIGHTNING, dir, y, x, 32, "Lightning Ball");
           ident = TRUE;
