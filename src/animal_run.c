@@ -6027,6 +6027,34 @@ sleep_monster_aoe()
   return (sleep);
 }
 int
+mass_poly()
+{
+  int cdis, y, x, fy, fx, mass;
+  struct creatureS* cr_ptr;
+
+  y = uD.y;
+  x = uD.x;
+  mass = FALSE;
+  FOR_EACH(mon, {
+    fy = mon->fy;
+    fx = mon->fx;
+    cdis = distance(y, x, fy, fx);
+    if (cdis <= MAX_SIGHT) {
+      cr_ptr = &creatureD[mon->cidx];
+      if ((cr_ptr->cmove & CM_WIN) == 0) {
+        caveD[fy][fx].midx = 0;
+        mon_unuse(mon);
+
+        mass = place_monster(
+            fy, fx,
+            randint(m_level[MAX_MON_LEVEL] - m_level[0]) - 1 + m_level[0],
+            FALSE);
+      }
+    }
+  });
+  return (mass);
+}
+int
 drain_life(dir, y, x)
 {
   int i;
@@ -7557,9 +7585,9 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             if ((uD.mflag & (1 << MA_SLOW)) == 0) ident = TRUE;
             maD[MA_SLOW] += randint(30) + 15;
             break;
-            // case 19:
-            //   ident = mass_poly();
-            //   break;
+          case 19:
+            ident = mass_poly();
+            break;
           case 20:
             if (equip_remove_curse()) {
               ident = see_print("The staff glows blue for a moment..");
@@ -7589,7 +7617,6 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             msg_print("Internal error in staffs()");
             break;
         }
-        /* End of staff actions.  	*/
       }
       if (ident) {
         if (!tr_is_known(tr_ptr)) {
