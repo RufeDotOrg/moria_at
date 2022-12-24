@@ -5634,6 +5634,106 @@ char* bolt_typ;
   } while (!flag);
 }
 int
+twall(y, x)
+{
+  int i, j;
+  struct caveS* c_ptr;
+  int res, found;
+
+  res = FALSE;
+  c_ptr = &caveD[y][x];
+  if (c_ptr->cflag & CF_ROOM) {
+    /* should become a room space, check to see whether it should be
+       LIGHT_FLOOR or DARK_FLOOR */
+    found = FALSE;
+    for (i = y - 1; i <= y + 1; i++)
+      for (j = x - 1; j <= x + 1; j++)
+        if (caveD[i][j].fval <= FLOOR_CORR) {
+          c_ptr->fval = caveD[i][j].fval;
+          c_ptr->cflag = caveD[i][j].cflag;
+          found = TRUE;
+          break;
+        }
+    if (!found) {
+      c_ptr->fval = FLOOR_CORR;
+    }
+  } else {
+    /* should become a corridor space */
+    c_ptr->fval = FLOOR_CORR;
+  }
+  c_ptr->cflag &= ~CF_FIELDMARK;
+  if (panel_contains(&panelD, y, x))
+    if (cave_lit(c_ptr) && c_ptr->oidx) msg_print("You have found something!");
+  res = TRUE;
+
+  return (res);
+}
+int
+wall_to_mud(dir, y, x)
+{
+  int i, wall, rubble, dist, lit;
+  int flag;
+  struct caveS* c_ptr;
+  struct objS* obj;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  wall = FALSE;
+  flag = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    obj = &entity_objD[c_ptr->oidx];
+    lit = cave_lit(c_ptr) || (c_ptr->cflag & CF_FIELDMARK) != 0;
+    rubble = (obj->tval == TV_RUBBLE);
+    m_ptr = &entity_monD[c_ptr->midx];
+    cr_ptr = &creatureD[m_ptr->cidx];
+
+    /* note, this ray can move through walls as it turns them to mud */
+    if (dist == OBJ_BOLT_RANGE) flag = TRUE;
+    if ((c_ptr->fval >= MIN_WALL) && (c_ptr->fval != BOUNDARY_WALL)) {
+      flag = TRUE;
+      twall(y, x);
+      if (lit) {
+        msg_print("The wall turns into mud.");
+        wall = TRUE;
+      }
+    } else if (obj->id && (c_ptr->fval >= MIN_CLOSED_SPACE)) {
+      flag = TRUE;
+      if (panel_contains(&panelD, y, x) && lit) {
+        obj_desc(obj, FALSE);
+        MSG("The %s turns into mud.", descD);
+        wall = TRUE;
+      }
+      delete_object(y, x);
+      if (rubble) {
+        if (randint(10) == 1) {
+          place_object(y, x, FALSE);
+          if (lit) msg_print("You have found something!");
+        }
+      }
+    }
+    if (c_ptr->midx) {
+      if (CD_STONE & cr_ptr->cdefense) {
+        mon_desc(c_ptr->midx);
+        i = mon_take_hit(c_ptr->midx, 100);
+        /* Should get these messages even if the monster is not
+           visible.  */
+        if (i >= 0) {
+          MSG("%s dissolves!", descD);
+          py_experience();
+        } else {
+          MSG("%s grunts in pain!", descD);
+        }
+        flag = TRUE;
+      }
+    }
+  } while (!flag);
+  return (wall);
+}
+int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
@@ -6757,9 +6857,9 @@ inven_try_wand_dir(iidx, dir)
           fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_nameD[22]);
           ident = TRUE;
           break;
-          // case 5:
-          //   ident = wall_to_mud(dir, y, x);
-          //   break;
+        case 5:
+          ident = wall_to_mud(dir, y, x);
+          break;
           // case 6:
           //   ident = poly_monster(dir, y, x);
           //   break;
