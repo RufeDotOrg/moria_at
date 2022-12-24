@@ -2832,6 +2832,38 @@ place_monster(y, x, z, slp)
 
   return mon->id;
 }
+static int
+mon_multiply(mon)
+struct monS* mon;
+{
+  register int y, x, fy, fx, i, j, k;
+  register struct caveS* c_ptr;
+  int count;
+
+  y = uD.y;
+  x = uD.x;
+  fy = mon->fy;
+  fx = mon->fx;
+  i = 0;
+  count = 0;
+  do {
+    j = fy - 2 + randint(3);
+    k = fx - 2 + randint(3);
+    // don't create a new creature on top of the old one
+    // don't create a creature on top of the player
+    if ((j != fy || k != fx) && (j != y || k != x)) {
+      c_ptr = &caveD[j][k];
+      if (c_ptr->fval <= MAX_OPEN_SPACE) {
+        // TBD: CM_EATS_OTHER
+        if (c_ptr->midx == 0) {
+          return place_monster(j, k, mon->cidx, FALSE);
+        }
+      }
+    }
+    i++;
+  } while (i <= 18);
+  return FALSE;
+}
 int
 summon_monster(y, x)
 {
@@ -6038,6 +6070,27 @@ td_destroy2(dir, y, x)
   return (destroy2);
 }
 int
+clone_monster(dir, y, x)
+{
+  struct caveS* c_ptr;
+  int dist, flag;
+
+  dist = 0;
+  flag = FALSE;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else if (c_ptr->midx) {
+      entity_monD[c_ptr->midx].msleep = 0;
+      return mon_multiply(&entity_monD[c_ptr->midx]);
+    }
+  } while (!flag);
+  return (FALSE);
+}
+int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
@@ -7195,9 +7248,9 @@ inven_try_wand_dir(iidx, dir)
         // case 15:
         //   ident = build_wall(dir, y, x);
         //   break;
-        // case 16:
-        //   ident = clone_monster(dir, y, x);
-        //   break;
+        case 16:
+          ident = clone_monster(dir, y, x);
+          break;
         // case 17:
         //   ident = teleport_monster(dir, y, x);
         //   break;
@@ -8783,38 +8836,6 @@ breath(typ, y, x, dam_hp, midx)
   }
   /* show the ball of gas */
   // put_qio();
-}
-static int
-mon_multiply(mon)
-struct monS* mon;
-{
-  register int y, x, fy, fx, i, j, k;
-  register struct caveS* c_ptr;
-  int count;
-
-  y = uD.y;
-  x = uD.x;
-  fy = mon->fy;
-  fx = mon->fx;
-  i = 0;
-  count = 0;
-  do {
-    j = fy - 2 + randint(3);
-    k = fx - 2 + randint(3);
-    // don't create a new creature on top of the old one
-    // don't create a creature on top of the player
-    if ((j != fy || k != fx) && (j != y || k != x)) {
-      c_ptr = &caveD[j][k];
-      if (c_ptr->fval <= MAX_OPEN_SPACE) {
-        // TBD: CM_EATS_OTHER
-        if (c_ptr->midx == 0) {
-          return place_monster(j, k, mon->cidx, FALSE);
-        }
-      }
-    }
-    i++;
-  } while (i <= 18);
-  return FALSE;
 }
 static void mon_try_multiply(mon) struct monS* mon;
 {
