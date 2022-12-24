@@ -7557,9 +7557,6 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
           case 25:
             ident = unlight_area(uD.y, uD.x);
             break;
-          case 32:
-            /* store bought flag */
-            break;
           default:
             msg_print("Internal error in staffs()");
             break;
