@@ -5734,6 +5734,46 @@ wall_to_mud(dir, y, x)
   return (wall);
 }
 int
+poly_monster(dir, y, x)
+int dir, y, x;
+{
+  int dist, flag, poly;
+  struct caveS* c_ptr;
+  struct creatureS* cr_ptr;
+  struct monS* m_ptr;
+
+  poly = FALSE;
+  flag = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else if (c_ptr->midx) {
+      m_ptr = &entity_monD[c_ptr->midx];
+      cr_ptr = &creatureD[m_ptr->cidx];
+      if (randint(MAX_MON_LEVEL) > cr_ptr->level) {
+        flag = TRUE;
+        mon_unuse(m_ptr);
+        c_ptr->midx = 0;
+        /* Place_monster() should always return TRUE here.  */
+        poly = place_monster(
+            y, x, randint(m_level[MAX_MON_LEVEL] - m_level[0]) - 1 + m_level[0],
+            FALSE);
+        /* don't test c_ptr->fm here, only pl/tl */
+        if (poly && panel_contains(&panelD, y, x) && cave_lit(c_ptr))
+          poly = TRUE;
+      } else {
+        mon_desc(c_ptr->midx);
+        MSG("%s is unaffected.", descD);
+      }
+    }
+  } while (!flag);
+  return (poly);
+}
+int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
@@ -6860,9 +6900,9 @@ inven_try_wand_dir(iidx, dir)
         case 5:
           ident = wall_to_mud(dir, y, x);
           break;
-          // case 6:
-          //   ident = poly_monster(dir, y, x);
-          //   break;
+        case 6:
+          ident = poly_monster(dir, y, x);
+          break;
           // case 7:
           //   ident = hp_monster(dir, y, x, -damroll(4, 6));
           //   break;
