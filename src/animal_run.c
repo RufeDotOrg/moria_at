@@ -5708,11 +5708,11 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
         if (tkill >= 0) py_experience();
         /* End ball hitting.  	     */
       }
-      //else if (panel_contains(&panelD, y, x) && (countD.blind == 0)) {
-      //  print('*', y, x);
-      //  /* show bolt */
-      //  put_qio();
-      //}
+      // else if (panel_contains(&panelD, y, x) && (countD.blind == 0)) {
+      //   print('*', y, x);
+      //   /* show bolt */
+      //   put_qio();
+      // }
       oldy = y;
       oldx = x;
     }
@@ -6001,6 +6001,41 @@ drain_life(dir, y, x)
     }
   } while (!flag);
   return (drain);
+}
+int
+td_destroy2(dir, y, x)
+{
+  int destroy2, dist;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  destroy2 = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    /* must move into first closed spot, as it might be a secret door */
+    if (c_ptr->oidx) {
+      obj = &entity_objD[c_ptr->oidx];
+      if ((obj->tval == TV_INVIS_TRAP) || (obj->tval == TV_CLOSED_DOOR) ||
+          (obj->tval == TV_VIS_TRAP) || (obj->tval == TV_OPEN_DOOR) ||
+          (obj->tval == TV_SECRET_DOOR)) {
+        delete_object(y, x);
+        msg_print("There is a bright flash of light!");
+        destroy2 = TRUE;
+      }
+      // TBD: Chest
+      // else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
+      //  msg_print("Click!");
+      //  obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
+      //  destroy2 = TRUE;
+      //  obj->name2 = SN_UNLOCKED;
+      //  obj->idflag = ID_REVEAL;
+      //}
+    }
+  } while ((dist <= OBJ_BOLT_RANGE) || c_ptr->fval <= MAX_OPEN_SPACE);
+  return (destroy2);
 }
 int
 dispel_creature(cflag, damage)
@@ -7150,9 +7185,9 @@ inven_try_wand_dir(iidx, dir)
         case 12:
           ident = drain_life(dir, y, x);
           break;
-        // case 13:
-        //   ident = td_destroy2(dir, y, x);
-        //   break;
+        case 13:
+          ident = td_destroy2(dir, y, x);
+          break;
         case 14:
           fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6), spell_nameD[0]);
           ident = TRUE;
