@@ -4192,7 +4192,7 @@ mon_take_hit(midx, dam)
   int death_blow;
 
   mon->msleep = 0;
-  mon->hp -= dam;
+  mon->hp -= MAX(dam, 1);
   death_blow = mon->hp < 0;
 
   if (death_blow) {
@@ -5650,7 +5650,7 @@ char* bolt_typ;
         if (mon_take_hit(c_ptr->midx, dam)) {
           MSG("%s dies in a fit of agony.", descD);
           py_experience();
-        } else if (dam > 0) {
+        } else {
           MSG("%s screams in agony.", descD);
         }
       } else if (panel_contains(&panelD, y, x)) {
@@ -5916,7 +5916,7 @@ hp_monster(dir, y, x, dam)
       if (mon_take_hit(c_ptr->midx, dam)) {
         MSG("%s dies in a fit of agony.", descD);
         py_experience();
-      } else if (dam > 0) {
+      } else {
         MSG("%s screams in agony.", descD);
       }
     }
@@ -8097,7 +8097,6 @@ py_shield_attack(y, x)
     k = pdamroll(shield->damage);
     k = critical_blow(shield->weight / 4 + statD.use_stat[A_STR], 0, k);
     k += uD.wt / 60 + 3;
-    if (k < 0) k = 0;
 
     /* See if we done it in.  			     */
     if (mon_take_hit(midx, k)) {
@@ -8177,7 +8176,6 @@ py_attack(y, x)
         k = critical_blow(1, 0, k);
       }
       k += todam;
-      if (k < 0) k = 0;
 
       if (uD.confuse_monster) {
         uD.confuse_monster = 0;
