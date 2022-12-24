@@ -6165,7 +6165,7 @@ build_wall(dir, y, x)
             py_experience();
           }
         } else if (cr_ptr->cchar == 'E' || cr_ptr->cchar == 'X') {
-          MSG("%s grows larger.", descD);
+          if (m_ptr->mlit) MSG("%s grows larger.", descD);
           /* must be an earth elemental or an earth spirit, or a Xorn
              increase its hit points */
           m_ptr->hp += damroll(4, 8);
@@ -6618,6 +6618,62 @@ replace_spot(y, x, typ)
     mon_unuse(&entity_monD[c_ptr->midx]);
     c_ptr->midx = 0;
   }
+}
+void
+earthquake()
+{
+  int y, x, i, j;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+  int damage, tmp;
+
+  y = uD.y;
+  x = uD.x;
+  for (i = y - 8; i <= y + 8; i++)
+    for (j = x - 8; j <= x + 8; j++)
+      if (((i != y) || (j != x)) && in_bounds(i, j) && (randint(8) == 1)) {
+        c_ptr = &caveD[i][j];
+        if (c_ptr->oidx) delete_object(i, j);
+        if (c_ptr->midx) {
+          m_ptr = &entity_monD[c_ptr->midx];
+          cr_ptr = &creatureD[m_ptr->cidx];
+          mon_desc(c_ptr->midx);
+
+          if (!(cr_ptr->cmove & CM_PHASE)) {
+            if (cr_ptr->cmove & CM_ATTACK_ONLY)
+              damage = 3000; /* this will kill everything */
+            else
+              damage = damroll(4, 8);
+
+            MSG("%s wails out in pain!", descD);
+            if (mon_take_hit(c_ptr->midx, damage)) {
+              MSG("%s is embedded in the rock.", descD);
+              py_experience();
+            }
+          } else if (cr_ptr->cchar == 'E' || cr_ptr->cchar == 'X') {
+            if (m_ptr->mlit) MSG("%s grows larger.", descD);
+            /* must be an earth elemental or an earth spirit, or a Xorn
+               increase its hit points */
+            m_ptr->hp += damroll(4, 8);
+          }
+        }
+
+        if ((c_ptr->fval >= MIN_WALL) && (c_ptr->fval != BOUNDARY_WALL)) {
+          c_ptr->fval = FLOOR_CORR;
+          c_ptr->cflag = 0;
+        } else if (c_ptr->fval <= MAX_FLOOR) {
+          // TBD: wall material
+          // tmp = randint(10);
+          // if (tmp < 6)
+          //  c_ptr->fval = QUARTZ_WALL;
+          // else if (tmp < 9)
+          //  c_ptr->fval = MAGMA_WALL;
+          // else
+          c_ptr->fval = GRANITE_WALL;
+          c_ptr->cflag = 0;
+        }
+      }
 }
 void
 destroy_area(y, x)
@@ -7528,7 +7584,6 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
       (i_ptr->p1)--;
       while (flags != 0) {
         j = bit_pos(&flags) + 1;
-        /* Staffs.  			*/
         switch (j) {
           case 1:
             ident = light_area(uD.y, uD.x);
@@ -7549,10 +7604,10 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             py_teleport(100, uy, ux);
             ident = TRUE;
             break;
-            // case 7:
-            //   ident = TRUE;
-            //   earthquake();
-            //   break;
+          case 7:
+            ident = TRUE;
+            earthquake();
+            break;
           case 8:
             ident = FALSE;
             for (k = 0; k < randint(4); k++) {
