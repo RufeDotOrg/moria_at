@@ -7551,9 +7551,9 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             countD.blind = 1;
             countD.confusion = 1;
             break;
-          // case 23:
-          //   ident = dispel_creature(CD_EVIL, 60);
-          //   break;
+          case 23:
+            ident = dispel_creature(CD_EVIL, 60);
+            break;
           case 25:
             ident = unlight_area(uD.y, uD.x);
             break;
