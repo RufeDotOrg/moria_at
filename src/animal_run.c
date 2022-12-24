@@ -5632,6 +5632,92 @@ char* bolt_typ;
     oldx = x;
   } while (!flag);
 }
+void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
+{
+  int i, j;
+  int dam, max_dis, thit, tkill, k, tmp;
+  int oldy, oldx, dist, flag, harm_type;
+  uint32_t weapon_type;
+  int (*destroy)();
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  thit = 0;
+  tkill = 0;
+  max_dis = 2;
+  get_flags(typ, &weapon_type, &harm_type, &destroy);
+  flag = FALSE;
+  oldy = y;
+  oldx = x;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    if (dist > OBJ_BOLT_RANGE)
+      flag = TRUE;
+    else {
+      c_ptr = &caveD[y][x];
+      if ((c_ptr->fval >= MIN_CLOSED_SPACE) || (c_ptr->midx)) {
+        flag = TRUE;
+        if (c_ptr->fval >= MIN_CLOSED_SPACE) {
+          y = oldy;
+          x = oldx;
+        }
+        /* The ball hits and explodes.  	     */
+        /* The explosion.  		     */
+        for (i = y - max_dis; i <= y + max_dis; i++)
+          for (j = x - max_dis; j <= x + max_dis; j++)
+            if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis) &&
+                los(y, x, i, j)) {
+              c_ptr = &caveD[i][j];
+              if ((c_ptr->oidx) && (*destroy)(&entity_objD[c_ptr->oidx]))
+                delete_object(i, j);
+              if (c_ptr->fval <= MAX_OPEN_SPACE) {
+                if (c_ptr->midx) {
+                  m_ptr = &entity_monD[c_ptr->midx];
+                  cr_ptr = &creatureD[m_ptr->cidx];
+
+                  thit++;
+                  dam = dam_hp;
+                  if (harm_type & cr_ptr->cdefense) {
+                    dam = dam * 2;
+                  } else if (weapon_type & cr_ptr->spells) {
+                    dam = dam / 4;
+                  }
+                  dam = (dam / (distance(i, j, y, x) + 1));
+                  if (mon_take_hit(c_ptr->midx, dam)) tkill++;
+                }
+                // else if (panel_contains(&panelD, i, j) && (countD.blind ==
+                // 0))
+                //   print('*', i, j);
+              }
+            }
+        /* show ball of whatever */
+        // put_qio();
+
+        if (thit == 1) {
+          MSG("The %s envelops a creature!", descrip);
+        } else if (thit > 1) {
+          MSG("The %s envelops several creatures!", descrip);
+        }
+        if (tkill == 1)
+          msg_print("There is a scream of agony!");
+        else if (tkill > 1)
+          msg_print("There are several screams of agony!");
+        if (tkill >= 0) py_experience();
+        /* End ball hitting.  	     */
+      }
+      //else if (panel_contains(&panelD, y, x) && (countD.blind == 0)) {
+      //  print('*', y, x);
+      //  /* show bolt */
+      //  put_qio();
+      //}
+      oldy = y;
+      oldx = x;
+    }
+  } while (!flag);
+}
 int
 twall(y, x)
 {
@@ -7083,29 +7169,29 @@ inven_try_wand_dir(iidx, dir)
         // case 18:
         //   ident = disarm_all(dir, y, x);
         //   break;
-        // case 19:
-        //   fire_ball(GF_LIGHTNING, dir, y, x, 32, "Lightning Ball");
-        //   ident = TRUE;
-        //   break;
-        // case 20:
-        //   fire_ball(GF_FROST, dir, y, x, 48, "Cold Ball");
-        //   ident = TRUE;
-        //   break;
-        // case 21:
-        //   fire_ball(GF_FIRE, dir, y, x, 72, spell_nameD[28]);
-        //   ident = TRUE;
-        //   break;
-        // case 22:
-        //   fire_ball(GF_POISON_GAS, dir, y, x, 12, spell_nameD[6]);
-        //   ident = TRUE;
-        //   break;
-        // case 23:
-        //   fire_ball(GF_ACID, dir, y, x, 60, "Acid Ball");
-        //   ident = TRUE;
-        //   break;
-        // case 24:
-        //   flags = 1L << (randint(23) - 1);
-        //   break;
+        case 19:
+          fire_ball(GF_LIGHTNING, dir, y, x, 32, "Lightning Ball");
+          ident = TRUE;
+          break;
+        case 20:
+          fire_ball(GF_FROST, dir, y, x, 48, "Cold Ball");
+          ident = TRUE;
+          break;
+        case 21:
+          fire_ball(GF_FIRE, dir, y, x, 72, "Fire Ball");
+          ident = TRUE;
+          break;
+        case 22:
+          fire_ball(GF_POISON_GAS, dir, y, x, 12, "Frost Ball");
+          ident = TRUE;
+          break;
+        case 23:
+          fire_ball(GF_ACID, dir, y, x, 60, "Acid Ball");
+          ident = TRUE;
+          break;
+        case 24:
+          flags = 1L << (randint(23) - 1);
+          break;
         default:
           msg_print("Internal error in wands()");
           break;
