@@ -6091,6 +6091,29 @@ clone_monster(dir, y, x)
   return (FALSE);
 }
 int
+teleport_monster(dir, y, x)
+{
+  int flag, result, dist;
+  struct caveS* c_ptr;
+
+  flag = FALSE;
+  result = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else if (c_ptr->midx) {
+      entity_monD[c_ptr->midx].msleep = 0; /* wake it up */
+      teleport_away(c_ptr->midx, MAX_SIGHT);
+      result = TRUE;
+    }
+  } while (!flag);
+  return (result);
+}
+int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
@@ -7251,9 +7274,9 @@ inven_try_wand_dir(iidx, dir)
         case 16:
           ident = clone_monster(dir, y, x);
           break;
-        // case 17:
-        //   ident = teleport_monster(dir, y, x);
-        //   break;
+        case 17:
+          ident = teleport_monster(dir, y, x);
+          break;
         // case 18:
         //   ident = disarm_all(dir, y, x);
         //   break;
