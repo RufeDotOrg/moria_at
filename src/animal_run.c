@@ -5563,8 +5563,7 @@ light_line(dir, y, x)
         /* light up and draw monster */
         update_mon(c_ptr->midx);
         if (CD_LIGHT & cr_ptr->cdefense) {
-          i = mon_take_hit(c_ptr->midx, damroll(2, 8));
-          if (i >= 0) {
+          if (mon_take_hit(c_ptr->midx, damroll(2, 8))) {
             MSG("%s shrivels away in the light!", descD);
             py_experience();
           } else {
@@ -5718,10 +5717,9 @@ wall_to_mud(dir, y, x)
     if (c_ptr->midx) {
       if (CD_STONE & cr_ptr->cdefense) {
         mon_desc(c_ptr->midx);
-        i = mon_take_hit(c_ptr->midx, 100);
         /* Should get these messages even if the monster is not
            visible.  */
-        if (i >= 0) {
+        if (mon_take_hit(c_ptr->midx, 100)) {
           MSG("%s dissolves!", descD);
           py_experience();
         } else {
@@ -5772,6 +5770,40 @@ int dir, y, x;
     }
   } while (!flag);
   return (poly);
+}
+int
+hp_monster(dir, y, x, dam)
+{
+  int i;
+  int flag, dist, monster;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  monster = FALSE;
+  flag = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else if (c_ptr->midx) {
+      flag = TRUE;
+      m_ptr = &entity_monD[c_ptr->midx];
+      cr_ptr = &creatureD[m_ptr->cidx];
+      mon_desc(c_ptr->midx);
+      monster = TRUE;
+      if (mon_take_hit(c_ptr->cptr, dam)) {
+        MSG("%s dies in a fit of agony.", descD);
+        py_experience();
+      } else if (dam > 0) {
+        MSG("%s screams in agony.", descD);
+      }
+    }
+  } while (!flag);
+  return (monster);
 }
 int
 dispel_creature(cflag, damage)
@@ -6903,9 +6935,9 @@ inven_try_wand_dir(iidx, dir)
         case 6:
           ident = poly_monster(dir, y, x);
           break;
-          // case 7:
-          //   ident = hp_monster(dir, y, x, -damroll(4, 6));
-          //   break;
+        case 7:
+          ident = hp_monster(dir, y, x, -damroll(4, 6));
+          break;
         case 8:
           ident = speed_monster(dir, y, x, 1);
           break;
