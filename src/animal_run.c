@@ -5881,6 +5881,42 @@ sleep_monster(dir, y, x)
   return (sleep);
 }
 int
+drain_life(dir, y, x)
+{
+  int i;
+  int flag, dist, drain;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* r_ptr;
+
+  drain = FALSE;
+  flag = FALSE;
+  dist = 0;
+  do {
+    mmove(dir, &y, &x);
+    dist++;
+    c_ptr = &caveD[y][x];
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+      flag = TRUE;
+    else if (c_ptr->midx) {
+      flag = TRUE;
+      m_ptr = &entity_monD[c_ptr->midx];
+      r_ptr = &creatureD[m_ptr->cidx];
+      if ((r_ptr->cdefense & CD_UNDEAD) == 0) {
+        drain = TRUE;
+        mon_desc(c_ptr->midx);
+        if (mon_take_hit(c_ptr->midx, 75)) {
+          MSG("%s dies in a fit of agony.", descD);
+          py_experience();
+        } else {
+          MSG("%s screams in agony.", descD);
+        }
+      }
+    }
+  } while (!flag);
+  return (drain);
+}
+int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
@@ -7025,9 +7061,9 @@ inven_try_wand_dir(iidx, dir)
         case 11:
           ident = sleep_monster(dir, y, x);
           break;
-        // case 12:
-        //   ident = drain_life(dir, y, x);
-        //   break;
+        case 12:
+          ident = drain_life(dir, y, x);
+          break;
         // case 13:
         //   ident = td_destroy2(dir, y, x);
         //   break;
