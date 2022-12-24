@@ -6640,6 +6640,14 @@ destroy_area(y, x)
   msg_print("There is a searing blast of light!");
   countD.blind += 10 + randint(10);
 }
+void
+starlite(y, x)
+{
+  if (countD.blind == 0)
+    msg_print("The end of the staff bursts into a blue shimmering light.");
+  for (int it = 1; it <= 9; it++)
+    if (it != 5) light_line(it, y, x);
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -7555,10 +7563,10 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             ident = TRUE;
             destroy_area(uD.y, uD.x);
             break;
-            // case 11:
-            //   ident = TRUE;
-            //   starlite(char_row, char_col);
-            //   break;
+          case 11:
+            ident = TRUE;
+            starlite(uD.y, uD.x);
+            break;
           case 12:
             ident = speed_monsters(1);
             break;
