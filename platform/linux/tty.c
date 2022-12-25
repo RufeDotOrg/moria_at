@@ -54,6 +54,7 @@ platform_draw()
   }
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
+  return 1;
 }
 static char
 _from_vt100(char c)

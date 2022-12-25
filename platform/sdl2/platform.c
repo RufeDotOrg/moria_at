@@ -1,9 +1,9 @@
-#include <sys/auxv.h>
 #include <time.h>
 
 #include "SDL.h"
 
 #include "art.c"
+#include "auxval.c"
 #include "dungeon.c"
 #include "font_zip.c"
 #include "player.c"
@@ -1007,10 +1007,6 @@ platform_readansi()
 void
 platform_init()
 {
-  // Game rng
-  void *p = (void *)getauxval(AT_RANDOM);
-  memcpy(&rnd_seed, p, sizeof(rnd_seed));
-
   // SDL config
   SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
   SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
@@ -1037,6 +1033,7 @@ platform_init()
   if (!tart_io() || !tart_init()) return;
   if (!part_io() || !part_init()) return;
 
+  platformD.seed = platform_auxval_random;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
 }

@@ -4,6 +4,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include "auxval.c"
 #include "tty.c"
 
 int
@@ -44,6 +45,7 @@ platform_init()
 
   write(STDOUT_FILENO, tc_hide_cursorD, sizeof(tc_hide_cursorD));
 
+  platformD.seed = platform_auxval_random;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
 }

@@ -8,6 +8,7 @@
 #include "libc/log/check.h"
 #include "libc/log/log.h"
 #include "libc/runtime/runtime.h"
+#include "libc/stdio/rand.h"
 #include "libc/stdio/stdio.h"
 #include "libc/str/str.h"
 #include "libc/sysv/consts/exit.h"
@@ -88,12 +89,20 @@ _rawmode()
   return 0;
 }
 
+int
+platform_seed()
+{
+  int seed = rdseed();
+  return seed;
+}
+
 void
 platform_init()
 {
   _rawmode();
   write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
 
+  platformD.seed = platform_seed;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
 }

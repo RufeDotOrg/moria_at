@@ -211,6 +211,7 @@ struct ownerS {
 };
 
 struct platformS {
+  fn seed;
   fn readansi;
   fn draw;
 };

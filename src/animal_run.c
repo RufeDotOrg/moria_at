@@ -10082,6 +10082,9 @@ main()
 {
   platform_init();
 
+  if (platformD.seed) rnd_seed = platformD.seed();
+  if (!rnd_seed) rnd_seed = 3123;
+
   // Burn randomness after platform seed
   for (int it = randint(100); it != 0; --it) rnd();
 
