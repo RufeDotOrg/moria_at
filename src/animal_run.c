@@ -7681,17 +7681,18 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             break;
         }
       }
-      if (ident) {
-        if (!tr_is_known(tr_ptr)) {
+      if (!tr_is_known(tr_ptr)) {
+        if (ident) {
           /* round half-way case up */
           uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
           py_experience();
 
           tr_make_known(tr_ptr);
         }
+        // else {
+        //   sample(i_ptr);
+        // }
       }
-      // else if (!known1_p(i_ptr))
-      //   sample(i_ptr);
       if (i_ptr->idflag & ID_REVEAL)
         MSG("You have %d charges remaining.", i_ptr->p1);
     } else {
