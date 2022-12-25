@@ -409,8 +409,6 @@
 #define STACK_BATCH 0x80
 #define STACK_ANY 0xc0
 
-// ITEM_GROUP removed
-
 /* Stat indexes */
 #define A_STR 0
 #define A_INT 1
