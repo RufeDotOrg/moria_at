@@ -20,26 +20,19 @@
 #include "tty.c"
 
 static bool platform_initD;
-#define CTRL(C)                ((C) ^ 0b01100000)
-#define WRITE(FD, SLIT)        write(FD, SLIT, strlen(SLIT))
-#define ENABLE_SAFE_PASTE      "\e[?2004h"
-#define ENABLE_MOUSE_TRACKING  "\e[?1000;1002;1015;1006h"
+#define CTRL(C) ((C) ^ 0b01100000)
+#define WRITE(FD, SLIT) write(FD, SLIT, strlen(SLIT))
+#define ENABLE_SAFE_PASTE "\e[?2004h"
+#define ENABLE_MOUSE_TRACKING "\e[?1000;1002;1015;1006h"
 #define DISABLE_MOUSE_TRACKING "\e[?1000;1002;1015;1006l"
-#define PROBE_DISPLAY_SIZE     "\e7\e[9979;9979H\e[6n\e8"
+#define PROBE_DISPLAY_SIZE "\e7\e[9979;9979H\e[6n\e8"
 
 #define INT16_MAX 0x7fff
 #define INT32_MAX 0x7fffffff
 
-// #define CLEAR_SCREEN "\e[2J"
-// #define CLEAR_LINE   "\e[K"
-
-//static char inputD[512];
-//char platform_readansi() {
-//  int read_count = readansi(0, inputD, sizeof(inputD));
-//  if (read_count == -1) return -1;
-//  return inputD[0];
-//}
-char platform_readansi() {
+int
+platform_readansi()
+{
   while (1) {
     char text[512];
     int len = 0;
@@ -55,7 +48,9 @@ char platform_readansi() {
   return -1;
 }
 
-void platform_reset() {
+void
+platform_reset()
+{
   if (platform_initD) {
     WRITE(1, DISABLE_MOUSE_TRACKING);
     ioctl(1, TCSETS, &save_termD);
@@ -64,7 +59,9 @@ void platform_reset() {
   }
 }
 
-static int _rawmode() {
+static int
+_rawmode()
+{
   struct termios t;
   if (!platform_initD) {
     platform_initD = 1;
@@ -91,7 +88,12 @@ static int _rawmode() {
   return 0;
 }
 
-void platform_init() {
+void
+platform_init()
+{
   _rawmode();
   write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
+
+  platformD.readansi = platform_readansi;
+  platformD.draw = platform_draw;
 }

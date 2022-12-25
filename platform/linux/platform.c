@@ -6,7 +6,7 @@
 
 #include "tty.c"
 
-char
+int
 platform_readansi()
 {
   while (1) {
@@ -43,6 +43,9 @@ platform_init()
   tcsetattr(STDIN_FILENO, TCSAFLUSH, &tbuf);
 
   write(STDOUT_FILENO, tc_hide_cursorD, sizeof(tc_hide_cursorD));
+
+  platformD.readansi = platform_readansi;
+  platformD.draw = platform_draw;
 }
 
 void

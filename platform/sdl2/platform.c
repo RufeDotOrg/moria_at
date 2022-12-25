@@ -609,7 +609,7 @@ texture_by_sym(char c)
   return t;
 }
 
-void
+int
 platform_draw()
 {
   int show_map, menu, height, width;
@@ -719,6 +719,7 @@ platform_draw()
   render_update();
 
   menuD = menu;
+  return 1;
 }
 
 char
@@ -996,10 +997,11 @@ sdl_pump()
   return 0;
 }
 
-char
+int
 platform_readansi()
 {
-  return sdl_pump();
+  char c = sdl_pump();
+  return c;
 }
 
 void
@@ -1034,6 +1036,9 @@ platform_init()
   if (!dungeon_io() || !dungeon_init()) exit(5);
   if (!tart_io() || !tart_init()) return;
   if (!part_io() || !part_init()) return;
+
+  platformD.readansi = platform_readansi;
+  platformD.draw = platform_draw;
 }
 void
 platform_reset()

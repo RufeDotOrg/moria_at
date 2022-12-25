@@ -9,6 +9,8 @@ typedef __INT16_TYPE__ int16_t;
 typedef __INT32_TYPE__ int32_t;
 typedef __INT64_TYPE__ int64_t;
 
+typedef int (*fn)();
+
 #ifndef UINT64_MAX
 #define UINT64_MAX __UINT64_MAX__
 #define UINT32_MAX __UINT32_MAX__

@@ -18,7 +18,7 @@ buffer_append(char* str, int str_len)
   buffer_usedD += str_len;
   return 1;
 }
-static void
+int
 platform_draw()
 {
   buffer_usedD = 0;

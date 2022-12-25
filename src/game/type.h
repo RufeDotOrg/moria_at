@@ -209,3 +209,9 @@ struct ownerS {
   uint8_t owner_race;
   uint8_t insult_max;
 };
+
+struct platformS {
+  fn readansi;
+  fn draw;
+};
+struct platformS platformD;

@@ -42,7 +42,7 @@ inkey()
 {
   char c;
   do {
-    c = platform_readansi();
+    c = platformD.readansi();
     if (c == CTRL('c')) {
       strcpy(death_descD, "quitting");
       death = 1;
@@ -216,7 +216,7 @@ draw()
   symmap_update();
   affect_update();
 
-  platform_draw();
+  platformD.draw();
   AC(screen_usedD);
   AC(overlay_usedD);
 }
