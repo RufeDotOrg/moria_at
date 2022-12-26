@@ -7727,6 +7727,9 @@ static void py_drop(y, x) int y, x;
       obj->fx = x;
       c_ptr->oidx = obj_index(obj);
       invenD[iidx] = 0;
+
+      obj_desc(obj, TRUE);
+      MSG("You drop %s.", descD);
     }
   }
 }
