@@ -5215,7 +5215,7 @@ magic_init()
   seed = rnd_seed;
   rnd_seed = obj_seed;
 
-  // TBD: could store_init() here, utilizing obj_seed
+  store_init();
 
   /* The first 3 entries for colors are fixed, (slime & apple juice, water) */
   for (i = 3; i < AL(colors); i++) {
@@ -10180,7 +10180,6 @@ main()
   dun_level = 1;
   mon_level_init();
   obj_level_init();
-  store_init();
   // TBD: Load char
   py_init();
 
