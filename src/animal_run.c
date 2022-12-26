@@ -8033,6 +8033,8 @@ static void
 py_help()
 {
   int line = 0;
+
+  msg_print("Gameplay Commands");
   BufMsg(screen, "? - help");
   BufMsg(screen, ",: pickup object");
   BufMsg(screen, "c: close object");
@@ -8045,7 +8047,14 @@ py_help()
   BufMsg(screen, "o: open object");
   BufMsg(screen, "s: search for traps/doors");
   BufMsg(screen, "w: wear object");
+  BufMsg(screen, "x: examine monsters");
   BufMsg(screen, "z: zap wand");
+  BufMsg(screen, "<: up stairs");
+  BufMsg(screen, ">: down stairs");
+
+  BufPad(screen, AL(screenD), 30);
+
+  line = 1;
   BufMsg(screen, "C: character screen");
   BufMsg(screen, "D: disarm trap");
   BufMsg(screen, "E: eat object");
@@ -8053,20 +8062,24 @@ py_help()
   BufMsg(screen, "R: rest until healed");
   BufMsg(screen, "T: take off equipment");
   BufMsg(screen, "W: where about the dungeon");
+  BufMsg(screen, "X: examine objects");
   BufMsg(screen, "Z: staff invocation");
+  BufMsg(screen, ".: automatic object interaction (experimental)");
 
-  BufPad(screen, AL(screenD), 30);
+  if (WIZARD) {
+    msg_pause();
+    msg_print("Cheat Commands");
 
-  line = 1;
-  BufMsg(screen, "<: up stairs");
-  BufMsg(screen, ">: down stairs");
-  BufMsg(screen, "CTRL('f'): food (cheat)");
-  BufMsg(screen, "CTRL('h'): heal (cheat)");
-  BufMsg(screen, "CTRL('t'): teleport (cheat)");
-  BufMsg(screen, "CTRL('m'): teleport-to-monster (cheat)");
-  BufMsg(screen, "CTRL('o'): teleport-to-object (cheat)");
-  BufMsg(screen, ".: object interaction (experimental)");
-  BufMsg(screen, "m: make_known (test_cmd)");
+    char c;
+    line = 0;
+    BufMsg(screen, "CTRL('f'): food");
+    BufMsg(screen, "CTRL('h'): heal");
+    BufMsg(screen, "CTRL('k'): make_known");
+    BufMsg(screen, "CTRL('t'): teleport");
+    BufMsg(screen, "CTRL('m'): teleport-to-monster");
+    BufMsg(screen, "CTRL('o'): teleport-to-object");
+  }
+  free_turn_flag = TRUE;
 }
 static void py_pickup(y, x, pickup) int y, x;
 int pickup;
@@ -9832,10 +9845,6 @@ dungeon()
               int count = py_inven(0, INVEN_EQUIP);
               MSG("You carrying %d items.", count);
             } break;
-            case 'm':
-              // TEMP: testing tr_make_known
-              py_make_known();
-              break;
             case 'q':
               iidx = choice("Quaff what?");
               if (iidx >= 0) inven_quaff(iidx);
@@ -9851,14 +9860,14 @@ dungeon()
               py_search(y, x);
               msg_print("You search the area.");
               break;
+            case 'w':
+              py_wear();
+              break;
             case 'x':
               py_look_mon();
               break;
             case 'X':
               py_look_obj();
-              break;
-            case 'w':
-              py_wear();
               break;
             case 'z':
               iidx = choice("Aim which wand?");
@@ -9900,87 +9909,94 @@ dungeon()
             case 'W':
               py_where();
               break;
-            case CTRL('a'): {
-              int* af_ptr = (void*)&countD;
-              for (int it = 0; it < sizeof(countD) / sizeof(int); ++it) {
-                af_ptr[it] = 1;
-              }
-            } break;
-            case CTRL('d'): {
-              detect_obj(oset_gold);
-              detect_obj(oset_pickup);
-              detect_obj(oset_trap);
-              detect_obj(oset_sdoor);
-              maD[MA_DETECT_MON] = 1;
-              maD[MA_DETECT_INVIS] = 1;
-              maD[MA_DETECT_EVIL] = 1;
-            } break;
-            case CTRL('f'): {
-              create_food(y, x);
-            } break;
-            case CTRL('h'):
-              if (uD.mhp < 100) uD.mhp = 100;
-              uD.chp = uD.mhp;
-              msg_print("You are healed.");
-              break;
-            case CTRL('t'):
-              msg_print("teleport");
-              do {
-                x = randint(MAX_WIDTH - 2);
-                y = randint(MAX_HEIGHT - 2);
-              } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
-                       caveD[y][x].midx != 0);
-              break;
-            case CTRL('m'):
-              if (mon_usedD) {
-                int rv = randint(mon_usedD);
-                struct monS* mon = mon_get(monD[rv - 1]);
-                MSG("Teleport to monster id %d (%d/%d)", mon->id, rv,
-                    mon_usedD);
-
-                int fy = mon->fy;
-                int fx = mon->fx;
-                py_teleport_near(fy, fx, &y, &x);
-              }
-              break;
-            case CTRL('o'): {
-              static int y_obj_teleportD;
-              static int x_obj_teleportD;
-              int row, col;
-              int fy, fx;
-              fy = y_obj_teleportD;
-              fx = x_obj_teleportD;
-
-              for (row = 1; row < MAX_HEIGHT - 1; ++row) {
-                for (col = 1; col < MAX_WIDTH - 1; ++col) {
-                  int oidx = caveD[row][col].oidx;
-                  if (!oidx) continue;
-                  struct objS* obj = &entity_objD[oidx];
-                  if (is_door(obj->tval)) continue;
-
-                  if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
-
-                  if (py_teleport_near(row, col, &y, &x)) {
-                    MSG("Teleport to obj %d", oidx);
-                    y_obj_teleportD = row;
-                    x_obj_teleportD = col;
-                    row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
-                  }
-                }
-              }
-              if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
-                y_obj_teleportD = x_obj_teleportD = 0;
-                msg_print("Reset object teleport");
-              }
-            } break;
             case CTRL('p'): {
               free_turn_flag = TRUE;
               msg_history();
             } break;
-            case CTRL('w'): {
-              dun_level = 50;
-              new_level_flag = TRUE;
-            } break;
+          }
+          if (WIZARD) {
+            switch (c) {
+              case CTRL('a'): {
+                int* af_ptr = (void*)&countD;
+                for (int it = 0; it < sizeof(countD) / sizeof(int); ++it) {
+                  af_ptr[it] = 1;
+                }
+              } break;
+              case CTRL('d'): {
+                detect_obj(oset_gold);
+                detect_obj(oset_pickup);
+                detect_obj(oset_trap);
+                detect_obj(oset_sdoor);
+                maD[MA_DETECT_MON] = 1;
+                maD[MA_DETECT_INVIS] = 1;
+                maD[MA_DETECT_EVIL] = 1;
+              } break;
+              case CTRL('f'): {
+                create_food(y, x);
+              } break;
+              case CTRL('h'):
+                if (uD.mhp < 100) uD.mhp = 100;
+                uD.chp = uD.mhp;
+                msg_print("You are healed.");
+                break;
+              case CTRL('k'):
+                py_make_known();
+                break;
+              case CTRL('t'):
+                msg_print("teleport");
+                do {
+                  x = randint(MAX_WIDTH - 2);
+                  y = randint(MAX_HEIGHT - 2);
+                } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
+                         caveD[y][x].midx != 0);
+                break;
+              case CTRL('m'):
+                if (mon_usedD) {
+                  int rv = randint(mon_usedD);
+                  struct monS* mon = mon_get(monD[rv - 1]);
+                  MSG("Teleport to monster id %d (%d/%d)", mon->id, rv,
+                      mon_usedD);
+
+                  int fy = mon->fy;
+                  int fx = mon->fx;
+                  py_teleport_near(fy, fx, &y, &x);
+                }
+                break;
+              case CTRL('o'): {
+                static int y_obj_teleportD;
+                static int x_obj_teleportD;
+                int row, col;
+                int fy, fx;
+                fy = y_obj_teleportD;
+                fx = x_obj_teleportD;
+
+                for (row = 1; row < MAX_HEIGHT - 1; ++row) {
+                  for (col = 1; col < MAX_WIDTH - 1; ++col) {
+                    int oidx = caveD[row][col].oidx;
+                    if (!oidx) continue;
+                    struct objS* obj = &entity_objD[oidx];
+                    if (is_door(obj->tval)) continue;
+
+                    if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
+
+                    if (py_teleport_near(row, col, &y, &x)) {
+                      MSG("Teleport to obj %d", oidx);
+                      y_obj_teleportD = row;
+                      x_obj_teleportD = col;
+                      row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+                    }
+                  }
+                }
+                if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
+                  y_obj_teleportD = x_obj_teleportD = 0;
+                  msg_print("Reset object teleport");
+                }
+              } break;
+              case CTRL('w'): {
+                dun_level = 50;
+                new_level_flag = TRUE;
+              } break;
+            }
           }
         }
       }
