@@ -12,9 +12,6 @@ static int find_openarea;
 static int find_breakright, find_breakleft;
 static int find_prevdir;
 
-ARR_REUSE(obj, 256);
-ARR_REUSE(mon, 256);
-
 #define MSG(x, ...)                                             \
   {                                                             \
     char vtype[80];                                             \
@@ -2264,9 +2261,6 @@ struct treasureS* tr_ptr;
 {
   return MASK_SUBVAL & tr_ptr->subval;
 }
-// Known refers to stackable treasures that are instanced
-// Distinct from identification which is PER object
-static uint8_t knownD[7][MAX_SUBVAL];
 int
 tr_known_row(tr_ptr)
 struct treasureS* tr_ptr;
@@ -3183,7 +3177,7 @@ town_gen()
   store_maint();
 }
 void
-generate_cave()
+cave_reset()
 {
   // Clear the cave
   memset(caveD, 0, sizeof(caveD));
@@ -3198,7 +3192,10 @@ generate_cave()
   // Release all monsters
   mon_usedD = 0;
   memset(entity_monD, 0, sizeof(entity_monD));
-
+}
+void
+generate_cave()
+{
   // a fresh cave!
   if (dun_level != 0)
     cave_gen();
@@ -9967,6 +9964,11 @@ dungeon()
               free_turn_flag = TRUE;
               msg_history();
             } break;
+            case CTRL('s'): {
+              save_exit_flag = TRUE;
+              new_level_flag = TRUE;
+              strcpy(death_descD, "quitting");
+            } break;
             default:
               if (HACK == 0) free_turn_flag = TRUE;
               break;
@@ -10180,19 +10182,25 @@ main()
   dun_level = 1;
   mon_level_init();
   obj_level_init();
-  // TBD: Load char
-  py_init();
+  if (platformD.load && platformD.load()) {
+  } else {
+    py_init();
+  }
 
   magic_init();
 
-  generate_cave();
-
   while (!death) {
+    generate_cave();
     panel_update(&panelD, uD.y, uD.x, TRUE);
     py_check_view(uD.y, uD.x);
     dungeon();
 
-    if (!death) generate_cave();
+    if (!death) {
+      cave_reset();
+      if (platformD.save && platformD.save()) {
+        if (save_exit_flag) break;
+      }
+    }
   }
 
   if (strcmp("quitting", death_descD) != 0) py_death();

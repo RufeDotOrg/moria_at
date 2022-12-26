@@ -79,6 +79,7 @@ static uint32_t town_seed;
 static int turnD;
 static int player_hpD[AL(player_exp)];
 static int death;
+static int save_exit_flag;
 static int total_winner;
 static int dun_level;
 static int free_turn_flag;
@@ -86,6 +87,12 @@ static int new_level_flag;
 static char descD[160];
 static char death_descD[160];
 
+ARR_REUSE(obj, 256);
+ARR_REUSE(mon, 256);
+
+// Known refers to stackable treasures that are instanced
+// Distinct from identification which is PER object
+static uint8_t knownD[7][MAX_SUBVAL];
 // Inventory of object IDs; obj_get(id)
 // Zero is an available or empty slot
 // [INVEN_WIELD, INVEN_AUX] are equipment
