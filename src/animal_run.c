@@ -1,6 +1,6 @@
 #include "game.c"
 
-enum { WIZARD = 0 };
+enum { HACK = 0 };
 static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
 static int find_cut = 1;
@@ -70,7 +70,7 @@ status_update()
   BufMsg(vitalinfo, "AC  : %6d", uD.pac);
   BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
   line += 1;
-  if (WIZARD) {
+  if (HACK) {
     BufMsg(vitalinfo, "DEBUG");
     BufMsg(vitalinfo, "y,x :%3d,%3d", uD.y, uD.x);
     BufMsg(vitalinfo, "sec :%3d,%3d", panelD.panel_col, panelD.panel_row);
@@ -2604,7 +2604,7 @@ store_init()
     storeD[j] = MAX_STORE * (randint(i) - 1) + j;
   }
 
-  if (WIZARD) {
+  if (HACK) {
     for (j = 0; j < AL(ownerD); ++j) {
       ownerD[j].max_cost = INT16_MAX;
     }
@@ -2688,7 +2688,7 @@ store_maint()
       if (store_ctr < MIN_STORE_INVEN) j = MIN_STORE_INVEN - store_ctr;
       j += randint(STORE_TURN_AROUND);
 
-      if (WIZARD) {
+      if (HACK) {
         do {
           k = randint(MAX_DUNGEON_OBJ - 1);
           if (treasureD[k].cost > 0) {
@@ -8066,9 +8066,9 @@ py_help()
   BufMsg(screen, "Z: staff invocation");
   BufMsg(screen, ".: automatic object interaction (experimental)");
 
-  if (WIZARD) {
+  if (HACK) {
     msg_pause();
-    msg_print("Cheat Commands");
+    msg_print("Hack Commands");
 
     char c;
     line = 0;
@@ -9914,7 +9914,7 @@ dungeon()
               msg_history();
             } break;
           }
-          if (WIZARD) {
+          if (HACK) {
             switch (c) {
               case CTRL('a'): {
                 int* af_ptr = (void*)&countD;
