@@ -770,6 +770,15 @@ sym_shift(char c)
 
   return c;
 }
+char
+dir_by_scancode(sym)
+{
+  switch (sym) {
+    case SDLK_KP_1 ... SDLK_KP_9:
+      return 1 + (sym - SDLK_KP_1);
+  }
+  return -1;
+}
 static char
 char_by_dir(dir)
 {
@@ -936,16 +945,20 @@ sdl_pump()
       return ' ';
     }
     if (event.type == SDL_KEYDOWN) {
+      SDL_Keymod km = SDL_GetModState();
+      int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
+
       if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
-        SDL_Keymod km = SDL_GetModState();
-        int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
         // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 13;
         if (isalpha(event.key.keysym.sym)) {
           if (km & KMOD_CTRL) return (event.key.keysym.sym & 037);
           return event.key.keysym.sym ^ shift;
+        } else {
+          return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
         }
-
-        return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
+      } else {
+        int dir = dir_by_scancode(event.key.keysym.sym);
+        if (dir > 0) return char_by_dir(dir) ^ shift;
       }
     }
     // Prototyping choice menu
