@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <time.h>
 
 #include "SDL.h"
@@ -1017,6 +1018,113 @@ platform_readansi()
   return c;
 }
 
+// load/save
+static int checksumD;
+void checksum(blob, len) void *blob;
+{
+  int *iter = blob;
+  int count = len / sizeof(int);
+  int *end = iter + count;
+  for (; iter < end; ++iter) {
+    checksumD ^= *iter;
+  }
+}
+int
+save()
+{
+  int save_info[] = {
+      sizeof(countD),   sizeof(dun_level),  sizeof(entity_objD),
+      sizeof(invenD),   sizeof(knownD),     sizeof(maD),
+      sizeof(objD),     sizeof(obj_usedD),  sizeof(player_hpD),
+      sizeof(rnd_seed), sizeof(town_seed),  sizeof(obj_seed),
+      sizeof(statD),    sizeof(store_objD), sizeof(turnD),
+      sizeof(uD),
+  };
+#define nameof(x) #x
+  char *save_name[] = {
+      nameof(&countD),   nameof(&dun_level), nameof(entity_objD),
+      nameof(invenD),    nameof(knownD),     nameof(maD),
+      nameof(objD),      nameof(&obj_usedD), nameof(player_hpD),
+      nameof(&rnd_seed), nameof(&town_seed), nameof(&obj_seed),
+      nameof(&statD),    nameof(store_objD), nameof(&turnD),
+      nameof(&uD),
+  };
+#define addrof(x) x
+  void *save_addr[] = {
+      addrof(&countD),   addrof(&dun_level), addrof(entity_objD),
+      addrof(invenD),    addrof(knownD),     addrof(maD),
+      addrof(objD),      addrof(&obj_usedD), addrof(player_hpD),
+      addrof(&rnd_seed), addrof(&town_seed), addrof(&obj_seed),
+      addrof(&statD),    addrof(store_objD), addrof(&turnD),
+      addrof(&uD),
+  };
+  int byte_count = 0;
+  for (int it = 0; it < AL(save_info); ++it) {
+    Log("%p %s %d\n", save_addr[it], save_name[it], save_info[it]);
+    byte_count += save_info[it];
+  }
+  void *f = fopen("test", "wb");
+  if (f) {
+    checksumD = 0;
+    for (int it = 0; it < AL(save_info); ++it) {
+      fwrite(save_addr[it], save_info[it], 1, f);
+      checksum(save_addr[it], save_info[it]);
+    }
+    fclose(f);
+    return byte_count;
+  }
+  return 0;
+}
+int
+load()
+{
+  int save_info[] = {
+      sizeof(countD),   sizeof(dun_level),  sizeof(entity_objD),
+      sizeof(invenD),   sizeof(knownD),     sizeof(maD),
+      sizeof(objD),     sizeof(obj_usedD),  sizeof(player_hpD),
+      sizeof(rnd_seed), sizeof(town_seed),  sizeof(obj_seed),
+      sizeof(statD),    sizeof(store_objD), sizeof(turnD),
+      sizeof(uD),
+  };
+#define nameof(x) #x
+  char *save_name[] = {
+      nameof(&countD),   nameof(&dun_level), nameof(entity_objD),
+      nameof(invenD),    nameof(knownD),     nameof(maD),
+      nameof(objD),      nameof(&obj_usedD), nameof(player_hpD),
+      nameof(&rnd_seed), nameof(&town_seed), nameof(&obj_seed),
+      nameof(&statD),    nameof(store_objD), nameof(&turnD),
+      nameof(&uD),
+  };
+#define addrof(x) x
+  void *save_addr[] = {
+      addrof(&countD),   addrof(&dun_level), addrof(entity_objD),
+      addrof(invenD),    addrof(knownD),     addrof(maD),
+      addrof(objD),      addrof(&obj_usedD), addrof(player_hpD),
+      addrof(&rnd_seed), addrof(&town_seed), addrof(&obj_seed),
+      addrof(&statD),    addrof(store_objD), addrof(&turnD),
+      addrof(&uD),
+  };
+  int byte_count = 0;
+  for (int it = 0; it < AL(save_info); ++it) {
+    printf("%p %s %d\n", save_addr[it], save_name[it], save_info[it]);
+    byte_count += save_info[it];
+  }
+  void *f = fopen("test", "rb");
+  if (f) {
+    for (int it = 0; it < AL(save_info); ++it) {
+      fread(save_addr[it], save_info[it], 1, f);
+    }
+    fclose(f);
+    checksumD = 0;
+    for (int it = 0; it < AL(save_info); ++it) {
+      checksum(save_addr[it], save_info[it]);
+    }
+    return byte_count;
+  }
+
+  return 0;
+}
+
 void
 platform_init()
 {
@@ -1047,6 +1155,8 @@ platform_init()
   if (!part_io() || !part_init()) return;
 
   platformD.seed = platform_auxval_random;
+  platformD.load = load;
+  platformD.save = save;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
 }
