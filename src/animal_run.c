@@ -9913,6 +9913,9 @@ dungeon()
               free_turn_flag = TRUE;
               msg_history();
             } break;
+            default:
+              if (HACK == 0) free_turn_flag = TRUE;
+              break;
           }
           if (HACK) {
             switch (c) {
