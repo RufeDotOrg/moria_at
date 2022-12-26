@@ -9595,7 +9595,7 @@ store_display(sidx)
   struct objS* obj;
 
   line = 0;
-  BufMsg(screen, "%-17.017s: %s", "OwnerName", ownerD[storeD[sidx]].name);
+  BufMsg(screen, "         %s", ownerD[storeD[sidx]].name);
   line += 1;
   BufMsg(screen, "   Item");
   for (int it = 0; it < AL(store_objD[0]); ++it) {
