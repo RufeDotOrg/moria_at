@@ -3128,6 +3128,10 @@ town_gen()
   struct caveS* c_ptr;
   int room[MAX_STORE];
   int room_used;
+  uint32_t seed;
+
+  seed = rnd_seed;
+  rnd_seed = town_seed;
 
   uint8_t cflag = town_night() ? 0 : (CF_PERM_LIGHT | CF_ROOM);
   for (int row = 0; row < MAX_HEIGHT; ++row) {
@@ -3165,6 +3169,7 @@ town_gen()
   } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
            (c_ptr->midx != 0));
   place_stair_tval_tchar(i, j, TV_DOWN_STAIR, '>');
+  rnd_seed = seed;
 
   do {
     i = randint(SYMMAP_HEIGHT - 2);
@@ -5203,7 +5208,52 @@ void
 magic_init()
 {
   int i, j, k, h;
+  void* tmp;
+  uint32_t seed;
   char string[80];
+
+  seed = rnd_seed;
+  rnd_seed = obj_seed;
+
+  // TBD: could store_init() here, utilizing obj_seed
+
+  /* The first 3 entries for colors are fixed, (slime & apple juice, water) */
+  for (i = 3; i < AL(colors); i++) {
+    j = randint(AL(colors) - 3) + 2;
+    tmp = colors[i];
+    colors[i] = colors[j];
+    colors[j] = tmp;
+  }
+  for (i = 0; i < AL(woods); i++) {
+    j = randint(AL(woods)) - 1;
+    tmp = woods[i];
+    woods[i] = woods[j];
+    woods[j] = tmp;
+  }
+  for (i = 0; i < AL(metals); i++) {
+    j = randint(AL(metals)) - 1;
+    tmp = metals[i];
+    metals[i] = metals[j];
+    metals[j] = tmp;
+  }
+  for (i = 0; i < AL(rocks); i++) {
+    j = randint(AL(rocks)) - 1;
+    tmp = rocks[i];
+    rocks[i] = rocks[j];
+    rocks[j] = tmp;
+  }
+  for (i = 0; i < AL(amulets); i++) {
+    j = randint(AL(amulets)) - 1;
+    tmp = amulets[i];
+    amulets[i] = amulets[j];
+    amulets[j] = tmp;
+  }
+  for (i = 0; i < AL(mushrooms); i++) {
+    j = randint(AL(mushrooms)) - 1;
+    tmp = mushrooms[i];
+    mushrooms[i] = mushrooms[j];
+    mushrooms[j] = tmp;
+  }
   for (h = 0; h < AL(titleD); h++) {
     string[0] = 0;
     k = randint(2) + 1;
@@ -5218,6 +5268,7 @@ magic_init()
       string[9] = '\0';
     strcat(titleD[h], string);
   }
+  rnd_seed = seed;
 }
 int
 dec_stat(stat)
@@ -10099,24 +10150,43 @@ obj_level_init()
     tmp[l]++;
   }
 }
+void
+seed_init()
+{
+  uint32_t seed;
+
+  seed = 0;
+  if (platformD.seed) seed = platformD.seed();
+  if (seed == 0) seed = 5381;
+
+  obj_seed = seed;
+
+  seed += 8762;
+  town_seed = seed;
+
+  seed += 113452;
+  rnd_seed = seed;
+
+  // Burn randomness after seeding
+  for (int it = randint(100); it != 0; --it) rnd();
+}
 int
 main()
 {
   platform_init();
 
-  if (platformD.seed) rnd_seed = platformD.seed();
-  if (!rnd_seed) rnd_seed = 3123;
-
-  // Burn randomness after platform seed
-  for (int it = randint(100); it != 0; --it) rnd();
+  seed_init();
 
   dun_level = 1;
-  store_init();
   mon_level_init();
   obj_level_init();
-  generate_cave();
+  store_init();
+  // TBD: Load char
   py_init();
+
   magic_init();
+
+  generate_cave();
 
   while (!death) {
     panel_update(&panelD, uD.y, uD.x, TRUE);

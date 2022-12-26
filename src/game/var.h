@@ -74,6 +74,8 @@ uint8_t blows_table[][6] = {
 
 // Game
 static uint32_t rnd_seed;
+static uint32_t obj_seed;
+static uint32_t town_seed;
 static int turnD;
 static int player_hpD[AL(player_exp)];
 static int death;
