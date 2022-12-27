@@ -176,7 +176,8 @@
 #define TV_SECRET_DOOR 109
 #define TV_STORE_DOOR 110
 #define TV_GLYPH 111
-#define TV_MAX_VISIBLE 111
+#define TV_PAWN_DOOR 112
+#define TV_MAX_VISIBLE 112
 
 #define MAX_TRAP 3
 #define MAX_OBJ_LEVEL 50

@@ -690,6 +690,37 @@ build_store(sidx, y, x)
   caveD[i][j].oidx = obj_index(obj);
   caveD[i][j].fval = FLOOR_CORR;
 }
+static void
+build_pawn()
+{
+  int tmp, i, j, y, x, x_left, x_right;
+  struct objS* obj;
+
+  tmp = randint(2);
+  if (tmp == 1) {
+    x_left = 1;
+    x = x_right = 1 + randint(3);
+  } else {
+    x = x_left = SYMMAP_WIDTH - randint(3) - 1;
+    x_right = SYMMAP_WIDTH - 2;
+  }
+  y = SYMMAP_HEIGHT / 4 + randint(SYMMAP_HEIGHT / 2);
+
+  for (i = y - 1; i <= y + 1; i++)
+    for (j = x_left; j <= x_right; j++) {
+      caveD[i][j].fval = BOUNDARY_WALL;
+      caveD[i][j].cflag |= CF_PERM_LIGHT;
+    }
+
+  obj = obj_use();
+  obj->fy = y;
+  obj->fx = x;
+  obj->tval = TV_PAWN_DOOR;
+  obj->tchar = '7';
+  obj->number = 1;
+  caveD[y][x].oidx = obj_index(obj);
+  caveD[y][x].fval = FLOOR_CORR;
+}
 BOOL
 near_light(y, x)
 int y, x;
@@ -3155,6 +3186,8 @@ town_gen()
       }
       room_used -= 1;
     }
+
+  build_pawn();
 
   do {
     i = randint(SYMMAP_HEIGHT - 2);
@@ -9584,6 +9617,108 @@ struct objS* obj;
   if (obj->subval & STACK_BATCH) value = value * obj->number;
   return (value);
 }
+static int
+obj_store_index(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+      // int general_store(element) int element;
+    case TV_DIGGING:
+    case TV_CLOAK:
+    case TV_FOOD:
+    case TV_FLASK:
+    case TV_LIGHT:
+    case TV_SPIKE:
+      return 0;
+      // int armory(element) int element;
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_HELM:
+    case TV_SHIELD:
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+      return 1;
+      // int weaponsmith(element) int element;
+    case TV_SLING_AMMO:
+    case TV_BOLT:
+    case TV_ARROW:
+    case TV_BOW:
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+      return 2;
+      // int temple(element) int element;
+    case TV_PRAYER_BOOK:
+      return 3;
+      // int alchemist(element) int element;
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+    case TV_POTION1:
+    case TV_POTION2:
+      return 4;
+      // int magic_shop(element) int element;
+    case TV_AMULET:
+    case TV_RING:
+    case TV_STAFF:
+    case TV_WAND:
+    case TV_MAGIC_BOOK:
+      return 5;
+  }
+  return -1;
+}
+static void
+inven_pawn(iidx)
+{
+  struct objS* obj;
+  int sidx, inflate, cost;
+
+  obj = obj_get(invenD[iidx]);
+  sidx = obj_store_index(obj);
+  if (sidx >= 0) {
+    inflate = ownerD[storeD[sidx]].min_inflate;
+    cost = obj_value(obj) * (200 - inflate) / 100;
+    cost = MAX(cost, 1);
+    obj_desc(obj, TRUE);
+    uD.gold += cost;
+    // TBD: copy obj to a store inventory?
+    obj_unuse(obj);
+    invenD[iidx] = 0;
+    MSG("You sold %s.", descD);
+    msg_pause();
+  }
+}
+static void
+pawn_display()
+{
+  int line, flag;
+  int inflate, cost, sidx;
+  struct objS* obj;
+
+  line = 0;
+  BufMsg(screen, "         Gilbrook The Thrifty");
+  line += 1;
+  BufMsg(screen, "   Item");
+  for (int it = 0; it < INVEN_EQUIP; ++it) {
+    obj = obj_get(invenD[it]);
+    flag = FALSE;
+    if (obj->id) {
+      obj_desc(obj, TRUE);
+      sidx = obj_store_index(obj);
+      if (sidx >= 0) {
+        inflate = ownerD[storeD[sidx]].min_inflate;
+        cost = obj_value(obj) * (200 - inflate) / 100;
+        cost = MAX(cost, 1);
+        flag = TRUE;
+      }
+    }
+
+    if (flag) {
+      BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, cost);
+    } else {
+      line += 1;
+    }
+  }
+}
 static void
 store_display(sidx)
 {
@@ -9642,6 +9777,19 @@ store_item_purchase(sidx, item)
   }
 }
 static void
+pawn_entrance()
+{
+  char c;
+
+  while (1) {
+    pawn_display();
+    if (!in_subcommand("What would you like to sell?", &c)) break;
+    uint8_t item = c - 'a';
+
+    if (item < INVEN_EQUIP) inven_pawn(item);
+  }
+}
+static void
 store_entrance(sidx)
 {
   char c;
@@ -9651,7 +9799,7 @@ store_entrance(sidx)
     if (!in_subcommand("What would you like to purchase?", &c)) break;
     uint8_t item = c - 'a';
 
-    store_item_purchase(sidx, item);
+    if (item < MAX_STORE_INVEN) store_item_purchase(sidx, item);
   }
 }
 static void regenhp(percent) int percent;
@@ -10099,6 +10247,8 @@ dungeon()
               hit_trap(y, x);
             } else if (obj->tval == TV_STORE_DOOR) {
               store_entrance(obj->tchar - '1');
+            } else if (obj->tval == TV_PAWN_DOOR) {
+              pawn_entrance();
             } else if (countD.blind == 0) {
               if (find_flag) find_event(y, x);
               if (obj->tval) {
