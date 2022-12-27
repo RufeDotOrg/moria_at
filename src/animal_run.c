@@ -8979,9 +8979,9 @@ py_look_mon()
     int seen = 0;
     FOR_EACH(mon, {
       if (mon->mlit && distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) {
-        oy = -((mon->fy - y) < 0) + ((mon->fy - y) > 0);
-        ox = -((mon->fx - x) < 0) + ((mon->fx - x) > 0);
-        if (oy == ly && ox == lx && los(y, x, mon->fy, mon->fx)) {
+        oy = (ly != 0) * (-((mon->fy - y) < 0) + ((mon->fy - y) > 0));
+        ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
+        if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
           seen += 1;
           mon_desc(it_index);
           // hack: mon death_descD pronoun is a/an
