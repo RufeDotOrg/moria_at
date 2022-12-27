@@ -9031,7 +9031,7 @@ py_look_obj()
   }
   free_turn_flag = TRUE;
 }
-static void make_move(midx, mm, tries) int* mm;
+static void make_move(midx, mm) int* mm;
 {
   int i, fy, fx, newy, newx, do_turn, do_move, stuck_door;
   register struct caveS* c_ptr;
@@ -9044,7 +9044,7 @@ static void make_move(midx, mm, tries) int* mm;
   do_move = FALSE;
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
-  for (int i = 0; i < tries; ++i) {
+  for (int i = 0; i < 5; ++i) {
     /* Get new position  	*/
     fy = newy = m_ptr->fy;
     fx = newx = m_ptr->fx;
@@ -9062,6 +9062,7 @@ static void make_move(midx, mm, tries) int* mm;
           delete_object(newy, newx);
         } else {
           do_move = FALSE;
+          do_turn = (cr_ptr->cmove & CM_ATTACK_ONLY);
         }
       }
     }
@@ -9369,12 +9370,11 @@ mon_move(midx, cdis)
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
   int mm[9];
-  int tries, took_turn, random, flee;
+  int took_turn, random, flee;
 
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
   AC(mm);
-  tries = 5;
   took_turn = FALSE;
   random = FALSE;
   flee = FALSE;
@@ -9411,11 +9411,10 @@ mon_move(midx, cdis)
       }
     } else if (cdis < 2 || (cr_ptr->cmove & CM_ATTACK_ONLY) == 0) {
       get_moves(midx, mm);
-      tries = 1;
     }
 
     if (mm[0]) {
-      make_move(midx, mm, tries);
+      make_move(midx, mm);
     }
   }
 }
