@@ -9973,7 +9973,10 @@ dungeon()
 
       y = uD.y;
       x = uD.x;
-      if (find_flag) {
+      if (uD.tflag & TR_TELEPORT && randint(100) == 1) {
+        disturb(0, 0);
+        py_teleport(40, &y, &x);
+      } else if (find_flag) {
         mmove(find_direction, &y, &x);
       } else {
         msg_advance();
