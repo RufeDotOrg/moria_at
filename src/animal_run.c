@@ -3089,7 +3089,7 @@ cave_gen()
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
   register int i, j, k;
   int y1, x1, y2, x2, pick1, pick2, tmp;
-  int16_t yloc[400], xloc[400];
+  int16_t yloc[CHUNK_SQ + 1], xloc[CHUNK_SQ + 1];
 
   k = randnor(DUN_ROOM_MEAN, 2);
   for (i = 0; i < k; i++)
