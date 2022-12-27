@@ -705,9 +705,9 @@ build_pawn()
   tmp = randint(2);
   if (tmp == 1) {
     x_left = 1;
-    x = x_right = 1 + randint(3);
+    x = x_right = 1 + randint(2) - 1;
   } else {
-    x = x_left = SYMMAP_WIDTH - randint(3) - 1;
+    x = x_left = SYMMAP_WIDTH - randint(2) - 1;
     x_right = SYMMAP_WIDTH - 2;
   }
   y = SYMMAP_HEIGHT / 4 + randint(SYMMAP_HEIGHT / 2);
@@ -722,7 +722,7 @@ build_pawn()
   obj->fy = y;
   obj->fx = x;
   obj->tval = TV_PAWN_DOOR;
-  obj->tchar = '$';
+  obj->tchar = '0';
   obj->number = 1;
   caveD[y][x].oidx = obj_index(obj);
   caveD[y][x].fval = FLOOR_CORR;
