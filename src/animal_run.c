@@ -9691,7 +9691,7 @@ inven_pawn(iidx)
 {
   struct objS* obj;
   struct treasureS* tr_ptr;
-  int sidx, inflate, cost;
+  int sidx, inflate, cost, number;
 
   obj = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[obj->tidx];
@@ -9702,7 +9702,11 @@ inven_pawn(iidx)
     cost = MAX(cost, 1);
     tr_make_known(tr_ptr);
     obj->idflag = ID_REVEAL;
+    // TBD: ouch
+    number = obj->number;
+    obj->number = 1;
     obj_desc(obj, TRUE);
+    obj->number = number;
     uD.gold += cost;
     // TBD: copy obj to a store inventory?
     inven_destroy_one(iidx);
