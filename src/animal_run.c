@@ -9681,20 +9681,23 @@ static void
 inven_pawn(iidx)
 {
   struct objS* obj;
+  struct treasureS* tr_ptr;
   int sidx, inflate, cost;
 
   obj = obj_get(invenD[iidx]);
+  tr_ptr = &treasureD[obj->tidx];
   sidx = obj_store_index(obj);
   if (sidx >= 0) {
     inflate = ownerD[storeD[sidx]].min_inflate;
     cost = obj_value(obj) * (200 - inflate) / 100;
     cost = MAX(cost, 1);
+    tr_make_known(tr_ptr);
     obj_desc(obj, TRUE);
     uD.gold += cost;
     // TBD: copy obj to a store inventory?
     obj_unuse(obj);
     invenD[iidx] = 0;
-    MSG("You sold %s.", descD);
+    MSG("You sold %s for %d gold piece%s.", descD, cost, cost > 1 ? "s" : "");
     msg_pause();
   }
 }
@@ -9757,6 +9760,7 @@ store_item_purchase(sidx, item)
 {
   int iidx, count, cost, flag;
   struct objS* obj;
+  struct treasureS* tr_ptr;
 
   flag = FALSE;
   if (item < MAX_STORE_INVEN) {
@@ -9778,7 +9782,10 @@ store_item_purchase(sidx, item)
       }
 
       if (flag) {
-        obj_desc(obj_get(invenD[iidx]), TRUE);
+        obj = obj_get(invenD[iidx]);
+        tr_ptr = &treasureD[obj->tidx];
+        tr_make_known(tr_ptr);
+        obj_desc(obj, TRUE);
         MSG("You have %s.", descD);
         uD.gold -= cost;
         store_item_destroy(sidx, item, count);
