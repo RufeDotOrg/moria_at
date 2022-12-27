@@ -130,24 +130,30 @@ symmap_update()
       *sym++ = get_sym(row, col);
     }
   }
-  uint16_t* cre = &cremapD[0][0];
-  for (int row = rmin; row < rmax; ++row) {
-    for (int col = cmin; col < cmax; ++col) {
-      struct caveS* cave_ptr = &caveD[row][col];
-      if (cave_ptr->midx) {
-        struct monS* mon = &entity_monD[cave_ptr->midx];
-        if (mon->mlit) *cre = mon->cidx;
+
+  if (countD.blind == 0) {
+    uint16_t* cre = &cremapD[0][0];
+    for (int row = rmin; row < rmax; ++row) {
+      for (int col = cmin; col < cmax; ++col) {
+        struct caveS* cave_ptr = &caveD[row][col];
+        if (cave_ptr->midx) {
+          struct monS* mon = &entity_monD[cave_ptr->midx];
+          if (mon->mlit) *cre = mon->cidx;
+        }
+        cre += 1;
       }
-      cre += 1;
     }
+
+    uint8_t* lit = &litmapD[0][0];
+    for (int row = rmin; row < rmax; ++row)
+      for (int col = cmin; col < cmax; ++col) {
+        int cflag = caveD[row][col].cflag;
+        *lit = cflag;
+        lit += 1;
+      }
+  } else {
+    litmapD[uD.y][uD.x] = CF_TEMP_LIGHT;
   }
-  uint8_t* lit = &litmapD[0][0];
-  for (int row = rmin; row < rmax; ++row)
-    for (int col = cmin; col < cmax; ++col) {
-      int cflag = caveD[row][col].cflag;
-      *lit = cflag;
-      lit += 1;
-    }
 }
 static char* affectD[][16] = {
     {"Hungry", "Weak", "Fainting"},
@@ -6882,7 +6888,6 @@ inven_eat(iidx)
           ident = TRUE;
           break;
         // case 5:
-
         //  f_ptr->image += randint(200) + 25 * obj->level + 200;
         //  msg_print("You feel drugged.");
         //  ident = TRUE;
