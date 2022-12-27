@@ -1473,7 +1473,6 @@ struct objS* obj;
 {
   struct treasureS* tr_ptr = &treasureD[tidx];
   obj->flags = tr_ptr->flags;
-  obj->name2 = 0;
   obj->fy = 0;
   obj->fx = 0;
   obj->tval = tr_ptr->tval;
@@ -1491,6 +1490,7 @@ struct objS* obj;
   memcpy(obj->damage, tr_ptr->damage, sizeof(obj->damage));
   obj->level = tr_ptr->level;
   obj->idflag = 0;
+  obj->sn = 0;
 }
 int
 magik(chance)
@@ -1531,32 +1531,32 @@ void magic_treasure(obj, level) struct objS* obj;
             case 1:
               obj->flags |=
                   (TR_RES_LIGHT | TR_RES_COLD | TR_RES_ACID | TR_RES_FIRE);
-              obj->name2 = SN(SN_R);
+              obj->sn = SN_R;
               obj->toac += 5;
               obj->cost += 2500;
               break;
             case 2: /* Resist Acid    */
               obj->flags |= TR_RES_ACID;
-              obj->name2 = SN(SN_RA);
+              obj->sn = SN_RA;
               obj->cost += 1000;
               break;
             case 3:
             case 4: /* Resist Fire    */
               obj->flags |= TR_RES_FIRE;
-              obj->name2 = SN(SN_RF);
+              obj->sn = SN_RF;
               obj->cost += 600;
               break;
             case 5:
             case 6: /* Resist Cold   */
               obj->flags |= TR_RES_COLD;
-              obj->name2 = SN(SN_RC);
+              obj->sn = SN_RC;
               obj->cost += 600;
               break;
             case 7:
             case 8:
             case 9: /* Resist Lightning*/
               obj->flags |= TR_RES_LIGHT;
-              obj->name2 = SN(SN_RL);
+              obj->sn = SN_RL;
               obj->cost += 500;
               break;
           }
@@ -1588,7 +1588,7 @@ void magic_treasure(obj, level) struct objS* obj;
               /* the value in p1 is used for strength increase */
               /* p1 is also used for sustain stat */
               obj->p1 = randint(4);
-              obj->name2 = SN(SN_HA);
+              obj->sn = SN_HA;
               obj->cost += obj->p1 * 500;
               obj->cost += 10000;
               break;
@@ -1599,7 +1599,7 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->tohit += 3;
               obj->todam += 3;
               obj->toac += 5 + randint(5);
-              obj->name2 = SN(SN_DF);
+              obj->sn = SN_DF;
               /* the value in p1 is used for stealth */
               obj->p1 = randint(3);
               obj->cost += obj->p1 * 500;
@@ -1610,7 +1610,7 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->flags |= TR_SLAY_ANIMAL;
               obj->tohit += 2;
               obj->todam += 2;
-              obj->name2 = SN(SN_SA);
+              obj->sn = SN_SA;
               obj->cost += 3000;
               break;
             case 5:
@@ -1618,7 +1618,7 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->flags |= TR_SLAY_DRAGON;
               obj->tohit += 3;
               obj->todam += 3;
-              obj->name2 = SN(SN_SD);
+              obj->sn = SN_SD;
               obj->cost += 4000;
               break;
             case 7:
@@ -1626,7 +1626,7 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->flags |= TR_SLAY_EVIL;
               obj->tohit += 3;
               obj->todam += 3;
-              obj->name2 = SN(SN_SE);
+              obj->sn = SN_SE;
               obj->cost += 4000;
               break;
             case 9:
@@ -1634,7 +1634,7 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->flags |= (TR_SEE_INVIS | TR_SLAY_UNDEAD);
               obj->tohit += 3;
               obj->todam += 3;
-              obj->name2 = SN(SN_SU);
+              obj->sn = SN_SU;
               obj->cost += 5000;
               break;
             case 11:
@@ -1643,7 +1643,7 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->flags |= TR_FLAME_TONGUE;
               obj->tohit++;
               obj->todam += 3;
-              obj->name2 = SN(SN_FT);
+              obj->sn = SN_FT;
               obj->cost += 2000;
               break;
             case 14:
@@ -1652,7 +1652,7 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->flags |= TR_FROST_BRAND;
               obj->tohit++;
               obj->todam++;
-              obj->name2 = SN(SN_FB);
+              obj->sn = SN_FB;
               obj->cost += 1200;
               break;
           }
@@ -1698,12 +1698,12 @@ void magic_treasure(obj, level) struct objS* obj;
         if (magik(special)) {
           if (randint(2) == 1) {
             obj->flags |= TR_FREE_ACT;
-            obj->name2 = SN(SN_FREE_ACTION);
+            obj->sn = SN_FREE_ACTION;
             obj->cost += 1000;
           } else {
             obj->tohit += 1 + randint(3);
             obj->todam += 1 + randint(3);
-            obj->name2 = SN(SN_SLAYING);
+            obj->sn = SN_SLAYING;
             obj->cost += (obj->tohit + obj->todam) * 250;
           }
         }
@@ -1711,10 +1711,10 @@ void magic_treasure(obj, level) struct objS* obj;
         if (magik(special)) {
           if (randint(2) == 1) {
             obj->flags |= TR_DEX;
-            obj->name2 = SN(SN_CLUMSINESS);
+            obj->sn = SN_CLUMSINESS;
           } else {
             obj->flags |= TR_STR;
-            obj->name2 = SN(SN_WEAKNESS);
+            obj->sn = SN_WEAKNESS;
           }
           obj->p1 = -m_bonus(1, 10, level);
         }
@@ -1731,18 +1731,18 @@ void magic_treasure(obj, level) struct objS* obj;
           tmp = randint(12);
           if (tmp > 5) {
             obj->flags |= TR_FFALL;
-            obj->name2 = SN(SN_SLOW_DESCENT);
+            obj->sn = SN_SLOW_DESCENT;
             obj->cost += 250;
           } else if (tmp == 1) {
             obj->flags |= TR_SPEED;
-            obj->name2 = SN(SN_SPEED);
+            obj->sn = SN_SPEED;
             obj->p1 = 1;
             obj->cost += 5000;
           } else /* 2 - 5 */
           {
             obj->flags |= TR_STEALTH;
             obj->p1 = randint(3);
-            obj->name2 = SN(SN_STEALTH);
+            obj->sn = SN_STEALTH;
             obj->cost += 500;
           }
         }
@@ -1750,13 +1750,13 @@ void magic_treasure(obj, level) struct objS* obj;
         tmp = randint(3);
         if (tmp == 1) {
           obj->flags |= TR_SPEED;
-          obj->name2 = SN(SN_SLOWNESS);
+          obj->sn = SN_SLOWNESS;
           obj->p1 = -1;
         } else if (tmp == 2) {
           obj->flags |= TR_AGGRAVATE;
-          obj->name2 = SN(SN_NOISE);
+          obj->sn = SN_NOISE;
         } else {
-          obj->name2 = SN(SN_GREAT_MASS);
+          obj->sn = SN_GREAT_MASS;
           obj->weight = obj->weight * 5;
         }
         obj->cost = 0;
@@ -1779,17 +1779,17 @@ void magic_treasure(obj, level) struct objS* obj;
             if (tmp == 1) {
               obj->p1 = randint(2);
               obj->flags |= TR_INT;
-              obj->name2 = SN(SN_INTELLIGENCE);
+              obj->sn = SN_INTELLIGENCE;
               obj->cost += obj->p1 * 500;
             } else if (tmp == 2) {
               obj->p1 = randint(2);
               obj->flags |= TR_WIS;
-              obj->name2 = SN(SN_WISDOM);
+              obj->sn = SN_WISDOM;
               obj->cost += obj->p1 * 500;
             } else {
               obj->p1 = 1 + randint(4);
               obj->flags |= TR_INFRA;
-              obj->name2 = SN(SN_INFRAVISION);
+              obj->sn = SN_INFRAVISION;
               obj->cost += obj->p1 * 250;
             }
           } else {
@@ -1797,37 +1797,37 @@ void magic_treasure(obj, level) struct objS* obj;
               case 1:
                 obj->p1 = randint(3);
                 obj->flags |= (TR_FREE_ACT | TR_CON | TR_DEX | TR_STR);
-                obj->name2 = SN(SN_MIGHT);
+                obj->sn = SN_MIGHT;
                 obj->cost += 1000 + obj->p1 * 500;
                 break;
               case 2:
                 obj->p1 = randint(3);
                 obj->flags |= (TR_CHR | TR_WIS);
-                obj->name2 = SN(SN_LORDLINESS);
+                obj->sn = SN_LORDLINESS;
                 obj->cost += 1000 + obj->p1 * 500;
                 break;
               case 3:
                 obj->p1 = randint(3);
                 obj->flags |= (TR_RES_LIGHT | TR_RES_COLD | TR_RES_ACID |
                                TR_RES_FIRE | TR_INT);
-                obj->name2 = SN(SN_MAGI);
+                obj->sn = SN_MAGI;
                 obj->cost += 3000 + obj->p1 * 500;
                 break;
               case 4:
                 obj->p1 = randint(3);
                 obj->flags |= TR_CHR;
-                obj->name2 = SN(SN_BEAUTY);
+                obj->sn = SN_BEAUTY;
                 obj->cost += 750;
                 break;
               case 5:
                 obj->p1 = 5 * (1 + randint(4));
                 obj->flags |= (TR_SEE_INVIS | TR_SEARCH);
-                obj->name2 = SN(SN_SEEING);
+                obj->sn = SN_SEEING;
                 obj->cost += 1000 + obj->p1 * 100;
                 break;
               case 6:
                 obj->flags |= TR_REGEN;
-                obj->name2 = SN(SN_REGENERATION);
+                obj->sn = SN_REGENERATION;
                 obj->cost += 1500;
                 break;
             }
@@ -1841,34 +1841,34 @@ void magic_treasure(obj, level) struct objS* obj;
             case 1:
               obj->p1 = -randint(5);
               obj->flags |= TR_INT;
-              obj->name2 = SN(SN_STUPIDITY);
+              obj->sn = SN_STUPIDITY;
               break;
             case 2:
               obj->p1 = -randint(5);
               obj->flags |= TR_WIS;
-              obj->name2 = SN(SN_DULLNESS);
+              obj->sn = SN_DULLNESS;
               break;
             case 3:
               obj->flags |= TR_BLIND;
-              obj->name2 = SN(SN_BLINDNESS);
+              obj->sn = SN_BLINDNESS;
               break;
             case 4:
               obj->flags |= TR_TIMID;
-              obj->name2 = SN(SN_TIMIDNESS);
+              obj->sn = SN_TIMIDNESS;
               break;
             case 5:
               obj->p1 = -randint(5);
               obj->flags |= TR_STR;
-              obj->name2 = SN(SN_WEAKNESS);
+              obj->sn = SN_WEAKNESS;
               break;
             case 6:
               obj->flags |= TR_TELEPORT;
-              obj->name2 = SN(SN_TELEPORTATION);
+              obj->sn = SN_TELEPORTATION;
               break;
             case 7:
               obj->p1 = -randint(5);
               obj->flags |= TR_CHR;
-              obj->name2 = SN(SN_UGLINESS);
+              obj->sn = SN_UGLINESS;
               break;
           }
       }
@@ -2146,14 +2146,14 @@ void magic_treasure(obj, level) struct objS* obj;
       if (magik(chance)) {
         if (magik(special)) {
           if (randint(2) == 1) {
-            obj->name2 = SN(SN_PROTECTION);
+            obj->sn = SN_PROTECTION;
             obj->toac += m_bonus(2, 40, level);
             obj->cost += 250;
           } else {
             obj->toac += m_bonus(1, 20, level);
             obj->p1 = randint(3);
             obj->flags |= TR_STEALTH;
-            obj->name2 = SN(SN_STEALTH);
+            obj->sn = SN_STEALTH;
             obj->cost += 500;
           }
         } else
@@ -2162,17 +2162,17 @@ void magic_treasure(obj, level) struct objS* obj;
         tmp = randint(3);
         if (tmp == 1) {
           obj->flags |= TR_AGGRAVATE;
-          obj->name2 = SN(SN_IRRITATION);
+          obj->sn = SN_IRRITATION;
           obj->toac -= m_bonus(1, 10, level);
           obj->tohit -= m_bonus(1, 10, level);
           obj->todam -= m_bonus(1, 10, level);
           obj->cost = 0;
         } else if (tmp == 2) {
-          obj->name2 = SN(SN_VULNERABILITY);
+          obj->sn = SN_VULNERABILITY;
           obj->toac -= m_bonus(10, 100, level + 50);
           obj->cost = 0;
         } else {
-          obj->name2 = SN(SN_ENVELOPING);
+          obj->sn = SN_ENVELOPING;
           obj->toac -= m_bonus(1, 10, level);
           obj->tohit -= m_bonus(2, 40, level + 10);
           obj->todam -= m_bonus(2, 40, level + 10);
@@ -2186,47 +2186,47 @@ void magic_treasure(obj, level) struct objS* obj;
       //   switch (randint(level + 4)) {
       //     case 1:
       //       obj->flags = 0;
-      //       obj->name2 = SN(SN_EMPTY);
+      //       obj->sn = SN_EMPTY;
       //       break;
       //     case 2:
       //       obj->flags |= CH_LOCKED;
-      //       obj->name2 = SN(SN_LOCKED);
+      //       obj->sn = SN_LOCKED;
       //       break;
       //     case 3:
       //     case 4:
       //       obj->flags |= (CH_LOSE_STR | CH_LOCKED);
-      //       obj->name2 = SN(SN_POISON_NEEDLE);
+      //       obj->sn = SN_POISON_NEEDLE;
       //       break;
       //     case 5:
       //     case 6:
       //       obj->flags |= (CH_POISON | CH_LOCKED);
-      //       obj->name2 = SN(SN_POISON_NEEDLE);
+      //       obj->sn = SN_POISON_NEEDLE;
       //       break;
       //     case 7:
       //     case 8:
       //     case 9:
       //       obj->flags |= (CH_PARALYSED | CH_LOCKED);
-      //       obj->name2 = SN(SN_GAS_TRAP);
+      //       obj->sn = SN_GAS_TRAP;
       //       break;
       //     case 10:
       //     case 11:
       //       obj->flags |= (CH_EXPLODE | CH_LOCKED);
-      //       obj->name2 = SN(SN_EXPLOSION_DEVICE);
+      //       obj->sn = SN_EXPLOSION_DEVICE;
       //       break;
       //     case 12:
       //     case 13:
       //     case 14:
       //       obj->flags |= (CH_SUMMON | CH_LOCKED);
-      //       obj->name2 = SN(SN_SUMMONING_RUNES);
+      //       obj->sn = SN_SUMMONING_RUNES;
       //       break;
       //     case 15:
       //     case 16:
       //     case 17:
       //       obj->flags |= (CH_PARALYSED | CH_POISON | CH_LOSE_STR |
-      //       CH_LOCKED); obj->name2 = SN(SN_MULTIPLE_TRAPS); break;
+      //       CH_LOCKED); obj->sn = SN_MULTIPLE_TRAPS; break;
       //     default:
       //       obj->flags |= (CH_SUMMON | CH_EXPLODE | CH_LOCKED);
-      //       obj->name2 = SN(SN_MULTIPLE_TRAPS);
+      //       obj->sn = SN_MULTIPLE_TRAPS;
       //       break;
       //   }
       //   break;
@@ -2245,7 +2245,7 @@ void magic_treasure(obj, level) struct objS* obj;
               case 1:
               case 2:
               case 3:
-                obj->name2 = SN(SN_SLAYING);
+                obj->sn = SN_SLAYING;
                 obj->tohit += 5;
                 obj->todam += 5;
                 obj->cost += 20;
@@ -2255,7 +2255,7 @@ void magic_treasure(obj, level) struct objS* obj;
                 obj->flags |= TR_FLAME_TONGUE;
                 obj->tohit += 2;
                 obj->todam += 4;
-                obj->name2 = SN(SN_FIRE);
+                obj->sn = SN_FIRE;
                 obj->cost += 25;
                 break;
               case 6:
@@ -2263,7 +2263,7 @@ void magic_treasure(obj, level) struct objS* obj;
                 obj->flags |= TR_SLAY_EVIL;
                 obj->tohit += 3;
                 obj->todam += 3;
-                obj->name2 = SN(SN_SLAY_EVIL);
+                obj->sn = SN_SLAY_EVIL;
                 obj->cost += 25;
                 break;
               case 8:
@@ -2271,14 +2271,14 @@ void magic_treasure(obj, level) struct objS* obj;
                 obj->flags |= TR_SLAY_ANIMAL;
                 obj->tohit += 2;
                 obj->todam += 2;
-                obj->name2 = SN(SN_SLAY_ANIMAL);
+                obj->sn = SN_SLAY_ANIMAL;
                 obj->cost += 30;
                 break;
               case 10:
                 obj->flags |= TR_SLAY_DRAGON;
                 obj->tohit += 3;
                 obj->todam += 3;
-                obj->name2 = SN(SN_DRAGON_SLAYING);
+                obj->sn = SN_DRAGON_SLAYING;
                 obj->cost += 35;
                 break;
             }
@@ -4320,9 +4320,9 @@ void obj_detail(obj) struct objS* obj;
 {
   char tmp_str[80];
 
-  if (obj->name2 && obj_reveal(obj)) {
-    strcat(descD, " ");
-    strcat(descD, obj->name2);
+  if (obj->sn && obj_reveal(obj)) {
+    snprintf(tmp_str, AL(tmp_str), " %s", special_nameD[obj->sn]);
+    strcat(descD, tmp_str);
   }
   /* Crowns have a zero base AC, so make a special test for them. */
   if (obj->ac != 0 || (obj->tval == TV_HELM)) {
@@ -4854,10 +4854,10 @@ equip_curse()
     i_ptr = obj_get(invenD[l]);
     obj_desc(i_ptr, FALSE);
     MSG("Your %s glows black, fades.", descD);
-    i_ptr->name2 = 0;
     i_ptr->tohit = 0;
     i_ptr->todam = 0;
     i_ptr->toac = -randint(5) - randint(5);
+    i_ptr->sn = 0;
 
     py_bonuses(i_ptr, -1);
     i_ptr->flags = TR_CURSED;
@@ -6211,7 +6211,7 @@ td_destroy2(dir, y, x)
       //  msg_print("Click!");
       //  obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
       //  destroy2 = TRUE;
-      //  obj->name2 = SN_UNLOCKED;
+      //  obj->sn = SN_UNLOCKED;
       //  obj->idflag = ID_REVEAL;
       //}
     }
@@ -6347,7 +6347,7 @@ disarm_all(dir, y, x)
     //   msg_print("Click!");
     //   obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
     //   disarm = TRUE;
-    //   obj->name2 = SN_UNLOCKED;
+    //   obj->sn = SN_UNLOCKED;
     //   known2(obj);
     // }
 
@@ -6829,10 +6829,10 @@ weapon_curse()
   if (i_ptr->tval != TV_NOTHING) {
     obj_desc(i_ptr, FALSE);
     MSG("Your %s glows black, fades.", descD);
-    i_ptr->name2 = 0;
     i_ptr->tohit = -randint(5) - randint(5);
     i_ptr->todam = -randint(5) - randint(5);
     i_ptr->toac = 0;
+    i_ptr->sn = 0;
 
     /* Must call py_bonuses() before set (clear) flags, and
        must call calc_bonuses() after set (clear) flags, so that

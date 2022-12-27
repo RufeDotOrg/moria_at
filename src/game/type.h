@@ -144,7 +144,6 @@ struct treasureS {
 struct objS {
   int id;
   uint32_t flags;
-  char *name2;
   uint8_t fy;
   uint8_t fx;
   uint8_t tval;
@@ -162,6 +161,7 @@ struct objS {
   uint8_t damage[2];
   uint8_t level;
   uint8_t idflag;  // aka. ident
+  uint8_t sn;
 };
 
 struct creatureS {
