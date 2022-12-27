@@ -9719,8 +9719,8 @@ pawn_display()
 
   line = 0;
   BufMsg(screen, "         Gilbrook The Thrifty");
-  line += 1;
-  BufMsg(screen, "   Item");
+  // line += 1;
+  // BufMsg(screen, "   Item");
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     obj = obj_get(invenD[it]);
     flag = FALSE;
