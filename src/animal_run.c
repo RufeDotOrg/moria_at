@@ -7813,7 +7813,7 @@ static void py_drop(y, x) int y, x;
 
   if (in_subcommand("Drop which item?", &c)) {
     uint8_t iidx = c - 'a';
-    if (iidx < INVEN_EQUIP) {
+    if (iidx < INVEN_EQUIP && invenD[iidx]) {
       obj = obj_get(invenD[iidx]);
       obj->fy = y;
       obj->fx = x;
