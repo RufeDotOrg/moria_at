@@ -2586,7 +2586,6 @@ struct treasureS* item; /* Use treasure_type since item not yet created */
 }
 int
 slot_equip(tval)
-int tval;
 {
   int slot = -1;
   switch (tval) {
@@ -2631,6 +2630,15 @@ int tval;
       break;
   }
   return slot;
+}
+int
+ring_open()
+{
+  int slot = INVEN_RING;
+  for (int it = 0; it < 2; ++it, ++slot) {
+    if (invenD[slot] == 0) return slot;
+  }
+  return -1;
 }
 void
 store_init()
@@ -4949,7 +4957,7 @@ inven_random()
     return -1;
 }
 static int
-inven_slot()
+inven_open()
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     if (!invenD[it]) return it;
@@ -5219,7 +5227,7 @@ py_init()
   }
   int inven_test[] = {};  // scrolls: 174 222
   for (int it = 0; it < AL(inven_test); ++it) {
-    int iidx = inven_slot();
+    int iidx = inven_open();
     if (iidx == -1) break;
 
     struct objS* obj = obj_use();
@@ -5230,7 +5238,7 @@ py_init()
   }
   int magik_test[] = {};
   for (int it = 0; it < AL(magik_test); ++it) {
-    int iidx = inven_slot();
+    int iidx = inven_open();
     if (iidx == -1) break;
 
     struct objS* obj = obj_use();
@@ -7871,14 +7879,15 @@ inven_carry(obj_id)
   return -1;
 }
 void
-equip_takeoff(iidx)
+equip_takeoff(iidx, into_slot)
 {
   struct objS* obj;
   obj = obj_get(invenD[iidx]);
   if (obj->flags & TR_CURSED) {
     msg_print("Hmm, it seems to be cursed.");
-  } else if (inven_carry(obj->id) >= 0) {
+  } else if (into_slot >= 0) {
     invenD[iidx] = 0;
+    invenD[into_slot] = obj->id;
 
     py_bonuses(obj, -1);
     obj_desc(obj, TRUE);
@@ -7895,31 +7904,25 @@ inven_wear(iidx)
 
   obj = obj_get(invenD[iidx]);
   slot = slot_equip(obj->tval);
+
+  // Ring is not worn unless a slot is open
+  if (slot == INVEN_RING) slot = ring_open();
+
   if (slot >= 0) {
-    if (slot == INVEN_RING) {
-      slot_count = 2;
-    } else {
-      slot_count = 1;
-      if (invenD[slot]) equip_takeoff(slot);
-    }
+    if (invenD[slot]) equip_takeoff(slot, iidx);
+    if (invenD[slot] == 0) {
+      invenD[slot] = obj->id;
 
-    for (int it = 0; it < slot_count; ++it, ++slot) {
-      if (invenD[slot] == 0) {
-        invenD[slot] = obj->id;
-        invenD[iidx] = 0;
-
-        py_bonuses(obj, 1);
-        obj_desc(obj, TRUE);
-        MSG("You are wearing %s.", descD);
-        if (obj->flags & TR_CURSED) {
-          msg_print("Oops! It feels deathly cold!");
-          obj->cost = -1;
-          obj->idflag |= ID_DAMD;
-        }
-        break;
+      py_bonuses(obj, 1);
+      obj_desc(obj, TRUE);
+      MSG("You are wearing %s.", descD);
+      if (obj->flags & TR_CURSED) {
+        msg_print("Oops! It feels deathly cold!");
+        obj->cost = -1;
+        obj->idflag |= ID_DAMD;
       }
+      calc_bonuses();
     }
-    calc_bonuses();
   }
 }
 void
@@ -8112,6 +8115,7 @@ void
 py_takeoff()
 {
   char c;
+  int into;
 
   int carry_count = py_carry_count();
   int equip_count = py_inven(INVEN_EQUIP, MAX_INVEN);
@@ -8119,8 +8123,13 @@ py_takeoff()
     if (in_subcommand("Take off which item?", &c)) {
       uint8_t iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
-        if (invenD[iidx]) equip_takeoff(iidx);
-        calc_bonuses();
+        if (invenD[iidx]) {
+          into = inven_open();
+          if (into >= 0) {
+            equip_takeoff(iidx, into);
+            calc_bonuses();
+          }
+        }
       }
     }
   }
@@ -9772,7 +9781,7 @@ store_item_purchase(sidx, item)
         if ((iidx = inven_merge_slot(obj)) >= 0) {
           obj_get(invenD[iidx])->number += count;
           flag = TRUE;
-        } else if ((iidx = inven_slot()) >= 0) {
+        } else if ((iidx = inven_open()) >= 0) {
           flag = inven_copy_num(iidx, obj, count);
         } else {
           msg_print("You don't have room in your inventory!");
