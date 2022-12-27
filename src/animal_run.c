@@ -795,29 +795,35 @@ unlight_room(y, x)
   for (i = start_row; i <= end_row; i++)
     for (j = start_col; j <= end_col; j++) {
       c_ptr = &caveD[i][j];
-      if ((c_ptr->cflag & CF_ROOM)) {
+      if (c_ptr->cflag & CF_ROOM && c_ptr->fval < MAX_FLOOR) {
         c_ptr->cflag &= ~CF_PERM_LIGHT;
-        if (c_ptr->fval == FLOOR_LIGHT) c_ptr->fval = FLOOR_DARK;
-        if (c_ptr->oidx) {
-          struct objS* obj = &entity_objD[c_ptr->oidx];
-          if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
-            c_ptr->cflag &= ~CF_FIELDMARK;
-          }
-        }
+        c_ptr->fval = FLOOR_DARK;
       }
     }
 }
 int
 unlight_area(y, x)
 {
-  if (caveD[y][x].cflag & CF_ROOM) unlight_room(y, x);
+  int known;
+
+  known = FALSE;
+  if (caveD[y][x].cflag & CF_LIT_ROOM) {
+    unlight_room(y, x);
+    known = TRUE;
+  }
   for (int col = y - 1; col <= y + 1; ++col) {
     for (int row = x - 1; row <= x + 1; ++row) {
-      caveD[col][row].cflag &= ~CF_PERM_LIGHT;
+      if (caveD[col][row].fval == FLOOR_CORR &&
+          caveD[col][row].cflag & CF_PERM_LIGHT) {
+        caveD[col][row].cflag &= ~CF_PERM_LIGHT;
+        known = TRUE;
+      }
     }
   }
 
-  return countD.blind == 0;
+  if (known && countD.blind == 0) msg_print("Darkness surrounds you.");
+
+  return known;
 }
 typedef struct {
   int y;

@@ -32,6 +32,7 @@
 #define CF_TEMP_LIGHT 0x2
 #define CF_PERM_LIGHT 0x4
 #define CF_FIELDMARK 0x8  // Object bypasses normal visibility rules
+#define CF_LIT_ROOM (CF_ROOM | CF_PERM_LIGHT)
 
 #define CHUNK_HEIGHT 16
 #define CHUNK_WIDTH 32
