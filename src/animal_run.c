@@ -1291,7 +1291,7 @@ describe_use(iidx)
 static void inven_destroy_one(iidx) int iidx;
 {
   struct objS* obj = obj_get(invenD[iidx]);
-  if (obj->number > 1) {
+  if (obj->number > 1 && obj->subval & STACK_SINGLE) {
     obj->number -= 1;
   } else {
     obj_unuse(obj);
@@ -9705,8 +9705,7 @@ inven_pawn(iidx)
     obj_desc(obj, TRUE);
     uD.gold += cost;
     // TBD: copy obj to a store inventory?
-    obj_unuse(obj);
-    invenD[iidx] = 0;
+    inven_destroy_one(iidx);
     MSG("You sold %s for %d gold piece%s.", descD, cost, cost > 1 ? "s" : "");
     msg_pause();
   }
