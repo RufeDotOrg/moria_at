@@ -722,7 +722,7 @@ build_pawn()
   obj->fy = y;
   obj->fx = x;
   obj->tval = TV_PAWN_DOOR;
-  obj->tchar = '7';
+  obj->tchar = '$';
   obj->number = 1;
   caveD[y][x].oidx = obj_index(obj);
   caveD[y][x].fval = FLOOR_CORR;
