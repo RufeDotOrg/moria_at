@@ -3144,12 +3144,13 @@ cave_gen()
    */
   new_spot(&uD.y, &uD.x);
 
-  int alloc_level = CLAMP(dun_level / 3, 2, 10);
-  alloc_mon((randint(8) + MIN_MALLOC_LEVEL + alloc_level), 0, TRUE);
+  int alloc_level = CLAMP(dun_level / 2, 2, 15);
+  alloc_mon((randint(RND_MALLOC_LEVEL) + MIN_MALLOC_LEVEL + alloc_level), 0,
+            TRUE);
   // alloc_obj(set_corr, 3, randint(alloc_level));
-  alloc_obj(set_room, 5, randnor(TREAS_ROOM_MEAN, 3));
-  // alloc_obj(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
-  alloc_obj(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
+  alloc_obj(set_room, 5, randnor(TREAS_ROOM_MEAN, 5));
+  alloc_obj(set_floor, 5, randnor(TREAS_ANY_ALLOC, 5));
+  alloc_obj(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 5));
   alloc_obj(set_floor, 1, randint(alloc_level));
   // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
 }

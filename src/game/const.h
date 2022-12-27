@@ -46,9 +46,12 @@
 #define DUN_TUN_CON 15      /* Chance of extra tunneling	       */
 #define DUN_TUN_PEN 25      /* % chance of room doors		       */
 #define DUN_TUN_JCT 15      /* % chance of doors at tunnel junctions */
-#define DUN_ROOM_MEAN 64    // TBD: retune - originally 32
-#define TREAS_ROOM_MEAN 14  // TBD: retune
-#define TREAS_GOLD_ALLOC 4  // TBD: retune
+#define DUN_ROOM_MEAN 64    // Retuned; 8*8 = 64 of 64 chunks; previously 32 out of 36
+#define MIN_MALLOC_LEVEL 28 /* Retuned; previously 14 Minimum number of monsters/level */
+#define RND_MALLOC_LEVEL 16 /* Retuned; previously 8 Random additional monsters/level */
+#define TREAS_ROOM_MEAN 14  // Retuned; previously 7
+#define TREAS_ANY_ALLOC 4   // Retuned; previously 2
+#define TREAS_GOLD_ALLOC 4  // Retuned; previously 2
 #define TRUE 1
 #define FALSE 0
 
@@ -265,7 +268,6 @@
 #define OBJ_BOLT_RANGE	 18   /* Maximum range of bolts and balls      */
 
 /* Creature constants						*/
-#define MIN_MALLOC_LEVEL 14 /* Minimum number of monsters/level      */
 #define MAX_MON_LEVEL 40
 #define MON_NASTY 50     // 1/x monsters are a big baddie
 #define MON_DRAIN_LIFE 2 /* Percent of player exp drained per hit */
