@@ -9701,6 +9701,7 @@ inven_pawn(iidx)
     cost = obj_value(obj) * (200 - inflate) / 100;
     cost = MAX(cost, 1);
     tr_make_known(tr_ptr);
+    obj->idflag = ID_REVEAL;
     obj_desc(obj, TRUE);
     uD.gold += cost;
     // TBD: copy obj to a store inventory?
