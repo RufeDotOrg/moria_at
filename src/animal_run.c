@@ -9810,7 +9810,11 @@ inven_pawn(iidx)
     uD.gold += cost;
     // TBD: copy obj to a store inventory?
     inven_destroy_one(iidx);
-    MSG("You sold %s for %d gold piece%s.", descD, cost, cost > 1 ? "s" : "");
+    if (cost == 0) {
+      MSG("You donate %s.", descD);
+    } else {
+      MSG("You sold %s for %d gold piece%s.", descD, cost, cost > 1 ? "s" : "");
+    }
     msg_pause();
   }
 }
