@@ -147,8 +147,10 @@ symmap_update()
     uint8_t* lit = &litmapD[0][0];
     for (int row = rmin; row < rmax; ++row)
       for (int col = cmin; col < cmax; ++col) {
-        int cflag = caveD[row][col].cflag;
-        *lit = cflag;
+        if (caveD[row][col].fval < MAX_FLOOR) {
+          int cflag = caveD[row][col].cflag;
+          *lit = cflag;
+        }
         lit += 1;
       }
   } else {

@@ -674,7 +674,7 @@ platform_draw()
         if (litmapD[row][col] & CF_TEMP_LIGHT) {
           SDL_SetRenderDrawColor(rendererD, C(fogbgD));
           SDL_RenderFillRect(rendererD, &sprite_rect);
-        } else if ((litmapD[row][col] & litroom) == litroom) {
+        } else if (litmapD[row][col] & CF_PERM_LIGHT) {
           if (!los(uD.y, uD.x, panelD.panel_row_min + row,
                    panelD.panel_col_min + col)) {
             SDL_SetRenderDrawColor(rendererD, C(losbgD));
