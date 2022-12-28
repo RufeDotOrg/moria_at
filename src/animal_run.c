@@ -9823,7 +9823,7 @@ static void
 store_display(sidx)
 {
   int line;
-  int cost;
+  int cost, number;
   struct objS* obj;
 
   line = 0;
@@ -9834,7 +9834,12 @@ store_display(sidx)
     obj = &store_objD[sidx][it];
     cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
+      // TBD: ouch
+      number = obj->number;
+      obj->number = 1;
       obj_desc(obj, TRUE);
+      obj->number = number;
+
       BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, cost);
     } else {
       line += 1;
