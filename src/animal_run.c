@@ -3970,6 +3970,60 @@ con_adj()
     return (4);
 }
 int
+chr_adj()
+{
+  int charisma;
+
+  charisma = statD.use_stat[A_CHR];
+  if (charisma > 117)
+    return (90);
+  else if (charisma > 107)
+    return (92);
+  else if (charisma > 87)
+    return (94);
+  else if (charisma > 67)
+    return (96);
+  else if (charisma > 18)
+    return (98);
+  else
+    switch (charisma) {
+      case 18:
+        return (100);
+      case 17:
+        return (101);
+      case 16:
+        return (102);
+      case 15:
+        return (103);
+      case 14:
+        return (104);
+      case 13:
+        return (106);
+      case 12:
+        return (108);
+      case 11:
+        return (110);
+      case 10:
+        return (112);
+      case 9:
+        return (114);
+      case 8:
+        return (116);
+      case 7:
+        return (118);
+      case 6:
+        return (120);
+      case 5:
+        return (122);
+      case 4:
+        return (125);
+      case 3:
+        return (130);
+      default:
+        return (100);
+    }
+}
+int
 poison_adj()
 {
   int i;
@@ -7891,7 +7945,7 @@ equip_takeoff(iidx, into_slot)
 
     py_bonuses(obj, -1);
     obj_desc(obj, TRUE);
-    MSG("You take off %s.", descD);
+    MSG("You take off %s. %d", descD, obj->id);
   } else {
     msg_print("You don't have room in your inventory.");
   }
@@ -7915,7 +7969,7 @@ inven_wear(iidx)
 
       py_bonuses(obj, 1);
       obj_desc(obj, TRUE);
-      MSG("You are wearing %s.", descD);
+      MSG("You are wearing %s. %d", descD, obj->id);
       if (obj->flags & TR_CURSED) {
         msg_print("Oops! It feels deathly cold!");
         obj->cost = -1;
@@ -9699,6 +9753,7 @@ inven_pawn(iidx)
   if (sidx >= 0) {
     inflate = ownerD[storeD[sidx]].min_inflate;
     cost = obj_value(obj) * (200 - inflate) / 100;
+    cost = cost * (200 - chr_adj()) / 100;
     cost = MAX(cost, 1);
     tr_make_known(tr_ptr);
     obj->idflag = ID_REVEAL;
@@ -9734,6 +9789,7 @@ pawn_display()
       if (sidx >= 0) {
         inflate = ownerD[storeD[sidx]].min_inflate;
         cost = obj_value(obj) * (200 - inflate) / 100;
+        cost = cost * (200 - chr_adj()) / 100;
         cost = MAX(cost, 1);
         flag = TRUE;
       }
@@ -9760,6 +9816,7 @@ store_display(sidx)
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     obj = &store_objD[sidx][it];
     cost = obj_value(obj) * ownerD[storeD[sidx]].min_inflate / 100;
+    cost = cost * chr_adj() / 100;
     if (obj->tidx) {
       obj_desc(obj, TRUE);
       BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, cost);
@@ -9781,6 +9838,7 @@ store_item_purchase(sidx, item)
     if (obj->tidx) {
       count = obj->subval & STACK_BATCH ? obj->number : 1;
       cost = obj_value(obj);
+      cost = cost * chr_adj() / 100;
       if (uD.gold >= cost) {
         if ((iidx = inven_merge_slot(obj)) >= 0) {
           obj_get(invenD[iidx])->number += count;
