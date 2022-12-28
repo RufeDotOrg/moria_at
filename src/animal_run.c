@@ -9691,6 +9691,29 @@ struct objS* obj;
   if (obj->subval & STACK_BATCH) value = value * obj->number;
   return (value);
 }
+// Object Value * Chrisma Adjustment * Racial Adjustment * Inflation
+// factor 1 or -1
+static int
+store_value(sidx, obj_value, factor)
+{
+  int cadj, radj, iadj;
+  struct ownerS* owner;
+
+  owner = &ownerD[storeD[sidx]];
+
+  cadj = chr_adj();
+  radj = rgold_adjD[owner->owner_race][uD.ridx];
+  iadj = owner->min_inflate;
+
+  if (factor < 0) {
+    cadj = (200 - chr_adj());
+    radj = (200 - radj);
+    iadj = MAX(200 - iadj, 1);
+  }
+
+  // Use a 64-bit range when scaling; narrow to int on return
+  return MAX((int64_t)obj_value * cadj * radj * iadj / 1e6, 0LL);
+}
 static int
 obj_store_index(obj)
 struct objS* obj;
@@ -9745,16 +9768,13 @@ inven_pawn(iidx)
 {
   struct objS* obj;
   struct treasureS* tr_ptr;
-  int sidx, inflate, cost, number;
+  int sidx, cost, number;
 
   obj = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[obj->tidx];
   sidx = obj_store_index(obj);
   if (sidx >= 0) {
-    inflate = ownerD[storeD[sidx]].min_inflate;
-    cost = obj_value(obj) * (200 - inflate) / 100;
-    cost = cost * (200 - chr_adj()) / 100;
-    cost = MAX(cost, 1);
+    cost = store_value(sidx, obj_value(obj), -1);
     tr_make_known(tr_ptr);
     obj->idflag = ID_REVEAL;
     // TBD: ouch
@@ -9773,7 +9793,7 @@ static void
 pawn_display()
 {
   int line, flag;
-  int inflate, cost, sidx;
+  int cost, sidx;
   struct objS* obj;
 
   line = 0;
@@ -9787,10 +9807,7 @@ pawn_display()
       obj_desc(obj, TRUE);
       sidx = obj_store_index(obj);
       if (sidx >= 0) {
-        inflate = ownerD[storeD[sidx]].min_inflate;
-        cost = obj_value(obj) * (200 - inflate) / 100;
-        cost = cost * (200 - chr_adj()) / 100;
-        cost = MAX(cost, 1);
+        cost = store_value(sidx, obj_value(obj), -1);
         flag = TRUE;
       }
     }
@@ -9815,8 +9832,7 @@ store_display(sidx)
   BufMsg(screen, "   Item");
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     obj = &store_objD[sidx][it];
-    cost = obj_value(obj) * ownerD[storeD[sidx]].min_inflate / 100;
-    cost = cost * chr_adj() / 100;
+    cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
       obj_desc(obj, TRUE);
       BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, cost);
@@ -9837,8 +9853,7 @@ store_item_purchase(sidx, item)
     obj = &store_objD[sidx][item];
     if (obj->tidx) {
       count = obj->subval & STACK_BATCH ? obj->number : 1;
-      cost = obj_value(obj);
-      cost = cost * chr_adj() / 100;
+      cost = store_value(sidx, obj_value(obj), 1);
       if (uD.gold >= cost) {
         if ((iidx = inven_merge_slot(obj)) >= 0) {
           obj_get(invenD[iidx])->number += count;

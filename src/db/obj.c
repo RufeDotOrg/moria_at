@@ -1,4 +1,4 @@
-/* Following are treasure arrays  and variables			*/
+/* Following are treasure arrays  and variables   */
 
 /* Object description:  Objects are defined here.  Each object has
   the following attributes:
@@ -49,7 +49,7 @@
         Chests:
         Traps are added randomly by magic_init() in misc.c.  */
 
-/* Object list (All objects must be defined here)  	 */
+/* Object list (All objects must be defined here)    */
 
 struct treasureS treasureD[] = {
     {0},
@@ -5464,4 +5464,17 @@ struct ownerS ownerD[] = {
     {"Wizzle the Chaotic     (Halfling)   Alchemist", 10000, 190, 110, 6, 3, 8},
     {"Inglorian the Mage     (Human?)     Magic Shop", 32000, 200, 110, 7, 0,
      10},
+};
+/* Buying and selling adjustments for character race VS store  */
+uint8_t rgold_adjD[AL(raceD)][AL(raceD)] = {
+    /*                Hum, HfE, Elf, Hal, Gno, Dwa, HfO, HfT*/
+    /* Human      */ {100, 105, 105, 110, 113, 115, 120, 125},
+    /* Half-Elf   */ {110, 100, 100, 105, 110, 120, 125, 130},
+    /* Elf        */ {110, 105, 100, 105, 110, 120, 125, 130},
+    /* Halfling   */ {115, 110, 105,  95, 105, 110, 115, 130},
+    /* Gnome      */ {115, 115, 110, 105,  95, 110, 115, 130},
+    /* Dwarf      */ {115, 120, 120, 110, 110,  95, 125, 135},
+    /* Half-Orc   */ {115, 120, 125, 115, 115, 130, 110, 115},
+    /* Half-Troll */ {110, 115, 115, 110, 110, 130, 110, 110},
+    /* owner race */
 };
