@@ -3215,6 +3215,7 @@ town_gen()
   } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
            (c_ptr->midx != 0));
   place_stair_tval_tchar(i, j, TV_DOWN_STAIR, '>');
+  caveD[i][j].cflag |= CF_FIELDMARK;
   rnd_seed = seed;
 
   do {
