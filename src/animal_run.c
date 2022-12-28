@@ -171,7 +171,7 @@ void
 affect_update()
 {
   int active[AL(affectD)];
-  int idx, count;
+  int idx, count, pad, len, sum;
 
   idx = 0;
   active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
@@ -186,8 +186,8 @@ affect_update()
   active[idx++] = (uD.mflag & (1 << MA_SLOW)) != 0;
   active[idx++] = (uD.mflag & (1 << MA_FAST)) != 0;
 
-  int len = 0;
-  int sum = 0;
+  len = 0;
+  sum = 0;
   for (int it = 0; it < idx; ++it) {
     if (active[it]) {
       count = snprintf(&affectinfoD[len], AL(affectinfoD) - len, "%s ",
@@ -6858,6 +6858,32 @@ starlite(y, x)
   for (int it = 1; it <= 9; it++)
     if (it != 5) light_line(it, y, x);
 }
+static void*
+ptr_xor(void* a, void* b)
+{
+  return (void*)((uint64_t)a ^ (uint64_t)b);
+}
+static int
+inven_sort()
+{
+  int i, j;
+  struct objS* obj[INVEN_EQUIP];
+  void* swap;
+
+  for (i = 0; i < INVEN_EQUIP; ++i) obj[i] = obj_get(invenD[i]);
+
+  for (i = 0; i < INVEN_EQUIP; ++i) {
+    for (j = i + 1; j < INVEN_EQUIP; ++j) {
+      if (obj[j]->tval > obj[i]->tval) {
+        swap = ptr_xor(obj[j], obj[i]);
+        obj[j] = ptr_xor(obj[j], swap);
+        obj[i] = ptr_xor(obj[i], swap);
+      }
+    }
+  }
+  for (i = 0; i < INVEN_EQUIP; ++i) invenD[i] = obj[i]->id;
+  return 1;
+}
 static int
 py_inven(begin, end)
 int begin, end;
@@ -6907,14 +6933,14 @@ weapon_curse()
   return FALSE;
 }
 static int
-choice(char* prompt)
+inven_choice(char* prompt)
 {
   char c;
   int count = py_inven(0, INVEN_EQUIP);
   if (count) {
     if (in_subcommand(prompt, &c)) {
       uint8_t iidx = c - 'a';
-      if (iidx < MAX_INVEN) return iidx;
+      if (iidx < INVEN_EQUIP) return iidx;
     }
   } else
     msg_print("You are not carrying anything!");
@@ -7368,7 +7394,7 @@ int *uy, *ux;
         case 4:
           msg_print("This is an identify scroll.");
           ident = TRUE;
-          l = choice("Which item do you wish identified?");
+          l = inven_choice("Which item do you wish identified?");
           if (l >= 0) inven_ident(l);
           used_up = TRUE;
           break;
@@ -7460,7 +7486,7 @@ int *uy, *ux;
         case 25:
           msg_print("This is a Recharge-Item scroll.");
           ident = TRUE;
-          iidx = choice("Recharge which item?");
+          iidx = inven_choice("Recharge which item?");
           if (iidx >= 0) {
             used_up = TRUE;
             inven_recharge(iidx, 60);
@@ -8215,6 +8241,7 @@ py_help()
   BufMsg(screen, "C: character screen");
   BufMsg(screen, "D: disarm trap");
   BufMsg(screen, "E: eat object");
+  BufMsg(screen, "I: inventory sort");
   BufMsg(screen, "M: map dungeon");
   BufMsg(screen, "R: rest until healed");
   BufMsg(screen, "T: take off equipment");
@@ -10155,11 +10182,11 @@ dungeon()
               MSG("You carrying %d items.", count);
             } break;
             case 'q':
-              iidx = choice("Quaff what?");
+              iidx = inven_choice("Quaff what?");
               if (iidx >= 0) inven_quaff(iidx);
               break;
             case 'r':
-              iidx = choice("Read what?");
+              iidx = inven_choice("Read what?");
               if (iidx >= 0) inven_read(iidx, &y, &x);
               break;
             case 'o':
@@ -10179,11 +10206,11 @@ dungeon()
               py_look_obj();
               break;
             case 'z':
-              iidx = choice("Aim which wand?");
+              iidx = inven_choice("Aim which wand?");
               if (iidx >= 0) py_zap(iidx);
               break;
             case 'Z':
-              iidx = choice("Invoke which staff?");
+              iidx = inven_choice("Invoke which staff?");
               if (iidx >= 0) inven_try_staff(iidx, &y, &x);
               break;
             case '<':
@@ -10203,8 +10230,14 @@ dungeon()
               py_disarm(&y, &x);
               break;
             case 'E':
-              iidx = choice("Eat what?");
+              iidx = inven_choice("Eat what?");
               if (iidx >= 0) inven_eat(iidx);
+              break;
+            case 'I':
+              inven_sort();
+              free_turn_flag = TRUE;
+              int count = py_inven(0, INVEN_EQUIP);
+              MSG("You carrying %d items.", count);
               break;
             case 'M':
               py_map();
