@@ -155,8 +155,8 @@ symmap_update()
     litmapD[uD.y][uD.x] = CF_TEMP_LIGHT;
   }
 }
-static char* affectD[][16] = {
-    {"Hungry", "Weak", "Fainting"},
+static char* affectD[][8] = {
+    {"Hungry", "Weak", "Faint"},
     {"Poison"},
     {"Blind"},
     {"Confused"},
@@ -194,10 +194,8 @@ affect_update()
                        affectD[it][active[it] - 1]);
       if (count > 0) len += count;
     }
-    while (len < it * AL(affectD[0])) {
-      if (len >= AL(affectinfoD)) break;
-      affectinfoD[len++] = ' ';
-    }
+    pad = MIN((1 + it) * AL(affectD[0]), AL(affectinfoD) - 1);
+    while (len < pad) affectinfoD[len++] = ' ';
   }
 
   static char d0[] = "Town Level";
