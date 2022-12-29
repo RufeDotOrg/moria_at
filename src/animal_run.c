@@ -6081,7 +6081,7 @@ hp_monster(dir, y, x, dam)
       if (mon_take_hit(c_ptr->midx, dam)) {
         MSG("%s dies in a fit of agony.", descD);
         py_experience();
-      } else {
+      } else if (dam > 0) {
         MSG("%s screams in agony.", descD);
       }
     }
