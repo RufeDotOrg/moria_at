@@ -15,6 +15,7 @@ struct uS {
   int ptodam;
   int pac;
   int ptoac;
+  int hide_toac;
   int pspeed;
   // Treasure flags from equipment
   int tflag;

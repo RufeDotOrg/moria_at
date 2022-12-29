@@ -64,7 +64,7 @@ status_update()
   BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
   BufMsg(vitalinfo, "CHP : %6d", uD.chp);
   line += 1;
-  BufMsg(vitalinfo, "AC  : %6d", uD.pac);
+  BufMsg(vitalinfo, "AC  : %6d", uD.pac - uD.hide_toac);
   BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
   line += 1;
   if (HACK) {
@@ -4642,12 +4642,14 @@ calc_bonuses()
 {
   int tflag;
   int ac, toac;
+  int hide_toac;
   struct objS* obj;
 
   uD.ptohit = weight_tohit_adj() + tohit_adj(); /* Real To Hit   */
   uD.ptodam = todam_adj();                      /* Real To Dam   */
   toac = toac_adj();                            /* Real To AC    */
   ac = 0;                                       /* Real AC       */
+  hide_toac = 0;
   tflag = 0;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
@@ -4656,6 +4658,9 @@ calc_bonuses()
       uD.ptodam += obj->todam;
     toac += obj->toac;
     ac += obj->ac;
+    if ((obj->idflag & ID_REVEAL) == 0) {
+      hide_toac += obj->toac;
+    }
     tflag |= obj->flags;
   }
 
@@ -4666,6 +4671,7 @@ calc_bonuses()
   // Summarize ac
   uD.ptoac = toac;
   uD.pac = ac + toac;
+  uD.hide_toac = hide_toac;
 
   tflag &= ~TR_STATS;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
@@ -8160,8 +8166,8 @@ py_character()
   line = MAX_A + 1;
   BufMsg(screen, "%-13.013s: %6d", "+ To Hit", uD.ptohit);
   BufMsg(screen, "%-13.013s: %6d", "+ To Damage", uD.ptodam);
-  BufMsg(screen, "%-13.013s: %6d", "+ To Armor", uD.ptoac);
-  BufMsg(screen, "%-13.013s: %6d", "Total Armor", uD.pac);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Armor", uD.ptoac - uD.hide_toac);
+  BufMsg(screen, "%-13.013s: %6d", "Total Armor", uD.pac - uD.hide_toac);
 
   BufPad(screen, MAX_A * 2, 28);
 
