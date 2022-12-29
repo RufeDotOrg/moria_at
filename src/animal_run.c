@@ -2585,7 +2585,7 @@ struct treasureS* item; /* Use treasure_type since item not yet created */
   return FALSE;
 }
 int
-slot_equip(tval)
+may_equip(tval)
 {
   int slot = -1;
   switch (tval) {
@@ -2632,7 +2632,7 @@ slot_equip(tval)
   return slot;
 }
 int
-ring_open()
+ring_slot()
 {
   int slot = INVEN_RING;
   for (int it = 0; it < 2; ++it, ++slot) {
@@ -2733,7 +2733,7 @@ store_maint()
       if (store_ctr < MIN_STORE_INVEN) j = MIN_STORE_INVEN - store_ctr;
       j += randint(STORE_TURN_AROUND);
 
-      if (HACK) {
+      if (0) {
         do {
           k = randint(MAX_DUNGEON_OBJ - 1);
           if (treasureD[k].cost > 0) {
@@ -5005,7 +5005,7 @@ inven_random()
     return -1;
 }
 static int
-inven_open()
+inven_slot()
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     if (!invenD[it]) return it;
@@ -5276,7 +5276,7 @@ py_init()
   }
   int inven_test[] = {};  // scrolls: 174 222
   for (int it = 0; it < AL(inven_test); ++it) {
-    int iidx = inven_open();
+    int iidx = inven_slot();
     if (iidx == -1) break;
 
     struct objS* obj = obj_use();
@@ -5287,7 +5287,7 @@ py_init()
   }
   int magik_test[] = {};
   for (int it = 0; it < AL(magik_test); ++it) {
-    int iidx = inven_open();
+    int iidx = inven_slot();
     if (iidx == -1) break;
 
     struct objS* obj = obj_use();
@@ -5303,6 +5303,10 @@ py_init()
   uD.food = 7500;
   uD.food_digest = 2;
   uD.gold = 100;
+
+  if (HACK) {
+    uD.gold = 100000;
+  }
 }
 void
 magic_init()
@@ -7974,19 +7978,23 @@ equip_takeoff(iidx, into_slot)
 void
 inven_wear(iidx)
 {
-  int slot, slot_count;
+  int eqidx, eqidx_count;
   struct objS* obj;
 
   obj = obj_get(invenD[iidx]);
-  slot = slot_equip(obj->tval);
+  eqidx = may_equip(obj->tval);
 
-  // Ring is not worn unless a slot is open
-  if (slot == INVEN_RING) slot = ring_open();
+  // Ring is not worn unless a eqidx is open
+  if (eqidx == INVEN_RING) eqidx = ring_slot();
 
-  if (slot >= 0) {
-    if (invenD[slot]) equip_takeoff(slot, iidx);
-    if (invenD[slot] == 0) {
-      invenD[slot] = obj->id;
+  if (eqidx >= INVEN_EQUIP) {
+    if (invenD[eqidx])
+      equip_takeoff(eqidx, iidx);
+    else
+      invenD[iidx] = 0;
+
+    if (invenD[eqidx] == 0) {
+      invenD[eqidx] = obj->id;
 
       py_bonuses(obj, 1);
       obj_desc(obj, TRUE);
@@ -8199,7 +8207,7 @@ py_takeoff()
       uint8_t iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
         if (invenD[iidx]) {
-          into = inven_open();
+          into = inven_slot();
           if (into >= 0) {
             equip_takeoff(iidx, into);
             calc_bonuses();
@@ -10011,7 +10019,7 @@ store_item_purchase(sidx, item)
         if ((iidx = inven_merge_slot(obj)) >= 0) {
           obj_get(invenD[iidx])->number += count;
           flag = TRUE;
-        } else if ((iidx = inven_open()) >= 0) {
+        } else if ((iidx = inven_slot()) >= 0) {
           flag = inven_copy_num(iidx, obj, count);
         } else {
           msg_print("You don't have room in your inventory!");
