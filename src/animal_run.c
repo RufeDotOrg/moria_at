@@ -10253,6 +10253,7 @@ dungeon()
         if (c == '.') {
           struct caveS* c_ptr = &caveD[y][x];
           uint8_t tval = entity_objD[c_ptr->oidx].tval;
+          uint8_t tchar = entity_objD[c_ptr->oidx].tchar;
           switch (tval) {
             case TV_UP_STAIR:
               c = '<';
@@ -10262,6 +10263,14 @@ dungeon()
               break;
             case 1 ... TV_MAX_PICK_UP:
               c = ',';
+              break;
+            case TV_STORE_DOOR:
+              c = ' ';
+              store_entrance(tchar - '1');
+              break;
+            case TV_PAWN_DOOR:
+              c = ' ';
+              pawn_entrance();
               break;
             default:
               c = 's';
