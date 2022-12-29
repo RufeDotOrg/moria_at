@@ -10159,8 +10159,10 @@ tick()
     regen_amount = PLAYER_REGEN_WEAK;
   else
     regen_amount = PLAYER_REGEN_NORMAL;
-  if (uD.food < PLAYER_FOOD_FAINT && randint(8) == 1)
+  if (uD.food < PLAYER_FOOD_FAINT && randint(8) == 1) {
+    if (countD.paralysis == 0) MSG("You faint from lack of food.");
     countD.paralysis += randint(5);
+  }
 
   uD.food -= uD.food_digest;
   if (uD.food < 0) {
@@ -10174,9 +10176,9 @@ tick()
     regen_amount = regen_amount * 2;
   // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
 
-  if (countD.poison == 0)
+  if (countD.poison == 0) {
     regenhp(regen_amount);
-  else if (countD.poison > 0) {
+  } else if (countD.poison > 0) {
     if (countD.poison == 1) {
       msg_print("You feel better.");
     } else {
