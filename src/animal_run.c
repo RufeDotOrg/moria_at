@@ -9560,21 +9560,21 @@ creatures()
             }
           }
         }
-      }
-      if (mon->mstunned != 0) {
-        /* NOTE: Balrog = 100*100 = 10000, it always
-           recovers instantly */
-        if (randint(5000) < cr_ptr->level * cr_ptr->level)
-          mon->mstunned = 0;
-        else
-          mon->mstunned--;
-        if (mon->mstunned == 0) {
-          if (mon->mlit) {
-            MSG("The %s recovers and glares at you.", cr_ptr->name);
+        if (mon->mstunned != 0) {
+          /* NOTE: Balrog = 100*100 = 10000, it always
+             recovers instantly */
+          if (randint(5000) < cr_ptr->level * cr_ptr->level)
+            mon->mstunned = 0;
+          else
+            mon->mstunned--;
+          if (mon->mstunned == 0) {
+            if (mon->mlit) {
+              MSG("The %s recovers and glares at you.", cr_ptr->name);
+            }
           }
         }
+        if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index, cdis);
       }
-      if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index, cdis);
     }
 
     update_mon(it_index);
