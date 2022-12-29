@@ -158,17 +158,17 @@ symmap_update()
   }
 }
 static char* affectD[][8] = {
-    {"Hungry", "Weak", "Faint"},
-    {"Poison"},
+    {"Slow"},
+    {"Fast"},
     {"Blind"},
     {"Confused"},
     {"Afraid"},
-    // {"Paralysis"},
-    // {"Rest"},
-    // "Searching",
-    {"Slow"},
-    {"Fast"},
+    {"Poison"},
+    {"Hungry", "Weak", "Faint"},
 };
+// {"Paralysis"},
+// {"Rest"},
+// "Searching",
 void
 affect_update()
 {
@@ -176,17 +176,17 @@ affect_update()
   int idx, count, pad, len, sum;
 
   idx = 0;
-  active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
-  active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
-  active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
-  active[idx++] = (countD.poison != 0);
+  active[idx++] = (uD.mflag & (1 << MA_SLOW)) != 0;
+  active[idx++] = (uD.mflag & (1 << MA_FAST)) != 0;
   active[idx++] = (countD.blind != 0);
   active[idx++] = (countD.confusion != 0);
   active[idx++] = (countD.fear != 0);
+  active[idx++] = (countD.poison != 0);
+  active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
+  active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
+  active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
   // Currently paralysis/rest skips rendering
   // active[idx++] = (countD.rest != 0);
-  active[idx++] = (uD.mflag & (1 << MA_SLOW)) != 0;
-  active[idx++] = (uD.mflag & (1 << MA_FAST)) != 0;
 
   len = 0;
   sum = 0;
