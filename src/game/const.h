@@ -184,7 +184,6 @@
 #define TV_PAWN_DOOR 112
 #define TV_MAX_VISIBLE 112
 
-#define MAX_TRAP 3
 #define MAX_OBJ_LEVEL 50
 #define MAX_DUNGEON_OBJ 345
 #define OBJ_GREAT 12  // 1/x treasure is a big surprise!
@@ -202,6 +201,9 @@
 
 #define OBJ_RUNE_TIDX 351 /* Rune of protection treasure index */
 #define OBJ_MUSH_TIDX 352 /* Create food treasure index */
+#define OBJ_TRAP_BEGIN 353
+#define OBJ_TRAP_END 371
+#define MAX_TRAP (OBJ_TRAP_END-OBJ_TRAP_BEGIN)
 
 /* spell types used by get_flags(), breathe(), fire_bolt() and fire_ball() */
 #define GF_MAGIC_MISSILE 0

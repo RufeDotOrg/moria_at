@@ -3044,22 +3044,16 @@ void place_object(y, x, must_be_small) int y, x, must_be_small;
   if (uD.y == y && uD.x == x)
     msg_print("You feel something roll beneath your feet.");
 }
-void place_trap(y, x, subval) int y, x, subval;
+void
+place_trap(y, x, offset)
 {
-  struct objS* obj = obj_use();
+  struct objS* obj;
 
+  obj = obj_use();
   caveD[y][x].oidx = obj_index(obj);
-  // invcopy(&t_list[cur_pos], OBJ_TRAP_LIST + subval);
+  tr_obj_copy(OBJ_TRAP_BEGIN + offset, obj);
   obj->fy = y;
   obj->fx = x;
-  obj->tval = TV_INVIS_TRAP;
-  obj->tchar = '9';
-  obj->subval = subval;
-  obj->number = 1;
-  obj->p1 = 2;
-  obj->damage[0] = 1;
-  obj->damage[1] = 8;
-  obj->level = 50;
 }
 void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
 int typ, num;
@@ -3076,7 +3070,7 @@ int typ, num;
            (y == uD.y && x == uD.x));
     switch (typ) {
       case 1:
-        place_trap(y, x, randint(MAX_TRAP));
+        place_trap(y, x, randint(MAX_TRAP) - 1);
         break;
       case 2:  // unused
       case 3:
@@ -4580,8 +4574,7 @@ BOOL prefix;
       descD[0] = 0;
       return;
     case TV_VIS_TRAP:
-      strcpy(descD, trap_nameD[indexx - 1]);
-      return;
+      break;
     // case TV_STORE_DOOR:
     //   sprintf(descD, "the entrance to the %s.",
     //   object_list[obj->index].name); return;
@@ -5148,7 +5141,8 @@ void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
     }
   }
 }
-static void py_take_hit(damage) int damage;
+static void
+py_take_hit(damage)
 {
   uD.chp -= damage;
   if (uD.chp < 0) {
@@ -6588,7 +6582,7 @@ trap_creation(y, x)
         c_ptr = &caveD[i][j];
         if (c_ptr->fval <= MAX_FLOOR) {
           if (c_ptr->oidx) delete_object(i, j);
-          place_trap(i, j, randint(MAX_TRAP));
+          place_trap(i, j, randint(MAX_TRAP) - 1);
           trap = TRUE;
         }
       }
@@ -9590,40 +9584,162 @@ int *uy, *ux;
 }
 static void hit_trap(y, x) int y, x;
 {
-  int dam, tac;
+  int num, dam, total_ac;
   struct caveS* c_ptr;
   struct objS* obj;
 
-  tac = uD.pac + uD.ptoac;
   c_ptr = &caveD[y][x];
+
+  find_flag = FALSE;
   obj = &entity_objD[c_ptr->oidx];
   if (obj->tval == TV_INVIS_TRAP) {
     obj->tval = TV_VIS_TRAP;
     obj->tchar = '^';
   }
+
+  total_ac = uD.pac + uD.ptoac;
   dam = pdamroll(obj->damage);
-  // TBD: dam may be conditional by trap subval
-  py_take_hit(dam);
+
+  obj_desc(obj, TRUE);
   switch (obj->subval) {
-    case 1:
-      msg_print("You fell into a pit.");
-      obj->tchar = ' ';
-      break;
-    case 2:
-      if (test_hit(125, 0, 0, tac)) {
-        msg_print("An arrow hits you.");
-      } else {
-        msg_print("An arrow barely misses you.");
+    case 1: /* Open pit*/
+      msg_print("You fell into a pit!");
+      if (uD.mflag & TR_FFALL)
+        msg_print("You gently float down.");
+      else {
+        py_take_hit(dam);
       }
       break;
-    case 3:
+    case 2: /* Arrow trap*/
+      if (test_hit(125, 0, 0, total_ac)) {
+        py_take_hit(dam);
+        msg_print("An arrow hits you.");
+      } else
+        msg_print("An arrow barely misses you.");
+      break;
+    case 3: /* Covered pit*/
+      msg_print("You fell into a covered pit.");
+      if (uD.mflag & TR_FFALL)
+        msg_print("You gently float down.");
+      else {
+        py_take_hit(dam);
+      }
+      place_trap(y, x, 0);
+      break;
+    case 4: /* Trap door*/
       msg_print("You fell through a trap door!");
       new_level_flag = TRUE;
-      dun_level += 1;
+      dun_level++;
+      if (uD.mflag & TR_FFALL)
+        msg_print("You gently float down.");
+      else {
+        py_take_hit(dam);
+      }
+      /* Force the messages to display before starting to generate the
+         next level.  */
+      msg_pause();
+      break;
+    case 5: /* Sleep gas*/
+      if (countD.paralysis == 0) {
+        msg_print("A strange white mist surrounds you!");
+        if (uD.mflag & TR_FREE_ACT)
+          msg_print("You are unaffected.");
+        else {
+          msg_print("You fall asleep.");
+          countD.paralysis += randint(10) + 4;
+        }
+      }
+      break;
+    case 6: /* Hid Obj*/
+      delete_object(y, x);
+      place_object(y, x, FALSE);
+      msg_print("Hmmm, there was something under this rock.");
+      break;
+    case 7: /* STR Dart*/
+      if (test_hit(125, 0, 0, total_ac)) {
+        if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_STR)
+          msg_print("A small dart hits you.");
+        else {
+          dec_stat(A_STR);
+          py_take_hit(dam);
+          msg_print("A small dart weakens you!");
+        }
+      } else
+        msg_print("A small dart barely misses you.");
+      break;
+    case 8: /* Teleport*/
+      teleport_trap = TRUE;
+      msg_print("You hit a teleport trap!");
+      break;
+    case 9: /* Rockfall*/
+      strcpy(death_descD, "a falling rock");
+      py_take_hit(dam);
+      delete_object(y, x);
+      // TBD: rubble
+      // place_rubble(y, x);
+      msg_print("You are hit by falling rock.");
+      break;
+    case 10: /* Corrode gas*/
+      /* Makes more sense to print the message first, then damage an
+         object.  */
+      msg_print("A strange red gas surrounds you.");
+      corrode_gas();
+      break;
+    case 11:               /* Summon mon*/
+      delete_object(y, x); /* Rune disappears.    */
+      num = 2 + randint(3);
+      for (int it = 0; it < num; it++) {
+        summon_monster(y, x);
+      }
+      break;
+    case 12: /* Fire trap*/
+      msg_print("You are enveloped in flames!");
+      fire_dam(dam);
+      break;
+    case 13: /* Acid trap*/
+      msg_print("You are splashed with acid!");
+      acid_dam(dam);
+      break;
+    case 14: /* Poison gas*/
+      msg_print("A pungent green gas surrounds you!");
+      poison_gas(dam);
+      break;
+    case 15: /* Blind Gas */
+      msg_print("A black gas surrounds you!");
+      countD.blind += randint(50) + 50;
+      break;
+    case 16: /* Confuse Gas*/
+      msg_print("A gas of scintillating colors surrounds you!");
+      countD.confusion += randint(15) + 15;
+      break;
+    case 17: /* Slow Dart*/
+      if (test_hit(125, 0, 0, total_ac)) {
+        py_take_hit(dam);
+        msg_print("A small dart hits you!");
+        if (uD.mflag & TR_FREE_ACT)
+          msg_print("You are unaffected.");
+        else
+          maD[MA_SLOW] += randint(20) + 10;
+      } else
+        msg_print("A small dart barely misses you.");
+      break;
+    case 18: /* CON Dart*/
+      if (test_hit(125, 0, 0, total_ac)) {
+        if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_CON)
+          msg_print("A small dart hits you.");
+        else {
+          dec_stat(A_CON);
+          py_take_hit(dam);
+          msg_print("A small dart saps your health!");
+        }
+      } else
+        msg_print("A small dart barely misses you.");
+      break;
+
+    default:
+      msg_print("Unknown trap value.");
       break;
   }
-
-  find_flag = FALSE;
 }
 static int
 obj_value(obj)
@@ -10109,7 +10225,8 @@ dungeon()
 
       y = uD.y;
       x = uD.x;
-      if (uD.tflag & TR_TELEPORT && randint(100) == 1) {
+      if (teleport_trap || uD.tflag & TR_TELEPORT && randint(100) == 1) {
+        teleport_trap = 0;
         disturb(0, 0);
         py_teleport(40, &y, &x);
       } else if (find_flag) {
