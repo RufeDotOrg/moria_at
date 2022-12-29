@@ -10000,6 +10000,7 @@ store_display(sidx)
       line += 1;
     }
   }
+  BufMsg(screen, "                 Your Gold Remaining : %d", uD.gold);
 }
 static void
 store_item_purchase(sidx, item)
