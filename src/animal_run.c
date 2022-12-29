@@ -9954,9 +9954,7 @@ pawn_display()
   struct objS* obj;
 
   line = 0;
-  BufMsg(screen, "         Gilbrook The Thrifty");
-  // line += 1;
-  // BufMsg(screen, "   Item");
+  BufMsg(screen, "   Item");
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     obj = obj_get(invenD[it]);
     flag = FALSE;
@@ -10049,7 +10047,10 @@ pawn_entrance()
 
   while (1) {
     pawn_display();
-    if (!in_subcommand("What would you like to sell?", &c)) break;
+    if (!in_subcommand("What would you like to sell to Gilbrook The Thrifty?",
+                       &c)) {
+      break;
+    }
     uint8_t item = c - 'a';
 
     if (item < INVEN_EQUIP) inven_pawn(item);
