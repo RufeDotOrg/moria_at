@@ -4996,7 +4996,7 @@ inven_random()
 
   k = 0;
   for (int it = 0; it < INVEN_EQUIP; ++it) {
-    if (invenD[it]) tmp[k++] = invenD[it];
+    if (invenD[it]) tmp[k++] = it;
   }
 
   if (k)
@@ -8689,7 +8689,7 @@ static void mon_attack(midx) int midx;
           }
           break;
         case 13: /*Steal Object   */
-          if (countD.paralysis < 1 && randint(124) < statD.use_stat[A_DEX])
+          if (!countD.paralysis && randint(124) < statD.use_stat[A_DEX])
             msg_print("You grab hold of your backpack!");
           else {
             int i = inven_random();
