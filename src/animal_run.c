@@ -2854,6 +2854,7 @@ place_monster(y, x, z, slp)
 {
   struct monS* mon;
   struct creatureS* cre;
+  int midx;
 
   cre = &creatureD[z];
   mon = mon_use();
@@ -2872,10 +2873,12 @@ place_monster(y, x, z, slp)
     mon->fx = x;
     mon->mlit = FALSE;
 
-    caveD[y][x].midx = mon_index(mon);
+    midx = mon_index(mon);
+    caveD[y][x].midx = midx;
+    return midx;
   }
 
-  return mon->id;
+  return FALSE;
 }
 static int
 mon_multiply(mon)
@@ -3595,8 +3598,6 @@ void find_event(y, x) int y, x;
         }
       }
       /* Also Creatures  	*/
-      /* the monster should be visible since update_mon() checks
-         for the special case of being in find mode */
       if (c_ptr->midx != 0 && entity_monD[c_ptr->midx].mlit) {
         find_flag = FALSE;
         return;
@@ -9296,7 +9297,7 @@ static int
 mon_try_spell(midx, cdis)
 {
   uint32_t i;
-  int k, y, x, chance, thrown_spell, r1;
+  int k, chance, thrown_spell, r1;
   int spell_choice[32];
   int took_turn;
   struct monS* m_ptr;
