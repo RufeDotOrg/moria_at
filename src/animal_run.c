@@ -10047,6 +10047,7 @@ pawn_entrance()
   char c;
 
   while (1) {
+    inven_sort();
     pawn_display();
     if (!in_subcommand("What would you like to sell to Gilbrook The Thrifty?",
                        &c)) {
@@ -10063,6 +10064,7 @@ store_entrance(sidx)
   char c;
 
   while (1) {
+    inven_sort();
     store_display(sidx);
     if (!in_subcommand("What would you like to purchase?", &c)) break;
     uint8_t item = c - 'a';
