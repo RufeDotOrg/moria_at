@@ -64,7 +64,7 @@ status_update()
   BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
   BufMsg(vitalinfo, "CHP : %6d", uD.chp);
   line += 1;
-  BufMsg(vitalinfo, "AC  : %6d", uD.pac + uD.ptoac);
+  BufMsg(vitalinfo, "AC  : %6d", uD.pac);
   BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
   line += 1;
   if (HACK) {
@@ -4641,27 +4641,31 @@ void
 calc_bonuses()
 {
   int tflag;
+  int ac, toac;
   struct objS* obj;
 
   uD.ptohit = weight_tohit_adj() + tohit_adj(); /* Real To Hit   */
   uD.ptodam = todam_adj();                      /* Real To Dam   */
-  uD.ptoac = toac_adj();                        /* Real To AC    */
-  uD.pac = 0;                                   /* Real AC       */
+  toac = toac_adj();                            /* Real To AC    */
+  ac = 0;                                       /* Real AC       */
   tflag = 0;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
     uD.ptohit += obj->tohit;
     if (obj->tval != TV_BOW) /* Bows can't damage. -CJS- */
       uD.ptodam += obj->todam;
-    uD.ptoac += obj->toac;
-    uD.pac += obj->ac;
+    toac += obj->toac;
+    ac += obj->ac;
     tflag |= obj->flags;
   }
 
   /* Add in temporary spell increases  */
-  uD.pac += uD.ma_ac;
-  // uD.dis_ac += uD.ma_ac;
+  ac += uD.ma_ac;
   if (uD.mflag & (1 << MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
+
+  // Summarize ac
+  uD.ptoac = toac;
+  uD.pac = ac + toac;
 
   tflag &= ~TR_STATS;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
@@ -8157,7 +8161,7 @@ py_character()
   BufMsg(screen, "%-13.013s: %6d", "+ To Hit", uD.ptohit);
   BufMsg(screen, "%-13.013s: %6d", "+ To Damage", uD.ptodam);
   BufMsg(screen, "%-13.013s: %6d", "+ To Armor", uD.ptoac);
-  BufMsg(screen, "%-13.013s: %6d", "Total Armor", uD.pac + uD.ptoac);
+  BufMsg(screen, "%-13.013s: %6d", "Total Armor", uD.pac);
 
   BufPad(screen, MAX_A * 2, 28);
 
@@ -8582,7 +8586,6 @@ static void mon_attack(midx) int midx;
 
   mon_desc(midx);
   int adj = cre->level * CRE_LEV_ADJ;
-  int uac = uD.pac + uD.ptoac;
   for (int it = 0; it < AL(cre->attack_list); ++it) {
     if (death) break;
     if (!cre->attack_list[it]) break;
@@ -8592,7 +8595,7 @@ static void mon_attack(midx) int midx;
     int attack_desc = attack->attack_desc;
     bth = bth_adj(attack_type);
     disturb(1, 0);
-    flag = test_hit(bth, adj, 0, uac);
+    flag = test_hit(bth, adj, 0, uD.pac);
     if (countD.protevil && (cre->cdefense & CD_EVIL) && uD.lev <= cre->level) {
       MSG("%s%s", descD, attack_string(99));
     } else if (flag) {
@@ -8601,7 +8604,7 @@ static void mon_attack(midx) int midx;
       switch (attack_type) {
         case 1: /*Normal attack  */
                 /* round half-way case down */
-          damage -= (uac * damage) / 200;
+          damage -= (uD.pac * damage) / 200;
           py_take_hit(damage);
           break;
         case 2: /*Lose Strength*/
@@ -9594,7 +9597,7 @@ int *uy, *ux;
 }
 static void hit_trap(y, x) int y, x;
 {
-  int num, dam, total_ac;
+  int num, dam;
   struct caveS* c_ptr;
   struct objS* obj;
 
@@ -9607,7 +9610,6 @@ static void hit_trap(y, x) int y, x;
     obj->tchar = '^';
   }
 
-  total_ac = uD.pac + uD.ptoac;
   dam = pdamroll(obj->damage);
 
   obj_desc(obj, TRUE);
@@ -9621,7 +9623,7 @@ static void hit_trap(y, x) int y, x;
       }
       break;
     case 2: /* Arrow trap*/
-      if (test_hit(125, 0, 0, total_ac)) {
+      if (test_hit(125, 0, 0, uD.pac)) {
         py_take_hit(dam);
         msg_print("An arrow hits you.");
       } else
@@ -9666,7 +9668,7 @@ static void hit_trap(y, x) int y, x;
       msg_print("Hmmm, there was something under this rock.");
       break;
     case 7: /* STR Dart*/
-      if (test_hit(125, 0, 0, total_ac)) {
+      if (test_hit(125, 0, 0, uD.pac)) {
         if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_STR)
           msg_print("A small dart hits you.");
         else {
@@ -9723,7 +9725,7 @@ static void hit_trap(y, x) int y, x;
       countD.confusion += randint(15) + 15;
       break;
     case 17: /* Slow Dart*/
-      if (test_hit(125, 0, 0, total_ac)) {
+      if (test_hit(125, 0, 0, uD.pac)) {
         py_take_hit(dam);
         msg_print("A small dart hits you!");
         if (uD.mflag & TR_FREE_ACT)
@@ -9734,7 +9736,7 @@ static void hit_trap(y, x) int y, x;
         msg_print("A small dart barely misses you.");
       break;
     case 18: /* CON Dart*/
-      if (test_hit(125, 0, 0, total_ac)) {
+      if (test_hit(125, 0, 0, uD.pac)) {
         if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_CON)
           msg_print("A small dart hits you.");
         else {
