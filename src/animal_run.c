@@ -7972,7 +7972,7 @@ equip_takeoff(iidx, into_slot)
 
     py_bonuses(obj, -1);
     obj_desc(obj, TRUE);
-    MSG("You take off %s. %d", descD, obj->id);
+    MSG("You take off %s.", descD);
   } else {
     msg_print("You don't have room in your inventory.");
   }
@@ -8000,7 +8000,7 @@ inven_wear(iidx)
 
       py_bonuses(obj, 1);
       obj_desc(obj, TRUE);
-      MSG("You are wearing %s. %d", descD, obj->id);
+      MSG("You are wearing %s.", descD);
       if (obj->flags & TR_CURSED) {
         msg_print("Oops! It feels deathly cold!");
         obj->cost = -1;
