@@ -7923,7 +7923,8 @@ py_carry_count()
   return count;
 }
 static int
-inven_merge(obj_id)
+inven_merge(obj_id, locn)
+int* locn;
 {
   int tval, p1, subval, number;
   struct objS* obj = obj_get(obj_id);
@@ -7940,11 +7941,12 @@ inven_merge(obj_id)
         obj->number += i_ptr->number;
         obj_unuse(i_ptr);
         invenD[it] = obj_id;
-        return it;
+        *locn = it;
+        return TRUE;
       }
     }
   }
-  return -1;
+  return FALSE;
 }
 static int
 inven_carry(obj_id)
@@ -8275,11 +8277,10 @@ int pickup;
 {
   struct caveS* c_ptr;
   struct objS* obj;
-  int locn;
+  int locn, merge;
 
   c_ptr = &caveD[y][x];
   obj = &entity_objD[c_ptr->oidx];
-  obj_desc(obj, TRUE);
 
   if (obj->tval == 0) {
     msg_print("You see nothing here.");
@@ -8292,21 +8293,21 @@ int pickup;
         gold_nameD[obj->subval]);
     delete_object(y, x);
   } else if (obj->tval <= TV_MAX_PICK_UP) {
-    if (pickup) {
-      if ((locn = inven_merge(obj->id)) >= 0 ||
-          (locn = inven_carry(obj->id)) >= 0) {
-        obj->fy = 0;
-        obj->fx = 0;
-        caveD[y][x].oidx = 0;
+    locn = -1;
+    merge = inven_merge(obj->id, &locn);
+    if (!merge && pickup) locn = inven_carry(obj->id);
 
-        // Redescribe the merged object
-        obj_desc(obj, TRUE);
-        MSG("You have %s (%c)", descD, locn + 'a');
-      } else {
-        MSG("You can't carry %s", descD);
-      }
-    } else {
+    obj_desc(obj, TRUE);
+    if (locn >= 0) {
+      obj->fy = 0;
+      obj->fx = 0;
+      caveD[y][x].oidx = 0;
+
+      MSG("You have %s (%c)", descD, locn + 'a');
+    } else if (!pickup) {
       MSG("You see %s here.", descD);
+    } else {
+      MSG("You can't carry %s.", descD);
     }
   }
 }
