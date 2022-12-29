@@ -64,7 +64,7 @@ status_update()
   BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
   BufMsg(vitalinfo, "CHP : %6d", uD.chp);
   line += 1;
-  BufMsg(vitalinfo, "AC  : %6d", uD.pac);
+  BufMsg(vitalinfo, "AC  : %6d", uD.pac + uD.ptoac);
   BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
   line += 1;
   if (HACK) {
