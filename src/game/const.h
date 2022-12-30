@@ -1,6 +1,6 @@
 
-#define MAX_WIDTH 256
-#define MAX_HEIGHT 128
+#define MAX_WIDTH 128
+#define MAX_HEIGHT 64
 #define SYMMAP_HEIGHT 16
 #define SYMMAP_WIDTH 32
 #define MAX_COL (MAX_WIDTH / SYMMAP_WIDTH * 2)
@@ -48,12 +48,12 @@
 #define DUN_TUN_CON 15      /* Chance of extra tunneling	       */
 #define DUN_TUN_PEN 25      /* % chance of room doors		       */
 #define DUN_TUN_JCT 15      /* % chance of doors at tunnel junctions */
-#define DUN_ROOM_MEAN 64    // Retuned; 8*8 = 64 of 64 chunks; previously 32 out of 36
-#define MIN_MALLOC_LEVEL 28 /* Retuned; previously 14 Minimum number of monsters/level */
-#define RND_MALLOC_LEVEL 16 /* Retuned; previously 8 Random additional monsters/level */
-#define TREAS_ROOM_MEAN 14  // Retuned; previously 7
-#define TREAS_ANY_ALLOC 4   // Retuned; previously 2
-#define TREAS_GOLD_ALLOC 4  // Retuned; previously 2
+#define DUN_ROOM_MEAN 32
+#define MIN_MALLOC_LEVEL 14
+#define RND_MALLOC_LEVEL 8
+#define TREAS_ROOM_MEAN 7
+#define TREAS_ANY_ALLOC 2
+#define TREAS_GOLD_ALLOC 2
 #define TRUE 1
 #define FALSE 0
 
