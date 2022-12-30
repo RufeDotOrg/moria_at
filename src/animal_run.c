@@ -64,7 +64,7 @@ status_update()
   BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
   BufMsg(vitalinfo, "CHP : %6d", uD.chp);
   line += 1;
-  BufMsg(vitalinfo, "AC  : %6d", uD.pac - uD.hide_toac);
+  BufMsg(vitalinfo, "AC  : %6d", cbD.pac - cbD.hide_toac);
   BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
   line += 1;
   if (HACK) {
@@ -3777,7 +3777,7 @@ void update_mon(midx) int midx;
       if (cave_lit(c_ptr)) {
         if ((CM_INVISIBLE & cr_ptr->cmove) == 0)
           flag = TRUE;
-        else if (uD.tflag & TR_SEE_INVIS)
+        else if (cbD.tflag & TR_SEE_INVIS)
           flag = TRUE;
       } else if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= uD.infra)) {
         flag = TRUE;
@@ -4649,17 +4649,17 @@ calc_bonuses()
   int hide_toac;
   struct objS* obj;
 
-  uD.ptohit = weight_tohit_adj() + tohit_adj(); /* Real To Hit   */
-  uD.ptodam = todam_adj();                      /* Real To Dam   */
-  toac = toac_adj();                            /* Real To AC    */
-  ac = 0;                                       /* Real AC       */
+  cbD.ptohit = weight_tohit_adj() + tohit_adj(); /* Real To Hit   */
+  cbD.ptodam = todam_adj();                      /* Real To Dam   */
+  toac = toac_adj();                             /* Real To AC    */
+  ac = 0;                                        /* Real AC       */
   hide_toac = 0;
   tflag = 0;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
-    uD.ptohit += obj->tohit;
+    cbD.ptohit += obj->tohit;
     if (obj->tval != TV_BOW) /* Bows can't damage. -CJS- */
-      uD.ptodam += obj->todam;
+      cbD.ptodam += obj->todam;
     toac += obj->toac;
     ac += obj->ac;
     if ((obj->idflag & ID_REVEAL) == 0) {
@@ -4673,16 +4673,16 @@ calc_bonuses()
   if (uD.mflag & (1 << MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
 
   // Summarize ac
-  uD.ptoac = toac;
-  uD.pac = ac + toac;
-  uD.hide_toac = hide_toac;
+  cbD.ptoac = toac;
+  cbD.pac = ac + toac;
+  cbD.hide_toac = hide_toac;
 
   tflag &= ~TR_STATS;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
     if (TR_SUST_STAT & obj->flags) tflag |= sustain_stat(obj->p1 - 1);
   }
-  uD.tflag = tflag;
+  cbD.tflag = tflag;
 }
 int8_t
 modify_stat(stat, amount)
@@ -4731,7 +4731,6 @@ void set_use_stat(stat) int stat;
   // }
 }
 void py_bonuses(obj, factor) struct objS* obj;
-int factor;
 {
   int amount;
 
@@ -5440,7 +5439,7 @@ void
 lose_stat(sidx)
 {
   uint32_t sustain = sustain_stat(sidx);
-  if (uD.tflag & sustain) {
+  if (cbD.tflag & sustain) {
     MSG("%s for a moment,  it passes.", stat_lossD[sidx]);
   } else {
     dec_stat(sidx);
@@ -7208,7 +7207,7 @@ inven_quaff(iidx)
           }
           break;
         case 19:
-          if ((uD.tflag & TR_FREE_ACT) == 0) {
+          if ((cbD.tflag & TR_FREE_ACT) == 0) {
             msg_print("You fall asleep.");
             countD.paralysis += randint(4) + 4;
             ident = TRUE;
@@ -7323,7 +7322,7 @@ inven_quaff(iidx)
           maD[MA_AFROST] += randint(10) + 10;
           break;
         case 43:
-          if ((uD.tflag & TR_SEE_INVIS) == 0) ident = TRUE;
+          if ((cbD.tflag & TR_SEE_INVIS) == 0) ident = TRUE;
           maD[MA_SEE_INVIS] += randint(12) + 12;
           break;
         case 44:
@@ -8168,10 +8167,10 @@ py_character()
   }
 
   line = MAX_A + 1;
-  BufMsg(screen, "%-13.013s: %6d", "+ To Hit", uD.ptohit);
-  BufMsg(screen, "%-13.013s: %6d", "+ To Damage", uD.ptodam);
-  BufMsg(screen, "%-13.013s: %6d", "+ To Armor", uD.ptoac - uD.hide_toac);
-  BufMsg(screen, "%-13.013s: %6d", "Total Armor", uD.pac - uD.hide_toac);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Hit", cbD.ptohit);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Damage", cbD.ptodam);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Armor", cbD.ptoac - cbD.hide_toac);
+  BufMsg(screen, "%-13.013s: %6d", "Total Armor", cbD.pac - cbD.hide_toac);
 
   BufPad(screen, MAX_A * 2, 28);
 
@@ -8521,8 +8520,8 @@ py_attack(y, x)
   struct creatureS* cre = &creatureD[mon->cidx];
   struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
-  tohit = uD.ptohit;
-  todam = uD.ptodam;
+  tohit = cbD.ptohit;
+  todam = cbD.ptodam;
   base_tohit = uD.bth;
   lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
   // reduce hit if monster not lit
@@ -8605,7 +8604,7 @@ static void mon_attack(midx) int midx;
     int attack_desc = attack->attack_desc;
     bth = bth_adj(attack_type);
     disturb(1, 0);
-    flag = test_hit(bth, adj, 0, uD.pac);
+    flag = test_hit(bth, adj, 0, cbD.pac);
     if (countD.protevil && (cre->cdefense & CD_EVIL) && uD.lev <= cre->level) {
       MSG("%s%s", descD, attack_string(99));
     } else if (flag) {
@@ -8614,7 +8613,7 @@ static void mon_attack(midx) int midx;
       switch (attack_type) {
         case 1: /*Normal attack  */
                 /* round half-way case down */
-          damage -= (uD.pac * damage) / 200;
+          damage -= (cbD.pac * damage) / 200;
           py_take_hit(damage);
           break;
         case 2: /*Lose Strength*/
@@ -8679,7 +8678,7 @@ static void mon_attack(midx) int midx;
           break;
         case 11: /*Paralysis attack*/
           py_take_hit(damage);
-          if (uD.tflag & TR_FREE_ACT)
+          if (cbD.tflag & TR_FREE_ACT)
             msg_print("You are unaffected by paralysis.");
           else if (player_saves())
             msg_print("You resist paralysis!");
@@ -9367,7 +9366,7 @@ mon_try_spell(midx, cdis)
           py_take_hit(damroll(8, 8));
         break;
       case 10: /*Hold Person    */
-        if (uD.tflag & TR_FREE_ACT)
+        if (cbD.tflag & TR_FREE_ACT)
           msg_print("You are unaffected by paralysis.");
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
@@ -9413,7 +9412,7 @@ mon_try_spell(midx, cdis)
         update_mon(midx);
       } break;
       case 16: /*Slow Person   */
-        if (uD.tflag & TR_FREE_ACT)
+        if (cbD.tflag & TR_FREE_ACT)
           msg_print("You are unaffected by the spell.");
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
@@ -9550,7 +9549,7 @@ creatures()
       cdis = distance(y, x, mon->fy, mon->fx);
       if (mon->mlit || cdis <= cr_ptr->aaf) {
         if (mon->msleep) {
-          if (uD.tflag & TR_AGGRAVATE)
+          if (cbD.tflag & TR_AGGRAVATE)
             mon->msleep = 0;
           else {
             uint32_t notice = randint(1024);
@@ -9628,7 +9627,7 @@ static void hit_trap(y, x) int y, x;
       }
       break;
     case 2: /* Arrow trap*/
-      if (test_hit(125, 0, 0, uD.pac)) {
+      if (test_hit(125, 0, 0, cbD.pac)) {
         py_take_hit(dam);
         msg_print("An arrow hits you.");
       } else
@@ -9673,7 +9672,7 @@ static void hit_trap(y, x) int y, x;
       msg_print("Hmmm, there was something under this rock.");
       break;
     case 7: /* STR Dart*/
-      if (test_hit(125, 0, 0, uD.pac)) {
+      if (test_hit(125, 0, 0, cbD.pac)) {
         if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_STR)
           msg_print("A small dart hits you.");
         else {
@@ -9730,7 +9729,7 @@ static void hit_trap(y, x) int y, x;
       countD.confusion += randint(15) + 15;
       break;
     case 17: /* Slow Dart*/
-      if (test_hit(125, 0, 0, uD.pac)) {
+      if (test_hit(125, 0, 0, cbD.pac)) {
         py_take_hit(dam);
         msg_print("A small dart hits you!");
         if (uD.mflag & TR_FREE_ACT)
@@ -9741,7 +9740,7 @@ static void hit_trap(y, x) int y, x;
         msg_print("A small dart barely misses you.");
       break;
     case 18: /* CON Dart*/
-      if (test_hit(125, 0, 0, uD.pac)) {
+      if (test_hit(125, 0, 0, cbD.pac)) {
         if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_CON)
           msg_print("A small dart hits you.");
         else {
@@ -10251,7 +10250,7 @@ dungeon()
 
       y = uD.y;
       x = uD.x;
-      if (teleport_trap || uD.tflag & TR_TELEPORT && randint(100) == 1) {
+      if (teleport_trap || cbD.tflag & TR_TELEPORT && randint(100) == 1) {
         teleport_trap = 0;
         disturb(0, 0);
         py_teleport(40, &y, &x);

@@ -11,15 +11,8 @@ struct uS {
   int chp_frac;
   int mhp;
   int gold;
-  int ptohit;
-  int ptodam;
-  int pac;
-  int ptoac;
-  int hide_toac;
   int pspeed;
-  // Treasure flags from equipment
-  int tflag;
-  // Magic affects from spells
+  // Stateful affects from magic spells
   int ma_ac;
   int mflag;
   // Status
@@ -41,6 +34,18 @@ struct uS {
   int wt;
 };
 static struct uS uD;
+
+// Calculated bonus; see calc_bonuses()
+struct cbS {
+  int ptohit;
+  int ptodam;
+  int pac;
+  int ptoac;
+  int hide_toac;
+  // Treasure flags from equipment
+  int tflag;
+};
+struct cbS cbD;
 
 struct countS {
   // Player ailment counters
