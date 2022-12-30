@@ -54,6 +54,13 @@ typedef int (*fn)();
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
 
+#ifdef RELEASE
+#undef RELEASE
+enum { RELEASE = 1 };
+#else
+enum { RELEASE = 0 };
+#endif
+
 // Array for reusable type
 // index is acquired by _use(); freed by _unuse()
 // eid is a stable, generational modulus index into entity array

@@ -960,6 +960,13 @@ sdl_pump()
       } else {
         int dir = dir_by_scancode(event.key.keysym.sym);
         if (dir > 0) return char_by_dir(dir) ^ shift;
+        switch (event.key.keysym.sym) {
+          case SDLK_KP_ENTER:
+            return ' ';
+          case SDLK_KP_PLUS:
+          case SDLK_KP_PERIOD:
+            return '.';
+        }
       }
     }
     // Prototyping choice menu

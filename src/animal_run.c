@@ -40,7 +40,7 @@ inkey()
   char c;
   do {
     c = platformD.readansi();
-    if (c == CTRL('c')) {
+    if (!RELEASE && c == CTRL('c')) {
       strcpy(death_descD, "quitting");
       death = 1;
       new_level_flag = TRUE;
@@ -8275,6 +8275,9 @@ py_help()
   BufMsg(screen, "X: examine objects");
   BufMsg(screen, "Z: staff invocation");
   BufMsg(screen, ".: automatic object interaction (experimental)");
+  line += 1;
+  BufMsg(screen, "CTRL-p: message history");
+  BufMsg(screen, "CTRL-x: save and exit (experiemntal)");
 
   if (HACK) {
     msg_pause();
@@ -10418,7 +10421,7 @@ dungeon()
               free_turn_flag = TRUE;
               msg_history();
             } break;
-            case CTRL('s'): {
+            case CTRL('x'): {
               save_exit_flag = TRUE;
               new_level_flag = TRUE;
               strcpy(death_descD, "quitting");
