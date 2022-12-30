@@ -2506,7 +2506,7 @@ struct objS* obj;
   return FALSE;
 }
 int
-oset_hitdam(obj)
+oset_tohitdam(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
@@ -2522,9 +2522,6 @@ struct objS* obj;
     case TV_GLOVES:
       return (obj->tohit || obj->todam);
     case TV_RING:
-      return (obj->tohit || obj->todam);
-    case TV_SOFT_ARMOR:
-    case TV_HARD_ARMOR:
       return (obj->tohit || obj->todam);
   }
   return FALSE;
@@ -4400,7 +4397,7 @@ void obj_detail(obj) struct objS* obj;
     strcat(descD, tmp_str);
   }
   if (obj_reveal(obj)) {
-    if (oset_hitdam(obj)) {
+    if (oset_tohitdam(obj)) {
       snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
       strcat(descD, tmp_str);
     }
