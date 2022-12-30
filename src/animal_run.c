@@ -26,6 +26,15 @@ static int find_prevdir;
                      ##__VA_ARGS__);                                    \
     name##_usedD[line++] = used;                                        \
   }
+#define BufLineAppend(name, line, text, ...)                             \
+  {                                                                      \
+    int used, append;                                                    \
+    used = name##_usedD[line];                                           \
+    append = snprintf(name##D[line] + used, AL(name##D[0]) - used, text, \
+                      ##__VA_ARGS__);                                    \
+    if (append > 0) name##_usedD[line] += append;                        \
+  }
+
 #define BufPad(name, line, len)            \
   for (int it = 0; it < line; ++it) {      \
     while (name##_usedD[it] < len) {       \
@@ -4326,8 +4335,7 @@ char c;
   }
   return FALSE;
 }
-void obj_prefix(obj, prefix) struct objS* obj;
-BOOL prefix;
+void obj_prefix(obj, plural) struct objS* obj;
 {
   char obj_name[160];
 
@@ -4335,14 +4343,14 @@ BOOL prefix;
   for (int it = 0; it < AL(descD); ++it) {
     if (descD[it] != '~')
       obj_name[it - offset] = descD[it];
-    else if (obj->number != 1)
+    else if (plural && obj->number != 1)
       obj_name[it - offset] = 's';
     else
       offset += 1;
     if (descD[it] == 0) break;
   }
 
-  if (prefix) {
+  if (plural) {
     /* ampersand is always the first character */
     if (obj_name[0] == '&') {
       /* use &obj_name[1], so that & does not appear in output */
@@ -7102,6 +7110,85 @@ inven_eat(iidx)
     msg_print("You can't eat that!");
   }
 }
+void
+inven_study(iidx)
+{
+  struct objS* obj;
+  struct treasureS* tr_ptr;
+  int line;
+  int blows, eqidx;
+
+  obj = obj_get(invenD[iidx]);
+  tr_ptr = &treasureD[obj->tidx];
+  if (obj->id) {
+    eqidx = may_equip(obj->tval);
+
+    obj_desc(obj, TRUE);
+    MSG("You study %s.", descD);
+
+    line = 0;
+    strcpy(descD, tr_ptr->name);
+    obj_prefix(obj, FALSE);
+    BufMsg(screen, "%-17.017s: %s", "Name", descD);
+    if (obj->idflag & ID_REVEAL) {
+      if (oset_tohitdam(obj)) {
+        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
+        BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
+      } else if (eqidx == INVEN_BODY) {
+        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
+      }
+      if (obj->ac) {
+        BufMsg(screen, "%-17.017s: %+d", "Base Armor", obj->ac);
+      }
+      if (obj->toac) {
+        BufMsg(screen, "%-17.017s: %+d", "+ To Armor", obj->toac);
+      }
+      if (obj->toac || obj->ac || eqidx == INVEN_HEAD) {
+        BufMsg(screen, "%-17.017s: %+d", "Total Armor", obj->ac + obj->toac);
+      }
+    } else {
+      BufMsg(screen, "... is unidentified!");
+    }
+    if (eqidx == INVEN_WIELD) {
+      BufMsg(screen, "%-17.017s: (%dd%d)", "Damage Dice", obj->damage[0],
+             obj->damage[1]);
+
+      BufMsg(screen, "%-17.017s: [%d - %d]", "Damage per Blow",
+             (obj->damage[0]), (obj->damage[0] * obj->damage[1]));
+
+      if (obj->idflag & ID_REVEAL) {
+        if (obj->todam >= 0) {
+          BufLineAppend(screen, line - 1, " + %d", obj->todam);
+        } else {
+          BufLineAppend(screen, line - 1, " - %d", -obj->todam);
+        }
+      } else {
+        BufLineAppend(screen, line - 1, "?");
+      }
+
+      blows = attack_blows(obj->weight);
+      BufMsg(screen, "%-17.017s: %d", "Number of Blows", blows);
+      if (obj->idflag & ID_REVEAL) {
+        BufMsg(screen, "%-17.017s: [%d - %d]", "Total Damage",
+               blows * MAX(obj->damage[0] + obj->todam, 1),
+               blows * MAX((obj->damage[0] * obj->damage[1] + obj->todam), 1));
+      } else {
+        BufMsg(screen, "%-17.017s: [%d - %d]?", "Total Damage",
+               blows * MAX(obj->damage[0], 1),
+               blows * MAX((obj->damage[0] * obj->damage[1]), 1));
+      }
+    }
+    if (obj->idflag & ID_DAMD) {
+      BufMsg(screen, "... is cursed!");
+    }
+    if (obj->idflag & ID_MAGIK) {
+      BufMsg(screen, "... is cursed!");
+    }
+    if (!tr_is_known(tr_ptr)) {
+      BufMsg(screen, "... has unknown effects!");
+    }
+  }
+}
 int
 inven_quaff(iidx)
 {
@@ -8270,6 +8357,7 @@ py_help()
   BufMsg(screen, "I: inventory sort");
   BufMsg(screen, "M: map dungeon");
   BufMsg(screen, "R: rest until healed");
+  BufMsg(screen, "S: study an object");
   BufMsg(screen, "T: take off equipment");
   BufMsg(screen, "W: where about the dungeon");
   BufMsg(screen, "X: examine objects");
@@ -10410,6 +10498,10 @@ dungeon()
               break;
             case 'R':
               countD.rest = -9999;
+              break;
+            case 'S':
+              iidx = inven_choice("Which item do you wish identified?");
+              if (iidx >= 0) inven_study(iidx);
               break;
             case 'T':
               py_takeoff();
