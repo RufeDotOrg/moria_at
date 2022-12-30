@@ -8092,7 +8092,7 @@ py_map()
   priority['>'] = 5;
   priority['@'] = 10;
   priority['+'] = 3;
-  priority[(unsigned char)240] = -5;
+  priority['#'] = -5;
   priority['.'] = -10;
   priority['\''] = -3;
   priority[' '] = -15;
