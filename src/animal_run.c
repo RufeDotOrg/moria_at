@@ -6640,7 +6640,7 @@ struct monS* mon;
 int
 aggravate_monster(dis_affect)
 {
-  register int y, x, count, mspeed;
+  register int y, x, count;
 
   y = uD.y;
   x = uD.x;
@@ -6677,7 +6677,7 @@ door_creation()
   return (door);
 }
 int
-speed_monsters(spd)
+speed_monster_aoe(spd)
 {
   register int y, x, see_count;
   struct creatureS* cr_ptr;
@@ -6713,7 +6713,6 @@ speed_monsters(spd)
 // TBD: very similar bolt()
 int
 speed_monster(dir, y, x, spd)
-int dir, y, x, spd;
 {
   int flag, dist, see_count;
   register struct caveS* c_ptr;
@@ -7814,10 +7813,10 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
             starlite(uD.y, uD.x);
             break;
           case 12:
-            ident = speed_monsters(1);
+            ident = speed_monster_aoe(1);
             break;
           case 13:
-            ident = speed_monsters(-1);
+            ident = speed_monster_aoe(-1);
             break;
           case 14:
             ident = sleep_monster_aoe();
@@ -9526,17 +9525,12 @@ mon_move(midx, cdis)
 }
 static int
 movement_rate(speed)
-int speed;
 {
-  if (speed > 0) {
-    if (countD.rest != 0)
-      return 1;
-    else
-      return speed;
-  } else {
-    /* speed must be negative here */
+  if (speed <= 0) {
     return ((turnD % (2 - speed)) == 0);
   }
+
+  return speed;
 }
 void
 creatures()
