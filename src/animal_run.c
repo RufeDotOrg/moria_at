@@ -4938,12 +4938,13 @@ equip_curse()
 static int
 equip_remove_curse()
 {
-  int l;
-  struct objS* i_ptr;
+  int eqidx;
+  struct objS* obj;
 
-  l = equip_cursed();
-  if (l > -1) {
-    i_ptr->flags &= ~TR_CURSED;
+  eqidx = equip_cursed();
+  if (eqidx > -1) {
+    obj = obj_get(invenD[eqidx]);
+    obj->flags &= ~TR_CURSED;
     calc_bonuses();
     return TRUE;
   }
