@@ -938,6 +938,7 @@ sdl_pump()
         for (int it = 0; it < AL(buttonD); ++it) {
           buttonD[it] = (SDL_FRect){.75 + (.1 * it), .75 - (.2 * it), .1, .2};
         }
+        return -1;
       }
       return ' ';
     }
