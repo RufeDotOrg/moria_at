@@ -8016,6 +8016,9 @@ inven_wear(iidx)
       py_bonuses(obj, 1);
       obj_desc(obj, TRUE);
       MSG("You are wearing %s.", descD);
+      if (eqidx == INVEN_BODY && obj->tohit) {
+        MSG("Cumbersome armor makes more difficult to hit (%+d).", obj->tohit);
+      }
       if (obj->flags & TR_CURSED) {
         msg_print("Oops! It feels deathly cold!");
         obj->cost = -1;
