@@ -745,8 +745,8 @@ void light_room(y, x) int y, x;
   struct caveS* c_ptr;
   int tval;
 
-  tmp1 = (SYMMAP_HEIGHT / 2);
-  tmp2 = (SYMMAP_WIDTH / 2);
+  tmp1 = CHUNK_HEIGHT / 2;
+  tmp2 = CHUNK_WIDTH / 2;
   start_row = (y / tmp1) * tmp1;
   start_col = (x / tmp2) * tmp2;
   end_row = start_row + tmp1 - 1;
@@ -786,8 +786,8 @@ unlight_room(y, x)
   struct caveS* c_ptr;
   int tval;
 
-  tmp1 = (SYMMAP_HEIGHT / 2);
-  tmp2 = (SYMMAP_WIDTH / 2);
+  tmp1 = CHUNK_HEIGHT / 2;
+  tmp2 = CHUNK_WIDTH / 2;
   start_row = (y / tmp1) * tmp1;
   start_col = (x / tmp2) * tmp2;
   end_row = start_row + tmp1 - 1;
