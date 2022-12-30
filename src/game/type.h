@@ -42,6 +42,8 @@ struct cbS {
   int pac;
   int ptoac;
   int hide_toac;
+  int hide_tohit;
+  int hide_todam;
   // Treasure flags from equipment
   int tflag;
 };

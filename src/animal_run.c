@@ -4646,23 +4646,26 @@ calc_bonuses()
 {
   int tflag;
   int ac, toac;
-  int hide_toac;
+  int tohit, todam;
+  int hide_tohit, hide_todam, hide_toac;
   struct objS* obj;
 
-  cbD.ptohit = weight_tohit_adj() + tohit_adj(); /* Real To Hit   */
-  cbD.ptodam = todam_adj();                      /* Real To Dam   */
-  toac = toac_adj();                             /* Real To AC    */
-  ac = 0;                                        /* Real AC       */
-  hide_toac = 0;
+  tohit = weight_tohit_adj() + tohit_adj();
+  todam = todam_adj();
+  toac = toac_adj();
+  ac = 0;
+  hide_tohit = hide_todam = hide_toac = 0;
   tflag = 0;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
-    cbD.ptohit += obj->tohit;
-    if (obj->tval != TV_BOW) /* Bows can't damage. -CJS- */
-      cbD.ptodam += obj->todam;
+    // TBD: Bow damage is skipped
+    tohit += obj->tohit;
+    todam += obj->todam;
     toac += obj->toac;
     ac += obj->ac;
     if ((obj->idflag & ID_REVEAL) == 0) {
+      hide_tohit += obj->tohit;
+      hide_todam += obj->todam;
       hide_toac += obj->toac;
     }
     tflag |= obj->flags;
@@ -4673,8 +4676,12 @@ calc_bonuses()
   if (uD.mflag & (1 << MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
 
   // Summarize ac
+  cbD.ptohit = tohit;
+  cbD.ptodam = todam;
   cbD.ptoac = toac;
   cbD.pac = ac + toac;
+  cbD.hide_tohit = hide_tohit;
+  cbD.hide_todam = hide_todam;
   cbD.hide_toac = hide_toac;
 
   tflag &= ~TR_STATS;
@@ -5311,8 +5318,6 @@ py_init()
     } while ((TR_SPEED & obj->flags) == 0 || obj->p1 <= 0);
     invenD[iidx] = obj->id;
   }
-
-  calc_bonuses();
 
   uD.food = 7500;
   uD.food_digest = 2;
@@ -8167,8 +8172,8 @@ py_character()
   }
 
   line = MAX_A + 1;
-  BufMsg(screen, "%-13.013s: %6d", "+ To Hit", cbD.ptohit);
-  BufMsg(screen, "%-13.013s: %6d", "+ To Damage", cbD.ptodam);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Hit", cbD.ptohit - cbD.hide_tohit);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Damage", cbD.ptodam - cbD.hide_todam);
   BufMsg(screen, "%-13.013s: %6d", "+ To Armor", cbD.ptoac - cbD.hide_toac);
   BufMsg(screen, "%-13.013s: %6d", "Total Armor", cbD.pac - cbD.hide_toac);
 
@@ -10637,6 +10642,7 @@ main()
   } else {
     py_init();
   }
+  calc_bonuses();
 
   magic_init();
 
