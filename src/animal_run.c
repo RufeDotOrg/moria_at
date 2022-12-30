@@ -608,8 +608,7 @@ void disturb(search, light) int search, light;
 
 static void build_room(yval, xval) int yval, xval;
 {
-  register int i, j, y_depth, x_right;
-  int y_height, x_left;
+  register int i, j, x, xmax, y, ymax;
   uint8_t floor;
   register struct caveS *c_ptr, *d_ptr;
 
@@ -618,32 +617,35 @@ static void build_room(yval, xval) int yval, xval;
   else
     floor = FLOOR_DARK;
 
-  y_height = yval - randint(ROOM_HEIGHT / 2);
-  y_depth = yval + randint(ROOM_HEIGHT / 2) - 1;
-  x_left = xval - randint(ROOM_WIDTH / 2);
-  x_right = xval + randint(ROOM_WIDTH / 2);
+  y = yval - randint(ROOM_HEIGHT / 2);
+  ymax = yval + randint(ROOM_HEIGHT / 2) - 1;
+  x = xval - randint(ROOM_WIDTH / 2);
+  xmax = xval + randint(ROOM_WIDTH / 2) - 1;
 
-  for (i = y_height; i <= y_depth; i++) {
-    c_ptr = &caveD[i][x_left];
-    for (j = x_left; j <= x_right; j++) {
+  for (i = y; i <= ymax; i++) {
+    for (j = x; j <= xmax; j++) {
+      c_ptr = &caveD[i][j];
       c_ptr->fval = floor;
       c_ptr->cflag |= CF_ROOM;
-      c_ptr++;
     }
   }
 
-  for (i = (y_height - 1); i <= (y_depth + 1); i++) {
-    c_ptr = &caveD[i][x_left - 1];
+  y -= 1;
+  ymax += 1;
+  x -= 1;
+  xmax += 1;
+  for (i = y; i <= ymax; i++) {
+    c_ptr = &caveD[i][x];
     c_ptr->fval = GRANITE_WALL;
     c_ptr->cflag |= CF_ROOM;
-    c_ptr = &caveD[i][x_right + 1];
+    c_ptr = &caveD[i][xmax];
     c_ptr->fval = GRANITE_WALL;
     c_ptr->cflag |= CF_ROOM;
   }
 
-  c_ptr = &caveD[y_height - 1][x_left];
-  d_ptr = &caveD[y_depth + 1][x_left];
-  for (i = x_left; i <= x_right; i++) {
+  c_ptr = &caveD[y][x];
+  d_ptr = &caveD[ymax][x];
+  for (i = x; i <= xmax; i++) {
     c_ptr->fval = GRANITE_WALL;
     c_ptr->cflag |= CF_ROOM;
     c_ptr++;
@@ -3103,8 +3105,9 @@ cave_gen()
   for (i = 0; i < AL(room_map); i++)
     for (j = 0; j < AL(room_map[0]); j++)
       if (room_map[i][j]) {
-        yloc[k] = i * CHUNK_HEIGHT + (CHUNK_HEIGHT >> 2);
-        xloc[k] = j * CHUNK_WIDTH + (CHUNK_WIDTH >> 2);
+        // Offset the room within the viewport
+        yloc[k] = i * CHUNK_HEIGHT + (CHUNK_HEIGHT / 4);
+        xloc[k] = j * CHUNK_WIDTH + (CHUNK_WIDTH / 4);
         build_room(yloc[k], xloc[k]);
         k++;
       }

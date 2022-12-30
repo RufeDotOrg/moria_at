@@ -40,8 +40,9 @@
 #define CHUNK_ROW (MAX_WIDTH / CHUNK_WIDTH)
 #define CHUNK_SQ (CHUNK_COL*CHUNK_ROW)
 
-#define ROOM_WIDTH 11
-#define ROOM_HEIGHT 4
+#define ROOM_HEIGHT (CHUNK_HEIGHT/2-1)
+#define ROOM_WIDTH (CHUNK_WIDTH/2-1)
+
 #define DUN_TUN_RND 9       /* 1/Chance of Random direction	       */
 #define DUN_TUN_CHG 70      /* Chance of changing direction (99 max) */
 #define DUN_TUN_CON 15      /* Chance of extra tunneling	       */
