@@ -10509,8 +10509,8 @@ dungeon()
                 }
               } break;
               case CTRL('w'): {
-                dun_level = 50;
-                new_level_flag = TRUE;
+                msg_print("The air about you becomes charged.");
+                maD[MA_RECALL] = 1;
               } break;
             }
           }
