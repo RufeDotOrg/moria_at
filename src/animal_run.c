@@ -10551,8 +10551,8 @@ dungeon()
               store_entrance(obj->tchar - '1');
             } else if (obj->tval == TV_PAWN_DOOR) {
               pawn_entrance();
-            } else if (countD.blind == 0) {
-              if (find_flag) find_event(y, x);
+            } else {
+              if (countD.blind == 0 && find_flag) find_event(y, x);
               if (obj->tval) {
                 find_flag = FALSE;
                 py_pickup(y, x, FALSE);
