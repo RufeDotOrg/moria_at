@@ -19,7 +19,7 @@ platform_readansi()
         nanosleep(&(struct timespec){0, 8e6}, 0);
         continue;
       }
-      break;
+      return CTRL('x');
     } else if (len == 1) {
       return text[0];
     } else {

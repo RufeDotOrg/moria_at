@@ -39,7 +39,7 @@ platform_readansi()
     int len = 0;
     len = readansi(STDIN_FILENO, AP(text));
     if (len <= 0) {
-      break;
+      return CTRL('x');
     } else if (len == 1) {
       return text[0];
     } else {
