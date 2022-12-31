@@ -3815,6 +3815,44 @@ enchant(int16_t* bonus, int16_t limit)
   return (res);
 }
 int
+attack_blows(weight)
+{
+  register int adj_weight;
+  register int str_index, dex_index, s, d;
+
+  d = statD.use_stat[A_DEX];
+  if (d < 10)
+    dex_index = 0;
+  else if (d < 19)
+    dex_index = 1;
+  else if (d < 68)
+    dex_index = 2;
+  else if (d < 108)
+    dex_index = 3;
+  else if (d < 118)
+    dex_index = 4;
+  else
+    dex_index = 5;
+
+  s = statD.use_stat[A_STR];
+  adj_weight = (s * 10 / weight);
+  if (adj_weight < 2)
+    str_index = 0;
+  else if (adj_weight < 3)
+    str_index = 1;
+  else if (adj_weight < 4)
+    str_index = 2;
+  else if (adj_weight < 5)
+    str_index = 3;
+  else if (adj_weight < 7)
+    str_index = 4;
+  else if (adj_weight < 9)
+    str_index = 5;
+  else
+    str_index = 6;
+  return blows_table[str_index][dex_index];
+}
+int
 bth_adj(attype)
 int attype;
 {
@@ -8522,44 +8560,6 @@ corrode_gas()
   if (!minus_ac(TR_RES_ACID)) py_take_hit(randint(8));
   if (inven_damage(vuln_gas, 5) > 0)
     msg_print("There is an acrid smell coming from your pack.");
-}
-int
-attack_blows(weight)
-{
-  register int adj_weight;
-  register int str_index, dex_index, s, d;
-
-  d = statD.use_stat[A_DEX];
-  if (d < 10)
-    dex_index = 0;
-  else if (d < 19)
-    dex_index = 1;
-  else if (d < 68)
-    dex_index = 2;
-  else if (d < 108)
-    dex_index = 3;
-  else if (d < 118)
-    dex_index = 4;
-  else
-    dex_index = 5;
-
-  s = statD.use_stat[A_STR];
-  adj_weight = (s * 10 / weight);
-  if (adj_weight < 2)
-    str_index = 0;
-  else if (adj_weight < 3)
-    str_index = 1;
-  else if (adj_weight < 4)
-    str_index = 2;
-  else if (adj_weight < 5)
-    str_index = 3;
-  else if (adj_weight < 7)
-    str_index = 4;
-  else if (adj_weight < 9)
-    str_index = 5;
-  else
-    str_index = 6;
-  return blows_table[str_index][dex_index];
 }
 void
 py_shield_attack(y, x)
