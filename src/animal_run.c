@@ -80,8 +80,8 @@ vital_update()
     BufMsg(vitalinfo, "DEBUG");
     BufMsg(vitalinfo, "y,x :%3d,%3d", uD.y, uD.x);
     BufMsg(vitalinfo, "sec :%3d,%3d", panelD.panel_col, panelD.panel_row);
-    BufMsg(vitalinfo, "turn: %6d", turnD);
   }
+  BufMsg(vitalinfo, "turn: %6d", turnD);
 
   BufPad(vitalinfo, AL(vitalinfoD), AL(vitalinfoD[0]));
 }
