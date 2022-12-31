@@ -59,7 +59,7 @@ inkey()
   return c;
 }
 void
-status_update()
+vital_update()
 {
   AC(vitalinfo_usedD);
 
@@ -167,17 +167,9 @@ symmap_update()
   }
 }
 static char* affectD[][8] = {
-    {"Slow"},
-    {"Fast"},
-    {"Blind"},
-    {"Confused"},
-    {"Afraid"},
-    {"Poison"},
-    {"Hungry", "Weak", "Faint"},
+    {"Slow"},   {"Fast"},     {"Blind"},  {"Confused"},
+    {"Afraid"}, {"Paralyse"}, {"Poison"}, {"Hungry", "Weak", "Faint"},
 };
-// {"Paralysis"},
-// {"Rest"},
-// "Searching",
 void
 affect_update()
 {
@@ -190,6 +182,7 @@ affect_update()
   active[idx++] = (countD.blind != 0);
   active[idx++] = (countD.confusion != 0);
   active[idx++] = (countD.fear != 0);
+  active[idx++] = (countD.paralysis != 0);
   active[idx++] = (countD.poison != 0);
   active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
   active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
@@ -224,7 +217,7 @@ affect_update()
 void
 draw()
 {
-  status_update();
+  vital_update();
   symmap_update();
   affect_update();
 
