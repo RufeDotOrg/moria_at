@@ -383,7 +383,6 @@ int* dir;
     }
   }
 
-  free_turn_flag = TRUE;
   return FALSE;
 }
 int
@@ -424,7 +423,6 @@ go_up()
 
   if (no_stairs) {
     msg_print("I see no up staircase here.");
-    free_turn_flag = TRUE;
   }
 }
 static void
@@ -447,7 +445,6 @@ go_down()
 
   if (no_stairs) {
     msg_print("I see no down staircase here.");
-    free_turn_flag = TRUE;
   }
 }
 int
@@ -5496,7 +5493,6 @@ py_where()
     panel_bounds(&panelD);
   }
   panel_update(&panelD, uD.y, uD.x, TRUE);
-  free_turn_flag = TRUE;
 }
 static int
 py_inven_filter(begin, end, valid)
@@ -6966,7 +6962,7 @@ inven_choice(char* prompt)
     msg_print("You are not carrying anything!");
   return -1;
 }
-void
+int
 inven_eat(iidx)
 {
   uint32_t i;
@@ -7102,9 +7098,12 @@ inven_eat(iidx)
     uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
     inven_destroy_one(iidx);
     msg_print("nom nom nom!!");
+    turn_flag = TRUE;
+    return TRUE;
   } else {
     msg_print("You can't eat that!");
   }
+  return FALSE;
 }
 void
 inven_study(iidx)
@@ -7450,6 +7449,7 @@ inven_quaff(iidx)
 
     uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
     inven_destroy_one(iidx);
+    turn_flag = TRUE;
 
     return TRUE;
   }
@@ -7470,7 +7470,6 @@ int *uy, *ux;
   i_ptr = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[i_ptr->tidx];
   if (i_ptr->tval == TV_SCROLL1 || i_ptr->tval == TV_SCROLL2) {
-    free_turn_flag = FALSE;
     used_up = TRUE;
     i = i_ptr->flags;
     ident = FALSE;
@@ -7678,6 +7677,7 @@ int *uy, *ux;
       MSG("You have %s.", descD);
       inven_destroy_one(iidx);
     }
+    turn_flag = TRUE;
     return TRUE;
   }
 
@@ -7691,141 +7691,146 @@ inven_try_wand_dir(iidx, dir)
   struct objS* i_ptr;
   struct treasureS* tr_ptr;
 
-  y = uD.y;
-  x = uD.x;
   i_ptr = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[i_ptr->tidx];
-  ident = FALSE;
-  chance = uD.save + think_adj(A_INT) - (int)i_ptr->level +
-           (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
-  if (countD.confusion) chance = chance / 2;
-  if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
-    chance = USE_DEVICE; /* Give everyone a slight chance */
-  if (chance <= 0) chance = 1;
-  if (randint(chance) < USE_DEVICE)
-    msg_print("You failed to use the wand properly.");
-  else if (i_ptr->p1 > 0) {
-    flags = i_ptr->flags;
-    (i_ptr->p1)--;
-    while (flags != 0) {
-      j = bit_pos(&flags) + 1;
-      /* Wands  		 */
-      switch (j) {
-        case 1:
-          msg_print("A line of blue shimmering light appears.");
-          light_line(dir, uD.y, uD.x);
-          ident = TRUE;
-          break;
-        case 2:
-          fire_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_nameD[8]);
-          ident = TRUE;
-          break;
-        case 3:
-          fire_bolt(GF_FROST, dir, y, x, damroll(6, 8), spell_nameD[14]);
-          ident = TRUE;
-          break;
-        case 4:
-          fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_nameD[22]);
-          ident = TRUE;
-          break;
-        case 5:
-          ident = wall_to_mud(dir, y, x);
-          break;
-        case 6:
-          ident = poly_monster(dir, y, x);
-          break;
-        case 7:
-          ident = hp_monster(dir, y, x, -damroll(4, 6));
-          break;
-        case 8:
-          ident = speed_monster(dir, y, x, 1);
-          break;
-        case 9:
-          ident = speed_monster(dir, y, x, -1);
-          break;
-        case 10:
-          ident = confuse_monster(dir, y, x);
-          break;
-        case 11:
-          ident = sleep_monster(dir, y, x);
-          break;
-        case 12:
-          ident = drain_life(dir, y, x);
-          break;
-        case 13:
-          ident = td_destroy2(dir, y, x);
-          break;
-        case 14:
-          fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6), spell_nameD[0]);
-          ident = TRUE;
-          break;
-        case 15:
-          ident = build_wall(dir, y, x);
-          break;
-        case 16:
-          ident = clone_monster(dir, y, x);
-          break;
-        case 17:
-          ident = teleport_monster(dir, y, x);
-          break;
-        case 18:
-          ident = disarm_all(dir, y, x);
-          break;
-        case 19:
-          fire_ball(GF_LIGHTNING, dir, y, x, 32, "Lightning Ball");
-          ident = TRUE;
-          break;
-        case 20:
-          fire_ball(GF_FROST, dir, y, x, 48, "Cold Ball");
-          ident = TRUE;
-          break;
-        case 21:
-          fire_ball(GF_FIRE, dir, y, x, 72, "Fire Ball");
-          ident = TRUE;
-          break;
-        case 22:
-          fire_ball(GF_POISON_GAS, dir, y, x, 12, "Frost Ball");
-          ident = TRUE;
-          break;
-        case 23:
-          fire_ball(GF_ACID, dir, y, x, 60, "Acid Ball");
-          ident = TRUE;
-          break;
-        case 24:
-          flags = 1L << (randint(23) - 1);
-          break;
-        default:
-          msg_print("Internal error in wands()");
-          break;
+  if (i_ptr->tval == TV_WAND) {
+    y = uD.y;
+    x = uD.x;
+    ident = FALSE;
+    chance = uD.save + think_adj(A_INT) - (int)i_ptr->level +
+             (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
+    if (countD.confusion) chance = chance / 2;
+    if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
+      chance = USE_DEVICE; /* Give everyone a slight chance */
+    if (chance <= 0) chance = 1;
+    if (randint(chance) < USE_DEVICE)
+      msg_print("You failed to use the wand properly.");
+    else if (i_ptr->p1 > 0) {
+      flags = i_ptr->flags;
+      (i_ptr->p1)--;
+      while (flags != 0) {
+        j = bit_pos(&flags) + 1;
+        /* Wands  		 */
+        switch (j) {
+          case 1:
+            msg_print("A line of blue shimmering light appears.");
+            light_line(dir, uD.y, uD.x);
+            ident = TRUE;
+            break;
+          case 2:
+            fire_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_nameD[8]);
+            ident = TRUE;
+            break;
+          case 3:
+            fire_bolt(GF_FROST, dir, y, x, damroll(6, 8), spell_nameD[14]);
+            ident = TRUE;
+            break;
+          case 4:
+            fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_nameD[22]);
+            ident = TRUE;
+            break;
+          case 5:
+            ident = wall_to_mud(dir, y, x);
+            break;
+          case 6:
+            ident = poly_monster(dir, y, x);
+            break;
+          case 7:
+            ident = hp_monster(dir, y, x, -damroll(4, 6));
+            break;
+          case 8:
+            ident = speed_monster(dir, y, x, 1);
+            break;
+          case 9:
+            ident = speed_monster(dir, y, x, -1);
+            break;
+          case 10:
+            ident = confuse_monster(dir, y, x);
+            break;
+          case 11:
+            ident = sleep_monster(dir, y, x);
+            break;
+          case 12:
+            ident = drain_life(dir, y, x);
+            break;
+          case 13:
+            ident = td_destroy2(dir, y, x);
+            break;
+          case 14:
+            fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6),
+                      spell_nameD[0]);
+            ident = TRUE;
+            break;
+          case 15:
+            ident = build_wall(dir, y, x);
+            break;
+          case 16:
+            ident = clone_monster(dir, y, x);
+            break;
+          case 17:
+            ident = teleport_monster(dir, y, x);
+            break;
+          case 18:
+            ident = disarm_all(dir, y, x);
+            break;
+          case 19:
+            fire_ball(GF_LIGHTNING, dir, y, x, 32, "Lightning Ball");
+            ident = TRUE;
+            break;
+          case 20:
+            fire_ball(GF_FROST, dir, y, x, 48, "Cold Ball");
+            ident = TRUE;
+            break;
+          case 21:
+            fire_ball(GF_FIRE, dir, y, x, 72, "Fire Ball");
+            ident = TRUE;
+            break;
+          case 22:
+            fire_ball(GF_POISON_GAS, dir, y, x, 12, "Frost Ball");
+            ident = TRUE;
+            break;
+          case 23:
+            fire_ball(GF_ACID, dir, y, x, 60, "Acid Ball");
+            ident = TRUE;
+            break;
+          case 24:
+            flags = 1L << (randint(23) - 1);
+            break;
+          default:
+            msg_print("Internal error in wands()");
+            break;
+        }
+        /* End of Wands.  	    */
       }
-      /* End of Wands.  	    */
-    }
-    if (ident) {
-      if (!tr_is_known(tr_ptr)) {
-        /* round half-way case up */
-        // TBD: tuning
-        uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
-        py_experience();
+      if (ident) {
+        if (!tr_is_known(tr_ptr)) {
+          /* round half-way case up */
+          // TBD: tuning
+          uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
+          py_experience();
 
-        tr_make_known(tr_ptr);
+          tr_make_known(tr_ptr);
+        }
       }
+      // else if (!known1_p(i_ptr))
+      //   sample(i_ptr);
+      if (i_ptr->idflag & ID_REVEAL)
+        MSG("You have %d charges remaining.", i_ptr->p1);
+    } else {
+      msg_print("The wand has no charges left.");
+      i_ptr->idflag |= ID_EMPTY;
     }
-    // else if (!known1_p(i_ptr))
-    //   sample(i_ptr);
-    if (i_ptr->idflag & ID_REVEAL)
-      MSG("You have %d charges remaining.", i_ptr->p1);
-  } else {
-    msg_print("The wand has no charges left.");
-    i_ptr->idflag |= ID_EMPTY;
+    turn_flag = TRUE;
+    return TRUE;
   }
-  return ident;
+
+  return FALSE;
 }
 void
 py_zap(iidx)
 {
   int dir;
 
-  free_turn_flag = FALSE;
   if (get_dir(0, &dir)) {
     if (countD.confusion) {
       msg_print("You are confused.");
@@ -7836,7 +7841,9 @@ py_zap(iidx)
     inven_try_wand_dir(iidx, dir);
   }
 }
-void inven_try_staff(iidx, uy, ux) int *uy, *ux;
+int
+inven_try_staff(iidx, uy, ux)
+int *uy, *ux;
 {
   uint32_t flags, j;
   int k, chance;
@@ -7847,7 +7854,6 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
   i_ptr = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[i_ptr->tidx];
   if (i_ptr->tval == TV_STAFF) {
-    free_turn_flag = FALSE;
     chance = uD.save + think_adj(A_INT) - i_ptr->level - 5 +
              (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
     if (countD.confusion) chance = chance / 2;
@@ -7977,9 +7983,14 @@ void inven_try_staff(iidx, uy, ux) int *uy, *ux;
       msg_print("The staff has no charges left.");
       i_ptr->idflag |= ID_EMPTY;
     }
+    turn_flag = TRUE;
+    return TRUE;
   }
+
+  return FALSE;
 }
-static void py_drop(y, x) int y, x;
+static void
+py_drop(y, x)
 {
   char c;
   struct caveS* c_ptr;
@@ -8008,6 +8019,7 @@ static void py_drop(y, x) int y, x;
 
       obj_desc(obj, TRUE);
       MSG("You drop %s.", descD);
+      turn_flag = TRUE;
     }
   }
 }
@@ -8108,6 +8120,7 @@ inven_wear(iidx)
         obj->idflag |= ID_DAMD;
       }
       calc_bonuses();
+      turn_flag = TRUE;
     }
   }
 }
@@ -8221,8 +8234,6 @@ py_map()
   for (int it = 0; it < MINIMAP_WIDTH; ++it) *iter++ = CH(HE);
   *iter++ = CH(BR);
   screen_usedD[orow + 2] = (MINIMAP_WIDTH + 2);
-
-  free_turn_flag = TRUE;
 }
 
 void
@@ -8295,8 +8306,6 @@ py_character()
   BufMsg(screen, "%-12.012s: %6d", "Perception", MAX(40 - uD.fos, 0));
   BufMsg(screen, "%-12.012s: %6d", "Searching", uD.search);
   BufMsg(screen, "%-12.012s: %d feet", "Infra-Vision", uD.infra * 10);
-
-  free_turn_flag = TRUE;
 }
 void
 py_takeoff()
@@ -8315,6 +8324,7 @@ py_takeoff()
           if (into >= 0) {
             equip_takeoff(iidx, into);
             calc_bonuses();
+            turn_flag = TRUE;
           }
         }
       }
@@ -8376,10 +8386,9 @@ py_help()
     BufMsg(screen, "CTRL('m'): teleport-to-monster");
     BufMsg(screen, "CTRL('o'): teleport-to-object");
   }
-  free_turn_flag = TRUE;
 }
-static void py_pickup(y, x, pickup) int y, x;
-int pickup;
+static void
+py_pickup(y, x, pickup)
 {
   struct caveS* c_ptr;
   struct objS* obj;
@@ -8390,7 +8399,6 @@ int pickup;
 
   if (obj->tval == 0) {
     msg_print("You see nothing here.");
-    free_turn_flag = TRUE;
   }
   /* There's GOLD in them thar hills!      */
   else if (obj->tval == TV_GOLD) {
@@ -8398,6 +8406,7 @@ int pickup;
     MSG("You have found %d gold pieces worth of %s.", obj->cost,
         gold_nameD[obj->subval]);
     delete_object(y, x);
+    turn_flag = TRUE;
   } else if (obj->tval <= TV_MAX_PICK_UP) {
     locn = -1;
     merge = inven_merge(obj->id, &locn);
@@ -8410,6 +8419,7 @@ int pickup;
       caveD[y][x].oidx = 0;
 
       MSG("You have %s (%c)", descD, locn + 'a');
+      turn_flag = TRUE;
     } else if (!pickup) {
       MSG("You see %s here.", descD);
     } else {
@@ -8559,46 +8569,53 @@ py_shield_attack(y, x)
   struct monS* m_ptr;
   struct objS* shield;
 
-  midx = caveD[y][x].midx;
-  m_ptr = &entity_monD[midx];
-  cr_ptr = &creatureD[m_ptr->cidx];
-  shield = obj_get(invenD[INVEN_ARM]);
-  m_ptr->msleep = 0;
-  mon_desc(midx);
-  base_tohit = statD.use_stat[A_STR] + shield->weight / 2 + uD.wt / 10;
-  adj = uD.lev * level_adj[uD.clidx][LA_BTH];
-  if (!m_ptr->mlit)
-    base_tohit = (base_tohit / 2) -
-                 (statD.use_stat[A_DEX] * (BTH_PLUS_ADJ - 1)) - (adj / 2);
-
-  if (test_hit(base_tohit, adj, statD.use_stat[A_DEX], cr_ptr->ac)) {
-    MSG("You hit %s.", descD);
-    k = pdamroll(shield->damage);
-    k = critical_blow(shield->weight / 4 + statD.use_stat[A_STR], 0, k);
-    k += uD.wt / 60 + 3;
-
-    /* See if we done it in.  			     */
-    if (mon_take_hit(midx, k)) {
-      MSG("You have slain %s.", descD);
-      py_experience();
-    } else {
-      /* Can not stun Balrog */
-      avg_max_hp = (cr_ptr->cdefense & CD_MAX_HP
-                        ? cr_ptr->hd[0] * cr_ptr->hd[1]
-                        : (cr_ptr->hd[0] * (cr_ptr->hd[1] + 1)) >> 1);
-      if ((100 + randint(400) + randint(400)) > (m_ptr->hp + avg_max_hp)) {
-        m_ptr->mstunned += randint(3) + 1;
-        if (m_ptr->mstunned > 24) m_ptr->mstunned = 24;
-        MSG("%s appears stunned!", descD);
-      } else
-        MSG("%s ignores your bash!", descD);
-    }
+  turn_flag = TRUE;
+  if (countD.fear) {
+    MSG("You are too afraid to bash anyone!");
+  } else if (!invenD[INVEN_ARM]) {
+    MSG("You must wear a shield to bash monsters!");
   } else {
-    MSG("You miss %s.", descD);
-  }
-  if (randint(150) > statD.use_stat[A_DEX]) {
-    msg_print("You are off balance.");
-    countD.paralysis = 1 + randint(2);
+    midx = caveD[y][x].midx;
+    m_ptr = &entity_monD[midx];
+    cr_ptr = &creatureD[m_ptr->cidx];
+    shield = obj_get(invenD[INVEN_ARM]);
+    m_ptr->msleep = 0;
+    mon_desc(midx);
+    base_tohit = statD.use_stat[A_STR] + shield->weight / 2 + uD.wt / 10;
+    adj = uD.lev * level_adj[uD.clidx][LA_BTH];
+    if (!m_ptr->mlit)
+      base_tohit = (base_tohit / 2) -
+                   (statD.use_stat[A_DEX] * (BTH_PLUS_ADJ - 1)) - (adj / 2);
+
+    if (test_hit(base_tohit, adj, statD.use_stat[A_DEX], cr_ptr->ac)) {
+      MSG("You hit %s.", descD);
+      k = pdamroll(shield->damage);
+      k = critical_blow(shield->weight / 4 + statD.use_stat[A_STR], 0, k);
+      k += uD.wt / 60 + 3;
+
+      /* See if we done it in.  			     */
+      if (mon_take_hit(midx, k)) {
+        MSG("You have slain %s.", descD);
+        py_experience();
+      } else {
+        /* Can not stun Balrog */
+        avg_max_hp = (cr_ptr->cdefense & CD_MAX_HP
+                          ? cr_ptr->hd[0] * cr_ptr->hd[1]
+                          : (cr_ptr->hd[0] * (cr_ptr->hd[1] + 1)) >> 1);
+        if ((100 + randint(400) + randint(400)) > (m_ptr->hp + avg_max_hp)) {
+          m_ptr->mstunned += randint(3) + 1;
+          if (m_ptr->mstunned > 24) m_ptr->mstunned = 24;
+          MSG("%s appears stunned!", descD);
+        } else
+          MSG("%s ignores your bash!", descD);
+      }
+    } else {
+      MSG("You miss %s.", descD);
+    }
+    if (randint(150) > statD.use_stat[A_DEX]) {
+      msg_print("You are off balance.");
+      countD.paralysis = 1 + randint(2);
+    }
   }
 }
 void
@@ -8612,70 +8629,75 @@ py_attack(y, x)
   struct creatureS* cre = &creatureD[mon->cidx];
   struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
-  tohit = cbD.ptohit;
-  todam = cbD.ptodam;
-  base_tohit = uD.bth;
-  lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
-  // reduce hit if monster not lit
-  if (mon->mlit == 0) {
-    tohit = 0;
-    base_tohit /= 2;
-    lev_adj /= 2;
-  }
+  turn_flag = TRUE;
+  if (countD.fear) {
+    msg_print("You are too afraid!");
+  } else {
+    tohit = cbD.ptohit;
+    todam = cbD.ptodam;
+    base_tohit = uD.bth;
+    lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
+    // reduce hit if monster not lit
+    if (mon->mlit == 0) {
+      tohit = 0;
+      base_tohit /= 2;
+      lev_adj /= 2;
+    }
 
-  switch (obj->tval) {
-    default:
-      blows = attack_blows(obj->weight);
-      break;
-    case 0:
-      blows = 2;
-      tohit -= 3;
-      break;
-    case TV_SLING_AMMO:
-    case TV_BOLT:
-    case TV_ARROW:
-    case TV_SPIKE:
-      blows = 1;
-      break;
-  }
+    switch (obj->tval) {
+      default:
+        blows = attack_blows(obj->weight);
+        break;
+      case 0:
+        blows = 2;
+        tohit -= 3;
+        break;
+      case TV_SLING_AMMO:
+      case TV_BOLT:
+      case TV_ARROW:
+      case TV_SPIKE:
+        blows = 1;
+        break;
+    }
 
-  mon->msleep = 0;
-  mon_desc(midx);
-  descD[0] = tolower(descD[0]);
-  creature_ac = cre->ac;
-  /* Loop for number of blows,  trying to hit the critter.	  */
-  for (int it = 0; it < blows; ++it) {
-    if (test_hit(base_tohit, lev_adj, tohit, creature_ac)) {
-      MSG("You hit %s.", descD);
-      if (obj->tval) {
-        k = pdamroll(obj->damage);
-        k = critical_blow(obj->weight, 0, k);
-      } else {
-        k = damroll(1, 1);
-        k = critical_blow(1, 0, k);
-      }
-      k += todam;
-
-      if (uD.confuse_monster) {
-        uD.confuse_monster = 0;
-        msg_print("Your hands stop glowing.");
-        if ((cre->cdefense & CD_NO_SLEEP) ||
-            randint(MAX_MON_LEVEL) < cre->level) {
-          MSG("%s is unaffected by confusion.", descD);
+    mon->msleep = 0;
+    mon_desc(midx);
+    descD[0] = tolower(descD[0]);
+    creature_ac = cre->ac;
+    /* Loop for number of blows,  trying to hit the critter.	  */
+    for (int it = 0; it < blows; ++it) {
+      if (test_hit(base_tohit, lev_adj, tohit, creature_ac)) {
+        MSG("You hit %s.", descD);
+        if (obj->tval) {
+          k = pdamroll(obj->damage);
+          k = critical_blow(obj->weight, 0, k);
         } else {
-          MSG("%s appears confused.", descD);
-          mon->mconfused += 2 + randint(16);
+          k = damroll(1, 1);
+          k = critical_blow(1, 0, k);
         }
-      }
+        k += todam;
 
-      /* See if we done it in.  			 */
-      if (mon_take_hit(midx, k)) {
-        MSG("You have slain %s.", descD);
-        py_experience();
-        blows = 0;
+        if (uD.confuse_monster) {
+          uD.confuse_monster = 0;
+          msg_print("Your hands stop glowing.");
+          if ((cre->cdefense & CD_NO_SLEEP) ||
+              randint(MAX_MON_LEVEL) < cre->level) {
+            MSG("%s is unaffected by confusion.", descD);
+          } else {
+            MSG("%s appears confused.", descD);
+            mon->mconfused += 2 + randint(16);
+          }
+        }
+
+        /* See if we done it in.  			 */
+        if (mon_take_hit(midx, k)) {
+          MSG("You have slain %s.", descD);
+          py_experience();
+          blows = 0;
+        }
+      } else {
+        MSG("You miss %s.", descD);
       }
-    } else {
-      MSG("You miss %s.", descD);
     }
   }
 }
@@ -8888,7 +8910,7 @@ static void mon_attack(midx) int midx;
 static void
 close_object()
 {
-  int y, x, dir, no_object, valid_object;
+  int y, x, dir, no_object;
   struct caveS* c_ptr;
   struct objS* obj;
 
@@ -8900,9 +8922,9 @@ close_object()
     obj = &entity_objD[c_ptr->oidx];
 
     no_object = (obj->id == 0);
-    valid_object = obj->tval == TV_OPEN_DOOR;
 
-    if (valid_object) {
+    if (obj->tval == TV_OPEN_DOOR) {
+      turn_flag = TRUE;
       if (c_ptr->midx == 0) {
         if (obj->p1 == 0) {
           // invcopy(&t_list[c_ptr->tptr], OBJ_CLOSED_DOOR);
@@ -8912,13 +8934,11 @@ close_object()
         } else
           msg_print("The door appears to be broken.");
       } else {
+        // Costs a turn, otherwise can be abused for detection
         msg_print("Something is in your way!");
       }
-    }
-
-    if (no_object) {
+    } else {
       msg_print("I do not see anything you can close there.");
-      free_turn_flag = TRUE;
     }
   }
 }
@@ -8961,7 +8981,6 @@ void py_disarm(uy, ux) int *uy, *ux;
   x = *ux;
   if (countD.confusion) {
     msg_print("You are too confused to disarm.");
-    free_turn_flag = TRUE;
   } else if (get_dir(0, &dir)) {
     mmove(dir, &y, &x);
     c_ptr = &caveD[y][x];
@@ -8969,7 +8988,6 @@ void py_disarm(uy, ux) int *uy, *ux;
 
     if (obj->tval != TV_VIS_TRAP) {
       msg_print("I do not see anything to disarm there.");
-      free_turn_flag = TRUE;
     } else if (c_ptr->midx) {
       // Prevent invis-detection via disarm: no free turn
       msg_print("Something is in your way!");
@@ -8991,39 +9009,26 @@ bash(y, x)
 
   movement = 0;
   if (c_ptr->midx) {
-    if (countD.fear) {
-      MSG("You are too afraid to bash anyone!");
-      free_turn_flag = TRUE;
-    } else if (!invenD[INVEN_ARM]) {
-      MSG("You must wear a shield to bash monsters!");
-      free_turn_flag = TRUE;
-    } else {
-      py_shield_attack(y, x);
-    }
-  } else if (c_ptr->oidx) {
-    if (obj->tval == TV_CLOSED_DOOR) {
-      msg_print("You smash into the door!");
-      tmp = statD.use_stat[A_STR] + uD.wt / 2;
-      /* Use (roughly) similar method as for monsters. */
-      if (randint(tmp * (20 + ABS(obj->p1))) < 10 * (tmp - ABS(obj->p1))) {
-        msg_print("The door crashes open!");
-        // invcopy(&t_list[c_ptr->tptr], OBJ_OPEN_DOOR);
-        obj->tval = TV_OPEN_DOOR;
-        obj->tchar = '\'';
-        obj->p1 = 1 - randint(2); /* 50% chance of breaking door */
-        c_ptr->fval = FLOOR_CORR;
-        if (countD.confusion == 0) movement = 1;
-      } else if (randint(150) > 18) {  // py.stats.use_stat[A_DEX]) {
-        msg_print("You are off-balance.");
-        countD.paralysis = 1 + randint(2);
-      } else
-        msg_print("The door holds firm.");
+    py_shield_attack(y, x);
+  } else if (obj->tval == TV_CLOSED_DOOR) {
+    turn_flag = TRUE;
+    msg_print("You smash into the door!");
+    tmp = statD.use_stat[A_STR] + uD.wt / 2;
+    /* Use (roughly) similar method as for monsters. */
+    if (randint(tmp * (20 + ABS(obj->p1))) < 10 * (tmp - ABS(obj->p1))) {
+      msg_print("The door crashes open!");
+      // invcopy(&t_list[c_ptr->tptr], OBJ_OPEN_DOOR);
+      obj->tval = TV_OPEN_DOOR;
+      obj->tchar = '\'';
+      obj->p1 = 1 - randint(2); /* 50% chance of breaking door */
+      c_ptr->fval = FLOOR_CORR;
+      if (countD.confusion == 0) movement = 1;
+    } else if (randint(150) > 18) {  // TBD: py.stats.use_stat[A_DEX])
+      msg_print("You are off-balance.");
+      countD.paralysis = 1 + randint(2);
     } else
-      /* Can't give free turn, or else player could try directions
-         until he found invisible creature */
-      msg_print("You bash it, but nothing interesting happens.");
-  } else /* same message for wall as for secret door */
-  {
+      msg_print("The door holds firm.");
+  } else {
     msg_print("You bash it, but nothing interesting happens.");
   }
 
@@ -9059,6 +9064,7 @@ open_object(y, x)
   obj = &entity_objD[c_ptr->oidx];
 
   if (obj->tval == TV_CLOSED_DOOR) {
+    turn_flag = TRUE;
     // Monster may be invisible and will retaliate
     if (c_ptr->midx) {
       msg_print("Something is in your way!");
@@ -9093,7 +9099,6 @@ open_object(y, x)
     }
   } else {
     msg_print("I do not see anything you can open there.");
-    free_turn_flag = TRUE;
   }
 }
 static void
@@ -9160,6 +9165,7 @@ py_search(y, x)
           find_flag = FALSE;
         }
       }
+  turn_flag = TRUE;
 }
 static void
 py_look_mon()
@@ -9194,7 +9200,6 @@ py_look_mon()
     else
       msg_print("You see no monsters of interest in that direction.");
   }
-  free_turn_flag = TRUE;
 }
 static void
 py_look_obj()
@@ -9229,7 +9234,6 @@ py_look_obj()
     else
       msg_print("You see no objects of interest in that direction.");
   }
-  free_turn_flag = TRUE;
 }
 static void make_move(midx, mm) int* mm;
 {
@@ -9240,7 +9244,7 @@ static void make_move(midx, mm) int* mm;
   struct objS* obj;
 
   i = 0;
-  do_turn = FALSE;
+  turn_flag = FALSE;
   do_move = FALSE;
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
@@ -9262,7 +9266,7 @@ static void make_move(midx, mm) int* mm;
           delete_object(newy, newx);
         } else {
           do_move = FALSE;
-          do_turn = (cr_ptr->cmove & CM_ATTACK_ONLY);
+          turn_flag = (cr_ptr->cmove & CM_ATTACK_ONLY);
         }
       }
     }
@@ -9275,7 +9279,7 @@ static void make_move(midx, mm) int* mm;
         if (!m_ptr->mlit) update_mon(midx);
         mon_attack(midx);
         do_move = FALSE;
-        do_turn = TRUE;
+        turn_flag = TRUE;
       }
       /* Creature is attempting to move on other creature?     */
       else if (c_ptr->midx && c_ptr->midx != midx) {
@@ -9290,7 +9294,7 @@ static void make_move(midx, mm) int* mm;
       m_ptr->mlit = FALSE;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
-      do_turn = TRUE;
+      turn_flag = TRUE;
     }
     if (do_turn) break;
   }
@@ -10243,7 +10247,6 @@ void
 tick()
 {
   int regen_amount;
-  turnD += 1;
 
   if (uD.food < 0)
     regen_amount = 0;
@@ -10335,14 +10338,15 @@ dungeon()
 
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
   while (!new_level_flag) {
-    tick();
     msg_countD = 1;
+    turnD += 1;
+    tick();
 
     do {
       if (countD.rest != 0) break;
       if (countD.paralysis != 0) break;
       draw();
-      free_turn_flag = FALSE;
+      turn_flag = FALSE;
 
       y = uD.y;
       x = uD.x;
@@ -10406,14 +10410,12 @@ dungeon()
               py_help();
               break;
             case ' ':
-              free_turn_flag = TRUE;
               break;
             case ',':
               py_pickup(y, x, TRUE);
               break;
             case '1' ... '9':
               MSG("Numlock is required for arrowkey movement");
-              free_turn_flag = TRUE;
               break;
             case 'c':
               close_object();
@@ -10422,7 +10424,6 @@ dungeon()
               py_drop(y, x);
               break;
             case 'e': {
-              free_turn_flag = TRUE;
               int count = py_inven(INVEN_EQUIP, MAX_INVEN);
               MSG("You wearing %d items.", count);
             } break;
@@ -10430,7 +10431,6 @@ dungeon()
               py_bash(&y, &x);
               break;
             case 'i': {
-              free_turn_flag = TRUE;
               int count = py_inven(0, INVEN_EQUIP);
               MSG("You carrying %d items.", count);
             } break;
@@ -10488,7 +10488,6 @@ dungeon()
               break;
             case 'I':
               inven_sort();
-              free_turn_flag = TRUE;
               int count = py_inven(0, INVEN_EQUIP);
               MSG("You carrying %d items.", count);
               break;
@@ -10509,7 +10508,6 @@ dungeon()
               py_where();
               break;
             case CTRL('p'): {
-              free_turn_flag = TRUE;
               msg_history();
             } break;
             case CTRL('x'): {
@@ -10518,7 +10516,6 @@ dungeon()
               strcpy(death_descD, "quitting");
             } break;
             default:
-              if (HACK == 0) free_turn_flag = TRUE;
               break;
           }
           if (HACK) {
@@ -10545,7 +10542,6 @@ dungeon()
                 if (uD.mhp < 1000) uD.mhp = 1000;
                 uD.chp = uD.mhp;
                 msg_print("You are healed.");
-                free_turn_flag = TRUE;
                 break;
               case CTRL('k'):
                 py_make_known();
@@ -10616,7 +10612,6 @@ dungeon()
 
         if (find_flag && (mon->mlit || c_ptr->fval > MAX_OPEN_SPACE)) {
           find_flag = FALSE;
-          free_turn_flag = TRUE;
         } else {
           // doors known to be jammed are bashed prior to movement
           if (obj->tval == TV_CLOSED_DOOR) {
@@ -10626,10 +10621,7 @@ dungeon()
           }
 
           if (mon->id) {
-            if (countD.fear == 0)
-              py_attack(y, x);
-            else
-              msg_print("You are too afraid!");
+            py_attack(y, x);
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
             if (obj->tval == TV_VIS_TRAP) {
               try_disarm_trap(y, x);
@@ -10645,6 +10637,7 @@ dungeon()
             }
 
             // Perception check on movement
+            turn_flag = TRUE;
             uD.y = y;
             uD.x = x;
             if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
@@ -10660,13 +10653,11 @@ dungeon()
             }
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
-          } else {
-            free_turn_flag = TRUE;
           }
         }
         panel_update(&panelD, uD.y, uD.x, FALSE);
       }
-    } while (free_turn_flag && !new_level_flag);
+    } while (!turn_flag && !new_level_flag);
 
     creatures();
   }
