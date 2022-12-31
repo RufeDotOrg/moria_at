@@ -10537,9 +10537,10 @@ dungeon()
                 create_food(y, x);
               } break;
               case CTRL('h'):
-                if (uD.mhp < 100) uD.mhp = 100;
+                if (uD.mhp < 1000) uD.mhp = 1000;
                 uD.chp = uD.mhp;
                 msg_print("You are healed.");
+                free_turn_flag = TRUE;
                 break;
               case CTRL('k'):
                 py_make_known();
