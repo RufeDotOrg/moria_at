@@ -10358,7 +10358,6 @@ dungeon()
       } else {
         msg_advance();
         c = inkey();
-        if (c == -1) break;
 
         // AWN: Period attempts auto-detection of a situational command
         if (c == '.') {
