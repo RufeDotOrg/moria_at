@@ -2476,7 +2476,7 @@ struct objS* obj;
 {
   return (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE);
 }
-int
+static int
 oset_pickup(obj)
 struct objS* obj;
 {
@@ -5641,6 +5641,8 @@ py_lose_experience(amount)
     // prt_title();
   }
 }
+// TBD: We may loop infinitely with the added restriction of oidx != 0
+// Phase door and thief (short range) teleport run a higher risk
 void py_teleport(dis, uy, ux) int dis;
 int *uy, *ux;
 {
@@ -5656,7 +5658,7 @@ int *uy, *ux;
       tx += ((x - tx) / 2);
     }
   } while ((caveD[ty][tx].fval >= MIN_CLOSED_SPACE) ||
-           (caveD[ty][tx].midx != 0));
+           (caveD[ty][tx].midx != 0) || (caveD[ty][tx].oidx != 0));
   *uy = ty;
   *ux = tx;
 }
@@ -8921,7 +8923,7 @@ close_object()
   }
 }
 void
-disarm_trap(y, x)
+try_disarm_trap(y, x)
 {
   int chance;
   struct caveS* c_ptr;
@@ -9689,12 +9691,14 @@ int *uy, *ux;
 
   return FALSE;
 }
-static void hit_trap(y, x) int y, x;
+static void hit_trap(uy, ux) int *uy, *ux;
 {
-  int num, dam;
+  int y, x, num, dam;
   struct caveS* c_ptr;
   struct objS* obj;
 
+  y = *uy;
+  x = *ux;
   c_ptr = &caveD[y][x];
 
   find_flag = FALSE;
@@ -9774,8 +9778,10 @@ static void hit_trap(y, x) int y, x;
         msg_print("A small dart barely misses you.");
       break;
     case 8: /* Teleport*/
-      teleport_trap = TRUE;
       msg_print("You hit a teleport trap!");
+      // Display prior to changing movement
+      msg_pause();
+      py_teleport(40, uy, ux);
       break;
     case 9: /* Rockfall*/
       strcpy(death_descD, "a falling rock");
@@ -10340,8 +10346,7 @@ dungeon()
 
       y = uD.y;
       x = uD.x;
-      if (teleport_trap || cbD.tflag & TR_TELEPORT && randint(100) == 1) {
-        teleport_trap = 0;
+      if (cbD.tflag & TR_TELEPORT && randint(100) == 1) {
         disturb(0, 0);
         py_teleport(40, &y, &x);
       } else if (find_flag) {
@@ -10627,32 +10632,32 @@ dungeon()
               msg_print("You are too afraid!");
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
             if (obj->tval == TV_VIS_TRAP) {
-              disarm_trap(y, x);
+              try_disarm_trap(y, x);
             }
+            if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
+              hit_trap(&y, &x);
+            }
+
             py_move_light(uD.y, uD.x, y, x);
             if (countD.blind == 0 && ((c_ptr->cflag & CF_PERM_LIGHT) == 0 &&
                                       c_ptr->cflag & CF_ROOM)) {
               if (near_light(y, x)) light_room(y, x);
             }
-            int oy = uD.y;
-            int ox = uD.x;
+
+            // Perception check on movement
             uD.y = y;
             uD.x = x;
+            if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
+            if (countD.blind == 0 && find_flag) find_event(y, x);
 
-            if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
-              hit_trap(y, x);
-            } else if (obj->tval == TV_STORE_DOOR) {
+            if (obj->tval == TV_STORE_DOOR) {
               store_entrance(obj->tchar - '1');
             } else if (obj->tval == TV_PAWN_DOOR) {
               pawn_entrance();
-            } else {
-              if (countD.blind == 0 && find_flag) find_event(y, x);
-              if (obj->tval) {
-                find_flag = FALSE;
-                py_pickup(y, x, FALSE);
-              }
+            } else if (oset_pickup(obj)) {
+              disturb(0, 0);
+              py_pickup(y, x, FALSE);
             }
-            if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
           } else {
