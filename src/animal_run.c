@@ -253,6 +253,7 @@ msg_pause()
     draw();
     do {
       c = inkey();
+      if (c == ESCAPE) break;
     } while (c != ' ');
     msg_advance();
   }
