@@ -623,9 +623,9 @@ platform_draw()
         // Art priority creature, treasure, fallback to symmap ASCII
         uint64_t cridx = cremapD[row][col];
         uint64_t tridx = tremapD[row][col];
-        if (cridx && cridx < AL(art_textureD)) {
+        if (cridx && cridx <= AL(art_textureD)) {
           srct = art_textureD[cridx - 1];
-        } else if (tridx && tridx < AL(tart_textureD)) {
+        } else if (tridx && tridx <= AL(tart_textureD)) {
           srct = tart_textureD[tridx - 1];
         }
 
