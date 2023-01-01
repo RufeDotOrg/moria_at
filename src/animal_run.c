@@ -830,11 +830,12 @@ build_pawn()
 }
 BOOL
 near_light(y, x)
-int y, x;
 {
-  for (int row = y - 1; row <= y + 1; ++row) {
-    for (int col = x - 1; col <= x + 1; ++col) {
-      if (caveD[row][col].fval == FLOOR_LIGHT) return TRUE;
+  if ((caveD[y][x].cflag & CF_LIT_ROOM) == CF_ROOM) {
+    for (int row = y - 1; row <= y + 1; ++row) {
+      for (int col = x - 1; col <= x + 1; ++col) {
+        if (caveD[row][col].fval == FLOOR_LIGHT) return TRUE;
+      }
     }
   }
   return FALSE;
@@ -10390,10 +10391,7 @@ void
 py_check_view(y, x)
 {
   py_move_light(y, x, y, x);
-  struct caveS* c_ptr = &caveD[y][x];
-  if ((c_ptr->cflag & CF_PERM_LIGHT) == 0 && c_ptr->cflag & CF_ROOM) {
-    if (near_light(y, x)) light_room(y, x);
-  }
+  if (near_light(y, x)) light_room(y, x);
   FOR_EACH(mon, { update_mon(it_index); });
 }
 void
@@ -10855,8 +10853,7 @@ dungeon()
             }
 
             py_move_light(uD.y, uD.x, y, x);
-            if (countD.blind == 0 && ((c_ptr->cflag & CF_PERM_LIGHT) == 0 &&
-                                      c_ptr->cflag & CF_ROOM)) {
+            if (countD.blind == 0) {
               if (near_light(y, x)) light_room(y, x);
             }
 
