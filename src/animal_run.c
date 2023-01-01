@@ -8460,6 +8460,8 @@ show_version()
   BufMsg(screen, "  Justine Tunney");
   BufMsg(screen, "Source from puff.c (Zlib)");
   BufMsg(screen, "  Mark Adler");
+  BufMsg(screen, "Source from SDL2 (Zlib)");
+  BufMsg(screen, "  Sam Lantinga");
 }
 void
 py_character()
