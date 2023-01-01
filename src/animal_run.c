@@ -9089,7 +9089,7 @@ bash(y, x)
       obj->p1 = 1 - randint(2); /* 50% chance of breaking door */
       c_ptr->fval = FLOOR_CORR;
       if (countD.confusion == 0) movement = 1;
-    } else if (randint(150) > 18) {  // TBD: py.stats.use_stat[A_DEX])
+    } else if (randint(150) > statD.use_stat[A_DEX]) {
       msg_print("You are off-balance.");
       countD.paralysis = 1 + randint(2);
     } else
