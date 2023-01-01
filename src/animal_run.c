@@ -3740,13 +3740,15 @@ detect_mon(int (*valid)())
   });
   return FALSE;
 }
-void move_rec(y1, x1, y2, x2) register int y1, x1, y2, x2;
+void
+move_rec(y1, x1, y2, x2)
 {
   int tmp = caveD[y1][x1].midx;
   caveD[y1][x1].midx = 0;
   caveD[y2][x2].midx = tmp;
 }
-void update_mon(midx) int midx;
+void
+update_mon(midx)
 {
   int flag, fy, fx, cdis;
   struct caveS* c_ptr;
@@ -8705,12 +8707,15 @@ py_attack(y, x)
     }
   }
 }
-static void mon_attack(midx) int midx;
+static void
+mon_attack(midx)
 {
   int bth, flag;
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
+  // TBD: perf draw/attack
+  draw();
   mon_desc(midx);
   int adj = cre->level * CRE_LEV_ADJ;
   for (int it = 0; it < AL(cre->attack_list); ++it) {
@@ -9277,10 +9282,6 @@ static void make_move(midx, mm) int* mm;
     if (do_move) {
       /* Creature has attempted to move on player?     */
       if (newy == uD.y && newx == uD.x) {
-        /* if the monster is not lit, must call update_mon, it may
-           be faster than character, and hence could have just
-           moved next to character this same turn */
-        if (!m_ptr->mlit) update_mon(midx);
         mon_attack(midx);
         do_move = FALSE;
         turn_flag = TRUE;
@@ -9295,9 +9296,9 @@ static void make_move(midx, mm) int* mm;
     if (do_move) {
       /* Move creature record  	       */
       move_rec(fy, fx, newy, newx);
-      m_ptr->mlit = FALSE;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
+      update_mon(midx);
       turn_flag = TRUE;
     }
     if (do_turn) break;
@@ -9643,6 +9644,8 @@ creatures()
   y = uD.y;
   x = uD.x;
   FOR_EACH(mon, {
+    update_mon(it_index);
+
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     move_count = movement_rate(mon_speed(mon));
     for (; move_count > 0; --move_count) {
@@ -9674,8 +9677,6 @@ creatures()
         if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index, cdis);
       }
     }
-
-    update_mon(it_index);
   });
 }
 BOOL
