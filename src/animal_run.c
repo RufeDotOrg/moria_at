@@ -7216,6 +7216,7 @@ inven_study(iidx)
   obj = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[obj->tidx];
   if (obj->id) {
+    if (HACK) obj->idflag = ID_REVEAL;
     eqidx = may_equip(obj->tval);
 
     obj_desc(obj, TRUE);
@@ -7277,7 +7278,7 @@ inven_study(iidx)
       BufMsg(screen, "... is cursed!");
     }
     if (obj->idflag & ID_MAGIK) {
-      BufMsg(screen, "... is cursed!");
+      BufMsg(screen, "... is magical!");
     }
     if (!tr_is_known(tr_ptr)) {
       BufMsg(screen, "... has unknown effects!");
@@ -8483,7 +8484,6 @@ py_help()
     line = 0;
     BufMsg(screen, "CTRL('f'): food");
     BufMsg(screen, "CTRL('h'): heal");
-    BufMsg(screen, "CTRL('k'): make_known");
     BufMsg(screen, "CTRL('t'): teleport");
     BufMsg(screen, "CTRL('m'): teleport-to-monster");
     BufMsg(screen, "CTRL('o'): teleport-to-object");
@@ -10640,9 +10640,6 @@ dungeon()
                 if (uD.mhp < 1000) uD.mhp = 1000;
                 uD.chp = uD.mhp;
                 msg_print("You are healed.");
-                break;
-              case CTRL('k'):
-                py_make_known();
                 break;
               case CTRL('t'):
                 msg_print("teleport");
