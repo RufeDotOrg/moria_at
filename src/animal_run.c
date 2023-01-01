@@ -6688,8 +6688,8 @@ void
 inven_recharge(iidx, amount)
 {
   int chance;
-  register int res;
-  register struct objS* i_ptr;
+  int res;
+  struct objS* i_ptr;
 
   i_ptr = obj_get(invenD[iidx]);
   /* recharge I = recharge(20) = 1/6 failure for empty 10th level wand */
@@ -7667,18 +7667,17 @@ int *uy, *ux;
 {
   uint32_t i;
   int j, k, y, x;
-  int flag, used_up;
-  register int ident, l;
+  int ident, used_up, choice_idx;
   struct objS* i_ptr;
   struct treasureS* tr_ptr;
 
   i_ptr = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[i_ptr->tidx];
   if (i_ptr->tval == TV_SCROLL1 || i_ptr->tval == TV_SCROLL2) {
-    used_up = TRUE;
-    i = i_ptr->flags;
     ident = FALSE;
+    used_up = TRUE;
 
+    i = i_ptr->flags;
     while (i != 0) {
       j = bit_pos(&i) + 1;
       if (i_ptr->tval == TV_SCROLL2) j += 32;
@@ -7697,9 +7696,13 @@ int *uy, *ux;
         case 4:
           msg_print("This is an identify scroll.");
           ident |= TRUE;
-          l = inven_choice("Which item do you wish identified?");
-          if (l >= 0) inven_ident(l);
-          used_up = TRUE;
+          choice_idx = inven_choice("Which item do you wish identified?");
+          if (choice_idx >= 0) {
+            if (invenD[choice_idx])
+              inven_ident(choice_idx);
+            else
+              used_up = FALSE;
+          }
           break;
         case 5:
           if (equip_remove_curse()) {
@@ -7789,10 +7792,12 @@ int *uy, *ux;
         case 25:
           msg_print("This is a Recharge-Item scroll.");
           ident |= TRUE;
-          iidx = inven_choice("Recharge which item?");
-          if (iidx >= 0) {
-            used_up = TRUE;
-            inven_recharge(iidx, 60);
+          choice_idx = inven_choice("Recharge which item?");
+          if (choice_idx >= 0 && invenD[choice_idx]) {
+            if (invenD[choice_idx])
+              inven_recharge(choice_idx, 60);
+            else
+              used_up = FALSE;
           }
           break;
         case 26:
