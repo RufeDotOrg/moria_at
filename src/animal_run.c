@@ -9253,7 +9253,7 @@ static void make_move(midx, mm) int* mm;
   struct objS* obj;
 
   i = 0;
-  turn_flag = FALSE;
+  do_turn = FALSE;
   do_move = FALSE;
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
@@ -9275,7 +9275,7 @@ static void make_move(midx, mm) int* mm;
           delete_object(newy, newx);
         } else {
           do_move = FALSE;
-          turn_flag = (cr_ptr->cmove & CM_ATTACK_ONLY);
+          do_turn = (cr_ptr->cmove & CM_ATTACK_ONLY);
         }
       }
     }
@@ -9284,7 +9284,7 @@ static void make_move(midx, mm) int* mm;
       if (newy == uD.y && newx == uD.x) {
         mon_attack(midx);
         do_move = FALSE;
-        turn_flag = TRUE;
+        do_turn = TRUE;
       }
       /* Creature is attempting to move on other creature?     */
       else if (c_ptr->midx && c_ptr->midx != midx) {
@@ -9299,7 +9299,7 @@ static void make_move(midx, mm) int* mm;
       m_ptr->fy = newy;
       m_ptr->fx = newx;
       update_mon(midx);
-      turn_flag = TRUE;
+      do_turn = TRUE;
     }
     if (do_turn) break;
   }
