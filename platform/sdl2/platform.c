@@ -1037,9 +1037,10 @@ save()
     Log("%p %s %d\n", save_addr[it], save_name[it], save_info[it]);
     byte_count += save_info[it];
   }
-  void *f = fopen("test", "wb");
+  void *f = fopen("savechar", "wb");
   if (f) {
     checksumD = 0;
+    fwrite(&byte_count, sizeof(byte_count), 1, f);
     for (int it = 0; it < AL(save_info); ++it) {
       fwrite(save_addr[it], save_info[it], 1, f);
       checksum(save_addr[it], save_info[it]);
@@ -1083,17 +1084,22 @@ load()
     printf("%p %s %d\n", save_addr[it], save_name[it], save_info[it]);
     byte_count += save_info[it];
   }
-  void *f = fopen("test", "rb");
+  void *f = fopen("savechar", "rb");
   if (f) {
-    for (int it = 0; it < AL(save_info); ++it) {
-      fread(save_addr[it], save_info[it], 1, f);
+    int save_size = 0;
+
+    fread(&save_size, sizeof(save_size), 1, f);
+    if (save_size == byte_count) {
+      for (int it = 0; it < AL(save_info); ++it) {
+        fread(save_addr[it], save_info[it], 1, f);
+      }
     }
     fclose(f);
     checksumD = 0;
     for (int it = 0; it < AL(save_info); ++it) {
       checksum(save_addr[it], save_info[it]);
     }
-    return byte_count;
+    return save_size == byte_count;
   }
 
   return 0;
