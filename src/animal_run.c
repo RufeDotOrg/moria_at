@@ -8438,7 +8438,28 @@ py_map()
   *iter++ = CH(BR);
   screen_usedD[orow + 2] = (MINIMAP_WIDTH + 2);
 }
+void
+show_version()
+{
+  int line;
 
+  versionD[AL(versionD) - 1] = 0;
+
+  line = 0;
+  BufMsg(screen, "Version: %s", versionD);
+  BufMsg(screen, "Programming: %s", "Alan Newton");
+  BufMsg(screen, "Art: %s", "Nathan Miller");
+  line += 1;
+  BufMsg(screen, "License");
+  BufMsg(screen, "Source from Umoria (GPLv3)");
+  BufMsg(screen, "  Robert Alan Koeneke (1958-2022)");
+  BufMsg(screen, "  David J. Grabiner");
+  BufMsg(screen, "  James E. Wilson");
+  BufMsg(screen, "Source from Cosmopolitan LibC (ISC)");
+  BufMsg(screen, "  Justine Tunney");
+  BufMsg(screen, "Source from puff.c (Zlib)");
+  BufMsg(screen, "  Mark Adler");
+}
 void
 py_character()
 {
@@ -10648,6 +10669,9 @@ dungeon()
             case 's':
               py_search(y, x);
               msg_print("You search the area.");
+              break;
+            case 'v':
+              show_version();
               break;
             case 'w':
               py_wear();
