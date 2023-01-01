@@ -2386,6 +2386,36 @@ struct objS* obj;
   return (FALSE);
 }
 BOOL
+vuln_fire_breath(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_ARROW:
+    case TV_BOW:
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_SOFT_ARMOR:
+      if (obj->flags & TR_RES_FIRE)
+        return FALSE;
+      else
+        return TRUE;
+    case TV_STAFF:
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+    case TV_POTION1:
+    case TV_POTION2:
+    case TV_FLASK:
+    case TV_FOOD:
+    case TV_OPEN_DOOR:
+    case TV_CLOSED_DOOR:
+      return (TRUE);
+  }
+  return (FALSE);
+}
+BOOL
 vuln_acid(obj)
 struct objS* obj;
 {
@@ -2406,6 +2436,36 @@ struct objS* obj;
         return (FALSE);
       else
         return (TRUE);
+  }
+  return (FALSE);
+}
+BOOL
+vuln_acid_breath(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_ARROW:
+    case TV_BOW:
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_HELM:
+    case TV_SHIELD:
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+      if (obj->flags & TR_RES_ACID)
+        return FALSE;
+      else
+        return TRUE;
+    case TV_STAFF:
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+    case TV_FOOD:
+    case TV_OPEN_DOOR:
+    case TV_CLOSED_DOOR:
+      return (TRUE);
   }
   return (FALSE);
 }
@@ -5733,44 +5793,42 @@ void teleport_away(midx, dis) int midx, dis;
 void
 get_flags(int typ, uint32_t* weapon_type, int* harm_type, int (**destroy)())
 {
-  // TBD:
   *destroy = set_null;
 
   switch (typ) {
     case GF_MAGIC_MISSILE:
       *weapon_type = 0;
       *harm_type = 0;
-      //*destroy = set_null;
       break;
     case GF_LIGHTNING:
       *weapon_type = CS_BR_LIGHT;
       *harm_type = CD_LIGHT;
-      //*destroy = set_lightning_destroy;
+      *destroy = vuln_lightning;
       break;
     case GF_POISON_GAS:
       *weapon_type = CS_BR_GAS;
       *harm_type = CD_POISON;
-      //*destroy = set_null;
       break;
     case GF_ACID:
       *weapon_type = CS_BR_ACID;
       *harm_type = CD_ACID;
-      //*destroy = set_acid_destroy;
+      // Distinct from vuln_acid (acid_dam attack)
+      *destroy = vuln_acid_breath;
       break;
     case GF_FROST:
       *weapon_type = CS_BR_FROST;
       *harm_type = CD_FROST;
-      //*destroy = set_frost_destroy;
+      *destroy = vuln_frost;
       break;
     case GF_FIRE:
       *weapon_type = CS_BR_FIRE;
       *harm_type = CD_FIRE;
-      //*destroy = set_fire_destroy;
+      // Distinct from vuln_fire (fire_dam attack)
+      *destroy = vuln_fire_breath;
       break;
     case GF_HOLY_ORB:
       *weapon_type = 0;
       *harm_type = CD_EVIL;
-      //*destroy = set_null;
       break;
     default:
       msg_print("ERROR in get_flags()\n");
