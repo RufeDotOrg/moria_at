@@ -5402,7 +5402,7 @@ int len;
 void
 py_init()
 {
-  int it, hitdie;
+  int hitdie;
   int csel, rsel;
   int8_t stat[MAX_A];
 
@@ -5411,11 +5411,17 @@ py_init()
     rsel = randint(AL(raceD)) - 1;
   } while ((raceD[rsel].rtclass & (1 << csel)) == 0);
 
+  py_stats(stat, AL(stat));
+
   // Race & class
-  int ridx = rsel;
-  struct raceS* r_ptr = &raceD[ridx];
+  struct raceS* r_ptr = &raceD[rsel];
+  for (int it = 0; it < MAX_A; ++it) {
+    stat[it] += r_ptr->attr[it];
+  }
+  // TBD: age
+  // TBD: height
   hitdie = r_ptr->bhitdie;
-  uD.ridx = ridx;
+  uD.ridx = rsel;
   uD.bth = r_ptr->bth;
   uD.search = r_ptr->srh;
   uD.fos = r_ptr->fos;
@@ -5431,8 +5437,6 @@ py_init()
     uD.wt = randnor(r_ptr->f_b_wt, r_ptr->f_m_wt);
   }
   uD.male = male;
-
-  py_stats(stat, AL(stat));
 
   int clidx = csel;
   struct classS* cl_ptr = &classD[clidx];
@@ -5469,7 +5473,7 @@ py_init()
   int max_value = (MAX_PLAYER_LEVEL * 5 / 8 * (hitdie - 1)) + MAX_PLAYER_LEVEL;
   player_hpD[0] = hitdie;
   do {
-    for (it = 1; it < MAX_PLAYER_LEVEL; it++) {
+    for (int it = 1; it < MAX_PLAYER_LEVEL; it++) {
       player_hpD[it] = randint(hitdie);
       player_hpD[it] += player_hpD[it - 1];
     }
