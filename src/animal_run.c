@@ -10305,6 +10305,42 @@ ma_tick()
     FOR_EACH(mon, { update_mon(it_index); });
   }
 }
+static int
+obj_enchanted(obj)
+struct objS* obj;
+{
+  if (obj->tval < TV_MIN_ENCHANT || obj->tval > TV_MAX_ENCHANT ||
+      obj->flags & TR_CURSED)
+    return FALSE;
+  if (obj->idflag & (ID_REVEAL | ID_MAGIK)) return FALSE;
+  if (obj->tohit > 0 || obj->todam > 0 || obj->toac > 0) return TRUE;
+  if ((0x4000107fL & obj->flags) && obj->p1 > 0) return TRUE;
+  if (0x07ffe980L & obj->flags) return TRUE;
+
+  return FALSE;
+}
+void
+sense_magik()
+{
+  struct objS* obj;
+
+  /* Allow for a slim chance of detect enchantment -CJS- */
+  /* for 1st level char, check once every 2160 turns
+     for 40th level char, check once every 416 turns */
+  if (((turnD & 0xF) == 0) && (countD.confusion == 0) &&
+      (randint((10 + 750 / (5 + uD.lev))) == 1)) {
+    for (int it = 0; it < MAX_INVEN; it++) {
+      obj = obj_get(invenD[it]);
+      /* if in inventory, succeed 1 out of 50 times,
+         if in equipment list, success 1 out of 10 times */
+      if (obj_enchanted(obj) && (randint(it < INVEN_EQUIP ? 50 : 10) == 1)) {
+        MSG("There's something about what you are %s...", describe_use(it));
+        disturb(0, 0);
+        obj->idflag |= ID_MAGIK;
+      }
+    }
+  }
+}
 void
 tick()
 {
@@ -10389,6 +10425,7 @@ tick()
     if (countD.protevil == 0) msg_print("You no longer feel safe from evil.");
   }
 
+  sense_magik();
   ma_tick();
 }
 void
