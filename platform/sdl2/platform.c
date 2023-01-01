@@ -560,47 +560,6 @@ texture_by_sym(char c)
   if (c == '<') return dungeon_textureD[13 + 4];
   if (c == '\'') return dungeon_textureD[18 + 1];
   if (c == '+') return dungeon_textureD[21 + 1];
-  switch (c) {
-    case '&':
-    case '(':
-      return tart_textureD[0];
-    case ')':
-      return tart_textureD[1];
-    case '"':
-      return tart_textureD[2];
-    case '!':
-      return tart_textureD[3];
-    case '-':
-      return tart_textureD[4];
-    case '/':
-      return tart_textureD[5];
-    case '=':
-      return tart_textureD[6];
-    case '?':
-      return tart_textureD[7];
-    case '[':
-      return tart_textureD[8];
-    case '\\':
-      return tart_textureD[9];
-    case ']':
-      return tart_textureD[10];
-    case '_':
-      return tart_textureD[11];
-    case '{':
-      return tart_textureD[12];
-    case '|':
-      return tart_textureD[13];
-    case '}':
-      return tart_textureD[14];
-    case '$':
-      return tart_textureD[15];
-    case ',':
-      return tart_textureD[18];
-    case '~':
-      return tart_textureD[20];
-    case 's':
-      return tart_textureD[24];
-  }
   if (c == '@') return part_textureD[0 + 4];
   if (c == '.') return 0;
   if (char_visible(c)) {
@@ -659,14 +618,19 @@ platform_draw()
     for (int row = 0; row < AL(symmapD); ++row) {
       sprite_rect.y = row * ART_H;
       for (int col = 0; col < SYMMAP_WIDTH; ++col) {
-        uint64_t cridx = cremapD[row][col];
-        char sym = symmapD[row][col];
-        SDL_Texture *srct;
+        SDL_Texture *srct = 0;
         sprite_rect.x = col * ART_W;
-        // Creature art overlay
+        // Art priority creature, treasure, fallback to symmap ASCII
+        uint64_t cridx = cremapD[row][col];
+        uint64_t tridx = tremapD[row][col];
         if (cridx && cridx < AL(art_textureD)) {
           srct = art_textureD[cridx - 1];
-        } else {
+        } else if (tridx && tridx < AL(tart_textureD)) {
+          srct = tart_textureD[tridx - 1];
+        }
+
+        if (!srct) {
+          char sym = symmapD[row][col];
           srct = texture_by_sym(sym);
         }
 

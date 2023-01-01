@@ -124,12 +124,88 @@ get_sym(int row, int col)
   }
   return '#';
 }
+int
+cave_obj(row, col)
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  if (row != uD.y || col != uD.x) {
+    c_ptr = &caveD[row][col];
+    obj = &entity_objD[c_ptr->oidx];
+    switch (obj->tval) {
+        // Misc
+      case TV_MISC:
+        if (obj->tchar == 's')
+          return 25;
+        else if (obj->tchar == '!')
+          return 4;
+        else  // '~'
+          return 23;
+        // Ranged
+      case TV_SLING_AMMO:
+      case TV_BOLT:
+      case TV_ARROW:
+        return 13;
+      case TV_SPIKE:
+        return 22;
+      case TV_LIGHT:
+        return 21;
+      case TV_BOW:
+        return 15;
+        // Worn
+      case TV_HAFTED:
+        return 10;
+      case TV_POLEARM:
+        return 6;
+      case TV_SWORD:
+        return 14;
+      case TV_DIGGING:
+        return 10;
+      case TV_BOOTS:
+      case TV_GLOVES:
+      case TV_CLOAK:
+      case TV_HELM:
+        return 11;
+      case TV_SHIELD:
+        return 2;
+      case TV_HARD_ARMOR:
+        return 9;
+      case TV_SOFT_ARMOR:
+        return 1;
+      case TV_AMULET:
+        return 3;
+      case TV_RING:
+        return 7;
+        // Activate
+      case TV_STAFF:
+        return 12;
+      case TV_WAND:
+        return 5;
+      case TV_SCROLL1:
+      case TV_SCROLL2:
+        return 8;
+      case TV_POTION1:
+      case TV_POTION2:
+      case TV_FLASK:
+        return 4;
+      case TV_FOOD:
+        return 19;
+      case TV_MAGIC_BOOK:
+        return 18;
+      case TV_PRAYER_BOOK:
+        return 17;
+        // Gold
+        // TBD: copper/silver/gold/mithril/gems by subval
+      case TV_GOLD:
+        return 16;
+    }
+  }
+  return 0;
+}
 void
 symmap_update()
 {
-  memset(cremapD, 0, sizeof(cremapD));
-  memset(litmapD, 0, sizeof(litmapD));
-
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
@@ -140,28 +216,46 @@ symmap_update()
       *sym++ = get_sym(row, col);
     }
   }
+}
+void
+altmap_update()
+{
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+
+  memset(cremapD, 0, sizeof(cremapD));
+  memset(tremapD, 0, sizeof(tremapD));
+  memset(litmapD, 0, sizeof(litmapD));
 
   if (countD.blind == 0) {
-    uint16_t* cre = &cremapD[0][0];
+    uint16_t* cidx_ptr = &cremapD[0][0];
     for (int row = rmin; row < rmax; ++row) {
       for (int col = cmin; col < cmax; ++col) {
         struct caveS* cave_ptr = &caveD[row][col];
         if (cave_ptr->midx) {
           struct monS* mon = &entity_monD[cave_ptr->midx];
-          if (mon->mlit) *cre = mon->cidx;
+          if (mon->mlit) *cidx_ptr = mon->cidx;
         }
-        cre += 1;
+        cidx_ptr += 1;
       }
     }
 
-    uint8_t* lit = &litmapD[0][0];
+    uint8_t* oidx_ptr = &tremapD[0][0];
+    for (int row = rmin; row < rmax; ++row)
+      for (int col = cmin; col < cmax; ++col) {
+        *oidx_ptr++ = cave_obj(row, col);
+      }
+
+    uint8_t* lit_ptr = &litmapD[0][0];
     for (int row = rmin; row < rmax; ++row)
       for (int col = cmin; col < cmax; ++col) {
         if (caveD[row][col].fval < MAX_FLOOR) {
           int cflag = caveD[row][col].cflag;
-          *lit = cflag;
+          *lit_ptr = cflag;
         }
-        lit += 1;
+        lit_ptr += 1;
       }
   } else {
     litmapD[uD.y][uD.x] = CF_TEMP_LIGHT;
@@ -220,6 +314,7 @@ draw()
 {
   vital_update();
   symmap_update();
+  altmap_update();
   affect_update();
 
   platformD.draw();
