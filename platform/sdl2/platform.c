@@ -967,6 +967,8 @@ sdl_pump()
           case SDLK_KP_PLUS:
           case SDLK_KP_PERIOD:
             return '.';
+          case SDLK_KP_0:
+            return 'M';
         }
       }
     }
