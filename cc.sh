@@ -52,13 +52,7 @@ if [ -n "$OD" ]; then
 fi
 
 if [ -n "$VER" ]; then
-  MAJOR=`cat major | wc -l`
-  MINOR=`cat minor | wc -l`
-  COUNT=`cat release | wc -l`
-  VER=`printf "%04d.%04d.%04d" $((MAJOR&0x3ff)) $((MINOR&0x3ff)) $((COUNT&0x3ff))`
-  sed -i "s/\<XXXX.YYYY.ZZZZ\>/$VER/g" bin/$OUTFILE || exit 1
-  HASH=`git log -1 --format=%H | cut -c 1-15`
-  sed -i "s/\<AbCdEfGhIjKlMnO\>/$HASH/g" bin/$OUTFILE || exit 1
+  ./version.sh bin/$OUTFILE || exit 1
 fi
 
 if [ $# -gt 1 ]; then
