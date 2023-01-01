@@ -7182,104 +7182,104 @@ inven_eat(iidx)
       switch (j) {
         case 1:
           countD.poison += randint(10) + obj->level;
-          ident = TRUE;
+          ident |= TRUE;
           break;
         case 2:
           countD.blind += randint(250) + 10 * obj->level + 100;
           msg_print("A veil of darkness surrounds you.");
-          ident = TRUE;
+          ident |= TRUE;
           break;
         case 3:
           countD.fear += randint(10) + obj->level;
           msg_print("You feel terrified!");
-          ident = TRUE;
+          ident |= TRUE;
           break;
         case 4:
           countD.confusion += randint(10) + obj->level;
           msg_print("You feel drugged.");
-          ident = TRUE;
+          ident |= TRUE;
           break;
         // case 5:
         //  f_ptr->image += randint(200) + 25 * obj->level + 200;
         //  msg_print("You feel drugged.");
-        //  ident = TRUE;
+        //  ident |= TRUE;
         //  break;
         case 6:
-          ident = countD.poison > 0;
+          ident |= countD.poison > 0;
           countD.poison = MIN(countD.poison, 1);
           break;
         case 7:
-          ident = countD.blind > 0;
+          ident |= countD.blind > 0;
           countD.blind = MIN(countD.blind, 1);
           break;
         case 8:
-          ident = countD.fear > 0;
+          ident |= countD.fear > 0;
           countD.fear = MIN(countD.fear, 1);
           break;
         case 9:
-          ident = countD.confusion > 0;
+          ident |= countD.confusion > 0;
           countD.confusion = MIN(countD.confusion, 1);
           break;
         case 10:
-          ident = TRUE;
+          ident |= TRUE;
           lose_stat(A_STR);
           break;
         case 11:
-          ident = TRUE;
+          ident |= TRUE;
           lose_stat(A_CON);
           break;
         case 16:
           if (res_stat(A_STR)) {
             msg_print("You feel your strength returning.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 17:
           if (res_stat(A_CON)) {
             msg_print("You feel your health returning.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 18:
           if (res_stat(A_INT)) {
             msg_print("Your head spins a moment.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 19:
           if (res_stat(A_WIS)) {
             msg_print("You feel your wisdom returning.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 20:
           if (res_stat(A_DEX)) {
             msg_print("You feel more dextrous.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 21:
           if (res_stat(A_CHR)) {
             msg_print("Your skin stops itching.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 22:
-          ident = py_heal_hit(randint(6));
+          ident |= py_heal_hit(randint(6));
           break;
         case 23:
-          ident = py_heal_hit(randint(12));
+          ident |= py_heal_hit(randint(12));
           break;
         case 24:
-          ident = py_heal_hit(randint(18));
+          ident |= py_heal_hit(randint(18));
           break;
         case 26:
-          ident = py_heal_hit(damroll(3, 12));
+          ident |= py_heal_hit(damroll(3, 12));
           break;
         case 27:
           strcpy(death_descD, "poisonous food");
           py_take_hit(randint(18));
-          ident = TRUE;
+          ident |= TRUE;
           break;
         default:
           msg_print("Internal error in eat()");
@@ -7398,6 +7398,7 @@ inven_quaff(iidx)
   if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
     i = obj->flags;
     if (i == 0) msg_print("You feel less thirsty.");
+    ident = FALSE;
     while (i != 0) {
       j = bit_pos(&i) + 1;
       j += (obj->tval == TV_POTION2) * 32;
@@ -7405,83 +7406,83 @@ inven_quaff(iidx)
         case 1:
           if (inc_stat(A_STR)) {
             msg_print("Wow!  What bulging muscles!");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 2:
-          ident = TRUE;
+          ident |= TRUE;
           lose_stat(A_STR);
           break;
         case 3:
           if (res_stat(A_STR)) {
             msg_print("You feel warm all over.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 4:
           if (inc_stat(A_INT)) {
             msg_print("Aren't you brilliant!");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 5:
-          ident = TRUE;
+          ident |= TRUE;
           lose_stat(A_INT);
           break;
         case 6:
           if (res_stat(A_INT)) {
             msg_print("You have have a warm feeling.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 7:
           if (inc_stat(A_WIS)) {
             msg_print("You suddenly have a profound thought!");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 8:
-          ident = TRUE;
+          ident |= TRUE;
           lose_stat(A_WIS);
           break;
         case 9:
           if (res_stat(A_WIS)) {
             msg_print("You feel your wisdom returning.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 10:
           if (inc_stat(A_CHR)) {
             msg_print("Gee, ain't you cute!");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 11:
-          ident = TRUE;
+          ident |= TRUE;
           lose_stat(A_CHR);
           break;
         case 12:
           if (res_stat(A_CHR)) {
             msg_print("You feel your looks returning.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 13:
-          ident = py_heal_hit(damroll(2, 7));
+          ident |= py_heal_hit(damroll(2, 7));
           break;
         case 14:
-          ident = py_heal_hit(damroll(4, 7));
+          ident |= py_heal_hit(damroll(4, 7));
           break;
         case 15:
-          ident = py_heal_hit(damroll(6, 7));
+          ident |= py_heal_hit(damroll(6, 7));
           break;
         case 16:
-          ident = py_heal_hit(1000);
+          ident |= py_heal_hit(1000);
           break;
         case 17:
           if (inc_stat(A_CON)) {
             msg_print("You feel tingly for a moment.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 18:
@@ -7491,73 +7492,73 @@ inven_quaff(iidx)
             uD.exp += l;
             msg_print("You feel more experienced.");
             py_experience();
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 19:
           if ((cbD.tflag & TR_FREE_ACT) == 0) {
             msg_print("You fall asleep.");
             countD.paralysis += randint(4) + 4;
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 20:
           if (countD.blind == 0) {
             msg_print("You are covered by a veil of darkness.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           countD.blind += randint(100) + 100;
           break;
         case 21:
           if (countD.confusion == 0) {
             msg_print("Hey!  This is good stuff!  * Hick! *");
-            ident = TRUE;
+            ident |= TRUE;
           }
           countD.confusion += randint(20) + 12;
           break;
         case 22:
           if (countD.poison == 0) {
             msg_print("You feel very sick.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           countD.poison += randint(15) + 10;
           break;
         case 23:
-          if ((uD.mflag & (1 << MA_FAST)) == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_FAST)) == 0) ident |= TRUE;
           maD[MA_FAST] += randint(25) + 15;
           break;
         case 24:
-          if ((uD.mflag & (1 << MA_SLOW)) == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_SLOW)) == 0) ident |= TRUE;
           maD[MA_SLOW] += randint(25) + 15;
           break;
         case 26:
           if (inc_stat(A_DEX)) {
             msg_print("You feel more limber!");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 27:
           if (res_stat(A_DEX)) {
             msg_print("You feel less clumsy.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 28:
           if (res_stat(A_CON)) {
             msg_print("You feel your health returning!");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 29:
-          ident = countD.blind > 0;
+          ident |= countD.blind > 0;
           countD.blind = MIN(countD.blind, 1);
           break;
         case 30:
-          ident = countD.confusion > 0;
+          ident |= countD.confusion > 0;
           countD.confusion = MIN(countD.confusion, 1);
           break;
         case 31:
-          ident = countD.poison > 0;
+          ident |= countD.poison > 0;
           countD.poison = MIN(countD.poison, 1);
           break;
         case 34:
@@ -7572,7 +7573,7 @@ inven_quaff(iidx)
             } else
               m += randint(uD.exp) / 5;
             py_lose_experience(m);
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 35:
@@ -7580,61 +7581,61 @@ inven_quaff(iidx)
           if (uD.food > 150) uD.food = 150;
           countD.paralysis = 4;
           msg_print("The potion makes you vomit!");
-          ident = TRUE;
+          ident |= TRUE;
           break;
         case 36:
-          if ((uD.mflag & (1 << MA_INVULN)) == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_INVULN)) == 0) ident |= TRUE;
           maD[MA_INVULN] += randint(10) + 10;
           break;
         case 37:
-          if ((uD.mflag & (1 << MA_HERO)) == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_HERO)) == 0) ident |= TRUE;
           maD[MA_HERO] += randint(25) + 25;
           break;
         case 38:
-          if ((uD.mflag & (1 << MA_SUPERHERO)) == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_SUPERHERO)) == 0) ident |= TRUE;
           maD[MA_SUPERHERO] += randint(25) + 25;
           break;
         case 39:
-          ident = countD.fear > 0;
+          ident |= countD.fear > 0;
           countD.fear = MIN(countD.fear, 1);
           break;
         case 40:
-          ident = restore_level();
+          ident |= restore_level();
           break;
         case 41:
-          if ((uD.mflag & (1 << MA_AFIRE)) == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_AFIRE)) == 0) ident |= TRUE;
           maD[MA_AFIRE] += randint(10) + 10;
           break;
         case 42:
-          if ((uD.mflag & (1 << MA_AFROST)) == 0) ident = TRUE;
+          if ((uD.mflag & (1 << MA_AFROST)) == 0) ident |= TRUE;
           maD[MA_AFROST] += randint(10) + 10;
           break;
         case 43:
-          if ((cbD.tflag & TR_SEE_INVIS) == 0) ident = TRUE;
+          if ((cbD.tflag & TR_SEE_INVIS) == 0) ident |= TRUE;
           maD[MA_SEE_INVIS] += randint(12) + 12;
           break;
         case 44:
           if (countD.poison > 0) {
-            ident = TRUE;
+            ident |= TRUE;
             msg_print("The effect of the poison has been reduced.");
             countD.poison = MAX(countD.poison / 2, 1);
           }
           break;
         case 45:
-          ident = countD.poison > 0;
+          ident |= countD.poison > 0;
           countD.poison = MIN(countD.poison, 1);
           break;
         case 46:
           //   if (m_ptr->cmana < m_ptr->mana) {
           //     m_ptr->cmana = m_ptr->mana;
-          //     ident = TRUE;
+          //     ident |= TRUE;
           msg_print("Your feel your head clear.");
           //   }
           break;
         case 47:
           if ((uD.mflag & (1 << MA_SEE_INFRA)) == 0) {
             msg_print("Your eyes begin to tingle.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           maD[MA_SEE_INFRA] += 100 + randint(100);
           break;
@@ -7685,17 +7686,17 @@ int *uy, *ux;
       /* Scrolls.  		*/
       switch (j) {
         case 1:
-          ident = tohit_enchant(1);
+          ident |= tohit_enchant(1);
           break;
         case 2:
-          ident = todam_enchant(1);
+          ident |= todam_enchant(1);
           break;
         case 3:
-          ident = equip_enchant(1);
+          ident |= equip_enchant(1);
           break;
         case 4:
           msg_print("This is an identify scroll.");
-          ident = TRUE;
+          ident |= TRUE;
           l = inven_choice("Which item do you wish identified?");
           if (l >= 0) inven_ident(l);
           used_up = TRUE;
@@ -7703,11 +7704,11 @@ int *uy, *ux;
         case 5:
           if (equip_remove_curse()) {
             msg_print("You feel as if someone is watching over you.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 6:
-          ident = light_area(uD.y, uD.x);
+          ident |= light_area(uD.y, uD.x);
           break;
         case 7:
           for (k = 0; k < randint(3); k++) {
@@ -7716,56 +7717,56 @@ int *uy, *ux;
           break;
         case 8:
           py_teleport(10, uy, ux);
-          ident = TRUE;
+          ident |= TRUE;
           break;
         case 9:
           py_teleport(100, uy, ux);
-          ident = TRUE;
+          ident |= TRUE;
           break;
         case 10:
           dun_level += (-3) + 2 * randint(2);
           if (dun_level < 1) dun_level = 1;
           new_level_flag = TRUE;
-          ident = TRUE;
+          ident |= TRUE;
           break;
         case 11:
           if (uD.confuse_monster == 0) {
             msg_print("Your hands begin to glow.");
             uD.confuse_monster = 1;
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 12:
-          ident = TRUE;
+          ident |= TRUE;
           map_area();
           break;
         case 13:
-          ident = sleep_adjacent(uD.y, uD.x);
+          ident |= sleep_adjacent(uD.y, uD.x);
           break;
         case 14:
-          ident = TRUE;
+          ident |= TRUE;
           warding_glyph(uD.y, uD.x);
           break;
         case 15:
-          ident = detect_obj(oset_gold);
+          ident |= detect_obj(oset_gold);
           break;
         case 16:
-          ident = detect_obj(oset_pickup);
+          ident |= detect_obj(oset_pickup);
           break;
         case 17:
-          ident = detect_obj(oset_trap);
+          ident |= detect_obj(oset_trap);
           break;
         case 18:
-          ident = detect_obj(oset_sdoor);
+          ident |= detect_obj(oset_sdoor);
           break;
         case 19:
           msg_print("This is a mass genocide scroll.");
           mass_genocide(uD.y, uD.x);
-          ident = TRUE;
+          ident |= TRUE;
           break;
         case 20:
           if (detect_mon(crset_visible)) {
-            ident = TRUE;
+            ident |= TRUE;
             maD[MA_DETECT_MON] = 1;
             msg_print("You sense the presence of monsters!");
           }
@@ -7773,21 +7774,21 @@ int *uy, *ux;
         case 21:
           if (aggravate_monster(20)) {
             msg_print("There is a high pitched humming noise.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 22:
-          ident = trap_creation(uD.y, uD.x);
+          ident |= trap_creation(uD.y, uD.x);
           break;
         case 23:
-          ident = td_destroy(uD.y, uD.x);
+          ident |= td_destroy(uD.y, uD.x);
           break;
         case 24:
-          ident = door_creation();
+          ident |= door_creation();
           break;
         case 25:
           msg_print("This is a Recharge-Item scroll.");
-          ident = TRUE;
+          ident |= TRUE;
           iidx = inven_choice("Recharge which item?");
           if (iidx >= 0) {
             used_up = TRUE;
@@ -7795,39 +7796,39 @@ int *uy, *ux;
           }
           break;
         case 26:
-          ident = extermination();
+          ident |= extermination();
           if (ident) {
             msg_print("This is an extermination scroll.");
-            ident = TRUE;
+            ident |= TRUE;
           }
           break;
         case 27:
-          ident = unlight_area(uD.y, uD.x);
+          ident |= unlight_area(uD.y, uD.x);
           break;
         case 28:
-          ident = (countD.protevil == 0);
+          ident |= (countD.protevil == 0);
           countD.protevil += randint(25) + 3 * uD.lev;
           break;
         case 29:
-          ident = TRUE;
+          ident |= TRUE;
           create_food(uD.y, uD.x);
           break;
         case 30:
-          ident = dispel_creature(CD_UNDEAD, 60);
+          ident |= dispel_creature(CD_UNDEAD, 60);
           break;
         case 33:
-          ident = tohit_enchant(randint(2));
+          ident |= tohit_enchant(randint(2));
           ident |= todam_enchant(randint(2));
           break;
         case 34:
-          ident = weapon_curse();
+          ident |= weapon_curse();
           break;
         case 35:
           k = randint(2) + 1;
-          ident = equip_enchant(k);
+          ident |= equip_enchant(k);
           break;
         case 36:
-          ident = equip_curse();
+          ident |= equip_curse();
           break;
         case 37:
           for (k = 0; k < randint(3); k++) {
@@ -7835,26 +7836,26 @@ int *uy, *ux;
           }
           break;
         case 38:
-          ident = TRUE;
+          ident |= TRUE;
           maD[MA_BLESS] += (randint(12) + 6);
           break;
         case 39:
-          ident = TRUE;
+          ident |= TRUE;
           maD[MA_BLESS] += (randint(24) + 12);
           break;
         case 40:
-          ident = TRUE;
+          ident |= TRUE;
           maD[MA_BLESS] += (randint(48) + 24);
           break;
         case 41:
-          ident = TRUE;
+          ident |= TRUE;
           if ((uD.mflag & (1 << MA_RECALL)) == 0)
             maD[MA_RECALL] += 25 + randint(30);
           msg_print("The air about you becomes charged.");
           break;
         case 42:
           destroy_area(uD.y, uD.x);
-          ident = TRUE;
+          ident |= TRUE;
           break;
         default:
           msg_print("Internal error in scroll()");
@@ -7919,83 +7920,83 @@ inven_try_wand_dir(iidx, dir)
           case 1:
             msg_print("A line of blue shimmering light appears.");
             light_line(dir, uD.y, uD.x);
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 2:
             fire_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_nameD[8]);
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 3:
             fire_bolt(GF_FROST, dir, y, x, damroll(6, 8), spell_nameD[14]);
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 4:
             fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_nameD[22]);
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 5:
-            ident = wall_to_mud(dir, y, x);
+            ident |= wall_to_mud(dir, y, x);
             break;
           case 6:
-            ident = poly_monster(dir, y, x);
+            ident |= poly_monster(dir, y, x);
             break;
           case 7:
-            ident = hp_monster(dir, y, x, -damroll(4, 6));
+            ident |= hp_monster(dir, y, x, -damroll(4, 6));
             break;
           case 8:
-            ident = speed_monster(dir, y, x, 1);
+            ident |= speed_monster(dir, y, x, 1);
             break;
           case 9:
-            ident = speed_monster(dir, y, x, -1);
+            ident |= speed_monster(dir, y, x, -1);
             break;
           case 10:
-            ident = confuse_monster(dir, y, x);
+            ident |= confuse_monster(dir, y, x);
             break;
           case 11:
-            ident = sleep_monster(dir, y, x);
+            ident |= sleep_monster(dir, y, x);
             break;
           case 12:
-            ident = drain_life(dir, y, x);
+            ident |= drain_life(dir, y, x);
             break;
           case 13:
-            ident = td_destroy2(dir, y, x);
+            ident |= td_destroy2(dir, y, x);
             break;
           case 14:
             fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6),
                       spell_nameD[0]);
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 15:
-            ident = build_wall(dir, y, x);
+            ident |= build_wall(dir, y, x);
             break;
           case 16:
-            ident = clone_monster(dir, y, x);
+            ident |= clone_monster(dir, y, x);
             break;
           case 17:
-            ident = teleport_monster(dir, y, x);
+            ident |= teleport_monster(dir, y, x);
             break;
           case 18:
-            ident = disarm_all(dir, y, x);
+            ident |= disarm_all(dir, y, x);
             break;
           case 19:
             fire_ball(GF_LIGHTNING, dir, y, x, 32, "Lightning Ball");
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 20:
             fire_ball(GF_FROST, dir, y, x, 48, "Cold Ball");
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 21:
             fire_ball(GF_FIRE, dir, y, x, 72, "Fire Ball");
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 22:
             fire_ball(GF_POISON_GAS, dir, y, x, 12, "Frost Ball");
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 23:
             fire_ball(GF_ACID, dir, y, x, 60, "Acid Ball");
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 24:
             flags = 1L << (randint(23) - 1);
@@ -8074,95 +8075,95 @@ int *uy, *ux;
         j = bit_pos(&flags) + 1;
         switch (j) {
           case 1:
-            ident = light_area(uD.y, uD.x);
+            ident |= light_area(uD.y, uD.x);
             break;
           case 2:
-            ident = detect_obj(oset_sdoor);
+            ident |= detect_obj(oset_sdoor);
             break;
           case 3:
-            ident = detect_obj(oset_trap);
+            ident |= detect_obj(oset_trap);
             break;
           case 4:
-            ident = detect_obj(oset_gold);
+            ident |= detect_obj(oset_gold);
             break;
           case 5:
-            ident = detect_obj(oset_pickup);
+            ident |= detect_obj(oset_pickup);
             break;
           case 6:
             py_teleport(100, uy, ux);
-            ident = TRUE;
+            ident |= TRUE;
             break;
           case 7:
-            ident = TRUE;
+            ident |= TRUE;
             earthquake();
             break;
           case 8:
-            ident = FALSE;
+            ident |= FALSE;
             for (k = 0; k < randint(4); k++) {
               ident |= (summon_monster(uD.y, uD.x) != 0);
             }
             break;
           case 10:
-            ident = TRUE;
+            ident |= TRUE;
             destroy_area(uD.y, uD.x);
             break;
           case 11:
-            ident = TRUE;
+            ident |= TRUE;
             starlite(uD.y, uD.x);
             break;
           case 12:
-            ident = speed_monster_aoe(1);
+            ident |= speed_monster_aoe(1);
             break;
           case 13:
-            ident = speed_monster_aoe(-1);
+            ident |= speed_monster_aoe(-1);
             break;
           case 14:
-            ident = sleep_monster_aoe();
+            ident |= sleep_monster_aoe();
             break;
           case 15:
-            ident = py_heal_hit(randint(8));
+            ident |= py_heal_hit(randint(8));
             break;
           case 16:
             if (detect_mon(crset_invisible)) {
-              ident = TRUE;
+              ident |= TRUE;
               maD[MA_DETECT_INVIS] = 1;
             }
             break;
           case 17:
-            if ((uD.mflag & (1 << MA_FAST)) == 0) ident = TRUE;
+            if ((uD.mflag & (1 << MA_FAST)) == 0) ident |= TRUE;
             maD[MA_FAST] += randint(30) + 15;
             break;
           case 18:
-            if ((uD.mflag & (1 << MA_SLOW)) == 0) ident = TRUE;
+            if ((uD.mflag & (1 << MA_SLOW)) == 0) ident |= TRUE;
             maD[MA_SLOW] += randint(30) + 15;
             break;
           case 19:
-            ident = mass_poly();
+            ident |= mass_poly();
             break;
           case 20:
             if (equip_remove_curse()) {
-              ident = see_print("The staff glows blue for a moment..");
+              ident |= see_print("The staff glows blue for a moment..");
             }
             break;
           case 21:
             if (detect_mon(crset_evil)) {
-              ident = TRUE;
+              ident |= TRUE;
               maD[MA_DETECT_EVIL] = 1;
               msg_print("You sense the presence of evil!");
             }
             break;
           case 22:
-            ident =
+            ident |=
                 countD.poison > 0 || countD.blind > 0 || countD.confusion > 0;
             countD.poison = 1;
             countD.blind = 1;
             countD.confusion = 1;
             break;
           case 23:
-            ident = dispel_creature(CD_EVIL, 60);
+            ident |= dispel_creature(CD_EVIL, 60);
             break;
           case 25:
-            ident = unlight_area(uD.y, uD.x);
+            ident |= unlight_area(uD.y, uD.x);
             break;
           default:
             msg_print("Internal error in staffs()");
