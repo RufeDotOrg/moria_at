@@ -8301,8 +8301,10 @@ py_character()
 
   line = 0;
   for (int it = 0; it < MAX_A; ++it) {
-    BufMsg(screen, "%-4.04s:%5d  %d", stat_nameD[it], statD.use_stat[it],
-           statD.max_stat[it]);
+    BufMsg(screen, "%-4.04s:%5d", stat_nameD[it], statD.use_stat[it]);
+    if (statD.max_stat[it] > statD.cur_stat[it]) {
+      BufLineAppend(screen, line - 1, "  %d", statD.max_stat[it]);
+    }
   }
 
   line = MAX_A + 1;
