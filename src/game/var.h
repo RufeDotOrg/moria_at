@@ -101,3 +101,4 @@ static int invenD[MAX_INVEN];
 static int storeD[MAX_STORE];
 static struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
 static char versionD[] = "XXXX.YYYY.ZZZZ";
+static char git_hashD[] = "AbCdEfGhIjKlMnO";

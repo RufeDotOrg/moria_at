@@ -8447,6 +8447,7 @@ show_version()
 
   line = 0;
   BufMsg(screen, "Version: %s", versionD);
+  BufMsg(screen, "Git Hash: %s", git_hashD);
   BufMsg(screen, "Programming: %s", "Alan Newton");
   BufMsg(screen, "Art: %s", "Nathan Miller");
   line += 1;
