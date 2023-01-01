@@ -133,72 +133,75 @@ cave_obj(row, col)
   if (row != uD.y || col != uD.x) {
     c_ptr = &caveD[row][col];
     obj = &entity_objD[c_ptr->oidx];
-    switch (obj->tval) {
-        // Misc
-      case TV_MISC:
-        if (obj->tchar == 's')
-          return 25;
-        else if (obj->tchar == '!')
+
+    if (c_ptr->cflag & CF_FIELDMARK || c_ptr->cflag & CF_LIT) {
+      switch (obj->tval) {
+          // Misc
+        case TV_MISC:
+          if (obj->tchar == 's')
+            return 25;
+          else if (obj->tchar == '!')
+            return 4;
+          else  // '~'
+            return 23;
+          // Ranged
+        case TV_SLING_AMMO:
+        case TV_BOLT:
+        case TV_ARROW:
+          return 13;
+        case TV_SPIKE:
+          return 22;
+        case TV_LIGHT:
+          return 21;
+        case TV_BOW:
+          return 15;
+          // Worn
+        case TV_HAFTED:
+          return 10;
+        case TV_POLEARM:
+          return 6;
+        case TV_SWORD:
+          return 14;
+        case TV_DIGGING:
+          return 10;
+        case TV_BOOTS:
+        case TV_GLOVES:
+        case TV_CLOAK:
+        case TV_HELM:
+          return 11;
+        case TV_SHIELD:
+          return 2;
+        case TV_HARD_ARMOR:
+          return 9;
+        case TV_SOFT_ARMOR:
+          return 1;
+        case TV_AMULET:
+          return 3;
+        case TV_RING:
+          return 7;
+          // Activate
+        case TV_STAFF:
+          return 12;
+        case TV_WAND:
+          return 5;
+        case TV_SCROLL1:
+        case TV_SCROLL2:
+          return 8;
+        case TV_POTION1:
+        case TV_POTION2:
+        case TV_FLASK:
           return 4;
-        else  // '~'
-          return 23;
-        // Ranged
-      case TV_SLING_AMMO:
-      case TV_BOLT:
-      case TV_ARROW:
-        return 13;
-      case TV_SPIKE:
-        return 22;
-      case TV_LIGHT:
-        return 21;
-      case TV_BOW:
-        return 15;
-        // Worn
-      case TV_HAFTED:
-        return 10;
-      case TV_POLEARM:
-        return 6;
-      case TV_SWORD:
-        return 14;
-      case TV_DIGGING:
-        return 10;
-      case TV_BOOTS:
-      case TV_GLOVES:
-      case TV_CLOAK:
-      case TV_HELM:
-        return 11;
-      case TV_SHIELD:
-        return 2;
-      case TV_HARD_ARMOR:
-        return 9;
-      case TV_SOFT_ARMOR:
-        return 1;
-      case TV_AMULET:
-        return 3;
-      case TV_RING:
-        return 7;
-        // Activate
-      case TV_STAFF:
-        return 12;
-      case TV_WAND:
-        return 5;
-      case TV_SCROLL1:
-      case TV_SCROLL2:
-        return 8;
-      case TV_POTION1:
-      case TV_POTION2:
-      case TV_FLASK:
-        return 4;
-      case TV_FOOD:
-        return 19;
-      case TV_MAGIC_BOOK:
-        return 18;
-      case TV_PRAYER_BOOK:
-        return 17;
-        // Gold
-        // TBD: copper/silver/gold/mithril/gems by subval
-      case TV_GOLD:
-        return 16;
+        case TV_FOOD:
+          return 19;
+        case TV_MAGIC_BOOK:
+          return 18;
+        case TV_PRAYER_BOOK:
+          return 17;
+          // Gold
+          // TBD: copper/silver/gold/mithril/gems by subval
+        case TV_GOLD:
+          return 16;
+      }
     }
   }
   return 0;
