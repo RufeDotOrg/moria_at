@@ -8524,38 +8524,37 @@ poison_gas(dam)
 void
 fire_dam(dam)
 {
-  // TBD: Resistance
-  // if (py.flags.fire_resist) dam = dam / 3;
+  if (cbD.tflag & TR_RES_FIRE) dam = dam / 3;
   if (uD.mflag & (1 << MA_AFIRE)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_fire, 3) > 0)
     msg_print("There is smoke coming from your pack!");
 }
-void acid_dam(dam) int dam;
+void
+acid_dam(dam)
 {
-  register int flag;
+  int flag;
 
   flag = 0;
   if (minus_ac(TR_RES_ACID)) flag = 1;
-  // TBD: Resistance
-  // if (py.flags.acid_resist) flag += 2;
+  if (cbD.tflag & TR_RES_ACID) flag += 2;
   py_take_hit(dam / (flag + 1));
   if (inven_damage(vuln_acid, 3) > 0)
     msg_print("There is an acrid smell coming from your pack!");
 }
-void frost_dam(dam) int dam;
+void
+frost_dam(dam)
 {
-  // if (py.flags.cold_resist) dam = dam / 3;
+  if (cbD.tflag & TR_RES_COLD) dam = dam / 3;
   if (uD.mflag & (1 << MA_AFROST)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_frost, 5) > 0)
     msg_print("Something shatters inside your pack!");
 }
-void light_dam(dam) int dam;
+void
+light_dam(dam)
 {
-  // if (py.flags.lght_resist)
-  //   take_hit((dam / 3), kb_str);
-  // else
+  if (cbD.tflag & TR_RES_LIGHT) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_lightning, 3) > 0)
     msg_print("There are sparks coming from your pack!");
