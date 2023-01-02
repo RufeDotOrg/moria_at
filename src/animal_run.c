@@ -10567,6 +10567,7 @@ dungeon()
   while (!new_level_flag) {
     msg_countD = 1;
     turnD += 1;
+    if (dun_level != 0 && (turnD & ~-1024) == 0) store_maint();
     if (randint(MAX_MALLOC_CHANCE) == 1) alloc_mon(1, MAX_SIGHT, FALSE);
     tick();
 
