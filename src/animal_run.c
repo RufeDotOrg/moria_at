@@ -9422,8 +9422,11 @@ static void make_move(midx, mm) int* mm;
     c_ptr = &caveD[newy][newx];
     if (c_ptr->fval == BOUNDARY_WALL) continue;
 
-    /* Floor is open?  	   */
-    if (c_ptr->fval <= MAX_OPEN_SPACE) do_move = TRUE;
+    if (c_ptr->fval <= MAX_OPEN_SPACE)
+      do_move = TRUE;
+    else if (cr_ptr->cmove & CM_PHASE)
+      do_move = TRUE;
+
     if (do_move && c_ptr->oidx != 0) {
       obj = &entity_objD[c_ptr->oidx];
       if (obj->tval == TV_GLYPH) {
