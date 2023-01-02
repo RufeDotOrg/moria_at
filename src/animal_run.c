@@ -8248,7 +8248,7 @@ py_drop(y, x)
 
   if (caveD[y][x].oidx == 0) {
     iidx = inven_choice("Drop which item?");
-    if (iidx >= 0) {
+    if (iidx >= 0 && iidx < INVEN_EQUIP) {
       obj = obj_get(invenD[iidx]);
       obj->fy = y;
       obj->fx = x;
@@ -10655,7 +10655,7 @@ dungeon()
               break;
             case 'w':
               iidx = inven_choice("Wear/Wield which item?");
-              if (iidx >= 0) inven_wear(iidx);
+              if (iidx >= 0 && iidx < INVEN_EQUIP) inven_wear(iidx);
               break;
             case 'x':
               py_look_mon();
@@ -10692,7 +10692,7 @@ dungeon()
                   inven_try_staff(iidx, &x, &x);
                 } else if (obj->tval == TV_WAND) {
                   py_zap(iidx);
-                } else {
+                } else if (iidx < INVEN_EQUIP) {
                   inven_wear(iidx);
                 }
               }
