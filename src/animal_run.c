@@ -6317,6 +6317,8 @@ hp_monster(dir, y, x, dam)
         py_experience();
       } else if (dam > 0) {
         MSG("%s screams in agony.", descD);
+      } else {
+        MSG("%s appears healthier.", descD);
       }
     }
   } while (!flag);
