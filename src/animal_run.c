@@ -9927,13 +9927,12 @@ static void hit_trap(uy, ux) int *uy, *ux;
   y = *uy;
   x = *ux;
   c_ptr = &caveD[y][x];
-
-  find_flag = FALSE;
   obj = &entity_objD[c_ptr->oidx];
-  if (obj->tval == TV_INVIS_TRAP) {
-    obj->tval = TV_VIS_TRAP;
-    obj->tchar = '^';
-  }
+
+  obj->tval = TV_VIS_TRAP;
+  obj->tchar = '^';
+  obj->idflag |= ID_REVEAL;
+  find_flag = FALSE;
 
   dam = pdamroll(obj->damage);
 
@@ -10887,7 +10886,7 @@ dungeon()
             py_attack(y, x);
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
             if (obj->tval == TV_VIS_TRAP) {
-              try_disarm_trap(y, x);
+              if (obj->idflag & ID_REVEAL) try_disarm_trap(y, x);
             }
             if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
               hit_trap(&y, &x);
