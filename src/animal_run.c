@@ -3727,9 +3727,9 @@ int dir, y, x;
   else
     return FALSE;
 }
-void find_event(y, x) int y, x;
+void find_event(y, x)
 {
-  int dir, newdir, t, inv, check_dir, row, col;
+  int dir, newdir, t, check_dir, row, col;
   register int i, max, option, option2;
   struct caveS* c_ptr;
 
@@ -3745,8 +3745,6 @@ void find_event(y, x) int y, x;
     if (mmove(newdir, &row, &col)) {
       /* Objects player can see (Including doors?) cause a stop. */
       c_ptr = &caveD[row][col];
-      // inv = TRUE;
-      // if (player_light || c_ptr->tl || c_ptr->pl || c_ptr->fm)
       if (c_ptr->oidx != 0) {
         t = entity_objD[c_ptr->oidx].tval;
         if (t != TV_INVIS_TRAP && t != TV_SECRET_DOOR &&
@@ -3755,14 +3753,8 @@ void find_event(y, x) int y, x;
           return;
         }
       }
-      /* Also Creatures  	*/
-      if (c_ptr->midx != 0 && entity_monD[c_ptr->midx].mlit) {
-        find_flag = FALSE;
-        return;
-      }
-      inv = FALSE;
 
-      if (c_ptr->fval <= MAX_OPEN_SPACE || inv) {
+      if (c_ptr->fval <= MAX_OPEN_SPACE) {
         if (find_openarea) {
           /* Have we found a break? */
           if (i < 0) {
@@ -3831,7 +3823,7 @@ void find_event(y, x) int y, x;
       /* Two options! */
       row = y;
       col = x;
-      (void)mmove(option, &row, &col);
+      mmove(option, &row, &col);
       if (!see_wall(option, row, col) || !see_wall(check_dir, row, col)) {
         /* Don't see that it is closed off.  This could be a
            potential corner or an intersection. */
