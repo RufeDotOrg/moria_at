@@ -5720,6 +5720,33 @@ int (*valid)();
   }
   return line;
 }
+void
+py_add_food(num)
+{
+  int food, extra, penalty;
+
+  food = uD.food;
+  if (food < 0) food = 0;
+  food += num;
+  if (food > PLAYER_FOOD_MAX) {
+    msg_print("You are bloated from overeating.");
+
+    /* Calculate how much of num is responsible for the bloating.
+       Give the player food credit for 1/50, and slow him for that many
+       turns also.  */
+    extra = food - PLAYER_FOOD_MAX;
+    if (extra > num) extra = num;
+    penalty = extra / 32;
+
+    maD[MA_SLOW] += penalty;
+    if (extra == num)
+      food = food - num + penalty;
+    else
+      food = PLAYER_FOOD_MAX + penalty;
+  } else if (food > PLAYER_FOOD_FULL)
+    msg_print("You are full.");
+  uD.food = food;
+}
 static int
 py_heal_hit(num)
 {
@@ -7173,7 +7200,8 @@ inven_eat(iidx)
 
   if (obj->tval == TV_FOOD) {
     i = obj->flags;
-    ident = FALSE;
+    // Some food has no effect; thus becomes known
+    ident = (i == 0);
     while (i != 0) {
       j = bit_pos(&i) + 1;
       /* Foods  				*/
@@ -7296,7 +7324,7 @@ inven_eat(iidx)
     }
     // else if (!known1_p(obj))
     //   sample(obj);
-    uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
+    py_add_food(obj->p1);
     inven_destroy_one(iidx);
     msg_print("nom nom nom!!");
     turn_flag = TRUE;
@@ -7650,7 +7678,7 @@ inven_quaff(iidx)
       // else sample(...);
     }
 
-    uD.food = CLAMP(uD.food + obj->p1, 0, 15000);
+    py_add_food(obj->p1);
     inven_destroy_one(iidx);
     turn_flag = TRUE;
 
@@ -10472,7 +10500,7 @@ sense_magik()
 void
 tick()
 {
-  int regen_amount;
+  int regen_amount, tmp;
 
   if (uD.food < 0)
     regen_amount = 0;
@@ -10487,12 +10515,17 @@ tick()
     countD.paralysis += randint(5);
   }
 
-  uD.food -= uD.food_digest;
-  if (uD.food < 0) {
+  tmp = uD.food - uD.food_digest;
+  if (tmp < PLAYER_FOOD_ALERT && uD.food >= PLAYER_FOOD_ALERT) {
+    MSG("You are getting hungry.");
+  } else if (tmp < PLAYER_FOOD_WEAK && uD.food >= PLAYER_FOOD_WEAK) {
+    MSG("You are getting weak from hunger.");
+  } else if (tmp < 0) {
     strcpy(death_descD, "starvation");
-    py_take_hit(-uD.food / 16);
+    py_take_hit(-tmp / 16);
     disturb(1, 0);
   }
+  uD.food = tmp;
 
   if (cbD.tflag & TR_REGEN) regen_amount = regen_amount * 3 / 2;
   // TBD: Search gives resting status
