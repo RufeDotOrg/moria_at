@@ -5222,6 +5222,15 @@ inven_random()
     return -1;
 }
 static int
+inven_count()
+{
+  int count = 0;
+  for (int it = 0; it < INVEN_EQUIP; ++it) {
+    count += (invenD[it] != 0);
+  }
+  return count;
+}
+static int
 inven_slot()
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
@@ -7133,7 +7142,7 @@ inven_sort()
   return 1;
 }
 static int
-py_inven(begin, end)
+inven_screen(begin, end)
 int begin, end;
 {
   int line, count;
@@ -7184,11 +7193,16 @@ static int
 inven_choice(char* prompt)
 {
   char c;
-  int count = py_inven(0, INVEN_EQUIP);
-  if (count) {
+  int inum;
+
+  inum = inven_count();
+  if (inum) {
+    inven_screen(0, INVEN_EQUIP);
     if (in_subcommand(prompt, &c)) {
       uint8_t iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) return iidx;
+      if (iidx < INVEN_EQUIP) {
+        if (invenD[iidx]) return iidx;
+      }
     }
   } else
     msg_print("You are not carrying anything!");
@@ -7728,11 +7742,9 @@ int *uy, *ux;
           ident |= TRUE;
           choice_idx = inven_choice("Which item do you wish identified?");
           if (choice_idx >= 0) {
-            if (invenD[choice_idx])
-              inven_ident(choice_idx);
-            else
-              used_up = FALSE;
-          }
+            inven_ident(choice_idx);
+          } else
+            used_up = FALSE;
           break;
         case 5:
           if (equip_remove_curse()) {
@@ -7824,11 +7836,9 @@ int *uy, *ux;
           ident |= TRUE;
           choice_idx = inven_choice("Recharge which item?");
           if (choice_idx >= 0 && invenD[choice_idx]) {
-            if (invenD[choice_idx])
-              inven_recharge(choice_idx, 60);
-            else
-              used_up = FALSE;
-          }
+            inven_recharge(choice_idx, 60);
+          } else
+            used_up = FALSE;
           break;
         case 26:
           ident |= extermination();
@@ -8233,34 +8243,24 @@ static void
 py_drop(y, x)
 {
   char c;
-  struct caveS* c_ptr;
+  int iidx;
   struct objS* obj;
 
-  c_ptr = &caveD[y][x];
-  if (c_ptr->oidx != 0) {
-    MSG("There is already an object on the ground here.");
-    return;
-  }
-
-  int count = py_inven(0, INVEN_EQUIP);
-  if (!count) {
-    MSG("You aren't carrying anything");
-    return;
-  }
-
-  if (in_subcommand("Drop which item?", &c)) {
-    uint8_t iidx = c - 'a';
-    if (iidx < INVEN_EQUIP && invenD[iidx]) {
+  if (caveD[y][x].oidx == 0) {
+    iidx = inven_choice("Drop which item?");
+    if (iidx >= 0) {
       obj = obj_get(invenD[iidx]);
       obj->fy = y;
       obj->fx = x;
-      c_ptr->oidx = obj_index(obj);
+      caveD[y][x].oidx = obj_index(obj);
       invenD[iidx] = 0;
 
       obj_desc(obj, TRUE);
       MSG("You drop %s.", descD);
       turn_flag = TRUE;
     }
+  } else {
+    MSG("There is already an object on the ground here.");
   }
 }
 static int
@@ -8359,50 +8359,6 @@ inven_wear(iidx)
       }
       calc_bonuses();
       turn_flag = TRUE;
-    }
-  }
-}
-void
-py_wear()
-{
-  char c;
-
-  int count = py_inven(0, INVEN_EQUIP);
-  if (count) {
-    if (in_subcommand("Wear/Wield which item?", &c)) {
-      uint8_t iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        inven_wear(iidx);
-      }
-    }
-  }
-}
-void choice_actuate(uy, ux) int *uy, *ux;
-{
-  char c;
-  struct objS* obj;
-  int dir;
-
-  int count = py_inven(0, INVEN_EQUIP);
-  if (count) {
-    if (in_subcommand("Use what?", &c)) {
-      uint8_t iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        struct objS* obj = obj_get(invenD[iidx]);
-        if (obj->tval == TV_FOOD) {
-          inven_eat(iidx);
-        } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-          inven_quaff(iidx);
-        } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-          inven_read(iidx, uy, ux);
-        } else if (obj->tval == TV_STAFF) {
-          inven_try_staff(iidx, uy, ux);
-        } else if (obj->tval == TV_WAND) {
-          py_zap(iidx);
-        } else {
-          inven_wear(iidx);
-        }
-      }
     }
   }
 }
@@ -8577,14 +8533,12 @@ py_takeoff()
   char c;
   int into;
 
-  int slot_count = py_inven_slot();
-  int eqnum = equip_count();
-  if (slot_count == 0) {
+  if (py_inven_slot() == 0) {
     msg_print("You don't have room in your inventory.");
-  } else if (eqnum == 0) {
+  } else if (equip_count() == 0) {
     msg_print("You aren't wearing anything!");
   } else {
-    py_inven(INVEN_EQUIP, MAX_INVEN);
+    inven_screen(INVEN_EQUIP, MAX_INVEN);
     if (in_subcommand("Take off which item?", &c)) {
       uint8_t iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
@@ -9343,26 +9297,6 @@ py_open()
   if (get_dir(0, &dir)) {
     mmove(dir, &y, &x);
     open_object(y, x);
-  }
-}
-static void
-py_make_known()
-{
-  char c;
-  struct objS* obj;
-
-  // TBD: filter?
-  int count = py_inven(0, INVEN_EQUIP);
-  if (count) {
-    if (in_subcommand("Make known which item?", &c)) {
-      uint8_t iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        obj = obj_get(invenD[iidx]);
-        struct treasureS* tr_ptr = &treasureD[obj->tidx];
-        tr_make_known(tr_ptr);
-        obj->idflag |= ID_REVEAL;
-      }
-    }
   }
 }
 static void
@@ -10691,14 +10625,14 @@ dungeon()
               py_drop(y, x);
               break;
             case 'e': {
-              int count = py_inven(INVEN_EQUIP, MAX_INVEN);
+              int count = inven_screen(INVEN_EQUIP, MAX_INVEN);
               MSG("You wearing %d items.", count);
             } break;
             case 'f':
               py_bash(&y, &x);
               break;
             case 'i': {
-              int count = py_inven(0, INVEN_EQUIP);
+              int count = inven_screen(0, INVEN_EQUIP);
               MSG("You carrying %d items.", count);
             } break;
             case 'q':
@@ -10720,7 +10654,8 @@ dungeon()
               show_version();
               break;
             case 'w':
-              py_wear();
+              iidx = inven_choice("Wear/Wield which item?");
+              if (iidx >= 0) inven_wear(iidx);
               break;
             case 'x':
               py_look_mon();
@@ -10744,7 +10679,23 @@ dungeon()
               break;
             case 'A':
               // Generalized inventory interaction
-              choice_actuate(&y, &x);
+              iidx = inven_choice("Use what?");
+              if (iidx >= 0) {
+                struct objS* obj = obj_get(invenD[iidx]);
+                if (obj->tval == TV_FOOD) {
+                  inven_eat(iidx);
+                } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+                  inven_quaff(iidx);
+                } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+                  inven_read(iidx, &y, &x);
+                } else if (obj->tval == TV_STAFF) {
+                  inven_try_staff(iidx, &x, &x);
+                } else if (obj->tval == TV_WAND) {
+                  py_zap(iidx);
+                } else {
+                  inven_wear(iidx);
+                }
+              }
               break;
             case 'C':
               py_character();
@@ -10758,7 +10709,7 @@ dungeon()
               break;
             case 'I':
               inven_sort();
-              int count = py_inven(0, INVEN_EQUIP);
+              int count = inven_screen(0, INVEN_EQUIP);
               MSG("You carrying %d items.", count);
               break;
             case 'M':
