@@ -3727,7 +3727,8 @@ int dir, y, x;
   else
     return FALSE;
 }
-void find_event(y, x)
+void
+find_event(y, x)
 {
   int dir, newdir, t, check_dir, row, col;
   register int i, max, option, option2;
@@ -5053,6 +5054,15 @@ player_saves()
   int adj = level_adj[uD.clidx][LA_SAVE];
 
   return (randint(100) <= (uD.save + think_adj(A_WIS) + (adj * uD.lev / 3)));
+}
+static int
+equip_count()
+{
+  int count = 0;
+  for (int it = INVEN_EQUIP; it < MAX_INVEN; ++it) {
+    count += (invenD[it] != 0);
+  }
+  return count;
 }
 static int
 equip_cursed()
@@ -8254,7 +8264,7 @@ py_drop(y, x)
   }
 }
 static int
-py_carry_count()
+py_inven_slot()
 {
   int count = 0;
   for (int it = 0; it < INVEN_EQUIP; ++it) {
@@ -8313,8 +8323,6 @@ equip_takeoff(iidx, into_slot)
     py_bonuses(obj, -1);
     obj_desc(obj, TRUE);
     MSG("You take off %s.", descD);
-  } else {
-    msg_print("You don't have room in your inventory.");
   }
 }
 void
@@ -8569,9 +8577,14 @@ py_takeoff()
   char c;
   int into;
 
-  int carry_count = py_carry_count();
-  int equip_count = py_inven(INVEN_EQUIP, MAX_INVEN);
-  if (carry_count && equip_count) {
+  int slot_count = py_inven_slot();
+  int eqnum = equip_count();
+  if (slot_count == 0) {
+    msg_print("You don't have room in your inventory.");
+  } else if (eqnum == 0) {
+    msg_print("You aren't wearing anything!");
+  } else {
+    py_inven(INVEN_EQUIP, MAX_INVEN);
     if (in_subcommand("Take off which item?", &c)) {
       uint8_t iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
