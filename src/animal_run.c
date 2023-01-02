@@ -9446,8 +9446,8 @@ py_look_obj()
     FOR_EACH(obj, {
       if (obj->tval > TV_MAX_OBJECT && obj->tval != TV_VIS_TRAP) continue;
       if (obj->fy && distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
-        oy = -((obj->fy - y) < 0) + ((obj->fy - y) > 0);
-        ox = -((obj->fx - x) < 0) + ((obj->fx - x) > 0);
+        oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
+        ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
         if (oy == ly && ox == lx && los(y, x, obj->fy, obj->fx)) {
           seen += 1;
           obj_desc(obj, TRUE);
