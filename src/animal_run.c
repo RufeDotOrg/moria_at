@@ -3129,10 +3129,10 @@ summon_undead(y, x)
 
   return summon;
 }
-void alloc_mon(num, dis, slp) int num, dis;
-int slp;
+void
+alloc_mon(num, dis, slp)
 {
-  register int y, x, i;
+  int y, x, i;
   int z;
 
   for (i = 0; i < num; i++) {
@@ -3146,8 +3146,6 @@ int slp;
     /* Dragons are always created sleeping here, so as to give the player a
        sporting chance.  */
     // if (c_list[z].cchar == 'd' || c_list[z].cchar == 'D') slp = TRUE;
-    /* Place_monster() should always return TRUE here.  It does not
-       matter if it fails though.  */
     place_monster(y, x, z, slp);
   }
 }
@@ -10569,6 +10567,7 @@ dungeon()
   while (!new_level_flag) {
     msg_countD = 1;
     turnD += 1;
+    if (randint(MAX_MALLOC_CHANCE) == 1) alloc_mon(1, MAX_SIGHT, FALSE);
     tick();
 
     do {

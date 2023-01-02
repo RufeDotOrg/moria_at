@@ -58,6 +58,9 @@
 #define TRUE 1
 #define FALSE 0
 
+// Per turn
+#define MAX_MALLOC_CHANCE 160 /* 1/x chance of new monster each round  */
+
 #define MAX_STORE 6
 #define MAX_STORE_INVEN 16
 #define MAX_STORE_CHOICE 26
