@@ -8024,7 +8024,7 @@ inven_try_wand_dir(iidx, dir)
             ident |= TRUE;
             break;
           case 22:
-            fire_ball(GF_POISON_GAS, dir, y, x, 12, "Frost Ball");
+            fire_ball(GF_POISON_GAS, dir, y, x, 12, "Stinking Cloud");
             ident |= TRUE;
             break;
           case 23:
