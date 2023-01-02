@@ -10494,9 +10494,9 @@ tick()
     disturb(1, 0);
   }
 
-  // if (uD.regenerate) regen_amount = regen_amount * 3 / 2;
-  if (countD.rest != 0)  // || (py.flags.status & PY_SEARCH)
-    regen_amount = regen_amount * 2;
+  if (cbD.tflag & TR_REGEN) regen_amount = regen_amount * 3 / 2;
+  // TBD: Search gives resting status
+  if (countD.rest != 0) regen_amount = regen_amount * 2;
   // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
 
   if (countD.poison == 0) {
