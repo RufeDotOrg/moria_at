@@ -7873,8 +7873,8 @@ int *uy, *ux;
         case 20:
           if (detect_mon(crset_visible)) {
             ident |= TRUE;
-            maD[MA_DETECT_MON] = 1;
-            msg_print("You sense the presence of monsters!");
+            maD[MA_DETECT_INVIS] = 1;
+            msg_print("You sense the presence of invisible creatures!");
           }
           break;
         case 21:
