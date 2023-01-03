@@ -9384,7 +9384,7 @@ py_look_obj()
     lx = dir_x(dir);
     int seen = 0;
     FOR_EACH(obj, {
-      if (obj->tval > TV_MAX_OBJECT && obj->tval != TV_VIS_TRAP) continue;
+      if (obj->tval > TV_MAX_PICK_UP && obj->tval != TV_VIS_TRAP) continue;
       if (obj->fy && distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
         oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
         ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
@@ -9479,7 +9479,7 @@ static void make_move(midx, mm) int* mm;
     }
     /* Creature has been allowed move.   */
     if (do_move) {
-      if (cr_ptr->cmove & CM_PICKS_UP) {
+      if (cr_ptr->cmove & CM_PICKS_UP && obj->tval <= TV_MON_PICK_UP) {
         delete_object(newy, newx);
       }
       /* Move creature record  	       */

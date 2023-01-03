@@ -169,7 +169,7 @@
 #define TV_MAGIC_BOOK 90
 #define TV_PRAYER_BOOK 91
 /* objects with tval above this are never picked up by monsters */
-#define TV_MAX_OBJECT 99
+#define TV_MON_PICK_UP 99
 #define TV_GOLD 100
 // Items above cannot be lifted by the player
 #define TV_MAX_PICK_UP 100
