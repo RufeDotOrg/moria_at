@@ -405,9 +405,10 @@
 #define MAX_INVEN 34
 
 #define ID_MAGIK 0x1  /* sense of magic */
-#define ID_DAMD 0x2   /* cursed */
-#define ID_EMPTY 0x4  /* reveal on use */
-#define ID_REVEAL 0x8 /* Object ident is known */
+#define ID_DAMD 0x2   /* wore something cursed and known bad */
+#define ID_EMPTY 0x4  /* wand/staff known to have 0 charges */
+#define ID_REVEAL 0x08 /* full object identity is known */
+#define ID_CORRODED 0x10 /* armor is known to provide no protection from acid/gas damage */
 
 /* tval sub type */
 #define MAX_SUBVAL 64

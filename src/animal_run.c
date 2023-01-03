@@ -4663,8 +4663,9 @@ void obj_detail(obj) struct objS* obj;
   strcat(descD, tmp_str);
 
   if (obj->idflag & ID_MAGIK) strcat(descD, "{magik}");
-  if (obj->idflag & ID_EMPTY) strcat(descD, "{empty}");
   if (obj->idflag & ID_DAMD) strcat(descD, "{damned}");
+  if (obj->idflag & ID_CORRODED) strcat(descD, "{corroded}");
+  if (obj->idflag & ID_EMPTY) strcat(descD, "{empty}");
 }
 void obj_desc(obj, prefix) struct objS* obj;
 BOOL prefix;
@@ -7472,10 +7473,13 @@ inven_study(iidx)
       }
     }
     if (obj->idflag & ID_DAMD) {
-      BufMsg(screen, "... is cursed!");
+      BufMsg(screen, "... is known to be cursed!");
     }
     if (obj->idflag & ID_MAGIK) {
-      BufMsg(screen, "... is magical!");
+      BufMsg(screen, "... is known to be magical!");
+    }
+    if (obj->idflag & ID_CORRODED) {
+      BufMsg(screen, "... is known to be corroded!");
     }
     if (!tr_is_known(tr_ptr)) {
       BufMsg(screen, "... has unknown effects!");
@@ -8735,7 +8739,10 @@ uint32_t typ_dam;
       calc_bonuses();
       minus = TRUE;
     } else if (typ_dam == TR_RES_ACID) {
-      MSG("Acid leaks through your damaged %s.", descD);
+      if ((obj->idflag & ID_CORRODED) == 0) {
+        obj->idflag |= ID_CORRODED;
+        MSG("Acid leaks through your damaged %s.", descD);
+      }
     }
   }
   return (minus);
