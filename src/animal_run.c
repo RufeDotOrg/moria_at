@@ -8385,7 +8385,7 @@ equip_takeoff(iidx, into_slot)
 
     py_bonuses(obj, -1);
     obj_desc(obj, TRUE);
-    MSG("You take off %s.", descD);
+    MSG("You take off %s. (%c)", descD, 'a' + into_slot);
   }
 }
 void
