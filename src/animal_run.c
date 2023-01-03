@@ -2441,56 +2441,61 @@ void magic_treasure(obj, level) struct objS* obj;
       break;
   }
 }
-int
-tr_subval(tr_ptr)
-struct treasureS* tr_ptr;
+static int
+mask_subval(sv)
 {
-  return MASK_SUBVAL & tr_ptr->subval;
+  return MASK_SUBVAL & sv;
 }
 int
-tr_known_row(tr_ptr)
-struct treasureS* tr_ptr;
+knowable_tval_subval(tval, sv)
 {
-  switch (tr_ptr->tval) {
+  int k;
+  k = 0;
+  switch (tval) {
     case TV_AMULET:
-      return (0);
+      k = 1;
+      break;
     case TV_RING:
-      return (1);
+      k = 2;
+      break;
     case TV_STAFF:
-      return (2);
+      k = 3;
+      break;
     case TV_WAND:
-      return (3);
+      k = 4;
+      break;
     case TV_SCROLL1:
     case TV_SCROLL2:
-      return (4);
+      k = 5;
+      break;
     case TV_POTION1:
     case TV_POTION2:
-      return (5);
+      k = 6;
+      break;
     case TV_FOOD:
-      if (tr_subval(tr_ptr) < AL(mushrooms)) return (6);
-      return (-1);
-    default:
-      return (-1);
+      if (sv < AL(mushrooms)) k = 7;
+      break;
   }
+  return k;
 }
 BOOL
 tr_is_known(tr_ptr)
 struct treasureS* tr_ptr;
 {
-  int krow = tr_known_row(tr_ptr);
-  if (krow < 0) return TRUE;
-  int subval = tr_subval(tr_ptr);
-  return knownD[krow][subval];
+  int subval = mask_subval(tr_ptr->subval);
+  int k = knowable_tval_subval(tr_ptr->tval, subval);
+  if (k == 0) return TRUE;
+  return knownD[k - 1][subval];
 }
 BOOL
 tr_make_known(tr_ptr)
 struct treasureS* tr_ptr;
 {
-  int krow = tr_known_row(tr_ptr);
-  int subval = tr_subval(tr_ptr);
-  if (krow < 0) return FALSE;
-  BOOL change = 1 ^ knownD[krow][subval];
-  knownD[krow][subval] = 1;
+  int subval = mask_subval(tr_ptr->subval);
+  int k = knowable_tval_subval(tr_ptr->tval, subval);
+  if (k == 0) return FALSE;
+  BOOL change = 1 ^ knownD[k - 1][subval];
+  knownD[k - 1][subval] = 1;
   return change;
 }
 BOOL
@@ -4683,7 +4688,7 @@ BOOL prefix;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
-  indexx = obj->subval & MASK_SUBVAL;
+  indexx = mask_subval(obj->subval);
   basenm = tr_ptr->name;
   damstr[0] = 0;
   unknown = !(tr_is_known(tr_ptr) || (obj->idflag & ID_REVEAL));
