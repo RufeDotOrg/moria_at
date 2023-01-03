@@ -2682,6 +2682,14 @@ struct objS* obj;
   uint8_t tval = obj->tval - 1;
   return (tval < TV_MAX_PICK_UP);
 }
+static int
+obj_mon_pickup(obj)
+struct objS* obj;
+{
+  // Underflow to exclude 0
+  uint8_t tval = obj->tval - 1;
+  return (tval < TV_MON_PICK_UP);
+}
 int
 oset_trap(obj)
 struct objS* obj;
@@ -9518,7 +9526,7 @@ static void make_move(midx, mm) int* mm;
     }
     /* Creature has been allowed move.   */
     if (do_move) {
-      if (cr_ptr->cmove & CM_PICKS_UP && obj->tval <= TV_MON_PICK_UP) {
+      if (cr_ptr->cmove & CM_PICKS_UP && obj_mon_pickup(obj)) {
         delete_object(newy, newx);
       }
       /* Move creature record  	       */
