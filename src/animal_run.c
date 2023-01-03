@@ -1336,7 +1336,7 @@ static void fill_cave(fval) register int fval;
 static void
 delete_object(y, x)
 {
-  register struct caveS* cave_ptr;
+  struct caveS* cave_ptr;
   cave_ptr = &caveD[y][x];
   obj_unuse(&entity_objD[cave_ptr->oidx]);
   cave_ptr->oidx = 0;
@@ -9479,6 +9479,9 @@ static void make_move(midx, mm) int* mm;
     }
     /* Creature has been allowed move.   */
     if (do_move) {
+      if (cr_ptr->cmove & CM_PICKS_UP) {
+        delete_object(newy, newx);
+      }
       /* Move creature record  	       */
       move_rec(fy, fx, newy, newx);
       m_ptr->fy = newy;
