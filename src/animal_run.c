@@ -8105,6 +8105,8 @@ inven_try_wand_dir(iidx, dir)
             ident |= TRUE;
             break;
           case 24:
+            msg_print("The wand vibrates for a moment.");
+            ident |= TRUE;
             flags = 1L << (randint(23) - 1);
             break;
           default:
