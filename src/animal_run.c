@@ -9420,23 +9420,47 @@ static void make_move(midx, mm) int* mm;
     fx = newx = m_ptr->fx;
     mmove(mm[i], &newy, &newx);
     c_ptr = &caveD[newy][newx];
-    if (c_ptr->fval == BOUNDARY_WALL) continue;
+    obj = &entity_objD[c_ptr->oidx];
 
-    if (c_ptr->fval <= MAX_OPEN_SPACE)
-      do_move = TRUE;
+    if (c_ptr->fval == BOUNDARY_WALL)
+      continue;
     else if (cr_ptr->cmove & CM_PHASE)
       do_move = TRUE;
-
-    if (do_move && c_ptr->oidx != 0) {
-      obj = &entity_objD[c_ptr->oidx];
-      if (obj->tval == TV_GLYPH) {
-        if (randint(obj->p1) < cr_ptr->level) {
-          msg_print("The glyph of protection is broken!");
-          delete_object(newy, newx);
-        } else {
-          do_move = FALSE;
-          do_turn = (cr_ptr->cmove & CM_ATTACK_ONLY);
+    else if (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR) {
+      do_turn = TRUE;
+      do_move = FALSE;
+      if (obj->p1 == 0) {
+        obj->tval = TV_OPEN_DOOR;
+        obj->tchar = '\'';
+      } else if (obj->p1 > 0) {
+        if (randint((m_ptr->hp + 1) * (50 + obj->p1)) <
+            40 * (m_ptr->hp - 10 - obj->p1)) {
+          msg_print("You hear the click of a lock being opened.");
+          obj->p1 = 0;
         }
+      } else if (obj->p1 < 0) {
+        if (randint((m_ptr->hp + 1) * (50 - obj->p1)) <
+            40 * (m_ptr->hp - 10 + obj->p1)) {
+          obj->tval = TV_OPEN_DOOR;
+          obj->tchar = '\'';
+          // 50% chance to break the door
+          obj->p1 = 1 - randint(2);
+          msg_print("You hear a door burst open!");
+          disturb(1, 0);
+          do_move = TRUE;
+        }
+      }
+      if (obj->tval == TV_OPEN_DOOR) c_ptr->fval = FLOOR_CORR;
+    } else if (c_ptr->fval <= MAX_OPEN_SPACE)
+      do_move = TRUE;
+
+    if (do_move && obj->tval == TV_GLYPH) {
+      if (randint(obj->p1) < cr_ptr->level) {
+        msg_print("The glyph of protection is broken!");
+        delete_object(newy, newx);
+      } else {
+        do_move = FALSE;
+        do_turn = (cr_ptr->cmove & CM_ATTACK_ONLY);
       }
     }
     if (do_move) {
