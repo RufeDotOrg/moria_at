@@ -1430,7 +1430,8 @@ describe_use(iidx)
   }
   return p;
 }
-static void inven_destroy_one(iidx) int iidx;
+static void
+inven_destroy_one(iidx)
 {
   struct objS* obj = obj_get(invenD[iidx]);
   if (obj->number > 1 && obj->subval & STACK_SINGLE) {
@@ -8691,17 +8692,14 @@ py_pickup(y, x, pickup)
   }
 }
 int inven_damage(typ, perc) int (*typ)();
-register int perc;
 {
-  register int it, j;
+  int it, j;
 
   j = 0;
   for (it = 0; it < INVEN_EQUIP; it++) {
     struct objS* obj = obj_get(invenD[it]);
     if ((*typ)(obj) && (randint(100) < perc)) {
-      // TBD: Single stack items may decrement obj->number
-      invenD[it] = 0;
-      obj_unuse(obj);
+      inven_destroy_one(it);
       j++;
     }
   }
