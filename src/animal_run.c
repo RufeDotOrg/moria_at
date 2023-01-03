@@ -10136,7 +10136,7 @@ struct objS* obj;
   value = obj->cost;
   known = ((obj->idflag & ID_REVEAL) != 0) || tr_is_known(tr_ptr);
   /* don't purchase known cursed items */
-  if (obj->idflag & ID_DAMD)
+  if (obj->idflag & (ID_DAMD | ID_CORRODED))
     value = 0;
   else if (((obj->tval >= TV_BOW) && (obj->tval <= TV_SWORD)) ||
            ((obj->tval >= TV_BOOTS) &&
