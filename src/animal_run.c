@@ -7260,13 +7260,17 @@ inven_choice(char* prompt)
 
   inum = inven_count();
   if (inum) {
-    inven_screen(0, INVEN_EQUIP);
-    if (in_subcommand(prompt, &c)) {
-      uint8_t iidx = c - 'a';
-      if (iidx < INVEN_EQUIP) {
-        if (invenD[iidx]) return iidx;
+    do {
+      inven_screen(0, INVEN_EQUIP);
+      if (in_subcommand(prompt, &c)) {
+        uint8_t iidx = c - 'a';
+        if (iidx < INVEN_EQUIP) {
+          if (invenD[iidx]) return iidx;
+        } else if (c == 'I') {
+          inven_sort();
+        }
       }
-    }
+    } while (c == 'I');
   } else
     msg_print("You are not carrying anything!");
   return -1;
