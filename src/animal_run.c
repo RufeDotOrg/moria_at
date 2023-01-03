@@ -10055,8 +10055,9 @@ static void hit_trap(uy, ux) int *uy, *ux;
       msg_print("A strange red gas surrounds you.");
       corrode_gas();
       break;
-    case 11:               /* Summon mon*/
-      delete_object(y, x); /* Rune disappears.    */
+    case 11: /* Summon mon*/
+      msg_print("A strange rune on the floor glows and fades.");
+      delete_object(y, x);
       num = 2 + randint(3);
       for (int it = 0; it < num; it++) {
         summon_monster(y, x);
