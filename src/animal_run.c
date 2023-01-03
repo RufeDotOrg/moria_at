@@ -3919,6 +3919,12 @@ detect_obj(int (*valid)())
       obj = &entity_objD[c_ptr->oidx];
       if (valid(obj)) {
         c_ptr->cflag |= CF_FIELDMARK;
+        // dungeon fixtures become known
+        // enables locked/stuck door interaction, trap auto-disarm
+        if (obj->tval > TV_MAX_PICK_UP) {
+          obj->idflag |= ID_REVEAL;
+          if (obj->tval == TV_INVIS_TRAP) obj->tval = TV_VIS_TRAP;
+        }
         detect = TRUE;
       }
     }
@@ -9384,6 +9390,7 @@ py_search(y, x)
           msg_print("You have found a trap.");
           obj->tval = TV_VIS_TRAP;
           obj->tchar = '^';
+          obj->idflag |= ID_REVEAL;
           find_flag = FALSE;
         }
       }
