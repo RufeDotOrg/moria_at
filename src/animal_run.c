@@ -9495,6 +9495,7 @@ static void make_move(midx, mm) int* mm;
       if (obj->p1 == 0) {
         obj->tval = TV_OPEN_DOOR;
         obj->tchar = '\'';
+        if (c_ptr->cflag & CF_LIT) msg_print("A door creaks open.");
       } else if (obj->p1 > 0) {
         if (randint((m_ptr->hp + 1) * (50 + obj->p1)) <
             40 * (m_ptr->hp - 10 - obj->p1)) {
