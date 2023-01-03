@@ -4494,7 +4494,8 @@ static void summon_object(y, x, num, typ) int y, x, num, typ;
             place_object(j, k, (typ >= 4));
           else
             place_gold(j, k);
-          // if (test_light(j, k)) res += real_typ;
+
+          if (c_ptr->cflag & CF_LIT) c_ptr->cflag |= CF_FIELDMARK;
           i = 20;
         }
       }
