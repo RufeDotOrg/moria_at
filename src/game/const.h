@@ -10,9 +10,6 @@
 #define SCREEN_HEIGHT 23
 #define MAX_MSG 16
 
-#define MODE_DFLT 0
-#define MODE_MAP 1
-
 #define FLOOR_NULL 0
 #define FLOOR_LIGHT 1
 #define FLOOR_DARK 2
@@ -279,7 +276,7 @@
 /* Creature constants						*/
 #define MAX_MON_LEVEL 40
 #define MON_NASTY 50     // 1/x monsters are a big baddie
-#define MON_DRAIN_LIFE 2 /* Percent of player exp drained per hit */
+#define MON_DRAIN_EXP 2 /* Percent of player exp drained per hit */
 #define MON_SUMMON_ADJ 2 /* Adjust level of summoned creatures    */
 #define MON_MULT_ADJ 7 /* High value slows multiplication       */
 #define MAX_WIN_MON 2

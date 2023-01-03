@@ -9078,7 +9078,7 @@ mon_attack(midx)
           break;
         case 19: /*Lose experience  */
           msg_print("You feel your life draining away!");
-          py_lose_experience(damage + (uD.exp / 100) * MON_DRAIN_LIFE);
+          py_lose_experience(damage + (uD.exp / 100) * MON_DRAIN_EXP);
           break;
         case 20: /*Aggravate monster*/
           aggravate_monster(20);
