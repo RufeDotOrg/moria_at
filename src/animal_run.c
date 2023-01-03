@@ -9031,11 +9031,11 @@ mon_attack(midx)
           break;
         case 17: /*Lose intelligence */
           py_take_hit(damage);
-          dec_stat(A_INT);
+          lose_stat(A_INT);
           break;
         case 18: /*Lose wisdom     */
           py_take_hit(damage);
-          dec_stat(A_WIS);
+          lose_stat(A_WIS);
           break;
         case 19: /*Lose experience  */
           msg_print("You feel your life draining away!");
@@ -9963,7 +9963,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
         if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_STR)
           msg_print("A small dart hits you.");
         else {
-          dec_stat(A_STR);
+          lose_stat(A_STR);
           py_take_hit(dam);
           msg_print("A small dart weakens you!");
         }
@@ -10033,7 +10033,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
         if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_CON)
           msg_print("A small dart hits you.");
         else {
-          dec_stat(A_CON);
+          lose_stat(A_CON);
           py_take_hit(dam);
           msg_print("A small dart saps your health!");
         }
