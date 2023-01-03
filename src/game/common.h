@@ -107,7 +107,7 @@ enum { RELEASE = 0 };
     for (; it < AL(type##D); ++it) {                                         \
       if (type##D[it] == eid) break;                                         \
     }                                                                        \
-    if (it < AL(type##D)) {                                                  \
+    if (it < type##_usedD) {                                                 \
       int swap_it = type##_usedD - 1;                                        \
       int swap_eid = type##D[swap_it];                                       \
       type##_usedD -= 1;                                                     \
