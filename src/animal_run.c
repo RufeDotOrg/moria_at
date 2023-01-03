@@ -699,6 +699,44 @@ register int weight, plus, dam;
   }
   return (critical);
 }
+int
+tot_dam(obj, tdam, cidx)
+struct objS* obj;
+{
+  struct creatureS* cr_ptr;
+
+  cr_ptr = &creatureD[cidx];
+  if ((obj->flags & TR_EGO_WEAPON) &&
+      (((obj->tval >= TV_SLING_AMMO) && (obj->tval <= TV_ARROW)) ||
+       ((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) ||
+       (obj->tval == TV_FLASK))) {
+    /* Slay Dragon  */
+    if ((cr_ptr->cdefense & CD_DRAGON) && (obj->flags & TR_SLAY_DRAGON)) {
+      tdam = tdam * 4;
+    }
+    /* Slay Undead  */
+    else if ((cr_ptr->cdefense & CD_UNDEAD) && (obj->flags & TR_SLAY_UNDEAD)) {
+      tdam = tdam * 3;
+    }
+    /* Slay Animal  */
+    else if ((cr_ptr->cdefense & CD_ANIMAL) && (obj->flags & TR_SLAY_ANIMAL)) {
+      tdam = tdam * 2;
+    }
+    /* Slay Evil     */
+    else if ((cr_ptr->cdefense & CD_EVIL) && (obj->flags & TR_SLAY_EVIL)) {
+      tdam = tdam * 2;
+    }
+    /* Frost         */
+    else if ((cr_ptr->cdefense & CD_FROST) && (obj->flags & TR_FROST_BRAND)) {
+      tdam = tdam * 3 / 2;
+    }
+    /* Fire        */
+    else if ((cr_ptr->cdefense & CD_FIRE) && (obj->flags & TR_FLAME_TONGUE)) {
+      tdam = tdam * 3 / 2;
+    }
+  }
+  return (tdam);
+}
 void disturb(search, light) int search, light;
 {
   if (countD.rest != 0) countD.rest = 0;
@@ -8854,6 +8892,7 @@ py_attack(y, x)
         MSG("You hit %s.", descD);
         if (obj->tval) {
           k = pdamroll(obj->damage);
+          k = tot_dam(obj, k, mon->cidx);
           k = critical_blow(obj->weight, 0, k);
         } else {
           k = damroll(1, 1);
