@@ -3935,6 +3935,7 @@ update_mon(midx)
     }
   }
 
+  if (HACK) flag = TRUE;
   /* Light it up.   */
   if (flag) {
     if (!m_ptr->mlit) {
