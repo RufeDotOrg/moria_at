@@ -265,8 +265,9 @@ altmap_update()
   }
 }
 static char* affectD[][8] = {
-    {"Slow"},   {"Fast"},     {"Blind"},  {"Confused"},
-    {"Afraid"}, {"Paralyse"}, {"Poison"}, {"Hungry", "Weak", "Faint"},
+    {"Recall"},   {"Slow"},     {"Fast"},
+    {"Blind"},    {"Confused"}, {"Afraid"},
+    {"Paralyse"}, {"Poison"},   {"Hungry", "Weak", "Faint"},
 };
 void
 affect_update()
@@ -275,6 +276,7 @@ affect_update()
   int idx, count, pad, len, sum;
 
   idx = 0;
+  active[idx++] = (uD.mflag & (1 << MA_RECALL)) != 0;
   active[idx++] = (uD.mflag & (1 << MA_SLOW)) != 0;
   active[idx++] = (uD.mflag & (1 << MA_FAST)) != 0;
   active[idx++] = (countD.blind != 0);
