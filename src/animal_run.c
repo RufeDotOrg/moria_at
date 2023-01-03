@@ -8690,7 +8690,7 @@ py_pickup(y, x, pickup)
       obj->fx = 0;
       caveD[y][x].oidx = 0;
 
-      MSG("You have %s (%c)%s", descD, locn + 'a', merge ? " (merge)" : "");
+      MSG("You have %s (%s%c)", descD, merge ? "merge " : "", locn + 'a');
       turn_flag = TRUE;
     } else if (!pickup) {
       MSG("You see %s here.", descD);
