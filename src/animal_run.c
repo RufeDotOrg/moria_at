@@ -10050,7 +10050,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
         if (py_tr(sustain_stat(TR_STR)))
           msg_print("A small dart hits you.");
         else {
-          lose_stat(A_STR);
+          dec_stat(A_STR);
           py_take_hit(dam);
           msg_print("A small dart weakens you!");
         }
@@ -10121,7 +10121,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
         if (py_tr(sustain_stat(TR_CON)))
           msg_print("A small dart hits you.");
         else {
-          lose_stat(A_CON);
+          dec_stat(A_CON);
           py_take_hit(dam);
           msg_print("A small dart saps your health!");
         }
