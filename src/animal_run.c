@@ -8579,7 +8579,7 @@ py_character()
   BufMsg(screen, "%-11.011s: %6d", "Level", uD.lev);
   BufMsg(screen, "%-11.011s: %6d", "Experience", uD.exp);
   BufMsg(screen, "%-11.011s: %6d", "Max Exp", uD.max_exp);
-  BufMsg(screen, "%-11.011s: %6d", "Exp to Adv", lev_exp(uD.lev) - uD.exp);
+  BufMsg(screen, "%-11.011s: %6d", "Exp to Adv", lev_exp(uD.lev));
   BufMsg(screen, "%-11.011s: %6d", "Gold", uD.gold);
 
   BufPad(screen, MAX_A * 2, 52);
