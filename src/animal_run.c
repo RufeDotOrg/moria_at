@@ -10955,6 +10955,9 @@ dungeon()
               case CTRL('p'): {
                 countD.paralysis += 1000;
               } break;
+              case CTRL('s'): {
+                store_maint();
+              } break;
               case CTRL('w'): {
                 msg_print("The air about you becomes charged.");
                 maD[MA_RECALL] = 1;
