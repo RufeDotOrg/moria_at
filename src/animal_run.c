@@ -611,7 +611,7 @@ rnd()
   if (test > 0)
     rnd_seed = test;
   else
-    rnd_seed = test + RNG_M;
+    rnd_seed = test + RNG_M - (test == 0);
   return rnd_seed;
 }
 
