@@ -5342,23 +5342,28 @@ inven_food()
   }
   return -1;
 }
-static void
+static int
 inven_ident(iidx)
 {
   struct objS* obj;
   struct treasureS* tr_ptr;
+  int used;
 
   obj = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[obj->tidx];
-  tr_make_known(tr_ptr);
-  obj->idflag |= ID_REVEAL;
+  used = tr_make_known(tr_ptr);
+  if ((obj->idflag & ID_REVEAL) == 0) {
+    used |= TRUE;
+    obj->idflag |= ID_REVEAL;
+  }
   obj_desc(obj, TRUE);
   if (iidx >= INVEN_EQUIP) {
     calc_bonuses();
     MSG("%s: %s", describe_use(iidx), descD);
   } else {
-    MSG("%c %s", iidx + 'a', descD);
+    MSG("%c) %s", iidx + 'a', descD);
   }
+  return used;
 }
 static int
 tohit_enchant(amount)
@@ -7823,9 +7828,10 @@ int *uy, *ux;
           ident |= TRUE;
           choice_idx = inven_choice("Which item do you wish identified?");
           if (choice_idx >= 0) {
-            inven_ident(choice_idx);
-          } else
+            used_up = inven_ident(choice_idx);
+          } else {
             used_up = FALSE;
+          }
           break;
         case 5:
           if (equip_remove_curse()) {
