@@ -10381,7 +10381,7 @@ store_display(sidx)
     if (obj->tidx) {
       // TBD: ouch
       number = obj->number;
-      obj->number = 1;
+      if ((obj->subval & STACK_BATCH) == 0) obj->number = 1;
       obj_desc(obj, TRUE);
       obj->number = number;
 
