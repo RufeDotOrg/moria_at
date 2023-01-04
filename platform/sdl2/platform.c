@@ -1139,6 +1139,9 @@ platform_init()
   platformD.save = save;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
+
+  while (1)
+    if (!sdl_pump()) break;
 }
 void
 platform_reset()
