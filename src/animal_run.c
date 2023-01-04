@@ -10485,13 +10485,11 @@ py_check_view(y, x)
 void
 ma_tick()
 {
-  uint32_t mflag, new_mflag, delta;
-  int val;
+  uint32_t new_mflag, delta;
 
-  mflag = uD.mflag;
   new_mflag = 0;
   for (int it = 0; it < AL(maD); ++it) {
-    val = maD[it];
+    int val = maD[it];
     if (val) {
       val -= 1;
       maD[it] = val;
@@ -10499,14 +10497,13 @@ ma_tick()
     }
   }
 
-  delta = mflag ^ new_mflag;
-  val = 0;
-  for (uint32_t it = 1; it != 0; it <<= 1, val += 1) {
-    if (delta & it) {
-      if (new_mflag & it) {
-        ma_bonuses(val, 1);
+  delta = uD.mflag ^ new_mflag;
+  for (int it = 0; it < AL(maD); ++it) {
+    if (delta & (1 << it)) {
+      if (new_mflag & (1 << it)) {
+        ma_bonuses(it, 1);
       } else {
-        ma_bonuses(val, -1);
+        ma_bonuses(it, -1);
       }
     }
   }
