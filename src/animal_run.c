@@ -8403,7 +8403,7 @@ equip_takeoff(iidx, into_slot)
   struct objS* obj;
   obj = obj_get(invenD[iidx]);
   if (obj->flags & TR_CURSED) {
-    msg_print("Hmm, it seems to be cursed.");
+    MSG("Hmm, the item you are %s seems to be cursed.", describe_use(iidx));
   } else if (into_slot >= 0) {
     invenD[iidx] = 0;
     invenD[into_slot] = obj->id;
