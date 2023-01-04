@@ -2983,7 +2983,7 @@ store_maint()
         } while (j > 0);
       } else {
         do {
-          k = randint(MAX_STORE_CHOICE - 1);
+          k = randint(MAX_STORE_CHOICE) - 1;
           store_ctr +=
               store_tr_stack(i, store_choiceD[i][k], store_stockD[i][k]);
           j -= 1;
