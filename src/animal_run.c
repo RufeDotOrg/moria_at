@@ -10653,9 +10653,9 @@ dungeon()
     tick();
 
     do {
+      draw();
       if (countD.rest != 0) break;
       if (countD.paralysis != 0) break;
-      draw();
       turn_flag = FALSE;
 
       y = uD.y;
