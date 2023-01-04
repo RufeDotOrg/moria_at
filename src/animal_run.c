@@ -2929,6 +2929,21 @@ store_tr_stack(sidx, tr_index, stack)
   return FALSE;
 }
 void
+store_sort(sidx)
+{
+  struct objS tmp_obj;
+  int i, j;
+  for (i = 0; i < AL(store_objD[0]); ++i) {
+    for (j = i + 1; j < AL(store_objD[0]); ++j) {
+      if (store_objD[sidx][j].tval > store_objD[sidx][i].tval) {
+        tmp_obj = store_objD[sidx][i];
+        store_objD[sidx][i] = store_objD[sidx][j];
+        store_objD[sidx][j] = tmp_obj;
+      }
+    }
+  }
+}
+void
 store_maint()
 {
   int i, j, k, store_ctr;
@@ -2975,6 +2990,7 @@ store_maint()
         } while (j > 0);
       }
     }
+    store_sort(i);
   }
 }
 void
