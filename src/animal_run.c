@@ -3967,16 +3967,19 @@ int
 detect_mon(int (*valid)())
 {
   struct creatureS* cr_ptr;
+  int flag;
 
+  flag = FALSE;
   FOR_EACH(mon, {
     if (panel_contains(&panelD, mon->fy, mon->fx)) {
       cr_ptr = &creatureD[mon->cidx];
       if (valid(cr_ptr)) {
-        return TRUE;
+        mon->mlit = TRUE;
+        flag = TRUE;
       }
     }
   });
-  return FALSE;
+  return flag;
 }
 void
 move_rec(y1, x1, y2, x2)
@@ -7913,7 +7916,7 @@ int *uy, *ux;
           ident |= TRUE;
           break;
         case 20:
-          if (detect_mon(crset_visible)) {
+          if (detect_mon(crset_invisible)) {
             ident |= TRUE;
             maD[MA_DETECT_INVIS] = 1;
             msg_print("You sense the presence of invisible creatures!");
