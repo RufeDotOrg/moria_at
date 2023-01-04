@@ -269,10 +269,17 @@ static char* affectD[][8] = {
     {"Blind"},    {"Confused"}, {"Afraid"},
     {"Paralyse"}, {"Poison"},   {"Hungry", "Weak", "Faint"},
 };
+// Match single index
 static int
 py_affect(maid)
 {
   return uD.mflag & (1 << maid);
+}
+// Match ALL trflag
+static int
+py_tr(trflag)
+{
+  return (cbD.tflag & trflag) == trflag;
 }
 void
 affect_update()
@@ -3991,7 +3998,7 @@ update_mon(midx)
       if (cave_lit(c_ptr)) {
         if ((CM_INVISIBLE & cr_ptr->cmove) == 0)
           flag = TRUE;
-        else if (cbD.tflag & TR_SEE_INVIS)
+        else if (py_tr(TR_SEE_INVIS))
           flag = TRUE;
       } else if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= uD.infra)) {
         flag = TRUE;
@@ -5721,7 +5728,7 @@ void
 lose_stat(sidx)
 {
   uint32_t sustain = sustain_stat(sidx);
-  if (cbD.tflag & sustain) {
+  if (py_tr(sustain)) {
     MSG("%s for a moment,  it passes.", stat_lossD[sidx]);
   } else {
     dec_stat(sidx);
@@ -7614,7 +7621,7 @@ inven_quaff(iidx)
           }
           break;
         case 19:
-          if ((cbD.tflag & TR_FREE_ACT) == 0) {
+          if (py_tr(TR_FREE_ACT) == 0) {
             msg_print("You fall asleep.");
             countD.paralysis += randint(4) + 4;
             ident |= TRUE;
@@ -7729,7 +7736,7 @@ inven_quaff(iidx)
           maD[MA_AFROST] += randint(10) + 10;
           break;
         case 43:
-          if ((cbD.tflag & TR_SEE_INVIS) == 0) ident |= TRUE;
+          if (py_tr(TR_SEE_INVIS) == 0) ident |= TRUE;
           maD[MA_SEE_INVIS] += randint(12) + 12;
           break;
         case 44:
@@ -8777,7 +8784,7 @@ poison_gas(dam)
 void
 fire_dam(dam)
 {
-  if (cbD.tflag & TR_RES_FIRE) dam = dam / 3;
+  if (py_tr(TR_RES_FIRE)) dam = dam / 3;
   if (py_affect(MA_AFIRE)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_fire, 3) > 0)
@@ -8790,7 +8797,7 @@ acid_dam(dam)
 
   flag = 0;
   if (minus_ac(TR_RES_ACID)) flag = 1;
-  if (cbD.tflag & TR_RES_ACID) flag += 2;
+  if (py_tr(TR_RES_ACID)) flag += 2;
   py_take_hit(dam / (flag + 1));
   if (inven_damage(vuln_acid, 3) > 0)
     msg_print("There is an acrid smell coming from your pack!");
@@ -8798,7 +8805,7 @@ acid_dam(dam)
 void
 frost_dam(dam)
 {
-  if (cbD.tflag & TR_RES_COLD) dam = dam / 3;
+  if (py_tr(TR_RES_COLD)) dam = dam / 3;
   if (py_affect(MA_AFROST)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_frost, 5) > 0)
@@ -8807,7 +8814,7 @@ frost_dam(dam)
 void
 light_dam(dam)
 {
-  if (cbD.tflag & TR_RES_LIGHT) dam = dam / 3;
+  if (py_tr(TR_RES_LIGHT)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_lightning, 3) > 0)
     msg_print("There are sparks coming from your pack!");
@@ -9054,7 +9061,7 @@ mon_attack(midx)
           break;
         case 11: /*Paralysis attack*/
           py_take_hit(damage);
-          if (cbD.tflag & TR_FREE_ACT)
+          if (py_tr(TR_FREE_ACT))
             msg_print("You are unaffected by paralysis.");
           else if (player_saves())
             msg_print("You resist paralysis!");
@@ -9732,7 +9739,7 @@ mon_try_spell(midx, cdis)
           py_take_hit(damroll(8, 8));
         break;
       case 10: /*Hold Person    */
-        if (cbD.tflag & TR_FREE_ACT)
+        if (py_tr(TR_FREE_ACT))
           msg_print("You are unaffected by paralysis.");
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
@@ -9778,7 +9785,7 @@ mon_try_spell(midx, cdis)
         update_mon(midx);
       } break;
       case 16: /*Slow Person   */
-        if (cbD.tflag & TR_FREE_ACT)
+        if (py_tr(TR_FREE_ACT))
           msg_print("You are unaffected by the spell.");
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
@@ -9917,7 +9924,7 @@ creatures()
       cdis = distance(y, x, mon->fy, mon->fx);
       if (mon->mlit || cdis <= cr_ptr->aaf) {
         if (mon->msleep) {
-          if (cbD.tflag & TR_AGGRAVATE)
+          if (py_tr(TR_AGGRAVATE))
             mon->msleep = 0;
           else {
             uint32_t notice = randint(1024);
@@ -9987,7 +9994,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
   switch (obj->subval) {
     case 1: /* Open pit*/
       msg_print("You fell into a pit!");
-      if (uD.mflag & TR_FFALL)
+      if (py_tr(TR_FFALL))
         msg_print("You gently float down.");
       else {
         py_take_hit(dam);
@@ -10002,7 +10009,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
       break;
     case 3: /* Covered pit*/
       msg_print("You fell into a covered pit.");
-      if (uD.mflag & TR_FFALL)
+      if (py_tr(TR_FFALL))
         msg_print("You gently float down.");
       else {
         py_take_hit(dam);
@@ -10013,7 +10020,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
       msg_print("You fell through a trap door!");
       new_level_flag = TRUE;
       dun_level++;
-      if (uD.mflag & TR_FFALL)
+      if (py_tr(TR_FFALL))
         msg_print("You gently float down.");
       else {
         py_take_hit(dam);
@@ -10025,7 +10032,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
     case 5: /* Sleep gas*/
       if (countD.paralysis == 0) {
         msg_print("A strange white mist surrounds you!");
-        if (uD.mflag & TR_FREE_ACT)
+        if (py_tr(TR_FREE_ACT))
           msg_print("You are unaffected.");
         else {
           msg_print("You fall asleep.");
@@ -10040,7 +10047,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
       break;
     case 7: /* STR Dart*/
       if (test_hit(125, 0, 0, cbD.pac)) {
-        if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_STR)
+        if (py_tr(sustain_stat(TR_STR)))
           msg_print("A small dart hits you.");
         else {
           lose_stat(A_STR);
@@ -10102,7 +10109,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
       if (test_hit(125, 0, 0, cbD.pac)) {
         py_take_hit(dam);
         msg_print("A small dart hits you!");
-        if (uD.mflag & TR_FREE_ACT)
+        if (py_tr(TR_FREE_ACT))
           msg_print("You are unaffected.");
         else
           maD[MA_SLOW] += randint(20) + 10;
@@ -10111,7 +10118,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
       break;
     case 18: /* CON Dart*/
       if (test_hit(125, 0, 0, cbD.pac)) {
-        if (uD.mflag & TR_SUST_STAT && uD.mflag & TR_CON)
+        if (py_tr(sustain_stat(TR_CON)))
           msg_print("A small dart hits you.");
         else {
           lose_stat(A_CON);
@@ -10576,7 +10583,7 @@ tick()
   }
   uD.food = tmp;
 
-  if (cbD.tflag & TR_REGEN) regen_amount = regen_amount * 3 / 2;
+  if (py_tr(TR_REGEN)) regen_amount = regen_amount * 3 / 2;
   // TBD: Search gives resting status
   if (countD.rest != 0) regen_amount = regen_amount * 2;
   // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
@@ -10660,7 +10667,7 @@ dungeon()
 
       y = uD.y;
       x = uD.x;
-      if (cbD.tflag & TR_TELEPORT && randint(100) == 1) {
+      if (py_tr(TR_TELEPORT) && randint(100) == 1) {
         disturb(0, 0);
         py_teleport(40, &y, &x);
       } else if (find_flag) {
