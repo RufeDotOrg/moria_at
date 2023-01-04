@@ -10395,7 +10395,7 @@ store_display(sidx)
 static void
 store_item_purchase(sidx, item)
 {
-  int iidx, count, cost, flag;
+  int iidx, count, cost, flag, number;
   struct objS* obj;
   struct treasureS* tr_ptr;
 
@@ -10422,9 +10422,13 @@ store_item_purchase(sidx, item)
         obj = obj_get(invenD[iidx]);
         tr_ptr = &treasureD[obj->tidx];
         tr_make_known(tr_ptr);
+        // Ugh:
+        number = obj->number;
+        obj->number = count;
         obj_desc(obj, TRUE);
-        MSG("You have %s.", descD);
+        obj->number = number;
         uD.gold -= cost;
+        MSG("You bought %s for %d gold.", descD, cost);
         store_item_destroy(sidx, item, count);
       }
       msg_pause();
