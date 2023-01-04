@@ -10922,6 +10922,9 @@ dungeon()
                   msg_print("Reset object teleport");
                 }
               } break;
+              case CTRL('p'): {
+                countD.paralysis += 1000;
+              } break;
               case CTRL('w'): {
                 msg_print("The air about you becomes charged.");
                 maD[MA_RECALL] = 1;
