@@ -10441,7 +10441,6 @@ pawn_entrance()
   char c;
 
   while (1) {
-    inven_sort();
     pawn_display();
     if (!in_subcommand("What would you like to sell to Gilbrook The Thrifty?",
                        &c)) {
@@ -10450,6 +10449,7 @@ pawn_entrance()
     uint8_t item = c - 'a';
 
     if (item < INVEN_EQUIP) inven_pawn(item);
+    if (c == 'I') inven_sort();
   }
 }
 static void
@@ -10458,12 +10458,12 @@ store_entrance(sidx)
   char c;
 
   while (1) {
-    inven_sort();
     store_display(sidx);
     if (!in_subcommand("What would you like to purchase?", &c)) break;
     uint8_t item = c - 'a';
 
     if (item < MAX_STORE_INVEN) store_item_purchase(sidx, item);
+    if (c == 'I') inven_sort();
   }
 }
 static void regenhp(percent) int percent;
