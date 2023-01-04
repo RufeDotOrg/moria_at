@@ -269,6 +269,11 @@ static char* affectD[][8] = {
     {"Blind"},    {"Confused"}, {"Afraid"},
     {"Paralyse"}, {"Poison"},   {"Hungry", "Weak", "Faint"},
 };
+static int
+py_affect(maid)
+{
+  return uD.mflag & (1 << maid);
+}
 void
 affect_update()
 {
@@ -276,9 +281,9 @@ affect_update()
   int idx, count, pad, len, sum;
 
   idx = 0;
-  active[idx++] = (uD.mflag & (1 << MA_RECALL)) != 0;
-  active[idx++] = (uD.mflag & (1 << MA_SLOW)) != 0;
-  active[idx++] = (uD.mflag & (1 << MA_FAST)) != 0;
+  active[idx++] = py_affect(MA_RECALL) != 0;
+  active[idx++] = py_affect(MA_SLOW) != 0;
+  active[idx++] = py_affect(MA_FAST) != 0;
   active[idx++] = (countD.blind != 0);
   active[idx++] = (countD.confusion != 0);
   active[idx++] = (countD.fear != 0);
@@ -3972,13 +3977,12 @@ update_mon(midx)
   fx = m_ptr->fx;
   cdis = distance(uD.y, uD.x, fy, fx);
   if ((panel_contains(&panelD, fy, fx))) {
-    if ((uD.mflag & (1 << MA_DETECT_EVIL)) && (CD_EVIL & cr_ptr->cdefense)) {
+    if (py_affect(MA_DETECT_EVIL) && (CD_EVIL & cr_ptr->cdefense)) {
       flag = TRUE;
-    } else if ((uD.mflag & (1 << MA_DETECT_MON)) &&
+    } else if (py_affect(MA_DETECT_MON) &&
                ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
       flag = TRUE;
-    } else if ((uD.mflag & (1 << MA_DETECT_INVIS)) &&
-               (CM_INVISIBLE & cr_ptr->cmove)) {
+    } else if (py_affect(MA_DETECT_INVIS) && (CM_INVISIBLE & cr_ptr->cmove)) {
       flag = TRUE;
     } else if (countD.blind == 0 && (cdis <= MAX_SIGHT) &&
                los(uD.y, uD.x, fy, fx)) {
@@ -4872,8 +4876,8 @@ void calc_hitpoints(level) int level;
   /* always give at least one point per level + 1 */
   if (hitpoints < (level + 1)) hitpoints = level + 1;
 
-  if (uD.mflag & (1 << MA_HERO)) hitpoints += 10;
-  if (uD.mflag & (1 << MA_SUPERHERO)) hitpoints += 20;
+  if (py_affect(MA_HERO)) hitpoints += 10;
+  if (py_affect(MA_SUPERHERO)) hitpoints += 20;
 
   // Scale current hp to the new maximum
   int value = ((uD.chp << 16) + uD.chp_frac) / uD.mhp * hitpoints;
@@ -4923,7 +4927,7 @@ calc_bonuses()
 
   /* Add in temporary spell increases  */
   ac += uD.ma_ac;
-  if (uD.mflag & (1 << MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
+  if (py_affect(MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
 
   // Summarize ac
   cbD.ptohit = tohit;
@@ -7638,11 +7642,11 @@ inven_quaff(iidx)
           countD.poison += randint(15) + 10;
           break;
         case 23:
-          if ((uD.mflag & (1 << MA_FAST)) == 0) ident |= TRUE;
+          if (py_affect(MA_FAST) == 0) ident |= TRUE;
           maD[MA_FAST] += randint(25) + 15;
           break;
         case 24:
-          if ((uD.mflag & (1 << MA_SLOW)) == 0) ident |= TRUE;
+          if (py_affect(MA_SLOW) == 0) ident |= TRUE;
           maD[MA_SLOW] += randint(25) + 15;
           break;
         case 26:
@@ -7698,15 +7702,15 @@ inven_quaff(iidx)
           ident |= TRUE;
           break;
         case 36:
-          if ((uD.mflag & (1 << MA_INVULN)) == 0) ident |= TRUE;
+          if (py_affect(MA_INVULN) == 0) ident |= TRUE;
           maD[MA_INVULN] += randint(10) + 10;
           break;
         case 37:
-          if ((uD.mflag & (1 << MA_HERO)) == 0) ident |= TRUE;
+          if (py_affect(MA_HERO) == 0) ident |= TRUE;
           maD[MA_HERO] += randint(25) + 25;
           break;
         case 38:
-          if ((uD.mflag & (1 << MA_SUPERHERO)) == 0) ident |= TRUE;
+          if (py_affect(MA_SUPERHERO) == 0) ident |= TRUE;
           maD[MA_SUPERHERO] += randint(25) + 25;
           break;
         case 39:
@@ -7717,11 +7721,11 @@ inven_quaff(iidx)
           ident |= restore_level();
           break;
         case 41:
-          if ((uD.mflag & (1 << MA_AFIRE)) == 0) ident |= TRUE;
+          if (py_affect(MA_AFIRE) == 0) ident |= TRUE;
           maD[MA_AFIRE] += randint(10) + 10;
           break;
         case 42:
-          if ((uD.mflag & (1 << MA_AFROST)) == 0) ident |= TRUE;
+          if (py_affect(MA_AFROST) == 0) ident |= TRUE;
           maD[MA_AFROST] += randint(10) + 10;
           break;
         case 43:
@@ -7747,7 +7751,7 @@ inven_quaff(iidx)
           //   }
           break;
         case 47:
-          if ((uD.mflag & (1 << MA_SEE_INFRA)) == 0) {
+          if (py_affect(MA_SEE_INFRA) == 0) {
             msg_print("Your eyes begin to tingle.");
             ident |= TRUE;
           }
@@ -7964,8 +7968,7 @@ int *uy, *ux;
           break;
         case 41:
           ident |= TRUE;
-          if ((uD.mflag & (1 << MA_RECALL)) == 0)
-            maD[MA_RECALL] += 25 + randint(30);
+          if (py_affect(MA_RECALL) == 0) maD[MA_RECALL] += 25 + randint(30);
           msg_print("The air about you becomes charged.");
           break;
         case 42:
@@ -8247,11 +8250,11 @@ int *uy, *ux;
             }
             break;
           case 17:
-            if ((uD.mflag & (1 << MA_FAST)) == 0) ident |= TRUE;
+            if (py_affect(MA_FAST) == 0) ident |= TRUE;
             maD[MA_FAST] += randint(30) + 15;
             break;
           case 18:
-            if ((uD.mflag & (1 << MA_SLOW)) == 0) ident |= TRUE;
+            if (py_affect(MA_SLOW) == 0) ident |= TRUE;
             maD[MA_SLOW] += randint(30) + 15;
             break;
           case 19:
@@ -8775,7 +8778,7 @@ void
 fire_dam(dam)
 {
   if (cbD.tflag & TR_RES_FIRE) dam = dam / 3;
-  if (uD.mflag & (1 << MA_AFIRE)) dam = dam / 3;
+  if (py_affect(MA_AFIRE)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_fire, 3) > 0)
     msg_print("There is smoke coming from your pack!");
@@ -8796,7 +8799,7 @@ void
 frost_dam(dam)
 {
   if (cbD.tflag & TR_RES_COLD) dam = dam / 3;
-  if (uD.mflag & (1 << MA_AFROST)) dam = dam / 3;
+  if (py_affect(MA_AFROST)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_frost, 5) > 0)
     msg_print("Something shatters inside your pack!");
@@ -9779,7 +9782,7 @@ mon_try_spell(midx, cdis)
           msg_print("You are unaffected by the spell.");
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
-        else if (uD.mflag & (1 << MA_SLOW))
+        else if (py_affect(MA_SLOW))
           maD[MA_SLOW] += 2;
         else
           maD[MA_SLOW] = randint(5) + 3;
@@ -10608,8 +10611,7 @@ tick()
     }
   }
   if (countD.fear > 0) {
-    if ((uD.mflag & (1 << MA_HERO)) || (uD.mflag & (1 << MA_SUPERHERO)))
-      countD.fear = 1;
+    if (py_affect(MA_HERO) || py_affect(MA_SUPERHERO)) countD.fear = 1;
     countD.fear -= 1;
     if (countD.fear == 0) {
       msg_print("You feel bolder now.");
