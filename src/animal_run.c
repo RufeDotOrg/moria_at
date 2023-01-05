@@ -10582,8 +10582,6 @@ ma_tick()
   uD.mflag = new_mflag;
   if (delta) {
     calc_bonuses();
-    // Vision changes, TBD: optimize?
-    FOR_EACH(mon, { update_mon(it_index); });
   }
 }
 static int
@@ -10711,7 +10709,6 @@ tick()
   }
 
   sense_magik();
-  ma_tick();
 }
 void
 dungeon()
@@ -11071,6 +11068,7 @@ dungeon()
       }
     } while (!turn_flag && !new_level_flag);
 
+    ma_tick();
     creatures();
   }
 }
