@@ -8700,11 +8700,12 @@ py_help()
   BufMsg(screen, "E: eat object");
   BufMsg(screen, "I: inventory sort");
   BufMsg(screen, "M: map dungeon");
+  BufMsg(screen, "O: object examination");
   BufMsg(screen, "R: rest until healed");
   BufMsg(screen, "S: study an object");
   BufMsg(screen, "T: take off equipment");
   BufMsg(screen, "W: where about the dungeon");
-  BufMsg(screen, "X: examine objects");
+  BufMsg(screen, "X: exchange primary weapon to offhand");
   BufMsg(screen, "Z: staff invocation");
   BufMsg(screen, ".: automatic object interaction (experimental)");
   line += 1;
@@ -9517,6 +9518,25 @@ py_look_obj()
     else
       msg_print("You see no objects of interest in that direction.");
   }
+}
+static void
+py_offhand()
+{
+  int tmp;
+  tmp = invenD[INVEN_WIELD] ^ invenD[INVEN_AUX];
+  if (invenD[INVEN_WIELD]) {
+    py_bonuses(obj_get(invenD[INVEN_WIELD]), -1);
+  }
+  invenD[INVEN_WIELD] ^= tmp;
+  invenD[INVEN_AUX] ^= tmp;
+  if (invenD[INVEN_WIELD]) {
+    py_bonuses(obj_get(invenD[INVEN_WIELD]), 1);
+    obj_desc(obj_get(invenD[INVEN_WIELD]), TRUE);
+    MSG("primary weapon: %s.", descD);
+  } else {
+    msg_print("No primary weapon.");
+  }
+  calc_bonuses();
 }
 static void make_move(midx, mm) int* mm;
 {
@@ -10797,6 +10817,9 @@ dungeon()
             case 'o':
               py_open();
               break;
+            case 'O':
+              py_look_obj();
+              break;
             case 's':
               py_search(y, x);
               msg_print("You search the area.");
@@ -10812,7 +10835,7 @@ dungeon()
               py_look_mon();
               break;
             case 'X':
-              py_look_obj();
+              py_offhand();
               break;
             case 'z':
               iidx = inven_choice("Aim which wand?");
