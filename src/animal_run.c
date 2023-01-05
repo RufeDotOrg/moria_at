@@ -261,7 +261,7 @@ altmap_update()
         lit_ptr += 1;
       }
   } else {
-    litmapD[uD.y][uD.x] = CF_TEMP_LIGHT;
+    litmapD[uD.y - rmin][uD.x - cmin] = CF_TEMP_LIGHT;
   }
 }
 static char* affectD[][8] = {
