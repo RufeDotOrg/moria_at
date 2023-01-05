@@ -265,9 +265,15 @@ altmap_update()
   }
 }
 static char* affectD[][8] = {
-    {"Recall"},   {"Slow"},     {"Fast"},
-    {"Blind"},    {"Confused"}, {"Afraid"},
-    {"Paralyse"}, {"Poison"},   {"Hungry", "Weak", "Faint"},
+    {"Recall"},
+    {"Slow (1)", "Slow (2)", "Slow (3)"},
+    {"Fast (1)", "Fast (2)", "Fast (3)"},
+    {"Blind"},
+    {"Confused"},
+    {"Afraid"},
+    {"Paralyse"},
+    {"Poison"},
+    {"Hungry", "Weak", "Faint"},
 };
 static void
 ma_immediate(maidx, nturn)
@@ -297,8 +303,16 @@ affect_update()
 
   idx = 0;
   active[idx++] = py_affect(MA_RECALL) != 0;
-  active[idx++] = py_affect(MA_SLOW) != 0;
-  active[idx++] = py_affect(MA_FAST) != 0;
+
+  // Slow
+  active[idx] = uD.pspeed > 0;
+  active[idx] += uD.pspeed > 1;
+  active[idx++] += uD.pspeed > 2;
+  // Fast
+  active[idx] = uD.pspeed < 0;
+  active[idx] += uD.pspeed < -1;
+  active[idx++] += uD.pspeed < -2;
+
   active[idx++] = (countD.blind != 0);
   active[idx++] = (countD.confusion != 0);
   active[idx++] = (countD.fear != 0);
@@ -8623,7 +8637,6 @@ py_character()
   BufMsg(screen, "%-15.015s: %6d", "Cur Hit Points", uD.chp);
   BufMsg(screen, "%-15.015s: %6d", "Max Mana", 0);
   BufMsg(screen, "%-15.015s: %6d", "Cur Mana", 0);
-  BufMsg(screen, "%-15.015s: %6d", "Speed", -uD.pspeed);
 
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-13.013s: %6d", "Fighting", uD.bth);
@@ -8636,6 +8649,7 @@ py_character()
   BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
   BufMsg(screen, "%-12.012s: %6d", "Disarming", uD.disarm);
   BufMsg(screen, "%-12.012s: %6d", "Magic Device", uD.save);
+  BufMsg(screen, "%-12.012s: %6d", "Speed", -uD.pspeed);
   BufPad(screen, MAX_A * 3, 55);
 
   line = 2 * MAX_A + 1;
