@@ -4758,7 +4758,8 @@ BOOL prefix;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
-      snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
+      snprintf(damstr, AL(damstr), " (%dx) (%dd%d)", attack_blows(obj->weight),
+               obj->damage[0], obj->damage[1]);
       break;
     case TV_DIGGING:
       snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
