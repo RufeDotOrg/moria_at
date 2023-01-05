@@ -931,6 +931,7 @@ void light_room(y, x) int y, x;
 int
 light_area(y, x)
 {
+  if (countD.blind == 0) msg_print("You are surrounded by a white light.");
   if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
   for (int col = y - 1; col <= y + 1; ++col) {
     for (int row = x - 1; row <= x + 1; ++row) {
