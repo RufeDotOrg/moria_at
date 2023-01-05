@@ -6121,7 +6121,7 @@ light_line(dir, y, x)
         }
       }
     }
-    (void)mmove(dir, &y, &x);
+    mmove(dir, &y, &x);
   } while (!flag);
 }
 void fire_bolt(typ, dir, y, x, dam, bolt_typ) int typ, dir, y, x, dam;
@@ -10798,14 +10798,14 @@ dungeon()
               break;
             case 'e': {
               int count = inven_screen(INVEN_EQUIP, MAX_INVEN);
-              MSG("You wearing %d items.", count);
+              MSG("You wear %d items.", count);
             } break;
             case 'f':
               py_bash(&y, &x);
               break;
             case 'i': {
               int count = inven_screen(0, INVEN_EQUIP);
-              MSG("You carrying %d items.", count);
+              MSG("You carry %d items.", count);
             } break;
             case 'q':
               iidx = inven_choice("Quaff what?");
