@@ -5380,7 +5380,7 @@ inven_ident(iidx)
   used = tr_make_known(tr_ptr);
   if ((obj->idflag & ID_REVEAL) == 0) {
     used |= TRUE;
-    obj->idflag |= ID_REVEAL;
+    obj->idflag = ID_REVEAL;
   }
   obj_desc(obj, TRUE);
   if (iidx >= INVEN_EQUIP) {
