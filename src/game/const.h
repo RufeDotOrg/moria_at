@@ -263,7 +263,7 @@
 #define MA_AFIRE 5
 #define MA_AFROST 6
 #define MA_INVULN 7
-#define MA_SEE_INVIS 8
+#define MA_SEE_INVIS 8 // TBD: move to immediate (breaks save format)
 #define MA_SEE_INFRA 9
 // Magic affects above this may set flags without waiting for ma_tick()
 #define MA_IMMEDIATE 10

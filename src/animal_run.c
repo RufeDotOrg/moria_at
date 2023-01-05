@@ -4025,7 +4025,7 @@ update_mon(midx)
       if (cave_lit(c_ptr)) {
         if ((CM_INVISIBLE & cr_ptr->cmove) == 0)
           flag = TRUE;
-        else if (py_tr(TR_SEE_INVIS))
+        else if (py_tr(TR_SEE_INVIS) || maD[MA_SEE_INVIS])
           flag = TRUE;
       } else if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= uD.infra)) {
         flag = TRUE;
@@ -4961,7 +4961,6 @@ calc_bonuses()
 
   /* Add in temporary spell increases  */
   ac += uD.ma_ac;
-  if (py_affect(MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
 
   // Summarize ac
   cbD.ptohit = tohit;
