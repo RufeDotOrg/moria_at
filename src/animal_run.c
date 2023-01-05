@@ -3979,7 +3979,13 @@ detect_obj(int (*valid)())
         // enables locked/stuck door interaction, trap auto-disarm
         if (obj->tval > TV_MAX_PICK_UP) {
           obj->idflag |= ID_REVEAL;
-          if (obj->tval == TV_INVIS_TRAP) obj->tval = TV_VIS_TRAP;
+          if (obj->tval == TV_INVIS_TRAP) {
+            obj->tval = TV_VIS_TRAP;
+            obj->tchar = '^';
+          } else if (obj->tval == TV_SECRET_DOOR) {
+            obj->tval = TV_CLOSED_DOOR;
+            obj->tchar = '+';
+          }
         }
         detect = TRUE;
       }
