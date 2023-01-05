@@ -5310,7 +5310,7 @@ equip_disenchant()
   // Gauntlets of Slaying tohit/todam are protected.
   if (i == INVEN_WIELD) {
     flag = (obj->tohit > 0 || obj->todam > 0);
-    obj->tohit -= randint(2);
+    obj->tohit = MAX(obj->tohit - randint(2), 0);
     obj->todam = MAX(obj->todam - randint(2), 0);
   } else {
     flag = (obj->toac > 0);
