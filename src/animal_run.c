@@ -264,17 +264,6 @@ altmap_update()
     litmapD[uD.y - rmin][uD.x - cmin] = CF_TEMP_LIGHT;
   }
 }
-static char* affectD[][8] = {
-    {"Recall"},
-    {"Slow (1)", "Slow (2)", "Slow (3)"},
-    {"Fast (1)", "Fast (2)", "Fast (3)"},
-    {"Blind"},
-    {"Confused"},
-    {"Afraid"},
-    {"Paralyse"},
-    {"Poison"},
-    {"Hungry", "Weak", "Faint"},
-};
 static void
 ma_immediate(maidx, nturn)
 {
@@ -295,6 +284,18 @@ py_tr(trflag)
 {
   return (cbD.tflag & trflag) == trflag;
 }
+static char* affectD[][8] = {
+    {"Recall"},
+    {"See Inv"},
+    {"Slow (1)", "Slow (2)", "Slow (3)"},
+    {"Fast (1)", "Fast (2)", "Fast (3)"},
+    {"Blind"},
+    {"Confused"},
+    {"Afraid"},
+    {"Paralyse"},
+    {"Poison"},
+    {"Hungry", "Weak", "Faint"},
+};
 void
 affect_update()
 {
@@ -303,6 +304,7 @@ affect_update()
 
   idx = 0;
   active[idx++] = py_affect(MA_RECALL) != 0;
+  active[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
 
   // Slow
   active[idx] = uD.pspeed > 0;
