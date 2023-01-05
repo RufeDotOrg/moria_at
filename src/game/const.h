@@ -265,6 +265,8 @@
 #define MA_INVULN 7
 #define MA_SEE_INVIS 8
 #define MA_SEE_INFRA 9
+// Magic affects above this may set flags without waiting for ma_tick()
+#define MA_IMMEDIATE 10
 #define MA_DETECT_MON 10
 #define MA_DETECT_EVIL 11
 #define MA_DETECT_INVIS 12

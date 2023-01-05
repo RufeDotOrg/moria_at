@@ -269,6 +269,14 @@ static char* affectD[][8] = {
     {"Blind"},    {"Confused"}, {"Afraid"},
     {"Paralyse"}, {"Poison"},   {"Hungry", "Weak", "Faint"},
 };
+static void
+ma_immediate(maidx, nturn)
+{
+  if (maidx > MA_IMMEDIATE) {
+    maD[maidx] += nturn;
+    uD.mflag |= (1 << maidx);
+  }
+}
 // Match single index
 static int
 py_affect(maid)
@@ -7918,7 +7926,7 @@ int *uy, *ux;
         case 20:
           if (detect_mon(crset_invisible)) {
             ident |= TRUE;
-            maD[MA_DETECT_INVIS] = 1;
+            ma_immediate(MA_DETECT_INVIS, 1);
             msg_print("You sense the presence of invisible creatures!");
           }
           break;
@@ -8000,7 +8008,7 @@ int *uy, *ux;
           break;
         case 41:
           ident |= TRUE;
-          if (py_affect(MA_RECALL) == 0) maD[MA_RECALL] += 25 + randint(30);
+          if (!py_affect(MA_RECALL)) ma_immediate(MA_RECALL, 25 + randint(30));
           msg_print("The air about you becomes charged.");
           break;
         case 42:
@@ -8278,7 +8286,7 @@ int *uy, *ux;
           case 16:
             if (detect_mon(crset_invisible)) {
               ident |= TRUE;
-              maD[MA_DETECT_INVIS] = 1;
+              ma_immediate(MA_DETECT_INVIS, 1);
             }
             break;
           case 17:
@@ -8300,7 +8308,7 @@ int *uy, *ux;
           case 21:
             if (detect_mon(crset_evil)) {
               ident |= TRUE;
-              maD[MA_DETECT_EVIL] = 1;
+              ma_immediate(MA_DETECT_EVIL, 1);
               msg_print("You sense the presence of evil!");
             }
             break;
@@ -10895,9 +10903,9 @@ dungeon()
                 detect_obj(oset_pickup);
                 detect_obj(oset_trap);
                 detect_obj(oset_sdoor);
-                maD[MA_DETECT_MON] = 1;
-                maD[MA_DETECT_INVIS] = 1;
-                maD[MA_DETECT_EVIL] = 1;
+                ma_immediate(MA_DETECT_MON, 1);
+                ma_immediate(MA_DETECT_INVIS, 1);
+                ma_immediate(MA_DETECT_EVIL, 1);
               } break;
               case CTRL('f'): {
                 create_food(y, x);
