@@ -4706,7 +4706,7 @@ void obj_detail(obj) struct objS* obj;
     }
     strcat(descD, "]");
   } else if ((obj->toac != 0) && obj_reveal(obj)) {
-    snprintf(tmp_str, AL(tmp_str), " [%+d]", obj->toac);
+    snprintf(tmp_str, AL(tmp_str), " [%+d AC]", obj->toac);
     strcat(descD, tmp_str);
   }
   if (obj_reveal(obj)) {
