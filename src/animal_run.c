@@ -10071,12 +10071,12 @@ static void hit_trap(uy, ux) int *uy, *ux;
       place_trap(y, x, 0);
       break;
     case 4: /* Trap door*/
-      msg_print("You fell through a trap door!");
-      new_level_flag = TRUE;
-      dun_level++;
-      if (py_tr(TR_FFALL))
-        msg_print("You gently float down.");
-      else {
+      if (py_tr(TR_FFALL)) {
+        MSG("A trap door opens; you catch the ledge preventing your fall!");
+      } else {
+        new_level_flag = TRUE;
+        dun_level++;
+        msg_print("You fell through a trap door!");
         py_take_hit(dam);
       }
       /* Force the messages to display before starting to generate the
