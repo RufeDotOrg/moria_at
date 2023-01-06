@@ -38,6 +38,7 @@ static uint32_t texture_formatD;
 static SDL_PixelFormat *pixel_formatD;
 static SDL_Color bg_colorD;
 static int xD;
+static int in_screenD;
 
 BOOL
 render_init()
@@ -583,6 +584,7 @@ platform_draw()
   SDL_SetRenderTarget(rendererD, text_textureD);
   SDL_RenderFillRect(rendererD, &text_rectD);
 
+  in_screenD = (screen_usedD[0] != 0);
   if (screen_usedD[0]) {
     show_map = 0;
     for (int row = 0; row < AL(screenD); ++row) {
@@ -738,6 +740,9 @@ sym_shift(char c)
 char
 dir_by_scancode(sym)
 {
+  // Disable directional movement during fullscreen
+  if (in_screenD) return -1;
+
   switch (sym) {
     case SDLK_KP_1 ... SDLK_KP_9:
       return 1 + (sym - SDLK_KP_1);
