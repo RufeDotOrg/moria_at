@@ -8597,6 +8597,8 @@ void
 py_character()
 {
   int line, col, col_width;
+  int xbth, xdis, xsave, xdev;
+
   col_width = 20;
   line = 0;
   col = 0;
@@ -8647,17 +8649,24 @@ py_character()
   BufMsg(screen, "%-15.015s: %6d", "Max Mana", 0);
   BufMsg(screen, "%-15.015s: %6d", "Cur Mana", 0);
 
+  xbth = uD.bth + uD.lev * level_adj[uD.clidx][LA_BTH];
+  xdis = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+         (level_adj[uD.clidx][LA_DISARM] * uD.lev / 3);
+  xsave =
+      uD.save + think_adj(A_WIS) + (level_adj[uD.clidx][LA_SAVE] * uD.lev / 3);
+  xdev = uD.save + think_adj(A_INT) +
+         (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
+
   line = 2 * MAX_A + 1;
-  BufMsg(screen, "%-13.013s: %6d", "Fighting", uD.bth);
+  BufMsg(screen, "%-13.013s: %6d", "Fighting", xbth);
   BufMsg(screen, "%-13.013s: %6d", "Bows", 0);
-  BufMsg(screen, "%-13.013s: %6d", "Saving Throw", uD.save);
+  BufMsg(screen, "%-13.013s: %6d", "Saving Throw", xsave);
   BufPad(screen, MAX_A * 3, 28);
 
   line = 2 * MAX_A + 1;
-  // TBD: xdev calc from wand/staff
   BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
-  BufMsg(screen, "%-12.012s: %6d", "Disarming", uD.disarm);
-  BufMsg(screen, "%-12.012s: %6d", "Magic Device", uD.save);
+  BufMsg(screen, "%-12.012s: %6d", "Disarming", xdis);
+  BufMsg(screen, "%-12.012s: %6d", "Magic Device", xdev);
   BufMsg(screen, "%-12.012s: %6d", "Speed", -uD.pspeed);
   BufPad(screen, MAX_A * 3, 55);
 
