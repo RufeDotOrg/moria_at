@@ -10292,8 +10292,10 @@ struct objS* obj;
         value = 50;
       else
         value = 70;
-    } else if (obj->idflag & ID_REVEAL)
-      value = obj->cost + (obj->cost / 20) * obj->p1;
+    }
+    // TBD: tuning
+    // else if (obj->idflag & ID_REVEAL)
+    //   value = obj->cost + (obj->cost / 20) * obj->p1;
   }
   /* picks and shovels */
   else if (obj->tval == TV_DIGGING) {
