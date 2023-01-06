@@ -50,12 +50,6 @@ inkey()
   char c;
   do {
     c = platformD.readansi();
-    if (!RELEASE && c == CTRL('c')) {
-      strcpy(death_descD, "quitting");
-      death = 1;
-      new_level_flag = TRUE;
-      break;
-    }
   } while (c == 0);
   return c;
 }
@@ -10937,6 +10931,13 @@ dungeon()
               break;
             case 'W':
               py_where();
+              break;
+            case CTRL('c'):
+              if (!RELEASE) {
+                strcpy(death_descD, "quitting");
+                death = 1;
+                return;  // Interrupt game
+              }
               break;
             case CTRL('p'): {
               msg_history();
