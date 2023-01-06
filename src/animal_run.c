@@ -10080,6 +10080,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
   dam = pdamroll(obj->damage);
 
   obj_desc(obj, TRUE);
+  strcpy(death_descD, descD);
   switch (obj->subval) {
     case 1: /* Open pit*/
       msg_print("You fell into a pit!");
@@ -10153,7 +10154,6 @@ static void hit_trap(uy, ux) int *uy, *ux;
       py_teleport(40, uy, ux);
       break;
     case 9: /* Rockfall*/
-      strcpy(death_descD, "a falling rock");
       py_take_hit(dam);
       delete_object(y, x);
       // TBD: rubble
