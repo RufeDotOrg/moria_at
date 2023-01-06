@@ -10626,11 +10626,12 @@ sense_magik()
 {
   struct objS* obj;
 
-  /* Allow for a slim chance of detect enchantment -CJS- */
-  /* for 1st level char, check once every 2160 turns
-     for 40th level char, check once every 416 turns */
+  // TBD: Tuning of turns
+  // Level 40: warrior 87, mage 371
+  // Level 1: warrior 516, mage 2682
   if (((turnD & 0xF) == 0) && (countD.confusion == 0) &&
-      (randint((10 + 750 / (5 + uD.lev))) == 1)) {
+      (randint(1 + (1000 / level_adj[uD.clidx][LA_SENSE_MAGIK]) /
+                       (1 + uD.lev)) == 1)) {
     for (int it = 0; it < MAX_INVEN; it++) {
       obj = obj_get(invenD[it]);
       /* if in inventory, succeed 1 out of 50 times,

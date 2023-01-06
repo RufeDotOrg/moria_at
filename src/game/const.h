@@ -386,7 +386,8 @@
 #define LA_DEVICE 2
 #define LA_DISARM 3
 #define LA_SAVE 4
-#define MAX_LA 5
+#define LA_SENSE_MAGIK 5
+#define MAX_LA 6
 
 /* magic numbers for players inventory array */
 #define INVEN_EQUIP 22
