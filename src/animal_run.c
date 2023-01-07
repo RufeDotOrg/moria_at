@@ -5228,6 +5228,7 @@ equip_enchant(amount)
     if (affect) {
       MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
       i_ptr->flags &= ~TR_CURSED;
+      i_ptr->idflag &= ~ID_CORRODED;
       calc_bonuses();
     } else
       msg_print("The enchantment fails.");
