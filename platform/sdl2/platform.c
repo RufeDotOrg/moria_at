@@ -849,7 +849,9 @@ sdl_pump()
           "",
           event.window.event, event.window.data1, event.window.data2);
       if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
-          event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+          event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED &&
+              (scale_rectD.x == 0 || display_rectD.w != event.window.data1 ||
+               display_rectD.h != event.window.data2)) {
         display_rectD.w = event.window.data1;
         display_rectD.h = event.window.data2;
         if (display_rectD.w > display_rectD.h) {
@@ -909,11 +911,11 @@ sdl_pump()
         }
         return -1;
       }
-      return ' ';
+      return 0;
     }
     if (event.type == SDL_DISPLAYEVENT) {
       Log("SDL_DisplayEvent [ event %d ]", event.display.event);
-      return ' ';
+      return 0;
     }
     if (event.type == SDL_KEYDOWN) {
       SDL_Keymod km = SDL_GetModState();
@@ -1145,8 +1147,7 @@ platform_init()
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
 
-  while (1)
-    if (!sdl_pump()) break;
+  for (int it = 0; it < 8; ++it) sdl_pump();
 }
 void
 platform_reset()
