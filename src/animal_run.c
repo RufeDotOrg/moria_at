@@ -4953,11 +4953,12 @@ calc_bonuses()
 {
   int tflag;
   int ac, toac;
-  int tohit, todam;
+  int wtohit, tohit, todam;
   int hide_tohit, hide_todam, hide_toac;
   struct objS* obj;
 
-  tohit = weight_tohit_adj() + tohit_adj();
+  wtohit = weight_tohit_adj();
+  tohit = wtohit + tohit_adj();
   todam = todam_adj();
   toac = toac_adj();
   ac = 0;
@@ -4997,6 +4998,15 @@ calc_bonuses()
     if (TR_SUST_STAT & obj->flags) tflag |= sustain_stat(obj->p1 - 1);
   }
   cbD.tflag = tflag;
+
+  if (cbD.weapon_heavy ^ (wtohit != 0)) {
+    cbD.weapon_heavy = (wtohit != 0);
+    if (wtohit) {
+      msg_print("You have trouble wielding such a heavy weapon.");
+    } else {
+      msg_print("You are strong enough to wield your weapon.");
+    }
+  }
 }
 int8_t
 modify_stat(stat, amount)
@@ -5731,7 +5741,6 @@ magic_init()
 }
 int
 dec_stat(stat)
-register int stat;
 {
   int tmp_stat, loss;
 

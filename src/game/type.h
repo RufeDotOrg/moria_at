@@ -46,6 +46,7 @@ struct cbS {
   int hide_todam;
   // Treasure flags from equipment
   int tflag;
+  uint8_t weapon_heavy;
 };
 struct cbS cbD;
 
