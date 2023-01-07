@@ -10071,7 +10071,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
   obj->idflag |= ID_REVEAL;
   find_flag = FALSE;
 
-  dam = pdamroll(obj->damage);
+  dam = obj->damage[1] ? pdamroll(obj->damage) : 0;
 
   obj_desc(obj, TRUE);
   strcpy(death_descD, descD);
