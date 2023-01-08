@@ -8469,6 +8469,7 @@ equip_takeoff(iidx, into_slot)
     py_bonuses(obj, -1);
     obj_desc(obj, TRUE);
     MSG("You take off %s. (%c)", descD, 'a' + into_slot);
+    turn_flag = TRUE;
   }
 }
 void
@@ -9589,6 +9590,7 @@ py_offhand()
       msg_print("No primary weapon.");
     }
     calc_bonuses();
+    turn_flag = TRUE;
   }
 }
 static void make_move(midx, mm) int* mm;
