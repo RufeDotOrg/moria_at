@@ -5006,7 +5006,12 @@ calc_bonuses()
     } else {
       msg_print("You are strong enough to wield your weapon.");
     }
+  } else if (cbD.prev_weapon != invenD[INVEN_WIELD]) {
+    if (wtohit) {
+      msg_print("You have trouble wielding such a heavy weapon.");
+    }
   }
+  cbD.prev_weapon = invenD[INVEN_WIELD];
 }
 int8_t
 modify_stat(stat, amount)
