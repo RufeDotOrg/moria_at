@@ -9562,21 +9562,34 @@ py_look_obj()
 static void
 py_offhand()
 {
-  int tmp;
+  struct objS* obj;
+  int tmp, swap;
   tmp = invenD[INVEN_WIELD] ^ invenD[INVEN_AUX];
+  swap = FALSE;
   if (invenD[INVEN_WIELD]) {
-    py_bonuses(obj_get(invenD[INVEN_WIELD]), -1);
+    obj = obj_get(invenD[INVEN_WIELD]);
+    if (obj->flags & TR_CURSED) {
+      MSG("Hmm, the item you are %s seems to be cursed.",
+          describe_use(INVEN_WIELD));
+    } else {
+      py_bonuses(obj, -1);
+      swap = TRUE;
+    }
   }
-  invenD[INVEN_WIELD] ^= tmp;
-  invenD[INVEN_AUX] ^= tmp;
-  if (invenD[INVEN_WIELD]) {
-    py_bonuses(obj_get(invenD[INVEN_WIELD]), 1);
-    obj_desc(obj_get(invenD[INVEN_WIELD]), TRUE);
-    MSG("primary weapon: %s.", descD);
-  } else {
-    msg_print("No primary weapon.");
+
+  if (swap) {
+    obj = obj_get(invenD[INVEN_AUX]);
+    invenD[INVEN_WIELD] ^= tmp;
+    invenD[INVEN_AUX] ^= tmp;
+    if (obj->id) {
+      py_bonuses(obj, 1);
+      obj_desc(obj, TRUE);
+      MSG("primary weapon: %s.", descD);
+    } else {
+      msg_print("No primary weapon.");
+    }
+    calc_bonuses();
   }
-  calc_bonuses();
 }
 static void make_move(midx, mm) int* mm;
 {
