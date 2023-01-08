@@ -85,6 +85,7 @@ static int total_winner;
 static int dun_level;
 static int turn_flag;
 static int new_level_flag;
+static int pack_heavy;
 static char descD[160];
 static char death_descD[160];
 

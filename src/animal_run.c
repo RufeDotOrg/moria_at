@@ -281,6 +281,7 @@ py_tr(trflag)
 static char* affectD[][8] = {
     {"Recall"},
     {"See Inv"},
+    {"PackHvy"},
     {"Slow (1)", "Slow (2)", "Slow (3)"},
     {"Fast (1)", "Fast (2)", "Fast (3)"},
     {"Blind"},
@@ -299,6 +300,7 @@ affect_update()
   idx = 0;
   active[idx++] = py_affect(MA_RECALL) != 0;
   active[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
+  active[idx++] = (pack_heavy != 0);
 
   // Slow
   active[idx] = uD.pspeed > 0;
@@ -7021,7 +7023,7 @@ struct monS* mon;
 {
   struct creatureS* cr_ptr;
   cr_ptr = &creatureD[mon->cidx];
-  return mon->mspeed + cr_ptr->speed - 10 + uD.pspeed;
+  return mon->mspeed + cr_ptr->speed - 10 + uD.pspeed + pack_heavy;
 }
 int
 aggravate_monster(dis_affect)
@@ -8449,6 +8451,36 @@ int* locn;
   }
   return FALSE;
 }
+int
+weight_limit()
+{
+  int weight_cap;
+
+  weight_cap = statD.use_stat[A_STR] * 130 + uD.wt;
+  if (weight_cap > 3000) weight_cap = 3000;
+  return (weight_cap);
+}
+void
+inven_check_weight()
+{
+  int iwt, ilimit, penalty;
+  iwt = 0;
+  for (int it = 0; it < MAX_INVEN; ++it) {
+    struct objS* obj = obj_get(invenD[it]);
+    iwt += obj->weight * obj->number;
+  }
+  ilimit = weight_limit();
+
+  penalty = iwt / (ilimit + 1);
+  if (pack_heavy != penalty) {
+    if (pack_heavy < penalty) {
+      msg_print("Your pack is so heavy that it slows you down.");
+    } else {
+      msg_print("You move more easily under the weight of your pack.");
+    }
+    pack_heavy = penalty;
+  }
+}
 static int
 inven_carry(obj_id)
 {
@@ -8680,7 +8712,7 @@ py_character()
   BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
   BufMsg(screen, "%-12.012s: %6d", "Disarming", xdis);
   BufMsg(screen, "%-12.012s: %6d", "Magic Device", xdev);
-  BufMsg(screen, "%-12.012s: %6d", "Speed", -uD.pspeed);
+  BufMsg(screen, "%-12.012s: %6d", "Speed", -uD.pspeed - pack_heavy);
   BufPad(screen, MAX_A * 3, 55);
 
   line = 2 * MAX_A + 1;
@@ -10774,6 +10806,7 @@ dungeon()
       if (randint(MAX_MALLOC_CHANCE) == 1) alloc_mon(1, MAX_SIGHT, FALSE);
     }
     tick();
+    inven_check_weight();
 
     do {
       draw();
