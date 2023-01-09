@@ -3759,8 +3759,7 @@ int dir, y, x;
   else
     return FALSE;
 }
-void find_init(dir, y_ptr, x_ptr) int dir;
-int *y_ptr, *x_ptr;
+void find_init(dir, y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
   int deepleft, deepright;
   int i, shortleft, shortright;
@@ -4085,6 +4084,16 @@ enchant(int16_t* bonus, int16_t limit)
     res = TRUE;
   }
   return (res);
+}
+int
+weight_tohit_adj()
+{
+  struct objS* obj;
+  int use_weight = statD.use_stat[A_STR] * 15;
+
+  obj = obj_get(invenD[INVEN_WIELD]);
+  if (use_weight < obj->weight) return use_weight - obj->weight;
+  return 0;
 }
 int
 attack_blows(weight)
@@ -4939,16 +4948,6 @@ void calc_hitpoints(level) int level;
   uD.chp = value >> 16;
   uD.chp_frac = value & 0xFFFF;
   uD.mhp = hitpoints;
-}
-int
-weight_tohit_adj()
-{
-  struct objS* obj;
-  int use_weight = statD.use_stat[A_STR] * 15;
-
-  obj = obj_get(invenD[INVEN_WIELD]);
-  if (use_weight < obj->weight) return use_weight - obj->weight;
-  return 0;
 }
 void
 calc_bonuses()
@@ -9630,6 +9629,101 @@ py_offhand()
     turn_flag = TRUE;
   }
 }
+void tunnel(dir, uy, ux) int *uy, *ux;
+{
+  int y, x, i, tabil;
+  struct caveS* c_ptr;
+  struct objS* i_ptr;
+  struct monS* m_ptr;
+
+  y = *uy;
+  x = *ux;
+  mmove(dir, &y, &x);
+
+  c_ptr = &caveD[y][x];
+
+  if (c_ptr->midx) {
+    *uy = y;
+    *ux = x;
+    return;
+  }
+
+  /* Don't let the player tunnel somewhere illegal, this is necessary to
+     prevent the player from getting a free attack by trying to tunnel
+     somewhere where it has no effect.  */
+  if (c_ptr->fval < MIN_WALL &&
+      (c_ptr->oidx == 0 || (entity_objD[c_ptr->oidx].tval != TV_RUBBLE &&
+                            entity_objD[c_ptr->oidx].tval != TV_SECRET_DOOR))) {
+    if (c_ptr->oidx == 0) {
+      msg_print("Tunnel through what?  Empty air?!?");
+    } else {
+      msg_print("You can't tunnel through that.");
+    }
+    return;
+  }
+
+  turn_flag = TRUE;
+  /* Compute the digging ability of player; based on     */
+  /* strength, and type of tool used  		   */
+  tabil = statD.use_stat[A_STR];
+  i_ptr = obj_get(invenD[INVEN_WIELD]);
+  if (i_ptr->tval != TV_NOTHING) {
+    if (TR_TUNNEL & i_ptr->flags)
+      tabil += 25 + i_ptr->p1 * 50;
+    else {
+      tabil +=
+          (i_ptr->damage[0] * i_ptr->damage[1]) + i_ptr->tohit + i_ptr->todam;
+      /* divide by two so that digging without shovel isn't too easy */
+      tabil >>= 1;
+    }
+
+    /* If this weapon is too heavy for the player to wield properly, then
+       also make it harder to dig with it.  */
+    tabil = MAX(tabil + weight_tohit_adj(), 0);
+
+    /* Regular walls; Granite, magma intrusion, quartz vein  */
+    /* Don't forget the boundary walls, made of titanium (255)*/
+    switch (c_ptr->fval) {
+      case GRANITE_WALL:
+        i = randint(1200) + 80;
+        if (tabil > i) {
+          twall(y, x);
+          msg_print("You have finished the tunnel.");
+        } else
+          msg_print("You tunnel into the granite wall.");
+        break;
+      // case MAGMA_WALL:
+      //   i = randint(600) + 10;
+      //   if (tabil > i) {
+      //     twall(y, x);
+      //     msg_print("You have finished the tunnel.");
+      //   } else
+      //     msg_print("You tunnel into the magma intrusion.");
+      //   break;
+      // case QUARTZ_WALL:
+      //   i = randint(400) + 10;
+      //   if (tabil > i) {
+      //     twall(y, x);
+      //     msg_print("You have finished the tunnel.");
+      //   } else
+      //     msg_print("You tunnel into the quartz vein.");
+      //   break;
+      case BOUNDARY_WALL:
+        msg_print("This seems to be permanent rock.");
+        break;
+      default:
+        /* Is there an object in the way?  (Rubble and secret doors)*/
+        /* TBD: Rubble.     */
+        /* Secret doors.*/
+        if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
+          msg_print("You tunnel into the granite wall.");
+          py_search(y, x);
+        }
+        break;
+    }
+  } else
+    msg_print("You dig with your hands, making no progress.");
+}
 static void make_move(midx, mm) int* mm;
 {
   int i, fy, fx, newy, newx, do_turn, do_move, stuck_door;
@@ -10854,19 +10948,25 @@ dungeon()
           }
         }
 
-        dir = map_roguedir(tolower(c)) - '0';
+        if (c < 037) {
+          dir = map_roguedir(c | 0x60) - '0';
+        } else {
+          dir = map_roguedir(c | 0x20) - '0';
+        }
+
         if (dir <= 9) {
           // 75% random movement
-          if (countD.confusion) {
-            c = tolower(c);  // Can't run
-            if (randint(4) > 1) dir = randint(9);
-          }
+          if (countD.confusion && randint(4) > 1) dir = randint(9);
 
-          // Primary movemenlowercase)
-          if (c & 0x20) {
+          if (c < 037) {
+            // Tunneling (CTRL)
+            tunnel(dir, &y, &x);
+          } else if (countD.confusion /* can't run during confusion */
+                     || c & 0x20) {
+            // Primary movement (lowercase)
             mmove(dir, &y, &x);
-          } else  // Secondary movement (uppercase)
-          {
+          } else {
+            // Secondary movement (uppercase)
             find_init(dir, &y, &x);
           }
         } else {
