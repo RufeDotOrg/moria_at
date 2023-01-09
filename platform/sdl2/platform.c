@@ -924,8 +924,10 @@ sdl_pump()
       if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
         // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 13;
         if (isalpha(event.key.keysym.sym)) {
-          if (km & KMOD_CTRL) return (event.key.keysym.sym & 037);
-          return event.key.keysym.sym ^ shift;
+          if (km & KMOD_CTRL)
+            return CTRL(event.key.keysym.sym);
+          else
+            return event.key.keysym.sym ^ shift;
         } else {
           return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
         }
