@@ -1255,7 +1255,7 @@ static void place_door(y, x) int y, x;
   int tmp;
   int lock;
 
-  tmp = randint(3);
+  tmp = randint(2 + (dun_level >= 5));
   if (tmp == 1) {
     place_broken_door(randint(4) == 1, y, x);
   } else if (tmp == 2) {
