@@ -89,7 +89,7 @@ struct caveS* cave;
 char
 get_sym(int row, int col)
 {
-  register struct caveS* cave_ptr;
+  struct caveS* cave_ptr;
 
   if (row == uD.y && col == uD.x)
     return '@';
@@ -467,7 +467,6 @@ char* command;
 }
 static char
 map_roguedir(comval)
-register char comval;
 {
   switch (comval) {
     case 'h':
@@ -522,8 +521,8 @@ int
 bit_pos(test)
 uint32_t* test;
 {
-  register int i;
-  register uint32_t mask = 0x1;
+  int i;
+  uint32_t mask = 0x1;
 
   for (i = 0; i < sizeof(*test) * 8; i++) {
     if (*test & mask) {
@@ -539,8 +538,8 @@ uint32_t* test;
 static void
 go_up()
 {
-  register struct caveS* c_ptr;
-  register int no_stairs = FALSE;
+  struct caveS* c_ptr;
+  int no_stairs = FALSE;
 
   c_ptr = &caveD[uD.y][uD.x];
   if (c_ptr->oidx != 0)
@@ -561,8 +560,8 @@ go_up()
 static void
 go_down()
 {
-  register struct caveS* c_ptr;
-  register int no_stairs = FALSE;
+  struct caveS* c_ptr;
+  int no_stairs = FALSE;
 
   c_ptr = &caveD[uD.y][uD.x];
   if (c_ptr->oidx != 0)
@@ -623,7 +622,7 @@ place_boundary()
 int
 rnd()
 {
-  register long low, high, test;
+  long low, high, test;
 
   high = rnd_seed / RNG_Q;
   low = rnd_seed % RNG_Q;
@@ -637,18 +636,16 @@ rnd()
 
 int
 randint(maxval)
-int maxval;
 {
-  register long randval;
+  long randval;
 
   randval = rnd();
   return ((int)(randval % maxval) + 1);
 }
 int
 randnor(mean, stand)
-int mean, stand;
 {
-  register int offset, low, iindex, high;
+  int offset, low, iindex, high;
   int16_t tmp;
 
   tmp = randint(INT16_MAX);
@@ -689,7 +686,7 @@ int
 damroll(num, sides)
 int num, sides;
 {
-  register int i, sum = 0;
+  int i, sum = 0;
 
   for (i = 0; i < num; i++) sum += randint(sides);
   return (sum);
@@ -702,9 +699,9 @@ uint8_t* array;
 }
 int
 critical_blow(weight, plus, dam)
-register int weight, plus, dam;
+int weight, plus, dam;
 {
-  register int critical;
+  int critical;
 
   critical = dam;
   /* Weight of weapon, plusses to hit, and character level all      */
@@ -779,9 +776,9 @@ void disturb(search, light) int search, light;
 
 static void build_room(yval, xval) int yval, xval;
 {
-  register int i, j, x, xmax, y, ymax;
+  int i, j, x, xmax, y, ymax;
   uint8_t floor;
-  register struct caveS *c_ptr, *d_ptr;
+  struct caveS *c_ptr, *d_ptr;
 
   if (dun_level <= randint(25))
     floor = FLOOR_LIGHT;
@@ -914,7 +911,7 @@ near_light(y, x)
 }
 void light_room(y, x) int y, x;
 {
-  register int i, j, start_col, end_col;
+  int i, j, start_col, end_col;
   int tmp1, tmp2, start_row, end_row;
   struct caveS* c_ptr;
   int tval;
@@ -1161,7 +1158,7 @@ int fromY, fromX, toY, toX;
 }
 static void rand_dir(rdir, cdir) int *rdir, *cdir;
 {
-  register int tmp;
+  int tmp;
 
   tmp = randint(4);
   if (tmp < 3) {
@@ -1173,7 +1170,7 @@ static void rand_dir(rdir, cdir) int *rdir, *cdir;
   }
 }
 static void correct_dir(rdir, cdir, y1, x1, y2, x2) int *rdir, *cdir;
-register int y1, x1, y2, x2;
+int y1, x1, y2, x2;
 {
   if (y1 < y2)
     *rdir = 1;
@@ -1196,8 +1193,8 @@ register int y1, x1, y2, x2;
 }
 static void place_broken_door(broken, y, x) int broken, y, x;
 {
-  register struct objS* obj;
-  register struct caveS* cave_ptr;
+  struct objS* obj;
+  struct caveS* cave_ptr;
 
   // invcopy(&t_list[cur_pos], OBJ_OPEN_DOOR);
   obj = obj_use();
@@ -1215,8 +1212,8 @@ static void place_broken_door(broken, y, x) int broken, y, x;
 }
 static void place_closed_door(locked, y, x) int locked, y, x;
 {
-  register struct objS* obj;
-  register struct caveS* cave_ptr;
+  struct objS* obj;
+  struct caveS* cave_ptr;
 
   // invcopy(&t_list[cur_pos], OBJ_CLOSED_DOOR);
   obj = obj_use();
@@ -1234,8 +1231,8 @@ static void place_closed_door(locked, y, x) int locked, y, x;
 }
 static void place_secret_door(y, x) int y, x;
 {
-  register struct objS* obj;
-  register struct caveS* cave_ptr;
+  struct objS* obj;
+  struct caveS* cave_ptr;
 
   // invcopy(&t_list[cur_pos], OBJ_SECRET_DOOR);
   obj = obj_use();
@@ -1252,8 +1249,8 @@ static void place_secret_door(y, x) int y, x;
 }
 static void place_door(y, x) int y, x;
 {
-  register int tmp;
-  register int lock;
+  int tmp;
+  int lock;
 
   tmp = randint(3);
   if (tmp == 1) {
@@ -1274,8 +1271,8 @@ static coords doorstk[100];
 static int doorindex;
 static void build_tunnel(row1, col1, row2, col2) int row1, col1, row2, col2;
 {
-  register int tmp_row, tmp_col, i, j;
-  register struct caveS* c_ptr;
+  int tmp_row, tmp_col, i, j;
+  struct caveS* c_ptr;
   struct caveS* d_ptr;
   coords tunstk[1000], wallstk[1000];
   coords* tun_ptr;
@@ -1389,10 +1386,10 @@ static void build_tunnel(row1, col1, row2, col2) int row1, col1, row2, col2;
     }
   }
 }
-static void fill_cave(fval) register int fval;
+static void fill_cave(fval) int fval;
 {
-  register int i, j;
-  register struct caveS* c_ptr;
+  int i, j;
+  struct caveS* c_ptr;
 
   /* no need to check the border of the cave */
 
@@ -1494,8 +1491,8 @@ struct objS* copy;
 }
 static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
 {
-  register struct objS* obj;
-  register struct caveS* cave_ptr;
+  struct objS* obj;
+  struct caveS* cave_ptr;
 
   cave_ptr = &caveD[y][x];
   if (cave_ptr->oidx != 0) delete_object(y, x);
@@ -1512,8 +1509,8 @@ static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
 }
 static void new_spot(y, x) int *y, *x;
 {
-  register int i, j;
-  register struct caveS* c_ptr;
+  int i, j;
+  struct caveS* c_ptr;
 
   do {
     i = randint(MAX_HEIGHT - 2);
@@ -1526,9 +1523,9 @@ static void new_spot(y, x) int *y, *x;
 }
 static void place_stairs(typ, num, walls) int typ, num, walls;
 {
-  register struct caveS* cave_ptr;
+  struct caveS* cave_ptr;
   int i, j, flag;
-  register int y1, x1, y2, x2;
+  int y1, x1, y2, x2;
 
   for (i = 0; i < num; i++) {
     flag = FALSE;
@@ -1567,10 +1564,9 @@ static void place_stairs(typ, num, walls) int typ, num, walls;
 }
 int
 next_to_corr(y, x)
-register int y, x;
 {
-  register int k, j, i;
-  register struct caveS* c_ptr;
+  int k, j, i;
+  struct caveS* c_ptr;
 
   i = 0;
   for (j = y - 1; j <= (y + 1); j++)
@@ -1585,9 +1581,9 @@ register int y, x;
 }
 static int
 next_to(y, x)
-register int y, x;
+int y, x;
 {
-  register int next;
+  int next;
 
   if (next_to_corr(y, x) > 2)
     if ((caveD[y - 1][x].fval >= MIN_WALL) &&
@@ -1606,7 +1602,7 @@ int
 distance(y1, x1, y2, x2)
 int y1, x1, y2, x2;
 {
-  register int dy, dx;
+  int dy, dx;
 
   dy = y1 - y2;
   if (dy < 0) dy = -dy;
@@ -1615,7 +1611,7 @@ int y1, x1, y2, x2;
 
   return ((((dy + dx) << 1) - (dy > dx ? dx : dy)) >> 1);
 }
-static void try_door(y, x) register int y, x;
+static void try_door(y, x) int y, x;
 {
   if ((caveD[y][x].fval == FLOOR_CORR) && (randint(100) > DUN_TUN_JCT) &&
       next_to(y, x))
@@ -1628,24 +1624,20 @@ set_null()
 }
 int
 set_room(element)
-register int element;
 {
   return (element == FLOOR_DARK || element == FLOOR_LIGHT);
 }
 int
 set_corr(element)
-register int element;
 {
   return (element == FLOOR_CORR || element == FLOOR_OBST);
 }
 int
 set_floor(element)
-int element;
 {
   return (element <= MAX_FLOOR);
 }
-void tr_obj_copy(tidx, obj) int tidx;
-struct objS* obj;
+void tr_obj_copy(tidx, obj) struct objS* obj;
 {
   struct treasureS* tr_ptr = &treasureD[tidx];
   obj->flags = tr_ptr->flags;
@@ -3085,7 +3077,7 @@ int
 get_mon_num(level)
 int level;
 {
-  register int i, j, num;
+  int i, j, num;
 
   if (level <= 0)
     i = randint(m_level[0]);
@@ -3147,8 +3139,8 @@ static int
 mon_multiply(mon)
 struct monS* mon;
 {
-  register int y, x, fy, fx, i, j, k;
-  register struct caveS* c_ptr;
+  int y, x, fy, fx, i, j, k;
+  struct caveS* c_ptr;
   int count;
 
   y = uD.y;
@@ -3265,7 +3257,7 @@ static char* gold_nameD[MAX_GOLD] = {
 };
 void place_gold(y, x) int y, x;
 {
-  register int i, cur_pos;
+  int i, cur_pos;
   struct objS* obj;
 
   obj = obj_use();
@@ -3353,7 +3345,7 @@ void
 cave_gen()
 {
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
-  register int i, j, k;
+  int i, j, k;
   int y1, x1, y2, x2, pick1, pick2, tmp;
   int16_t yloc[CHUNK_SQ + 1], xloc[CHUNK_SQ + 1];
 
@@ -3561,7 +3553,7 @@ panel_update(struct panelS* panel, int y, int x, BOOL force)
   panel_bounds(panel);
 }
 static void get_moves(monptr, mm) int monptr;
-register int* mm;
+int* mm;
 {
   int y, ay, x, ax, move_val;
 
@@ -3737,9 +3729,9 @@ dir_y(dir)
 int
 mmove(dir, y, x)
 int dir;
-register int *y, *x;
+int *y, *x;
 {
-  register int new_row, new_col;
+  int new_row, new_col;
   int b;
 
   new_row = dir_y(dir);
@@ -3835,7 +3827,7 @@ void
 find_event(y, x)
 {
   int dir, newdir, t, check_dir, row, col;
-  register int i, max, option, option2;
+  int i, max, option, option2;
   struct caveS* c_ptr;
 
   option = 0;
@@ -3958,8 +3950,8 @@ find_event(y, x)
 int
 detect_obj(int (*valid)())
 {
-  register int i, j, detect;
-  register struct caveS* c_ptr;
+  int i, j, detect;
+  struct caveS* c_ptr;
   struct objS* obj;
 
   int rmin = panelD.panel_row_min;
@@ -4069,7 +4061,7 @@ update_mon(midx)
 int
 enchant(int16_t* bonus, int16_t limit)
 {
-  register int chance, res;
+  int chance, res;
 
   if (limit <= 0) /* avoid randint(0) call */
     return (FALSE);
@@ -4089,8 +4081,8 @@ enchant(int16_t* bonus, int16_t limit)
 int
 attack_blows(weight)
 {
-  register int adj_weight;
-  register int str_index, dex_index, s, d;
+  int adj_weight;
+  int str_index, dex_index, s, d;
 
   d = statD.use_stat[A_DEX];
   if (d < 10)
@@ -4368,7 +4360,7 @@ int
 think_adj(stat)
 int stat;
 {
-  register int value;
+  int value;
 
   value = statD.use_stat[stat];
   if (value > 117)
@@ -4391,7 +4383,7 @@ int stat;
 int
 tohit_adj()
 {
-  register int total, stat;
+  int total, stat;
 
   stat = statD.use_stat[A_DEX];
   if (stat < 4)
@@ -4434,7 +4426,7 @@ tohit_adj()
 int
 toac_adj()
 {
-  register int stat;
+  int stat;
 
   stat = statD.use_stat[A_DEX];
   if (stat < 4)
@@ -4461,7 +4453,7 @@ toac_adj()
 int
 todis_adj()
 {
-  register int stat;
+  int stat;
 
   stat = statD.use_stat[A_DEX];
   if (stat < 4)
@@ -4492,7 +4484,7 @@ todis_adj()
 int
 todam_adj()
 {
-  register int stat;
+  int stat;
 
   stat = statD.use_stat[A_STR];
   if (stat < 4)
@@ -4518,7 +4510,7 @@ int
 test_hit(bth, level_adj, pth, ac)
 int bth, level_adj, pth, ac;
 {
-  register int i, die;
+  int i, die;
 
   disturb(1, 0);
   i = bth + pth * BTH_PLUS_ADJ + level_adj;
@@ -4535,8 +4527,8 @@ int bth, level_adj, pth, ac;
 // TBD: rewrite
 static void summon_object(y, x, num, typ) int y, x, num, typ;
 {
-  register int i, j, k;
-  register struct caveS* c_ptr;
+  int i, j, k;
+  struct caveS* c_ptr;
   int real_typ;
 
   if ((typ == 1) || (typ == 5))
@@ -5541,7 +5533,7 @@ py_class_select()
 static void py_stats(stats, len) int8_t* stats;
 int len;
 {
-  register int i, tot;
+  int i, tot;
   int dice[18];
 
   do {
@@ -6820,7 +6812,7 @@ int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
-  register struct creatureS* cr_ptr;
+  struct creatureS* cr_ptr;
 
   y = uD.y;
   x = uD.x;
@@ -6848,8 +6840,8 @@ dispel_creature(cflag, damage)
 int
 mass_genocide(y, x)
 {
-  register int count;
-  register struct creatureS* cr_ptr;
+  int count;
+  struct creatureS* cr_ptr;
 
   count = 0;
   FOR_EACH(mon, {
@@ -6913,10 +6905,10 @@ extermination()
 int
 sleep_adjacent(y, x)
 {
-  register int i, j;
-  register struct caveS* c_ptr;
-  register struct monS* m_ptr;
-  register struct creatureS* cr_ptr;
+  int i, j;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
   int sleep;
 
   sleep = FALSE;
@@ -6975,8 +6967,8 @@ warding_glyph(y, x)
 int
 trap_creation(y, x)
 {
-  register int i, j, trap;
-  register struct caveS* c_ptr;
+  int i, j, trap;
+  struct caveS* c_ptr;
 
   trap = FALSE;
   for (i = y - 1; i <= y + 1; i++)
@@ -6995,9 +6987,9 @@ trap_creation(y, x)
 int
 td_destroy(y, x)
 {
-  register int i, j, destroy;
-  register struct caveS* c_ptr;
-  register struct objS* obj;
+  int i, j, destroy;
+  struct caveS* c_ptr;
+  struct objS* obj;
 
   destroy = FALSE;
   for (i = y - 1; i <= y + 1; i++)
@@ -7028,7 +7020,7 @@ struct monS* mon;
 int
 aggravate_monster(dis_affect)
 {
-  register int y, x, count;
+  int y, x, count;
 
   y = uD.y;
   x = uD.x;
@@ -7046,8 +7038,8 @@ aggravate_monster(dis_affect)
 int
 door_creation()
 {
-  register int y, x, i, j, door;
-  register struct caveS* c_ptr;
+  int y, x, i, j, door;
+  struct caveS* c_ptr;
 
   door = FALSE;
   y = uD.y;
@@ -7067,7 +7059,7 @@ door_creation()
 int
 speed_monster_aoe(spd)
 {
-  register int y, x, see_count;
+  int y, x, see_count;
   struct creatureS* cr_ptr;
 
   y = uD.y;
@@ -7103,9 +7095,9 @@ int
 speed_monster(dir, y, x, spd)
 {
   int flag, dist, see_count;
-  register struct caveS* c_ptr;
-  register struct monS* m_ptr;
-  register struct creatureS* cr_ptr;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
 
   see_count = 0;
   flag = FALSE;
@@ -7140,7 +7132,7 @@ speed_monster(dir, y, x, spd)
 static void
 replace_spot(y, x, typ)
 {
-  register struct caveS* c_ptr;
+  struct caveS* c_ptr;
 
   c_ptr = &caveD[y][x];
   switch (typ) {
@@ -7231,7 +7223,7 @@ earthquake()
 void
 destroy_area(y, x)
 {
-  register int i, j, k;
+  int i, j, k;
 
   if (dun_level > 0) {
     for (i = (y - 15); i <= (y + 15); i++)
@@ -8558,7 +8550,7 @@ enum { RATIO = (MAX_WIDTH / MINIMAP_WIDTH) };
 void
 py_map()
 {
-  register int i, j;
+  int i, j;
   static uint8_t screen_border[][6] = {
       {'+', '+', '+', '+', '-', '|'}, /* normal chars */
   };
@@ -8861,7 +8853,7 @@ int
 minus_ac(typ_dam)
 uint32_t typ_dam;
 {
-  register int j;
+  int j;
   int minus;
   struct objS* obj;
 
@@ -8998,7 +8990,7 @@ py_shield_attack(y, x)
 void
 py_attack(y, x)
 {
-  register int k, blows;
+  int k, blows;
   int base_tohit, lev_adj, tohit, todam, creature_ac;
 
   int midx = caveD[y][x].midx;
@@ -9532,7 +9524,7 @@ py_search(y, x)
 static void
 py_look_mon()
 {
-  register int y, x, ly, lx, oy, ox;
+  int y, x, ly, lx, oy, ox;
   int dir;
 
   if (countD.blind) msg_print("You can't see a damn thing!");
@@ -9566,7 +9558,7 @@ py_look_mon()
 static void
 py_look_obj()
 {
-  register int y, x, ly, lx, oy, ox;
+  int y, x, ly, lx, oy, ox;
   int dir;
 
   if (countD.blind) msg_print("You can't see a damn thing!");
@@ -9633,8 +9625,8 @@ py_offhand()
 static void make_move(midx, mm) int* mm;
 {
   int i, fy, fx, newy, newx, do_turn, do_move, stuck_door;
-  register struct caveS* c_ptr;
-  register struct monS* m_ptr;
+  struct caveS* c_ptr;
+  struct monS* m_ptr;
   struct creatureS* cr_ptr;
   struct objS* obj;
 
