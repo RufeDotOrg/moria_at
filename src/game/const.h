@@ -262,6 +262,16 @@
 #define TR_INFRA 0x40000000L
 #define TR_CURSED 0x80000000L
 
+/* definitions for chests */
+#define CH_LOCKED	0x00000001L
+#define CH_TRAPPED	0x000001F0L
+#define CH_LOSE_STR	0x00000010L
+#define CH_POISON	0x00000020L
+#define CH_PARALYSED	0x00000040L
+#define CH_EXPLODE	0x00000080L
+#define CH_SUMMON	0x00000100L
+
+/* magic effects */
 #define MA_BLESS 0
 #define MA_HERO 1
 #define MA_SUPERHERO 2

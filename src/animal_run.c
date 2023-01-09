@@ -2349,54 +2349,55 @@ void magic_treasure(obj, level) struct objS* obj;
       }
       break;
 
-      // case TV_CHEST:
-      //   switch (randint(level + 4)) {
-      //     case 1:
-      //       obj->flags = 0;
-      //       obj->sn = SN_EMPTY;
-      //       break;
-      //     case 2:
-      //       obj->flags |= CH_LOCKED;
-      //       obj->sn = SN_LOCKED;
-      //       break;
-      //     case 3:
-      //     case 4:
-      //       obj->flags |= (CH_LOSE_STR | CH_LOCKED);
-      //       obj->sn = SN_POISON_NEEDLE;
-      //       break;
-      //     case 5:
-      //     case 6:
-      //       obj->flags |= (CH_POISON | CH_LOCKED);
-      //       obj->sn = SN_POISON_NEEDLE;
-      //       break;
-      //     case 7:
-      //     case 8:
-      //     case 9:
-      //       obj->flags |= (CH_PARALYSED | CH_LOCKED);
-      //       obj->sn = SN_GAS_TRAP;
-      //       break;
-      //     case 10:
-      //     case 11:
-      //       obj->flags |= (CH_EXPLODE | CH_LOCKED);
-      //       obj->sn = SN_EXPLOSION_DEVICE;
-      //       break;
-      //     case 12:
-      //     case 13:
-      //     case 14:
-      //       obj->flags |= (CH_SUMMON | CH_LOCKED);
-      //       obj->sn = SN_SUMMONING_RUNES;
-      //       break;
-      //     case 15:
-      //     case 16:
-      //     case 17:
-      //       obj->flags |= (CH_PARALYSED | CH_POISON | CH_LOSE_STR |
-      //       CH_LOCKED); obj->sn = SN_MULTIPLE_TRAPS; break;
-      //     default:
-      //       obj->flags |= (CH_SUMMON | CH_EXPLODE | CH_LOCKED);
-      //       obj->sn = SN_MULTIPLE_TRAPS;
-      //       break;
-      //   }
-      //   break;
+    case TV_CHEST:
+      switch (randint(level + 4)) {
+        case 1:
+          obj->flags = 0;
+          obj->sn = SN_EMPTY;
+          break;
+        case 2:
+          obj->flags |= CH_LOCKED;
+          obj->sn = SN_LOCKED;
+          break;
+        case 3:
+        case 4:
+          obj->flags |= (CH_LOSE_STR | CH_LOCKED);
+          obj->sn = SN_POISON_NEEDLE;
+          break;
+        case 5:
+        case 6:
+          obj->flags |= (CH_POISON | CH_LOCKED);
+          obj->sn = SN_POISON_NEEDLE;
+          break;
+        case 7:
+        case 8:
+        case 9:
+          obj->flags |= (CH_PARALYSED | CH_LOCKED);
+          obj->sn = SN_GAS_TRAP;
+          break;
+        case 10:
+        case 11:
+          obj->flags |= (CH_EXPLODE | CH_LOCKED);
+          obj->sn = SN_EXPLOSION_DEVICE;
+          break;
+        case 12:
+        case 13:
+        case 14:
+          obj->flags |= (CH_SUMMON | CH_LOCKED);
+          obj->sn = SN_SUMMONING_RUNES;
+          break;
+        case 15:
+        case 16:
+        case 17:
+          obj->flags |= (CH_PARALYSED | CH_POISON | CH_LOSE_STR | CH_LOCKED);
+          obj->sn = SN_MULTIPLE_TRAPS;
+          break;
+        default:
+          obj->flags |= (CH_SUMMON | CH_EXPLODE | CH_LOCKED);
+          obj->sn = SN_MULTIPLE_TRAPS;
+          break;
+      }
+      break;
 
     case TV_SLING_AMMO:
     case TV_BOLT:
@@ -5689,7 +5690,7 @@ py_init()
     do {
       tr_obj_copy(magik_test[it], obj);
       magic_treasure(obj, dun_level);
-    } while (0);
+    } while (0);  // obj->sn == SN_EMPTY;
     invenD[iidx] = obj->id;
   }
 
@@ -6687,15 +6688,13 @@ td_destroy2(dir, y, x)
         delete_object(y, x);
         msg_print("There is a bright flash of light!");
         destroy2 = TRUE;
+      } else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
+        msg_print("Click!");
+        obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
+        destroy2 = TRUE;
+        obj->sn = SN_UNLOCKED;
+        obj->idflag = ID_REVEAL;
       }
-      // TBD: Chest
-      // else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
-      //  msg_print("Click!");
-      //  obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
-      //  destroy2 = TRUE;
-      //  obj->sn = SN_UNLOCKED;
-      //  obj->idflag = ID_REVEAL;
-      //}
     }
   } while ((dist <= OBJ_BOLT_RANGE) || c_ptr->fval <= MAX_OPEN_SPACE);
   return (destroy2);
@@ -6824,14 +6823,13 @@ disarm_all(dir, y, x)
       obj->tval = TV_CLOSED_DOOR;
       obj->tchar = '+';
       disarm = TRUE;
+    } else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
+      msg_print("Click!");
+      obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
+      disarm = TRUE;
+      obj->sn = SN_UNLOCKED;
+      obj->idflag = ID_REVEAL;
     }
-    // else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
-    //   msg_print("Click!");
-    //   obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
-    //   disarm = TRUE;
-    //   obj->sn = SN_UNLOCKED;
-    //   known2(obj);
-    // }
 
     mmove(dir, &y, &x);
   } while ((dist <= OBJ_BOLT_RANGE) && c_ptr->fval <= MAX_OPEN_SPACE);
@@ -9344,6 +9342,46 @@ close_object()
   }
 }
 void
+chest_trap(y, x)
+{
+  int i, j, k;
+  struct objS* obj;
+
+  obj = &entity_objD[caveD[y][x].oidx];
+  if (CH_LOSE_STR & obj->flags) {
+    msg_print("A small needle has pricked you!");
+    strcpy(death_descD, "a poison needle");
+    py_take_hit(damroll(1, 4));
+    lose_stat(A_STR);
+  }
+  if (CH_POISON & obj->flags) {
+    msg_print("A small needle has pricked you!");
+    strcpy(death_descD, "a poison needle");
+    py_take_hit(damroll(1, 6));
+    countD.poison += 10 + randint(20);
+  }
+  if (CH_PARALYSED & obj->flags) {
+    msg_print("A puff of yellow gas surrounds you!");
+    if (TR_FREE_ACT & cbD.tflag)
+      msg_print("You are unaffected.");
+    else {
+      msg_print("You choke and pass out.");
+      countD.paralysis = 10 + randint(20);
+    }
+  }
+  if (CH_SUMMON & obj->flags) {
+    for (i = 0; i < 3; i++) {
+      summon_monster(y, x);
+    }
+  }
+  if (CH_EXPLODE & obj->flags) {
+    msg_print("There is a sudden explosion!");
+    delete_object(y, x);
+    strcpy(death_descD, "an exploding chest");
+    py_take_hit(damroll(5, 8));
+  }
+}
+void
 try_disarm_trap(y, x)
 {
   int chance;
@@ -9372,6 +9410,37 @@ try_disarm_trap(y, x)
     }
   }
 }
+void
+try_disarm_chest(y, x)
+{
+  struct objS* obj;
+  int chance;
+
+  obj = obj_get(caveD[y][x].oidx);
+  if ((obj->idflag & ID_REVEAL) && (CH_TRAPPED & obj->flags)) {
+    // TBD: div is used; verify this number is positive. clean-up code.
+    chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+             level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
+    if (countD.confusion) chance /= 8;
+    if ((chance - obj->level) > randint(100)) {
+      obj->flags &= ~CH_TRAPPED;
+      if (CH_LOCKED & obj->flags)
+        obj->sn = SN_LOCKED;
+      else
+        obj->sn = SN_DISARMED;
+      msg_print("You have disarmed the chest.");
+      obj->idflag = ID_REVEAL;
+      uD.exp += obj->level;
+      py_experience();
+    } else if ((chance > 5) && (randint(chance) > 5))
+      msg_print("You failed to disarm the chest.");
+    else {
+      msg_print("You set a trap off!");
+      obj->idflag = ID_REVEAL;
+      chest_trap(y, x);
+    }
+  }
+}
 void py_disarm(uy, ux) int *uy, *ux;
 {
   int y, x, dir;
@@ -9387,14 +9456,24 @@ void py_disarm(uy, ux) int *uy, *ux;
     c_ptr = &caveD[y][x];
     obj = &entity_objD[c_ptr->oidx];
 
-    if (obj->tval != TV_VIS_TRAP) {
+    if (obj->tval != TV_VIS_TRAP && obj->tval != TV_CHEST) {
       msg_print("I do not see anything to disarm there.");
-    } else if (c_ptr->midx) {
+    }
+    if (c_ptr->midx) {
       // Prevent invis-detection via disarm: no free turn
       msg_print("Something is in your way!");
-    } else {
+    } else if (obj->tval == TV_VIS_TRAP) {
       *uy = y;
       *ux = x;
+    } else if (obj->tval == TV_CHEST) {
+      if ((obj->idflag & ID_REVEAL) == 0)
+        msg_print("You don't see a trap on the chest.");
+      else if ((obj->flags & CH_TRAPPED) == 0)
+        msg_print("The chest is not trapped.");
+      else {
+        *uy = y;
+        *ux = x;
+      }
     }
   }
 }
@@ -9458,7 +9537,7 @@ static void py_bash(uy, ux) int *uy, *ux;
 static void
 open_object(y, x)
 {
-  int chance;
+  int chance, flag;
   struct caveS* c_ptr;
   struct objS* obj;
   c_ptr = &caveD[y][x];
@@ -9496,6 +9575,47 @@ open_object(y, x)
         obj->tval = TV_OPEN_DOOR;
         obj->tchar = '\'';
         c_ptr->fval = FLOOR_CORR;
+      }
+    }
+  } else if (obj->tval == TV_CHEST) {
+    if (c_ptr->midx) {
+      msg_print("Something is in your way!");
+    } else {
+      chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+               (level_adj[uD.clidx][LA_DISARM] * uD.lev / 3);
+      flag = FALSE;
+      if (CH_LOCKED & obj->flags)
+        if (countD.confusion)
+          msg_print("You are too confused to pick the lock.");
+        else if ((chance - obj->level) > randint(100)) {
+          msg_print("You have picked the lock.");
+          flag = TRUE;
+          uD.exp += obj->level;
+          py_experience();
+        } else
+          msg_print("You failed to pick the lock.");
+      else
+        flag = TRUE;
+      if (flag) {
+        obj->flags &= ~CH_LOCKED;
+        obj->sn = SN_EMPTY;
+        obj->idflag = ID_REVEAL;
+        obj->cost = 0;
+      }
+      flag = FALSE;
+      /* Was chest still trapped?   (Snicker)   */
+      if ((CH_LOCKED & obj->flags) == 0) {
+        chest_trap(y, x);
+        if (c_ptr->oidx) flag = TRUE;
+      }
+      /* Chest treasure is allocated as if a creature   */
+      /* had been killed.  			   */
+      if (flag) {
+        /* clear the cursed chest/monster win flag, so that people
+           can not win by opening a cursed chest */
+        obj->flags &= ~TR_CURSED;
+        mon_death(y, x, obj->flags);
+        obj->flags = 0;
       }
     }
   } else {
@@ -9545,6 +9665,11 @@ py_search(y, x)
           obj->tchar = '^';
           obj->idflag |= ID_REVEAL;
           find_flag = FALSE;
+        } else if (obj->tval == TV_CHEST) {
+          if (CH_TRAPPED & obj->flags) {
+            obj->idflag = ID_REVEAL;
+            msg_print("The chest is trapped!");
+          }
         }
       }
   turn_flag = TRUE;
@@ -11034,8 +11159,8 @@ dungeon()
               py_look_obj();
               break;
             case 's':
-              py_search(y, x);
               msg_print("You search the area.");
+              py_search(y, x);
               break;
             case 'v':
               show_version();
@@ -11242,7 +11367,10 @@ dungeon()
           if (mon->id) {
             py_attack(y, x);
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
-            if (obj->tval == TV_VIS_TRAP) {
+            if (obj->tval == TV_CHEST) {
+              if (obj->idflag & ID_REVEAL) try_disarm_chest(y, x);
+              if (obj->flags & CH_LOCKED) open_object(y, x);
+            } else if (obj->tval == TV_VIS_TRAP) {
               if (obj->idflag & ID_REVEAL) try_disarm_trap(y, x);
             }
             if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
