@@ -2824,9 +2824,6 @@ may_equip(tval)
 {
   int slot = -1;
   switch (tval) {
-    case TV_SLING_AMMO:
-    case TV_BOLT:
-    case TV_ARROW:
     case TV_BOW:
     case TV_HAFTED:
     case TV_POLEARM:
@@ -9118,11 +9115,6 @@ py_attack(y, x)
       case 0:
         blows = 2;
         tohit -= 3;
-        break;
-      case TV_SLING_AMMO:
-      case TV_BOLT:
-      case TV_ARROW:
-        blows = 1;
         break;
     }
 
