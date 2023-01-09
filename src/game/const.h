@@ -142,7 +142,6 @@
 #define TV_SLING_AMMO 10
 #define TV_BOLT 11
 #define TV_ARROW 12
-#define TV_SPIKE 13
 #define TV_LIGHT 15
 #define TV_BOW 20
 #define TV_HAFTED 21

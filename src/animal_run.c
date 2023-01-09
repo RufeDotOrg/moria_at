@@ -148,8 +148,6 @@ cave_obj(row, col)
         case TV_BOLT:
         case TV_ARROW:
           return 13;
-        case TV_SPIKE:
-          return 22;
         case TV_LIGHT:
           return 21;
         case TV_BOW:
@@ -2401,7 +2399,6 @@ void magic_treasure(obj, level) struct objS* obj;
       //   break;
 
     case TV_SLING_AMMO:
-    case TV_SPIKE:
     case TV_BOLT:
     case TV_ARROW:
       if (obj->tval == TV_SLING_AMMO || obj->tval == TV_BOLT ||
@@ -2651,8 +2648,7 @@ BOOL
 vuln_lightning(obj)
 struct objS* obj;
 {
-  return ((obj->tval == TV_RING) || (obj->tval == TV_WAND) ||
-          (obj->tval == TV_SPIKE));
+  return ((obj->tval == TV_RING) || (obj->tval == TV_WAND));
 }
 BOOL
 vuln_gas(obj)
@@ -2772,7 +2768,6 @@ struct objS* obj;
 {
   switch (obj->tval) {
     case TV_SLING_AMMO:
-    case TV_SPIKE:
     case TV_BOLT:
     case TV_ARROW:
       return TRUE;
@@ -2836,7 +2831,6 @@ may_equip(tval)
     case TV_POLEARM:
     case TV_SWORD:
     case TV_DIGGING:
-    case TV_SPIKE:
       slot = INVEN_WIELD;
       break;
     case TV_LIGHT:
@@ -4801,8 +4795,6 @@ BOOL prefix;
       snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_LIGHT:
-      break;
-    case TV_SPIKE:
       break;
     case TV_BOW:
       if (obj->p1 == 1 || obj->p1 == 2)
@@ -9062,7 +9054,6 @@ py_attack(y, x)
       case TV_SLING_AMMO:
       case TV_BOLT:
       case TV_ARROW:
-      case TV_SPIKE:
         blows = 1;
         break;
     }
@@ -10439,7 +10430,7 @@ struct objS* obj;
         value = obj->cost + obj->toac * 100;
     }
   } else if ((obj->tval >= TV_SLING_AMMO) &&
-             (obj->tval <= TV_SPIKE)) { /* Ammo  		*/
+             (obj->tval <= TV_ARROW)) { /* Ammo  		*/
     if ((obj->idflag & ID_REVEAL) == 0)
       value = tr_ptr->cost;
     else {
@@ -10534,7 +10525,6 @@ struct objS* obj;
     case TV_FOOD:
     case TV_FLASK:
     case TV_LIGHT:
-    case TV_SPIKE:
       return 0;
       // int armory(element) int element;
     case TV_BOOTS:
