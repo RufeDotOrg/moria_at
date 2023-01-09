@@ -3851,6 +3851,14 @@ find_event(y, x)
         }
       }
 
+      /* Detect adjacent visible monsters that may not otherwise disturb */
+      if (c_ptr->midx != 0) {
+        if (entity_monD[c_ptr->midx].mlit) {
+          find_flag = FALSE;
+          return;
+        }
+      }
+
       if (c_ptr->fval <= MAX_OPEN_SPACE) {
         if (find_openarea) {
           /* Have we found a break? */
