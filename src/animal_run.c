@@ -4159,6 +4159,21 @@ attack_blows(weight)
   return blows_table[str_index][dex_index];
 }
 int
+light_adj(p1)
+{
+  int bonus;
+  if (p1 > 10000) {
+    bonus = 3;
+  } else if (p1 > 3000) {
+    bonus = 2;
+  } else if (p1) {
+    bonus = 1;
+  } else {
+    bonus = 0;
+  }
+  return bonus;
+}
+int
 bth_adj(attype)
 int attype;
 {
@@ -4795,6 +4810,7 @@ BOOL prefix;
       snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_LIGHT:
+      snprintf(damstr, AL(damstr), " (%+d,+0) [%d]", light_adj(obj->p1), obj->p1);
       break;
     case TV_BOW:
       if (obj->p1 == 1 || obj->p1 == 2)
@@ -5658,11 +5674,13 @@ py_init()
   } while ((player_hpD[MAX_PLAYER_LEVEL - 1] < min_value) ||
            (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
 
-  // Starting equipment..
-  struct objS* dagger = obj_use();
-  tr_obj_copy(30, dagger);
-  dagger->idflag |= ID_REVEAL;
-  invenD[INVEN_WIELD] = dagger->id;
+  int start_equip[] = {30, 87};
+  for (int it = 0; it < AL(start_equip); ++it) {
+    struct objS* obj = obj_use();
+    tr_obj_copy(start_equip[it], obj);
+    obj->idflag |= ID_REVEAL;
+    invenD[may_equip(obj->tval)] = obj->id;
+  }
   for (int it = 0; it < 1; ++it) {
     struct objS* food = obj_use();
     // 22 = 1 ration of food
@@ -8499,6 +8517,19 @@ inven_check_weight()
     pack_heavy = penalty;
   }
 }
+void
+inven_check_light()
+{
+  struct objS* obj;
+  int p1;
+
+  if (invenD[INVEN_LIGHT]) {
+    obj = obj_get(invenD[INVEN_LIGHT]);
+    p1 = MAX(obj->p1 - 1, 0);
+    obj->p1 = p1;
+    light_bonus = light_adj(p1);
+  }
+}
 static int
 inven_carry(obj_id)
 {
@@ -8691,7 +8722,8 @@ py_character()
   }
 
   line = MAX_A + 1;
-  BufMsg(screen, "%-13.013s: %6d", "+ To Hit", cbD.ptohit - cbD.hide_tohit);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Hit",
+         cbD.ptohit - cbD.hide_tohit + light_bonus);
   BufMsg(screen, "%-13.013s: %6d", "+ To Damage", cbD.ptodam - cbD.hide_todam);
   BufMsg(screen, "%-13.013s: %6d", "+ To Armor", cbD.ptoac - cbD.hide_toac);
   BufMsg(screen, "%-13.013s: %6d", "Total Armor", cbD.pac - cbD.hide_toac);
@@ -9029,7 +9061,7 @@ py_attack(y, x)
   if (countD.fear) {
     msg_print("You are too afraid!");
   } else {
-    tohit = cbD.ptohit;
+    tohit = cbD.ptohit + light_bonus;
     todam = cbD.ptodam;
     base_tohit = uD.bth;
     lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
@@ -11046,6 +11078,7 @@ dungeon()
     }
     tick();
     inven_check_weight();
+    inven_check_light();
 
     do {
       draw();
