@@ -1348,7 +1348,7 @@ static void build_tunnel(row1, col1, row2, col2) int row1, col1, row2, col2;
       row1 = tmp_row;
       col1 = tmp_col;
       if (!door_flag) {
-        if (doorindex < 100) {
+        if (doorindex < AL(doorstk)) {
           doorstk[doorindex].y = row1;
           doorstk[doorindex].x = col1;
           doorindex++;
