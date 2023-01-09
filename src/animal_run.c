@@ -4090,6 +4090,41 @@ update_mon(midx)
     m_ptr->mlit = FALSE;
   }
 }
+void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
+{
+  int row, col;
+  for (row = y1 - 1; row <= y1 + 1; ++row) {
+    for (col = x1 - 1; col <= x1 + 1; ++col) {
+      caveD[row][col].cflag &= ~CF_TEMP_LIGHT;
+    }
+  }
+
+  for (row = y2 - 1; row <= y2 + 1; ++row) {
+    for (col = x2 - 1; col <= x2 + 1; ++col) {
+      struct caveS* cave = &caveD[row][col];
+      uint32_t cflag = cave->cflag;
+
+      if (countD.blind == 0) {
+        cflag |= CF_TEMP_LIGHT;
+        if (cave->fval >= MIN_WALL) cflag |= CF_PERM_LIGHT;
+        if (cave->oidx) {
+          struct objS* obj = &entity_objD[cave->oidx];
+          if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
+            cflag |= CF_FIELDMARK;
+          }
+        }
+      }
+      cave->cflag = cflag;
+    }
+  }
+}
+void
+py_check_view(y, x)
+{
+  py_move_light(y, x, y, x);
+  if (near_light(y, x)) light_room(y, x);
+  FOR_EACH(mon, { update_mon(it_index); });
+}
 int
 enchant(int16_t* bonus, int16_t limit)
 {
@@ -4810,7 +4845,8 @@ BOOL prefix;
       snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_LIGHT:
-      snprintf(damstr, AL(damstr), " (%+d,+0) [%d]", light_adj(obj->p1), obj->p1);
+      snprintf(damstr, AL(damstr), " (%+d,+0) [%d]", light_adj(obj->p1),
+               obj->p1);
       break;
     case TV_BOW:
       if (obj->p1 == 1 || obj->p1 == 2)
@@ -5520,34 +5556,6 @@ todam_enchant(amount)
 
   return FALSE;
 }
-void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
-{
-  int row, col;
-  for (row = y1 - 1; row <= y1 + 1; ++row) {
-    for (col = x1 - 1; col <= x1 + 1; ++col) {
-      caveD[row][col].cflag &= ~CF_TEMP_LIGHT;
-    }
-  }
-
-  for (row = y2 - 1; row <= y2 + 1; ++row) {
-    for (col = x2 - 1; col <= x2 + 1; ++col) {
-      struct caveS* cave = &caveD[row][col];
-      uint32_t cflag = cave->cflag;
-
-      if (countD.blind == 0) {
-        cflag |= CF_TEMP_LIGHT;
-        if (cave->fval >= MIN_WALL) cflag |= CF_PERM_LIGHT;
-        if (cave->oidx) {
-          struct objS* obj = &entity_objD[cave->oidx];
-          if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
-            cflag |= CF_FIELDMARK;
-          }
-        }
-      }
-      cave->cflag = cflag;
-    }
-  }
-}
 static void
 py_take_hit(damage)
 {
@@ -6056,9 +6064,40 @@ py_lose_experience(amount)
     //   calc_spells(A_WIS);
     //   calc_mana(A_WIS);
     // }
-    // prt_level();
-    // prt_title();
   }
+}
+void
+teleport_to(ny, nx)
+{
+  int dis, ctr, y, x;
+  int i, j;
+  struct caveS* c_ptr;
+
+  y = uD.y;
+  x = uD.x;
+  for (i = y - 1; i <= y + 1; i++)
+    for (j = x - 1; j <= x + 1; j++) {
+      c_ptr = &caveD[i][j];
+      c_ptr->cflag &= ~CF_TEMP_LIGHT;
+    }
+
+  dis = 1;
+  ctr = 0;
+  do {
+    y = ny + (randint(2 * dis + 1) - (dis + 1));
+    x = nx + (randint(2 * dis + 1) - (dis + 1));
+    ctr++;
+    if (ctr > 9) {
+      ctr = 0;
+      dis++;
+    }
+  } while (!in_bounds(y, x) || (caveD[y][x].fval >= MIN_CLOSED_SPACE) ||
+           (caveD[y][x].midx != 0));
+
+  uD.y = y;
+  uD.x = x;
+  panel_update(&panelD, y, x, FALSE);
+  py_check_view(y, x);
 }
 // TBD: We may loop infinitely with the added restriction of oidx != 0
 // Phase door and thief (short range) teleport run a higher risk
@@ -10140,9 +10179,9 @@ mon_try_spell(midx, cdis)
       case 6: /*Teleport Long */
         teleport_away(midx, MAX_SIGHT);
         break;
-      // case 7: /*Teleport To (aka. Summon)  */
-      //   teleport_to(m_ptr->fy, m_ptr->fx);
-      //   break;
+      case 7: /*Teleport To (aka. Summon)  */
+        teleport_to(m_ptr->fy, m_ptr->fx);
+        break;
       case 8: /*Light Wound   */
         if (player_saves())
           msg_print("You resist the effects of the spell.");
@@ -10896,13 +10935,6 @@ static void regenhp(percent) int percent;
 
   uD.chp = chp;
   uD.chp_frac = chp_frac;
-}
-void
-py_check_view(y, x)
-{
-  py_move_light(y, x, y, x);
-  if (near_light(y, x)) light_room(y, x);
-  FOR_EACH(mon, { update_mon(it_index); });
 }
 void
 ma_tick()
