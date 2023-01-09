@@ -556,7 +556,7 @@ texture_by_sym(char c)
 {
   SDL_Texture *t = 0;
   if (c == '#') return dungeon_textureD[0 + 4];
-  if (c == '%') return dungeon_textureD[0 + 5];
+  if (c == '%') return dungeon_textureD[0 + 6];
   if (c == '8') return dungeon_textureD[0 + 3];
   if (c == '>') return dungeon_textureD[8 + 4];
   if (c == '<') return dungeon_textureD[13 + 4];
