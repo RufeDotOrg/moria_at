@@ -116,6 +116,11 @@ get_sym(int row, int col)
     case FLOOR_OBST:
       return ';';
   }
+  switch (cave_ptr->fval) {
+    case MAGMA_WALL:
+    case QUARTZ_WALL:
+      return '%';
+  }
   return '#';
 }
 int
@@ -1322,10 +1327,8 @@ static void build_tunnel(row1, col1, row2, col2) int row1, col1, row2, col2;
         tunindex++;
       }
       door_flag = FALSE;
-    } else if (c_ptr->fval == TMP2_WALL)
-      /* do nothing */
-      ;
-    else if (c_ptr->fval == GRANITE_WALL) {
+    } else if (c_ptr->fval == TMP2_WALL) {
+    } else if (c_ptr->fval == GRANITE_WALL) {
       row1 = tmp_row;
       col1 = tmp_col;
       if (wallindex < 1000) {
@@ -1337,8 +1340,6 @@ static void build_tunnel(row1, col1, row2, col2) int row1, col1, row2, col2;
         for (j = col1 - 1; j <= col1 + 1; j++)
           if (in_bounds(i, j)) {
             d_ptr = &caveD[i][j];
-            /* values 11 and 12 are impossible here, place_streamer
-               is never run before build_tunnel */
             if (d_ptr->fval == GRANITE_WALL) d_ptr->fval = TMP2_WALL;
           }
     } else if (c_ptr->fval == FLOOR_CORR || c_ptr->fval == FLOOR_OBST) {
@@ -3341,6 +3342,37 @@ int typ, num;
     }
   }
 }
+static void
+place_streamer(fval, treas_chance)
+{
+  int i, tx, ty;
+  int y, x, t1, t2, dir;
+  struct caveS* c_ptr;
+
+  /* Choose starting point and direction  	*/
+  y = (MAX_HEIGHT / 2) + ROOM_HEIGHT - randint(SYMMAP_HEIGHT);
+  x = (MAX_WIDTH / 2) + ROOM_WIDTH - randint(SYMMAP_WIDTH);
+
+  dir = randint(8); /* Number 1-4, 6-9  */
+  if (dir > 4) dir = dir + 1;
+
+  /* Place streamer into dungeon  		*/
+  t1 = 2 * DUN_STR_RNG + 1; /* Constants  */
+  t2 = DUN_STR_RNG + 1;
+  do {
+    for (i = 0; i < DUN_STR_DEN; i++) {
+      ty = y + randint(t1) - t2;
+      tx = x + randint(t1) - t2;
+      if (in_bounds(ty, tx)) {
+        c_ptr = &caveD[ty][tx];
+        if (c_ptr->fval == GRANITE_WALL) {
+          c_ptr->fval = fval;
+          if (randint(treas_chance) == 1) place_gold(ty, tx);
+        }
+      }
+    }
+  } while (mmove(dir, &y, &x));
+}
 void
 cave_gen()
 {
@@ -3386,9 +3418,8 @@ cave_gen()
   }
 
   fill_cave(GRANITE_WALL);
-  // for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL,
-  // DUN_STR_MC); for (i = 0; i < DUN_STR_QUA; i++)
-  // place_streamer(QUARTZ_WALL, DUN_STR_QC);
+  for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL, DUN_STR_MC);
+  for (i = 0; i < DUN_STR_QUA; i++) place_streamer(QUARTZ_WALL, DUN_STR_QC);
   place_boundary();
   /* Place intersection doors  */
   for (i = 0; i < doorindex; i++) {
@@ -6724,7 +6755,7 @@ build_wall(dir, y, x)
           m_ptr->hp += damroll(4, 8);
         }
       }
-      c_ptr->fval = GRANITE_WALL;  // TBD: was MAGMA_WALL;
+      c_ptr->fval = MAGMA_WALL;
       c_ptr->cflag &= ~CF_FIELDMARK;
       i++;
       build = TRUE;
@@ -7151,13 +7182,13 @@ replace_spot(y, x, typ)
     case 4:
     case 7:
     case 10:
-      // c_ptr->fval = QUARTZ_WALL;
-      // break;
+      c_ptr->fval = QUARTZ_WALL;
+      break;
     case 5:
     case 8:
     case 11:
-      // c_ptr->fval = MAGMA_WALL;
-      // break;
+      c_ptr->fval = MAGMA_WALL;
+      break;
     case 6:
     case 9:
     case 12:
@@ -7215,14 +7246,13 @@ earthquake()
           c_ptr->fval = FLOOR_CORR;
           c_ptr->cflag = 0;
         } else if (c_ptr->fval <= MAX_FLOOR) {
-          // TBD: wall material
-          // tmp = randint(10);
-          // if (tmp < 6)
-          //  c_ptr->fval = QUARTZ_WALL;
-          // else if (tmp < 9)
-          //  c_ptr->fval = MAGMA_WALL;
-          // else
-          c_ptr->fval = GRANITE_WALL;
+          tmp = randint(10);
+          if (tmp < 6)
+            c_ptr->fval = QUARTZ_WALL;
+          else if (tmp < 9)
+            c_ptr->fval = MAGMA_WALL;
+          else
+            c_ptr->fval = GRANITE_WALL;
           c_ptr->cflag = 0;
         }
       }
@@ -9692,22 +9722,22 @@ void tunnel(dir, uy, ux) int *uy, *ux;
         } else
           msg_print("You tunnel into the granite wall.");
         break;
-      // case MAGMA_WALL:
-      //   i = randint(600) + 10;
-      //   if (tabil > i) {
-      //     twall(y, x);
-      //     msg_print("You have finished the tunnel.");
-      //   } else
-      //     msg_print("You tunnel into the magma intrusion.");
-      //   break;
-      // case QUARTZ_WALL:
-      //   i = randint(400) + 10;
-      //   if (tabil > i) {
-      //     twall(y, x);
-      //     msg_print("You have finished the tunnel.");
-      //   } else
-      //     msg_print("You tunnel into the quartz vein.");
-      //   break;
+      case MAGMA_WALL:
+        i = randint(600) + 10;
+        if (tabil > i) {
+          twall(y, x);
+          msg_print("You have finished the tunnel.");
+        } else
+          msg_print("You tunnel into the magma intrusion.");
+        break;
+      case QUARTZ_WALL:
+        i = randint(400) + 10;
+        if (tabil > i) {
+          twall(y, x);
+          msg_print("You have finished the tunnel.");
+        } else
+          msg_print("You tunnel into the quartz vein.");
+        break;
       case BOUNDARY_WALL:
         msg_print("This seems to be permanent rock.");
         break;

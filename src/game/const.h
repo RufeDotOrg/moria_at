@@ -22,6 +22,8 @@
 #define TMP2_WALL 9
 #define MIN_WALL 12
 #define GRANITE_WALL 12
+#define MAGMA_WALL 13
+#define QUARTZ_WALL 14
 #define BOUNDARY_WALL 15
 
 // Cave flags
@@ -46,6 +48,12 @@
 #define DUN_TUN_CON 15      /* Chance of extra tunneling	       */
 #define DUN_TUN_PEN 25      /* % chance of room doors		       */
 #define DUN_TUN_JCT 15      /* % chance of doors at tunnel junctions */
+#define DUN_STR_DEN  5      /* Density of streamers          */
+#define DUN_STR_RNG  2      /* Width of streamers          */
+#define DUN_STR_MAG  3      /* Number of magma streamers         */
+#define DUN_STR_MC   90     /* 1/x chance of treasure per magma      */
+#define DUN_STR_QUA  2      /* Number of quartz streamers        */
+#define DUN_STR_QC   40     /* 1/x chance of treasure per quartz     */
 #define DUN_ROOM_MEAN 32
 #define MIN_MALLOC_LEVEL 14
 #define RND_MALLOC_LEVEL 8
