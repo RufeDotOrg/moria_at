@@ -3336,6 +3336,56 @@ int typ, num;
     }
   }
 }
+int
+dir_x(dir)
+{
+  switch (dir) {
+    case 1:
+    case 4:
+    case 7:
+      return -1;
+    case 3:
+    case 6:
+    case 9:
+      return 1;
+  }
+  return 0;
+}
+int
+dir_y(dir)
+{
+  switch (dir) {
+    case 1:
+    case 2:
+    case 3:
+      return 1;
+    case 7:
+    case 8:
+    case 9:
+      return -1;
+  }
+  return 0;
+}
+int
+mmove(dir, y, x)
+int *y, *x;
+{
+  int new_row, new_col;
+  int b;
+
+  new_row = dir_y(dir);
+  new_col = dir_x(dir);
+  new_row += *y;
+  new_col += *x;
+  b = FALSE;
+  if ((new_row >= 0) && (new_row < MAX_HEIGHT) && (new_col >= 0) &&
+      (new_col < MAX_WIDTH)) {
+    *y = new_row;
+    *x = new_col;
+    b = TRUE;
+  }
+  return (b);
+}
 static void
 place_streamer(fval, treas_chance)
 {
@@ -3720,57 +3770,6 @@ int* mm;
       }
       break;
   }
-}
-int
-dir_x(dir)
-{
-  switch (dir) {
-    case 1:
-    case 4:
-    case 7:
-      return -1;
-    case 3:
-    case 6:
-    case 9:
-      return 1;
-  }
-  return 0;
-}
-int
-dir_y(dir)
-{
-  switch (dir) {
-    case 1:
-    case 2:
-    case 3:
-      return 1;
-    case 7:
-    case 8:
-    case 9:
-      return -1;
-  }
-  return 0;
-}
-int
-mmove(dir, y, x)
-int dir;
-int *y, *x;
-{
-  int new_row, new_col;
-  int b;
-
-  new_row = dir_y(dir);
-  new_col = dir_x(dir);
-  new_row += *y;
-  new_col += *x;
-  b = FALSE;
-  if ((new_row >= 0) && (new_row < MAX_HEIGHT) && (new_col >= 0) &&
-      (new_col < MAX_WIDTH)) {
-    *y = new_row;
-    *x = new_col;
-    b = TRUE;
-  }
-  return (b);
 }
 static int
 see_wall(dir, y, x)
