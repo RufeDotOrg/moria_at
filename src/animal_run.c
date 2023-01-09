@@ -8603,6 +8603,7 @@ py_map()
   priority['@'] = 10;
   priority['+'] = 3;
   priority['#'] = -5;
+  priority['%'] = -5;
   priority['.'] = -10;
   priority['\''] = -3;
   priority[' '] = -15;
