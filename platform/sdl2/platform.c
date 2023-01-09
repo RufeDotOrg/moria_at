@@ -556,6 +556,7 @@ texture_by_sym(char c)
 {
   SDL_Texture *t = 0;
   if (c == '#') return dungeon_textureD[0 + 4];
+  if (c == '%') return dungeon_textureD[0 + 5];
   if (c == '8') return dungeon_textureD[0 + 3];
   if (c == '>') return dungeon_textureD[8 + 4];
   if (c == '<') return dungeon_textureD[13 + 4];
@@ -922,7 +923,7 @@ sdl_pump()
       int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
 
       if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
-        // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 13;
+        // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 8;
         if (isalpha(event.key.keysym.sym)) {
           if (km & KMOD_CTRL)
             return CTRL(event.key.keysym.sym);
