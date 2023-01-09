@@ -5698,7 +5698,7 @@ py_init()
     do {
       tr_obj_copy(magik_test[it], obj);
       magic_treasure(obj, dun_level);
-    } while ((TR_SPEED & obj->flags) == 0 || obj->p1 <= 0);
+    } while (0);
     invenD[iidx] = obj->id;
   }
 
