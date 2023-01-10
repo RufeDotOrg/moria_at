@@ -4728,10 +4728,10 @@ void obj_detail(obj) struct objS* obj;
   }
   strcat(descD, tmp_str);
 
-  if (obj->idflag & ID_MAGIK) strcat(descD, "{magik}");
-  if (obj->idflag & ID_DAMD) strcat(descD, "{damned}");
-  if (obj->idflag & ID_CORRODED) strcat(descD, "{corroded}");
-  if (obj->idflag & ID_EMPTY) strcat(descD, "{empty}");
+  if (obj->idflag & ID_MAGIK) strcat(descD, " {magik}");
+  if (obj->idflag & ID_DAMD) strcat(descD, " {damned}");
+  if (obj->idflag & ID_CORRODED) strcat(descD, " {corroded}");
+  if (obj->idflag & ID_EMPTY) strcat(descD, " {empty}");
 }
 void obj_desc(obj, prefix) struct objS* obj;
 BOOL prefix;
