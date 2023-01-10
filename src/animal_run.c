@@ -4094,7 +4094,7 @@ int
 light_adj(p1)
 {
   int bonus;
-  if (p1 > 10000) {
+  if (p1 > 7500) {
     bonus = 3;
   } else if (p1 > 3000) {
     bonus = 2;
@@ -4737,8 +4737,7 @@ BOOL prefix;
     case TV_CHEST:
       break;
     case TV_LIGHT:
-      snprintf(damstr, AL(damstr), " (%+d,+0) [%d]", light_adj(obj->p1),
-               obj->p1);
+      snprintf(damstr, AL(damstr), " (%+d,+0)", light_adj(obj->p1));
       break;
     case TV_HAFTED:
     case TV_POLEARM:
@@ -8437,6 +8436,22 @@ inven_check_weight()
     pack_heavy = penalty;
   }
 }
+int
+inven_consume_flask()
+{
+  struct objS* obj;
+  for (int it = 0; it < INVEN_EQUIP; ++it) {
+    obj = obj_get(invenD[it]);
+    if (obj->tval == TV_FLASK) {
+      inven_destroy_one(it);
+      msg_print(
+          "You pour a flask of oil into your lantern, renewing its light.");
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
 void
 inven_check_light()
 {
@@ -8446,7 +8461,12 @@ inven_check_light()
   if (invenD[INVEN_LIGHT]) {
     obj = obj_get(invenD[INVEN_LIGHT]);
     p1 = MAX(obj->p1 - 1, 0);
+
+    if (obj->subval == 1 && p1 <= 7500) {
+      if (inven_consume_flask()) p1 += 7500;
+    }
     obj->p1 = p1;
+
     light_bonus = light_adj(p1);
   }
 }

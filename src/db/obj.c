@@ -1350,7 +1350,7 @@ struct treasureS treasureD[] = {
      '~', /* 86*/
      4000,
      2,
-     1,
+     2,
      1,
      30,
      0,
