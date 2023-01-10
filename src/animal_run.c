@@ -3025,8 +3025,12 @@ struct monS* mon;
 {
   int y, x, fy, fx, i, j, k;
   struct caveS* c_ptr;
+  int eats_others;
+  int mexp;
   int count;
 
+  eats_others = creatureD[mon->cidx].cmove & CM_EATS_OTHER;
+  mexp = creatureD[mon->cidx].mexp;
   y = uD.y;
   x = uD.x;
   fy = mon->fy;
@@ -3041,7 +3045,12 @@ struct monS* mon;
     if ((j != fy || k != fx) && (j != y || k != x)) {
       c_ptr = &caveD[j][k];
       if (c_ptr->fval <= MAX_OPEN_SPACE) {
-        // TBD: CM_EATS_OTHER
+        if (eats_others) {
+          if (mexp >= creatureD[c_ptr->midx].mexp) {
+            mon_unuse(&entity_monD[c_ptr->midx]);
+            c_ptr->midx = 0;
+          }
+        }
         if (c_ptr->midx == 0) {
           return place_monster(j, k, mon->cidx, FALSE);
         }
@@ -9879,9 +9888,13 @@ static void make_move(midx, mm) int* mm;
         do_turn = TRUE;
       }
       /* Creature is attempting to move on other creature?     */
-      else if (c_ptr->midx && c_ptr->midx != midx) {
-        // TBD: Creatures can eat creatures
-        do_move = FALSE;
+      else if (cr_ptr->cmove & CM_EATS_OTHER) {
+        if (c_ptr->midx && c_ptr->midx != midx &&
+            creatureD[c_ptr->midx].mexp >= cr_ptr->mexp) {
+          mon_unuse(&entity_monD[c_ptr->midx]);
+          c_ptr->midx = 0;
+        } else
+          do_move = FALSE;
       }
     }
     /* Creature has been allowed move.   */
@@ -10491,8 +10504,7 @@ struct objS* obj;
       else
         value = obj->cost + obj->toac * 100;
     }
-  }
-  else if ((obj->tval == TV_SCROLL1) || (obj->tval == TV_SCROLL2) ||
+  } else if ((obj->tval == TV_SCROLL1) || (obj->tval == TV_SCROLL2) ||
              (obj->tval == TV_POTION1) ||
              (obj->tval == TV_POTION2)) { /* Potions, Scrolls, and Food  */
     if (!known) value = 20;
