@@ -10411,7 +10411,9 @@ static void hit_trap(uy, ux) int *uy, *ux;
       else {
         py_take_hit(dam);
       }
-      place_trap(y, x, 0);
+      /* Reveal an open pit */
+      obj->tidx = OBJ_TRAP_BEGIN + 0;
+      obj->subval = 1;
       break;
     case 4: /* Trap door*/
       if (py_tr(TR_FFALL)) {
