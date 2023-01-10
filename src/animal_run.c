@@ -2379,6 +2379,10 @@ void magic_treasure(obj, level) struct objS* obj;
       }
       break;
 
+    case TV_FOOD:
+      if (obj->number > 1) obj->number = randint(obj->number);
+      break;
+
     default:
       break;
   }
