@@ -11081,14 +11081,17 @@ dungeon()
         }
 
         if (c < 037) {
-          dir = map_roguedir(c | 0x60) - '0';
+          dir = map_roguedir(c | 0x60) - '1';
         } else {
-          dir = map_roguedir(c | 0x20) - '0';
+          dir = map_roguedir(c | 0x20) - '1';
         }
 
-        if (dir <= 9) {
+        if (dir < 9) {
           // 75% random movement
-          if (countD.confusion && randint(4) > 1) dir = randint(9);
+          if (countD.confusion && randint(4) > 1)
+            dir = randint(9);
+          else
+            dir += 1;
 
           if (c < 037) {
             // Tunneling (CTRL)
