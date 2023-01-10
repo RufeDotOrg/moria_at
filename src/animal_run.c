@@ -9846,6 +9846,7 @@ void tunnel(dir, uy, ux) int *uy, *ux;
           py_search(y, x);
         } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
           if (tabil > randint(180)) {
+            c_ptr->fval = FLOOR_CORR;
             delete_object(y, x);
             msg_print("You have removed the rubble.");
             if (randint(10) == 1) {
