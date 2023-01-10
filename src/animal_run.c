@@ -4855,11 +4855,13 @@ BOOL prefix;
       snprintf(descD, AL(descD), "& Holy Book~ of Prayers %s", basenm);
       basenm = 0;
       break;
+    case TV_GOLD:
+      strcpy(descD, gold_nameD[obj->subval]);
+      break;
     case TV_OPEN_DOOR:
     case TV_CLOSED_DOOR:
     case TV_SECRET_DOOR:
     case TV_RUBBLE:
-    case TV_GOLD:
     case TV_INVIS_TRAP:
     case TV_UP_STAIR:
     case TV_DOWN_STAIR:
