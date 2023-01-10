@@ -9830,10 +9830,23 @@ static void make_move(midx, mm) int* mm;
   do_move = FALSE;
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
+  fy = m_ptr->fy;
+  fx = m_ptr->fx;
+  c_ptr = &caveD[fy][fx];
+  if ((cr_ptr->cmove & CM_PHASE) == 0 && c_ptr->fval >= MIN_WALL) {
+    if (mon_take_hit(midx, damroll(8, 8))) {
+      msg_print("You hear a scream muffled by rock!");
+      py_experience();
+    } else {
+      msg_print("A creature digs itself out from the rock!");
+      twall(fy, fx);
+    }
+    return;
+  }
+
   for (int i = 0; i < 5; ++i) {
-    /* Get new position  	*/
-    fy = newy = m_ptr->fy;
-    fx = newx = m_ptr->fx;
+    newy = fy;
+    newx = fx;
     mmove(mm[i], &newy, &newx);
     c_ptr = &caveD[newy][newx];
     obj = &entity_objD[c_ptr->oidx];
