@@ -143,15 +143,8 @@ cave_obj(row, col)
             return 4;
           else  // '~'
             return 23;
-          // Ranged
-        case TV_SLING_AMMO:
-        case TV_BOLT:
-        case TV_ARROW:
-          return 13;
         case TV_LIGHT:
           return 21;
-        case TV_BOW:
-          return 15;
           // Worn
         case TV_HAFTED:
           return 10;
@@ -741,9 +734,8 @@ struct objS* obj;
 
   cr_ptr = &creatureD[cidx];
   if ((obj->flags & TR_EGO_WEAPON) &&
-      (((obj->tval >= TV_SLING_AMMO) && (obj->tval <= TV_ARROW)) ||
-       ((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) ||
-       (obj->tval == TV_FLASK))) {
+      (obj->tval == TV_HAFTED || obj->tval == TV_POLEARM ||
+       obj->tval == TV_SWORD)) {
     /* Slay Dragon  */
     if ((cr_ptr->cdefense & CD_DRAGON) && (obj->flags & TR_SLAY_DRAGON)) {
       tdam = tdam * 4;
@@ -1833,18 +1825,6 @@ void magic_treasure(obj, level) struct objS* obj;
       }
       break;
 
-    case TV_BOW:
-      if (magik(chance)) {
-        obj->tohit += m_bonus(1, 30, level);
-        obj->todam += m_bonus(1, 20, level); /* add damage. -CJS- */
-      } else if (magik(cursed)) {
-        obj->tohit -= m_bonus(1, 50, level);
-        obj->todam -= m_bonus(1, 30, level); /* add damage. -CJS- */
-        obj->flags |= TR_CURSED;
-        obj->cost = 0;
-      }
-      break;
-
     case TV_DIGGING:
       if (magik(chance)) {
         tmp = randint(3);
@@ -2399,68 +2379,6 @@ void magic_treasure(obj, level) struct objS* obj;
       }
       break;
 
-    case TV_SLING_AMMO:
-    case TV_BOLT:
-    case TV_ARROW:
-      if (obj->tval == TV_SLING_AMMO || obj->tval == TV_BOLT ||
-          obj->tval == TV_ARROW) {
-        if (magik(chance)) {
-          obj->tohit += m_bonus(1, 35, level);
-          obj->todam += m_bonus(1, 35, level);
-          /* see comment for weapons */
-          if (magik(3 * special / 2)) switch (randint(10)) {
-              case 1:
-              case 2:
-              case 3:
-                obj->sn = SN_SLAYING;
-                obj->tohit += 5;
-                obj->todam += 5;
-                obj->cost += 20;
-                break;
-              case 4:
-              case 5:
-                obj->flags |= TR_FLAME_TONGUE;
-                obj->tohit += 2;
-                obj->todam += 4;
-                obj->sn = SN_FIRE;
-                obj->cost += 25;
-                break;
-              case 6:
-              case 7:
-                obj->flags |= TR_SLAY_EVIL;
-                obj->tohit += 3;
-                obj->todam += 3;
-                obj->sn = SN_SLAY_EVIL;
-                obj->cost += 25;
-                break;
-              case 8:
-              case 9:
-                obj->flags |= TR_SLAY_ANIMAL;
-                obj->tohit += 2;
-                obj->todam += 2;
-                obj->sn = SN_SLAY_ANIMAL;
-                obj->cost += 30;
-                break;
-              case 10:
-                obj->flags |= TR_SLAY_DRAGON;
-                obj->tohit += 3;
-                obj->todam += 3;
-                obj->sn = SN_DRAGON_SLAYING;
-                obj->cost += 35;
-                break;
-            }
-        } else if (magik(cursed)) {
-          obj->tohit -= m_bonus(5, 55, level);
-          obj->todam -= m_bonus(5, 55, level);
-          obj->flags |= TR_CURSED;
-          obj->cost = 0;
-        }
-      }
-
-      obj->number = 0;
-      for (i = 0; i < 7; i++) obj->number += randint(6);
-      break;
-
     default:
       break;
   }
@@ -2533,8 +2451,6 @@ vuln_fire(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    case TV_ARROW:
-    case TV_BOW:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_BOOTS:
@@ -2559,8 +2475,6 @@ vuln_fire_breath(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    case TV_ARROW:
-    case TV_BOW:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_BOOTS:
@@ -2592,9 +2506,6 @@ struct objS* obj;
     case TV_MISC:
     case TV_CHEST:
       return TRUE;
-    case TV_BOLT:
-    case TV_ARROW:
-    case TV_BOW:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_BOOTS:
@@ -2613,8 +2524,6 @@ vuln_acid_breath(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    case TV_ARROW:
-    case TV_BOW:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_BOOTS:
@@ -2747,31 +2656,15 @@ oset_tohitdam(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    case TV_ARROW:
-    case TV_BOLT:
-    case TV_SLING_AMMO:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
-    case TV_BOW:
     case TV_DIGGING:
       return TRUE;
     case TV_GLOVES:
       return (obj->tohit || obj->todam);
     case TV_RING:
       return (obj->tohit || obj->todam);
-  }
-  return FALSE;
-}
-int
-oset_missile(obj)
-struct objS* obj;
-{
-  switch (obj->tval) {
-    case TV_SLING_AMMO:
-    case TV_BOLT:
-    case TV_ARROW:
-      return TRUE;
   }
   return FALSE;
 }
@@ -2803,7 +2696,6 @@ struct treasureS* item; /* Use treasure_type since item not yet created */
 {
   switch (item->tval) {
     case TV_CHEST:
-    case TV_BOW:
     case TV_POLEARM:
     case TV_HARD_ARMOR:
     case TV_SOFT_ARMOR:
@@ -2824,7 +2716,6 @@ may_equip(tval)
 {
   int slot = -1;
   switch (tval) {
-    case TV_BOW:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
@@ -4836,25 +4727,9 @@ BOOL prefix;
     case TV_MISC:
     case TV_CHEST:
       break;
-    case TV_SLING_AMMO:
-    case TV_BOLT:
-    case TV_ARROW:
-      snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
-      break;
     case TV_LIGHT:
       snprintf(damstr, AL(damstr), " (%+d,+0) [%d]", light_adj(obj->p1),
                obj->p1);
-      break;
-    case TV_BOW:
-      if (obj->p1 == 1 || obj->p1 == 2)
-        tmp = 2;
-      else if (obj->p1 == 3 || obj->p1 == 5)
-        tmp = 3;
-      else if (obj->p1 == 4 || obj->p1 == 6)
-        tmp = 4;
-      else
-        tmp = -1;
-      snprintf(damstr, AL(damstr), " (x%d)", tmp);
       break;
     case TV_HAFTED:
     case TV_POLEARM:
@@ -10596,12 +10471,12 @@ struct objS* obj;
   /* don't purchase known cursed items */
   if (obj->idflag & (ID_DAMD | ID_CORRODED))
     value = 0;
-  else if (((obj->tval >= TV_BOW) && (obj->tval <= TV_SWORD)) ||
+  else if (((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) ||
            ((obj->tval >= TV_BOOTS) &&
             (obj->tval <= TV_SOFT_ARMOR))) { /* Weapons and armor  */
     if ((obj->idflag & ID_REVEAL) == 0)
       value = tr_ptr->cost;
-    else if ((obj->tval >= TV_BOW) && (obj->tval <= TV_SWORD)) {
+    else if ((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) {
       if (obj->tohit < 0)
         value = 0;
       else if (obj->todam < 0)
@@ -10616,23 +10491,8 @@ struct objS* obj;
       else
         value = obj->cost + obj->toac * 100;
     }
-  } else if ((obj->tval >= TV_SLING_AMMO) &&
-             (obj->tval <= TV_ARROW)) { /* Ammo  		*/
-    if ((obj->idflag & ID_REVEAL) == 0)
-      value = tr_ptr->cost;
-    else {
-      if (obj->tohit < 0)
-        value = 0;
-      else if (obj->todam < 0)
-        value = 0;
-      else if (obj->toac < 0)
-        value = 0;
-      else
-        /* use 5, because missiles generally appear in groups of 20,
-           so 20 * 5 == 100, which is comparable to weapon bonus above */
-        value = obj->cost + (obj->tohit + obj->todam + obj->toac) * 5;
-    }
-  } else if ((obj->tval == TV_SCROLL1) || (obj->tval == TV_SCROLL2) ||
+  }
+  else if ((obj->tval == TV_SCROLL1) || (obj->tval == TV_SCROLL2) ||
              (obj->tval == TV_POTION1) ||
              (obj->tval == TV_POTION2)) { /* Potions, Scrolls, and Food  */
     if (!known) value = 20;
@@ -10722,10 +10582,6 @@ struct objS* obj;
     case TV_SOFT_ARMOR:
       return 1;
       // int weaponsmith(element) int element;
-    case TV_SLING_AMMO:
-    case TV_BOLT:
-    case TV_ARROW:
-    case TV_BOW:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
