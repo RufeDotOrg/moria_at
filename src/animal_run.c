@@ -3138,6 +3138,20 @@ alloc_mon(num, dis, slp)
     place_monster(y, x, z, slp);
   }
 }
+void
+place_rubble(y, x)
+{
+  struct objS* obj;
+  obj = obj_use();
+  caveD[y][x].oidx = obj_index(obj);
+  caveD[y][x].fval = FLOOR_OBST;
+
+  // invcopy(... OBJ_RUBBLE);
+  obj->tval = TV_RUBBLE;
+  obj->tchar = ':';
+  obj->subval = 1;
+  obj->number = 1;
+}
 
 #define MAX_GOLD 18
 static int goldD[MAX_GOLD] = {
@@ -3148,7 +3162,8 @@ static char* gold_nameD[MAX_GOLD] = {
     "garnets",   "garnets", "gold",   "gold",     "gold",     "opals",
     "sapphires", "gold",    "rubies", "diamonds", "emeralds", "mithril",
 };
-void place_gold(y, x) int y, x;
+void
+place_gold(y, x)
 {
   int i, cur_pos;
   struct objS* obj;
@@ -3223,7 +3238,7 @@ int typ, num;
         break;
       case 2:  // unused
       case 3:
-        // place_rubble(y, x);
+        place_rubble(y, x);
         break;
       case 4:
         place_gold(y, x);
@@ -9826,11 +9841,22 @@ void tunnel(dir, uy, ux) int *uy, *ux;
         break;
       default:
         /* Is there an object in the way?  (Rubble and secret doors)*/
-        /* TBD: Rubble.     */
-        /* Secret doors.*/
         if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
           msg_print("You tunnel into the granite wall.");
           py_search(y, x);
+        } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
+          if (tabil > randint(180)) {
+            delete_object(y, x);
+            msg_print("You have removed the rubble.");
+            if (randint(10) == 1) {
+              place_object(y, x, FALSE);
+              if (cave_lit(c_ptr)) {
+                c_ptr->cflag |= CF_FIELDMARK;
+                msg_print("You have found something!");
+              }
+            }
+          } else
+            msg_print("You dig in the rubble.");
         }
         break;
     }
@@ -10437,8 +10463,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
     case 9: /* Rockfall*/
       py_take_hit(dam);
       delete_object(y, x);
-      // TBD: rubble
-      // place_rubble(y, x);
+      place_rubble(y, x);
       msg_print("You are hit by falling rock.");
       break;
     case 10: /* Corrode gas*/
