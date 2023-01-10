@@ -9921,8 +9921,9 @@ static void make_move(midx, mm) int* mm;
         do_turn = TRUE;
       }
       /* Creature is attempting to move on other creature?     */
-      else if (cr_ptr->cmove & CM_EATS_OTHER) {
-        if (c_ptr->midx && c_ptr->midx != midx &&
+      else if (c_ptr->midx && c_ptr->midx != midx) {
+        /* Eat it or wait */
+        if ((cr_ptr->cmove & CM_EATS_OTHER) &&
             creatureD[c_ptr->midx].mexp >= cr_ptr->mexp) {
           mon_unuse(&entity_monD[c_ptr->midx]);
           c_ptr->midx = 0;
