@@ -5081,7 +5081,7 @@ ma_bonuses(maffect, factor)
   }
 }
 static void
-ma_immediate(maidx, nturn)
+ma_duration(maidx, nturn)
 {
   if (maidx < MA_IMMEDIATE) {
     if ((uD.mflag & (1 << maidx)) == 0) {
@@ -7946,7 +7946,7 @@ int *uy, *ux;
         case 20:
           if (detect_mon(crset_invisible)) {
             ident |= TRUE;
-            ma_immediate(MA_DETECT_INVIS, 1);
+            ma_duration(MA_DETECT_INVIS, 1);
             msg_print("You sense the presence of invisible creatures!");
           }
           break;
@@ -8028,7 +8028,7 @@ int *uy, *ux;
           break;
         case 41:
           ident |= TRUE;
-          if (!py_affect(MA_RECALL)) ma_immediate(MA_RECALL, 25 + randint(30));
+          if (!py_affect(MA_RECALL)) ma_duration(MA_RECALL, 25 + randint(30));
           msg_print("The air about you becomes charged.");
           break;
         case 42:
@@ -8307,7 +8307,7 @@ int *uy, *ux;
           case 16:
             if (detect_mon(crset_invisible)) {
               ident |= TRUE;
-              ma_immediate(MA_DETECT_INVIS, 1);
+              ma_duration(MA_DETECT_INVIS, 1);
             }
             break;
           case 17:
@@ -8329,7 +8329,7 @@ int *uy, *ux;
           case 21:
             if (detect_mon(crset_evil)) {
               ident |= TRUE;
-              ma_immediate(MA_DETECT_EVIL, 1);
+              ma_duration(MA_DETECT_EVIL, 1);
               msg_print("You sense the presence of evil!");
             }
             break;
@@ -10202,9 +10202,9 @@ mon_try_spell(midx, cdis)
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
         else if (py_affect(MA_SLOW))
-          ma_immediate(MA_SLOW, 2);
+          ma_duration(MA_SLOW, 2);
         else
-          ma_immediate(MA_SLOW, randint(5) + 3);
+          ma_duration(MA_SLOW, randint(5) + 3);
         break;
       case 17: /*Drain Mana   */
         //   if (uD.cmana > 0) {
@@ -11281,9 +11281,9 @@ dungeon()
                 detect_obj(oset_pickup);
                 detect_obj(oset_trap);
                 detect_obj(oset_sdoor);
-                ma_immediate(MA_DETECT_MON, 1);
-                ma_immediate(MA_DETECT_INVIS, 1);
-                ma_immediate(MA_DETECT_EVIL, 1);
+                ma_duration(MA_DETECT_MON, 1);
+                ma_duration(MA_DETECT_INVIS, 1);
+                ma_duration(MA_DETECT_EVIL, 1);
               } break;
               case CTRL('f'): {
                 create_food(y, x);
