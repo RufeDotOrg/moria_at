@@ -8849,7 +8849,7 @@ py_pickup(y, x, pickup)
       obj->fx = 0;
       caveD[y][x].oidx = 0;
 
-      MSG("You have %s (%s%c)", descD, merge ? "merge " : "", locn + 'a');
+      MSG("You have %s (%s%c).", descD, merge ? "merge " : "", locn + 'a');
       turn_flag = TRUE;
     } else if (!pickup) {
       MSG("You see %s here.", descD);
@@ -10815,8 +10815,13 @@ store_item_purchase(sidx, item)
         obj_desc(obj, TRUE);
         obj->number = number;
         uD.gold -= cost;
-        MSG("You bought %s for %d gold.", descD, cost);
+        MSG("You bought %s for %d gold (%c).", descD, cost, iidx + 'a');
         store_item_destroy(sidx, item, count);
+
+        if (number > count) {
+          obj_desc(obj, TRUE);
+          MSG("You have %s.", descD);
+        }
       }
       msg_pause();
     }
