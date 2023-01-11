@@ -10000,8 +10000,10 @@ breath(typ, y, x, dam_hp, midx)
       if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis) &&
           los(y, x, i, j)) {
         c_ptr = &caveD[i][j];
-        if ((c_ptr->oidx != 0) && (*destroy)(&entity_objD[c_ptr->oidx]))
+        if ((c_ptr->oidx != 0) && (*destroy)(&entity_objD[c_ptr->oidx])) {
+          if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
           delete_object(i, j);
+        }
         if (c_ptr->fval <= MAX_OPEN_SPACE) {
           /* must test status bit, not py.flags.blind here, flag could have
              been set by a previous monster, but the breath should still
