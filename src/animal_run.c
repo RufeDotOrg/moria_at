@@ -10269,9 +10269,14 @@ mon_move(midx, cdis)
   if (!took_turn) {
     if (m_ptr->mconfused) {
       m_ptr->mconfused -= 1;
-      random = TRUE;
-      // Undead are confused by turn undead and should flee below
-      flee = (cr_ptr->cdefense & CD_UNDEAD);
+      if ((cr_ptr->cmove & CM_ATTACK_ONLY)) {
+        /* disable confused + attack_only */
+        cdis = 99;
+      } else {
+        random = TRUE;
+        // Undead are confused by turn undead and should flee below
+        flee = (cr_ptr->cdefense & CD_UNDEAD);
+      }
     } else if ((cr_ptr->cmove & CM_75_RANDOM) && randint(100) < 75) {
       random = TRUE;
     } else if ((cr_ptr->cmove & CM_40_RANDOM) && randint(100) < 40) {
