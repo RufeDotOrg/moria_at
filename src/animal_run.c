@@ -5080,17 +5080,11 @@ ma_bonuses(maffect, factor)
       break;
   }
 }
+// Effects are ticked twice per turn (rising/falling edge)
 static void
 ma_duration(maidx, nturn)
 {
-  if (maidx < MA_IMMEDIATE) {
-    if ((uD.mflag & (1 << maidx)) == 0) {
-      ma_bonuses(maidx, 1);
-      calc_bonuses();
-    }
-  }
-  maD[maidx] += nturn;
-  uD.mflag |= (1 << maidx);
+  maD[maidx] += 2 * nturn;
 }
 int8_t
 modify_stat(stat, amount)
@@ -5843,7 +5837,7 @@ py_add_food(num)
     if (extra > num) extra = num;
     penalty = extra / 32;
 
-    maD[MA_SLOW] += penalty;
+    ma_duration(MA_SLOW, penalty);
     if (extra == num)
       food = food - num + penalty;
     else
@@ -7702,11 +7696,11 @@ inven_quaff(iidx)
           break;
         case 23:
           if (py_affect(MA_FAST) == 0) ident |= TRUE;
-          maD[MA_FAST] += randint(25) + 15;
+          ma_duration(MA_FAST, randint(25) + 15);
           break;
         case 24:
           if (py_affect(MA_SLOW) == 0) ident |= TRUE;
-          maD[MA_SLOW] += randint(25) + 15;
+          ma_duration(MA_SLOW, randint(25) + 15);
           break;
         case 26:
           if (inc_stat(A_DEX)) {
@@ -7762,15 +7756,15 @@ inven_quaff(iidx)
           break;
         case 36:
           if (py_affect(MA_INVULN) == 0) ident |= TRUE;
-          maD[MA_INVULN] += randint(10) + 10;
+          ma_duration(MA_INVULN, randint(10) + 10);
           break;
         case 37:
           if (py_affect(MA_HERO) == 0) ident |= TRUE;
-          maD[MA_HERO] += randint(25) + 25;
+          ma_duration(MA_HERO, randint(25) + 25);
           break;
         case 38:
           if (py_affect(MA_SUPERHERO) == 0) ident |= TRUE;
-          maD[MA_SUPERHERO] += randint(25) + 25;
+          ma_duration(MA_SUPERHERO, randint(25) + 25);
           break;
         case 39:
           ident |= countD.fear > 0;
@@ -7781,15 +7775,15 @@ inven_quaff(iidx)
           break;
         case 41:
           if (py_affect(MA_AFIRE) == 0) ident |= TRUE;
-          maD[MA_AFIRE] += randint(10) + 10;
+          ma_duration(MA_AFIRE, randint(10) + 10);
           break;
         case 42:
           if (py_affect(MA_AFROST) == 0) ident |= TRUE;
-          maD[MA_AFROST] += randint(10) + 10;
+          ma_duration(MA_AFROST, randint(10) + 10);
           break;
         case 43:
           if (py_tr(TR_SEE_INVIS) == 0) ident |= TRUE;
-          maD[MA_SEE_INVIS] += randint(12) + 12;
+          ma_duration(MA_SEE_INVIS, randint(12) + 12);
           break;
         case 44:
           if (countD.poison > 0) {
@@ -7814,7 +7808,7 @@ inven_quaff(iidx)
             msg_print("Your eyes begin to tingle.");
             ident |= TRUE;
           }
-          maD[MA_SEE_INFRA] += 100 + randint(100);
+          ma_duration(MA_SEE_INFRA, 100 + randint(100));
           break;
         default:
           msg_print("Internal error in potion()");
@@ -8016,15 +8010,15 @@ int *uy, *ux;
           break;
         case 38:
           ident |= TRUE;
-          maD[MA_BLESS] += (randint(12) + 6);
+          ma_duration(MA_BLESS, randint(12) + 6);
           break;
         case 39:
           ident |= TRUE;
-          maD[MA_BLESS] += (randint(24) + 12);
+          ma_duration(MA_BLESS, randint(24) + 12);
           break;
         case 40:
           ident |= TRUE;
-          maD[MA_BLESS] += (randint(48) + 24);
+          ma_duration(MA_BLESS, randint(48) + 24);
           break;
         case 41:
           ident |= TRUE;
@@ -8312,11 +8306,11 @@ int *uy, *ux;
             break;
           case 17:
             if (py_affect(MA_FAST) == 0) ident |= TRUE;
-            maD[MA_FAST] += randint(30) + 15;
+            ma_duration(MA_FAST, randint(30) + 15);
             break;
           case 18:
             if (py_affect(MA_SLOW) == 0) ident |= TRUE;
-            maD[MA_SLOW] += randint(30) + 15;
+            ma_duration(MA_SLOW, randint(30) + 15);
             break;
           case 19:
             ident |= mass_poly();
@@ -10530,7 +10524,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
         if (py_tr(TR_FREE_ACT))
           msg_print("You are unaffected.");
         else
-          maD[MA_SLOW] += randint(20) + 10;
+          ma_duration(MA_SLOW, randint(20) + 10);
       } else
         msg_print("A small dart barely misses you.");
       break;
@@ -11051,6 +11045,7 @@ dungeon()
       if (randint(MAX_MALLOC_CHANCE) == 1) alloc_mon(1, MAX_SIGHT, FALSE);
     }
     tick();
+    ma_tick();
     inven_check_weight();
     inven_check_light();
 
@@ -11348,7 +11343,7 @@ dungeon()
               } break;
               case CTRL('w'): {
                 msg_print("The air about you becomes charged.");
-                maD[MA_RECALL] = 1;
+                ma_duration(MA_RECALL, 1);
               } break;
               case CTRL('z'): {
                 dun_level += 1;
