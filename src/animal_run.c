@@ -8639,8 +8639,6 @@ show_version()
   line = 0;
   BufMsg(screen, "Version: %s", versionD);
   BufMsg(screen, "Git Hash: %s", git_hashD);
-  BufMsg(screen, "Programming: %s", "Alan Newton");
-  BufMsg(screen, "Art: %s", "Nathan Miller");
   line += 1;
   BufMsg(screen, "License");
   BufMsg(screen, "Source from Umoria (GPLv3)");
@@ -8653,6 +8651,9 @@ show_version()
   BufMsg(screen, "  Mark Adler");
   BufMsg(screen, "Source from SDL2 (Zlib)");
   BufMsg(screen, "  Sam Lantinga");
+  line += 1;
+  BufMsg(screen, "Programming: %s", "Alan Newton");
+  BufMsg(screen, "Art: %s", "Nathan Miller");
 }
 void
 py_character()
