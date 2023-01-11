@@ -278,7 +278,7 @@
 #define MA_INVULN 7
 #define MA_SEE_INVIS 8 // TBD: move to immediate (breaks save format)
 #define MA_SEE_INFRA 9
-// Magic affects above this may set flags without waiting for ma_tick()
+// Magic affects greater this do not rely on rising edge transitions in ma_bonuses()
 #define MA_IMMEDIATE 10
 #define MA_DETECT_MON 10
 #define MA_DETECT_EVIL 11

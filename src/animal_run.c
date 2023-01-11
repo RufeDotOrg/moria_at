@@ -254,14 +254,6 @@ altmap_update()
     litmapD[uD.y - rmin][uD.x - cmin] = CF_TEMP_LIGHT;
   }
 }
-static void
-ma_immediate(maidx, nturn)
-{
-  if (maidx > MA_IMMEDIATE) {
-    maD[maidx] += nturn;
-    uD.mflag |= (1 << maidx);
-  }
-}
 // Match single index
 static int
 py_affect(maid)
@@ -4990,78 +4982,6 @@ calc_bonuses()
   }
   cbD.prev_weapon = invenD[INVEN_WIELD];
 }
-int8_t
-modify_stat(stat, amount)
-int stat, amount;
-{
-  int loop, i;
-  int8_t tmp_stat;
-
-  tmp_stat = statD.cur_stat[stat];
-  loop = (amount < 0 ? -amount : amount);
-  for (i = 0; i < loop; i++) {
-    if (amount > 0) {
-      if (tmp_stat < 18)
-        tmp_stat++;
-      else if (tmp_stat < 108)
-        tmp_stat += 10;
-      else
-        tmp_stat = 118;
-    } else {
-      if (tmp_stat > 27)
-        tmp_stat -= 10;
-      else if (tmp_stat > 18)
-        tmp_stat = 18;
-      else if (tmp_stat > 3)
-        tmp_stat--;
-    }
-  }
-  return tmp_stat;
-}
-void set_use_stat(stat) int stat;
-{
-  statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
-
-  if (stat == A_STR) {
-    calc_bonuses();
-  } else if (stat == A_DEX) {
-    calc_bonuses();
-  } else if (stat == A_CON)
-    calc_hitpoints(uD.lev);
-  // else if (stat == A_INT) {
-  //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
-  //   calc_mana(A_INT);
-  // } else if (stat == A_WIS) {
-  //   if (class[py.misc.pclass].spell == PRIEST) calc_spells(A_WIS);
-  //   calc_mana(A_WIS);
-  // }
-}
-void py_bonuses(obj, factor) struct objS* obj;
-{
-  int amount;
-
-  if ((TR_BLIND & obj->flags) && (factor > 0)) countD.blind += 1000;
-  if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
-  if (TR_SLOW_DIGEST & obj->flags) uD.food_digest -= factor;
-  if (TR_REGEN & obj->flags) uD.food_digest += factor * 3;
-
-  amount = obj->p1 * factor;
-  if (obj->flags & TR_STATS) {
-    for (int it = 0; it < MAX_A; it++)
-      if ((1 << it) & obj->flags) {
-        statD.mod_stat[it] += amount;
-        set_use_stat(it);
-      }
-  }
-  if (TR_SEARCH & obj->flags) {
-    uD.search += amount;
-    uD.fos -= amount;
-  }
-  if (TR_STEALTH & obj->flags) uD.stealth += amount;
-  if (TR_SPEED & obj->flags) uD.pspeed -= amount;
-  if (TR_INFRA & obj->flags) uD.infra += amount;
-}
-// TBD: various
 // Combat bonuses are applied in calc_bonuses
 // Hp bonuses are reapplied in calc_hitpoints
 void
@@ -5159,6 +5079,89 @@ ma_bonuses(maffect, factor)
       msg_print("Error in ma_bonuses()");
       break;
   }
+}
+static void
+ma_immediate(maidx, nturn)
+{
+  if (maidx < MA_IMMEDIATE) {
+    if ((uD.mflag & (1 << maidx)) == 0) {
+      ma_bonuses(maidx, 1);
+      calc_bonuses();
+    }
+  }
+  maD[maidx] += nturn;
+  uD.mflag |= (1 << maidx);
+}
+int8_t
+modify_stat(stat, amount)
+int stat, amount;
+{
+  int loop, i;
+  int8_t tmp_stat;
+
+  tmp_stat = statD.cur_stat[stat];
+  loop = (amount < 0 ? -amount : amount);
+  for (i = 0; i < loop; i++) {
+    if (amount > 0) {
+      if (tmp_stat < 18)
+        tmp_stat++;
+      else if (tmp_stat < 108)
+        tmp_stat += 10;
+      else
+        tmp_stat = 118;
+    } else {
+      if (tmp_stat > 27)
+        tmp_stat -= 10;
+      else if (tmp_stat > 18)
+        tmp_stat = 18;
+      else if (tmp_stat > 3)
+        tmp_stat--;
+    }
+  }
+  return tmp_stat;
+}
+void set_use_stat(stat) int stat;
+{
+  statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
+
+  if (stat == A_STR) {
+    calc_bonuses();
+  } else if (stat == A_DEX) {
+    calc_bonuses();
+  } else if (stat == A_CON)
+    calc_hitpoints(uD.lev);
+  // else if (stat == A_INT) {
+  //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
+  //   calc_mana(A_INT);
+  // } else if (stat == A_WIS) {
+  //   if (class[py.misc.pclass].spell == PRIEST) calc_spells(A_WIS);
+  //   calc_mana(A_WIS);
+  // }
+}
+void py_bonuses(obj, factor) struct objS* obj;
+{
+  int amount;
+
+  if ((TR_BLIND & obj->flags) && (factor > 0)) countD.blind += 1000;
+  if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
+  if (TR_SLOW_DIGEST & obj->flags) uD.food_digest -= factor;
+  if (TR_REGEN & obj->flags) uD.food_digest += factor * 3;
+
+  amount = obj->p1 * factor;
+  if (obj->flags & TR_STATS) {
+    for (int it = 0; it < MAX_A; it++)
+      if ((1 << it) & obj->flags) {
+        statD.mod_stat[it] += amount;
+        set_use_stat(it);
+      }
+  }
+  if (TR_SEARCH & obj->flags) {
+    uD.search += amount;
+    uD.fos -= amount;
+  }
+  if (TR_STEALTH & obj->flags) uD.stealth += amount;
+  if (TR_SPEED & obj->flags) uD.pspeed -= amount;
+  if (TR_INFRA & obj->flags) uD.infra += amount;
 }
 BOOL
 player_saves()
@@ -10199,9 +10202,9 @@ mon_try_spell(midx, cdis)
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
         else if (py_affect(MA_SLOW))
-          maD[MA_SLOW] += 2;
+          ma_immediate(MA_SLOW, 2);
         else
-          maD[MA_SLOW] = randint(5) + 3;
+          ma_immediate(MA_SLOW, randint(5) + 3);
         break;
       case 17: /*Drain Mana   */
         //   if (uD.cmana > 0) {
