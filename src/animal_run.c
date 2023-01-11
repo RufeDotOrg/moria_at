@@ -11379,7 +11379,7 @@ dungeon()
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
             if (obj->tval == TV_CHEST) {
               if (obj->idflag & ID_REVEAL) try_disarm_chest(y, x);
-              if (obj->flags & CH_LOCKED) open_object(y, x);
+              if (obj->sn != SN_EMPTY) open_object(y, x);
             } else if (obj->tval == TV_VIS_TRAP) {
               if (obj->idflag & ID_REVEAL) try_disarm_trap(y, x);
             }
