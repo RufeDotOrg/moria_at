@@ -6644,6 +6644,7 @@ td_destroy2(dir, y, x)
           (obj->tval == TV_VIS_TRAP) || (obj->tval == TV_OPEN_DOOR) ||
           (obj->tval == TV_SECRET_DOOR)) {
         delete_object(y, x);
+        if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
         msg_print("There is a bright flash of light!");
         destroy2 = TRUE;
       } else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
@@ -6981,16 +6982,20 @@ td_destroy(y, x)
     for (j = x - 1; j <= x + 1; j++) {
       c_ptr = &caveD[i][j];
       obj = &entity_objD[c_ptr->oidx];
-      if (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_OPEN_DOOR ||
-          obj->tval == TV_SECRET_DOOR) {
+      if ((obj->tval == TV_INVIS_TRAP) || (obj->tval == TV_CLOSED_DOOR) ||
+          (obj->tval == TV_VIS_TRAP) || (obj->tval == TV_OPEN_DOOR) ||
+          (obj->tval == TV_SECRET_DOOR)) {
         delete_object(i, j);
+        if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
+        msg_print("There is a bright flash of light!");
         destroy = TRUE;
-      }
-      if (obj->tval == TV_VIS_TRAP || obj->tval == TV_INVIS_TRAP) {
-        delete_object(i, j);
+      } else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
+        msg_print("Click!");
+        obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
         destroy = TRUE;
+        obj->sn = SN_UNLOCKED;
+        obj->idflag = ID_REVEAL;
       }
-      // TBD: Chests?
     }
   return (destroy);
 }

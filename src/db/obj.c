@@ -3114,7 +3114,7 @@ struct treasureS treasureD[] = {
      0,
      {0, 0},
      12},
-    {"Trap/Door Destruction",
+    {"Trap/Door/Lock Destruction",
      0x00400000L,
      TV_SCROLL1,
      '?', /*204*/
@@ -4270,7 +4270,7 @@ struct treasureS treasureD[] = {
      0,
      {1, 1},
      50},
-    {"Trap/Door Destruction",
+    {"Trap/Door/Lock Destruction",
      0x00001000L,
      TV_WAND,
      '-', /*281*/
