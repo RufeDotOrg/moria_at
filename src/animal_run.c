@@ -6299,7 +6299,7 @@ twall(y, x)
       for (j = x - 1; j <= x + 1; j++)
         if (caveD[i][j].fval <= FLOOR_CORR) {
           c_ptr->fval = caveD[i][j].fval;
-          c_ptr->cflag = caveD[i][j].cflag;
+          c_ptr->cflag |= (CF_PERM_LIGHT & caveD[i][j].cflag);
           found = TRUE;
           break;
         }
