@@ -10910,13 +10910,19 @@ ma_tick()
   }
 }
 static int
-obj_enchanted(obj)
+obj_sense(obj)
 struct objS* obj;
 {
   if (obj->tval < TV_MIN_ENCHANT || obj->tval > TV_MAX_ENCHANT ||
       obj->flags & TR_CURSED)
     return FALSE;
   if (obj->idflag & (ID_REVEAL | ID_MAGIK)) return FALSE;
+  return TRUE;
+}
+static int
+obj_magik(obj)
+struct objS* obj;
+{
   if (obj->tohit > 0 || obj->todam > 0 || obj->toac > 0) return TRUE;
   if ((0x4000107fL & obj->flags) && obj->p1 > 0) return TRUE;
   if (0x07ffe980L & obj->flags) return TRUE;
@@ -10938,10 +10944,16 @@ sense_magik()
       obj = obj_get(invenD[it]);
       /* if in inventory, succeed 1 out of 50 times,
          if in equipment list, success 1 out of 10 times */
-      if (obj_enchanted(obj) && (randint(it < INVEN_EQUIP ? 50 : 10) == 1)) {
-        MSG("There's something about what you are %s...", describe_use(it));
+      if (obj_sense(obj) && (randint(it < INVEN_EQUIP ? 50 : 10) == 1)) {
         disturb(0, 0);
-        obj->idflag |= ID_MAGIK;
+        if (obj_magik(obj)) {
+          MSG("There's something about what you are %s...", describe_use(it));
+          obj->idflag |= ID_MAGIK;
+        } else {
+          MSG("You have become familiar with what you are %s.",
+              describe_use(it));
+          obj->idflag |= ID_REVEAL;
+        }
       }
     }
   }

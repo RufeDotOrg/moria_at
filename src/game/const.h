@@ -136,10 +136,10 @@
 /* min tval for wearable items, all items between TV_MIN_WEAR and TV_MAX_WEAR
    use the same flag bits, see the TR_* defines */
 #define TV_MIN_WEAR 10
-/* items tested for enchantments, i.e. the MAGIK inscription, see the
-   enchanted() procedure */
-#define TV_MIN_ENCHANT 10
 #define TV_LIGHT 15
+/* items tested for enchantments, i.e. the MAGIK inscription, see the
+   sense_magik() procedure */
+#define TV_MIN_ENCHANT 21
 #define TV_HAFTED 21
 #define TV_POLEARM 22
 #define TV_SWORD 23
