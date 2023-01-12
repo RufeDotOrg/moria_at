@@ -10434,7 +10434,8 @@ static void hit_trap(uy, ux) int *uy, *ux;
       break;
     case 4: /* Trap door*/
       if (py_tr(TR_FFALL)) {
-        MSG("A trap door opens; you catch the ledge preventing your fall!");
+        MSG("A trap door opens; you fall slowly, catch the ledge and prevent "
+            "your fall!");
       } else {
         new_level_flag = TRUE;
         dun_level++;
