@@ -4527,7 +4527,8 @@ int bth, level_adj, pth, ac;
     return FALSE;
 }
 // TBD: rewrite
-static void summon_object(y, x, num, typ) int y, x, num, typ;
+static void
+summon_object(y, x, num, typ)
 {
   int i, j, k;
   struct caveS* c_ptr;
@@ -11395,7 +11396,6 @@ dungeon()
           } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
             if (obj->tval == TV_CHEST) {
               if (obj->idflag & ID_REVEAL) try_disarm_chest(y, x);
-              if (obj->sn != SN_EMPTY) open_object(y, x);
             } else if (obj->tval == TV_VIS_TRAP) {
               if (obj->idflag & ID_REVEAL) try_disarm_trap(y, x);
             }
@@ -11415,7 +11415,9 @@ dungeon()
             if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
             if (countD.blind == 0 && find_flag) find_event(y, x);
 
-            if (obj->tval == TV_STORE_DOOR) {
+            if (obj->tval == TV_CHEST) {
+              if (obj->sn != SN_EMPTY) open_object(y, x);
+            } else if (obj->tval == TV_STORE_DOOR) {
               store_entrance(obj->tchar - '1');
             } else if (obj->tval == TV_PAWN_DOOR) {
               pawn_entrance();
