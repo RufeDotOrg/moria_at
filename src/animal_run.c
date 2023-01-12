@@ -7569,7 +7569,7 @@ inven_quaff(iidx)
   if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
     i = obj->flags;
     if (i == 0) msg_print("You feel less thirsty.");
-    ident = FALSE;
+    ident = (i == 0);
     while (i != 0) {
       j = bit_pos(&i) + 1;
       j += (obj->tval == TV_POTION2) * 32;
