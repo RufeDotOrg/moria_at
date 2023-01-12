@@ -690,7 +690,7 @@ platform_draw()
   int msg_used = AS(msglen_cqD, msg_writeD);
   if (msg_used) {
     render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
-  } else {
+  } else if (show_map) {
     msg = AS(msg_cqD, msg_writeD - 1);
     msg_used = AS(msglen_cqD, msg_writeD - 1);
     font_texture_alphamod(128);
