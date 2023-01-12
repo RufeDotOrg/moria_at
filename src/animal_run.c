@@ -7341,6 +7341,7 @@ inven_eat(iidx)
   struct treasureS* tr_ptr = &treasureD[obj->tidx];
 
   if (obj->tval == TV_FOOD) {
+    msg_print("nom nom nom!!");
     i = obj->flags;
     // Some food has no effect; thus becomes known
     ident = (i == 0);
@@ -7468,7 +7469,6 @@ inven_eat(iidx)
     //   sample(obj);
     py_add_food(obj->p1);
     inven_destroy_one(iidx);
-    msg_print("nom nom nom!!");
     turn_flag = TRUE;
     return TRUE;
   } else {
