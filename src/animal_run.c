@@ -8359,7 +8359,7 @@ int *uy, *ux;
       }
       if (i_ptr->idflag & ID_REVEAL)
         MSG("You have %d charges remaining.", i_ptr->p1);
-      i_ptr->cost = i_ptr->cost / 2;
+      if (i_ptr->cost > 150) i_ptr->cost = i_ptr->cost / 2;
     } else {
       msg_print("The staff has no charges left.");
       i_ptr->idflag |= ID_EMPTY;
