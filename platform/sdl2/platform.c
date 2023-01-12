@@ -496,6 +496,14 @@ render_font_string(struct SDL_Renderer *renderer, struct fontS *font,
   }
 }
 
+static void
+font_texture_alphamod(alpha)
+{
+  for (int it = 0; it < AL(font_textureD); ++it) {
+    SDL_SetTextureAlphaMod(font_textureD[it], alpha);
+  }
+}
+
 // Texture
 SDL_Texture *map_textureD;
 SDL_Rect map_rectD;
@@ -680,7 +688,15 @@ platform_draw()
 
   char *msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
-  render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
+  if (msg_used) {
+    render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
+  } else {
+    msg = AS(msg_cqD, msg_writeD - 1);
+    msg_used = AS(msglen_cqD, msg_writeD - 1);
+    font_texture_alphamod(128);
+    render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
+    font_texture_alphamod(255);
+  }
 
   SDL_Point p = {0, display_rectD.h - height};
   render_font_string(rendererD, &fontD, affectinfoD, affectinfo_usedD, p);
