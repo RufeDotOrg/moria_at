@@ -13,10 +13,14 @@ static int find_openarea;
 static int find_breakright, find_breakleft;
 static int find_prevdir;
 
+#define MAX_MSGLEN AL(msg_cqD[0])
+static char log_extD[] = " -more-";
 #define MSG(x, ...)                                             \
   {                                                             \
-    char vtype[80];                                             \
+    char vtype[MAX_MSGLEN - AL(log_extD)];                      \
     int len = snprintf(vtype, sizeof(vtype), x, ##__VA_ARGS__); \
+    len = CLAMP(len, 0, sizeof(vtype) - 1);                     \
+    vtype[len] = 0;                                             \
     msg_game(vtype, len);                                       \
   }
 
@@ -347,8 +351,6 @@ draw()
   AC(overlay_usedD);
 }
 
-static char log_extD[] = " -more-";
-#define MAX_MSGLEN AL(msg_cqD[0])
 void
 msg_advance()
 {
