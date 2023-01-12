@@ -10998,7 +10998,7 @@ tick()
     regenhp(regen_amount);
   } else if (countD.poison > 0) {
     if (countD.poison == 1) {
-      msg_print("You feel better.");
+      msg_print("You have recovered from illness.");
     } else {
       strcpy(death_descD, "poison");
       py_take_hit(poison_adj());
