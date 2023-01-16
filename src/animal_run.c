@@ -401,6 +401,9 @@ static void msg_game(msg, msglen) char* msg;
   }
 
   if (log_used > 0) AS(msglen_cqD, msg_writeD) = log_used;
+
+  if (countD.rest != 0) countD.rest = 0;
+  find_flag = FALSE;
 }
 static void
 msg_print(char* text)
