@@ -4732,8 +4732,9 @@ void obj_detail(obj) struct objS* obj;
 
   if (obj->idflag & ID_MAGIK) strcat(descD, " {magik}");
   if (obj->idflag & ID_DAMD) strcat(descD, " {damned}");
-  if (obj->idflag & ID_CORRODED) strcat(descD, " {corroded}");
   if (obj->idflag & ID_EMPTY) strcat(descD, " {empty}");
+  if (obj->idflag & ID_CORRODED) strcat(descD, " {corroded}");
+  if (obj->idflag & ID_PLAIN) strcat(descD, " {plain}");
 }
 void obj_desc(obj, prefix) struct objS* obj;
 BOOL prefix;
@@ -10950,7 +10951,7 @@ sense_magik()
   if (((turnD & 0xF) == 0) && (countD.confusion == 0) &&
       (randint(1 + (1000 / level_adj[uD.clidx][LA_SENSE_MAGIK]) /
                        (1 + uD.lev)) == 1)) {
-    for (int it = 0; it < MAX_INVEN; it++) {
+    for (int it = 0; it < INVEN_AUX; it++) {
       obj = obj_get(invenD[it]);
       /* if in inventory, succeed 1 out of 50 times,
          if in equipment list, success 1 out of 10 times */
@@ -10960,9 +10961,8 @@ sense_magik()
           MSG("There's something about what you are %s...", describe_use(it));
           obj->idflag |= ID_MAGIK;
         } else {
-          MSG("You have become familiar with what you are %s.",
-              describe_use(it));
-          obj->idflag |= ID_REVEAL;
+          MSG("A very plain item you are %s.", describe_use(it));
+          obj->idflag |= ID_PLAIN;
         }
       }
     }

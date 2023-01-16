@@ -424,6 +424,7 @@
 #define ID_EMPTY 0x4  /* wand/staff known to have 0 charges */
 #define ID_REVEAL 0x08 /* full object identity is known */
 #define ID_CORRODED 0x10 /* armor is known to provide no protection from acid/gas damage */
+#define ID_PLAIN 0x20 /* wearing a non-enchanted item for a while */
 
 /* tval sub type */
 #define MAX_SUBVAL 64
