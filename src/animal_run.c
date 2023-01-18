@@ -8339,11 +8339,18 @@ int *uy, *ux;
             }
             break;
           case 22:
-            ident |=
-                countD.poison > 0 || countD.blind > 0 || countD.confusion > 0;
-            countD.poison = 1;
-            countD.blind = 1;
-            countD.confusion = 1;
+            if (countD.poison > 0) {
+              ident = TRUE;
+              countD.poison = 1;
+            }
+            if (countD.blind > 0) {
+              ident = TRUE;
+              countD.blind = 1;
+            }
+            if (countD.confusion > 0) {
+              ident = TRUE;
+              countD.confusion = 1;
+            }
             break;
           case 23:
             ident |= dispel_creature(CD_EVIL, 60);
