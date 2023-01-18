@@ -9118,7 +9118,6 @@ mon_attack(midx)
     int attack_type = attack->attack_type;
     int attack_desc = attack->attack_desc;
     bth = bth_adj(attack_type);
-    disturb(1, 0);
     flag = test_hit(bth, adj, 0, cbD.pac);
     if (countD.protevil && (cre->cdefense & CD_EVIL) && uD.lev <= cre->level) {
       MSG("%s%s", descD, attack_string(99));
@@ -9943,7 +9942,6 @@ static void make_move(midx, mm) int* mm;
           // 50% chance to break the door
           obj->p1 = 1 - randint(2);
           msg_print("You hear a door burst open!");
-          disturb(1, 0);
           do_move = TRUE;
         }
       }
@@ -10956,7 +10954,6 @@ sense_magik()
       /* if in inventory, succeed 1 out of 50 times,
          if in equipment list, success 1 out of 10 times */
       if (obj_sense(obj) && (randint(it < INVEN_EQUIP ? 50 : 10) == 1)) {
-        disturb(0, 0);
         if (obj_magik(obj)) {
           MSG("There's something about what you are %s...", describe_use(it));
           obj->idflag |= ID_MAGIK;
@@ -11021,7 +11018,6 @@ tick()
     countD.blind -= 1;
     if (countD.blind == 0) {
       msg_print("The veil of darkness lifts.");
-      disturb(0, 1);
       py_check_view(uD.y, uD.x);
     }
   }
@@ -11029,8 +11025,8 @@ tick()
   if (countD.confusion > 0) {
     countD.confusion -= 1;
     if (countD.confusion == 0) {
-      msg_print("You feel less confused.");
       disturb(0, 0);
+      msg_print("You feel less confused.");
     }
   }
   if (countD.fear > 0) {
@@ -11038,7 +11034,6 @@ tick()
     countD.fear -= 1;
     if (countD.fear == 0) {
       msg_print("You feel bolder now.");
-      disturb(0, 0);
     }
   }
 
@@ -11430,7 +11425,6 @@ dungeon()
             } else if (obj->tval == TV_PAWN_DOOR) {
               pawn_entrance();
             } else if (oset_pickup(obj)) {
-              disturb(0, 0);
               py_pickup(y, x, FALSE);
             }
           } else if (obj->tval == TV_CLOSED_DOOR) {
