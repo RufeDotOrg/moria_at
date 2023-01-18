@@ -8563,7 +8563,11 @@ inven_wear(iidx)
         msg_print("Oops! It feels deathly cold!");
         obj->cost = -1;
         obj->idflag |= ID_DAMD;
+      } else if ((obj->idflag & ID_REVEAL) == 0 && obj->sn) {
+        MSG("There's something about what you are %s...", describe_use(eqidx));
+        obj->idflag |= ID_MAGIK;
       }
+
       calc_bonuses();
       turn_flag = TRUE;
     }
