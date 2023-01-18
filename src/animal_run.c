@@ -10974,11 +10974,10 @@ sense_magik()
       for (int it = INVEN_AUX - 1; it >= INVEN_EQUIP; --it) {
         obj = obj_get(invenD[it]);
         if (obj_sense(obj)) {
+          MSG("You have a feeling about what you are %s.", describe_use(it));
           if (obj_magik(obj)) {
-            MSG("There's something about what you are %s...", describe_use(it));
             obj->idflag |= ID_MAGIK;
           } else {
-            MSG("A very plain item you are %s.", describe_use(it));
             obj->idflag |= ID_PLAIN;
           }
           it = 0;
