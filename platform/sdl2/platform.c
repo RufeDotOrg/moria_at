@@ -928,6 +928,9 @@ sdl_pump()
           buttonD[it] = (SDL_FRect){.75 + (.1 * it), .75 - (.2 * it), .1, .2};
         }
         return -1;
+      } else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
+        // Ask for a redraw
+        return -1;
       }
       return 0;
     }
