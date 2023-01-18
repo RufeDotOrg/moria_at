@@ -11074,8 +11074,9 @@ tick()
   if (countD.rest < 0) {
     countD.rest += 1;
     if (uD.chp == uD.mhp) {
-      int mal = countD.blind + countD.confusion + countD.fear;
-      if (mal == 0) countD.rest = 0;
+      int aff =
+          countD.blind + countD.confusion + countD.fear + py_affect(MA_RECALL);
+      if (aff == 0) countD.rest = 0;
     }
   } else if (countD.rest > 0) {
     countD.rest -= 1;
