@@ -5205,16 +5205,13 @@ equip_random()
   return -1;
 }
 static int
-equip_enchant(amount)
+equip_enchant(iidx, amount)
 {
   struct objS* i_ptr;
-  int affect, l;
+  int affect;
 
-  l = equip_cursed();
-  if (l < 0) l = equip_random();
-
-  if (l >= 0) {
-    i_ptr = obj_get(invenD[l]);
+  if (iidx >= 0) {
+    i_ptr = obj_get(invenD[iidx]);
     obj_desc(i_ptr, FALSE);
     affect = 0;
     for (int it = 0; it < amount; ++it) {
@@ -7873,7 +7870,13 @@ int *uy, *ux;
           ident |= todam_enchant(1);
           break;
         case 3:
-          ident |= equip_enchant(1);
+          ident |= TRUE;
+          choice_idx = inven_choice("Which armor do you wish to enchant?");
+          if (choice_idx >= 0) {
+            equip_enchant(choice_idx, 1);
+          } else {
+            used_up = FALSE;
+          }
           break;
         case 4:
           msg_print("This is an identify scroll.");
@@ -8008,8 +8011,14 @@ int *uy, *ux;
           ident |= weapon_curse();
           break;
         case 35:
-          k = randint(2) + 1;
-          ident |= equip_enchant(k);
+          ident |= TRUE;
+          choice_idx = inven_choice("Which armor do you wish to enchant?");
+          if (choice_idx >= 0) {
+            k = randint(2) + 1;
+            equip_enchant(choice_idx, k);
+          } else {
+            used_up = FALSE;
+          }
           break;
         case 36:
           ident |= equip_curse();
