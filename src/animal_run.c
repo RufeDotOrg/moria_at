@@ -11465,14 +11465,14 @@ dungeon()
             }
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
-          }
+          } 
         }
         panel_update(&panelD, uD.y, uD.x, FALSE);
       }
     } while (!turn_flag && !new_level_flag);
 
     ma_tick();
-    creatures();
+    if (!new_level_flag) creatures();
   }
 }
 void
