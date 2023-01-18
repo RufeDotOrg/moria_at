@@ -8474,7 +8474,7 @@ inven_consume_flask()
     if (obj->tval == TV_FLASK) {
       inven_destroy_one(it);
       msg_print(
-          "You pour a flask of oil into your lantern, renewing its light.");
+          "Your lantern's light is renewed by pouring in a flask of oil.");
       return TRUE;
     }
   }
