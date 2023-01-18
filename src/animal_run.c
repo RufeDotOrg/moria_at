@@ -5308,12 +5308,16 @@ equip_disenchant()
   // Ego weapon toac is protected.
   // Gauntlets of Slaying tohit/todam are protected.
   if (i == INVEN_WIELD) {
-    flag = (obj->tohit > 0 || obj->todam > 0);
-    obj->tohit = MAX(obj->tohit - randint(2), 0);
-    obj->todam = MAX(obj->todam - randint(2), 0);
+    if (obj->tohit > 0 || obj->todam > 0) {
+      obj->tohit = MAX(obj->tohit - randint(2), 0);
+      obj->todam = MAX(obj->todam - randint(2), 0);
+      flag = TRUE;
+    }
   } else {
-    flag = (obj->toac > 0);
-    obj->toac = MAX(obj->toac - randint(2), 0);
+    if (obj->toac > 0) {
+      obj->toac = MAX(obj->toac - randint(2), 0);
+      flag = TRUE;
+    }
   }
   if (flag) {
     msg_print("There is a static feeling in the air.");
