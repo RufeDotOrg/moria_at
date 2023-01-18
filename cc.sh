@@ -42,7 +42,7 @@ esac
 CFLAGS+=" $DEV_FLAGS "
 
 TDIR=`dirname $1`
-[ -f $TDIR/ccext ] && source $TDIR/ccext
+[ -f ccext ] && source ccext
 
 echo $CC $1 $CFLAGS $LFLAGS -o bin/$OUTFILE
 time $CC $1 $CFLAGS $LFLAGS -o bin/$OUTFILE || exit 1
