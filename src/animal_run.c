@@ -10927,7 +10927,7 @@ struct objS* obj;
   if (obj->tval < TV_MIN_ENCHANT || obj->tval > TV_MAX_ENCHANT ||
       obj->flags & TR_CURSED)
     return FALSE;
-  if (obj->idflag & (ID_REVEAL | ID_MAGIK)) return FALSE;
+  if (obj->idflag & (ID_REVEAL | ID_MAGIK | ID_PLAIN)) return FALSE;
   return TRUE;
 }
 static int
@@ -10951,7 +10951,7 @@ sense_magik()
   if (((turnD & 0xF) == 0) && (countD.confusion == 0) &&
       (randint(1 + (1000 / level_adj[uD.clidx][LA_SENSE_MAGIK]) /
                        (1 + uD.lev)) == 1)) {
-    for (int it = 0; it < INVEN_AUX; it++) {
+    for (int it = INVEN_AUX - 1; it >= 0; --it) {
       obj = obj_get(invenD[it]);
       /* if in inventory, succeed 1 out of 50 times,
          if in equipment list, success 1 out of 10 times */
@@ -10964,6 +10964,7 @@ sense_magik()
           MSG("A very plain item you are %s.", describe_use(it));
           obj->idflag |= ID_PLAIN;
         }
+        it = 0;
       }
     }
   }
