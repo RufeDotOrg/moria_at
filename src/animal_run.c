@@ -10949,19 +10949,33 @@ sense_magik()
   if (((turnD & 0xF) == 0) && (countD.confusion == 0) &&
       (randint(1 + (1000 / level_adj[uD.clidx][LA_SENSE_MAGIK]) /
                        (1 + uD.lev)) == 1)) {
-    for (int it = INVEN_AUX - 1; it >= 0; --it) {
-      obj = obj_get(invenD[it]);
-      /* if in inventory, succeed 1 out of 50 times,
-         if in equipment list, success 1 out of 10 times */
-      if (obj_sense(obj) && (randint(it < INVEN_EQUIP ? 50 : 10) == 1)) {
-        if (obj_magik(obj)) {
-          MSG("There's something about what you are %s...", describe_use(it));
-          obj->idflag |= ID_MAGIK;
-        } else {
-          MSG("A very plain item you are %s.", describe_use(it));
-          obj->idflag |= ID_PLAIN;
+    if (randint(10) == 1) {
+      for (int it = INVEN_AUX - 1; it >= INVEN_EQUIP; --it) {
+        obj = obj_get(invenD[it]);
+        if (obj_sense(obj)) {
+          if (obj_magik(obj)) {
+            MSG("There's something about what you are %s...", describe_use(it));
+            obj->idflag |= ID_MAGIK;
+          } else {
+            MSG("A very plain item you are %s.", describe_use(it));
+            obj->idflag |= ID_PLAIN;
+          }
+          it = 0;
         }
-        it = 0;
+      }
+    } else if (randint(50) == 1) {
+      for (int it = INVEN_EQUIP - 1; it >= 0; --it) {
+        obj = obj_get(invenD[it]);
+        if (obj_sense(obj)) {
+          obj_desc(obj, TRUE);
+          MSG("You have a feeling about %c) %s.", 'a' + it, descD);
+          if (obj_magik(obj)) {
+            obj->idflag |= ID_MAGIK;
+          } else {
+            obj->idflag |= ID_PLAIN;
+          }
+          it = 0;
+        }
       }
     }
   }
