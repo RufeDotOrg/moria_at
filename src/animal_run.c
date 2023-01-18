@@ -1261,7 +1261,8 @@ static void place_door(y, x) int y, x;
 }
 static coords doorstk[100];
 static int doorindex;
-static void build_tunnel(row1, col1, row2, col2) int row1, col1, row2, col2;
+static void
+build_corridor(row1, col1, row2, col2)
 {
   int tmp_row, tmp_col, i, j;
   struct caveS* c_ptr;
@@ -3364,7 +3365,7 @@ cave_gen()
     xloc[pick2] = x1;
   }
   doorindex = 0;
-  /* move zero entry to k, so that can call build_tunnel all k times */
+  /* move zero entry to k, so that can call build_corridor all k times */
   yloc[k] = yloc[0];
   xloc[k] = xloc[0];
   for (i = 0; i < k; i++) {
@@ -3372,7 +3373,7 @@ cave_gen()
     x1 = xloc[i];
     y2 = yloc[i + 1];
     x2 = xloc[i + 1];
-    build_tunnel(y2, x2, y1, x1);
+    build_corridor(y2, x2, y1, x1);
   }
 
   fill_cave(GRANITE_WALL);
