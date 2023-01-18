@@ -10412,6 +10412,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
   obj->tval = TV_VIS_TRAP;
   obj->tchar = '^';
   obj->idflag |= ID_REVEAL;
+  c_ptr->cflag |= CF_FIELDMARK;
   find_flag = FALSE;
 
   dam = obj->damage[1] ? pdamroll(obj->damage) : 0;
