@@ -9988,7 +9988,7 @@ tunnel(y, x)
             place_object(y, x, FALSE);
             if (cave_lit(c_ptr)) {
               c_ptr->cflag |= CF_FIELDMARK;
-              msg_print("You have found something under the rubble!");
+              msg_print("You have found something!");
             }
           } else {
             msg_print("You have removed the rubble.");
@@ -10649,6 +10649,9 @@ static void hit_trap(uy, ux) int *uy, *ux;
       delete_object(y, x);
       place_rubble(y, x);
       msg_print("You are hit by falling rock.");
+      // Ready to mine
+      miningD[0] = y;
+      miningD[1] = x;
       break;
     case 10: /* Corrode gas*/
       /* Makes more sense to print the message first, then damage an
@@ -11577,6 +11580,14 @@ dungeon()
             if (*my == y && *mx == x) {
               tunnel(y, x);
             } else {
+              if (obj->tval == TV_GOLD) {
+                obj_desc(obj, TRUE);
+                MSG("You see %s glimmering in the %s.", descD,
+                    c_ptr->fval == QUARTZ_WALL ? "quartz vein"
+                                               : "magma intrusion");
+              } else if (obj->tval == TV_RUBBLE) {
+                msg_print("You see rubble.");
+              }
               *my = y;
               *mx = x;
             }
