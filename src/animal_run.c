@@ -8556,6 +8556,32 @@ equip_takeoff(iidx, into_slot)
     turn_flag = TRUE;
   }
 }
+static int
+obj_sense(obj)
+struct objS* obj;
+{
+  if (obj->tval < TV_MIN_ENCHANT || obj->tval > TV_MAX_ENCHANT) return FALSE;
+  if (obj->idflag & (ID_REVEAL | ID_MAGIK | ID_PLAIN | ID_DAMD)) return FALSE;
+  return TRUE;
+}
+static int
+obj_damd(obj)
+struct objS* obj;
+{
+  return (obj->flags & TR_CURSED);
+}
+static int
+obj_magik(obj)
+struct objS* obj;
+{
+  if ((obj->flags & TR_CURSED) == 0) {
+    if (obj->tohit > 0 || obj->todam > 0 || obj->toac > 0) return TRUE;
+    if ((0x4000107fL & obj->flags) && obj->p1 > 0) return TRUE;
+    if (0x07ffe980L & obj->flags) return TRUE;
+  }
+
+  return FALSE;
+}
 void
 inven_wear(iidx)
 {
@@ -8587,14 +8613,19 @@ inven_wear(iidx)
         msg_print("Oops! It feels deathly cold!");
         obj->cost = -1;
         obj->idflag |= ID_DAMD;
-      } else if ((obj->idflag & ID_REVEAL) == 0 && obj->sn) {
-        MSG("There's something about what you are %s...", describe_use(eqidx));
-        obj->idflag |= ID_MAGIK;
+      } else if (obj_sense(obj)) {
+        if (obj_magik(obj)) {
+          MSG("There's something about what you are %s...",
+              describe_use(eqidx));
+          obj->idflag |= ID_MAGIK;
+        } else {
+          obj->idflag |= ID_PLAIN;
+        }
       }
-
-      calc_bonuses();
-      turn_flag = TRUE;
     }
+
+    calc_bonuses();
+    turn_flag = TRUE;
   }
 }
 enum { MINIMAP_WIDTH = SYMMAP_WIDTH };
@@ -10990,26 +11021,6 @@ ma_tick()
     calc_bonuses();
   }
 }
-static int
-obj_sense(obj)
-struct objS* obj;
-{
-  if (obj->tval < TV_MIN_ENCHANT || obj->tval > TV_MAX_ENCHANT ||
-      obj->flags & TR_CURSED)
-    return FALSE;
-  if (obj->idflag & (ID_REVEAL | ID_MAGIK | ID_PLAIN)) return FALSE;
-  return TRUE;
-}
-static int
-obj_magik(obj)
-struct objS* obj;
-{
-  if (obj->tohit > 0 || obj->todam > 0 || obj->toac > 0) return TRUE;
-  if ((0x4000107fL & obj->flags) && obj->p1 > 0) return TRUE;
-  if (0x07ffe980L & obj->flags) return TRUE;
-
-  return FALSE;
-}
 void
 sense_magik()
 {
@@ -11021,26 +11032,16 @@ sense_magik()
   if (((turnD & 0xF) == 0) && (countD.confusion == 0) &&
       (randint(1 + (1000 / level_adj[uD.clidx][LA_SENSE_MAGIK]) /
                        (1 + uD.lev)) == 1)) {
-    if (randint(10) == 1) {
-      for (int it = INVEN_AUX - 1; it >= INVEN_EQUIP; --it) {
-        obj = obj_get(invenD[it]);
-        if (obj_sense(obj)) {
-          MSG("You have a feeling about what you are %s.", describe_use(it));
-          if (obj_magik(obj)) {
-            obj->idflag |= ID_MAGIK;
-          } else {
-            obj->idflag |= ID_PLAIN;
-          }
-          it = 0;
-        }
-      }
-    } else if (randint(50) == 1) {
+    if (randint(50) == 1) {
       for (int it = INVEN_EQUIP - 1; it >= 0; --it) {
         obj = obj_get(invenD[it]);
         if (obj_sense(obj)) {
           obj_desc(obj, TRUE);
           MSG("You have a feeling about %c) %s.", 'a' + it, descD);
-          if (obj_magik(obj)) {
+          if (obj_damd(obj)) {
+            obj->cost = -1;
+            obj->idflag |= ID_DAMD;
+          } else if (obj_magik(obj)) {
             obj->idflag |= ID_MAGIK;
           } else {
             obj->idflag |= ID_PLAIN;
