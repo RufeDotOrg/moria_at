@@ -419,12 +419,13 @@
 #define INVEN_AUX 33
 #define MAX_INVEN 34
 
-#define ID_MAGIK 0x1  /* sense of magic */
+#define ID_MAGIK 0x1  /* obj_sense() magic */
 #define ID_DAMD 0x2   /* wore something cursed and known bad */
 #define ID_EMPTY 0x4  /* wand/staff known to have 0 charges */
 #define ID_REVEAL 0x08 /* full object identity is known */
 #define ID_CORRODED 0x10 /* armor is known to provide no protection from acid/gas damage */
-#define ID_PLAIN 0x20 /* wearing a non-enchanted item for a while */
+#define ID_PLAIN 0x20 /* obj_sense() not magic or cursed */
+#define ID_RARE 0x40 /* obj_sense() special name item */
 
 /* tval sub type */
 #define MAX_SUBVAL 64

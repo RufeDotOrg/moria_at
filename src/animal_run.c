@@ -4755,6 +4755,7 @@ void obj_detail(obj) struct objS* obj;
   if (obj->idflag & ID_EMPTY) strcat(descD, " {empty}");
   if (obj->idflag & ID_CORRODED) strcat(descD, " {corroded}");
   if (obj->idflag & ID_PLAIN) strcat(descD, " {plain}");
+  if (obj->idflag & ID_RARE) strcat(descD, " {rare}");
 }
 void obj_desc(obj, prefix) struct objS* obj;
 BOOL prefix;
@@ -7579,6 +7580,9 @@ inven_study(iidx)
     if (obj->idflag & ID_MAGIK) {
       BufMsg(screen, "... is known to be magical!");
     }
+    if (obj->idflag & ID_RARE) {
+      BufMsg(screen, "... is known to be rare!");
+    }
     if (obj->idflag & ID_CORRODED) {
       BufMsg(screen, "... is known to be corroded!");
     }
@@ -8573,7 +8577,8 @@ obj_sense(obj)
 struct objS* obj;
 {
   if (obj->tval < TV_MIN_ENCHANT || obj->tval > TV_MAX_ENCHANT) return FALSE;
-  if (obj->idflag & (ID_REVEAL | ID_MAGIK | ID_PLAIN | ID_DAMD)) return FALSE;
+  if (obj->idflag & (ID_REVEAL | ID_RARE | ID_MAGIK | ID_PLAIN | ID_DAMD))
+    return FALSE;
   return TRUE;
 }
 static int
@@ -8581,6 +8586,15 @@ obj_damd(obj)
 struct objS* obj;
 {
   return (obj->flags & TR_CURSED);
+}
+static int
+obj_rare(obj)
+struct objS* obj;
+{
+  if ((obj->flags & TR_CURSED) == 0) {
+    return obj->sn != 0;
+  }
+  return FALSE;
 }
 static int
 obj_magik(obj)
@@ -8626,7 +8640,11 @@ inven_wear(iidx)
         obj->cost = -1;
         obj->idflag |= ID_DAMD;
       } else if (obj_sense(obj)) {
-        if (obj_magik(obj)) {
+        if (obj_rare(obj)) {
+          MSG("There's something about what you are %s...",
+              describe_use(eqidx));
+          obj->idflag |= ID_RARE;
+        } else if (obj_magik(obj)) {
           MSG("There's something about what you are %s...",
               describe_use(eqidx));
           obj->idflag |= ID_MAGIK;
@@ -11071,16 +11089,18 @@ sense_magik()
       for (int it = INVEN_EQUIP - 1; it >= 0; --it) {
         obj = obj_get(invenD[it]);
         if (obj_sense(obj)) {
-          obj_desc(obj, TRUE);
-          MSG("You have a feeling about %c) %s.", 'a' + it, descD);
           if (obj_damd(obj)) {
             obj->cost = -1;
             obj->idflag |= ID_DAMD;
+          } else if (obj_rare(obj)) {
+            obj->idflag |= ID_RARE;
           } else if (obj_magik(obj)) {
             obj->idflag |= ID_MAGIK;
           } else {
             obj->idflag |= ID_PLAIN;
           }
+          obj_desc(obj, TRUE);
+          MSG("You have a feeling about %c) %s.", 'a' + it, descD);
           it = 0;
         }
       }
