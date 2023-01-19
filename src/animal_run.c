@@ -84,11 +84,23 @@ vital_update()
 
   BufPad(vitalinfo, AL(vitalinfoD), AL(vitalinfoD[0]));
 }
-BOOL
+static BOOL
 cave_lit(cave)
 struct caveS* cave;
 {
   return (cave->cflag & (CF_TEMP_LIGHT | CF_PERM_LIGHT)) != 0;
+}
+static BOOL
+obj_lit(obj)
+struct objS* obj;
+{
+  int lit;
+
+  if (obj->fy && obj->fx) {
+    lit = (caveD[obj->fy][obj->fx].cflag &
+           (CF_TEMP_LIGHT | CF_PERM_LIGHT | CF_FIELDMARK)) != 0;
+  }
+  return lit;
 }
 char
 get_sym(int row, int col)
@@ -9788,7 +9800,8 @@ py_look_obj()
       if (obj->fy && distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
         oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
         ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
-        if (oy == ly && ox == lx && los(y, x, obj->fy, obj->fx)) {
+        if (oy == ly && ox == lx && obj_lit(obj) &&
+            los(y, x, obj->fy, obj->fx)) {
           seen += 1;
           obj_desc(obj, TRUE);
           MSG("You see %s.", descD);
