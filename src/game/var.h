@@ -89,6 +89,7 @@ static int pack_heavy;
 static int light_bonus;
 static char descD[160];
 static char death_descD[160];
+static int miningD[2];
 
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);

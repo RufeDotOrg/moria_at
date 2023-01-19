@@ -4070,6 +4070,13 @@ weight_tohit_adj()
   return 0;
 }
 int
+hitadj_by_weight_str(weight, str)
+{
+  int use = str * 15;
+  if (use < weight) return use - weight;
+  return 0;
+}
+int
 attack_blows(weight)
 {
   int adj_weight;
@@ -9797,45 +9804,53 @@ py_offhand()
     turn_flag = TRUE;
   }
 }
-void tunnel(dir, uy, ux) int *uy, *ux;
+// TBD: ID_REVEAL affects perceived bonuses
+static int
+obj_tabil(obj)
+struct objS* obj;
 {
-  int y, x, i, tabil;
+  int tabil, use_str;
+  tabil = use_str = statD.use_stat[A_STR];
+  if (TR_TUNNEL & obj->flags)
+    tabil += 25 + obj->p1 * 50;
+  else {
+    tabil += (obj->damage[0] * obj->damage[1]) + obj->tohit + obj->todam;
+    /* divide by two so that digging without shovel isn't too easy */
+    tabil >>= 1;
+  }
+
+  /* If this weapon is too heavy for the player to wield properly, then
+     also make it harder to dig with it.  */
+  tabil = MAX(tabil + hitadj_by_weight_str(obj->weight, use_str), 0);
+  return tabil;
+}
+static void
+tunnel(y, x)
+{
+  int i, tabil, iidx, max_tabil;
   struct caveS* c_ptr;
   struct objS* i_ptr;
-  struct monS* m_ptr;
-
-  y = *uy;
-  x = *ux;
-  mmove(dir, &y, &x);
 
   c_ptr = &caveD[y][x];
 
-  if (c_ptr->midx) {
-    *uy = y;
-    *ux = x;
-    return;
-  }
-
-  /* Don't let the player tunnel somewhere illegal, this is necessary to
-     prevent the player from getting a free attack by trying to tunnel
-     somewhere where it has no effect.  */
-  if (c_ptr->fval < MIN_WALL &&
-      (c_ptr->oidx == 0 || (entity_objD[c_ptr->oidx].tval != TV_RUBBLE &&
-                            entity_objD[c_ptr->oidx].tval != TV_SECRET_DOOR))) {
-    if (c_ptr->oidx == 0) {
-      msg_print("Tunnel through what?  Empty air?!?");
-    } else {
-      msg_print("You can't tunnel through that.");
-    }
-    return;
-  }
-
-  turn_flag = TRUE;
   /* Compute the digging ability of player; based on     */
   /* strength, and type of tool used  		   */
-  tabil = statD.use_stat[A_STR];
-  i_ptr = obj_get(invenD[INVEN_WIELD]);
+  iidx = -1;
+  max_tabil = -1;
+  for (i = 0; i < MAX_INVEN; ++i) {
+    i_ptr = obj_get(invenD[i]);
+    if (may_equip(i_ptr->tval) == INVEN_WIELD) {
+      tabil = obj_tabil(i_ptr);
+      if (tabil > max_tabil) {
+        max_tabil = tabil;
+        iidx = i;
+      }
+    }
+  }
+  i_ptr = obj_get(iidx >= 0 ? invenD[iidx] : 0);
   if (i_ptr->tval != TV_NOTHING) {
+    obj_desc(i_ptr, TRUE);
+    MSG("You begin tunneling with %s.", descD);
     if (TR_TUNNEL & i_ptr->flags)
       tabil += 25 + i_ptr->p1 * 50;
     else {
@@ -9877,7 +9892,7 @@ void tunnel(dir, uy, ux) int *uy, *ux;
           msg_print("You tunnel into the quartz vein.");
         break;
       case BOUNDARY_WALL:
-        msg_print("This seems to be permanent rock.");
+        msg_print("You cannot tunnel into permanent rock.");
         break;
       default:
         /* Is there an object in the way?  (Rubble and secret doors)*/
@@ -9903,6 +9918,41 @@ void tunnel(dir, uy, ux) int *uy, *ux;
     }
   } else
     msg_print("You dig with your hands, making no progress.");
+
+  turn_flag = TRUE;
+}
+void py_tunnel(dir, uy, ux) int *uy, *ux;
+{
+  int y, x;
+  struct caveS* c_ptr;
+
+  y = *uy;
+  x = *ux;
+  mmove(dir, &y, &x);
+
+  c_ptr = &caveD[y][x];
+
+  if (c_ptr->midx) {
+    *uy = y;
+    *ux = x;
+    return;
+  }
+
+  /* Don't let the player tunnel somewhere illegal, this is necessary to
+     prevent the player from getting a free attack by trying to tunnel
+     somewhere where it has no effect.  */
+  if (c_ptr->fval < MIN_WALL &&
+      (c_ptr->oidx == 0 || (entity_objD[c_ptr->oidx].tval != TV_RUBBLE &&
+                            entity_objD[c_ptr->oidx].tval != TV_SECRET_DOOR))) {
+    if (c_ptr->oidx == 0) {
+      msg_print("Tunnel through what?  Empty air?!?");
+    } else {
+      msg_print("You can't tunnel through that.");
+    }
+    return;
+  }
+
+  tunnel(y, x);
 }
 static void make_move(midx, mm) int* mm;
 {
@@ -11171,7 +11221,7 @@ dungeon()
 
           if (c < 037) {
             // Tunneling (CTRL)
-            tunnel(dir, &y, &x);
+            py_tunnel(dir, &y, &x);
           } else if (countD.confusion /* can't run during confusion */
                      || c & 0x20) {
             // Primary movement (lowercase)
@@ -11465,7 +11515,16 @@ dungeon()
             }
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
-          } 
+          } else {
+            int* my = &miningD[0];
+            int* mx = &miningD[1];
+            if (*my == y && *mx == x) {
+              tunnel(y, x);
+            } else {
+              *my = y;
+              *mx = x;
+            }
+          }
         }
         panel_update(&panelD, uD.y, uD.x, FALSE);
       }
