@@ -9835,118 +9835,135 @@ py_offhand()
     turn_flag = TRUE;
   }
 }
-// TBD: ID_REVEAL affects perceived bonuses
 static int
-obj_tabil(obj)
+obj_tabil(obj, truth)
 struct objS* obj;
 {
   int tabil, use_str;
-  tabil = use_str = statD.use_stat[A_STR];
-  if (TR_TUNNEL & obj->flags)
-    tabil += 25 + obj->p1 * 50;
-  else {
-    tabil += (obj->damage[0] * obj->damage[1]) + obj->tohit + obj->todam;
-    /* divide by two so that digging without shovel isn't too easy */
-    tabil >>= 1;
-  }
+  tabil = -1;
+  if (may_equip(obj->tval) == INVEN_WIELD) {
+    use_str = statD.use_stat[A_STR];
 
-  /* If this weapon is too heavy for the player to wield properly, then
-     also make it harder to dig with it.  */
-  tabil = MAX(tabil + hitadj_by_weight_str(obj->weight, use_str), 0);
-  return tabil;
-}
-static void
-tunnel(y, x)
-{
-  int i, tabil, iidx, max_tabil;
-  struct caveS* c_ptr;
-  struct objS* i_ptr;
-
-  c_ptr = &caveD[y][x];
-
-  /* Compute the digging ability of player; based on     */
-  /* strength, and type of tool used  		   */
-  iidx = -1;
-  max_tabil = -1;
-  for (i = 0; i < MAX_INVEN; ++i) {
-    i_ptr = obj_get(invenD[i]);
-    if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-      tabil = obj_tabil(i_ptr);
-      if (tabil > max_tabil) {
-        max_tabil = tabil;
-        iidx = i;
+    tabil = use_str;
+    if (truth || (obj->idflag & ID_REVEAL)) {
+      if (TR_TUNNEL & obj->flags)
+        tabil += obj->p1 * 50;
+      else {
+        tabil += obj->tohit + obj->todam;
       }
     }
-  }
-  i_ptr = obj_get(iidx >= 0 ? invenD[iidx] : 0);
-  if (i_ptr->tval != TV_NOTHING) {
-    obj_desc(i_ptr, TRUE);
-    MSG("You begin tunneling with %s.", descD);
-    if (TR_TUNNEL & i_ptr->flags)
-      tabil += 25 + i_ptr->p1 * 50;
+
+    if (TR_TUNNEL & obj->flags)
+      tabil += 25 + obj->p1 * 50;
     else {
-      tabil +=
-          (i_ptr->damage[0] * i_ptr->damage[1]) + i_ptr->tohit + i_ptr->todam;
+      tabil += (obj->damage[0] * obj->damage[1]) + obj->tohit + obj->todam;
       /* divide by two so that digging without shovel isn't too easy */
       tabil >>= 1;
     }
 
     /* If this weapon is too heavy for the player to wield properly, then
        also make it harder to dig with it.  */
-    tabil = MAX(tabil + weight_tohit_adj(), 0);
+    tabil = MAX(tabil + hitadj_by_weight_str(obj->weight, use_str), 0);
+  }
+  return tabil;
+}
+static void
+tunnel(y, x)
+{
+  int tabil, wall_chance, wall_min, turn_count;
+  struct caveS* c_ptr;
+  struct objS* i_ptr;
 
-    /* Regular walls; Granite, magma intrusion, quartz vein  */
-    /* Don't forget the boundary walls, made of titanium (255)*/
+  c_ptr = &caveD[y][x];
+
+  {
+    int max_tabil = -1;
+    int iidx = -1;
+    for (int it = 0; it < MAX_INVEN; ++it) {
+      i_ptr = obj_get(invenD[it]);
+      if (may_equip(i_ptr->tval) == INVEN_WIELD) {
+        tabil = obj_tabil(i_ptr, FALSE);
+        if (tabil > max_tabil) {
+          max_tabil = tabil;
+          iidx = it;
+        }
+      }
+    }
+    i_ptr = obj_get(iidx >= 0 ? invenD[iidx] : 0);
+  }
+
+  if (i_ptr->tval != TV_NOTHING) {
+    countD.paralysis = 2;
+    obj_desc(i_ptr, TRUE);
+    MSG("You begin tunneling with %s.", descD);
+    tabil = obj_tabil(i_ptr, TRUE);
+
+    wall_chance = 0;
     switch (c_ptr->fval) {
-      case GRANITE_WALL:
-        i = randint(1200) + 80;
-        if (tabil > i) {
-          twall(y, x);
-          msg_print("You have finished the tunnel.");
-        } else
-          msg_print("You tunnel into the granite wall.");
+      case QUARTZ_WALL:
+        wall_min = 80;
+        wall_chance = 400;
+        msg_print("You tunnel into the quartz vein.");
         break;
       case MAGMA_WALL:
-        i = randint(600) + 10;
-        if (tabil > i) {
-          twall(y, x);
-          msg_print("You have finished the tunnel.");
-        } else
-          msg_print("You tunnel into the magma intrusion.");
+        wall_min = 10;
+        wall_chance = 600;
+        msg_print("You tunnel into the magma intrusion.");
         break;
-      case QUARTZ_WALL:
-        i = randint(400) + 10;
-        if (tabil > i) {
-          twall(y, x);
-          msg_print("You have finished the tunnel.");
-        } else
-          msg_print("You tunnel into the quartz vein.");
+      case GRANITE_WALL:
+        wall_min = 10;
+        wall_chance = 1200;
+        msg_print("You tunnel into the granite wall.");
         break;
       case BOUNDARY_WALL:
         msg_print("You cannot tunnel into permanent rock.");
         break;
       default:
-        /* Is there an object in the way?  (Rubble and secret doors)*/
-        if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
-          msg_print("You tunnel into the granite wall.");
-          py_search(y, x);
-        } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
-          if (tabil > randint(180)) {
-            c_ptr->fval = FLOOR_CORR;
-            delete_object(y, x);
-            msg_print("You have removed the rubble.");
-            if (randint(10) == 1) {
-              place_object(y, x, FALSE);
-              if (cave_lit(c_ptr)) {
-                c_ptr->cflag |= CF_FIELDMARK;
-                msg_print("You have found something!");
-              }
-            }
-          } else
-            msg_print("You dig in the rubble.");
-        }
         break;
     }
+
+    turn_count = 0;
+    if (wall_chance) {
+      do {
+        turn_count += 1;
+        if (tabil > randint(wall_chance) + wall_min) {
+          twall(y, x);
+          msg_print("You have finished the tunnel.");
+          break;
+        }
+      } while (turn_count < 5);
+    }
+    /* Is there an object in the way?  (Rubble and secret doors)*/
+    else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
+      msg_print("You tunnel into the granite wall.");
+      do {
+        turn_count += 1;
+        py_search(y, x);
+        if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
+      } while (turn_count < 5);
+    } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
+      msg_print("You dig in the rubble.");
+
+      do {
+        if (tabil > randint(180)) {
+          c_ptr->fval = FLOOR_CORR;
+          delete_object(y, x);
+          if (randint(10) == 1) {
+            place_object(y, x, FALSE);
+            if (cave_lit(c_ptr)) {
+              c_ptr->cflag |= CF_FIELDMARK;
+              msg_print("You have found something under the rubble!");
+            }
+          } else {
+            msg_print("You have removed the rubble.");
+          }
+          break;
+        }
+      } while (turn_count < 5);
+    }
+
+    // TBD: unique counter for mining?
+    countD.paralysis += turn_count;
   } else
     msg_print("You dig with your hands, making no progress.");
 
