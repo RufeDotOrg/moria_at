@@ -9903,12 +9903,17 @@ tunnel(y, x)
       }
     }
     i_ptr = obj_get(iidx >= 0 ? invenD[iidx] : 0);
+
+    if (iidx != INVEN_WIELD) {
+      countD.paralysis = 2;
+      obj_desc(i_ptr, TRUE);
+      MSG("You begin tunneling with %s.", descD);
+    } else {
+      countD.paralysis = -1;
+    }
   }
 
   if (i_ptr->tval != TV_NOTHING) {
-    countD.paralysis = 2;
-    obj_desc(i_ptr, TRUE);
-    MSG("You begin tunneling with %s.", descD);
     tabil = obj_tabil(i_ptr, TRUE);
 
     wall_chance = 0;
@@ -9976,7 +9981,7 @@ tunnel(y, x)
     }
 
     // TBD: unique counter for mining?
-    countD.paralysis += turn_count;
+    countD.paralysis += MAX(turn_count, 1);
   } else
     msg_print("You dig with your hands, making no progress.");
 
