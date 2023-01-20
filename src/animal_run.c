@@ -9843,15 +9843,15 @@ py_offhand()
   struct objS* obj;
   int tmp, swap;
   tmp = invenD[INVEN_WIELD] ^ invenD[INVEN_AUX];
-  swap = FALSE;
+  swap = (tmp != 0);
   if (invenD[INVEN_WIELD]) {
     obj = obj_get(invenD[INVEN_WIELD]);
     if (obj->flags & TR_CURSED) {
       MSG("Hmm, the item you are %s seems to be cursed.",
           describe_use(INVEN_WIELD));
+      swap = FALSE;
     } else {
       py_bonuses(obj, -1);
-      swap = TRUE;
     }
   }
 
