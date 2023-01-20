@@ -9244,8 +9244,7 @@ mon_attack(midx)
           py_take_hit(damage);
 
           if (player_saves()) {
-            if (countD.fear == 0)
-              msg_print("You resist the urge to be afraid!");
+            if (countD.fear == 0) msg_print("You remain bold.");
           } else if (countD.fear == 0) {
             msg_print("You are suddenly afraid!");
             countD.fear += 3 + randint(cre->level);
