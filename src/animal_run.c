@@ -9752,13 +9752,13 @@ py_search(y, x)
           msg_print("You have found a secret door.");
           obj->tval = TV_CLOSED_DOOR;
           obj->tchar = '+';
-          find_flag = FALSE;
+          c_ptr->cflag |= CF_FIELDMARK;
         } else if (obj->tval == TV_INVIS_TRAP) {
           msg_print("You have found a trap.");
           obj->tval = TV_VIS_TRAP;
           obj->tchar = '^';
           obj->idflag |= ID_REVEAL;
-          find_flag = FALSE;
+          c_ptr->cflag |= CF_FIELDMARK;
         } else if (obj->tval == TV_CHEST) {
           if (CH_TRAPPED & obj->flags) {
             obj->idflag = ID_REVEAL;
