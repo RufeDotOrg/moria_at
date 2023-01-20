@@ -11578,7 +11578,7 @@ dungeon()
             }
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
-          } else {
+          } else if (countD.blind == 0) {
             int* my = &miningD[0];
             int* mx = &miningD[1];
             if (*my == y && *mx == x) {
