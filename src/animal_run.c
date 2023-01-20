@@ -5843,7 +5843,7 @@ int (*valid)();
     struct objS* obj = obj_get(obj_id);
     if (valid(obj)) {
       obj_desc(obj, TRUE);
-      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %s",
+      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %.77s",
                      'a' + it - begin, descD);
     }
 
@@ -7310,7 +7310,7 @@ int begin, end;
       count += 1;
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, TRUE);
-      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %s",
+      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %.77s",
                      'a' + it - begin, descD);
     }
 

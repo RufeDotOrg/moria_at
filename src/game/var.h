@@ -12,7 +12,7 @@ static int affectinfo_usedD;
 // Full-screen & overlay (choice)
 static char screenD[SCREEN_HEIGHT][80];
 static int screen_usedD[AL(screenD)];
-static char overlayD[STATUS_HEIGHT][80 - STATUS_WIDTH];
+static char overlayD[STATUS_HEIGHT][80];
 static int overlay_usedD[AL(overlayD)];
 
 // Gameplay messages write to a circular queue
