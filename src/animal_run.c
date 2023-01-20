@@ -9911,19 +9911,22 @@ tunnel(y, x)
   c_ptr = &caveD[y][x];
 
   {
-    int max_tabil = -1;
-    int iidx = -1;
-    for (int it = 0; it < MAX_INVEN; ++it) {
-      i_ptr = obj_get(invenD[it]);
-      if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-        tabil = obj_tabil(i_ptr, FALSE);
-        if (tabil > max_tabil) {
-          max_tabil = tabil;
-          iidx = it;
+    i_ptr = obj_get(invenD[INVEN_WIELD]);
+    int iidx = INVEN_WIELD;
+    if ((i_ptr->flags & TR_CURSED) == 0) {
+      int max_tabil = -1;
+      for (int it = 0; it < MAX_INVEN; ++it) {
+        i_ptr = obj_get(invenD[it]);
+        if (may_equip(i_ptr->tval) == INVEN_WIELD) {
+          tabil = obj_tabil(i_ptr, FALSE);
+          if (tabil > max_tabil) {
+            max_tabil = tabil;
+            iidx = it;
+          }
         }
       }
+      i_ptr = obj_get(invenD[iidx]);
     }
-    i_ptr = obj_get(iidx >= 0 ? invenD[iidx] : 0);
 
     if (iidx != INVEN_WIELD) {
       countD.paralysis = 2;
