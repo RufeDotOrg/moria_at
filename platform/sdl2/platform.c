@@ -930,7 +930,7 @@ sdl_pump()
         return -1;
       } else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
         // Ask for a redraw
-        return -1;
+        return ' ';
       }
       return 0;
     }
