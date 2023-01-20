@@ -4742,10 +4742,14 @@ void obj_detail(obj) struct objS* obj;
       sprintf(tmp_str, " (%d charges)", obj->p1);
     } else if (obj->tval == TV_HAFTED || obj->tval == TV_POLEARM ||
                obj->tval == TV_SWORD) {
-      if (obj->flags & TR_STR)
-        sprintf(tmp_str, " (%+d to STR)", obj->p1);
-      else if (obj->flags & TR_STEALTH)
-        sprintf(tmp_str, " (%+d to stealth)", obj->p1);
+      for (int it = 0; it < MAX_A; ++it) {
+        if (obj->flags & (1 << it)) {
+          sprintf(tmp_str, " (%+d %.3s)", obj->p1, stat_nameD[it]);
+          strcat(descD, tmp_str);
+        }
+      }
+      tmp_str[0] = 0;
+      if (obj->flags & TR_STEALTH) sprintf(tmp_str, " (%+d stealth)", obj->p1);
     }
   }
   strcat(descD, tmp_str);
