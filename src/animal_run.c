@@ -381,7 +381,8 @@ msg_pause()
   log_used = AS(msglen_cqD, msg_writeD);
   if (log_used) {
     log = AS(msg_cqD, msg_writeD);
-    log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, "%s", log_extD);
+    log_used = MIN(log_used, MAX_MSGLEN - AL(log_extD));
+    log_used += snprintf(log + log_used, AL(log_extD), "%s", log_extD);
     AS(msglen_cqD, msg_writeD) = log_used;
 
     // wait for user to acknowledge prior buffer -more-
