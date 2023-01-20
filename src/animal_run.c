@@ -10892,7 +10892,7 @@ inven_pawn(iidx)
     if (cost == 0) {
       MSG("You donate %s.", descD);
     } else {
-      MSG("You sold %s for %d gold piece%s.", descD, cost, cost > 1 ? "s" : "");
+      MSG("You sold %s for %d gold.", descD, cost);
     }
     msg_pause();
   }
