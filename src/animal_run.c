@@ -8641,8 +8641,7 @@ inven_wear(iidx)
         obj->idflag |= ID_DAMD;
       } else if (obj_sense(obj)) {
         if (obj_rare(obj)) {
-          MSG("There's something about what you are %s...",
-              describe_use(eqidx));
+          msg_print("Eureka! It feels rare in origin.");
           obj->idflag |= ID_RARE;
         } else if (obj_magik(obj)) {
           MSG("There's something about what you are %s...",
