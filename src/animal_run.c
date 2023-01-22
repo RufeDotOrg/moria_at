@@ -1248,17 +1248,19 @@ static void place_closed_door(locked, y, x) int locked, y, x;
 
   // invcopy(&t_list[cur_pos], OBJ_CLOSED_DOOR);
   obj = obj_use();
-  obj->fy = y;
-  obj->fx = x;
-  obj->tval = TV_CLOSED_DOOR;
-  obj->tchar = '+';
-  obj->subval = 1;
-  obj->number = 1;
-  obj->p1 = locked;
+  if (obj->id) {
+    obj->fy = y;
+    obj->fx = x;
+    obj->tval = TV_CLOSED_DOOR;
+    obj->tchar = '+';
+    obj->subval = 1;
+    obj->number = 1;
+    obj->p1 = locked;
 
-  cave_ptr = &caveD[y][x];
-  cave_ptr->oidx = obj_index(obj);
-  cave_ptr->fval = FLOOR_OBST;
+    cave_ptr = &caveD[y][x];
+    cave_ptr->oidx = obj_index(obj);
+    cave_ptr->fval = FLOOR_OBST;
+  }
 }
 static void place_secret_door(y, x) int y, x;
 {
@@ -3184,14 +3186,16 @@ place_rubble(y, x)
 {
   struct objS* obj;
   obj = obj_use();
-  caveD[y][x].oidx = obj_index(obj);
-  caveD[y][x].fval = FLOOR_OBST;
+  if (obj->id) {
+    caveD[y][x].oidx = obj_index(obj);
+    caveD[y][x].fval = FLOOR_OBST;
 
-  // invcopy(... OBJ_RUBBLE);
-  obj->tval = TV_RUBBLE;
-  obj->tchar = ':';
-  obj->subval = 1;
-  obj->number = 1;
+    // invcopy(... OBJ_RUBBLE);
+    obj->tval = TV_RUBBLE;
+    obj->tchar = ':';
+    obj->subval = 1;
+    obj->number = 1;
+  }
 }
 
 #define MAX_GOLD 18
@@ -3210,44 +3214,48 @@ place_gold(y, x)
   struct objS* obj;
 
   obj = obj_use();
-  caveD[y][x].oidx = obj_index(obj);
+  if (obj->id) {
+    caveD[y][x].oidx = obj_index(obj);
 
-  i = ((randint(dun_level + 2) + 2) / 2) - 1;
-  if (randint(OBJ_GREAT) == 1) i += randint(dun_level + 1);
-  if (i >= MAX_GOLD) i = MAX_GOLD - 1;
+    i = ((randint(dun_level + 2) + 2) / 2) - 1;
+    if (randint(OBJ_GREAT) == 1) i += randint(dun_level + 1);
+    if (i >= MAX_GOLD) i = MAX_GOLD - 1;
 
-  // invcopy(&t_list[cur_pos], OBJ_GOLD_LIST + i);
-  obj->fy = y;
-  obj->fx = x;
-  obj->tval = TV_GOLD;
-  obj->tchar = '$';
-  obj->cost = goldD[i];
-  obj->subval = i;
-  obj->number = 1;
-  obj->level = 1;
+    // invcopy(&t_list[cur_pos], OBJ_GOLD_LIST + i);
+    obj->fy = y;
+    obj->fx = x;
+    obj->tval = TV_GOLD;
+    obj->tchar = '$';
+    obj->cost = goldD[i];
+    obj->subval = i;
+    obj->number = 1;
+    obj->level = 1;
 
-  obj->cost += (8 * randint(obj->cost)) + randint(8);
-  if (uD.y == y && uD.x == x)
-    msg_print("You feel something roll beneath your feet.");
+    obj->cost += (8 * randint(obj->cost)) + randint(8);
+    if (uD.y == y && uD.x == x)
+      msg_print("You feel something roll beneath your feet.");
+  }
 }
 void place_object(y, x, must_be_small) int y, x, must_be_small;
 {
   struct objS* obj;
 
   obj = obj_use();
-  caveD[y][x].oidx = obj_index(obj);
+  if (obj->id) {
+    caveD[y][x].oidx = obj_index(obj);
 
-  int sn = get_obj_num(dun_level, must_be_small);
-  int z = sorted_objects[sn];
+    int sn = get_obj_num(dun_level, must_be_small);
+    int z = sorted_objects[sn];
 
-  tr_obj_copy(z, obj);
-  obj->fy = y;
-  obj->fx = x;
+    tr_obj_copy(z, obj);
+    obj->fy = y;
+    obj->fx = x;
 
-  magic_treasure(obj, dun_level);
+    magic_treasure(obj, dun_level);
 
-  if (uD.y == y && uD.x == x)
-    msg_print("You feel something roll beneath your feet.");
+    if (uD.y == y && uD.x == x)
+      msg_print("You feel something roll beneath your feet.");
+  }
 }
 void
 place_trap(y, x, offset)
@@ -3255,10 +3263,12 @@ place_trap(y, x, offset)
   struct objS* obj;
 
   obj = obj_use();
-  caveD[y][x].oidx = obj_index(obj);
-  tr_obj_copy(OBJ_TRAP_BEGIN + offset, obj);
-  obj->fy = y;
-  obj->fx = x;
+  if (obj->id) {
+    caveD[y][x].oidx = obj_index(obj);
+    tr_obj_copy(OBJ_TRAP_BEGIN + offset, obj);
+    obj->fy = y;
+    obj->fx = x;
+  }
 }
 void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
 int typ, num;
