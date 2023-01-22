@@ -140,6 +140,24 @@ get_sym(int row, int col)
   return '#';
 }
 int
+cave_wall(row, col)
+{
+  struct caveS* c_ptr;
+  c_ptr = &caveD[row][col];
+  if (cave_lit(c_ptr)) {
+    switch (c_ptr->fval) {
+      case GRANITE_WALL:
+      case BOUNDARY_WALL:
+        return 5;
+      case QUARTZ_WALL:
+        return 4;
+      case MAGMA_WALL:
+        return 3;
+    }
+  }
+  return 0;
+}
+int
 cave_obj(row, col)
 {
   struct caveS* c_ptr;
@@ -235,6 +253,7 @@ altmap_update()
   int cmax = panelD.panel_col_max;
 
   memset(cremapD, 0, sizeof(cremapD));
+  memset(wallmapD, 0, sizeof(wallmapD));
   memset(tremapD, 0, sizeof(tremapD));
   memset(litmapD, 0, sizeof(litmapD));
 
@@ -248,6 +267,13 @@ altmap_update()
           if (mon->mlit) *cidx_ptr = mon->cidx;
         }
         cidx_ptr += 1;
+      }
+    }
+
+    uint8_t* wall_ptr = &wallmapD[0][0];
+    for (int row = rmin; row < rmax; ++row) {
+      for (int col = cmin; col < cmax; ++col) {
+        *wall_ptr++ = cave_wall(row, col);
       }
     }
 
