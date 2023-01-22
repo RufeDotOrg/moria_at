@@ -6840,7 +6840,6 @@ disarm_all(dir, y, x)
       obj->tchar = '+';
       disarm = TRUE;
     } else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
-      msg_print("Click!");
       obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
       disarm = TRUE;
       obj->sn = SN_UNLOCKED;
@@ -6849,6 +6848,7 @@ disarm_all(dir, y, x)
 
     mmove(dir, &y, &x);
   } while ((dist <= OBJ_BOLT_RANGE) && c_ptr->fval <= MAX_OPEN_SPACE);
+  if (disarm) msg_print("Click!");
   return (disarm);
 }
 int
