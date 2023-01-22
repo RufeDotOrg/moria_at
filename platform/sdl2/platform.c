@@ -9,6 +9,7 @@
 #include "font_zip.c"
 #include "player.c"
 #include "treasure.c"
+#include "wall.c"
 
 #include "third_party/zlib/puff.c"
 
@@ -314,6 +315,51 @@ tart_init()
   return TRUE;
 }
 
+// wall
+#define MAX_WART 10
+static uint8_t wartD[4 * 1024];
+static uint64_t wart_usedD;
+static struct SDL_Texture *wart_textureD[MAX_WART];
+BOOL
+wart_io()
+{
+  int rc = -1;
+  wart_usedD = AL(wartD);
+  rc = puff((void *)&wartD, &wart_usedD, wallZ, &(uint64_t){sizeof(wallZ)});
+  Log("wart_io() [ rc %d ] [ wart_usedD %ju ]\n", rc, wart_usedD);
+  return rc == 0;
+}
+
+BOOL
+wart_init()
+{
+  struct SDL_Renderer *renderer = rendererD;
+  int byte_count = wart_usedD;
+  uint8_t bitmap[ART_H][ART_W];
+
+  struct SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
+      SDL_SWSURFACE, ART_W, ART_H, 0, texture_formatD);
+  uint64_t byte_used = 0;
+  for (int it = 0; it < AL(wart_textureD);
+       ++it, byte_used += (ART_W * ART_H / 8)) {
+    if (byte_used >= byte_count) break;
+    bitfield_to_bitmap(&wartD[byte_used], &bitmap[0][0], ART_W * ART_H);
+    memset(surface->pixels, 0, surface->h * surface->pitch);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
+                           surface);
+    wart_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
+    SDL_SetTextureBlendMode(wart_textureD[it], SDL_BLENDMODE_BLEND);
+  }
+  SDL_FreeSurface(surface);
+
+  for (int it = 0; it < AL(wart_textureD); ++it) {
+    if (!wart_textureD[it]) return FALSE;
+  }
+  Log("Wall Art textures available %ju", AL(wart_textureD));
+
+  return TRUE;
+}
+
 // player
 #define MAX_PART 13
 static uint8_t partD[4 * 1024];
@@ -565,7 +611,7 @@ texture_by_sym(char c)
   SDL_Texture *t = 0;
   if (c == '#') return dungeon_textureD[0 + 4];
   if (c == '%') return dungeon_textureD[0 + 6];
-  if (c == '8') return dungeon_textureD[0 + 3];
+  if (c == '8') return wart_textureD[2];
   if (c == ':') return dungeon_textureD[35];
   if (c == '>') return dungeon_textureD[8 + 4];
   if (c == '<') return dungeon_textureD[13 + 4];
@@ -633,12 +679,15 @@ platform_draw()
         SDL_Texture *srct = 0;
         sprite_rect.x = col * ART_W;
         // Art priority creature, treasure, fallback to symmap ASCII
+        uint64_t wallidx = wallmapD[row][col];
         uint64_t cridx = cremapD[row][col];
         uint64_t tridx = tremapD[row][col];
         if (cridx && cridx <= AL(art_textureD)) {
           srct = art_textureD[cridx - 1];
         } else if (tridx && tridx <= AL(tart_textureD)) {
           srct = tart_textureD[tridx - 1];
+        } else if (wallidx && wallidx <= AL(wart_textureD)) {
+          srct = wart_textureD[2 * (wallidx - 1)];
         }
 
         if (!srct) {
@@ -1162,6 +1211,7 @@ platform_init()
 
   if (!dungeon_io() || !dungeon_init()) exit(5);
   if (!tart_io() || !tart_init()) return;
+  if (!wart_io() || !wart_init()) return;
   if (!part_io() || !part_init()) return;
 
   platformD.seed = platform_auxval_random;
