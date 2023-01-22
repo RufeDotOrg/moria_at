@@ -9026,7 +9026,7 @@ uint32_t typ_dam;
     } else if (typ_dam == TR_RES_ACID) {
       if ((obj->idflag & ID_CORRODED) == 0) {
         obj->idflag |= ID_CORRODED;
-        MSG("Acid leaks through your damaged %s.", descD);
+        MSG("Acid leaks through your corroded %s.", descD);
       }
     }
   }
