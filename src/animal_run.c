@@ -9422,6 +9422,7 @@ mon_attack(midx)
       if (uD.confuse_monster) {
         uD.confuse_monster = 0;
         msg_print("Your hands stop glowing.");
+        mon_desc(midx);
         if ((cre->cdefense & CD_NO_SLEEP) ||
             randint(MAX_MON_LEVEL) < cre->level) {
           MSG("%s is unaffected by confusion.", descD);
