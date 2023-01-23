@@ -9522,17 +9522,18 @@ try_disarm_trap(y, x)
   obj = &entity_objD[c_ptr->oidx];
 
   if (obj->tval == TV_VIS_TRAP) {
+    obj_desc(obj, TRUE);
     // TBD: div is used; verify this number is positive. clean-up code.
     chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
              level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
     if (countD.confusion) chance /= 8;
     if (chance + 100 - obj->level > randint(100)) {
-      msg_print("You have disarmed the trap.");
+      MSG("You have disarmed %s.", descD);
       uD.exp += obj->p1;
       delete_object(y, x);
       py_experience();
     } else {
-      msg_print("You fail to disarm the trap.");
+      MSG("You fail to disarm %s.", descD);
     }
   }
 }
