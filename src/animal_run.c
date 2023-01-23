@@ -9499,6 +9499,7 @@ chest_trap(y, x)
     }
   }
   if (CH_SUMMON & obj->flags) {
+    msg_print("A strange rune on the chest glows and fades.");
     for (i = 0; i < 3; i++) {
       summon_monster(y, x);
     }
