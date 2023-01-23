@@ -9952,6 +9952,10 @@ tunnel(y, x)
   struct objS* i_ptr;
 
   c_ptr = &caveD[y][x];
+  if (c_ptr->fval == BOUNDARY_WALL) {
+    msg_print("You cannot tunnel into permanent rock.");
+    return;
+  }
 
   {
     i_ptr = obj_get(invenD[INVEN_WIELD]);
@@ -9999,9 +10003,6 @@ tunnel(y, x)
         wall_min = 10;
         wall_chance = 1200;
         msg_print("You tunnel into the granite wall.");
-        break;
-      case BOUNDARY_WALL:
-        msg_print("You cannot tunnel into permanent rock.");
         break;
       default:
         break;
