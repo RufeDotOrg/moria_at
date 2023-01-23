@@ -316,7 +316,7 @@ tart_init()
 }
 
 // wall
-#define MAX_WART 10
+#define MAX_WART 6
 static uint8_t wartD[4 * 1024];
 static uint64_t wart_usedD;
 static struct SDL_Texture *wart_textureD[MAX_WART];
@@ -611,7 +611,7 @@ texture_by_sym(char c)
   SDL_Texture *t = 0;
   if (c == '#') return dungeon_textureD[0 + 4];
   if (c == '%') return dungeon_textureD[0 + 6];
-  if (c == '8') return wart_textureD[2];
+  if (c == '8') return wart_textureD[1];
   if (c == ':') return dungeon_textureD[35];
   if (c == '>') return dungeon_textureD[8 + 4];
   if (c == '<') return dungeon_textureD[13 + 4];
@@ -684,10 +684,10 @@ platform_draw()
         uint64_t tridx = tremapD[row][col];
         if (cridx && cridx <= AL(art_textureD)) {
           srct = art_textureD[cridx - 1];
+        } else if (wallidx && wallidx <= AL(wart_textureD)) {
+          srct = wart_textureD[wallidx - 1];
         } else if (tridx && tridx <= AL(tart_textureD)) {
           srct = tart_textureD[tridx - 1];
-        } else if (wallidx && wallidx <= AL(wart_textureD)) {
-          srct = wart_textureD[2 * (wallidx - 1)];
         }
 
         if (!srct) {

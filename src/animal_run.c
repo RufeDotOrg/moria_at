@@ -148,11 +148,11 @@ cave_wall(row, col)
     switch (c_ptr->fval) {
       case GRANITE_WALL:
       case BOUNDARY_WALL:
-        return 5;
+        return 1;
       case QUARTZ_WALL:
-        return 4;
+        return 3 + (c_ptr->oidx != 0);
       case MAGMA_WALL:
-        return 3;
+        return 5 + (c_ptr->oidx != 0);
     }
   }
   return 0;
