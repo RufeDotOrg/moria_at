@@ -9237,11 +9237,11 @@ mon_attack(midx)
 
   // TBD: perf draw/attack
   draw();
-  mon_desc(midx);
   int adj = cre->level * CRE_LEV_ADJ;
   for (int it = 0; it < AL(cre->attack_list); ++it) {
     if (death) break;
     if (!cre->attack_list[it]) break;
+    mon_desc(midx);
     struct attackS* attack = &attackD[cre->attack_list[it]];
 
     int attack_type = attack->attack_type;
