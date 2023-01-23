@@ -9013,8 +9013,7 @@ int inven_damage(typ, perc) int (*typ)();
   return (j);
 }
 int
-minus_ac(typ_dam)
-uint32_t typ_dam;
+minus_ac()
 {
   int j;
   int minus;
@@ -9025,7 +9024,7 @@ uint32_t typ_dam;
   if (j >= 0) {
     obj = obj_get(invenD[j]);
     obj_desc(obj, FALSE);
-    if (obj->flags & typ_dam) {
+    if (obj->flags & TR_RES_ACID) {
       MSG("Your %s resists damage!", descD);
       minus = TRUE;
     } else if ((obj->ac + obj->toac) > 0) {
@@ -9033,7 +9032,7 @@ uint32_t typ_dam;
       obj->toac--;
       calc_bonuses();
       minus = TRUE;
-    } else if (typ_dam == TR_RES_ACID) {
+    } else {
       if ((obj->idflag & ID_CORRODED) == 0) {
         obj->idflag |= ID_CORRODED;
         MSG("Acid leaks through your corroded %s.", descD);
@@ -9063,7 +9062,7 @@ acid_dam(dam)
   int flag;
 
   flag = 0;
-  if (minus_ac(TR_RES_ACID)) flag = 1;
+  if (minus_ac()) flag = 1;
   if (py_tr(TR_RES_ACID)) flag += 2;
   py_take_hit(dam / (flag + 1));
   if (inven_damage(vuln_acid, 3) > 0)
@@ -9089,7 +9088,7 @@ light_dam(dam)
 void
 corrode_gas()
 {
-  if (!minus_ac(TR_RES_ACID)) py_take_hit(randint(8));
+  if (!minus_ac()) py_take_hit(randint(8));
   if (inven_damage(vuln_gas, 5) > 0)
     msg_print("There is an acrid smell coming from your pack.");
 }
