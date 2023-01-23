@@ -9531,11 +9531,7 @@ try_disarm_trap(y, x)
       uD.exp += obj->p1;
       delete_object(y, x);
       py_experience();
-    }
-    // TBD: balance tuning; harmless failure to disarm is gone
-    // else if (chance > 5 && randint(chance) > 5)
-    //    msg_print("You failed to disarm the trap.");
-    else {
+    } else {
       msg_print("You fail to disarm the trap.");
     }
   }
@@ -9543,10 +9539,12 @@ try_disarm_trap(y, x)
 void
 try_disarm_chest(y, x)
 {
+  struct caveS* c_ptr;
   struct objS* obj;
   int chance;
 
-  obj = obj_get(caveD[y][x].oidx);
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
   if ((obj->idflag & ID_REVEAL) && (CH_TRAPPED & obj->flags)) {
     // TBD: div is used; verify this number is positive. clean-up code.
     chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
@@ -9562,12 +9560,8 @@ try_disarm_chest(y, x)
       obj->idflag = ID_REVEAL;
       uD.exp += obj->level;
       py_experience();
-    } else if ((chance > 5) && (randint(chance) > 5))
+    } else {
       msg_print("You failed to disarm the chest.");
-    else {
-      msg_print("You set a trap off!");
-      obj->idflag = ID_REVEAL;
-      chest_trap(y, x);
     }
   }
 }
