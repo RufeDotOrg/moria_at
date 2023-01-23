@@ -11359,7 +11359,7 @@ dungeon()
               break;
             case 'i': {
               int count = inven_screen(0, INVEN_EQUIP);
-              MSG("You carry %d items.", count);
+              MSG("You carry %d %s:", count, count > 1 ? "items" : "item");
             } break;
             case 'q':
               iidx = inven_choice("Quaff what?");
@@ -11439,7 +11439,7 @@ dungeon()
             case 'I':
               inven_sort();
               int count = inven_screen(0, INVEN_EQUIP);
-              MSG("You carrying %d items.", count);
+              MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
             case 'M':
               py_map();
