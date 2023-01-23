@@ -10186,10 +10186,10 @@ static void make_move(midx, mm) int* mm;
   }
 }
 void
-breath(typ, y, x, dam_hp, midx)
+breath(typ, fy, fx, dam_hp, midx)
 {
   int i, j;
-  int dam, max_dis, harm_type;
+  int dam, cdis, max_dis, harm_type;
   uint32_t weapon_type, tmp, treas;
   int (*destroy)();
   struct caveS* c_ptr;
@@ -10198,21 +10198,16 @@ breath(typ, y, x, dam_hp, midx)
 
   max_dis = 2;
   get_flags(typ, &weapon_type, &harm_type, &destroy);
-  for (i = y - 2; i <= y + 2; i++)
-    for (j = x - 2; j <= x + 2; j++)
-      if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis) &&
-          los(y, x, i, j)) {
+  for (i = fy - 2; i <= fy + 2; i++)
+    for (j = fx - 2; j <= fx + 2; j++)
+      if (in_bounds(i, j) && (distance(fy, fx, i, j) <= max_dis) &&
+          los(fy, fx, i, j)) {
         c_ptr = &caveD[i][j];
         if ((c_ptr->oidx != 0) && (*destroy)(&entity_objD[c_ptr->oidx])) {
           if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
           delete_object(i, j);
         }
         if (c_ptr->fval <= MAX_OPEN_SPACE) {
-          /* must test status bit, not py.flags.blind here, flag could have
-             been set by a previous monster, but the breath should still
-             be visible until the blindness takes effect */
-          // if (panel_contains(i, j) && !(py.flags.status & PY_BLIND))
-          //   print('*', i, j);
           if (c_ptr->midx) {
             m_ptr = &entity_monD[c_ptr->midx];
             cr_ptr = &creatureD[m_ptr->cidx];
@@ -10221,23 +10216,15 @@ breath(typ, y, x, dam_hp, midx)
               dam = dam * 2;
             else if (weapon_type & cr_ptr->spells)
               dam = (dam / 4);
-            dam = (dam / (distance(i, j, y, x) + 1));
+            cdis = distance(i, j, fy, fx);
+            dam = (dam / (cdis + 1));
+
             /* can not call mon_take_hit here, since player does not
                get experience for kill */
             m_ptr->hp = m_ptr->hp - dam;
             m_ptr->msleep = 0;
             if (m_ptr->hp < 0) {
-              // TBD: treasure drop
-              // treas = monster_death(m_ptr->fy, m_ptr->fx, cr_ptr->cmove);
-              // if (m_ptr->mlit) {
-              //   tmp = (c_recall[m_ptr->mptr].r_cmove & CM_TREASURE) >>
-              //         CM_TR_SHIFT;
-              //   if (tmp > ((treas & CM_TREASURE) >> CM_TR_SHIFT))
-              //     treas = (treas & ~CM_TREASURE) | (tmp << CM_TR_SHIFT);
-              //   c_recall[m_ptr->mptr].r_cmove =
-              //       treas | (c_recall[m_ptr->mptr].r_cmove & ~CM_TREASURE);
-              // }
-
+              mon_death(m_ptr->fy, m_ptr->fx, cr_ptr->cmove);
               mon_unuse(m_ptr);
               c_ptr->midx = 0;
             }
@@ -10247,7 +10234,8 @@ breath(typ, y, x, dam_hp, midx)
 
   /* let's do at least one point of damage to the player */
   /* prevents randint(0) problem with poison_gas, also */
-  dam = MAX(dam_hp / (distance(i, j, y, x) + 1), 1);
+  cdis = distance(uD.y, uD.x, fy, fx);
+  dam = MAX(dam_hp / (cdis + 1), 1);
   switch (typ) {
     case GF_LIGHTNING:
       light_dam(dam);
@@ -10424,23 +10412,23 @@ mon_try_spell(midx, cdis)
         break;
       case 20: /*Breath Light */
         MSG("%s breathes lightning.", descD);
-        breath(GF_LIGHTNING, uD.y, uD.x, (m_ptr->hp / 4), midx);
+        breath(GF_LIGHTNING, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 4), midx);
         break;
       case 21: /*Breath Gas   */
         MSG("%s breathes gas.", descD);
-        breath(GF_POISON_GAS, uD.y, uD.x, (m_ptr->hp / 3), midx);
+        breath(GF_POISON_GAS, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 3), midx);
         break;
       case 22: /*Breath Acid   */
         MSG("%s breathes acid.", descD);
-        breath(GF_ACID, uD.y, uD.x, (m_ptr->hp / 3), midx);
+        breath(GF_ACID, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 3), midx);
         break;
       case 23: /*Breath Frost */
         MSG("%s breathes frost.", descD);
-        breath(GF_FROST, uD.y, uD.x, (m_ptr->hp / 3), midx);
+        breath(GF_FROST, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 3), midx);
         break;
       case 24: /*Breath Fire   */
         MSG("%s breathes fire.", descD);
-        breath(GF_FIRE, uD.y, uD.x, (m_ptr->hp / 3), midx);
+        breath(GF_FIRE, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 3), midx);
         break;
       default:
         MSG("%s cast unknown spell.", descD);
