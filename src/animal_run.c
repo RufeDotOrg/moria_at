@@ -10236,6 +10236,7 @@ breath(typ, fy, fx, dam_hp, midx)
   /* prevents randint(0) problem with poison_gas, also */
   cdis = distance(uD.y, uD.x, fy, fx);
   dam = MAX(dam_hp / (cdis + 1), 1);
+  MSG("[-%d/%d]", dam_hp, cdis + 1);
   switch (typ) {
     case GF_LIGHTNING:
       light_dam(dam);
