@@ -5465,9 +5465,9 @@ inven_ident(iidx)
   obj_desc(obj, TRUE);
   if (iidx >= INVEN_EQUIP) {
     calc_bonuses();
-    MSG("%s: %s", describe_use(iidx), descD);
+    MSG("%s: %s.", describe_use(iidx), descD);
   } else {
-    MSG("%c) %s", iidx + 'a', descD);
+    MSG("%c) %s.", iidx + 'a', descD);
   }
   return used;
 }
