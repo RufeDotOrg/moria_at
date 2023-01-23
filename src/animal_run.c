@@ -6260,6 +6260,8 @@ char* bolt_typ;
         } else {
           MSG("%s screams in agony.", descD);
         }
+        // Pause while lit
+        msg_pause();
       } else if (panel_contains(&panelD, y, x)) {
         // TBD: && (py.flags.blind < 1)
         // print('*', y, x);
