@@ -3103,6 +3103,8 @@ place_rubble(y, x)
     caveD[y][x].fval = FLOOR_OBST;
 
     // invcopy(... OBJ_RUBBLE);
+    obj->fy = y;
+    obj->fx = x;
     obj->tval = TV_RUBBLE;
     obj->tchar = ':';
     obj->subval = 1;
@@ -3441,7 +3443,7 @@ cave_reset()
 
   // Release objects in the cave
   FOR_EACH(obj, {
-    if (obj->fx || obj->fy) {
+    if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
       obj_unuse(obj);
     }
   });
