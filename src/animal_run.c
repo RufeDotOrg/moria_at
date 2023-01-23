@@ -9785,11 +9785,12 @@ py_search(y, x)
           obj->tchar = '+';
           c_ptr->cflag |= CF_FIELDMARK;
         } else if (obj->tval == TV_INVIS_TRAP) {
-          msg_print("You have found a trap.");
           obj->tval = TV_VIS_TRAP;
           obj->tchar = '^';
           obj->idflag |= ID_REVEAL;
           c_ptr->cflag |= CF_FIELDMARK;
+          obj_desc(obj, TRUE);
+          MSG("You have found %s.", descD);
         } else if (obj->tval == TV_CHEST) {
           if (CH_TRAPPED & obj->flags) {
             obj->idflag = ID_REVEAL;
