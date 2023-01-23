@@ -940,94 +940,6 @@ near_light(y, x)
   }
   return FALSE;
 }
-void light_room(y, x) int y, x;
-{
-  int i, j, start_col, end_col;
-  int tmp1, tmp2, start_row, end_row;
-  struct caveS* c_ptr;
-  int tval;
-
-  tmp1 = CHUNK_HEIGHT / 2;
-  tmp2 = CHUNK_WIDTH / 2;
-  start_row = (y / tmp1) * tmp1;
-  start_col = (x / tmp2) * tmp2;
-  end_row = start_row + tmp1 - 1;
-  end_col = start_col + tmp2 - 1;
-  for (i = start_row; i <= end_row; i++)
-    for (j = start_col; j <= end_col; j++) {
-      c_ptr = &caveD[i][j];
-      if ((c_ptr->cflag & CF_ROOM)) {
-        c_ptr->cflag |= CF_PERM_LIGHT;
-        if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
-        if (c_ptr->oidx) {
-          struct objS* obj = &entity_objD[c_ptr->oidx];
-          if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
-            c_ptr->cflag |= CF_FIELDMARK;
-          }
-        }
-      }
-    }
-}
-int
-light_area(y, x)
-{
-  if (countD.blind == 0) msg_print("You are surrounded by a white light.");
-  if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
-  for (int col = y - 1; col <= y + 1; ++col) {
-    for (int row = x - 1; row <= x + 1; ++row) {
-      caveD[col][row].cflag |= CF_PERM_LIGHT;
-    }
-  }
-
-  return countD.blind == 0;
-}
-void
-unlight_room(y, x)
-{
-  int i, j, start_col, end_col;
-  int tmp1, tmp2, start_row, end_row;
-  struct caveS* c_ptr;
-  int tval;
-
-  tmp1 = CHUNK_HEIGHT / 2;
-  tmp2 = CHUNK_WIDTH / 2;
-  start_row = (y / tmp1) * tmp1;
-  start_col = (x / tmp2) * tmp2;
-  end_row = start_row + tmp1 - 1;
-  end_col = start_col + tmp2 - 1;
-  for (i = start_row; i <= end_row; i++)
-    for (j = start_col; j <= end_col; j++) {
-      c_ptr = &caveD[i][j];
-      if (c_ptr->cflag & CF_ROOM && c_ptr->fval < MAX_FLOOR) {
-        c_ptr->cflag &= ~CF_PERM_LIGHT;
-        c_ptr->fval = FLOOR_DARK;
-      }
-    }
-}
-int
-unlight_area(y, x)
-{
-  int known;
-
-  known = FALSE;
-  if (caveD[y][x].cflag & CF_LIT_ROOM) {
-    unlight_room(y, x);
-    known = TRUE;
-  }
-  for (int col = y - 1; col <= y + 1; ++col) {
-    for (int row = x - 1; row <= x + 1; ++row) {
-      if (caveD[col][row].fval == FLOOR_CORR &&
-          caveD[col][row].cflag & CF_PERM_LIGHT) {
-        caveD[col][row].cflag &= ~CF_PERM_LIGHT;
-        known = TRUE;
-      }
-    }
-  }
-
-  if (known && countD.blind == 0) msg_print("Darkness surrounds you.");
-
-  return known;
-}
 typedef struct {
   int y;
   int x;
@@ -4052,6 +3964,102 @@ update_mon(midx)
   else if (m_ptr->mlit) {
     m_ptr->mlit = FALSE;
   }
+}
+void light_room(y, x) int y, x;
+{
+  int i, j, start_col, end_col;
+  int tmp1, tmp2, start_row, end_row;
+  struct caveS* c_ptr;
+  int tval;
+
+  tmp1 = CHUNK_HEIGHT / 2;
+  tmp2 = CHUNK_WIDTH / 2;
+  start_row = (y / tmp1) * tmp1;
+  start_col = (x / tmp2) * tmp2;
+  end_row = start_row + tmp1 - 1;
+  end_col = start_col + tmp2 - 1;
+  for (i = start_row; i <= end_row; i++)
+    for (j = start_col; j <= end_col; j++) {
+      c_ptr = &caveD[i][j];
+      if ((c_ptr->cflag & CF_ROOM)) {
+        c_ptr->cflag |= CF_PERM_LIGHT;
+        if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
+        if (c_ptr->oidx) {
+          struct objS* obj = &entity_objD[c_ptr->oidx];
+          if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
+            c_ptr->cflag |= CF_FIELDMARK;
+          }
+        }
+      }
+    }
+}
+int
+light_area(y, x)
+{
+  if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
+  for (int col = y - 1; col <= y + 1; ++col) {
+    for (int row = x - 1; row <= x + 1; ++row) {
+      caveD[col][row].cflag |= CF_PERM_LIGHT;
+    }
+  }
+
+  if (countD.blind == 0) {
+    FOR_EACH(mon, { update_mon(it_index); });
+    msg_print("You are surrounded by a white light.");
+    return TRUE;
+  }
+
+  return FALSE;
+}
+void
+unlight_room(y, x)
+{
+  int i, j, start_col, end_col;
+  int tmp1, tmp2, start_row, end_row;
+  struct caveS* c_ptr;
+  int tval;
+
+  tmp1 = CHUNK_HEIGHT / 2;
+  tmp2 = CHUNK_WIDTH / 2;
+  start_row = (y / tmp1) * tmp1;
+  start_col = (x / tmp2) * tmp2;
+  end_row = start_row + tmp1 - 1;
+  end_col = start_col + tmp2 - 1;
+  for (i = start_row; i <= end_row; i++)
+    for (j = start_col; j <= end_col; j++) {
+      c_ptr = &caveD[i][j];
+      if (c_ptr->cflag & CF_ROOM && c_ptr->fval < MAX_FLOOR) {
+        c_ptr->cflag &= ~CF_PERM_LIGHT;
+        c_ptr->fval = FLOOR_DARK;
+      }
+    }
+}
+int
+unlight_area(y, x)
+{
+  int known;
+
+  known = FALSE;
+  if (caveD[y][x].cflag & CF_LIT_ROOM) {
+    unlight_room(y, x);
+    known = TRUE;
+  }
+  for (int col = y - 1; col <= y + 1; ++col) {
+    for (int row = x - 1; row <= x + 1; ++row) {
+      if (caveD[col][row].fval == FLOOR_CORR &&
+          caveD[col][row].cflag & CF_PERM_LIGHT) {
+        caveD[col][row].cflag &= ~CF_PERM_LIGHT;
+        known = TRUE;
+      }
+    }
+  }
+
+  if (known && countD.blind == 0) {
+    FOR_EACH(mon, { update_mon(it_index); });
+    msg_print("Darkness surrounds you.");
+  }
+
+  return known;
 }
 void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
 {
