@@ -10934,7 +10934,7 @@ inven_pawn(iidx)
 {
   struct objS* obj;
   struct treasureS* tr_ptr;
-  int sidx, cost, number;
+  int sidx, cost;
 
   obj = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[obj->tidx];
@@ -10943,17 +10943,12 @@ inven_pawn(iidx)
     cost = store_value(sidx, obj_value(obj), -1);
     tr_make_known(tr_ptr);
     obj->idflag = ID_REVEAL;
-    // TBD: ouch
-    number = obj->number;
-    obj->number = 1;
-    obj_desc(obj, TRUE);
-    obj->number = number;
-    uD.gold += cost;
-    // TBD: copy obj to a store inventory?
+    obj_desc(obj, FALSE);
     inven_destroy_one(iidx);
     if (cost == 0) {
       MSG("You donate %s.", descD);
     } else {
+      uD.gold += cost;
       MSG("You sold %s for %d gold.", descD, cost);
     }
     msg_pause();
