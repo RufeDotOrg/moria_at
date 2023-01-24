@@ -730,17 +730,15 @@ uint8_t* array;
   return damroll(array[0], array[1]);
 }
 int
-critical_blow(weight, plus, dam)
+critical_blow(weight, plus, lev_adj, dam)
 {
   int critical;
 
   critical = dam;
   /* Weight of weapon, plusses to hit, and character level all      */
   /* contribute to the chance of a critical  		   */
-  if (randint(5000) <= (int)(weight + 5 * plus)) {
-    //  + (class_level_adj[py.misc.pclass][attack_type] * py.misc.lev)
+  if (randint(5000) <= (int)(weight + 5 * plus + lev_adj)) {
     weight += randint(650);
-    // 1000 max itemization (you can wield iron chests apparently)
     // 300 for lance (TV_POLEARM)
     // 280 for two-handed great flail (TV_HAFTED)
     // 280 for zweihander (TV_SWORD)
@@ -9158,7 +9156,7 @@ py_shield_attack(y, x)
     if (test_hit(base_tohit, adj, statD.use_stat[A_DEX], cr_ptr->ac)) {
       MSG("You hit %s.", descD);
       k = pdamroll(shield->damage);
-      k = critical_blow(shield->weight / 4 + statD.use_stat[A_STR], 0, k);
+      k = critical_blow(shield->weight / 4 + statD.use_stat[A_STR], 0, adj, k);
       k += uD.wt / 60 + 3;
 
       /* See if we done it in.  			     */
@@ -9233,10 +9231,10 @@ py_attack(y, x)
         if (obj->tval) {
           k = pdamroll(obj->damage);
           k = tot_dam(obj, k, mon->cidx);
-          k = critical_blow(obj->weight, tohit, k);
+          k = critical_blow(obj->weight, tohit, lev_adj, k);
         } else {
           k = damroll(1, 1);
-          k = critical_blow(1, tohit, k);
+          k = critical_blow(1, tohit, lev_adj, k);
         }
         k += todam;
 
