@@ -11641,7 +11641,7 @@ dungeon()
             int* my = &miningD[0];
             int* mx = &miningD[1];
             if (*my == y && *mx == x) {
-              tunnel(y, x);
+              if (countD.confusion == 0) tunnel(y, x);
             } else {
               if (obj->tval == TV_GOLD) {
                 obj_desc(obj, TRUE);
