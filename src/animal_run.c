@@ -9207,7 +9207,7 @@ py_attack(y, x)
     lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
     // reduce hit if monster not lit
     if (mon->mlit == 0) {
-      tohit = 0;
+      tohit /= 2;
       base_tohit /= 2;
       lev_adj /= 2;
     }
