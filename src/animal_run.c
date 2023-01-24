@@ -7476,20 +7476,28 @@ inven_eat(iidx)
         //  ident |= TRUE;
         //  break;
         case 6:
-          ident |= countD.poison > 0;
-          countD.poison = MIN(countD.poison, 1);
+          if (countD.poison > 0) {
+            countD.poison = 1;
+            ident |= TRUE;
+          }
           break;
         case 7:
-          ident |= countD.blind > 0;
-          countD.blind = MIN(countD.blind, 1);
+          if (countD.blind > 0) {
+            countD.blind = 1;
+            ident |= TRUE;
+          }
           break;
         case 8:
-          ident |= countD.fear > 0;
-          countD.fear = MIN(countD.fear, 1);
+          if (countD.fear > 0) {
+            countD.fear = 1;
+            ident = TRUE;
+          }
           break;
         case 9:
-          ident |= countD.confusion > 0;
-          countD.confusion = MIN(countD.confusion, 1);
+          if (countD.confusion > 0) {
+            countD.confusion = 1;
+            ident = TRUE;
+          }
           break;
         case 10:
           ident |= TRUE;
