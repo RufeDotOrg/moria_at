@@ -4962,7 +4962,8 @@ BOOL prefix;
   obj_prefix(obj, prefix);
   if (prefix) obj_detail(obj);
 }
-static void mon_desc(midx) int midx;
+static void
+mon_desc(midx)
 {
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
@@ -10186,6 +10187,8 @@ static void make_move(midx, mm) int* mm;
     /* Creature has been allowed move.   */
     if (do_move) {
       if (cr_ptr->cmove & CM_PICKS_UP && obj_mon_pickup(obj)) {
+        mon_desc(midx);
+        MSG("%s picks up an object.", descD);
         delete_object(newy, newx);
       }
       /* Move creature record  	       */
