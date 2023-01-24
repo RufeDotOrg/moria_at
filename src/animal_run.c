@@ -731,7 +731,6 @@ uint8_t* array;
 }
 int
 critical_blow(weight, plus, dam)
-int weight, plus, dam;
 {
   int critical;
 
@@ -9234,10 +9233,10 @@ py_attack(y, x)
         if (obj->tval) {
           k = pdamroll(obj->damage);
           k = tot_dam(obj, k, mon->cidx);
-          k = critical_blow(obj->weight, 0, k);
+          k = critical_blow(obj->weight, tohit, k);
         } else {
           k = damroll(1, 1);
-          k = critical_blow(1, 0, k);
+          k = critical_blow(1, tohit, k);
         }
         k += todam;
 
