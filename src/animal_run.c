@@ -2709,6 +2709,21 @@ may_equip(tval)
   return slot;
 }
 int
+may_enchant_ac(tval)
+{
+  switch (tval) {
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_HELM:
+    case TV_SHIELD:
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+      return TRUE;
+  }
+  return FALSE;
+}
+int
 ring_slot()
 {
   int slot = INVEN_RING;
@@ -5285,20 +5300,24 @@ equip_enchant(iidx, amount)
 
   if (iidx >= 0) {
     i_ptr = obj_get(invenD[iidx]);
-    obj_desc(i_ptr, FALSE);
-    affect = 0;
-    for (int it = 0; it < amount; ++it) {
-      affect += (enchant(&i_ptr->toac, 10));
-    }
+    if (may_enchant_ac(i_ptr->tval)) {
+      obj_desc(i_ptr, FALSE);
+      affect = 0;
+      for (int it = 0; it < amount; ++it) {
+        affect += (enchant(&i_ptr->toac, 10));
+      }
 
-    if (affect) {
-      MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
-      i_ptr->flags &= ~TR_CURSED;
-      i_ptr->idflag &= ~ID_CORRODED;
-      calc_bonuses();
-    } else
-      msg_print("The enchantment fails.");
-    return TRUE;
+      if (affect) {
+        MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
+        i_ptr->flags &= ~TR_CURSED;
+        i_ptr->idflag &= ~ID_CORRODED;
+        calc_bonuses();
+      } else
+        msg_print("The enchantment fails.");
+      return TRUE;
+    } else {
+      msg_print("Invalid target.");
+    }
   }
 
   return FALSE;
@@ -5488,7 +5507,7 @@ tohit_enchant(amount)
   int affect;
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
 
-  if (i_ptr->tval != TV_NOTHING) {
+  if (may_equip(i_ptr->tval) == INVEN_WIELD) {
     obj_desc(i_ptr, FALSE);
     affect = 0;
     for (int it = 0; it < amount; ++it) {
@@ -5511,7 +5530,7 @@ todam_enchant(amount)
   int affect, limit;
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
 
-  if (i_ptr->tval != TV_NOTHING) {
+  if (may_equip(i_ptr->tval) == INVEN_WIELD) {
     obj_desc(i_ptr, FALSE);
     if ((i_ptr->tval >= TV_HAFTED) && (i_ptr->tval <= TV_DIGGING))
       limit = i_ptr->damage[0] * i_ptr->damage[1];
@@ -7951,7 +7970,7 @@ int *uy, *ux;
           ident |= TRUE;
           choice_idx = inven_choice("Which armor do you wish to enchant?");
           if (choice_idx >= 0) {
-            equip_enchant(choice_idx, 1);
+            used_up = equip_enchant(choice_idx, 1);
           } else {
             used_up = FALSE;
           }
@@ -8093,7 +8112,7 @@ int *uy, *ux;
           choice_idx = inven_choice("Which armor do you wish to enchant?");
           if (choice_idx >= 0) {
             k = randint(2) + 1;
-            equip_enchant(choice_idx, k);
+            used_up = equip_enchant(choice_idx, k);
           } else {
             used_up = FALSE;
           }
