@@ -6908,10 +6908,8 @@ dispel_creature(cflag, damage)
         (distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) &&
         los(y, x, mon->fy, mon->fx)) {
       dispel = TRUE;
-      // c_recall[mon->mptr].r_cdefense |= cflag;
+      mon->mlit = TRUE;
       mon_desc(it_index);
-      /* Should get these messages even if the monster is not
-         visible.  */
       if (mon_take_hit(it_index, randint(damage))) {
         MSG("%s dissolves!", descD);
         py_experience();
