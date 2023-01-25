@@ -2955,6 +2955,41 @@ int level;
   }
   return i;
 }
+void
+place_win_monster()
+{
+  int cidx, fy, fx, y, x;
+  struct monS* mon;
+  struct creatureS* cr_ptr;
+
+  cidx = randint(MAX_WIN_MON) - 1 + m_level[MAX_MON_LEVEL];
+  cr_ptr = &creatureD[cidx];
+  y = uD.y;
+  x = uD.x;
+
+  if (!total_winner) {
+    mon = mon_use();
+    if (mon->id) {
+      do {
+        fy = randint(MAX_HEIGHT - 2);
+        fx = randint(MAX_WIDTH - 2);
+      } while ((caveD[fy][fx].fval >= MIN_CLOSED_SPACE) ||
+               (caveD[fy][fx].midx) || (caveD[fy][fx].oidx) ||
+               (distance(fy, fx, y, x) <= MAX_SIGHT));
+      mon->cidx = cidx;
+      mon->msleep = 0;
+      if (cr_ptr->cdefense & CD_MAX_HP)
+        mon->hp = cr_ptr->hd[0] * cr_ptr->hd[1];
+      else
+        mon->hp = pdamroll(cr_ptr->hd);
+      mon->fy = fy;
+      mon->fx = fx;
+      mon->mlit = FALSE;
+
+      caveD[fy][fx].midx = mon_index(mon);
+    }
+  }
+}
 int
 place_monster(y, x, z, slp)
 {
@@ -3376,7 +3411,7 @@ cave_gen()
   alloc_obj(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
   alloc_obj(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
   alloc_obj(set_floor, 1, randint(alloc_level));
-  // if (dun_level >= WIN_MON_APPEAR) place_win_monster();
+  if (dun_level >= WIN_MON_APPEAR) place_win_monster();
 }
 static int
 town_night()

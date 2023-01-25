@@ -294,7 +294,8 @@
 #define MON_DRAIN_EXP 2 /* Percent of player exp drained per hit */
 #define MON_SUMMON_ADJ 2 /* Adjust level of summoned creatures    */
 #define MON_MULT_ADJ 7 /* High value slows multiplication       */
-#define MAX_WIN_MON 2
+#define MAX_WIN_MON 2 /* Total number of win creatures */
+#define WIN_MON_APPEAR 50 /* Level where winning creature begins */
 #define CRE_LEV_ADJ 3
 #define MAX_SIGHT 20 /* Maximum dis a creature can be seen    */
 

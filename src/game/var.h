@@ -81,6 +81,7 @@ static uint32_t town_seed;
 static int turnD;
 static int player_hpD[AL(player_exp)];
 static int death;
+static int total_winner;
 static int save_exit_flag;
 static int total_winner;
 static int dun_level;
