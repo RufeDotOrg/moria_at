@@ -7949,232 +7949,238 @@ int *uy, *ux;
   struct objS* i_ptr;
   struct treasureS* tr_ptr;
 
-  i_ptr = obj_get(invenD[iidx]);
-  tr_ptr = &treasureD[i_ptr->tidx];
-  if (i_ptr->tval == TV_SCROLL1 || i_ptr->tval == TV_SCROLL2) {
-    ident = FALSE;
-    used_up = TRUE;
+  if (countD.blind)
+    msg_print("You can't see to read the scroll.");
+  else if (countD.confusion) {
+    msg_print("You are too confused to read a scroll.");
+  } else {
+    i_ptr = obj_get(invenD[iidx]);
+    tr_ptr = &treasureD[i_ptr->tidx];
+    if (i_ptr->tval == TV_SCROLL1 || i_ptr->tval == TV_SCROLL2) {
+      ident = FALSE;
+      used_up = TRUE;
 
-    i = i_ptr->flags;
-    while (i != 0) {
-      j = bit_pos(&i) + 1;
-      if (i_ptr->tval == TV_SCROLL2) j += 32;
+      i = i_ptr->flags;
+      while (i != 0) {
+        j = bit_pos(&i) + 1;
+        if (i_ptr->tval == TV_SCROLL2) j += 32;
 
-      /* Scrolls.  		*/
-      switch (j) {
-        case 1:
-          ident |= tohit_enchant(1);
-          break;
-        case 2:
-          ident |= todam_enchant(1);
-          break;
-        case 3:
-          ident |= TRUE;
-          choice_idx = inven_choice("Which armor do you wish to enchant?");
-          if (choice_idx >= 0) {
-            used_up = equip_enchant(choice_idx, 1);
-          } else {
-            used_up = FALSE;
-          }
-          break;
-        case 4:
-          msg_print("This is an identify scroll.");
-          ident |= TRUE;
-          choice_idx = inven_choice("Which item do you wish identified?");
-          if (choice_idx >= 0) {
-            used_up = inven_ident(choice_idx);
-          } else {
-            used_up = FALSE;
-          }
-          break;
-        case 5:
-          if (equip_remove_curse()) {
-            msg_print("You feel as if someone is watching over you.");
+        /* Scrolls.  		*/
+        switch (j) {
+          case 1:
+            ident |= tohit_enchant(1);
+            break;
+          case 2:
+            ident |= todam_enchant(1);
+            break;
+          case 3:
             ident |= TRUE;
-          }
-          break;
-        case 6:
-          ident |= light_area(uD.y, uD.x);
-          break;
-        case 7:
-          for (k = 0; k < randint(3); k++) {
-            ident |= (summon_monster(uD.y, uD.x) != 0);
-          }
-          break;
-        case 8:
-          py_teleport(10, uy, ux);
-          ident |= TRUE;
-          break;
-        case 9:
-          py_teleport(100, uy, ux);
-          ident |= TRUE;
-          break;
-        case 10:
-          dun_level += (-3) + 2 * randint(2);
-          if (dun_level < 1) dun_level = 1;
-          new_level_flag = TRUE;
-          ident |= TRUE;
-          break;
-        case 11:
-          if (uD.confuse_monster == 0) {
-            msg_print("Your hands begin to glow.");
-            uD.confuse_monster = 1;
+            choice_idx = inven_choice("Which armor do you wish to enchant?");
+            if (choice_idx >= 0) {
+              used_up = equip_enchant(choice_idx, 1);
+            } else {
+              used_up = FALSE;
+            }
+            break;
+          case 4:
+            msg_print("This is an identify scroll.");
             ident |= TRUE;
-          }
-          break;
-        case 12:
-          ident |= TRUE;
-          map_area();
-          break;
-        case 13:
-          ident |= sleep_adjacent(uD.y, uD.x);
-          break;
-        case 14:
-          ident |= TRUE;
-          warding_glyph(uD.y, uD.x);
-          break;
-        case 15:
-          ident |= detect_obj(oset_gold);
-          break;
-        case 16:
-          ident |= detect_obj(oset_pickup);
-          break;
-        case 17:
-          ident |= detect_obj(oset_trap);
-          break;
-        case 18:
-          ident |= detect_obj(oset_sdoor);
-          break;
-        case 19:
-          msg_print("This is a mass genocide scroll.");
-          mass_genocide(uD.y, uD.x);
-          ident |= TRUE;
-          break;
-        case 20:
-          if (detect_mon(crset_invisible)) {
+            choice_idx = inven_choice("Which item do you wish identified?");
+            if (choice_idx >= 0) {
+              used_up = inven_ident(choice_idx);
+            } else {
+              used_up = FALSE;
+            }
+            break;
+          case 5:
+            if (equip_remove_curse()) {
+              msg_print("You feel as if someone is watching over you.");
+              ident |= TRUE;
+            }
+            break;
+          case 6:
+            ident |= light_area(uD.y, uD.x);
+            break;
+          case 7:
+            for (k = 0; k < randint(3); k++) {
+              ident |= (summon_monster(uD.y, uD.x) != 0);
+            }
+            break;
+          case 8:
+            py_teleport(10, uy, ux);
             ident |= TRUE;
-            ma_duration(MA_DETECT_INVIS, 1);
-            msg_print("You sense the presence of invisible creatures!");
-          }
-          break;
-        case 21:
-          if (aggravate_monster(20)) {
-            msg_print("There is a high pitched humming noise.");
+            break;
+          case 9:
+            py_teleport(100, uy, ux);
             ident |= TRUE;
-          }
-          break;
-        case 22:
-          ident |= trap_creation(uD.y, uD.x);
-          break;
-        case 23:
-          ident |= td_destroy(uD.y, uD.x);
-          break;
-        case 24:
-          ident |= door_creation();
-          break;
-        case 25:
-          msg_print("This is a Recharge-Item scroll.");
-          ident |= TRUE;
-          choice_idx = inven_choice("Recharge which item?");
-          if (choice_idx >= 0 && invenD[choice_idx]) {
-            inven_recharge(choice_idx, 60);
-          } else
-            used_up = FALSE;
-          break;
-        case 26:
-          ident |= extermination();
-          if (ident) {
-            msg_print("This is an extermination scroll.");
+            break;
+          case 10:
+            dun_level += (-3) + 2 * randint(2);
+            if (dun_level < 1) dun_level = 1;
+            new_level_flag = TRUE;
             ident |= TRUE;
-          }
-          break;
-        case 27:
-          ident |= unlight_area(uD.y, uD.x);
-          break;
-        case 28:
-          ident |= (countD.protevil == 0);
-          countD.protevil += randint(25) + 3 * uD.lev;
-          break;
-        case 29:
-          ident |= TRUE;
-          create_food(uD.y, uD.x);
-          break;
-        case 30:
-          ident |= dispel_creature(CD_UNDEAD, 60);
-          break;
-        case 33:
-          ident |= tohit_enchant(randint(2));
-          ident |= todam_enchant(randint(2));
-          break;
-        case 34:
-          ident |= weapon_curse();
-          break;
-        case 35:
-          ident |= TRUE;
-          choice_idx = inven_choice("Which armor do you wish to enchant?");
-          if (choice_idx >= 0) {
-            k = randint(2) + 1;
-            used_up = equip_enchant(choice_idx, k);
-          } else {
-            used_up = FALSE;
-          }
-          break;
-        case 36:
-          ident |= equip_curse();
-          break;
-        case 37:
-          for (k = 0; k < randint(3); k++) {
-            ident |= (summon_undead(uD.y, uD.x) != 0);
-          }
-          break;
-        case 38:
-          ident |= TRUE;
-          ma_duration(MA_BLESS, randint(12) + 6);
-          break;
-        case 39:
-          ident |= TRUE;
-          ma_duration(MA_BLESS, randint(24) + 12);
-          break;
-        case 40:
-          ident |= TRUE;
-          ma_duration(MA_BLESS, randint(48) + 24);
-          break;
-        case 41:
-          ident |= TRUE;
-          if (!py_affect(MA_RECALL)) ma_duration(MA_RECALL, 25 + randint(30));
-          msg_print("The air about you becomes charged.");
-          break;
-        case 42:
-          destroy_area(uD.y, uD.x);
-          ident |= TRUE;
-          break;
-        default:
-          msg_print("Internal error in scroll()");
-          break;
+            break;
+          case 11:
+            if (uD.confuse_monster == 0) {
+              msg_print("Your hands begin to glow.");
+              uD.confuse_monster = 1;
+              ident |= TRUE;
+            }
+            break;
+          case 12:
+            ident |= TRUE;
+            map_area();
+            break;
+          case 13:
+            ident |= sleep_adjacent(uD.y, uD.x);
+            break;
+          case 14:
+            ident |= TRUE;
+            warding_glyph(uD.y, uD.x);
+            break;
+          case 15:
+            ident |= detect_obj(oset_gold);
+            break;
+          case 16:
+            ident |= detect_obj(oset_pickup);
+            break;
+          case 17:
+            ident |= detect_obj(oset_trap);
+            break;
+          case 18:
+            ident |= detect_obj(oset_sdoor);
+            break;
+          case 19:
+            msg_print("This is a mass genocide scroll.");
+            mass_genocide(uD.y, uD.x);
+            ident |= TRUE;
+            break;
+          case 20:
+            if (detect_mon(crset_invisible)) {
+              ident |= TRUE;
+              ma_duration(MA_DETECT_INVIS, 1);
+              msg_print("You sense the presence of invisible creatures!");
+            }
+            break;
+          case 21:
+            if (aggravate_monster(20)) {
+              msg_print("There is a high pitched humming noise.");
+              ident |= TRUE;
+            }
+            break;
+          case 22:
+            ident |= trap_creation(uD.y, uD.x);
+            break;
+          case 23:
+            ident |= td_destroy(uD.y, uD.x);
+            break;
+          case 24:
+            ident |= door_creation();
+            break;
+          case 25:
+            msg_print("This is a Recharge-Item scroll.");
+            ident |= TRUE;
+            choice_idx = inven_choice("Recharge which item?");
+            if (choice_idx >= 0 && invenD[choice_idx]) {
+              inven_recharge(choice_idx, 60);
+            } else
+              used_up = FALSE;
+            break;
+          case 26:
+            ident |= extermination();
+            if (ident) {
+              msg_print("This is an extermination scroll.");
+              ident |= TRUE;
+            }
+            break;
+          case 27:
+            ident |= unlight_area(uD.y, uD.x);
+            break;
+          case 28:
+            ident |= (countD.protevil == 0);
+            countD.protevil += randint(25) + 3 * uD.lev;
+            break;
+          case 29:
+            ident |= TRUE;
+            create_food(uD.y, uD.x);
+            break;
+          case 30:
+            ident |= dispel_creature(CD_UNDEAD, 60);
+            break;
+          case 33:
+            ident |= tohit_enchant(randint(2));
+            ident |= todam_enchant(randint(2));
+            break;
+          case 34:
+            ident |= weapon_curse();
+            break;
+          case 35:
+            ident |= TRUE;
+            choice_idx = inven_choice("Which armor do you wish to enchant?");
+            if (choice_idx >= 0) {
+              k = randint(2) + 1;
+              used_up = equip_enchant(choice_idx, k);
+            } else {
+              used_up = FALSE;
+            }
+            break;
+          case 36:
+            ident |= equip_curse();
+            break;
+          case 37:
+            for (k = 0; k < randint(3); k++) {
+              ident |= (summon_undead(uD.y, uD.x) != 0);
+            }
+            break;
+          case 38:
+            ident |= TRUE;
+            ma_duration(MA_BLESS, randint(12) + 6);
+            break;
+          case 39:
+            ident |= TRUE;
+            ma_duration(MA_BLESS, randint(24) + 12);
+            break;
+          case 40:
+            ident |= TRUE;
+            ma_duration(MA_BLESS, randint(48) + 24);
+            break;
+          case 41:
+            ident |= TRUE;
+            if (!py_affect(MA_RECALL)) ma_duration(MA_RECALL, 25 + randint(30));
+            msg_print("The air about you becomes charged.");
+            break;
+          case 42:
+            destroy_area(uD.y, uD.x);
+            ident |= TRUE;
+            break;
+          default:
+            msg_print("Internal error in scroll()");
+            break;
+        }
+        /* End of Scrolls.  		       */
       }
-      /* End of Scrolls.  		       */
-    }
-    if (!tr_is_known(tr_ptr)) {
-      if (ident) {
-        /* round half-way case up */
-        // TDB: xp tuning
-        uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
-        py_experience();
+      if (!tr_is_known(tr_ptr)) {
+        if (ident) {
+          /* round half-way case up */
+          // TDB: xp tuning
+          uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
+          py_experience();
 
-        tr_make_known(tr_ptr);
+          tr_make_known(tr_ptr);
+        }
+        // else
+        //   sample(i_ptr);
       }
-      // else
-      //   sample(i_ptr);
+      if (used_up) {
+        i_ptr->number -= 1;
+        obj_desc(i_ptr, TRUE);
+        i_ptr->number += 1;
+        MSG("You have %s.", descD);
+        inven_destroy_one(iidx);
+      }
+      turn_flag = TRUE;
+      return TRUE;
     }
-    if (used_up) {
-      i_ptr->number -= 1;
-      obj_desc(i_ptr, TRUE);
-      i_ptr->number += 1;
-      MSG("You have %s.", descD);
-      inven_destroy_one(iidx);
-    }
-    turn_flag = TRUE;
-    return TRUE;
   }
 
   return FALSE;
