@@ -4799,8 +4799,7 @@ void obj_detail(obj) struct objS* obj;
         sprintf(tmp_str, " (%+d)", obj->p1);
     } else if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
       sprintf(tmp_str, " (%d charges)", obj->p1);
-    } else if (obj->tval == TV_HAFTED || obj->tval == TV_POLEARM ||
-               obj->tval == TV_SWORD) {
+    } else if (may_equip(obj->tval) >= INVEN_EQUIP) {
       for (int it = 0; it < MAX_A; ++it) {
         if (obj->flags & (1 << it)) {
           sprintf(tmp_str, " (%+d %.3s)", obj->p1, stat_nameD[it]);
