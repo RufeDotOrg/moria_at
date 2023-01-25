@@ -10276,8 +10276,8 @@ void
 mon_breath_dam(midx, fy, fx, breath, dam_hp)
 {
   int i, j, y, x;
-  int dam, cdis, max_dis, harm_type;
-  uint32_t weapon_type, tmp, treas;
+  int reduce, dam, harm_type;
+  uint32_t cdis, weapon_type;
   int (*destroy)();
   struct caveS* c_ptr;
   struct monS* m_ptr;
@@ -10286,9 +10286,11 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   y = uD.y;
   x = uD.x;
   cdis = distance(y, x, fy, fx);
-  MSG("[%d/%d", dam_hp, cdis);
-  dam_hp = dam_hp / cdis;
-  max_dis = 2;
+  reduce = 0;
+  while (cdis) reduce = bit_pos(&cdis);
+  reduce += 1;
+  MSG("[%d/%d@%d", dam_hp, reduce, distance(y, x, fy, fx));
+  dam_hp = dam_hp / reduce;
   get_flags(breath, &weapon_type, &harm_type, &destroy);
   for (i = y - 2; i <= y + 2; i++)
     for (j = x - 2; j <= x + 2; j++)
