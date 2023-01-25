@@ -10251,7 +10251,7 @@ mon_breath_dam(midx, breath, dam_hp)
           delete_object(i, j);
         }
         if (c_ptr->fval <= MAX_OPEN_SPACE) {
-          if (c_ptr->midx) {
+          if (c_ptr->midx != midx) {
             m_ptr = &entity_monD[c_ptr->midx];
             cr_ptr = &creatureD[m_ptr->cidx];
             dam = dam_hp;
