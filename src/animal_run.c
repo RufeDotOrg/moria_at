@@ -10235,7 +10235,7 @@ static void make_move(midx, mm) int* mm;
   }
 }
 void
-mon_breath_dam(midx, breath, dam_hp)
+mon_breath_dam(midx, fy, fx, breath, dam_hp)
 {
   int i, j, y, x;
   int dam, cdis, max_dis, harm_type;
@@ -10247,6 +10247,9 @@ mon_breath_dam(midx, breath, dam_hp)
 
   y = uD.y;
   x = uD.x;
+  cdis = distance(y, x, fy, fx);
+  MSG("[%d/%d", dam_hp, cdis + 1);
+  dam_hp = dam_hp / (cdis + 1);
   max_dis = 2;
   get_flags(breath, &weapon_type, &harm_type, &destroy);
   for (i = y - 2; i <= y + 2; i++)
@@ -10265,9 +10268,9 @@ mon_breath_dam(midx, breath, dam_hp)
             if (harm_type & cr_ptr->cdefense)
               dam = dam * 2;
             else if (weapon_type & cr_ptr->spells)
-              dam = (dam / 4);
+              dam = dam / 4;
             cdis = distance(i, j, y, x);
-            dam = (dam / (cdis + 1));
+            dam = dam / (cdis + 1);
 
             /* can not call mon_take_hit here, since player does not
                get experience for kill */
@@ -10301,7 +10304,7 @@ mon_breath_dam(midx, breath, dam_hp)
       dam = fire_dam(dam_hp);
       break;
   }
-  MSG("[%d->%d]", dam_hp, dam);
+  MSG("-%d]", dam);
   /* show the ball of gas */
   // put_qio();
 }
@@ -10323,16 +10326,16 @@ mon_try_spell(midx, cdis)
   int k, chance, thrown_spell, r1;
   int spell_choice[32];
   int took_turn;
-  struct monS* m_ptr;
+  struct monS* mon;
   struct creatureS* cr_ptr;
 
-  m_ptr = &entity_monD[midx];
-  cr_ptr = &creatureD[m_ptr->cidx];
+  mon = &entity_monD[midx];
+  cr_ptr = &creatureD[mon->cidx];
 
   chance = cr_ptr->spells & CS_FREQ;
 
   /* confused monsters don't cast; including turn undead */
-  if (m_ptr->mconfused) took_turn = FALSE;
+  if (mon->mconfused) took_turn = FALSE;
   /* 1 in x chance of casting spell  	   */
   else if (randint(chance) != 1)
     took_turn = FALSE;
@@ -10340,7 +10343,7 @@ mon_try_spell(midx, cdis)
   else if (cdis > MAX_SIGHT)
     took_turn = FALSE;
   // Must have unobstructed Line-Of-Sight
-  else if (!los(uD.y, uD.x, m_ptr->fy, m_ptr->fx))
+  else if (!los(uD.y, uD.x, mon->fy, mon->fx))
     took_turn = FALSE;
   else /* Creature is going to cast a spell   */
   {
@@ -10372,7 +10375,7 @@ mon_try_spell(midx, cdis)
         teleport_away(midx, MAX_SIGHT);
         break;
       case 7: /*Teleport To (aka. Summon)  */
-        teleport_to(m_ptr->fy, m_ptr->fx);
+        teleport_to(mon->fy, mon->fx);
         break;
       case 8: /*Light Wound   */
         if (player_saves())
@@ -10446,7 +10449,7 @@ mon_try_spell(midx, cdis)
         //   if (uD.cmana > 0) {
         //     disturb(1, 0);
         //     MSG("%sdraws psychic energy from you!", descD);
-        //     if (m_ptr->mlit) {
+        //     if (mon->mlit) {
         //       MSG("%sappears healthier.", descD);
         //     }
         //     r1 = (randint(cr_ptr->level) >> 1) + 1;
@@ -10456,40 +10459,33 @@ mon_try_spell(midx, cdis)
         //       uD.cmana_frac = 0;
         //     } else
         //       uD.cmana -= r1;
-        //     m_ptr->hp += 6 * (r1);
+        //     mon->hp += 6 * (r1);
         //   }
         break;
       case 20: /*Breath Light */
         MSG("%s breathes lightning.", descD);
-        mon_breath_dam(midx, GF_LIGHTNING, (m_ptr->hp / 4));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_LIGHTNING, (mon->hp / 4));
         break;
       case 21: /*Breath Gas   */
         MSG("%s breathes gas.", descD);
-        mon_breath_dam(midx, GF_POISON_GAS, (m_ptr->hp / 3));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS, (mon->hp / 3));
         break;
       case 22: /*Breath Acid   */
         MSG("%s breathes acid.", descD);
-        mon_breath_dam(midx, GF_ACID, (m_ptr->hp / 3));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID, (mon->hp / 3));
         break;
       case 23: /*Breath Frost */
         MSG("%s breathes frost.", descD);
-        mon_breath_dam(midx, GF_FROST, (m_ptr->hp / 3));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST, (mon->hp / 3));
         break;
       case 24: /*Breath Fire   */
         MSG("%s breathes fire.", descD);
-        mon_breath_dam(midx, GF_FIRE, (m_ptr->hp / 3));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE, (mon->hp / 3));
         break;
       default:
         MSG("%s cast unknown spell.", descD);
     }
     /* End of spells  			       */
-    // if (m_ptr->mlit) {
-    //   c_recall[m_ptr->mptr].r_spells |= 1L << (thrown_spell - 1);
-    //   if ((c_recall[m_ptr->mptr].r_spells & CS_FREQ) != CS_FREQ)
-    //     c_recall[m_ptr->mptr].r_spells++;
-    //   if (death && c_recall[m_ptr->mptr].r_deaths < MAX_SHORT)
-    //     c_recall[m_ptr->mptr].r_deaths++;
-    // }
   }
   return took_turn;
 }
