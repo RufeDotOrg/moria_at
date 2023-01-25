@@ -10282,8 +10282,8 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   y = uD.y;
   x = uD.x;
   cdis = distance(y, x, fy, fx);
-  MSG("[%d/%d", dam_hp, cdis + 1);
-  dam_hp = dam_hp / (cdis + 1);
+  MSG("[%d/%d", dam_hp, cdis);
+  dam_hp = dam_hp / cdis;
   max_dis = 2;
   get_flags(breath, &weapon_type, &harm_type, &destroy);
   for (i = y - 2; i <= y + 2; i++)
@@ -10502,19 +10502,19 @@ mon_try_spell(midx, cdis)
         break;
       case 21: /*Breath Gas   */
         MSG("%s breathes gas.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS, (mon->hp / 3));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS, (mon->hp / 4));
         break;
       case 22: /*Breath Acid   */
         MSG("%s breathes acid.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID, (mon->hp / 3));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID, (mon->hp / 4));
         break;
       case 23: /*Breath Frost */
         MSG("%s breathes frost.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST, (mon->hp / 3));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST, (mon->hp / 4));
         break;
       case 24: /*Breath Fire   */
         MSG("%s breathes fire.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE, (mon->hp / 3));
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE, (mon->hp / 4));
         break;
       default:
         MSG("%s cast unknown spell.", descD);
