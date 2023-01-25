@@ -9100,7 +9100,8 @@ acid_dam(dam)
   flag = 0;
   if (minus_ac()) flag = 1;
   if (py_tr(TR_RES_ACID)) flag += 2;
-  py_take_hit(dam / (flag + 1));
+  dam /= (flag + 1);
+  py_take_hit(dam);
   if (inven_damage(vuln_acid, 3) > 0)
     msg_print("There is an acrid smell coming from your pack!");
   return dam;
