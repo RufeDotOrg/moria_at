@@ -9075,13 +9075,14 @@ minus_ac()
   }
   return (minus);
 }
-void
+int
 poison_gas(dam)
 {
   py_take_hit(dam);
   countD.poison += 12 + randint(dam);
+  return dam;
 }
-void
+int
 fire_dam(dam)
 {
   if (py_tr(TR_RES_FIRE)) dam = dam / 3;
@@ -9089,8 +9090,9 @@ fire_dam(dam)
   py_take_hit(dam);
   if (inven_damage(vuln_fire, 3) > 0)
     msg_print("There is smoke coming from your pack!");
+  return dam;
 }
-void
+int
 acid_dam(dam)
 {
   int flag;
@@ -9101,8 +9103,9 @@ acid_dam(dam)
   py_take_hit(dam / (flag + 1));
   if (inven_damage(vuln_acid, 3) > 0)
     msg_print("There is an acrid smell coming from your pack!");
+  return dam;
 }
-void
+int
 frost_dam(dam)
 {
   if (py_tr(TR_RES_COLD)) dam = dam / 3;
@@ -9110,14 +9113,16 @@ frost_dam(dam)
   py_take_hit(dam);
   if (inven_damage(vuln_frost, 5) > 0)
     msg_print("Something shatters inside your pack!");
+  return dam;
 }
-void
+int
 light_dam(dam)
 {
   if (py_tr(TR_RES_LIGHT)) dam = dam / 3;
   py_take_hit(dam);
   if (inven_damage(vuln_lightning, 3) > 0)
     msg_print("There are sparks coming from your pack!");
+  return dam;
 }
 void
 corrode_gas()
@@ -10223,9 +10228,9 @@ static void make_move(midx, mm) int* mm;
   }
 }
 void
-breath(typ, fy, fx, dam_hp, midx)
+mon_breath_dam(midx, breath, dam_hp)
 {
-  int i, j;
+  int i, j, y, x;
   int dam, cdis, max_dis, harm_type;
   uint32_t weapon_type, tmp, treas;
   int (*destroy)();
@@ -10233,12 +10238,13 @@ breath(typ, fy, fx, dam_hp, midx)
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
 
+  y = uD.y;
+  x = uD.x;
   max_dis = 2;
-  get_flags(typ, &weapon_type, &harm_type, &destroy);
-  for (i = fy - 2; i <= fy + 2; i++)
-    for (j = fx - 2; j <= fx + 2; j++)
-      if (in_bounds(i, j) && (distance(fy, fx, i, j) <= max_dis) &&
-          los(fy, fx, i, j)) {
+  get_flags(breath, &weapon_type, &harm_type, &destroy);
+  for (i = y - 2; i <= y + 2; i++)
+    for (j = x - 2; j <= x + 2; j++)
+      if (in_bounds(i, j) && distance(y, x, i, j) <= 2 && los(y, x, i, j)) {
         c_ptr = &caveD[i][j];
         if ((c_ptr->oidx != 0) && (*destroy)(&entity_objD[c_ptr->oidx])) {
           if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
@@ -10253,7 +10259,7 @@ breath(typ, fy, fx, dam_hp, midx)
               dam = dam * 2;
             else if (weapon_type & cr_ptr->spells)
               dam = (dam / 4);
-            cdis = distance(i, j, fy, fx);
+            cdis = distance(i, j, y, x);
             dam = (dam / (cdis + 1));
 
             /* can not call mon_take_hit here, since player does not
@@ -10270,27 +10276,25 @@ breath(typ, fy, fx, dam_hp, midx)
       }
 
   /* let's do at least one point of damage to the player */
-  /* prevents randint(0) problem with poison_gas, also */
-  cdis = distance(uD.y, uD.x, fy, fx);
-  dam = MAX(dam_hp / (cdis + 1), 1);
-  MSG("[-%d/%d]", dam_hp, cdis + 1);
-  switch (typ) {
+  switch (breath) {
     case GF_LIGHTNING:
-      light_dam(dam);
+      dam = light_dam(dam_hp);
       break;
     case GF_POISON_GAS:
-      poison_gas(dam);
+      /* prevents randint(0) problem with poison_gas, also */
+      dam = poison_gas(dam_hp + 1);
       break;
     case GF_ACID:
-      acid_dam(dam);
+      dam = acid_dam(dam_hp);
       break;
     case GF_FROST:
-      frost_dam(dam);
+      dam = frost_dam(dam_hp);
       break;
     case GF_FIRE:
-      fire_dam(dam);
+      dam = fire_dam(dam_hp);
       break;
   }
+  MSG("[%d->%d]", dam_hp, dam);
   /* show the ball of gas */
   // put_qio();
 }
@@ -10450,23 +10454,23 @@ mon_try_spell(midx, cdis)
         break;
       case 20: /*Breath Light */
         MSG("%s breathes lightning.", descD);
-        breath(GF_LIGHTNING, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 4), midx);
+        mon_breath_dam(midx, GF_LIGHTNING, (m_ptr->hp / 4));
         break;
       case 21: /*Breath Gas   */
         MSG("%s breathes gas.", descD);
-        breath(GF_POISON_GAS, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 3), midx);
+        mon_breath_dam(midx, GF_POISON_GAS, (m_ptr->hp / 3));
         break;
       case 22: /*Breath Acid   */
         MSG("%s breathes acid.", descD);
-        breath(GF_ACID, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 3), midx);
+        mon_breath_dam(midx, GF_ACID, (m_ptr->hp / 3));
         break;
       case 23: /*Breath Frost */
         MSG("%s breathes frost.", descD);
-        breath(GF_FROST, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 3), midx);
+        mon_breath_dam(midx, GF_FROST, (m_ptr->hp / 3));
         break;
       case 24: /*Breath Fire   */
         MSG("%s breathes fire.", descD);
-        breath(GF_FIRE, m_ptr->fy, m_ptr->fx, (m_ptr->hp / 3), midx);
+        mon_breath_dam(midx, GF_FIRE, (m_ptr->hp / 3));
         break;
       default:
         MSG("%s cast unknown spell.", descD);
