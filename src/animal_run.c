@@ -4828,21 +4828,25 @@ void obj_detail(obj) struct objS* obj;
   // Check p1 value
   tmp_str[0] = 0;
   if (obj->idflag & ID_REVEAL) {
-    if (obj->tval == TV_DIGGING || obj->tval == TV_AMULET ||
-        obj->tval == TV_RING) {
-      if (obj->p1 && (obj->flags & TR_SUST_STAT) == 0)
-        sprintf(tmp_str, " (%+d)", obj->p1);
+    if (obj->tval == TV_DIGGING) {
+      sprintf(tmp_str, " (%+d)", obj->p1);
     } else if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
       sprintf(tmp_str, " (%d charges)", obj->p1);
     } else if (may_equip(obj->tval) >= INVEN_EQUIP) {
-      for (int it = 0; it < MAX_A; ++it) {
-        if (obj->flags & (1 << it)) {
-          sprintf(tmp_str, " (%+d %.3s)", obj->p1, stat_nameD[it]);
-          strcat(descD, tmp_str);
+      if ((obj->flags & TR_SUST_STAT) == 0) {
+        for (int it = 0; it < MAX_A; ++it) {
+          if (obj->flags & (1 << it)) {
+            sprintf(tmp_str, " (%+d %.3s)", obj->p1, stat_nameD[it]);
+            strcat(descD, tmp_str);
+          }
         }
       }
+
       tmp_str[0] = 0;
-      if (obj->flags & TR_STEALTH) sprintf(tmp_str, " (%+d stealth)", obj->p1);
+      if (obj->flags & TR_STEALTH)
+        sprintf(tmp_str, " (%+d stealth)", obj->p1);
+      else if (obj->flags & TR_SEARCH)
+        sprintf(tmp_str, " (%+d search)", obj->p1);
     }
   }
   strcat(descD, tmp_str);
