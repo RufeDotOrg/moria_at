@@ -9126,8 +9126,8 @@ poison_gas(dam)
 int
 fire_dam(dam)
 {
-  if (py_tr(TR_RES_FIRE)) dam = dam / 3;
-  if (py_affect(MA_AFIRE)) dam = dam / 3;
+  if (py_tr(TR_RES_FIRE)) dam = dam / 2;
+  if (py_affect(MA_AFIRE)) dam = dam / 2;
   py_take_hit(dam);
   if (inven_damage(vuln_fire, 3) > 0)
     msg_print("There is smoke coming from your pack!");
@@ -9139,9 +9139,8 @@ acid_dam(dam)
   int flag;
 
   flag = 0;
-  if (minus_ac()) flag = 1;
-  if (py_tr(TR_RES_ACID)) flag += 2;
-  dam /= (flag + 1);
+  if (minus_ac()) dam = dam / 2;
+  if (py_tr(TR_RES_ACID)) dam = dam / 2;
   py_take_hit(dam);
   if (inven_damage(vuln_acid, 3) > 0)
     msg_print("There is an acrid smell coming from your pack!");
@@ -9150,8 +9149,8 @@ acid_dam(dam)
 int
 frost_dam(dam)
 {
-  if (py_tr(TR_RES_COLD)) dam = dam / 3;
-  if (py_affect(MA_AFROST)) dam = dam / 3;
+  if (py_tr(TR_RES_COLD)) dam = dam / 2;
+  if (py_affect(MA_AFROST)) dam = dam / 2;
   py_take_hit(dam);
   if (inven_damage(vuln_frost, 5) > 0)
     msg_print("Something shatters inside your pack!");
@@ -9160,7 +9159,7 @@ frost_dam(dam)
 int
 light_dam(dam)
 {
-  if (py_tr(TR_RES_LIGHT)) dam = dam / 3;
+  if (py_tr(TR_RES_LIGHT)) dam = dam / 2;
   py_take_hit(dam);
   if (inven_damage(vuln_lightning, 3) > 0)
     msg_print("There are sparks coming from your pack!");
