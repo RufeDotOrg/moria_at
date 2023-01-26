@@ -9092,7 +9092,7 @@ int inven_damage(typ, perc) int (*typ)();
   return (j);
 }
 int
-minus_ac()
+minus_ac(verbose)
 {
   int j;
   int minus;
@@ -9104,17 +9104,17 @@ minus_ac()
     obj = obj_get(invenD[j]);
     obj_desc(obj, FALSE);
     if (obj->flags & TR_RES_ACID) {
-      MSG("Your %s resists damage!", descD);
+      MSG("Your %s resists damage.", descD);
       minus = TRUE;
     } else if ((obj->ac + obj->toac) > 0) {
-      MSG("Your %s is damaged!", descD);
+      MSG("Your %s is damaged.", descD);
       obj->toac--;
       calc_bonuses();
       minus = TRUE;
     } else {
-      if ((obj->idflag & ID_CORRODED) == 0) {
+      if ((obj->idflag & ID_CORRODED) == 0 || verbose) {
         obj->idflag |= ID_CORRODED;
-        MSG("Acid leaks through your corroded %s.", descD);
+        MSG("Your %s is corroded, acid burns your flesh!", descD);
       }
     }
   }
@@ -9138,12 +9138,12 @@ fire_dam(dam)
   return dam;
 }
 int
-acid_dam(dam)
+acid_dam(dam, verbose)
 {
   int flag;
 
   flag = 0;
-  if (minus_ac()) dam = dam / 2;
+  if (minus_ac(verbose)) dam = dam / 2;
   if (py_tr(TR_RES_ACID)) dam = dam / 2;
   py_take_hit(dam);
   if (inven_damage(vuln_acid, 3) > 0)
@@ -9170,9 +9170,9 @@ light_dam(dam)
   return dam;
 }
 void
-corrode_gas()
+corrode_gas(verbose)
 {
-  if (!minus_ac()) py_take_hit(randint(8));
+  if (!minus_ac(verbose)) py_take_hit(randint(8));
   if (inven_damage(vuln_gas, 5) > 0)
     msg_print("There is an acrid smell coming from your pack.");
 }
@@ -9377,7 +9377,7 @@ mon_attack(midx)
           break;
         case 6: /*Acid attack  */
           msg_print("You are covered in acid!");
-          acid_dam(damage);
+          acid_dam(damage, FALSE);
           break;
         case 7: /*Frost attack  */
           msg_print("You are covered with frost!");
@@ -9389,7 +9389,7 @@ mon_attack(midx)
           break;
         case 9: /*Corrosion attack*/
           msg_print("A stinging red gas swirls about you.");
-          corrode_gas();
+          corrode_gas(FALSE);
           py_take_hit(damage);
           break;
         case 10: /*Blindness attack*/
@@ -10335,7 +10335,7 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
       dam = poison_gas(dam_hp + 1);
       break;
     case GF_ACID:
-      dam = acid_dam(dam_hp);
+      dam = acid_dam(dam_hp, TRUE);
       break;
     case GF_FROST:
       dam = frost_dam(dam_hp);
@@ -10362,7 +10362,7 @@ static void mon_try_multiply(mon) struct monS* mon;
 static int
 mon_try_spell(midx, cdis)
 {
-  uint32_t i;
+  uint32_t i, nasty, maxlev;
   int k, chance, thrown_spell, r1;
   int spell_choice[32];
   int took_turn;
@@ -10371,6 +10371,7 @@ mon_try_spell(midx, cdis)
 
   mon = &entity_monD[midx];
   cr_ptr = &creatureD[mon->cidx];
+  maxlev = (cr_ptr->level >= MAX_MON_LEVEL);
 
   chance = cr_ptr->spells & CS_FREQ;
 
@@ -10503,24 +10504,29 @@ mon_try_spell(midx, cdis)
         //   }
         break;
       case 20: /*Breath Light */
-        MSG("%s breathes lightning.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_LIGHTNING, (mon->hp / 4));
+        MSG("[%d] %s breathes lightning.", mon->hp, descD);
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_LIGHTNING,
+                       (mon->hp >> (1 + maxlev)));
         break;
       case 21: /*Breath Gas   */
-        MSG("%s breathes gas.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS, (mon->hp / 4));
+        MSG("[%d] %s breathes gas.", mon->hp, descD);
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS,
+                       (mon->hp >> (1 + maxlev)));
         break;
       case 22: /*Breath Acid   */
-        MSG("%s breathes acid.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID, (mon->hp / 4));
+        MSG("[%d] %s breathes acid.", mon->hp, descD);
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID,
+                       (mon->hp >> (1 + maxlev)));
         break;
       case 23: /*Breath Frost */
-        MSG("%s breathes frost.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST, (mon->hp / 4));
+        MSG("[%d] %s breathes frost.", mon->hp, descD);
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST,
+                       (mon->hp >> (1 + maxlev)));
         break;
       case 24: /*Breath Fire   */
-        MSG("%s breathes fire.", descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE, (mon->hp / 4));
+        MSG("[%d] %s breathes fire.", mon->hp, descD);
+        mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE,
+                       (mon->hp >> (1 + maxlev)));
         break;
       default:
         MSG("%s cast unknown spell.", descD);
@@ -10770,7 +10776,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
       /* Makes more sense to print the message first, then damage an
          object.  */
       msg_print("A strange red gas surrounds you.");
-      corrode_gas();
+      corrode_gas(TRUE);
       break;
     case 11: /* Summon mon*/
       msg_print("A strange rune on the floor glows and fades.");
@@ -10786,7 +10792,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
       break;
     case 13: /* Acid trap*/
       msg_print("You are splashed with acid!");
-      acid_dam(dam);
+      acid_dam(dam, TRUE);
       break;
     case 14: /* Poison gas*/
       msg_print("A pungent green gas surrounds you!");
