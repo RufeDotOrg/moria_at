@@ -8959,7 +8959,7 @@ static void
 py_grave()
 {
   int row, col;
-  MSG("Killed by %s. (CTRL-P log) (C/e/i/o) (ESC to exit)", death_descD);
+  MSG("Killed by %s. (CTRL-P log) (C/e/i/o/ESC)", death_descD);
   row = col = 0;
   for (int it = 0; it < AL(grave); ++it) {
     if (grave[it] == '\n') {
