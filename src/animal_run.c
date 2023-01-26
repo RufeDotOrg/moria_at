@@ -4832,7 +4832,7 @@ void obj_detail(obj) struct objS* obj;
     } else if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
       sprintf(tmp_str, " (%d charges)", obj->p1);
     } else if (may_equip(obj->tval) >= INVEN_EQUIP) {
-      if ((obj->flags & TR_SUST_STAT) == 0) {
+      if (obj->tval != TV_RING || (obj->flags & TR_SUST_STAT) == 0) {
         for (int it = 0; it < MAX_A; ++it) {
           if (obj->flags & (1 << it)) {
             sprintf(tmp_str, " (%+d %.3s)", obj->p1, stat_nameD[it]);
