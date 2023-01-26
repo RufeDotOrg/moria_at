@@ -2980,7 +2980,10 @@ place_win_monster()
                (caveD[fy][fx].midx) || (caveD[fy][fx].oidx) ||
                (distance(fy, fx, y, x) <= MAX_SIGHT));
       mon->cidx = cidx;
-      mon->msleep = 0;
+      if (!cr_ptr->sleep)
+        mon->msleep = 0;
+      else
+        mon->msleep = (cr_ptr->sleep * 2) + randint(cr_ptr->sleep * 10);
       if (cr_ptr->cdefense & CD_MAX_HP)
         mon->hp = cr_ptr->hd[0] * cr_ptr->hd[1];
       else
@@ -8788,6 +8791,7 @@ py_map()
   priority['.'] = -10;
   priority['\''] = -3;
   priority[' '] = -15;
+  priority['B'] = 9;
 
   iter = screenD[0];
   *iter++ = CH(TL);
