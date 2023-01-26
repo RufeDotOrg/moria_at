@@ -4710,7 +4710,6 @@ mon_death(y, x, flags)
     {
       total_winner = TRUE;
       msg_print("*** CONGRATULATIONS *** You have won the game.");
-      msg_print("You cannot save this game, but you may retire when ready.");
     }
 }
 static int
