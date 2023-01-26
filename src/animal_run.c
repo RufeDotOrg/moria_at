@@ -9927,7 +9927,7 @@ py_look_mon()
           seen += 1;
           mon_desc(it_index);
           // hack: mon death_descD pronoun is a/an
-          MSG("You see %s.", death_descD);
+          MSG("You see %s [%d].", death_descD, mon->hp);
           msg_pause();
         }
       }
