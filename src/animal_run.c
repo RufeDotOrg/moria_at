@@ -7290,7 +7290,7 @@ earthquake()
           mon_desc(c_ptr->midx);
 
           if (!(cr_ptr->cmove & CM_PHASE)) {
-            if (cr_ptr->cmove & CM_ATTACK_ONLY)
+            if (cr_ptr->cmove & (CM_ATTACK_ONLY | CM_ONLY_MAGIC))
               damage = 3000; /* this will kill everything */
             else
               damage = damroll(4, 8);
