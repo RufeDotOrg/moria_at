@@ -2282,6 +2282,7 @@ void magic_treasure(obj, level) struct objS* obj;
         case 1:
           obj->flags = 0;
           obj->sn = SN_EMPTY;
+          obj->idflag = ID_REVEAL;
           break;
         case 2:
           obj->flags |= CH_LOCKED;
