@@ -6116,8 +6116,7 @@ teleport_to(ny, nx)
 }
 // TBD: We may loop infinitely with the added restriction of oidx != 0
 // Phase door and thief (short range) teleport run a higher risk
-void py_teleport(dis, uy, ux) int dis;
-int *uy, *ux;
+void py_teleport(dis, uy, ux) int *uy, *ux;
 {
   int ty, tx, y, x;
 
@@ -6131,7 +6130,8 @@ int *uy, *ux;
       tx += ((x - tx) / 2);
     }
   } while ((caveD[ty][tx].fval >= MIN_CLOSED_SPACE) ||
-           (caveD[ty][tx].midx != 0) || (caveD[ty][tx].oidx != 0));
+           (caveD[ty][tx].midx != 0) || (caveD[ty][tx].oidx != 0) ||
+           distance(ty, tx, y, x) <= 2);
   *uy = ty;
   *ux = tx;
 }
