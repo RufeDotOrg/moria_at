@@ -5895,31 +5895,6 @@ res_stat(stat)
   return FALSE;
 }
 static void
-py_death()
-{
-  char c;
-  int row, col;
-
-  msg_pause();
-  MSG("Killed by %s.", death_descD);
-  row = col = 0;
-  for (int it = 0; it < AL(grave); ++it) {
-    if (grave[it] == '\n') {
-      screenD[row][col] = 0;
-      screen_usedD[row] = col;
-      row += 1;
-      col = 0;
-    } else {
-      screenD[row][col] = grave[it];
-      col += 1;
-    }
-  }
-
-  // TBD: platform considerations...
-  draw();
-  c = inkey();
-}
-static void
 py_where()
 {
   int y, x, dir;
@@ -8980,6 +8955,50 @@ py_takeoff()
       }
     }
   }
+}
+static void
+py_grave()
+{
+  int row, col;
+  MSG("Killed by %s. (CTRL-P log) (C/e/i/o) (ESC to exit)", death_descD);
+  row = col = 0;
+  for (int it = 0; it < AL(grave); ++it) {
+    if (grave[it] == '\n') {
+      screenD[row][col] = 0;
+      screen_usedD[row] = col;
+      row += 1;
+      col = 0;
+    } else {
+      screenD[row][col] = grave[it];
+      col += 1;
+    }
+  }
+}
+static void
+py_death()
+{
+  msg_pause();
+  char c = 0;
+  do {
+    AS(msglen_cqD, msg_writeD) = 0;
+    if (c == CTRL('p')) {
+      msg_history();
+    } else if (c == 'C') {
+      py_character();
+    } else if (c == 'e') {
+      int count = inven_screen(INVEN_EQUIP, MAX_INVEN);
+      MSG("You were wearing %d items.", count);
+    } else if (c == 'i') {
+      int count = inven_screen(0, INVEN_EQUIP);
+      MSG("You were carrying %d %s:", count, count > 1 ? "items" : "item");
+    } else if (c == 'o') {
+      // observe game board
+    } else {
+      py_grave();
+    }
+    draw();
+    c = inkey();
+  } while (c != ESCAPE && c != CTRL('c'));
 }
 static void
 py_help()
