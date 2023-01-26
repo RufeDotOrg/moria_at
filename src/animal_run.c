@@ -7897,11 +7897,11 @@ inven_quaff(iidx)
           break;
         case 41:
           if (py_affect(MA_AFIRE) == 0) ident |= TRUE;
-          ma_duration(MA_AFIRE, randint(10) + 10);
+          ma_duration(MA_AFIRE, randint(20) + 20);
           break;
         case 42:
           if (py_affect(MA_AFROST) == 0) ident |= TRUE;
-          ma_duration(MA_AFROST, randint(10) + 10);
+          ma_duration(MA_AFROST, randint(20) + 20);
           break;
         case 43:
           if (py_tr(TR_SEE_INVIS) == 0) ident |= TRUE;
