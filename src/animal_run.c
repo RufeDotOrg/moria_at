@@ -2958,11 +2958,14 @@ int level;
 void
 place_win_monster()
 {
-  int cidx, fy, fx, y, x;
+  int cidx, fy, fx, y, x, k;
   struct monS* mon;
   struct creatureS* cr_ptr;
 
-  cidx = randint(MAX_WIN_MON) + m_level[MAX_MON_LEVEL];
+  k = randint(MAX_WIN_MON);
+  if (k == MAX_WIN_MON)
+    msg_print("You hear a low rumble echo through the caverns.");
+  cidx = k + m_level[MAX_MON_LEVEL];
   cr_ptr = &creatureD[cidx];
   y = uD.y;
   x = uD.x;
