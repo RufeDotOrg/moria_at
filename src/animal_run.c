@@ -2962,7 +2962,7 @@ place_win_monster()
   struct monS* mon;
   struct creatureS* cr_ptr;
 
-  cidx = randint(MAX_WIN_MON) - 1 + m_level[MAX_MON_LEVEL];
+  cidx = randint(MAX_WIN_MON) + m_level[MAX_MON_LEVEL];
   cr_ptr = &creatureD[cidx];
   y = uD.y;
   x = uD.x;
