@@ -9354,7 +9354,7 @@ mon_attack(midx)
     int attack_desc = attack->attack_desc;
     bth = bth_adj(attack_type);
     flag = test_hit(bth, adj, 0, cbD.pac);
-    if (countD.protevil && (cre->cdefense & CD_EVIL) && uD.lev <= cre->level) {
+    if (countD.protevil && (cre->cdefense & CD_EVIL) && uD.lev >= cre->level) {
       MSG("%s%s", descD, attack_string(99));
     } else if (flag) {
       int damage = damroll(attack->attack_dice, attack->attack_sides);
