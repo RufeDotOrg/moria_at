@@ -10545,7 +10545,8 @@ mon_move(midx, cdis)
   flee = FALSE;
 
   if (cr_ptr->cmove & CM_MULTIPLY) mon_try_multiply(m_ptr);
-  if (cr_ptr->spells & CS_FREQ) took_turn = mon_try_spell(midx, cdis);
+  if (cr_ptr->spells & CS_FREQ)
+    took_turn = mon_try_spell(midx, cdis) || (cr_ptr->cmove & CM_ONLY_MAGIC);
 
   if (!took_turn) {
     if (m_ptr->mconfused) {
