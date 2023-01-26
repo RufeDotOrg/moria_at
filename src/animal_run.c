@@ -4846,6 +4846,8 @@ void obj_detail(obj) struct objS* obj;
         sprintf(tmp_str, " (%+d stealth)", obj->p1);
       else if (obj->flags & TR_SEARCH)
         sprintf(tmp_str, " (%+d search)", obj->p1);
+      else if (obj->flags & TR_SPEED)
+        sprintf(tmp_str, " (%+d speed)", obj->p1);
     }
   }
   strcat(descD, tmp_str);
