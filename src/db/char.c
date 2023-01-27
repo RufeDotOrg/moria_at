@@ -277,7 +277,11 @@ char stat_nameD[MAX_A][5] = {
     "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
 };
 char* stat_lossD[] = {
-    "You feel weaker",        "You have trouble thinking clearly",
-    "You feel very naive",    "You feel clumsy",
-    "Your health is damaged", "Your skin starts to itch",
+    "You feel weaker",      "You have trouble thinking clearly",
+    "You feel very naive",  "You feel clumsy",
+    "Your body is damaged", "Your skin starts to itch",
+};
+char* stat_restD[] = {
+    "strength",  "intelligence", "wisdom",
+    "dexterity", "constitution", "charisma",
 };

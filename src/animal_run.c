@@ -3486,8 +3486,6 @@ town_gen()
            (c_ptr->midx != 0));
   uD.y = i;
   uD.x = j;
-
-  store_maint();
 }
 void
 cave_reset()
@@ -3505,15 +3503,6 @@ cave_reset()
   // Release all monsters
   mon_usedD = 0;
   memset(entity_monD, 0, sizeof(entity_monD));
-}
-void
-generate_cave()
-{
-  // a fresh cave!
-  if (dun_level != 0)
-    cave_gen();
-  else
-    town_gen();
 }
 BOOL
 panel_contains(panel, y, x)
@@ -5898,6 +5887,7 @@ res_stat(stat)
   if (statD.max_stat[stat] != statD.cur_stat[stat]) {
     statD.cur_stat[stat] = statD.max_stat[stat];
     set_use_stat(stat);
+    MSG("You feel your natural %s returning.", stat_restD[stat]);
     return TRUE;
   }
   return FALSE;
@@ -7525,37 +7515,31 @@ inven_eat(iidx)
           break;
         case 16:
           if (res_stat(A_STR)) {
-            msg_print("You feel your strength returning.");
             ident |= TRUE;
           }
           break;
         case 17:
           if (res_stat(A_CON)) {
-            msg_print("You feel your health returning.");
             ident |= TRUE;
           }
           break;
         case 18:
           if (res_stat(A_INT)) {
-            msg_print("Your head spins a moment.");
             ident |= TRUE;
           }
           break;
         case 19:
           if (res_stat(A_WIS)) {
-            msg_print("You feel your wisdom returning.");
             ident |= TRUE;
           }
           break;
         case 20:
           if (res_stat(A_DEX)) {
-            msg_print("You feel more dextrous.");
             ident |= TRUE;
           }
           break;
         case 21:
           if (res_stat(A_CHR)) {
-            msg_print("Your skin stops itching.");
             ident |= TRUE;
           }
           break;
@@ -7715,7 +7699,6 @@ inven_quaff(iidx)
           break;
         case 3:
           if (res_stat(A_STR)) {
-            msg_print("You feel warm all over.");
             ident |= TRUE;
           }
           break;
@@ -7731,7 +7714,6 @@ inven_quaff(iidx)
           break;
         case 6:
           if (res_stat(A_INT)) {
-            msg_print("You have have a warm feeling.");
             ident |= TRUE;
           }
           break;
@@ -7747,7 +7729,6 @@ inven_quaff(iidx)
           break;
         case 9:
           if (res_stat(A_WIS)) {
-            msg_print("You feel your wisdom returning.");
             ident |= TRUE;
           }
           break;
@@ -7763,7 +7744,6 @@ inven_quaff(iidx)
           break;
         case 12:
           if (res_stat(A_CHR)) {
-            msg_print("You feel your looks returning.");
             ident |= TRUE;
           }
           break;
@@ -7839,13 +7819,11 @@ inven_quaff(iidx)
           break;
         case 27:
           if (res_stat(A_DEX)) {
-            msg_print("You feel less clumsy.");
             ident |= TRUE;
           }
           break;
         case 28:
           if (res_stat(A_CON)) {
-            msg_print("You feel your health returning!");
             ident |= TRUE;
           }
           break;
@@ -11192,6 +11170,20 @@ static void regenhp(percent) int percent;
   uD.chp_frac = chp_frac;
 }
 void
+player_maint()
+{
+  int flag;
+  for (int it = 0; it < MAX_A; ++it) {
+    flag |= (statD.cur_stat[it] < statD.max_stat[it]);
+  }
+  if (flag) {
+    msg_print("A wind from the Misty Mountains renews your being.");
+    for (int it = 0; it < MAX_A; ++it) {
+      res_stat(it);
+    }
+  }
+}
+void
 ma_tick()
 {
   uint32_t new_mflag, delta;
@@ -11349,6 +11341,8 @@ dungeon()
   int c, y, x, iidx;
   uint32_t dir;
   new_level_flag = FALSE;
+
+  if (dun_level == 0) player_maint();
 
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
   while (!new_level_flag) {
@@ -11816,7 +11810,14 @@ main()
   magic_init();
 
   while (!death) {
-    generate_cave();
+    // a fresh cave!
+    if (dun_level != 0) {
+      cave_gen();
+    } else {
+      town_gen();
+      store_maint();
+    }
+
     panel_update(&panelD, uD.y, uD.x, TRUE);
     py_check_view(uD.y, uD.x);
     dungeon();
