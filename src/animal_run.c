@@ -4824,7 +4824,7 @@ void obj_detail(obj) struct objS* obj;
   tmp_str[0] = 0;
   if (obj->idflag & ID_REVEAL) {
     if (obj->tval == TV_DIGGING) {
-      sprintf(tmp_str, " (%+d)", obj->p1);
+      sprintf(tmp_str, " (%+d dig)", obj->p1);
     } else if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
       sprintf(tmp_str, " (%d charges)", obj->p1);
     } else if (may_equip(obj->tval) >= INVEN_EQUIP) {
