@@ -10011,9 +10011,9 @@ struct objS* obj;
     }
 
     if (TR_TUNNEL & obj->flags)
-      tabil += 25 + obj->p1 * 50;
+      tabil += 25;
     else {
-      tabil += (obj->damage[0] * obj->damage[1]) + obj->tohit + obj->todam;
+      tabil += obj->damage[0] * obj->damage[1];
       /* divide by two so that digging without shovel isn't too easy */
       tabil >>= 1;
     }
