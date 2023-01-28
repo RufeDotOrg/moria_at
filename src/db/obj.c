@@ -1298,7 +1298,7 @@ struct treasureS treasureD[] = {
      0,
      {0, 0},
      1},
-    {"& Pint~ of Fine Ale",
+    {"& Piece~ of Sourdough Bread",
      0x00000000L,
      TV_FOOD,
      ',', /*83*/
@@ -5246,7 +5246,7 @@ struct treasureS treasureD[] = {
      0,
      {0, 0},
      1},
-    {"& Pint~ of Fine Ale",
+    {"& Piece~ of Sourdough Bread",
      0x00000000L,
      TV_FOOD,
      ',', /*346*/
