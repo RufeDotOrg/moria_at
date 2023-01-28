@@ -8995,7 +8995,6 @@ py_help()
   msg_print("Gameplay Commands");
   BufMsg(screen, "? - help");
   BufMsg(screen, ",: pickup object");
-  BufMsg(screen, "c: close object");
   BufMsg(screen, "d: drop object");
   BufMsg(screen, "e: equipment");
   BufMsg(screen, "f: force Bash");
@@ -9522,41 +9521,6 @@ mon_attack(midx)
       }
     } else {
       MSG("%s misses you.", descD);
-    }
-  }
-}
-static void
-close_object()
-{
-  int y, x, dir, no_object;
-  struct caveS* c_ptr;
-  struct objS* obj;
-
-  y = uD.y;
-  x = uD.x;
-  if (get_dir(0, &dir)) {
-    mmove(dir, &y, &x);
-    c_ptr = &caveD[y][x];
-    obj = &entity_objD[c_ptr->oidx];
-
-    no_object = (obj->id == 0);
-
-    if (obj->tval == TV_OPEN_DOOR) {
-      turn_flag = TRUE;
-      if (c_ptr->midx == 0) {
-        if (obj->p1 == 0) {
-          // invcopy(&t_list[c_ptr->tptr], OBJ_CLOSED_DOOR);
-          obj->tval = TV_CLOSED_DOOR;
-          obj->tchar = '+';
-          c_ptr->fval = FLOOR_OBST;
-        } else
-          msg_print("The door appears to be broken.");
-      } else {
-        // Costs a turn, otherwise can be abused for detection
-        msg_print("Something is in your way!");
-      }
-    } else {
-      msg_print("I do not see anything you can close there.");
     }
   }
 }
@@ -10206,7 +10170,8 @@ static void make_move(midx, mm) int* mm;
       continue;
     else if (cr_ptr->cmove & CM_PHASE)
       do_move = TRUE;
-    else if (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR) {
+    else if (cr_ptr->cmove & CM_OPEN_DOOR &&
+             (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR)) {
       do_turn = TRUE;
       do_move = FALSE;
       if (obj->p1 == 0) {
@@ -10231,6 +10196,18 @@ static void make_move(midx, mm) int* mm;
         }
       }
       if (obj->tval == TV_OPEN_DOOR) c_ptr->fval = FLOOR_CORR;
+    } else if (obj->tval == TV_CLOSED_DOOR) {
+      do_turn = TRUE;
+      if (randint((m_ptr->hp + 1) * (80 + ABS(obj->p1))) <
+          40 * (m_ptr->hp - 20 - ABS(obj->p1))) {
+        obj->tval = TV_OPEN_DOOR;
+        obj->tchar = '\'';
+        // 50% chance to break the door
+        obj->p1 = 1 - randint(2);
+        msg_print("You hear a door burst open!");
+        do_move = TRUE;
+        c_ptr->fval = FLOOR_CORR;
+      }
     } else if (c_ptr->fval <= MAX_OPEN_SPACE)
       do_move = TRUE;
 
@@ -11439,9 +11416,6 @@ dungeon()
               break;
             case '1' ... '9':
               MSG("Numlock is required for arrowkey movement");
-              break;
-            case 'c':
-              close_object();
               break;
             case 'd':
               py_drop(y, x);
