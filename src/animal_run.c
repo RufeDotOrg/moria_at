@@ -68,7 +68,7 @@ vital_update()
   }
   line += 1;
   BufMsg(vitalinfo, "LEV : %6d", uD.lev);
-  BufMsg(vitalinfo, "EXP : %6d", uD.exp);
+  BufMsg(vitalinfo, "EXP :%7d", uD.exp);
   BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
   BufMsg(vitalinfo, "CHP : %6d", uD.chp);
   line += 1;
