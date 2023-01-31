@@ -5627,7 +5627,7 @@ char* special_nameD[] = {
     "of Slaying",
     "of Clumsiness",
     "of Weakness",
-    "of Slow Descent",
+    "of Feather Falling",
     "of Speed",
     "of Stealth",
     "of Slowness",
