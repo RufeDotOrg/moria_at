@@ -3762,7 +3762,7 @@ struct creatureS creatureD[] = {
      0x0081C743L,
      0x5004,
      55000L,
-     70,
+     40,
      30,
      125,
      13,

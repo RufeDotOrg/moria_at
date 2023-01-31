@@ -107,10 +107,7 @@ get_sym(int row, int col)
 {
   struct caveS* cave_ptr;
 
-  if (row == uD.y && col == uD.x)
-    return '@';
-  else if (countD.blind)
-    return ' ';
+  if (row == uD.y && col == uD.x) return '@';
 
   cave_ptr = &caveD[row][col];
   if (cave_ptr->midx) {
@@ -118,6 +115,7 @@ get_sym(int row, int col)
     struct creatureS* creature = &creatureD[mon->cidx];
     if (mon->mlit) return creature->cchar;
   }
+  if (countD.blind) return ' ';
   if (((cave_ptr->cflag & CF_FIELDMARK) == 0) && !cave_lit(cave_ptr))
     return ' ';
   if (cave_ptr->oidx) {
