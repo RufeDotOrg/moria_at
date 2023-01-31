@@ -225,6 +225,19 @@ cave_obj(row, col)
           // TBD: copper/silver/gold/mithril/gems by subval
         case TV_GOLD:
           return 16;
+        /* Dungeon Fixtures */
+        case TV_VIS_TRAP:
+          return 26;
+        case TV_RUBBLE:
+          return 27;
+        case TV_OPEN_DOOR:
+          return 28;
+        case TV_CLOSED_DOOR:
+          return 29;
+        case TV_UP_STAIR:
+          return 30;
+        case TV_DOWN_STAIR:
+          return 31;
       }
     }
   }

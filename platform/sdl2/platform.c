@@ -5,7 +5,6 @@
 
 #include "art.c"
 #include "auxval.c"
-#include "dungeon.c"
 #include "font_zip.c"
 #include "player.c"
 #include "treasure.c"
@@ -270,7 +269,7 @@ art_init()
 }
 
 // treasure
-#define MAX_TART 25
+#define MAX_TART 31
 static uint8_t tartD[8 * 1024];
 static uint64_t tart_usedD;
 static struct SDL_Texture *tart_textureD[MAX_TART];
@@ -401,51 +400,6 @@ part_init()
     if (!part_textureD[it]) return FALSE;
   }
   Log("Player Art textures available %ju", AL(part_textureD));
-
-  return TRUE;
-}
-
-#define MAX_DUNGEON 36
-static uint8_t dungeonD[16 * 1024];
-static uint64_t dungeon_usedD;
-static struct SDL_Texture *dungeon_textureD[MAX_DUNGEON];
-BOOL
-dungeon_io()
-{
-  int rc = -1;
-  dungeon_usedD = AL(dungeonD);
-  rc = puff((void *)&dungeonD, &dungeon_usedD, dungeonZ,
-            &(uint64_t){sizeof(dungeonZ)});
-  Log("dungeon_io() [ rc %d ] [ dungeon_usedD %ju ]\n", rc, dungeon_usedD);
-  return rc == 0;
-}
-
-BOOL
-dungeon_init()
-{
-  struct SDL_Renderer *renderer = rendererD;
-  int byte_count = dungeon_usedD;
-  uint8_t bitmap[ART_H][ART_W];
-
-  struct SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
-      SDL_SWSURFACE, ART_W, ART_H, 0, texture_formatD);
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(dungeon_textureD);
-       ++it, byte_used += (ART_W * ART_H / 8)) {
-    if (byte_used >= byte_count) break;
-    bitfield_to_bitmap(&dungeonD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    memset(surface->pixels, 0, surface->h * surface->pitch);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
-                           surface);
-    dungeon_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_SetTextureBlendMode(dungeon_textureD[it], SDL_BLENDMODE_BLEND);
-  }
-  SDL_FreeSurface(surface);
-
-  for (int it = 0; it < AL(dungeon_textureD); ++it) {
-    if (!dungeon_textureD[it]) return FALSE;
-  }
-  Log("Dungeon textures available %ju", AL(dungeon_textureD));
 
   return TRUE;
 }
@@ -609,14 +563,7 @@ SDL_Texture *
 texture_by_sym(char c)
 {
   SDL_Texture *t = 0;
-  if (c == '#') return dungeon_textureD[0 + 4];
-  if (c == '%') return dungeon_textureD[0 + 6];
   if (c == '8') return wart_textureD[1];
-  if (c == ':') return dungeon_textureD[35];
-  if (c == '>') return dungeon_textureD[8 + 4];
-  if (c == '<') return dungeon_textureD[13 + 4];
-  if (c == '\'') return dungeon_textureD[18 + 1];
-  if (c == '+') return dungeon_textureD[21 + 1];
   if (c == '@') return part_textureD[0 + 4];
   if (c == '.') return 0;
   if (char_visible(c)) {
@@ -1209,7 +1156,6 @@ platform_init()
 
   if (!art_io() || !art_init()) return;
 
-  if (!dungeon_io() || !dungeon_init()) exit(5);
   if (!tart_io() || !tart_init()) return;
   if (!wart_io() || !wart_init()) return;
   if (!part_io() || !part_init()) return;
