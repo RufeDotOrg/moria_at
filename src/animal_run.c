@@ -5215,7 +5215,6 @@ ma_duration(maidx, nturn)
 }
 int8_t
 modify_stat(stat, amount)
-int stat, amount;
 {
   int loop, i;
   int8_t tmp_stat;
@@ -10170,23 +10169,22 @@ static void make_move(midx, mm) int* mm;
       continue;
     else if (cr_ptr->cmove & CM_PHASE)
       do_move = TRUE;
-    else if (cr_ptr->cmove & CM_OPEN_DOOR &&
-             (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR)) {
+    else if (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR) {
       do_turn = TRUE;
       do_move = FALSE;
-      if (obj->p1 == 0) {
+      if (cr_ptr->cmove & CM_OPEN_DOOR && obj->p1 == 0) {
         obj->tval = TV_OPEN_DOOR;
         obj->tchar = '\'';
         if (c_ptr->cflag & CF_LIT) msg_print("A door creaks open.");
-      } else if (obj->p1 > 0) {
+      } else if (cr_ptr->cmove & CM_OPEN_DOOR && obj->p1 > 0) {
         if (randint((m_ptr->hp + 1) * (50 + obj->p1)) <
             40 * (m_ptr->hp - 10 - obj->p1)) {
           msg_print("You hear the click of a lock being opened.");
           obj->p1 = 0;
         }
       } else if (obj->p1 < 0) {
-        if (randint((m_ptr->hp + 1) * (50 - obj->p1)) <
-            40 * (m_ptr->hp - 10 + obj->p1)) {
+        if (randint((m_ptr->hp + 1) * (80 - obj->p1)) <
+            40 * (m_ptr->hp - 20 + obj->p1)) {
           obj->tval = TV_OPEN_DOOR;
           obj->tchar = '\'';
           // 50% chance to break the door
@@ -10196,18 +10194,6 @@ static void make_move(midx, mm) int* mm;
         }
       }
       if (obj->tval == TV_OPEN_DOOR) c_ptr->fval = FLOOR_CORR;
-    } else if (obj->tval == TV_CLOSED_DOOR) {
-      do_turn = TRUE;
-      if (randint((m_ptr->hp + 1) * (80 + ABS(obj->p1))) <
-          40 * (m_ptr->hp - 20 - ABS(obj->p1))) {
-        obj->tval = TV_OPEN_DOOR;
-        obj->tchar = '\'';
-        // 50% chance to break the door
-        obj->p1 = 1 - randint(2);
-        msg_print("You hear a door burst open!");
-        do_move = TRUE;
-        c_ptr->fval = FLOOR_CORR;
-      }
     } else if (c_ptr->fval <= MAX_OPEN_SPACE)
       do_move = TRUE;
 
