@@ -1984,7 +1984,7 @@ void magic_treasure(obj, level) struct objS* obj;
 
     case TV_RING: /* Rings        */
       switch (obj->subval) {
-        case 0:
+        case 0: /* Attributes */
         case 1:
         case 2:
         case 3:
@@ -1997,7 +1997,7 @@ void magic_treasure(obj, level) struct objS* obj;
             obj->cost += obj->p1 * 100;
           }
           break;
-        case 4:
+        case 4: /* Speed */
           if (magik(cursed)) {
             obj->p1 = -randint(3);
             obj->flags |= TR_CURSED;
@@ -2005,7 +2005,7 @@ void magic_treasure(obj, level) struct objS* obj;
           } else
             obj->p1 = 1;
           break;
-        case 5:
+        case 5: /* Searching */
           obj->p1 = 5 * m_bonus(1, 20, level);
           obj->cost += obj->p1 * 50;
           if (magik(cursed)) {
