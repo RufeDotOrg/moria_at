@@ -270,19 +270,19 @@ altmap_update()
   memset(tremapD, 0, sizeof(tremapD));
   memset(litmapD, 0, sizeof(litmapD));
 
-  if (countD.blind == 0) {
-    uint16_t* cidx_ptr = &cremapD[0][0];
-    for (int row = rmin; row < rmax; ++row) {
-      for (int col = cmin; col < cmax; ++col) {
-        struct caveS* cave_ptr = &caveD[row][col];
-        if (cave_ptr->midx) {
-          struct monS* mon = &entity_monD[cave_ptr->midx];
-          if (mon->mlit) *cidx_ptr = mon->cidx;
-        }
-        cidx_ptr += 1;
+  uint16_t* cidx_ptr = &cremapD[0][0];
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      struct caveS* cave_ptr = &caveD[row][col];
+      if (cave_ptr->midx) {
+        struct monS* mon = &entity_monD[cave_ptr->midx];
+        if (mon->mlit) *cidx_ptr = mon->cidx;
       }
+      cidx_ptr += 1;
     }
+  }
 
+  if (countD.blind == 0) {
     uint8_t* wall_ptr = &wallmapD[0][0];
     for (int row = rmin; row < rmax; ++row) {
       for (int col = cmin; col < cmax; ++col) {
