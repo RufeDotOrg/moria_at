@@ -726,7 +726,6 @@ randnor(mean, stand)
 }
 int
 damroll(num, sides)
-int num, sides;
 {
   int i, sum = 0;
 
@@ -806,13 +805,15 @@ struct objS* obj;
   }
   return (tdam);
 }
-void disturb(search, light) int search, light;
+void
+disturb(search, light)
 {
   if (countD.rest != 0) countD.rest = 0;
   find_flag = FALSE;
 }
 
-static void build_room(yval, xval) int yval, xval;
+static void
+build_room(yval, xval)
 {
   int i, j, x, xmax, y, ymax;
   uint8_t floor;
@@ -976,7 +977,6 @@ in_bounds(int row, int col)
 
 int
 los(fromY, fromX, toY, toX)
-int fromY, fromX, toY, toX;
 {
   int tmp, deltaX, deltaY;
 
@@ -1120,7 +1120,6 @@ static void rand_dir(rdir, cdir) int *rdir, *cdir;
   }
 }
 static void correct_dir(rdir, cdir, y1, x1, y2, x2) int *rdir, *cdir;
-int y1, x1, y2, x2;
 {
   if (y1 < y2)
     *rdir = 1;
@@ -1141,7 +1140,8 @@ int y1, x1, y2, x2;
       *cdir = 0;
   }
 }
-static void place_broken_door(broken, y, x) int broken, y, x;
+static void
+place_broken_door(broken, y, x)
 {
   struct objS* obj;
   struct caveS* cave_ptr;
@@ -1160,7 +1160,8 @@ static void place_broken_door(broken, y, x) int broken, y, x;
   cave_ptr->oidx = obj_index(obj);
   cave_ptr->fval = FLOOR_CORR;
 }
-static void place_closed_door(locked, y, x) int locked, y, x;
+static void
+place_closed_door(locked, y, x)
 {
   struct objS* obj;
   struct caveS* cave_ptr;
@@ -1181,7 +1182,8 @@ static void place_closed_door(locked, y, x) int locked, y, x;
     cave_ptr->fval = FLOOR_OBST;
   }
 }
-static void place_secret_door(y, x) int y, x;
+static void
+place_secret_door(y, x)
 {
   struct objS* obj;
   struct caveS* cave_ptr;
@@ -1199,7 +1201,8 @@ static void place_secret_door(y, x) int y, x;
   cave_ptr->oidx = obj_index(obj);
   cave_ptr->fval = FLOOR_OBST;
 }
-static void place_door(y, x) int y, x;
+static void
+place_door(y, x)
 {
   int tmp;
   int lock;
@@ -1335,7 +1338,8 @@ build_corridor(row1, col1, row2, col2)
     }
   }
 }
-static void fill_cave(fval) int fval;
+static void
+fill_cave(fval)
 {
   int i, j;
   struct caveS* c_ptr;
@@ -1438,7 +1442,8 @@ struct objS* copy;
 
   return id != 0;
 }
-static void place_stair_tval_tchar(y, x, tval, tchar) int y, x, tval, tchar;
+static void
+place_stair_tval_tchar(y, x, tval, tchar)
 {
   struct objS* obj;
   struct caveS* cave_ptr;
@@ -1470,7 +1475,8 @@ static void new_spot(y, x) int *y, *x;
   *y = i;
   *x = j;
 }
-static void place_stairs(typ, num, walls) int typ, num, walls;
+static void
+place_stairs(typ, num, walls)
 {
   struct caveS* cave_ptr;
   int i, j, flag;
@@ -1530,7 +1536,6 @@ next_to_corr(y, x)
 }
 static int
 next_to(y, x)
-int y, x;
 {
   int next;
 
@@ -1549,7 +1554,6 @@ int y, x;
 }
 int
 distance(y1, x1, y2, x2)
-int y1, x1, y2, x2;
 {
   int dy, dx;
 
@@ -1560,7 +1564,8 @@ int y1, x1, y2, x2;
 
   return ((((dy + dx) << 1) - (dy > dx ? dx : dy)) >> 1);
 }
-static void try_door(y, x) int y, x;
+static void
+try_door(y, x)
 {
   if ((caveD[y][x].fval == FLOOR_CORR) && (randint(100) > DUN_TUN_JCT) &&
       next_to(y, x))
@@ -2540,7 +2545,6 @@ struct objS* obj;
 }
 BOOL
 is_door(tval)
-int tval;
 {
   switch (tval) {
     case TV_OPEN_DOOR:
@@ -2895,7 +2899,6 @@ map_area()
 }
 int
 get_obj_num(level, must_be_small)
-int level, must_be_small;
 {
   int i, j;
 
@@ -2937,7 +2940,6 @@ int level, must_be_small;
 }
 int
 get_mon_num(level)
-int level;
 {
   int i, j, num;
 
@@ -3214,7 +3216,8 @@ place_gold(y, x)
       msg_print("You feel something roll beneath your feet.");
   }
 }
-void place_object(y, x, must_be_small) int y, x, must_be_small;
+void
+place_object(y, x, must_be_small)
 {
   struct objS* obj;
 
@@ -3249,7 +3252,6 @@ place_trap(y, x, offset)
   }
 }
 void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
-int typ, num;
 {
   for (int it = 0; it < num; it++) {
     int y, x;
@@ -3517,7 +3519,6 @@ cave_reset()
 BOOL
 panel_contains(panel, y, x)
 struct panelS* panel;
-int y, x;
 {
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
@@ -3558,13 +3559,12 @@ panel_update(struct panelS* panel, int y, int x, BOOL force)
 
   panel_bounds(panel);
 }
-static void get_moves(monptr, mm) int monptr;
-int* mm;
+static void get_moves(midx, mm) int* mm;
 {
   int y, ay, x, ax, move_val;
 
-  y = entity_monD[monptr].fy - uD.y;
-  x = entity_monD[monptr].fx - uD.x;
+  y = entity_monD[midx].fy - uD.y;
+  x = entity_monD[midx].fx - uD.x;
   if (y < 0) {
     move_val = 8;
     ay = -y;
@@ -3704,7 +3704,6 @@ int* mm;
 }
 static int
 see_wall(dir, y, x)
-int dir, y, x;
 {
   char c;
   if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
@@ -3768,7 +3767,6 @@ void find_init(dir, y_ptr, x_ptr) int *y_ptr, *x_ptr;
 }
 static int
 see_nothing(dir, y, x)
-int dir, y, x;
 {
   if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
     return FALSE;
@@ -4020,7 +4018,8 @@ update_mon(midx)
     m_ptr->mlit = FALSE;
   }
 }
-void light_room(y, x) int y, x;
+void
+light_room(y, x)
 {
   int i, j, start_col, end_col;
   int tmp1, tmp2, start_row, end_row;
@@ -4116,7 +4115,8 @@ unlight_area(y, x)
 
   return known;
 }
-void py_move_light(y1, x1, y2, x2) int y1, x1, y2, x2;
+void
+py_move_light(y1, x1, y2, x2)
 {
   int row, col;
   for (row = y1 - 1; row <= y1 + 1; ++row) {
@@ -4243,7 +4243,6 @@ light_adj(p1)
 }
 int
 bth_adj(attype)
-int attype;
 {
   switch (attype) {
     case 1:
@@ -4301,7 +4300,6 @@ int attype;
 }
 char*
 attack_string(adesc)
-int adesc;
 {
   switch (adesc) {
     case 1:
@@ -4369,9 +4367,9 @@ int adesc;
 }
 uint32_t
 sustain_stat(sidx)
-uint32_t sidx;
 {
-  return ((1 << sidx) | TR_SUST_STAT);
+  uint32_t val = sidx;
+  return ((1 << val) | TR_SUST_STAT);
 }
 int
 con_adj()
@@ -4483,7 +4481,6 @@ poison_adj()
 }
 int
 think_adj(stat)
-int stat;
 {
   int value;
 
@@ -4633,7 +4630,6 @@ todam_adj()
 }
 int
 test_hit(bth, level_adj, pth, ac)
-int bth, level_adj, pth, ac;
 {
   int i, die;
 
@@ -4741,9 +4737,9 @@ mon_take_hit(midx, dam)
   return death_blow;
 }
 BOOL
-is_a_vowel(c)
-char c;
+is_a_vowel(chr)
 {
+  char c = chr;
   switch (c) {
     case 'a':
     case 'e':
@@ -4866,7 +4862,6 @@ void obj_detail(obj) struct objS* obj;
   if (obj->idflag & ID_RARE) strcat(descD, " {rare}");
 }
 void obj_desc(obj, prefix) struct objS* obj;
-BOOL prefix;
 {
   char* basenm;
   char damstr[80];
@@ -5037,7 +5032,8 @@ mon_desc(midx)
   else
     snprintf(death_descD, AL(death_descD), "A %s", cre->name);
 }
-void calc_hitpoints(level) int level;
+void
+calc_hitpoints(level)
 {
   int hitpoints;
 
@@ -5250,7 +5246,8 @@ modify_stat(stat, amount)
   }
   return tmp_stat;
 }
-void set_use_stat(stat) int stat;
+void
+set_use_stat(stat)
 {
   statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
 
@@ -5624,7 +5621,6 @@ py_class_select()
   return 0;
 }
 static void py_stats(stats, len) int8_t* stats;
-int len;
 {
   int i, tot;
   int dice[18];
@@ -5907,10 +5903,7 @@ py_where()
   }
   panel_update(&panelD, uD.y, uD.x, TRUE);
 }
-static int
-py_inven_filter(begin, end, valid)
-int begin, end;
-int (*valid)();
+static int py_inven_filter(begin, end, valid) int (*valid)();
 {
   int line = 0;
 
@@ -6129,7 +6122,8 @@ void py_teleport(dis, uy, ux) int *uy, *ux;
   *uy = ty;
   *ux = tx;
 }
-void teleport_away(midx, dis) int midx, dis;
+void
+teleport_away(midx, dis)
 {
   int fy, fx, yn, xn, ctr, cdis;
   struct monS* m_ptr;
@@ -6247,8 +6241,7 @@ light_line(dir, y, x)
     mmove(dir, &y, &x);
   } while (!flag);
 }
-void fire_bolt(typ, dir, y, x, dam, bolt_typ) int typ, dir, y, x, dam;
-char* bolt_typ;
+void fire_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
 {
   int i, oldy, oldx, dist, flag;
   uint32_t weapon_type;
@@ -6493,7 +6486,6 @@ wall_to_mud(dir, y, x)
 }
 int
 poly_monster(dir, y, x)
-int dir, y, x;
 {
   int dist, flag, poly;
   struct caveS* c_ptr;
@@ -7374,7 +7366,6 @@ inven_sort()
 }
 static int
 inven_screen(begin, end)
-int begin, end;
 {
   int line, count;
 
@@ -10624,7 +10615,6 @@ creatures()
 }
 BOOL
 py_teleport_near(y, x, uy, ux)
-int y, x;
 int *uy, *ux;
 {
   for (int ro = y - 1; ro <= y + 1; ++ro) {
@@ -11117,7 +11107,8 @@ store_entrance(sidx)
     if (c == 'I') inven_sort();
   }
 }
-static void regenhp(percent) int percent;
+static void
+regenhp(percent)
 {
   uint32_t new_value;
   int chp, mhp, chp_frac;
