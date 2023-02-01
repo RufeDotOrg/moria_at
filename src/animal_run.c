@@ -1711,8 +1711,11 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->todam += 5;
               obj->toac += randint(4);
               /* the value in p1 is used for strength increase */
-              /* p1 is also used for sustain stat */
-              obj->p1 = randint(4);
+              /* p1 is also used for sustain stat (STR or DEX) */
+              if (randint(2) == 1)
+                obj->p1 = 1;
+              else
+                obj->p1 = 4;
               obj->sn = SN_HA;
               obj->cost += obj->p1 * 500;
               obj->cost += 10000;
