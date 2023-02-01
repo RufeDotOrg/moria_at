@@ -10193,9 +10193,9 @@ static void make_move(midx, mm) int* mm;
           msg_print("You hear the click of a lock being opened.");
           obj->p1 = 0;
         }
-      } else if (obj->p1 < 0) {
-        if (randint((m_ptr->hp + 1) * (80 - obj->p1)) <
-            40 * (m_ptr->hp - 20 + obj->p1)) {
+      } else {
+        int k = ABS(obj->p1);
+        if (randint((m_ptr->hp + 1) * (80 + k)) < 40 * (m_ptr->hp - 20 - k)) {
           obj->tval = TV_OPEN_DOOR;
           obj->tchar = '\'';
           // 50% chance to break the door
