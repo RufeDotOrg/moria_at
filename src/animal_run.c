@@ -1988,57 +1988,27 @@ void magic_treasure(obj, level) struct objS* obj;
         case 1:
         case 2:
         case 3:
-          if (magik(cursed)) {
-            obj->p1 = -m_bonus(1, 20, level);
-            obj->flags |= TR_CURSED;
-            obj->cost = -obj->cost;
-          } else {
-            obj->p1 = m_bonus(1, 10, level);
-            obj->cost += obj->p1 * 100;
-          }
+          obj->p1 = m_bonus(1, 10, level);
+          obj->cost += obj->p1 * 100;
           break;
         case 4: /* Speed */
-          if (magik(cursed)) {
-            obj->flags = (TR_SLOWNESS | TR_CURSED);
-            obj->cost = -obj->cost;
-          } else
-            obj->flags = TR_SPEED;
+          obj->flags = TR_SPEED;
           break;
         case 5: /* Searching */
           obj->p1 = 5 * m_bonus(1, 20, level);
           obj->cost += obj->p1 * 50;
-          if (magik(cursed)) {
-            obj->p1 = -obj->p1;
-            obj->flags |= TR_CURSED;
-            obj->cost = -obj->cost;
-          }
           break;
         case 19: /* Increase damage        */
           obj->todam += m_bonus(1, 20, level);
           obj->cost += obj->todam * 100;
-          if (magik(cursed)) {
-            obj->todam = -obj->todam;
-            obj->flags |= TR_CURSED;
-            obj->cost = -obj->cost;
-          }
           break;
         case 20: /* Increase To-Hit        */
           obj->tohit += m_bonus(1, 20, level);
           obj->cost += obj->tohit * 100;
-          if (magik(cursed)) {
-            obj->tohit = -obj->tohit;
-            obj->flags |= TR_CURSED;
-            obj->cost = -obj->cost;
-          }
           break;
         case 21: /* Protection        */
           obj->toac += m_bonus(1, 20, level);
           obj->cost += obj->toac * 100;
-          if (magik(cursed)) {
-            obj->toac = -obj->toac;
-            obj->flags |= TR_CURSED;
-            obj->cost = -obj->cost;
-          }
           break;
         case 24:
         case 25:
@@ -2051,12 +2021,6 @@ void magic_treasure(obj, level) struct objS* obj;
           obj->todam += m_bonus(1, 25, level);
           obj->tohit += m_bonus(1, 25, level);
           obj->cost += (obj->tohit + obj->todam) * 100;
-          if (magik(cursed)) {
-            obj->tohit = -obj->tohit;
-            obj->todam = -obj->todam;
-            obj->flags |= TR_CURSED;
-            obj->cost = -obj->cost;
-          }
           break;
         default:
           break;
@@ -2065,24 +2029,12 @@ void magic_treasure(obj, level) struct objS* obj;
 
     case TV_AMULET: /* Amulets        */
       if (obj->subval < 2) {
-        if (magik(cursed)) {
-          obj->p1 = -m_bonus(1, 20, level);
-          obj->flags |= TR_CURSED;
-          obj->cost = -obj->cost;
-        } else {
-          obj->p1 = m_bonus(1, 10, level);
-          obj->cost += obj->p1 * 100;
-        }
+        obj->p1 = m_bonus(1, 10, level);
+        obj->cost += obj->p1 * 100;
       } else if (obj->subval == 2) {
         obj->p1 = 5 * m_bonus(1, 25, level);
-        if (magik(cursed)) {
-          obj->p1 = -obj->p1;
-          obj->cost = -obj->cost;
-          obj->flags |= TR_CURSED;
-        } else
-          obj->cost += 50 * obj->p1;
+        obj->cost += 50 * obj->p1;
       } else if (obj->subval == 8) {
-        /* amulet of the magi is never cursed */
         obj->p1 = 5 * m_bonus(1, 25, level);
         obj->cost += 20 * obj->p1;
       }
