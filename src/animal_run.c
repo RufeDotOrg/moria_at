@@ -1896,8 +1896,8 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->sn = SN_INTELLIGENCE;
               obj->cost += obj->p1 * 500;
             } else if (tmp == 2) {
-              obj->p1 = randint(2);
-              obj->flags |= TR_WIS;
+              obj->p1 = 3;
+              obj->flags |= (TR_SUST_STAT | TR_WIS);
               obj->sn = SN_WISDOM;
               obj->cost += obj->p1 * 500;
             } else {
@@ -1920,9 +1920,9 @@ void magic_treasure(obj, level) struct objS* obj;
                 obj->cost += 1000 + obj->p1 * 500;
                 break;
               case 3:
-                obj->p1 = randint(3);
+                obj->p1 = 2;
                 obj->flags |= (TR_RES_LIGHT | TR_RES_COLD | TR_RES_ACID |
-                               TR_RES_FIRE | TR_INT);
+                               TR_RES_FIRE | TR_SUST_STAT | TR_INT);
                 obj->sn = SN_MAGI;
                 obj->cost += 3000 + obj->p1 * 500;
                 break;
