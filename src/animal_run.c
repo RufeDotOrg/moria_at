@@ -1898,7 +1898,6 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->cost += obj->p1 * 500;
             } else {
               obj->p1 = 1 + randint(4);
-              obj->flags |= TR_INFRA;
               obj->sn = SN_INFRAVISION;
               obj->cost += obj->p1 * 250;
             }
@@ -1959,11 +1958,9 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->sn = SN_DULLNESS;
               break;
             case 3:
-              obj->flags |= TR_BLIND;
               obj->sn = SN_BLINDNESS;
               break;
             case 4:
-              obj->flags |= TR_TIMID;
               obj->sn = SN_TIMIDNESS;
               break;
             case 5:
@@ -5269,8 +5266,8 @@ void py_bonuses(obj, factor) struct objS* obj;
 {
   int amount;
 
-  if ((TR_BLIND & obj->flags) && (factor > 0)) countD.blind += 1000;
-  if ((TR_TIMID & obj->flags) && (factor > 0)) countD.fear += 50;
+  if (obj->sn == SN_BLINDNESS && factor > 0) countD.blind += 1000;
+  if (obj->sn == SN_TIMIDNESS && factor > 0) countD.fear += 50;
   if (TR_SLOW_DIGEST & obj->flags) uD.food_digest -= factor;
   if (TR_REGEN & obj->flags) uD.food_digest += factor * 3;
 
@@ -5288,7 +5285,7 @@ void py_bonuses(obj, factor) struct objS* obj;
   }
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
   if (TR_SPEED & obj->flags) uD.pspeed -= amount;
-  if (TR_INFRA & obj->flags) uD.infra += amount;
+  if (obj->sn == SN_INFRAVISION) uD.infra += amount;
 }
 BOOL
 player_saves()
@@ -5374,9 +5371,11 @@ equip_curse()
     i_ptr->tohit = 0;
     i_ptr->todam = 0;
     i_ptr->toac = -randint(5) - randint(5);
-    i_ptr->sn = 0;
-
+    /* Must call py_bonuses() before set (clear) sn & flags, and
+       must call calc_bonuses() after set (clear) sn & flags, so that
+       all attributes will be properly turned off. */
     py_bonuses(i_ptr, -1);
+    i_ptr->sn = 0;
     i_ptr->flags = TR_CURSED;
     calc_bonuses();
     return TRUE;
@@ -7398,12 +7397,12 @@ weapon_curse()
     i_ptr->tohit = -randint(5) - randint(5);
     i_ptr->todam = -randint(5) - randint(5);
     i_ptr->toac = 0;
-    i_ptr->sn = 0;
 
-    /* Must call py_bonuses() before set (clear) flags, and
-       must call calc_bonuses() after set (clear) flags, so that
+    /* Must call py_bonuses() before set (clear) sn & flags, and
+       must call calc_bonuses() after set (clear) sn & flags, so that
        all attributes will be properly turned off. */
     py_bonuses(i_ptr, -1);
+    i_ptr->sn = 0;
     i_ptr->flags = TR_CURSED;
     calc_bonuses();
     return TRUE;
