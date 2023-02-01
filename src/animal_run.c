@@ -5988,31 +5988,39 @@ restore_level()
   }
   return (restore);
 }
-void
+int
 py_lose_experience(amount)
 {
   int lev, exp;
   struct classS* c_ptr;
+  struct objS* obj;
 
-  exp = MAX(uD.exp - amount, 0);
+  obj = obj_get(invenD[INVEN_WIELD]);
+  if (obj->sn != SN_SU) {
+    exp = MAX(uD.exp - amount, 0);
 
-  lev = 1;
-  while (lev_exp(lev) <= exp) lev++;
+    lev = 1;
+    while (lev_exp(lev) <= exp) lev++;
 
-  uD.exp = exp;
-  if (uD.lev != lev) {
-    uD.lev = lev;
+    uD.exp = exp;
+    if (uD.lev != lev) {
+      uD.lev = lev;
 
-    calc_hitpoints(lev);
-    c_ptr = &classD[uD.clidx];
-    // if (c_ptr->spell == MAGE) {
-    //   calc_spells(A_INT);
-    //   calc_mana(A_INT);
-    // } else if (c_ptr->spell == PRIEST) {
-    //   calc_spells(A_WIS);
-    //   calc_mana(A_WIS);
-    // }
+      calc_hitpoints(lev);
+      c_ptr = &classD[uD.clidx];
+      // if (c_ptr->spell == MAGE) {
+      //   calc_spells(A_INT);
+      //   calc_mana(A_INT);
+      // } else if (c_ptr->spell == PRIEST) {
+      //   calc_spells(A_WIS);
+      //   calc_mana(A_WIS);
+      // }
+    }
+
+    return TRUE;
   }
+
+  return FALSE;
 }
 void
 teleport_to(ny, nx)
@@ -7783,7 +7791,6 @@ inven_quaff(iidx)
         case 34:
           if (uD.exp > 0) {
             int m, scale;
-            msg_print("You feel your memories fade.");
             /* Lose between 1/5 and 2/5 of your experience */
             m = uD.exp / 5;
             if (uD.exp > INT16_MAX) {
@@ -7791,8 +7798,10 @@ inven_quaff(iidx)
               m += (randint(scale) * uD.exp) / (scale * 5);
             } else
               m += randint(uD.exp) / 5;
-            py_lose_experience(m);
-            ident |= TRUE;
+            if (py_lose_experience(m)) {
+              msg_print("You feel your memories fade.");
+              ident |= TRUE;
+            }
           }
           break;
         case 35:
@@ -9401,8 +9410,9 @@ mon_attack(midx)
           lose_stat(A_WIS);
           break;
         case 19: /*Lose experience  */
-          msg_print("You feel your life draining away!");
-          py_lose_experience(damage + (uD.exp / 100) * MON_DRAIN_EXP);
+          if (py_lose_experience(damage + (uD.exp / 100) * MON_DRAIN_EXP)) {
+            msg_print("You feel your life draining away!");
+          }
           break;
         case 20: /*Aggravate monster*/
           aggravate_monster(20);
