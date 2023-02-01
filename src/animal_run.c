@@ -8657,12 +8657,6 @@ struct objS* obj;
   return TRUE;
 }
 static int
-obj_damd(obj)
-struct objS* obj;
-{
-  return (obj->flags & TR_CURSED);
-}
-static int
 obj_rare(obj)
 struct objS* obj;
 {
@@ -11172,39 +11166,6 @@ ma_tick()
   }
 }
 void
-sense_magik()
-{
-  struct objS* obj;
-
-  // TBD: Tuning of turns
-  // Level 40: warrior 87, mage 371
-  // Level 1: warrior 516, mage 2682
-  if (((turnD & 0xF) == 0) && (countD.confusion == 0) &&
-      (randint(1 + (1000 / level_adj[uD.clidx][LA_SENSE_MAGIK]) /
-                       (1 + uD.lev)) == 1)) {
-    if (randint(50) == 1) {
-      for (int it = INVEN_EQUIP - 1; it >= 0; --it) {
-        obj = obj_get(invenD[it]);
-        if (obj_sense(obj)) {
-          if (obj_damd(obj)) {
-            obj->cost = -1;
-            obj->idflag |= ID_DAMD;
-          } else if (obj_rare(obj)) {
-            obj->idflag |= ID_RARE;
-          } else if (obj_magik(obj)) {
-            obj->idflag |= ID_MAGIK;
-          } else {
-            obj->idflag |= ID_PLAIN;
-          }
-          obj_desc(obj, TRUE);
-          MSG("You have a feeling about %c) %s.", 'a' + it, descD);
-          it = 0;
-        }
-      }
-    }
-  }
-}
-void
 tick()
 {
   int regen_amount, tmp;
@@ -11290,8 +11251,6 @@ tick()
     countD.protevil -= 1;
     if (countD.protevil == 0) msg_print("You no longer feel safe from evil.");
   }
-
-  sense_magik();
 }
 void
 dungeon()
