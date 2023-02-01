@@ -255,7 +255,7 @@
 // #define TR_BLIND 0x08000000L
 // #define TR_TIMID 0x10000000L
 #define TR_TUNNEL 0x20000000L
-// #define TR_INFRA 0x40000000L
+#define TR_SLOWNESS 0x40000000L
 #define TR_CURSED 0x80000000L
 
 /* definitions for chests */

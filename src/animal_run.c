@@ -310,7 +310,7 @@ altmap_update()
 static int
 py_affect(maid)
 {
-  return uD.mflag & (1 << maid);
+  return (uD.mflag & (1 << maid)) != 0;
 }
 // Match ALL trflag
 static int
@@ -322,8 +322,8 @@ static char* affectD[][8] = {
     {"Recall"},
     {"See Inv"},
     {"PackHvy"},
-    {"Slow (1)", "Slow (2)", "Slow (3)"},
-    {"Fast (1)", "Fast (2)", "Fast (3)"},
+    {"Slow (1)", "Slow (2)"},
+    {"Fast (1)", "Fast (2)"},
     {"Blind"},
     {"Confused"},
     {"Afraid"},
@@ -331,6 +331,12 @@ static char* affectD[][8] = {
     {"Poison"},
     {"Hungry", "Weak", "Faint"},
 };
+int
+py_speed()
+{
+  return (py_affect(MA_SLOW) + py_tr(TR_SLOWNESS)) -
+         (py_affect(MA_FAST) + py_tr(TR_SPEED));
+}
 void
 affect_update()
 {
@@ -342,14 +348,13 @@ affect_update()
   active[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
   active[idx++] = (pack_heavy != 0);
 
+  int pspeed = py_speed();
   // Slow
-  active[idx] = uD.pspeed > 0;
-  active[idx] += uD.pspeed > 1;
-  active[idx++] += uD.pspeed > 2;
+  active[idx] = pspeed > 0;
+  active[idx++] += pspeed > 1;
   // Fast
-  active[idx] = uD.pspeed < 0;
-  active[idx] += uD.pspeed < -1;
-  active[idx++] += uD.pspeed < -2;
+  active[idx] = pspeed < 0;
+  active[idx++] += pspeed < -1;
 
   active[idx++] = (countD.blind != 0);
   active[idx++] = (countD.confusion != 0);
@@ -359,8 +364,6 @@ affect_update()
   active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
   active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
   active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
-  // Currently paralysis/rest skips rendering
-  // active[idx++] = (countD.rest != 0);
 
   len = 0;
   sum = 0;
@@ -1846,7 +1849,6 @@ void magic_treasure(obj, level) struct objS* obj;
           } else if (tmp == 1) {
             obj->flags |= TR_SPEED;
             obj->sn = SN_SPEED;
-            obj->p1 = 1;
             obj->cost += 5000;
           } else /* 2 - 5 */
           {
@@ -1859,9 +1861,8 @@ void magic_treasure(obj, level) struct objS* obj;
       } else if (magik(cursed)) {
         tmp = randint(3);
         if (tmp == 1) {
-          obj->flags |= TR_SPEED;
+          obj->flags |= TR_SLOWNESS;
           obj->sn = SN_SLOWNESS;
-          obj->p1 = -1;
         } else if (tmp == 2) {
           obj->flags |= TR_AGGRAVATE;
           obj->sn = SN_NOISE;
@@ -1998,11 +1999,10 @@ void magic_treasure(obj, level) struct objS* obj;
           break;
         case 4: /* Speed */
           if (magik(cursed)) {
-            obj->p1 = -randint(3);
-            obj->flags |= TR_CURSED;
+            obj->flags = (TR_SLOWNESS | TR_CURSED);
             obj->cost = -obj->cost;
           } else
-            obj->p1 = 1;
+            obj->flags = TR_SPEED;
           break;
         case 5: /* Searching */
           obj->p1 = 5 * m_bonus(1, 20, level);
@@ -5149,14 +5149,12 @@ ma_bonuses(maffect, factor)
         msg_print("The super heroism wears off.");
       break;
     case MA_FAST:
-      uD.pspeed -= factor * 1;
       if (factor > 0)
         msg_print("You feel yourself moving faster.");
       else if (factor < 0)
         msg_print("You feel yourself slow down.");
       break;
     case MA_SLOW:
-      uD.pspeed += factor * 1;
       if (factor > 0)
         msg_print("You feel yourself moving slower.");
       else if (factor < 0)
@@ -5284,7 +5282,6 @@ void py_bonuses(obj, factor) struct objS* obj;
     uD.fos -= amount;
   }
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
-  if (TR_SPEED & obj->flags) uD.pspeed -= amount;
   if (obj->sn == SN_INFRAVISION) uD.infra += amount;
 }
 BOOL
@@ -7103,8 +7100,9 @@ mon_speed(mon)
 struct monS* mon;
 {
   struct creatureS* cr_ptr;
+
   cr_ptr = &creatureD[mon->cidx];
-  return mon->mspeed + cr_ptr->speed - 10 + uD.pspeed + pack_heavy;
+  return mon->mspeed + cr_ptr->speed - 10 + py_speed() + pack_heavy;
 }
 int
 aggravate_monster(dis_affect)
@@ -7797,11 +7795,11 @@ inven_quaff(iidx)
           countD.poison += randint(15) + 10;
           break;
         case 23:
-          if (py_affect(MA_FAST) == 0) ident |= TRUE;
+          if (py_affect(MA_FAST)) ident |= TRUE;
           ma_duration(MA_FAST, randint(25) + 15);
           break;
         case 24:
-          if (py_affect(MA_SLOW) == 0) ident |= TRUE;
+          if (py_affect(MA_SLOW)) ident |= TRUE;
           ma_duration(MA_SLOW, randint(25) + 15);
           break;
         case 26:
@@ -7855,15 +7853,15 @@ inven_quaff(iidx)
           ident |= TRUE;
           break;
         case 36:
-          if (py_affect(MA_INVULN) == 0) ident |= TRUE;
+          if (py_affect(MA_INVULN)) ident |= TRUE;
           ma_duration(MA_INVULN, randint(10) + 10);
           break;
         case 37:
-          if (py_affect(MA_HERO) == 0) ident |= TRUE;
+          if (py_affect(MA_HERO)) ident |= TRUE;
           ma_duration(MA_HERO, randint(25) + 25);
           break;
         case 38:
-          if (py_affect(MA_SUPERHERO) == 0) ident |= TRUE;
+          if (py_affect(MA_SUPERHERO)) ident |= TRUE;
           ma_duration(MA_SUPERHERO, randint(25) + 25);
           break;
         case 39:
@@ -7874,11 +7872,11 @@ inven_quaff(iidx)
           ident |= restore_level();
           break;
         case 41:
-          if (py_affect(MA_AFIRE) == 0) ident |= TRUE;
+          if (py_affect(MA_AFIRE)) ident |= TRUE;
           ma_duration(MA_AFIRE, randint(20) + 20);
           break;
         case 42:
-          if (py_affect(MA_AFROST) == 0) ident |= TRUE;
+          if (py_affect(MA_AFROST)) ident |= TRUE;
           ma_duration(MA_AFROST, randint(20) + 20);
           break;
         case 43:
@@ -7904,7 +7902,7 @@ inven_quaff(iidx)
           //   }
           break;
         case 47:
-          if (py_affect(MA_SEE_INFRA) == 0) {
+          if (py_affect(MA_SEE_INFRA)) {
             msg_print("Your eyes begin to tingle.");
             ident |= TRUE;
           }
@@ -8423,11 +8421,11 @@ int *uy, *ux;
             }
             break;
           case 17:
-            if (py_affect(MA_FAST) == 0) ident |= TRUE;
+            if (py_affect(MA_FAST)) ident |= TRUE;
             ma_duration(MA_FAST, randint(30) + 15);
             break;
           case 18:
-            if (py_affect(MA_SLOW) == 0) ident |= TRUE;
+            if (py_affect(MA_SLOW)) ident |= TRUE;
             ma_duration(MA_SLOW, randint(30) + 15);
             break;
           case 19:
@@ -8895,7 +8893,6 @@ py_character()
   BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
   BufMsg(screen, "%-12.012s: %6d", "Disarming", xdis);
   BufMsg(screen, "%-12.012s: %6d", "Magic Device", xdev);
-  BufMsg(screen, "%-12.012s: %6d", "Speed", -uD.pspeed - pack_heavy);
   BufPad(screen, MAX_A * 3, 55);
 
   line = 2 * MAX_A + 1;

@@ -2095,7 +2095,7 @@ struct treasureS treasureD[] = {
      {0, 0},
      30},
     {"Speed",
-     0x00001000L,
+     0x00000000L,
      TV_RING,
      '=', /*136*/
      0,
