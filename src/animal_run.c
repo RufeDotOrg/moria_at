@@ -7559,6 +7559,7 @@ inven_study(iidx)
     strcpy(descD, tr_ptr->name);
     obj_prefix(obj, FALSE);
     BufMsg(screen, "%-17.017s: %s", "Name", descD);
+    BufMsg(screen, "%-17.017s: %d Lbs", "Weight", obj->weight / 10);
     if (obj->idflag & ID_REVEAL) {
       if (oset_tohitdam(obj)) {
         BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
