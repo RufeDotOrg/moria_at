@@ -1,7 +1,6 @@
 #include "game.c"
 
 enum { HACK = 0 };
-enum { TEST = 0 };
 static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
 static int find_cut = 1;
@@ -5700,12 +5699,6 @@ py_init()
   memcpy(statD.cur_stat, AP(stat));
   AC(statD.mod_stat);
   memcpy(statD.use_stat, AP(stat));
-
-  if (TEST) {
-    for (int it = 0; it < MAX_A; ++it) {
-      statD.max_stat[it] += 1;
-    }
-  }
 
   uD.mhp = uD.chp = hitdie + con_adj();
   uD.chp_frac = 0;
