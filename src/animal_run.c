@@ -4749,54 +4749,66 @@ void obj_prefix(obj, plural) struct objS* obj;
 void obj_detail(obj) struct objS* obj;
 {
   char tmp_str[80];
+  int eqidx, reveal;
 
-  if (obj->sn && obj_reveal(obj)) {
-    snprintf(tmp_str, AL(tmp_str), " %s", special_nameD[obj->sn]);
-    strcat(descD, tmp_str);
-  }
-  /* Crowns have a zero base AC, so make a special test for them. */
-  if (obj->ac != 0 || (obj->tval == TV_HELM)) {
-    snprintf(tmp_str, AL(tmp_str), " [%d", obj->ac);
-    strcat(descD, tmp_str);
-    if (obj_reveal(obj)) {
-      snprintf(tmp_str, AL(tmp_str), ",%+d", obj->toac);
+  eqidx = may_equip(obj->tval);
+  reveal = (obj->idflag & ID_REVEAL) != 0;
+  tmp_str[0] = 0;
+  if (obj->sn && reveal) {
+    if (eqidx == INVEN_WIELD) {
+      if (obj->p1) {
+        snprintf(tmp_str, AL(tmp_str), " (%s%d)", special_nameD[obj->sn],
+                 obj->p1);
+        strcat(descD, tmp_str);
+      } else {
+        snprintf(tmp_str, AL(tmp_str), " (%s)", special_nameD[obj->sn]);
+        strcat(descD, tmp_str);
+      }
+    } else {
+      snprintf(tmp_str, AL(tmp_str), " %s", special_nameD[obj->sn]);
       strcat(descD, tmp_str);
     }
-    strcat(descD, "]");
-  } else if ((obj->toac != 0) && obj_reveal(obj)) {
-    snprintf(tmp_str, AL(tmp_str), " [%+d AC]", obj->toac);
-    strcat(descD, tmp_str);
   }
-  if (obj_reveal(obj)) {
+
+  if (reveal) {
     if (oset_tohitdam(obj)) {
       snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
       strcat(descD, tmp_str);
     }
   }
 
-  // Check p1 value
-  tmp_str[0] = 0;
-  if (obj->idflag & ID_REVEAL) {
-    if (obj->tval == TV_DIGGING) {
-      sprintf(tmp_str, " (%+d dig)", obj->p1);
-    } else if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
-      sprintf(tmp_str, " (%d charges)", obj->p1);
-    } else if (may_equip(obj->tval) >= INVEN_EQUIP) {
-      for (int it = 0; it < MAX_A; ++it) {
-        if (obj->flags & (1 << it)) {
-          sprintf(tmp_str, " (%+d %.3s)", obj->p1, stat_nameD[it]);
+  if (eqidx > INVEN_WIELD) {
+    if ((obj->ac + obj->toac) != 0) {
+      strcat(descD, " [");
+      if (obj->ac != 0) {
+        snprintf(tmp_str, AL(tmp_str), "%d", obj->ac);
+        strcat(descD, tmp_str);
+      }
+      if (reveal) {
+        if (obj->toac != 0) {
+          if (obj->ac != 0) {
+            strcat(descD, ",");
+          }
+          snprintf(tmp_str, AL(tmp_str), "%+d", obj->toac);
           strcat(descD, tmp_str);
         }
       }
-
-      tmp_str[0] = 0;
-      if (obj->flags & TR_STEALTH)
-        sprintf(tmp_str, " (%+d stealth)", obj->p1);
-      else if (obj->flags & TR_SEARCH)
-        sprintf(tmp_str, " (%+d search)", obj->p1);
+      strcat(descD, " AC]");
     }
   }
-  strcat(descD, tmp_str);
+
+  // Check p1 value
+  if (reveal) {
+    if (obj->p1) {
+      if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
+        sprintf(tmp_str, " (%d charges)", obj->p1);
+        strcat(descD, tmp_str);
+      } else if (obj->tval == TV_DIGGING) {
+        sprintf(tmp_str, " (%+d digging) ", obj->p1);
+        strcat(descD, tmp_str);
+      }
+    }
+  }
 
   if (obj->idflag & ID_MAGIK) strcat(descD, " {magik}");
   if (obj->idflag & ID_DAMD) strcat(descD, " {damned}");
