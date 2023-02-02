@@ -1704,8 +1704,8 @@ void magic_treasure(obj, level) struct objS* obj;
            before change to treasure distribution, this helps keep same
            number of ego weapons same as before, see also missiles */
         if (magik(3 * special / 2)) switch (randint(16)) {
-            case 1: /* Holy Avenger   */
-              tmp = randint(4); // str, dex, toac
+            case 1:              /* Holy Avenger   */
+              tmp = randint(4);  // str, dex, toac
               obj->flags |= (TR_SEE_INVIS | TR_SUST_STAT | TR_SLAY_UNDEAD |
                              TR_SLAY_EVIL | TR_STR | TR_DEX);
               obj->tohit += 5;
@@ -1716,8 +1716,8 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->cost += tmp * 500;
               obj->cost += 10000;
               break;
-            case 2: /* Defender   */
-              tmp = randint(5); // stealth, toac
+            case 2:              /* Defender   */
+              tmp = randint(5);  // stealth, toac
               obj->flags |= (TR_FFALL | TR_RES_LIGHT | TR_SEE_INVIS |
                              TR_FREE_ACT | TR_RES_COLD | TR_RES_ACID |
                              TR_RES_FIRE | TR_REGEN | TR_STEALTH);
