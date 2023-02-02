@@ -1705,19 +1705,15 @@ void magic_treasure(obj, level) struct objS* obj;
            number of ego weapons same as before, see also missiles */
         if (magik(3 * special / 2)) switch (randint(16)) {
             case 1: /* Holy Avenger   */
+              tmp = randint(4);
               obj->flags |= (TR_SEE_INVIS | TR_SUST_STAT | TR_SLAY_UNDEAD |
                              TR_SLAY_EVIL | TR_STR);
               obj->tohit += 5;
               obj->todam += 5;
-              obj->toac += randint(4);
-              /* the value in p1 is used for strength increase */
-              /* p1 is also used for sustain stat (STR or DEX) */
-              if (randint(2) == 1)
-                obj->p1 = 1;
-              else
-                obj->p1 = 4;
+              obj->toac += tmp;
+              obj->p1 = tmp;
               obj->sn = SN_HA;
-              obj->cost += obj->p1 * 500;
+              obj->cost += tmp * 500;
               obj->cost += 10000;
               break;
             case 2: /* Defender   */
@@ -1896,8 +1892,8 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->sn = SN_INTELLIGENCE;
               obj->cost += obj->p1 * 500;
             } else if (tmp == 2) {
-              obj->p1 = 3;
-              obj->flags |= (TR_SUST_STAT | TR_WIS);
+              obj->p1 = randint(2);
+              obj->flags |= TR_WIS;
               obj->sn = SN_WISDOM;
               obj->cost += obj->p1 * 500;
             } else {
@@ -1920,9 +1916,9 @@ void magic_treasure(obj, level) struct objS* obj;
                 obj->cost += 1000 + obj->p1 * 500;
                 break;
               case 3:
-                obj->p1 = 2;
+                obj->p1 = randint(3);
                 obj->flags |= (TR_RES_LIGHT | TR_RES_COLD | TR_RES_ACID |
-                               TR_RES_FIRE | TR_SUST_STAT | TR_INT);
+                               TR_RES_FIRE | TR_INT);
                 obj->sn = SN_MAGI;
                 obj->cost += 3000 + obj->p1 * 500;
                 break;
@@ -4786,12 +4782,10 @@ void obj_detail(obj) struct objS* obj;
     } else if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
       sprintf(tmp_str, " (%d charges)", obj->p1);
     } else if (may_equip(obj->tval) >= INVEN_EQUIP) {
-      if (obj->tval != TV_RING || (obj->flags & TR_SUST_STAT) == 0) {
-        for (int it = 0; it < MAX_A; ++it) {
-          if (obj->flags & (1 << it)) {
-            sprintf(tmp_str, " (%+d %.3s)", obj->p1, stat_nameD[it]);
-            strcat(descD, tmp_str);
-          }
+      for (int it = 0; it < MAX_A; ++it) {
+        if (obj->flags & (1 << it)) {
+          sprintf(tmp_str, " (%+d %.3s)", obj->p1, stat_nameD[it]);
+          strcat(descD, tmp_str);
         }
       }
 
@@ -5047,7 +5041,9 @@ calc_bonuses()
   tflag &= ~TR_STATS;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
-    if (TR_SUST_STAT & obj->flags) tflag |= sustain_stat(obj->p1 - 1);
+    if (TR_SUST_STAT & obj->flags) {
+      tflag |= (obj->flags & TR_STATS);
+    }
   }
   cbD.tflag = tflag;
 
