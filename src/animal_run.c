@@ -8733,8 +8733,10 @@ struct objS* obj;
 {
   if ((obj->flags & TR_CURSED) == 0) {
     if (obj->tohit > 0 || obj->todam > 0 || obj->toac > 0) return TRUE;
-    if ((0x4000107fL & obj->flags) && obj->p1 > 0) return TRUE;
-    if (0x07ffe980L & obj->flags) return TRUE;
+    if (((TR_STATS | TR_SEARCH | TR_STEALTH | TR_TUNNEL) & obj->flags) &&
+        obj->p1 > 0)
+      return TRUE;
+    if (0x03fff880L & obj->flags) return TRUE;
   }
 
   return FALSE;
