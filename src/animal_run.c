@@ -1705,7 +1705,7 @@ void magic_treasure(obj, level) struct objS* obj;
            number of ego weapons same as before, see also missiles */
         if (magik(3 * special / 2)) switch (randint(16)) {
             case 1: /* Holy Avenger   */
-              tmp = randint(4);
+              tmp = randint(4); // str, dex, toac
               obj->flags |= (TR_SEE_INVIS | TR_SUST_STAT | TR_SLAY_UNDEAD |
                              TR_SLAY_EVIL | TR_STR | TR_DEX);
               obj->tohit += 5;
@@ -1717,16 +1717,17 @@ void magic_treasure(obj, level) struct objS* obj;
               obj->cost += 10000;
               break;
             case 2: /* Defender   */
+              tmp = randint(5); // stealth, toac
               obj->flags |= (TR_FFALL | TR_RES_LIGHT | TR_SEE_INVIS |
                              TR_FREE_ACT | TR_RES_COLD | TR_RES_ACID |
                              TR_RES_FIRE | TR_REGEN | TR_STEALTH);
               obj->tohit += 3;
               obj->todam += 3;
-              obj->toac += 5 + randint(5);
+              obj->ac += 5;
+              obj->toac += tmp;
               obj->sn = SN_DF;
-              /* the value in p1 is used for stealth */
-              obj->p1 = randint(3);
-              obj->cost += obj->p1 * 500;
+              obj->p1 = tmp;
+              obj->cost += tmp * 500;
               obj->cost += 7500;
               break;
             case 3:
