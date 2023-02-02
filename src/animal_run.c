@@ -1707,7 +1707,7 @@ void magic_treasure(obj, level) struct objS* obj;
             case 1: /* Holy Avenger   */
               tmp = randint(4);
               obj->flags |= (TR_SEE_INVIS | TR_SUST_STAT | TR_SLAY_UNDEAD |
-                             TR_SLAY_EVIL | TR_STR);
+                             TR_SLAY_EVIL | TR_STR | TR_DEX);
               obj->tohit += 5;
               obj->todam += 5;
               obj->toac += tmp;
