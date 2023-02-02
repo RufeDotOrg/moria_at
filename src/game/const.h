@@ -152,7 +152,6 @@
 #define TV_HARD_ARMOR 35
 #define TV_SOFT_ARMOR 36
 /* max tval that uses the TR_* flags */
-// TBD: cross check ring/amulet TR_ flag usage; make sure cbD.tflag is accurate
 #define TV_MAX_ENCHANT 39
 #define TV_AMULET 40
 #define TV_RING 45
