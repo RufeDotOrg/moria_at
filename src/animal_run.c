@@ -9046,6 +9046,7 @@ py_help()
   msg_print("Gameplay Commands");
   BufMsg(screen, "? - help");
   BufMsg(screen, ",: pickup object");
+  BufMsg(screen, "c: close object");
   BufMsg(screen, "d: drop object");
   BufMsg(screen, "e: equipment");
   BufMsg(screen, "f: force Bash");
@@ -9573,6 +9574,41 @@ mon_attack(midx)
       }
     } else {
       MSG("%s misses you.", descD);
+    }
+  }
+}
+static void
+close_object()
+{
+  int y, x, dir, no_object;
+  struct caveS* c_ptr;
+  struct objS* obj;
+
+  y = uD.y;
+  x = uD.x;
+  if (get_dir(0, &dir)) {
+    mmove(dir, &y, &x);
+    c_ptr = &caveD[y][x];
+    obj = &entity_objD[c_ptr->oidx];
+
+    no_object = (obj->id == 0);
+
+    if (obj->tval == TV_OPEN_DOOR) {
+      turn_flag = TRUE;
+      if (c_ptr->midx == 0) {
+        if (obj->p1 == 0) {
+          // invcopy(&t_list[c_ptr->tptr], OBJ_CLOSED_DOOR);
+          obj->tval = TV_CLOSED_DOOR;
+          obj->tchar = '+';
+          c_ptr->fval = FLOOR_OBST;
+        } else
+          msg_print("The door appears to be broken.");
+      } else {
+        // Costs a turn, otherwise can be abused for detection
+        msg_print("Something is in your way!");
+      }
+    } else {
+      msg_print("I do not see anything you can close there.");
     }
   }
 }
@@ -11420,6 +11456,9 @@ dungeon()
               break;
             case '1' ... '9':
               MSG("Numlock is required for arrowkey movement");
+              break;
+            case 'c':
+              close_object();
               break;
             case 'd':
               py_drop(y, x);
