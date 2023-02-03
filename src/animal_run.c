@@ -501,7 +501,7 @@ char* command;
 
   msg = AS(msg_cqD, msg_writeD);
   AS(msglen_cqD, msg_writeD) =
-      snprintf(msg, MAX_MSGLEN, "%s (/ equip, * inven)", prompt ? prompt : "");
+      snprintf(msg, MAX_MSGLEN, "%s", prompt ? prompt : "");
   draw();
   do {
     c = inkey();
@@ -8051,7 +8051,8 @@ int *uy, *ux;
             break;
           case 3:
             ident |= TRUE;
-            choice_idx = inven_choice("Which armor do you wish to enchant?");
+            choice_idx = inven_choice(
+                "Which armor do you wish to enchant? (/ equip, * inven)");
             if (choice_idx >= 0) {
               used_up = equip_enchant(choice_idx, 1);
             } else {
@@ -8061,7 +8062,8 @@ int *uy, *ux;
           case 4:
             msg_print("This is an identify scroll.");
             ident |= TRUE;
-            choice_idx = inven_choice("Which item do you wish identified?");
+            choice_idx = inven_choice(
+                "Which item do you wish identified? (/ equip, * inven)");
             if (choice_idx >= 0) {
               used_up = inven_ident(choice_idx);
             } else {
@@ -8192,7 +8194,8 @@ int *uy, *ux;
             break;
           case 35:
             ident |= TRUE;
-            choice_idx = inven_choice("Which armor do you wish to enchant?");
+            choice_idx = inven_choice(
+                "Which armor do you wish to enchant? (/ equip, * inven)");
             if (choice_idx >= 0) {
               k = randint(2) + 1;
               used_up = equip_enchant(choice_idx, k);
@@ -11579,7 +11582,8 @@ dungeon()
               countD.rest = -9999;
               break;
             case 'S':
-              iidx = inven_choice("Which item do you wish to study?");
+              iidx = inven_choice(
+                  "Which item do you wish to study? (/ equip, * inven)");
               if (iidx >= 0) inven_study(iidx);
               break;
             case 'T':
