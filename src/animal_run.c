@@ -4781,18 +4781,14 @@ void obj_detail(obj) struct objS* obj;
   if (eqidx > INVEN_WIELD) {
     if ((obj->ac + obj->toac) != 0) {
       strcat(descD, " [");
-      if (obj->ac != 0) {
+      if (obj->tval == TV_HELM || obj->ac != 0) {
         snprintf(tmp_str, AL(tmp_str), "%d", obj->ac);
         strcat(descD, tmp_str);
+        if (reveal) strcat(descD, ",");
       }
       if (reveal) {
-        if (obj->toac != 0) {
-          if (obj->ac != 0) {
-            strcat(descD, ",");
-          }
-          snprintf(tmp_str, AL(tmp_str), "%+d", obj->toac);
-          strcat(descD, tmp_str);
-        }
+        snprintf(tmp_str, AL(tmp_str), "%+d", obj->toac);
+        strcat(descD, tmp_str);
       }
       strcat(descD, " AC]");
     }
@@ -4804,9 +4800,11 @@ void obj_detail(obj) struct objS* obj;
       if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
         sprintf(tmp_str, " (%d charges)", obj->p1);
         strcat(descD, tmp_str);
-      } else if (obj->tval == TV_DIGGING) {
-        sprintf(tmp_str, " (%+d digging)", obj->p1);
-        strcat(descD, tmp_str);
+      } else if (eqidx > INVEN_WIELD) {
+        if (TR_P1 & obj->flags) {
+          snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->p1);
+          strcat(descD, tmp_str);
+        }
       }
     }
   }
@@ -8755,9 +8753,7 @@ struct objS* obj;
 {
   if ((obj->flags & TR_CURSED) == 0) {
     if (obj->tohit > 0 || obj->todam > 0 || obj->toac > 0) return TRUE;
-    if (((TR_STATS | TR_SEARCH | TR_STEALTH | TR_TUNNEL) & obj->flags) &&
-        obj->p1 > 0)
-      return TRUE;
+    if ((TR_P1 & obj->flags) && obj->p1 > 0) return TRUE;
     if (0x03fff880L & obj->flags) return TRUE;
   }
 

@@ -256,6 +256,8 @@
 #define TR_TUNNEL 0x20000000L
 #define TR_SLOWNESS 0x40000000L
 #define TR_CURSED 0x80000000L
+// Set of flags dependent on p1 value
+#define TR_P1 (TR_STATS | TR_SEARCH | TR_STEALTH | TR_TUNNEL)
 
 /* definitions for chests */
 #define CH_LOCKED	0x00000001L
