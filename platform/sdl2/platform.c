@@ -23,6 +23,8 @@ enum { ANDROID };
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
 
+int los();
+
 BOOL
 char_visible(char c)
 {
@@ -863,9 +865,9 @@ sdl_pump()
           "",
           event.window.event, event.window.data1, event.window.data2);
       if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
-          event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED &&
-              (scale_rectD.x == 0 || display_rectD.w != event.window.data1 ||
-               display_rectD.h != event.window.data2)) {
+          (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED &&
+           (scale_rectD.x == 0 || display_rectD.w != event.window.data1 ||
+            display_rectD.h != event.window.data2))) {
         display_rectD.w = event.window.data1;
         display_rectD.h = event.window.data2;
         if (display_rectD.w > display_rectD.h) {
