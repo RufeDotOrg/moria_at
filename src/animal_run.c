@@ -501,7 +501,7 @@ char* command;
 
   msg = AS(msg_cqD, msg_writeD);
   AS(msglen_cqD, msg_writeD) =
-      snprintf(msg, MAX_MSGLEN, "%s", prompt ? prompt : "");
+      snprintf(msg, MAX_MSGLEN, "%s (/ equip, * inven)", prompt ? prompt : "");
   draw();
   do {
     c = inkey();
@@ -4805,7 +4805,7 @@ void obj_detail(obj) struct objS* obj;
         sprintf(tmp_str, " (%d charges)", obj->p1);
         strcat(descD, tmp_str);
       } else if (obj->tval == TV_DIGGING) {
-        sprintf(tmp_str, " (%+d digging) ", obj->p1);
+        sprintf(tmp_str, " (%+d digging)", obj->p1);
         strcat(descD, tmp_str);
       }
     }
@@ -7382,21 +7382,43 @@ static int
 inven_choice(char* prompt)
 {
   char c;
-  int inum;
+  int inum, eqnum, mode;
+  int begin, end;
 
+  mode = 'i';
   inum = inven_count();
+  eqnum = equip_count();
   if (inum) {
     do {
-      inven_screen(0, INVEN_EQUIP);
+      switch (mode) {
+        case 'i':
+          begin = 0;
+          end = INVEN_EQUIP;
+          break;
+        case 'e':
+          begin = INVEN_WIELD;
+          end = MAX_INVEN;
+          break;
+      }
+      inven_screen(begin, end);
       if (in_subcommand(prompt, &c)) {
         uint8_t iidx = c - 'a';
-        if (iidx < INVEN_EQUIP) {
+        if (iidx < end - begin) {
+          iidx += begin;
           if (invenD[iidx]) return iidx;
         } else if (c == 'I') {
           inven_sort();
+        } else if (c == '*') {
+          mode = 'i';
+        } else if (c == '/') {
+          mode = 'e';
+        } else {
+          mode = 0;
         }
+      } else {
+        mode = 0;
       }
-    } while (c == 'I');
+    } while (mode);
   } else
     msg_print("You are not carrying anything!");
   return -1;
@@ -11561,7 +11583,7 @@ dungeon()
               countD.rest = -9999;
               break;
             case 'S':
-              iidx = inven_choice("Which item do you wish identified?");
+              iidx = inven_choice("Which item do you wish to study?");
               if (iidx >= 0) inven_study(iidx);
               break;
             case 'T':
