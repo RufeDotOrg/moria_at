@@ -9488,7 +9488,7 @@ mon_attack(midx)
           }
           break;
         case 12: /*Steal Money    */
-          if (countD.paralysis < 1 && randint(124) < statD.use_stat[A_DEX])
+          if (!countD.paralysis && randint(124) < statD.use_stat[A_DEX])
             msg_print("You quickly protect your money pouch!");
           else {
             int gold = (uD.gold / 10) + randint(25);
