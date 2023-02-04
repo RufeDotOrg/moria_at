@@ -38,9 +38,12 @@ static float aspectD;
 static struct SDL_Renderer *rendererD;
 static uint32_t texture_formatD;
 static SDL_PixelFormat *pixel_formatD;
-static SDL_Color bg_colorD;
+static SDL_Color blackD;
+static SDL_Color whiteD = {255, 255, 255, 255};
+static SDL_Color font_colorD;
 static int xD;
 static int modeD;
+static int finger_rowD;
 static int quitD;
 
 BOOL
@@ -108,7 +111,7 @@ render_update()
 {
   SDL_Renderer *r = rendererD;
   SDL_RenderPresent(r);
-  SDL_SetRenderDrawColor(r, bg_colorD.r, bg_colorD.g, bg_colorD.b, bg_colorD.a);
+  SDL_SetRenderDrawColor(r, blackD.r, blackD.g, blackD.b, blackD.a);
   SDL_RenderClear(r);
 }
 
@@ -163,7 +166,6 @@ struct fontS {
   uint64_t bitmap_used;
 };
 static struct fontS fontD;
-static const SDL_Color whiteD = {0xff, 0xff, 0xff, 0xff};
 static struct SDL_Texture *font_textureD[MAX_GLYPH];
 static int rowD, colD;
 static float rfD, cfD;
@@ -490,7 +492,9 @@ render_font_string(struct SDL_Renderer *renderer, struct fontS *font,
       uint64_t glyph_index = c - START_GLYPH;
       struct glyphS *glyph = &font->glyph[glyph_index];
       struct SDL_Texture *texture = font_textureD[glyph_index];
+      SDL_SetTextureColorMod(texture, C3(font_colorD));
       SDL_RenderCopy(renderer, texture, NULL, &target_rect);
+      SDL_SetTextureColorMod(texture, C3(whiteD));
       target_rect.x += glyph->advance_x;
     } else {
       target_rect.x += whitespace;
@@ -599,9 +603,16 @@ platform_draw()
     mode = 1;
     show_map = 0;
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
+      font_colorD = (row == finger_rowD) ? (SDL_Color){255, 0, 0, 255} : whiteD;
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
                          p);
+    }
+    font_colorD = whiteD;
+    {
+      SDL_Point p = {width * 80, height};
+      char text[2] = {'a' + finger_rowD, 0};
+      render_font_string(rendererD, &fontD, text, 1, p);
     }
   } else {
     mode = 0;
@@ -672,17 +683,21 @@ platform_draw()
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
 
     if (ANDROID) {
-      // Input viz
       SDL_Color c = {0, 0, 78, 0};
       SDL_SetRenderDrawColor(rendererD, C(c));
 
       SDL_Rect pr = {RS(padD, display_rectD)};
       SDL_RenderFillRect(rendererD, &pr);
+    }
+  }
 
-      for (int it = 0; it < AL(buttonD); ++it) {
-        SDL_Rect r = {RS(buttonD[it], display_rectD)};
-        SDL_RenderFillRect(rendererD, &r);
-      }
+  if (ANDROID) {
+    SDL_Color c = {0, 0, 78, 0};
+    SDL_SetRenderDrawColor(rendererD, C(c));
+
+    for (int it = 0; it < AL(buttonD); ++it) {
+      SDL_Rect r = {RS(buttonD[it], display_rectD)};
+      SDL_RenderFillRect(rendererD, &r);
     }
   }
 
@@ -928,7 +943,10 @@ SDL_Event event;
 char
 sdl_pump()
 {
+  int mode;
   SDL_Event event;
+
+  mode = modeD;
   if (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
       Log("SDL_QUIT");
@@ -970,24 +988,18 @@ sdl_pump()
         }
       }
     }
-    // Prototyping choice menu
-    static int ltD;
+
+    // Finger inputs
     if (event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (modeD == 1) {
-        int row = (tp.y * rowD);
-        // -1 for line prompt
-        if (row > 0) return 'a' + row - 1;
-        return ESCAPE;
-      }
-      if (SDL_PointInFRect(&tp, &padD)) {
+      if (mode == 0 && SDL_PointInFRect(&tp, &padD)) {
         SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
         char c = map_touch(event.tfinger.fingerId, rp.y, rp.x);
-        ltD = c;
         return c;
       }
       for (int it = 0; it < AL(buttonD); ++it) {
         if (SDL_PointInFRect(&tp, &buttonD[it])) {
+          finger_rowD = -1;
           switch (it) {
             case 0:
               return 'A';
@@ -998,18 +1010,27 @@ sdl_pump()
       }
     }
     if (event.type == SDL_FINGERMOTION) {
-      static uint32_t tsD;
-      if (event.tfinger.timestamp - tsD > 1000) {
-        tsD = event.tfinger.timestamp;
-      }
     }
     if (event.type == SDL_FINGERUP) {
-      if (ltD == ' ') {
-        SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-        if (SDL_PointInFRect(&tp, &padD)) {
-          SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
-          return map_touch(1, rp.y, rp.x);
+    }
+
+    // Choice overlay (mode 1)
+    if (mode == 1) {
+      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+      int row = (tp.y * rowD) - 1;
+      if (event.type == SDL_FINGERMOTION || event.type == SDL_FINGERDOWN) {
+        Log("fingermotion %d", row);
+        if (row != finger_rowD) {
+          finger_rowD = row;
+          return '*';
         }
+      }
+      if (event.type == SDL_FINGERUP) {
+        Log("fingerup row %d", row);
+        if (row >= 0 && row < 22) {
+          return 'a' + row;
+        }
+        // return ESCAPE;
       }
     }
   } else {
@@ -1176,6 +1197,8 @@ platform_init()
   platformD.draw = platform_draw;
 
   for (int it = 0; it < 8; ++it) sdl_pump();
+
+  font_colorD = whiteD;
 }
 void
 platform_reset()
