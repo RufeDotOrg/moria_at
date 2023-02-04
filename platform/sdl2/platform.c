@@ -43,6 +43,7 @@ static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
 static int xD;
 static int modeD;
+static int prevD;
 static int finger_rowD;
 static int quitD;
 
@@ -943,10 +944,11 @@ SDL_Event event;
 char
 sdl_pump()
 {
-  int mode;
+  int mode, prev;
   SDL_Event event;
 
   mode = modeD;
+  prev = prevD;
   if (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
       Log("SDL_QUIT");
@@ -1002,6 +1004,8 @@ sdl_pump()
           finger_rowD = -1;
           switch (it) {
             case 0:
+              if (prev == 'A') return 'S';
+              if (prev == 'S') return 'd';
               return 'A';
             case 1:
               return '.';
@@ -1030,8 +1034,11 @@ sdl_pump()
         if (row >= 0 && row < 22) {
           return 'a' + row;
         }
-        // return ESCAPE;
+        return ESCAPE;
       }
+    }
+    if (mode == 2) {
+      if (event.type == SDL_FINGERUP) return ' ';
     }
   } else {
     nanosleep(&(struct timespec){0, 8e6}, 0);
@@ -1044,6 +1051,7 @@ int
 platform_readansi()
 {
   char c = sdl_pump();
+  if (isalpha(c)) prevD = c;
   if (quitD) return CTRL('c');
   return c;
 }
