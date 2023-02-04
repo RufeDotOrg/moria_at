@@ -40,7 +40,7 @@ static uint32_t texture_formatD;
 static SDL_PixelFormat *pixel_formatD;
 static SDL_Color bg_colorD;
 static int xD;
-static int in_screenD;
+static int modeD;
 static int quitD;
 
 BOOL
@@ -167,7 +167,6 @@ static const SDL_Color whiteD = {0xff, 0xff, 0xff, 0xff};
 static struct SDL_Texture *font_textureD[MAX_GLYPH];
 static int rowD, colD;
 static float rfD, cfD;
-static int menuD;
 
 void
 font_debug(struct fontS *font)
@@ -579,39 +578,41 @@ texture_by_sym(char c)
 int
 platform_draw()
 {
-  int show_map, menu, height, width;
+  int show_map, mode, height, width;
   struct SDL_Texture *texture;
 
   show_map = 1;
-  menu = 0;
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
 
   SDL_SetRenderTarget(rendererD, text_textureD);
   SDL_RenderFillRect(rendererD, &text_rectD);
 
-  in_screenD = (screen_usedD[0] != 0);
   if (screen_usedD[0]) {
+    mode = 2;
     show_map = 0;
     for (int row = 0; row < AL(screenD); ++row) {
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row], p);
     }
   } else if (overlay_usedD[0]) {
+    mode = 1;
     show_map = 0;
-    menu = 1;
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
                          p);
     }
   } else {
+    mode = 0;
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, vitalinfoD[row], AL(vitalinfoD[0]),
                          p);
     }
   }
+  modeD = mode;
+
   SDL_SetRenderTarget(rendererD, 0);
   SDL_RenderCopy(rendererD, text_textureD, NULL, &text_rectD);
 
@@ -702,7 +703,6 @@ platform_draw()
 
   render_update();
 
-  menuD = menu;
   return 1;
 }
 
@@ -758,7 +758,7 @@ char
 dir_by_scancode(sym)
 {
   // Disable directional movement during fullscreen
-  if (in_screenD) return -1;
+  if (modeD) return -1;
 
   switch (sym) {
     case SDLK_KP_1 ... SDLK_KP_9:
@@ -935,7 +935,6 @@ sdl_pump()
       quitD = TRUE;
       return 0;
     }
-    // Spacebar yields to the game without causing a turn to pass
     if (event.type == SDL_WINDOWEVENT) {
       return sdl_window_event(event);
     }
@@ -975,7 +974,7 @@ sdl_pump()
     static int ltD;
     if (event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (menuD) {
+      if (modeD == 1) {
         int row = (tp.y * rowD);
         // -1 for line prompt
         if (row > 0) return 'a' + row - 1;
