@@ -41,6 +41,7 @@ static SDL_PixelFormat *pixel_formatD;
 static SDL_Color bg_colorD;
 static int xD;
 static int in_screenD;
+static int quitD;
 
 BOOL
 render_init()
@@ -845,6 +846,84 @@ float ty, tx;
   return -1;
 }
 
+int
+sdl_window_event(event)
+SDL_Event event;
+{
+  Log("SDL_WindowEvent "
+      "[ event %d ] "
+      "[ data1 %d data2 %d ]"
+      "",
+      event.window.event, event.window.data1, event.window.data2);
+  if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
+      (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED &&
+       (scale_rectD.x == 0 || display_rectD.w != event.window.data1 ||
+        display_rectD.h != event.window.data2))) {
+    display_rectD.w = event.window.data1;
+    display_rectD.h = event.window.data2;
+    if (display_rectD.w > display_rectD.h) {
+      aspectD = (float)display_rectD.h / display_rectD.w;
+    } else {
+      aspectD = (float)display_rectD.w / display_rectD.h;
+    }
+
+    int dx, dy;
+    dx = event.window.data1;
+    dy = event.window.data2;
+    int px, py;
+    px = fontD.max_pixel_width;
+    py = fontD.max_pixel_height;
+    int mx, my;
+    mx = map_rectD.w;
+    my = map_rectD.h;
+
+    // Console row/col
+    rowD = display_rectD.h / py;
+    colD = display_rectD.w / px;
+    rfD = 1.0f / rowD;
+    cfD = 1.0f / colD;
+    Log("font %dw %dh console %drow %dcol rf/cf %f %f\n", px, py, rowD, colD,
+        rfD, cfD);
+
+    float xscale, yscale, scale;
+    // reserve space for status width (left)
+    if (px * 13 + mx <= dx) {
+      xscale = 1.0f;
+    } else {
+      xscale = (float)(dx - px * 13) / mx;
+    }
+    // reserve space for top bar, bottom bar
+    // hack: -8 to fit common 1080 res
+    if (py * 2 - 8 + my <= dy) {
+      yscale = 1.0f;
+    } else {
+      yscale = (float)(dy - py * 2 - 8) / my;
+    }
+
+    scale = SDL_min(xscale, yscale);
+    mx = map_rectD.w * scale;
+    my = map_rectD.h * scale;
+    scale_rectD.x = dx / 2 - mx / 2;
+    scale_rectD.y = dy / 2 - my / 2;
+    scale_rectD.w = my;
+    scale_rectD.h = mx;
+    scaleD = scale;
+    Log("Scale %.3f (%.3fx %.3fy) %dx %dy %dw %dh", scale, xscale, yscale,
+        R(scale_rectD));
+
+    // Input constraints
+    padD = (SDL_FRect){0, .5, .25 - (2 * cfD), .5 - (rfD)};
+    for (int it = 0; it < AL(buttonD); ++it) {
+      buttonD[it] = (SDL_FRect){.75 + (.1 * it), .75 - (.2 * it), .1, .2};
+    }
+    return -1;
+  } else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
+    // Ask for a redraw
+    return ' ';
+  }
+  return 0;
+}
+
 // Game interface
 char
 sdl_pump()
@@ -853,84 +932,12 @@ sdl_pump()
   if (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
       Log("SDL_QUIT");
-      death = 1;
-      new_level_flag = TRUE;
-      return CTRL('c');
+      quitD = TRUE;
+      return 0;
     }
     // Spacebar yields to the game without causing a turn to pass
     if (event.type == SDL_WINDOWEVENT) {
-      Log("SDL_WindowEvent "
-          "[ event %d ] "
-          "[ data1 %d data2 %d ]"
-          "",
-          event.window.event, event.window.data1, event.window.data2);
-      if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
-          (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED &&
-           (scale_rectD.x == 0 || display_rectD.w != event.window.data1 ||
-            display_rectD.h != event.window.data2))) {
-        display_rectD.w = event.window.data1;
-        display_rectD.h = event.window.data2;
-        if (display_rectD.w > display_rectD.h) {
-          aspectD = (float)display_rectD.h / display_rectD.w;
-        } else {
-          aspectD = (float)display_rectD.w / display_rectD.h;
-        }
-
-        int dx, dy;
-        dx = event.window.data1;
-        dy = event.window.data2;
-        int px, py;
-        px = fontD.max_pixel_width;
-        py = fontD.max_pixel_height;
-        int mx, my;
-        mx = map_rectD.w;
-        my = map_rectD.h;
-
-        // Console row/col
-        rowD = display_rectD.h / py;
-        colD = display_rectD.w / px;
-        rfD = 1.0f / rowD;
-        cfD = 1.0f / colD;
-        Log("font %dw %dh console %drow %dcol rf/cf %f %f\n", px, py, rowD,
-            colD, rfD, cfD);
-
-        float xscale, yscale, scale;
-        // reserve space for status width (left)
-        if (px * 13 + mx <= dx) {
-          xscale = 1.0f;
-        } else {
-          xscale = (float)(dx - px * 13) / mx;
-        }
-        // reserve space for top bar, bottom bar
-        // hack: -8 to fit common 1080 res
-        if (py * 2 - 8 + my <= dy) {
-          yscale = 1.0f;
-        } else {
-          yscale = (float)(dy - py * 2 - 8) / my;
-        }
-
-        scale = SDL_min(xscale, yscale);
-        mx = map_rectD.w * scale;
-        my = map_rectD.h * scale;
-        scale_rectD.x = dx / 2 - mx / 2;
-        scale_rectD.y = dy / 2 - my / 2;
-        scale_rectD.w = my;
-        scale_rectD.h = mx;
-        scaleD = scale;
-        Log("Scale %.3f (%.3fx %.3fy) %dx %dy %dw %dh", scale, xscale, yscale,
-            R(scale_rectD));
-
-        // Input constraints
-        padD = (SDL_FRect){0, .5, .25 - (2 * cfD), .5 - (rfD)};
-        for (int it = 0; it < AL(buttonD); ++it) {
-          buttonD[it] = (SDL_FRect){.75 + (.1 * it), .75 - (.2 * it), .1, .2};
-        }
-        return -1;
-      } else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
-        // Ask for a redraw
-        return ' ';
-      }
-      return 0;
+      return sdl_window_event(event);
     }
     if (event.type == SDL_DISPLAYEVENT) {
       Log("SDL_DisplayEvent [ event %d ]", event.display.event);
@@ -1017,6 +1024,7 @@ int
 platform_readansi()
 {
   char c = sdl_pump();
+  if (quitD) return CTRL('c');
   return c;
 }
 
