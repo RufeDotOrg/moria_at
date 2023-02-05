@@ -1020,6 +1020,15 @@ sdl_pump()
     if (event.type == SDL_FINGERUP) {
     }
 
+    // Playing
+    if (mode == 0) {
+      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+      if (event.type == SDL_FINGERDOWN) {
+        if (tp.x < .25 && tp.y < .5) return 'C';
+        if (tp.x > .25 && tp.x < .75) return 'M';
+      }
+    }
+
     // Choice overlay (mode 1)
     if (mode == 1) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
