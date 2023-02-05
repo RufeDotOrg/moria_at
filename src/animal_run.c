@@ -8581,6 +8581,24 @@ int *uy, *ux;
 
   return FALSE;
 }
+void
+equip_takeoff(iidx, into_slot)
+{
+  struct objS* obj;
+  obj = obj_get(invenD[iidx]);
+  if (obj->flags & TR_CURSED) {
+    MSG("Hmm, the item you are %s seems to be cursed.", describe_use(iidx));
+  } else {
+    if (into_slot >= 0) invenD[into_slot] = obj->id;
+    invenD[iidx] = 0;
+
+    py_bonuses(obj, -1);
+    obj_desc(obj, TRUE);
+    MSG("You take off %s.", descD);
+    calc_bonuses();
+    turn_flag = TRUE;
+  }
+}
 static void
 py_drop(y, x)
 {
@@ -8589,13 +8607,20 @@ py_drop(y, x)
   struct objS* obj;
 
   if (caveD[y][x].oidx == 0) {
-    iidx = inven_choice("Drop which item?");
-    if (iidx >= 0 && iidx < INVEN_EQUIP) {
+    iidx = inven_choice("Drop which item? (/ equip, * inven)");
+
+    if (iidx >= 0) {
       obj = obj_get(invenD[iidx]);
+
+      if (iidx >= INVEN_EQUIP) {
+        equip_takeoff(iidx, -1);
+      } else {
+        invenD[iidx] = 0;
+      }
+
       obj->fy = y;
       obj->fx = x;
       caveD[y][x].oidx = obj_index(obj);
-      invenD[iidx] = 0;
 
       obj_desc(obj, TRUE);
       MSG("You drop %s.", descD);
@@ -8714,23 +8739,6 @@ inven_carry(obj_id)
     }
   }
   return -1;
-}
-void
-equip_takeoff(iidx, into_slot)
-{
-  struct objS* obj;
-  obj = obj_get(invenD[iidx]);
-  if (obj->flags & TR_CURSED) {
-    MSG("Hmm, the item you are %s seems to be cursed.", describe_use(iidx));
-  } else if (into_slot >= 0) {
-    invenD[iidx] = 0;
-    invenD[into_slot] = obj->id;
-
-    py_bonuses(obj, -1);
-    obj_desc(obj, TRUE);
-    MSG("You take off %c) %s.", 'a' + into_slot, descD);
-    turn_flag = TRUE;
-  }
 }
 static int
 obj_sense(obj)
@@ -9007,7 +9015,6 @@ py_takeoff()
           into = inven_slot();
           if (into >= 0) {
             equip_takeoff(iidx, into);
-            calc_bonuses();
             turn_flag = TRUE;
           }
         }
