@@ -1026,7 +1026,7 @@ sdl_pump()
         Log("fingermotion %d", row);
         if (row != finger_rowD) {
           finger_rowD = row;
-          return '*';
+          return (tp.x < .5) ? '/' : '*';
         }
       }
       if (event.type == SDL_FINGERUP) {
