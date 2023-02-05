@@ -604,13 +604,15 @@ platform_draw()
     mode = 1;
     show_map = 0;
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
-      font_colorD = (row == finger_rowD) ? (SDL_Color){255, 0, 0, 255} : whiteD;
+      font_colorD = (ANDROID && row == finger_rowD)
+                        ? (SDL_Color){255, 0, 0, 255}
+                        : whiteD;
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
                          p);
     }
     font_colorD = whiteD;
-    {
+    if (ANDROID) {
       SDL_Point p = {width * 80, height};
       char text[2] = {'a' + finger_rowD, 0};
       render_font_string(rendererD, &fontD, text, 1, p);
