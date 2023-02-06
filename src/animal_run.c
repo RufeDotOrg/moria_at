@@ -288,7 +288,7 @@ obj_viz(obj, viz)
 struct objS* obj;
 struct vizS* viz;
 {
-  viz->sym = obj->tchar;
+  if (obj->tval != TV_INVIS_TRAP) viz->sym = obj->tchar;
   switch (obj->tval) {
       // Misc
     case TV_MISC:
