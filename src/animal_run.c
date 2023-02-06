@@ -4775,12 +4775,17 @@ void obj_detail(obj) struct objS* obj;
     }
   }
 
-  if (eqidx > INVEN_WIELD && obj->ac + obj->toac != 0) {
-    if (reveal)
-      snprintf(tmp_str, AL(tmp_str), " [%d%+d AC]", obj->ac, obj->toac);
-    else
-      snprintf(tmp_str, AL(tmp_str), " [%d AC]", obj->ac);
-    strcat(descD, tmp_str);
+  if (eqidx > INVEN_WIELD) {
+    if (obj->tval > TV_MIN_ENCHANT && obj->tval < TV_MAX_ENCHANT) {
+      if (reveal)
+        snprintf(tmp_str, AL(tmp_str), " [%d%+d AC]", obj->ac, obj->toac);
+      else
+        snprintf(tmp_str, AL(tmp_str), " [%d AC]", obj->ac);
+      strcat(descD, tmp_str);
+    } else if (reveal && obj->ac + obj->toac != 0) {
+      snprintf(tmp_str, AL(tmp_str), " [%+d AC]", obj->ac + obj->toac);
+      strcat(descD, tmp_str);
+    }
   }
 
   // Check p1 value
