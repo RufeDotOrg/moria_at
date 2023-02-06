@@ -1114,15 +1114,15 @@ save()
     Log("%p %s %d\n", save_addr[it], save_name[it], save_info[it]);
     byte_count += save_info[it];
   }
-  void *f = fopen("savechar", "wb");
-  if (f) {
+  SDL_RWops *writef = SDL_RWFromFile("savechar", "wb");
+  if (writef) {
     checksumD = 0;
-    fwrite(&byte_count, sizeof(byte_count), 1, f);
+    SDL_RWwrite(writef, &byte_count, sizeof(byte_count), 1);
     for (int it = 0; it < AL(save_info); ++it) {
-      fwrite(save_addr[it], save_info[it], 1, f);
+      SDL_RWwrite(writef, save_addr[it], save_info[it], 1);
       checksum(save_addr[it], save_info[it]);
     }
-    fclose(f);
+    SDL_RWclose(writef);
     return byte_count;
   }
   return 0;
@@ -1161,17 +1161,17 @@ load()
     printf("%p %s %d\n", save_addr[it], save_name[it], save_info[it]);
     byte_count += save_info[it];
   }
-  void *f = fopen("savechar", "rb");
-  if (f) {
+  SDL_RWops *readf = SDL_RWFromFile("savechar", "rb");
+  if (readf) {
     int save_size = 0;
 
-    fread(&save_size, sizeof(save_size), 1, f);
+    SDL_RWread(readf, &save_size, sizeof(save_size), 1);
     if (save_size == byte_count) {
       for (int it = 0; it < AL(save_info); ++it) {
-        fread(save_addr[it], save_info[it], 1, f);
+        SDL_RWread(readf, save_addr[it], save_info[it], 1);
       }
     }
-    fclose(f);
+    SDL_RWclose(readf);
     checksumD = 0;
     for (int it = 0; it < AL(save_info); ++it) {
       checksum(save_addr[it], save_info[it]);
