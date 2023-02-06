@@ -11103,7 +11103,6 @@ pawn_display()
   struct objS* obj;
 
   line = 0;
-  BufMsg(screen, "   Item");
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     obj = obj_get(invenD[it]);
     flag = FALSE;
@@ -11117,7 +11116,7 @@ pawn_display()
     }
 
     if (flag) {
-      BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, cost);
+      BufMsg(overlay, "%c) %-57.057s %d", 'a' + it, descD, cost);
     } else {
       line += 1;
     }
@@ -11131,9 +11130,6 @@ store_display(sidx)
   struct objS* obj;
 
   line = 0;
-  BufMsg(screen, "         %s", ownerD[storeD[sidx]].name);
-  line += 1;
-  BufMsg(screen, "   Item");
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     obj = &store_objD[sidx][it];
     cost = store_value(sidx, obj_value(obj), 1);
@@ -11144,12 +11140,12 @@ store_display(sidx)
       obj_desc(obj, TRUE);
       obj->number = number;
 
-      BufMsg(screen, "%c) %-57.057s %d", 'a' + it, descD, cost);
+      BufMsg(overlay, "%c) %-57.057s %d", 'a' + it, descD, cost);
     } else {
       line += 1;
     }
   }
-  BufMsg(screen, "                 Your Gold Remaining : %d", uD.gold);
+  BufMsg(overlay, "                 Your Gold Remaining : %d", uD.gold);
 }
 static void
 store_item_purchase(sidx, item)
@@ -11220,10 +11216,13 @@ static void
 store_entrance(sidx)
 {
   char c;
+  char tmp_str[80];
 
+  snprintf(tmp_str, AL(tmp_str), "What would you like to purchase from %s?",
+           ownerD[storeD[sidx]].name);
   while (1) {
     store_display(sidx);
-    if (!in_subcommand("What would you like to purchase?", &c)) break;
+    if (!in_subcommand(tmp_str, &c)) break;
     uint8_t item = c - 'a';
 
     if (item < MAX_STORE_INVEN) store_item_purchase(sidx, item);
