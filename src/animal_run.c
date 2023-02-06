@@ -90,6 +90,7 @@ struct objS* obj;
   if (obj->fy && obj->fx) return (CF_VIZ & caveD[obj->fy][obj->fx].cflag) != 0;
   return 0;
 }
+// TBD: can this be elided from SDL builds?
 char
 get_sym(int row, int col)
 {
