@@ -4747,20 +4747,12 @@ void obj_detail(obj) struct objS* obj;
     }
   }
 
-  if (eqidx > INVEN_WIELD) {
-    if ((obj->ac + obj->toac) != 0) {
-      strcat(descD, " [");
-      if (obj->tval == TV_HELM || obj->ac != 0) {
-        snprintf(tmp_str, AL(tmp_str), "%d", obj->ac);
-        strcat(descD, tmp_str);
-        if (reveal) strcat(descD, ",");
-      }
-      if (reveal) {
-        snprintf(tmp_str, AL(tmp_str), "%+d", obj->toac);
-        strcat(descD, tmp_str);
-      }
-      strcat(descD, " AC]");
-    }
+  if (eqidx > INVEN_WIELD && obj->ac + obj->toac != 0) {
+    if (reveal)
+      snprintf(tmp_str, AL(tmp_str), " [%d%+d AC]", obj->ac, obj->toac);
+    else
+      snprintf(tmp_str, AL(tmp_str), " [%d AC]", obj->ac);
+    strcat(descD, tmp_str);
   }
 
   // Check p1 value
