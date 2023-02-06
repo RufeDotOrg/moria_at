@@ -934,7 +934,7 @@ SDL_Event event;
     // Input constraints
     padD = (SDL_FRect){0, .5, .25 - (2 * cfD), .5 - (rfD)};
     for (int it = 0; it < AL(buttonD); ++it) {
-      buttonD[it] = (SDL_FRect){.75 + (.1 * it), .75 - (.2 * it), .1, .2};
+      buttonD[it] = (SDL_FRect){.77 + (.11 * it), .75 - (.22 * it), .11, .22};
     }
     return -1;
   } else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
