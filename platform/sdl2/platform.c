@@ -643,9 +643,8 @@ platform_draw()
     for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
       sprite_rect.y = row * ART_H;
       for (int col = 0; col < SYMMAP_WIDTH; ++col) {
-        SDL_Texture *srct = 0;
         sprite_rect.x = col * ART_W;
-        // Art priority creature, treasure, fallback to symmap ASCII
+
         struct vizS *viz = &vizD[row][col];
         char sym = viz->sym;
         uint64_t fidx = viz->floor;
@@ -653,6 +652,8 @@ platform_draw()
         uint64_t cridx = viz->cr;
         uint64_t tridx = viz->tr;
 
+        // Art priority creature, treasure, fallback to symmap ASCII
+        SDL_Texture *srct = 0;
         if (cridx && cridx <= AL(art_textureD)) {
           srct = art_textureD[cridx - 1];
         } else if (fidx && fidx <= AL(wart_textureD)) {
