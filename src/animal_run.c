@@ -218,7 +218,7 @@ struct vizS* viz;
   }
   return 0;
 }
-void
+static void
 symmap_update()
 {
   int rmin = panelD.panel_row_min;
@@ -232,7 +232,7 @@ symmap_update()
     }
   }
 }
-void
+static void
 viz_update()
 {
   int blind, py, px;
@@ -374,8 +374,10 @@ void
 draw()
 {
   vital_update();
-  symmap_update();
-  viz_update();
+  if (SDL)
+    viz_update();
+  else
+    symmap_update();
   affect_update();
 
   platformD.draw();
