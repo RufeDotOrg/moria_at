@@ -428,6 +428,10 @@ viz_minimap()
 {
   int row, col;
   struct caveS* c_ptr;
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
 
   memset(minimapD, 0, sizeof(minimapD));
   for (row = 0; row < MAX_HEIGHT; ++row) {
@@ -437,6 +441,10 @@ viz_minimap()
         minimapD[row][col] = 1;
       if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT || col + 1 == MAX_WIDTH)
         minimapD[row][col] = 1;
+      if (row == rmin || row == rmax)
+        if (col >= cmin && col <= cmax) minimapD[row][col] = 1;
+      if (col == cmin || col == cmax)
+        if (row >= rmin && row <= rmax) minimapD[row][col] = 1;
     }
   }
 }
