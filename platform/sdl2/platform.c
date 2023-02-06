@@ -517,8 +517,8 @@ font_texture_alphamod(alpha)
 SDL_Texture *map_textureD;
 SDL_Rect map_rectD;
 SDL_Color mapbgD;
-SDL_Color fogbgD;
-SDL_Color losbgD;
+SDL_Color lightbgD;
+SDL_Color shroudbgD;
 SDL_Rect scale_rectD;
 float scaleD;
 SDL_Texture *text_textureD;
@@ -558,8 +558,8 @@ texture_init()
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, w, h);
   mapbgD = (SDL_Color){120, 120, 120, 15};
-  fogbgD = (SDL_Color){220, 220, 220, 45};
-  losbgD = (SDL_Color){170, 170, 170, 30};
+  lightbgD = (SDL_Color){220, 220, 220, 45};
+  shroudbgD = (SDL_Color){170, 170, 170, 30};
 
   w = 4 * 1024;
   h = 4 * 1024;
@@ -665,22 +665,18 @@ platform_draw()
           srct = texture_by_sym(sym);
         }
 
-        if (light & CF_TEMP_LIGHT) {
-          SDL_SetRenderDrawColor(rendererD, C(fogbgD));
-          SDL_RenderFillRect(rendererD, &sprite_rect);
-        } else if (light & CF_PERM_LIGHT) {
-          if (!los(uD.y, uD.x, panelD.panel_row_min + row,
-                   panelD.panel_col_min + col)) {
-            SDL_SetRenderDrawColor(rendererD, C(losbgD));
-            SDL_RenderFillRect(rendererD, &sprite_rect);
-          } else {
-            SDL_SetRenderDrawColor(rendererD, C(fogbgD));
-            SDL_RenderFillRect(rendererD, &sprite_rect);
-          }
-        } else {
-          SDL_SetRenderDrawColor(rendererD, C(mapbgD));
-          SDL_RenderFillRect(rendererD, &sprite_rect);
+        switch (light) {
+          case 0:
+            SDL_SetRenderDrawColor(rendererD, C(mapbgD));
+            break;
+          case 1:
+            SDL_SetRenderDrawColor(rendererD, C(shroudbgD));
+            break;
+          case 2:
+            SDL_SetRenderDrawColor(rendererD, C(lightbgD));
+            break;
         }
+        SDL_RenderFillRect(rendererD, &sprite_rect);
         SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
       }
     }

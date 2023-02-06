@@ -254,9 +254,13 @@ viz_update()
       if (row != py || col != px) {
         if (mon->mlit) viz.cr = mon->cidx;
         if (!blind && (CF_VIZ & c_ptr->cflag)) {
-          // TBD: use visual index instead of cflag, test los() here
-          if (caveD[row][col].fval < MAX_FLOOR) {
-            viz.light = caveD[row][col].cflag;
+          if (c_ptr->cflag & CF_TEMP_LIGHT) {
+            viz.light = 2;
+          } else if (c_ptr->cflag & CF_LIT) {
+            if (los(py, px, row, col))
+              viz.light = 2;
+            else
+              viz.light = 1;
           }
           switch (c_ptr->fval) {
             case GRANITE_WALL:
