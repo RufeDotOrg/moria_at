@@ -83,23 +83,12 @@ vital_update()
 
   BufPad(vitalinfo, AL(vitalinfoD), AL(vitalinfoD[0]));
 }
-static BOOL
-cave_lit(cave)
-struct caveS* cave;
-{
-  return (cave->cflag & (CF_TEMP_LIGHT | CF_PERM_LIGHT)) != 0;
-}
-static BOOL
+static int
 obj_lit(obj)
 struct objS* obj;
 {
-  int lit;
-
-  if (obj->fy && obj->fx) {
-    lit = (caveD[obj->fy][obj->fx].cflag &
-           (CF_TEMP_LIGHT | CF_PERM_LIGHT | CF_FIELDMARK)) != 0;
-  }
-  return lit;
+  if (obj->fy && obj->fx) return (CF_VIZ & caveD[obj->fy][obj->fx].cflag) != 0;
+  return 0;
 }
 char
 get_sym(int row, int col)
@@ -3926,7 +3915,7 @@ update_mon(midx)
                los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
-      if (cave_lit(c_ptr)) {
+      if (CF_LIT & c_ptr->cflag) {
         if ((CM_INVISIBLE & cr_ptr->cmove) == 0)
           flag = TRUE;
         else if (py_tr(TR_SEE_INVIS))
@@ -6362,7 +6351,8 @@ twall(y, x)
   }
   c_ptr->cflag &= ~CF_FIELDMARK;
   if (panel_contains(&panelD, y, x))
-    if (cave_lit(c_ptr) && c_ptr->oidx) msg_print("You have found something!");
+    if (CF_LIT & c_ptr->cflag && c_ptr->oidx)
+      msg_print("You have found something!");
   res = TRUE;
 
   return (res);
@@ -6385,7 +6375,7 @@ wall_to_mud(dir, y, x)
     dist++;
     c_ptr = &caveD[y][x];
     obj = &entity_objD[c_ptr->oidx];
-    lit = cave_lit(c_ptr) || (c_ptr->cflag & CF_FIELDMARK) != 0;
+    lit = (CF_VIZ & c_ptr->cflag) != 0;
     rubble = (obj->tval == TV_RUBBLE);
     m_ptr = &entity_monD[c_ptr->midx];
     cr_ptr = &creatureD[m_ptr->cidx];
@@ -6460,7 +6450,7 @@ poly_monster(dir, y, x)
             y, x, randint(m_level[MAX_MON_LEVEL] - m_level[0]) - 1 + m_level[0],
             FALSE);
         /* don't test c_ptr->fm here, only pl/tl */
-        if (poly && panel_contains(&panelD, y, x) && cave_lit(c_ptr))
+        if (poly && panel_contains(&panelD, y, x) && CF_LIT & c_ptr->cflag)
           poly = TRUE;
       } else {
         mon_desc(c_ptr->midx);
@@ -10179,7 +10169,7 @@ tunnel(y, x)
           delete_object(y, x);
           if (randint(10) == 1) {
             place_object(y, x, FALSE);
-            if (cave_lit(c_ptr)) {
+            if (CF_LIT & c_ptr->cflag) {
               c_ptr->cflag |= CF_FIELDMARK;
               msg_print("You have found something!");
             }
