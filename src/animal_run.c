@@ -11145,6 +11145,7 @@ store_display(sidx)
       line += 1;
     }
   }
+  line += 1;
   BufMsg(overlay, "                 Your Gold Remaining : %d", uD.gold);
 }
 static void
