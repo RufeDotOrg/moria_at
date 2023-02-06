@@ -3,10 +3,13 @@
 
 #include "SDL.h"
 
+#define Log SDL_Log
+
 #include "art.c"
 #include "auxval.c"
 #include "font_zip.c"
 #include "player.c"
+#include "random.c"
 #include "treasure.c"
 #include "wall.c"
 
@@ -16,7 +19,6 @@
 enum { ANDROID };
 #endif
 #define CTRL(x) (x & 037)
-#define Log SDL_Log
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
 #define RS(r, s) (r.x * s.w), (r.y * s.h), (r.w * s.w), (r.h * s.h)
@@ -1209,7 +1211,10 @@ platform_init()
   if (!wart_io() || !wart_init()) return;
   if (!part_io() || !part_init()) return;
 
-  platformD.seed = platform_auxval_random;
+  if (ANDROID)
+    platformD.seed = platform_random;
+  else
+    platformD.seed = platform_auxval_random;
   platformD.load = load;
   platformD.save = save;
   platformD.readansi = platform_readansi;
