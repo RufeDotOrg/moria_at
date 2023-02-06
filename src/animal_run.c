@@ -90,8 +90,7 @@ struct objS* obj;
   if (obj->fy && obj->fx) return (CF_VIZ & caveD[obj->fy][obj->fx].cflag) != 0;
   return 0;
 }
-// TBD: can this be elided from SDL builds?
-char
+static char
 get_sym(int row, int col)
 {
   struct caveS* cave_ptr;
@@ -3654,7 +3653,7 @@ see_wall(dir, y, x)
   char c;
   if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
     return TRUE;
-  else if ((c = get_sym(y, x)) == '#' || c == '%')
+  else if (caveD[y][x].fval >= MIN_WALL && CF_VIZ & caveD[y][x].cflag)
     return TRUE;
   else
     return FALSE;
@@ -3716,7 +3715,7 @@ see_nothing(dir, y, x)
 {
   if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
     return FALSE;
-  else if (get_sym(y, x) == ' ')
+  else if ((CF_VIZ & caveD[y][x].cflag) == 0)
     return TRUE;
   else
     return FALSE;
@@ -8823,7 +8822,7 @@ enum { RATIO = (MAX_WIDTH / MINIMAP_WIDTH) };
 #define HE 4 /* horizontal edge */
 #define VE 5
 #define CH(x) (screen_border[0][x])
-void
+static void
 py_map()
 {
   int i, j;
@@ -9091,7 +9090,7 @@ py_help()
   BufMsg(screen, "D: disarm trap");
   BufMsg(screen, "E: eat object");
   BufMsg(screen, "I: inventory sort");
-  BufMsg(screen, "M: map dungeon");
+  if (!SDL) BufMsg(screen, "M: map dungeon");
   BufMsg(screen, "O: object examination");
   BufMsg(screen, "R: rest until healed");
   BufMsg(screen, "S: study an object");
@@ -11578,7 +11577,7 @@ dungeon()
               MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
             case 'M':
-              py_map();
+              if (!SDL) py_map();
               break;
             case 'R':
               countD.rest = -9999;
