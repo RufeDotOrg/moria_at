@@ -1165,7 +1165,7 @@ place_secret_door(y, x)
   obj->fy = y;
   obj->fx = x;
   obj->tval = TV_SECRET_DOOR;
-  obj->tchar = '8';
+  obj->tchar = '#';
   obj->subval = 1;
   obj->number = 1;
 

@@ -559,7 +559,6 @@ SDL_Texture *
 texture_by_sym(char c)
 {
   SDL_Texture *t = 0;
-  if (c == '8') return wart_textureD[1];
   if (c == '@') return part_textureD[0 + 4];
   if (c == '.') return 0;
   if (char_visible(c)) {
