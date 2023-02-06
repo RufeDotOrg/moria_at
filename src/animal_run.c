@@ -11549,7 +11549,7 @@ dungeon()
               break;
             case 'A':
               // Generalized inventory interaction
-              iidx = inven_choice("Use what?");
+              iidx = inven_choice("Use which item?");
               if (iidx >= 0) {
                 struct objS* obj = obj_get(invenD[iidx]);
                 if (obj->tval == TV_FOOD) {
@@ -11589,8 +11589,7 @@ dungeon()
               countD.rest = -9999;
               break;
             case 'S':
-              iidx = inven_choice(
-                  "Which item do you wish to study? (/ equip, * inven)");
+              iidx = inven_choice("Study which item? (/ equip, * inven)");
               if (iidx >= 0) inven_study(iidx);
               break;
             case 'T':
