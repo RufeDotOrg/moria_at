@@ -224,7 +224,8 @@ cave_obj(row, col)
           return 16;
         /* Dungeon Fixtures */
         case TV_VIS_TRAP:
-          return 26;
+          // TBD: disable lighting for this square
+          if (obj->tchar != ' ') return 26;
         case TV_RUBBLE:
           return 27;
         case TV_OPEN_DOOR:
