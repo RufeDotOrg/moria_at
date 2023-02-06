@@ -640,33 +640,35 @@ platform_draw()
     SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
     SDL_RenderFillRect(rendererD, &map_rectD);
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
-    for (int row = 0; row < AL(symmapD); ++row) {
+    for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
       sprite_rect.y = row * ART_H;
       for (int col = 0; col < SYMMAP_WIDTH; ++col) {
         SDL_Texture *srct = 0;
         sprite_rect.x = col * ART_W;
         // Art priority creature, treasure, fallback to symmap ASCII
-        uint64_t wallidx = wallmapD[row][col];
-        uint64_t cridx = cremapD[row][col];
-        uint64_t tridx = tremapD[row][col];
+        struct vizS *viz = &vizD[row][col];
+        char sym = viz->sym;
+        uint64_t fidx = viz->floor;
+        uint64_t light = viz->light;
+        uint64_t cridx = viz->cr;
+        uint64_t tridx = viz->tr;
+
         if (cridx && cridx <= AL(art_textureD)) {
           srct = art_textureD[cridx - 1];
-        } else if (wallidx && wallidx <= AL(wart_textureD)) {
-          srct = wart_textureD[wallidx - 1];
+        } else if (fidx && fidx <= AL(wart_textureD)) {
+          srct = wart_textureD[fidx - 1];
         } else if (tridx && tridx <= AL(tart_textureD)) {
           srct = tart_textureD[tridx - 1];
         }
 
         if (!srct) {
-          char sym = symmapD[row][col];
           srct = texture_by_sym(sym);
         }
 
-        int litroom = (CF_PERM_LIGHT | CF_ROOM);
-        if (litmapD[row][col] & CF_TEMP_LIGHT) {
+        if (light & CF_TEMP_LIGHT) {
           SDL_SetRenderDrawColor(rendererD, C(fogbgD));
           SDL_RenderFillRect(rendererD, &sprite_rect);
-        } else if (litmapD[row][col] & CF_PERM_LIGHT) {
+        } else if (light & CF_PERM_LIGHT) {
           if (!los(uD.y, uD.x, panelD.panel_row_min + row,
                    panelD.panel_col_min + col)) {
             SDL_SetRenderDrawColor(rendererD, C(losbgD));

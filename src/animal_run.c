@@ -114,9 +114,7 @@ get_sym(int row, int col)
     struct creatureS* creature = &creatureD[mon->cidx];
     if (mon->mlit) return creature->cchar;
   }
-  if (countD.blind) return ' ';
-  if (((cave_ptr->cflag & CF_FIELDMARK) == 0) && !cave_lit(cave_ptr))
-    return ' ';
+  if (countD.blind || (CF_VIZ & cave_ptr->cflag) == 0) return ' ';
   if (cave_ptr->oidx) {
     struct objS* obj = &entity_objD[cave_ptr->oidx];
     if (obj->tval != TV_INVIS_TRAP) return obj->tchar;
@@ -137,107 +135,86 @@ get_sym(int row, int col)
   return '#';
 }
 int
-cave_wall(row, col)
+obj_viz(obj, viz)
+struct objS* obj;
+struct vizS* viz;
 {
-  struct caveS* c_ptr;
-  c_ptr = &caveD[row][col];
-  if (cave_lit(c_ptr)) {
-    switch (c_ptr->fval) {
-      case GRANITE_WALL:
-      case BOUNDARY_WALL:
-        return 1;
-      case QUARTZ_WALL:
-        return 3 + (c_ptr->oidx != 0);
-      case MAGMA_WALL:
-        return 5 + (c_ptr->oidx != 0);
-    }
-  }
-  return 0;
-}
-int
-cave_obj(row, col)
-{
-  struct caveS* c_ptr;
-  struct objS* obj;
-
-  if (row != uD.y || col != uD.x) {
-    c_ptr = &caveD[row][col];
-    obj = &entity_objD[c_ptr->oidx];
-
-    if (c_ptr->cflag & CF_FIELDMARK || c_ptr->cflag & CF_LIT) {
-      switch (obj->tval) {
-          // Misc
-        case TV_MISC:
-          if (obj->tchar == 's')
-            return 25;
-          else if (obj->tchar == '!')
-            return 4;
-          else  // '~'
-            return 23;
-        case TV_LIGHT:
-          return 21;
-          // Worn
-        case TV_HAFTED:
-          return 10;
-        case TV_POLEARM:
-          return 6;
-        case TV_SWORD:
-          return 14;
-        case TV_DIGGING:
-          return 10;
-        case TV_BOOTS:
-        case TV_GLOVES:
-        case TV_CLOAK:
-        case TV_HELM:
-          return 11;
-        case TV_SHIELD:
-          return 2;
-        case TV_HARD_ARMOR:
-          return 9;
-        case TV_SOFT_ARMOR:
-          return 1;
-        case TV_AMULET:
-          return 3;
-        case TV_RING:
-          return 7;
-          // Activate
-        case TV_STAFF:
-          return 12;
-        case TV_WAND:
-          return 5;
-        case TV_SCROLL1:
-        case TV_SCROLL2:
-          return 8;
-        case TV_POTION1:
-        case TV_POTION2:
-        case TV_FLASK:
-          return 4;
-        case TV_FOOD:
-          return 19;
-        case TV_MAGIC_BOOK:
-          return 18;
-        case TV_PRAYER_BOOK:
-          return 17;
-          // Gold
-          // TBD: copper/silver/gold/mithril/gems by subval
-        case TV_GOLD:
-          return 16;
-        /* Dungeon Fixtures */
-        case TV_VIS_TRAP:
-          // TBD: disable lighting for this square
-          if (obj->tchar != ' ') return 26;
-        case TV_RUBBLE:
-          return 27;
-        case TV_OPEN_DOOR:
-          return 28;
-        case TV_CLOSED_DOOR:
-          return 29;
-        case TV_UP_STAIR:
-          return 30;
-        case TV_DOWN_STAIR:
-          return 31;
-      }
-    }
+  viz->sym = obj->tchar;
+  switch (obj->tval) {
+      // Misc
+    case TV_MISC:
+      if (obj->tchar == 's')
+        return 25;
+      else if (obj->tchar == '!')
+        return 4;
+      else  // '~'
+        return 23;
+    case TV_LIGHT:
+      return 21;
+      // Worn
+    case TV_HAFTED:
+      return 10;
+    case TV_POLEARM:
+      return 6;
+    case TV_SWORD:
+      return 14;
+    case TV_DIGGING:
+      return 10;
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_HELM:
+      return 11;
+    case TV_SHIELD:
+      return 2;
+    case TV_HARD_ARMOR:
+      return 9;
+    case TV_SOFT_ARMOR:
+      return 1;
+    case TV_AMULET:
+      return 3;
+    case TV_RING:
+      return 7;
+      // Activate
+    case TV_STAFF:
+      return 12;
+    case TV_WAND:
+      return 5;
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+      return 8;
+    case TV_POTION1:
+    case TV_POTION2:
+    case TV_FLASK:
+      return 4;
+    case TV_FOOD:
+      return 19;
+    case TV_MAGIC_BOOK:
+      return 18;
+    case TV_PRAYER_BOOK:
+      return 17;
+      // Gold
+      // TBD: copper/silver/gold/mithril/gems by subval
+    case TV_GOLD:
+      return 16;
+    /* Dungeon Fixtures */
+    case TV_VIS_TRAP:
+      if (obj->tchar != ' ') return 26;
+      viz->light = 0;
+      break;
+    case TV_RUBBLE:
+      return 27;
+    case TV_OPEN_DOOR:
+      return 28;
+    case TV_CLOSED_DOOR:
+      return 29;
+    case TV_UP_STAIR:
+      return 30;
+    case TV_DOWN_STAIR:
+      return 31;
+    case TV_SECRET_DOOR:
+      viz->floor = 2;
+      break;
   }
   return 0;
 }
@@ -256,55 +233,54 @@ symmap_update()
   }
 }
 void
-altmap_update()
+viz_update()
 {
+  int blind, py, px;
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
   int cmax = panelD.panel_col_max;
 
-  memset(cremapD, 0, sizeof(cremapD));
-  memset(wallmapD, 0, sizeof(wallmapD));
-  memset(tremapD, 0, sizeof(tremapD));
-  memset(litmapD, 0, sizeof(litmapD));
-
-  uint16_t* cidx_ptr = &cremapD[0][0];
+  struct vizS* vptr = &vizD[0][0];
+  blind = countD.blind;
+  py = uD.y;
+  px = uD.x;
   for (int row = rmin; row < rmax; ++row) {
     for (int col = cmin; col < cmax; ++col) {
-      struct caveS* cave_ptr = &caveD[row][col];
-      if (cave_ptr->midx) {
-        struct monS* mon = &entity_monD[cave_ptr->midx];
-        if (mon->mlit) *cidx_ptr = mon->cidx;
-      }
-      cidx_ptr += 1;
-    }
-  }
-
-  if (countD.blind == 0) {
-    uint8_t* wall_ptr = &wallmapD[0][0];
-    for (int row = rmin; row < rmax; ++row) {
-      for (int col = cmin; col < cmax; ++col) {
-        *wall_ptr++ = cave_wall(row, col);
-      }
-    }
-
-    uint8_t* oidx_ptr = &tremapD[0][0];
-    for (int row = rmin; row < rmax; ++row)
-      for (int col = cmin; col < cmax; ++col) {
-        *oidx_ptr++ = cave_obj(row, col);
-      }
-
-    uint8_t* lit_ptr = &litmapD[0][0];
-    for (int row = rmin; row < rmax; ++row)
-      for (int col = cmin; col < cmax; ++col) {
-        if (caveD[row][col].fval < MAX_FLOOR) {
-          int cflag = caveD[row][col].cflag;
-          *lit_ptr = cflag;
+      struct caveS* c_ptr = &caveD[row][col];
+      struct monS* mon = &entity_monD[c_ptr->midx];
+      struct objS* obj = &entity_objD[c_ptr->oidx];
+      struct vizS viz = {0};
+      if (row != py || col != px) {
+        if (mon->mlit) viz.cr = mon->cidx;
+        if (!blind && (CF_VIZ & c_ptr->cflag)) {
+          // TBD: use visual index instead of cflag, test los() here
+          if (caveD[row][col].fval < MAX_FLOOR) {
+            viz.light = caveD[row][col].cflag;
+          }
+          switch (c_ptr->fval) {
+            case GRANITE_WALL:
+            case BOUNDARY_WALL:
+              viz.floor = 1;
+              break;
+            case QUARTZ_WALL:
+              viz.floor = 3 + (c_ptr->oidx != 0);
+              break;
+            case MAGMA_WALL:
+              viz.floor = 5 + (c_ptr->oidx != 0);
+              break;
+            default:
+              viz.tr = obj_viz(obj, &viz);
+              break;
+          }
         }
-        lit_ptr += 1;
+      } else {
+        viz.sym = '@';
+        viz.light = CF_TEMP_LIGHT;
       }
-  } else {
-    litmapD[uD.y - rmin][uD.x - cmin] = CF_TEMP_LIGHT;
+
+      *vptr++ = viz;
+    }
   }
 }
 // Match single index
@@ -395,7 +371,7 @@ draw()
 {
   vital_update();
   symmap_update();
-  altmap_update();
+  viz_update();
   affect_update();
 
   platformD.draw();
