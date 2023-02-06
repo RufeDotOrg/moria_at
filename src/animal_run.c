@@ -422,6 +422,23 @@ viz_update()
     }
   }
 }
+void
+viz_minimap()
+{
+  int row, col;
+  struct caveS* c_ptr;
+
+  memset(minimapD, 0, sizeof(minimapD));
+  for (row = 0; row < MAX_HEIGHT; ++row) {
+    for (col = 0; col < MAX_WIDTH; ++col) {
+      c_ptr = &caveD[row][col];
+      if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
+        minimapD[row][col] = 1;
+      if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT || col + 1 == MAX_WIDTH)
+        minimapD[row][col] = 1;
+    }
+  }
+}
 // Match single index
 static int
 py_affect(maid)
@@ -509,10 +526,12 @@ void
 draw()
 {
   vital_update();
-  if (SDL)
+  if (SDL) {
     viz_update();
-  else
+    viz_minimap();
+  } else {
     symmap_update();
+  }
   affect_update();
 
   platformD.draw();

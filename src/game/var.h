@@ -12,6 +12,7 @@ static char screenD[SCREEN_HEIGHT][80];
 static int screen_usedD[AL(screenD)];
 static char overlayD[STATUS_HEIGHT][80];
 static int overlay_usedD[AL(overlayD)];
+static uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
 
 // Gameplay messages write to a circular queue
 static char msg_cqD[MAX_MSG][80];

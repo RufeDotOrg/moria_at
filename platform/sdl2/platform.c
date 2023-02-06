@@ -38,6 +38,7 @@ static float aspectD;
 static struct SDL_Renderer *rendererD;
 static uint32_t texture_formatD;
 static SDL_PixelFormat *pixel_formatD;
+static SDL_Surface *mmsurfaceD;
 static SDL_Color blackD;
 static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
@@ -679,6 +680,20 @@ platform_draw()
       SDL_Rect pr = {RS(padD, display_rectD)};
       SDL_RenderFillRect(rendererD, &pr);
     }
+
+    if (dun_level != 0) {
+      bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
+                             (SDL_Point){0, 0}, mmsurfaceD);
+      SDL_Texture *t = SDL_CreateTextureFromSurface(rendererD, mmsurfaceD);
+      SDL_Rect r = {
+          display_rectD.w - 2 * MAX_WIDTH - width,
+          height,
+          2 * MAX_WIDTH,
+          2 * MAX_HEIGHT,
+      };
+      SDL_RenderCopy(rendererD, t, NULL, &r);
+      SDL_DestroyTexture(t);
+    }
   }
 
   if (ANDROID) {
@@ -1208,6 +1223,8 @@ platform_init()
   for (int it = 0; it < 8; ++it) sdl_pump();
 
   font_colorD = whiteD;
+  mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
+                                              MAX_HEIGHT, 0, texture_formatD);
 }
 void
 platform_reset()
