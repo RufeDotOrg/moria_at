@@ -25,8 +25,6 @@ enum { ANDROID };
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
 
-int los();
-
 BOOL
 char_visible(char c)
 {
@@ -536,17 +534,6 @@ enum {
   CH_ACTUATE,
   CH_DROP
 };
-
-SDL_Rect
-subrect_xy_wh(SDL_FPoint xy, SDL_FPoint wh)
-{
-  SDL_Rect r;
-  r.w = wh.x * display_rectD.w;
-  r.h = wh.y * display_rectD.h;
-  r.x = xy.x * display_rectD.w - r.w / 2;
-  r.y = xy.y * display_rectD.h - r.h / 2;
-  return r;
-}
 
 void
 texture_init()
