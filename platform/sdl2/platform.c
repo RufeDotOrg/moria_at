@@ -853,8 +853,6 @@ float ty, tx;
     case 1:
       if (x || y) c &= ~0x20;
       return c;
-    case 2:
-      return 'A';
   }
   return -1;
 }
@@ -1014,20 +1012,28 @@ sdl_pump()
         touch = touch_from_event(&event);
         break;
     }
+    int finger = event.tfinger.fingerId;
+    if (!ANDROID) {
+      if (KMOD_SHIFT & SDL_GetModState()) {
+        finger = 1;
+      }
+    }
 
     // Playing (Mode 0)
     if (mode == 0 && event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
       if (touch == TOUCH_PAD) {
         SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
-        char c = map_touch(event.tfinger.fingerId, rp.y, rp.x);
+        char c = map_touch(finger, rp.y, rp.x);
         return c;
       } else if (touch) {
         finger_rowD = -1;
         switch (touch) {
           case TOUCH_LB:
+            if (finger) return 'S';
             return 'A';
           case TOUCH_RB:
+            if (finger) return 'd';
             return '.';
         }
       } else {
@@ -1041,10 +1047,8 @@ sdl_pump()
     if (mode == 1 && event.type == SDL_FINGERDOWN) {
       switch (touch) {
         case TOUCH_LB:
-          // fingerId return 'S'
           return ESCAPE;
         case TOUCH_RB:
-          // fingerId return 'd'
           return 'I';
       }
     }
