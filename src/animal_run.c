@@ -4768,6 +4768,18 @@ void obj_detail(obj) struct objS* obj;
     }
   }
 
+  if (reveal && obj->p1) {
+    if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
+      sprintf(tmp_str, " (%d charges)", obj->p1);
+      strcat(descD, tmp_str);
+    } else if (eqidx > INVEN_WIELD) {
+      if (TR_P1 & obj->flags) {
+        snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->p1);
+        strcat(descD, tmp_str);
+      }
+    }
+  }
+
   if (reveal) {
     if (oset_tohitdam(obj)) {
       snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
@@ -4785,21 +4797,6 @@ void obj_detail(obj) struct objS* obj;
     } else if (reveal && obj->ac + obj->toac != 0) {
       snprintf(tmp_str, AL(tmp_str), " [%+d AC]", obj->ac + obj->toac);
       strcat(descD, tmp_str);
-    }
-  }
-
-  // Check p1 value
-  if (reveal) {
-    if (obj->p1) {
-      if (obj->tval == TV_STAFF || obj->tval == TV_WAND) {
-        sprintf(tmp_str, " (%d charges)", obj->p1);
-        strcat(descD, tmp_str);
-      } else if (eqidx > INVEN_WIELD) {
-        if (TR_P1 & obj->flags) {
-          snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->p1);
-          strcat(descD, tmp_str);
-        }
-      }
     }
   }
 
