@@ -685,12 +685,14 @@ platform_draw()
       bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
                              (SDL_Point){0, 0}, mmsurfaceD);
       SDL_Texture *t = SDL_CreateTextureFromSurface(rendererD, mmsurfaceD);
+      SDL_SetTextureBlendMode(t, SDL_BLENDMODE_NONE);
       SDL_Rect r = {
           display_rectD.w - 2 * MAX_WIDTH - width,
           height,
           2 * MAX_WIDTH,
           2 * MAX_HEIGHT,
       };
+      if (minimap_enlargeD) r = scale_rectD;
       SDL_RenderCopy(rendererD, t, NULL, &r);
       SDL_DestroyTexture(t);
     }

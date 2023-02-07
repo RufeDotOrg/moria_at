@@ -545,6 +545,7 @@ draw()
   platformD.draw();
   AC(screen_usedD);
   AC(overlay_usedD);
+  if (SDL) minimap_enlargeD = FALSE;
 }
 
 void
@@ -11577,7 +11578,10 @@ dungeon()
               MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
             case 'M':
-              if (!SDL) py_map();
+              if (SDL)
+                minimap_enlargeD = TRUE;
+              else
+                py_map();
               break;
             case 'R':
               countD.rest = -9999;
