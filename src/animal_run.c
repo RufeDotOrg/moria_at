@@ -8584,13 +8584,17 @@ equip_takeoff(iidx, into_slot)
   if (obj->flags & TR_CURSED) {
     MSG("Hmm, the item you are %s seems to be cursed.", describe_use(iidx));
   } else {
-    if (into_slot >= 0) invenD[into_slot] = obj->id;
+    if (into_slot >= 0) {
+      invenD[into_slot] = obj->id;
+      obj_desc(obj, TRUE);
+      MSG("You take off %c) %s.", 'a' + into_slot, descD);
+    }
     invenD[iidx] = 0;
 
-    py_bonuses(obj, -1);
-    obj_desc(obj, TRUE);
-    MSG("You take off %s.", descD);
-    calc_bonuses();
+    if (iidx != INVEN_AUX) {
+      py_bonuses(obj, -1);
+      calc_bonuses();
+    }
     turn_flag = TRUE;
   }
 }
