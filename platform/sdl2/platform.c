@@ -673,6 +673,19 @@ platform_draw()
     }
   }
 
+  {
+    render_font_string(rendererD, &fontD, versionD, sizeof(versionD) - 1,
+                       (SDL_Point){
+                           display_rectD.w - 2 * MAX_WIDTH,
+                           height,
+                       });
+    render_font_string(rendererD, &fontD, git_hashD, sizeof(git_hashD) - 1,
+                       (SDL_Point){
+                           display_rectD.w - width / 2 - 2 * MAX_WIDTH,
+                           2 * height,
+                       });
+  }
+
   if (dun_level != 0) {
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
                            (SDL_Point){0, 0}, mmsurfaceD);
@@ -680,7 +693,7 @@ platform_draw()
     SDL_SetTextureBlendMode(t, SDL_BLENDMODE_NONE);
     SDL_Rect r = {
         display_rectD.w - 2 * MAX_WIDTH - width,
-        height,
+        3 * height,
         2 * MAX_WIDTH,
         2 * MAX_HEIGHT,
     };
@@ -1037,9 +1050,10 @@ sdl_pump()
             return '.';
         }
       } else {
-        if (tp.x < .77 && tp.y < .2) return CTRL('p');
+        if (tp.x < .85 && tp.y < .09) return CTRL('p');
         if (tp.x < .25 && tp.y < .5) return 'C';
-        if (tp.x > .77 && tp.y < .2) return 'M';
+        if (tp.x > .85 && tp.y < .09) return 'v';
+        if (tp.x > .85 && tp.y < .23) return 'M';
       }
     }
 
