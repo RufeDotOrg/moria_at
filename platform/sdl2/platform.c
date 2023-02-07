@@ -671,22 +671,22 @@ platform_draw()
       SDL_Rect pr = {RS(padD, display_rectD)};
       SDL_RenderFillRect(rendererD, &pr);
     }
+  }
 
-    if (dun_level != 0) {
-      bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
-                             (SDL_Point){0, 0}, mmsurfaceD);
-      SDL_Texture *t = SDL_CreateTextureFromSurface(rendererD, mmsurfaceD);
-      SDL_SetTextureBlendMode(t, SDL_BLENDMODE_NONE);
-      SDL_Rect r = {
-          display_rectD.w - 2 * MAX_WIDTH - width,
-          height,
-          2 * MAX_WIDTH,
-          2 * MAX_HEIGHT,
-      };
-      if (minimap_enlargeD) r = scale_rectD;
-      SDL_RenderCopy(rendererD, t, NULL, &r);
-      SDL_DestroyTexture(t);
-    }
+  if (dun_level != 0) {
+    bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
+                           (SDL_Point){0, 0}, mmsurfaceD);
+    SDL_Texture *t = SDL_CreateTextureFromSurface(rendererD, mmsurfaceD);
+    SDL_SetTextureBlendMode(t, SDL_BLENDMODE_NONE);
+    SDL_Rect r = {
+        display_rectD.w - 2 * MAX_WIDTH - width,
+        height,
+        2 * MAX_WIDTH,
+        2 * MAX_HEIGHT,
+    };
+    if (minimap_enlargeD) r = scale_rectD;
+    SDL_RenderCopy(rendererD, t, NULL, &r);
+    SDL_DestroyTexture(t);
   }
 
   if (ANDROID) {
@@ -1037,9 +1037,9 @@ sdl_pump()
             return '.';
         }
       } else {
-        if (tp.y < .2) return CTRL('p');
+        if (tp.x < .77 && tp.y < .2) return CTRL('p');
         if (tp.x < .25 && tp.y < .5) return 'C';
-        if (tp.x > .25 && tp.x < .75) return 'M';
+        if (tp.x > .77 && tp.y < .2) return 'M';
       }
     }
 

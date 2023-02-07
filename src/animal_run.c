@@ -11581,6 +11581,8 @@ dungeon()
               MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
             case 'M':
+              screenD[0][0] = ' ';
+              screen_usedD[0] = 1;
               if (SDL)
                 minimap_enlargeD = TRUE;
               else
