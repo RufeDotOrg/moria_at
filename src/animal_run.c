@@ -8407,7 +8407,7 @@ py_zap(iidx)
 {
   int dir;
 
-  if (get_dir(0, &dir)) {
+  if (get_dir("Zap wand which direction?", &dir)) {
     if (countD.confusion) {
       msg_print("You are confused.");
       do {
