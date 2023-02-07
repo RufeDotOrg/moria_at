@@ -523,18 +523,9 @@ float scaleD;
 SDL_Texture *text_textureD;
 SDL_Rect text_rectD;
 
-SDL_FRect padD;
+enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
 SDL_FRect buttonD[2];
-enum {
-  CH_WALK,
-  CH_RUN,
-  CH_BASH,
-  CH_ZAP,
-  CH_WEAR,
-  CH_TAKEOFF,
-  CH_ACTUATE,
-  CH_DROP
-};
+SDL_FRect padD;
 
 void
 texture_init()
@@ -946,6 +937,24 @@ SDL_Event event;
   return 0;
 }
 
+int
+touch_from_event(event)
+SDL_Event *event;
+{
+  int r;
+
+  r = 0;
+  SDL_FPoint tp = {event->tfinger.x, event->tfinger.y};
+  for (int it = 0; it < AL(buttonD); ++it) {
+    if (SDL_PointInFRect(&tp, &buttonD[it])) r = 1 + it;
+  }
+  if (SDL_PointInFRect(&tp, &padD)) {
+    r = TOUCH_PAD;
+  }
+
+  return r;
+}
+
 // Game interface
 char
 sdl_pump()
@@ -998,61 +1007,70 @@ sdl_pump()
     }
 
     // Finger inputs
-    if (event.type == SDL_FINGERDOWN) {
+    int touch = 0;
+    switch (event.type) {
+      case SDL_FINGERDOWN:
+      case SDL_FINGERUP:
+        touch = touch_from_event(&event);
+        break;
+    }
+
+    // Playing (Mode 0)
+    if (mode == 0 && event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (mode == 0 && SDL_PointInFRect(&tp, &padD)) {
+      if (touch == TOUCH_PAD) {
         SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
         char c = map_touch(event.tfinger.fingerId, rp.y, rp.x);
         return c;
-      }
-      for (int it = 0; it < AL(buttonD); ++it) {
-        if (SDL_PointInFRect(&tp, &buttonD[it])) {
-          finger_rowD = -1;
-          switch (it) {
-            case 0:
-              if (prev == 'A') return 'S';
-              if (prev == 'S') return 'd';
-              return 'A';
-            case 1:
-              return '.';
-          }
+      } else if (touch) {
+        finger_rowD = -1;
+        switch (touch) {
+          case TOUCH_LB:
+            return 'A';
+          case TOUCH_RB:
+            return '.';
         }
-      }
-    }
-    if (event.type == SDL_FINGERMOTION) {
-    }
-    if (event.type == SDL_FINGERUP) {
-    }
-
-    // Playing
-    if (mode == 0) {
-      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (event.type == SDL_FINGERDOWN) {
+      } else {
         if (tp.y < .2) return CTRL('p');
         if (tp.x < .25 && tp.y < .5) return 'C';
         if (tp.x > .25 && tp.x < .75) return 'M';
       }
     }
 
-    // Choice overlay (mode 1)
-    if (mode == 1) {
-      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      int row = (tp.y * rowD) - 1;
-      if (event.type == SDL_FINGERMOTION || event.type == SDL_FINGERDOWN) {
-        Log("fingermotion %d", row);
-        if (row != finger_rowD) {
-          finger_rowD = row;
-          return (tp.x < .5) ? '/' : '*';
-        }
-      }
-      if (event.type == SDL_FINGERUP) {
-        Log("fingerup row %d", row);
-        if (row >= 0 && row < 22) {
-          return 'a' + row;
-        }
-        return ESCAPE;
+    // Overlay (Mode 1)
+    if (mode == 1 && event.type == SDL_FINGERDOWN) {
+      switch (touch) {
+        case TOUCH_LB:
+          // fingerId return 'S'
+          return ESCAPE;
+        case TOUCH_RB:
+          // fingerId return 'd'
+          return 'I';
       }
     }
+    if (mode == 1 && event.type == SDL_FINGERMOTION) {
+      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+      int row = (tp.y * rowD) - 1;
+      if (row != finger_rowD) {
+        Log("fingermotion %d", row);
+        finger_rowD = row;
+        return (tp.x < .5) ? '/' : '*';
+      }
+    }
+    if (mode == 1 && event.type == SDL_FINGERUP) {
+      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+      if (tp.x < .77) {
+        int row = (tp.y * rowD) - 1;
+        if (row >= 0 && row < 22) {
+          Log("fingerup row %d vs motion row %d", row, finger_rowD);
+          return 'a' + row;
+        }
+      }
+
+      return (tp.x < .5) ? '/' : '*';
+    }
+
+    // Screen (mode 2)
     if (mode == 2) {
       if (event.type == SDL_FINGERUP) return ' ';
     }
