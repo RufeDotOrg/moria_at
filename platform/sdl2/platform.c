@@ -1028,6 +1028,7 @@ sdl_pump()
     if (mode == 0) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
       if (event.type == SDL_FINGERDOWN) {
+        if (tp.y < .2) return CTRL('p');
         if (tp.x < .25 && tp.y < .5) return 'C';
         if (tp.x > .25 && tp.x < .75) return 'M';
       }
