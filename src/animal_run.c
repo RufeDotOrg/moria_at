@@ -11248,15 +11248,9 @@ regenhp(percent)
 void
 player_maint()
 {
-  int flag;
+  msg_print("A wind from the Misty Mountains renews your being.");
   for (int it = 0; it < MAX_A; ++it) {
-    flag |= (statD.cur_stat[it] < statD.max_stat[it]);
-  }
-  if (flag) {
-    msg_print("A wind from the Misty Mountains renews your being.");
-    for (int it = 0; it < MAX_A; ++it) {
-      res_stat(it);
-    }
+    res_stat(it);
   }
 }
 void
