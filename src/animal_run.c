@@ -11563,6 +11563,8 @@ dungeon()
                   py_zap(iidx);
                 } else if (iidx < INVEN_EQUIP) {
                   inven_wear(iidx);
+                } else if (iidx == INVEN_WIELD) {
+                  py_offhand();
                 }
               }
               break;
