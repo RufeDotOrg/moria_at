@@ -45,6 +45,7 @@ static SDL_Color font_colorD;
 static int xD;
 static int modeD;
 static int prevD;
+static int finger_stackD;
 static int finger_rowD;
 static int quitD;
 
@@ -1050,13 +1051,34 @@ sdl_pump()
     }
 
     // Finger inputs
+    SDL_FPoint motion = {0};
     int touch = 0;
     switch (event.type) {
       case SDL_FINGERDOWN:
       case SDL_FINGERUP:
         touch = touch_from_event(&event);
         break;
+      case SDL_FINGERMOTION:
+        motion = (SDL_FPoint){event.tfinger.x, event.tfinger.y};
+        break;
+      case SDL_MOUSEMOTION:
+        if (!ANDROID) {
+          motion = (SDL_FPoint){event.motion.x / (float)display_rectD.w,
+                                event.motion.y / (float)display_rectD.h};
+        }
+        break;
     }
+    switch (event.type) {
+      case SDL_FINGERDOWN:
+        finger_stackD += 1;
+        Log("finger_stackD %d", finger_stackD);
+        break;
+      case SDL_FINGERUP:
+        finger_stackD -= 1;
+        Log("finger_stackD %d", finger_stackD);
+        break;
+    }
+
     int finger = event.tfinger.fingerId;
     if (!ANDROID) {
       if (KMOD_SHIFT & SDL_GetModState()) {
@@ -1100,13 +1122,11 @@ sdl_pump()
           return 'I';
       }
     }
-    if (mode == 1 && event.type == SDL_FINGERMOTION) {
-      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      int row = (tp.y * rowD) - 1;
+    if (mode == 1 && (motion.x + motion.y)) {
+      int row = (motion.y * rowD) - 1;
       if (row != finger_rowD) {
-        Log("fingermotion %d", row);
         finger_rowD = row;
-        return (tp.x < .5) ? '/' : '*';
+        return (motion.x < .5) ? '/' : '*';
       }
     }
     if (mode == 1 && event.type == SDL_FINGERUP) {
@@ -1114,7 +1134,6 @@ sdl_pump()
       if (tp.x < .77) {
         int row = (tp.y * rowD) - 1;
         if (row >= 0 && row < 22) {
-          Log("fingerup row %d vs motion row %d", row, finger_rowD);
           return 'a' + row;
         }
       }
