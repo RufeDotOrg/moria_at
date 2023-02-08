@@ -147,7 +147,7 @@ struct glyphS {
   uint32_t bitmap_offset;
 };
 
-void
+static void
 glyph_debug(struct glyphS *g)
 {
   Log("glyph "
@@ -176,7 +176,7 @@ static struct SDL_Texture *font_textureD[MAX_GLYPH];
 static int rowD, colD;
 static float rfD, cfD;
 
-void
+static void
 font_debug(struct fontS *font)
 {
   Log("font "
