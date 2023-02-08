@@ -17,6 +17,9 @@
 
 #ifndef ANDROID
 enum { ANDROID };
+enum { TOUCH };
+#else
+enum { TOUCH = 1 };
 #endif
 #define CTRL(x) (x & 037)
 #define P(p) p.x, p.y
@@ -586,15 +589,14 @@ platform_draw()
     mode = 1;
     show_map = 0;
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
-      font_colorD = (ANDROID && row == finger_rowD)
-                        ? (SDL_Color){255, 0, 0, 255}
-                        : whiteD;
+      font_colorD =
+          (TOUCH && row == finger_rowD) ? (SDL_Color){255, 0, 0, 255} : whiteD;
       SDL_Point p = {0, (row + 1) * height};
       render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
                          p);
     }
     font_colorD = whiteD;
-    if (ANDROID) {
+    if (TOUCH) {
       SDL_Point p = {width * 80, height};
       char text[2] = {'a' + finger_rowD, 0};
       render_font_string(rendererD, &fontD, text, 1, p);
@@ -666,24 +668,24 @@ platform_draw()
 
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
 
-    if (ANDROID) {
-    {
-      SDL_Color c = {0, 0, 78, 0};
-      SDL_SetRenderDrawColor(rendererD, C(c));
+    if (TOUCH) {
+      {
+        SDL_Color c = {0, 0, 78, 0};
+        SDL_SetRenderDrawColor(rendererD, C(c));
 
-      SDL_Rect pr = {RS(padD, display_rectD)};
-      SDL_RenderFillRect(rendererD, &pr);
-    }
-    {
-      SDL_Color c = {50, 0, 0, 0};
-      SDL_SetRenderDrawColor(rendererD, C(c));
-
-      for (int it = 0; it < AL(ppD); ++it) {
-        if (!ppD[it].x && !ppD[it].y) break;
-        SDL_Rect ppr = {RS(ppD[it], display_rectD)};
-        SDL_RenderFillRect(rendererD, &ppr);
+        SDL_Rect pr = {RS(padD, display_rectD)};
+        SDL_RenderFillRect(rendererD, &pr);
       }
-    }
+      {
+        SDL_Color c = {50, 0, 0, 0};
+        SDL_SetRenderDrawColor(rendererD, C(c));
+
+        for (int it = 0; it < AL(ppD); ++it) {
+          if (!ppD[it].x && !ppD[it].y) break;
+          SDL_Rect ppr = {RS(ppD[it], display_rectD)};
+          SDL_RenderFillRect(rendererD, &ppr);
+        }
+      }
     }
   }
 
@@ -716,7 +718,7 @@ platform_draw()
     SDL_DestroyTexture(t);
   }
 
-  if (ANDROID) {
+  if (TOUCH) {
     SDL_Color c = {0, 0, 78, 0};
     SDL_SetRenderDrawColor(rendererD, C(c));
 
@@ -1062,7 +1064,7 @@ sdl_pump()
         motion = (SDL_FPoint){event.tfinger.x, event.tfinger.y};
         break;
       case SDL_MOUSEMOTION:
-        if (!ANDROID) {
+        if (TOUCH && !ANDROID) {
           motion = (SDL_FPoint){event.motion.x / (float)display_rectD.w,
                                 event.motion.y / (float)display_rectD.h};
         }
@@ -1080,7 +1082,7 @@ sdl_pump()
     }
 
     int finger = event.tfinger.fingerId;
-    if (!ANDROID) {
+    if (TOUCH && !ANDROID) {
       if (KMOD_SHIFT & SDL_GetModState()) {
         finger = 1;
       }
@@ -1286,8 +1288,10 @@ platform_init()
   SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
 
   // Platform Input isolation
-  SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
-  SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+  if (ANDROID || !TOUCH) {
+    SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+    SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+  }
 
   SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
 
