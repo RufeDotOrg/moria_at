@@ -50,6 +50,7 @@ static int modeD;
 static int prevD;
 static int finger_stackD;
 static int finger_rowD;
+static int finger_colD;
 static int quitD;
 
 BOOL
@@ -1103,6 +1104,7 @@ sdl_pump()
         }
       } else if (touch) {
         finger_rowD = -1;
+        finger_colD = -1;
         switch (touch) {
           case TOUCH_LB:
             if (finger) return 'S';
@@ -1130,21 +1132,23 @@ sdl_pump()
     }
     if (mode == 1 && (motion.x + motion.y)) {
       int row = (motion.y * rowD) - 1;
-      if (row != finger_rowD) {
+      int col = (motion.x / .30);
+      if (row != finger_rowD || col != finger_colD) {
         finger_rowD = row;
-        return (motion.x < .5) ? '/' : '*';
+        finger_colD = col;
+        return (finger_colD == 0) ? '/' : '*';
       }
     }
     if (mode == 1 && event.type == SDL_FINGERUP) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
       if (tp.x < .77) {
-        int row = (tp.y * rowD) - 1;
+        int row = finger_rowD;
         if (row >= 0 && row < 22) {
           return 'a' + row;
         }
       }
 
-      return (tp.x < .5) ? '/' : '*';
+      return (finger_colD == 0) ? '/' : '*';
     }
 
     // Screen (mode 2)
