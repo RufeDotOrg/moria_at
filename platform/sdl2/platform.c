@@ -592,13 +592,16 @@ platform_draw()
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
       font_colorD =
           (TOUCH && row == finger_rowD) ? (SDL_Color){255, 0, 0, 255} : whiteD;
-      SDL_Point p = {0, (row + 1) * height};
+      SDL_Point p = {
+          (TOUCH && finger_colD) ? 13 * width : 0,
+          (row + 1) * height,
+      };
       render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
                          p);
     }
     font_colorD = whiteD;
     if (TOUCH) {
-      SDL_Point p = {width * 80, height};
+      SDL_Point p = {width * 16, 0};
       char text[2] = {'a' + finger_rowD, 0};
       render_font_string(rendererD, &fontD, text, 1, p);
     }
@@ -1132,7 +1135,7 @@ sdl_pump()
     }
     if (mode == 1 && (motion.x + motion.y)) {
       int row = (motion.y * rowD) - 1;
-      int col = (motion.x / .30);
+      int col = (motion.x / .10);
       if (row != finger_rowD || col != finger_colD) {
         finger_rowD = row;
         finger_colD = col;
