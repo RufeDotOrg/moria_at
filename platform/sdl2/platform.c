@@ -526,6 +526,7 @@ SDL_Rect text_rectD;
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
 SDL_FRect buttonD[2];
 SDL_FRect padD;
+SDL_FRect ppD[9];
 
 void
 texture_init()
@@ -665,11 +666,23 @@ platform_draw()
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
 
     if (ANDROID) {
+    {
       SDL_Color c = {0, 0, 78, 0};
       SDL_SetRenderDrawColor(rendererD, C(c));
 
       SDL_Rect pr = {RS(padD, display_rectD)};
       SDL_RenderFillRect(rendererD, &pr);
+    }
+    {
+      SDL_Color c = {50, 0, 0, 0};
+      SDL_SetRenderDrawColor(rendererD, C(c));
+
+      for (int it = 0; it < AL(ppD); ++it) {
+        if (!ppD[it].x && !ppD[it].y) break;
+        SDL_Rect ppr = {RS(ppD[it], display_rectD)};
+        SDL_RenderFillRect(rendererD, &ppr);
+      }
+    }
     }
   }
 
@@ -937,6 +950,14 @@ SDL_Event event;
 
     // Input constraints
     padD = (SDL_FRect){0, .5, .25 - (2 * cfD), .5 - (rfD)};
+
+    for (int col = 0; col < 3; ++col) {
+      for (int row = 0; row < 3; ++row) {
+        int idx = col * 3 + row;
+        ppD[idx] = (SDL_FRect){.00 + .1 * row, .75 - .1 * col, .05, .05};
+      }
+    }
+
     for (int it = 0; it < AL(buttonD); ++it) {
       buttonD[it] = (SDL_FRect){.77 + (.11 * it), .75 - (.22 * it), .11, .22};
     }
@@ -959,8 +980,19 @@ SDL_Event *event;
   for (int it = 0; it < AL(buttonD); ++it) {
     if (SDL_PointInFRect(&tp, &buttonD[it])) r = 1 + it;
   }
-  if (SDL_PointInFRect(&tp, &padD)) {
-    r = TOUCH_PAD;
+  // if (SDL_PointInFRect(&tp, &padD)) {
+  //   r = TOUCH_PAD;
+  // }
+  float max_dsq = 2 * .025 * .025;
+
+  for (int it = 0; it < AL(ppD); ++it) {
+    float dx = tp.x - (ppD[it].x + ppD[it].w / 2);
+    float dy = tp.y - (ppD[it].y + ppD[it].h / 2);
+    float dsq = dx * dx + dy * dy;
+    if (dsq < max_dsq) {
+      max_dsq = dsq;
+      r = TOUCH_PAD + it;
+    }
   }
 
   return r;
@@ -1035,9 +1067,11 @@ sdl_pump()
     // Playing (Mode 0)
     if (mode == 0 && event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (touch == TOUCH_PAD) {
-        SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
-        char c = map_touch(finger, rp.y, rp.x);
+      if (touch >= TOUCH_PAD) {
+        // SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
+        // char c = map_touch(finger, rp.y, rp.x);
+        char c = char_by_dir(touch - TOUCH_PAD + 1);
+        Log("char_by_dir %c (%d)", c, touch - TOUCH_PAD + 1);
         return c;
       } else if (touch) {
         finger_rowD = -1;
