@@ -298,6 +298,8 @@ struct vizS* viz;
         return 4;
       else  // '~'
         return 23;
+    case TV_CHEST:
+      return 32;
     case TV_LIGHT:
       return 21;
       // Worn

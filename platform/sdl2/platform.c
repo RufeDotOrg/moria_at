@@ -275,7 +275,7 @@ art_init()
 }
 
 // treasure
-#define MAX_TART 31
+#define MAX_TART 32
 static uint8_t tartD[8 * 1024];
 static uint64_t tart_usedD;
 static struct SDL_Texture *tart_textureD[MAX_TART];
