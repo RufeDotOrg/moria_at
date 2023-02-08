@@ -1083,9 +1083,7 @@ sdl_pump()
 
     int finger = event.tfinger.fingerId;
     if (TOUCH && !ANDROID) {
-      if (KMOD_SHIFT & SDL_GetModState()) {
-        finger = 1;
-      }
+      finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
     }
 
     // Playing (Mode 0)
@@ -1096,7 +1094,13 @@ sdl_pump()
         // char c = map_touch(finger, rp.y, rp.x);
         char c = char_by_dir(touch - TOUCH_PAD + 1);
         Log("char_by_dir %c (%d)", c, touch - TOUCH_PAD + 1);
-        return c;
+        switch (finger) {
+          case 0:
+            return c;
+          case 1:
+            if (c != ' ') return c & ~0x20;
+            return c;
+        }
       } else if (touch) {
         finger_rowD = -1;
         switch (touch) {
