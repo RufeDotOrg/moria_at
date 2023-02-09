@@ -1133,7 +1133,7 @@ sdl_pump()
           return 'I';
       }
     }
-    if (mode == 1 && (motion.x + motion.y)) {
+    if (mode == 1 && (motion.x + motion.y) && finger_stackD == (finger + 1)) {
       int row = (motion.y * rowD) - 1;
       int col = (motion.x / .10);
       if (row != finger_rowD || col != finger_colD) {
