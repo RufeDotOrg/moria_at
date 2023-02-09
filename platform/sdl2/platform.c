@@ -66,11 +66,7 @@ render_init()
     Log("%d Display) %d %d %d %d\n", it, r.x, r.y, r.w, r.h);
     if (r.x == 0 && r.y == 0) {
       display_rectD = r;
-      if (display_rectD.w > display_rectD.h) {
-        aspectD = (float)display_rectD.h / display_rectD.w;
-      } else {
-        aspectD = (float)display_rectD.w / display_rectD.h;
-      }
+      aspectD = (float)display_rectD.w / display_rectD.h;
     }
   }
 
@@ -531,7 +527,7 @@ SDL_Rect text_rectD;
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
 SDL_FRect buttonD[2];
 SDL_FRect padD;
-SDL_FRect ppD[9];
+SDL_FPoint ppD[9];
 
 void
 texture_init()
@@ -564,6 +560,18 @@ texture_by_sym(char c)
     t = font_textureD[glyph_index];
   }
   return t;
+}
+
+#define TOUCH_DIAMETER .05f
+SDL_FRect
+rect_from_pp(idx)
+{
+  return (SDL_FRect){
+      ppD[idx].x,
+      ppD[idx].y,
+      TOUCH_DIAMETER,
+      TOUCH_DIAMETER * aspectD,
+  };
 }
 
 int
@@ -685,9 +693,11 @@ platform_draw()
         SDL_SetRenderDrawColor(rendererD, C(c));
 
         for (int it = 0; it < AL(ppD); ++it) {
-          if (!ppD[it].x && !ppD[it].y) break;
-          SDL_Rect ppr = {RS(ppD[it], display_rectD)};
-          SDL_RenderFillRect(rendererD, &ppr);
+          if (ppD[it].x || ppD[it].y) {
+            SDL_FRect r = rect_from_pp(it);
+            SDL_Rect ppr = {RS(r, display_rectD)};
+            SDL_RenderFillRect(rendererD, &ppr);
+          }
         }
       }
     }
@@ -905,11 +915,7 @@ SDL_Event event;
         display_rectD.h != event.window.data2))) {
     display_rectD.w = event.window.data1;
     display_rectD.h = event.window.data2;
-    if (display_rectD.w > display_rectD.h) {
-      aspectD = (float)display_rectD.h / display_rectD.w;
-    } else {
-      aspectD = (float)display_rectD.w / display_rectD.h;
-    }
+    aspectD = (float)display_rectD.w / display_rectD.h;
 
     int dx, dy;
     dx = event.window.data1;
@@ -958,10 +964,14 @@ SDL_Event event;
     // Input constraints
     padD = (SDL_FRect){0, .5, .25 - (2 * cfD), .5 - (rfD)};
 
+#define TOUCH_GAP (TOUCH_DIAMETER * 1.5f)
     for (int col = 0; col < 3; ++col) {
       for (int row = 0; row < 3; ++row) {
         int idx = col * 3 + row;
-        ppD[idx] = (SDL_FRect){.00 + .1 * row, .75 - .1 * col, .05, .05};
+        ppD[idx] = (SDL_FPoint){
+            .01 + TOUCH_GAP * row,
+            .80 - TOUCH_GAP * col * aspectD,
+        };
       }
     }
 
@@ -987,17 +997,10 @@ SDL_Event *event;
   for (int it = 0; it < AL(buttonD); ++it) {
     if (SDL_PointInFRect(&tp, &buttonD[it])) r = 1 + it;
   }
-  // if (SDL_PointInFRect(&tp, &padD)) {
-  //   r = TOUCH_PAD;
-  // }
-  float max_dsq = 2 * .025 * .025;
 
   for (int it = 0; it < AL(ppD); ++it) {
-    float dx = tp.x - (ppD[it].x + ppD[it].w / 2);
-    float dy = tp.y - (ppD[it].y + ppD[it].h / 2);
-    float dsq = dx * dx + dy * dy;
-    if (dsq < max_dsq) {
-      max_dsq = dsq;
+    SDL_FRect rect = rect_from_pp(it);
+    if (SDL_PointInFRect(&tp, &rect)) {
       r = TOUCH_PAD + it;
     }
   }
@@ -1133,13 +1136,15 @@ sdl_pump()
           return 'I';
       }
     }
-    if (mode == 1 && (motion.x + motion.y) && finger_stackD == (finger + 1)) {
-      int row = (motion.y * rowD) - 1;
-      int col = (motion.x / .10);
-      if (row != finger_rowD || col != finger_colD) {
-        finger_rowD = row;
-        finger_colD = col;
-        return (finger_colD == 0) ? '/' : '*';
+    if (mode == 1 && (motion.x + motion.y)) {
+      if (!ANDROID || finger_stackD == (finger + 1)) {
+        int row = (motion.y * rowD) - 1;
+        int col = (motion.x / .10);
+        if (row != finger_rowD || col != finger_colD) {
+          finger_rowD = row;
+          finger_colD = col;
+          return (finger_colD == 0) ? '/' : '*';
+        }
       }
     }
     if (mode == 1 && event.type == SDL_FINGERUP) {
