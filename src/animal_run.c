@@ -1477,6 +1477,16 @@ static void new_spot(y, x) int *y, *x;
   *y = i;
   *x = j;
 }
+static int
+next_to_object(y1, x1)
+{
+  for (int col = y1 - 1; col <= y1 + 1; ++col) {
+    for (int row = x1 - 1; row <= x1 + 1; ++row) {
+      if (caveD[col][row].oidx) return TRUE;
+    }
+  }
+  return FALSE;
+}
 static void
 place_stairs(typ, num, walls)
 {
@@ -1500,12 +1510,14 @@ place_stairs(typ, num, walls)
           do {
             cave_ptr = &caveD[y1][x1];
             //  if (next_to_walls(y1, x1) >= walls)
-            if (cave_ptr->fval <= MAX_OPEN_SPACE && cave_ptr->oidx == 0) {
-              flag = TRUE;
-              if (typ == 1)
-                place_stair_tval_tchar(y1, x1, TV_UP_STAIR, '<');
-              else {
-                place_stair_tval_tchar(y1, x1, TV_DOWN_STAIR, '>');
+            if (cave_ptr->fval <= MAX_OPEN_SPACE) {
+              if (next_to_object(y1, x1) == 0) {
+                flag = TRUE;
+                if (typ == 1)
+                  place_stair_tval_tchar(y1, x1, TV_UP_STAIR, '<');
+                else {
+                  place_stair_tval_tchar(y1, x1, TV_DOWN_STAIR, '>');
+                }
               }
             }
             x1++;
