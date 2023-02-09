@@ -998,10 +998,19 @@ SDL_Event *event;
     if (SDL_PointInFRect(&tp, &buttonD[it])) r = 1 + it;
   }
 
-  for (int it = 0; it < AL(ppD); ++it) {
-    SDL_FRect rect = rect_from_pp(it);
-    if (SDL_PointInFRect(&tp, &rect)) {
-      r = TOUCH_PAD + it;
+  // TBD: dynamic bounds based on aspectD
+  if (SDL_PointInFRect(&tp, &padD)) {
+    float min_dsq = FLT_MAX;
+    for (int it = 0; it < AL(ppD); ++it) {
+      SDL_FRect rect = rect_from_pp(it);
+      SDL_FPoint center = {rect.x + rect.w / 2, rect.y + rect.h / 2};
+      float dx = tp.x - center.x;
+      float dy = tp.y - center.y;
+      float dsq = dx * dx + dy * dy;
+      if (dsq < min_dsq) {
+        min_dsq = dsq;
+        r = TOUCH_PAD + it;
+      }
     }
   }
 
