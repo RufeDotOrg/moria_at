@@ -7898,16 +7898,22 @@ inven_quaff(iidx)
           }
           break;
         case 29:
-          ident |= countD.blind > 0;
-          countD.blind = MIN(countD.blind, 1);
+          if (countD.blind > 0) {
+            ident |= TRUE;
+            countD.blind = 1;
+          }
           break;
         case 30:
-          ident |= countD.confusion > 0;
-          countD.confusion = MIN(countD.confusion, 1);
+          if (countD.confusion > 0) {
+            ident |= TRUE;
+            countD.confusion = 1;
+          }
           break;
         case 31:
-          ident |= countD.poison > 0;
-          countD.poison = MIN(countD.poison, 1);
+          if (countD.poison > 0) {
+            ident |= TRUE;
+            countD.poison = 1;
+          }
           break;
         case 34:
           if (uD.exp > 0) {
