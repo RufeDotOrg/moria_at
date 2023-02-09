@@ -280,13 +280,14 @@
 #define MA_INVULN 7
 #define MA_SEE_INVIS 8 // TBD: move to immediate (breaks save format)
 #define MA_SEE_INFRA 9
-// Magic affects greater this do not rely on rising edge transitions in ma_bonuses()
-#define MA_IMMEDIATE 10
-#define MA_DETECT_MON 10
-#define MA_DETECT_EVIL 11
-#define MA_DETECT_INVIS 12
-#define MA_RECALL 13
-#define MA_COUNT 14
+#define MA_BLIND 10
+#define MA_DETECT_MON 15
+#define MA_DETECT_EVIL 16
+#define MA_DETECT_INVIS 17
+#define MA_RECALL 18
+#define MA_COUNT 19
+// Magic affects less than this value are persistent in the save file
+#define MA_SAVE 14
 
 #define OBJ_BOLT_RANGE	 18   /* Maximum range of bolts and balls      */
 

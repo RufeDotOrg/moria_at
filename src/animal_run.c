@@ -103,7 +103,7 @@ get_sym(int row, int col)
     struct creatureS* creature = &creatureD[mon->cidx];
     if (mon->mlit) return creature->cchar;
   }
-  if (countD.blind || (CF_VIZ & cave_ptr->cflag) == 0) return ' ';
+  if (maD[MA_BLIND] || (CF_VIZ & cave_ptr->cflag) == 0) return ' ';
   if (cave_ptr->oidx) {
     struct objS* obj = &entity_objD[cave_ptr->oidx];
     if (obj->tval != TV_INVIS_TRAP) return obj->tchar;
@@ -379,7 +379,7 @@ viz_update()
   int cmax = panelD.panel_col_max;
 
   struct vizS* vptr = &vizD[0][0];
-  blind = countD.blind;
+  blind = maD[MA_BLIND];
   py = uD.y;
   px = uD.x;
   for (int row = rmin; row < rmax; ++row) {
@@ -499,7 +499,7 @@ affect_update()
   active[idx] = pspeed < 0;
   active[idx++] += pspeed < -1;
 
-  active[idx++] = (countD.blind != 0);
+  active[idx++] = (maD[MA_BLIND] != 0);
   active[idx++] = (countD.confusion != 0);
   active[idx++] = (countD.fear != 0);
   active[idx++] = (countD.paralysis != 0);
@@ -613,7 +613,7 @@ msg_print(char* text)
 static int
 see_print(char* text)
 {
-  BOOL see = (countD.blind == 0);
+  BOOL see = (maD[MA_BLIND] == 0);
   if (see) msg_print(text);
   return see;
 }
@@ -3673,7 +3673,7 @@ void find_init(dir, y_ptr, x_ptr) int *y_ptr, *x_ptr;
     find_flag = TRUE;
     find_breakright = find_breakleft = FALSE;
     find_prevdir = dir;
-    if (countD.blind == 0) {
+    if (py_affect(MA_BLIND) == 0) {
       i = chome[dir];
       deepleft = deepright = FALSE;
       shortright = shortleft = FALSE;
@@ -3938,7 +3938,7 @@ update_mon(midx)
       flag = TRUE;
     } else if (py_affect(MA_DETECT_INVIS) && (CM_INVISIBLE & cr_ptr->cmove)) {
       flag = TRUE;
-    } else if (countD.blind == 0 && (cdis <= MAX_SIGHT) &&
+    } else if (maD[MA_BLIND] == 0 && (cdis <= MAX_SIGHT) &&
                los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
       /* Normal sight.       */
@@ -3992,11 +3992,14 @@ light_room(y, x)
             c_ptr->cflag |= CF_FIELDMARK;
           }
         }
+        if (c_ptr->midx) {
+          update_mon(c_ptr->midx);
+        }
       }
     }
 }
 int
-light_area(y, x)
+illuminate(y, x)
 {
   if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
   for (int col = y - 1; col <= y + 1; ++col) {
@@ -4005,13 +4008,9 @@ light_area(y, x)
     }
   }
 
-  if (countD.blind == 0) {
-    FOR_EACH(mon, { update_mon(it_index); });
-    msg_print("You are surrounded by a white light.");
-    return TRUE;
-  }
+  see_print("You are surrounded by a white light.");
 
-  return FALSE;
+  return py_affect(MA_BLIND) == 0;
 }
 void
 unlight_room(y, x)
@@ -4034,6 +4033,7 @@ unlight_room(y, x)
         c_ptr->cflag &= ~CF_PERM_LIGHT;
         c_ptr->fval = FLOOR_DARK;
       }
+      if (c_ptr->midx) update_mon(c_ptr->midx);
     }
 }
 int
@@ -4056,10 +4056,7 @@ unlight_area(y, x)
     }
   }
 
-  if (known && countD.blind == 0) {
-    FOR_EACH(mon, { update_mon(it_index); });
-    msg_print("Darkness surrounds you.");
-  }
+  see_print("Darkness surrounds you.");
 
   return known;
 }
@@ -4073,7 +4070,7 @@ py_move_light(y1, x1, y2, x2)
     }
   }
 
-  if (countD.blind == 0) {
+  if (maD[MA_BLIND] == 0) {
     for (row = y2 - 1; row <= y2 + 1; ++row) {
       for (col = x2 - 1; col <= x2 + 1; ++col) {
         struct caveS* cave = &caveD[row][col];
@@ -5138,6 +5135,10 @@ ma_bonuses(maffect, factor)
     case MA_SEE_INFRA:
       uD.infra += factor * 3;
       break;
+    case MA_BLIND:
+      if (factor < 0) msg_print("The veil of darkness lifts.");
+      py_check_view(uD.y, uD.x);
+      break;
     case MA_DETECT_MON:
       break;
     case MA_DETECT_EVIL:
@@ -5218,7 +5219,7 @@ void py_bonuses(obj, factor) struct objS* obj;
 {
   int amount;
 
-  if (obj->sn == SN_BLINDNESS && factor > 0) countD.blind += 1000;
+  if (obj->sn == SN_BLINDNESS && factor > 0) ma_duration(MA_BLIND, 1000);
   if (obj->sn == SN_TIMIDNESS && factor > 0) countD.fear += 50;
   if (TR_SLOW_DIGEST & obj->flags) uD.food_digest -= factor;
   if (TR_REGEN & obj->flags) uD.food_digest += factor * 3;
@@ -6313,13 +6314,8 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
                   dam = (dam / (distance(i, j, y, x) + 1));
                   if (mon_take_hit(c_ptr->midx, dam)) tkill++;
                 }
-                // else if (panel_contains(&panelD, i, j) && (countD.blind ==
-                // 0))
-                //   print('*', i, j);
               }
             }
-        /* show ball of whatever */
-        // put_qio();
 
         if (thit == 1) {
           MSG("The %s envelops a creature!", descrip);
@@ -6331,13 +6327,7 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
         else if (tkill > 1)
           msg_print("There are several screams of agony!");
         if (tkill >= 0) py_experience();
-        /* End ball hitting.  	     */
       }
-      // else if (panel_contains(&panelD, y, x) && (countD.blind == 0)) {
-      //   print('*', y, x);
-      //   /* show bolt */
-      //   put_qio();
-      // }
       oldy = y;
       oldx = x;
     }
@@ -7288,13 +7278,12 @@ destroy_area(y, x)
         }
   }
   msg_print("There is a searing blast of light!");
-  countD.blind += 10 + randint(10);
+  ma_duration(MA_BLIND, 10 + randint(10));
 }
 void
 starlite(y, x)
 {
-  if (countD.blind == 0)
-    msg_print("The end of the staff bursts into a blue shimmering light.");
+  see_print("The end of the staff bursts into a blue shimmering light.");
   for (int it = 1; it <= 9; it++)
     if (it != 5) light_line(it, y, x);
 }
@@ -7438,7 +7427,7 @@ inven_eat(iidx)
           ident |= TRUE;
           break;
         case 2:
-          countD.blind += randint(250) + 10 * obj->level + 100;
+          ma_duration(MA_BLIND, randint(250) + 10 * obj->level + 100);
           msg_print("A veil of darkness surrounds you.");
           ident |= TRUE;
           break;
@@ -7464,8 +7453,8 @@ inven_eat(iidx)
           }
           break;
         case 7:
-          if (countD.blind > 0) {
-            countD.blind = 1;
+          if (py_affect(MA_BLIND)) {
+            maD[MA_BLIND] = 1;
             ident |= TRUE;
           }
           break;
@@ -7853,11 +7842,11 @@ inven_quaff(iidx)
           }
           break;
         case 20:
-          if (countD.blind == 0) {
+          if (py_affect(MA_BLIND) == 0) {
             msg_print("You are covered by a veil of darkness.");
             ident |= TRUE;
           }
-          countD.blind += randint(100) + 100;
+          ma_duration(MA_BLIND, randint(100) + 100);
           break;
         case 21:
           if (countD.confusion == 0) {
@@ -7898,9 +7887,9 @@ inven_quaff(iidx)
           }
           break;
         case 29:
-          if (countD.blind > 0) {
+          if (py_affect(MA_BLIND)) {
             ident |= TRUE;
-            countD.blind = 1;
+            maD[MA_BLIND] = 1;
           }
           break;
         case 30:
@@ -8026,7 +8015,7 @@ int *uy, *ux;
   struct objS* i_ptr;
   struct treasureS* tr_ptr;
 
-  if (countD.blind)
+  if (py_affect(MA_BLIND))
     msg_print("You can't see to read the scroll.");
   else if (countD.confusion) {
     msg_print("You are too confused to read a scroll.");
@@ -8078,7 +8067,7 @@ int *uy, *ux;
             }
             break;
           case 6:
-            ident |= light_area(uD.y, uD.x);
+            ident |= illuminate(uD.y, uD.x);
             break;
           case 7:
             for (k = 0; k < randint(3); k++) {
@@ -8455,7 +8444,7 @@ int *uy, *ux;
         j = bit_pos(&flags) + 1;
         switch (j) {
           case 1:
-            ident |= light_area(uD.y, uD.x);
+            ident |= illuminate(uD.y, uD.x);
             break;
           case 2:
             ident |= detect_obj(oset_sdoor);
@@ -8537,9 +8526,9 @@ int *uy, *ux;
               ident = TRUE;
               countD.poison = 1;
             }
-            if (countD.blind > 0) {
+            if (py_affect(MA_BLIND)) {
               ident = TRUE;
-              countD.blind = 1;
+              maD[MA_BLIND] = 1;
             }
             if (countD.confusion > 0) {
               ident = TRUE;
@@ -9484,11 +9473,11 @@ mon_attack(midx)
           break;
         case 10: /*Blindness attack*/
           py_take_hit(damage);
-          if (countD.blind < 1) {
-            countD.blind += 10 + randint(cre->level);
-            msg_print("Your eyes begin to sting.");
+          if (maD[MA_BLIND]) {
+            ma_duration(MA_BLIND, 5);
           } else {
-            countD.blind += 5;
+            ma_duration(MA_BLIND, 10 + randint(cre->level));
+            msg_print("Your eyes begin to sting.");
           }
           break;
         case 11: /*Paralysis attack*/
@@ -9945,7 +9934,7 @@ py_search(y, x)
   // TBD: tuning; used to divide by 10
   if (countD.confusion) chance /= 8;
   // TBD: light also reduced search, like blindness
-  if (countD.blind) chance /= 8;
+  if (py_affect(MA_BLIND)) chance /= 8;
   // if (p_ptr->image > 0) chance = chance / 10;
   for (i = (y - 1); i <= (y + 1); i++)
     for (j = (x - 1); j <= (x + 1); j++)
@@ -9981,7 +9970,7 @@ py_look_mon()
   int y, x, ly, lx, oy, ox;
   int dir;
 
-  if (countD.blind) msg_print("You can't see a damn thing!");
+  if (py_affect(MA_BLIND)) msg_print("You can't see a damn thing!");
   // else if (py.flags.image > 0)
   //   msg_print("You can't believe what you are seeing! It's like a dream!");
   else if (get_dir("Look which direction?", &dir)) {
@@ -10015,7 +10004,7 @@ py_look_obj()
   int y, x, ly, lx, oy, ox;
   int dir;
 
-  if (countD.blind) msg_print("You can't see a damn thing!");
+  if (py_affect(MA_BLIND)) msg_print("You can't see a damn thing!");
   // else if (py.flags.image > 0)
   //   msg_print("You can't believe what you are seeing! It's like a dream!");
   else if (get_dir("Look which direction?", &dir)) {
@@ -10536,10 +10525,10 @@ mon_try_spell(midx, cdis)
       case 11: /*Cause Blindness*/
         if (player_saves())
           msg_print("You resist the effects of the spell.");
-        else if (countD.blind)
-          countD.blind += 6;
+        else if (maD[MA_BLIND])
+          ma_duration(MA_BLIND, 6);
         else
-          countD.blind += 12 + randint(3);
+          ma_duration(MA_BLIND, 12 + randint(3));
         break;
       case 12: /*Cause Confuse */
         if (player_saves())
@@ -10892,7 +10881,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
       break;
     case 15: /* Blind Gas */
       msg_print("A black gas surrounds you!");
-      countD.blind += randint(50) + 50;
+      ma_duration(MA_BLIND, randint(50) + 50);
       break;
     case 16: /* Confuse Gas*/
       msg_print("A gas of scintillating colors surrounds you!");
@@ -11340,14 +11329,6 @@ tick()
     disturb(1, 0);
   }
 
-  if (countD.blind) {
-    countD.blind -= 1;
-    if (countD.blind == 0) {
-      msg_print("The veil of darkness lifts.");
-      py_check_view(uD.y, uD.x);
-    }
-  }
-
   if (countD.confusion > 0) {
     countD.confusion -= 1;
     if (countD.confusion == 0) {
@@ -11366,8 +11347,8 @@ tick()
   if (countD.rest < 0) {
     countD.rest += 1;
     if (uD.chp == uD.mhp) {
-      int aff =
-          countD.blind + countD.confusion + countD.fear + py_affect(MA_RECALL);
+      int aff = py_affect(MA_BLIND) + countD.confusion + countD.fear +
+                py_affect(MA_RECALL);
       if (aff == 0) countD.rest = 0;
     }
   } else if (countD.rest > 0) {
@@ -11747,7 +11728,7 @@ dungeon()
             uD.y = y;
             uD.x = x;
             if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
-            if (countD.blind == 0 && find_flag) find_event(y, x);
+            if (py_affect(MA_BLIND) == 0 && find_flag) find_event(y, x);
 
             if (obj->tval == TV_CHEST) {
               if (obj->sn != SN_EMPTY) open_object(y, x);
@@ -11760,7 +11741,7 @@ dungeon()
             }
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
-          } else if (countD.blind == 0) {
+          } else if (py_affect(MA_BLIND) == 0) {
             int* my = &miningD[0];
             int* mx = &miningD[1];
             if (*my == y && *mx == x) {

@@ -1195,7 +1195,7 @@ save()
 {
   int save_info[] = {
       sizeof(countD),   sizeof(dun_level),  sizeof(entity_objD),
-      sizeof(invenD),   sizeof(knownD),     sizeof(maD),
+      sizeof(invenD),   sizeof(knownD),     sizeof(maD[0]) * MA_SAVE,
       sizeof(objD),     sizeof(obj_usedD),  sizeof(player_hpD),
       sizeof(rnd_seed), sizeof(town_seed),  sizeof(obj_seed),
       sizeof(statD),    sizeof(store_objD), sizeof(turnD),
@@ -1242,7 +1242,7 @@ load()
 {
   int save_info[] = {
       sizeof(countD),   sizeof(dun_level),  sizeof(entity_objD),
-      sizeof(invenD),   sizeof(knownD),     sizeof(maD),
+      sizeof(invenD),   sizeof(knownD),     sizeof(maD[0]) * MA_SAVE,
       sizeof(objD),     sizeof(obj_usedD),  sizeof(player_hpD),
       sizeof(rnd_seed), sizeof(town_seed),  sizeof(obj_seed),
       sizeof(statD),    sizeof(store_objD), sizeof(turnD),
