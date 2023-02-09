@@ -4073,12 +4073,12 @@ py_move_light(y1, x1, y2, x2)
     }
   }
 
-  for (row = y2 - 1; row <= y2 + 1; ++row) {
-    for (col = x2 - 1; col <= x2 + 1; ++col) {
-      struct caveS* cave = &caveD[row][col];
-      uint32_t cflag = cave->cflag;
+  if (countD.blind == 0) {
+    for (row = y2 - 1; row <= y2 + 1; ++row) {
+      for (col = x2 - 1; col <= x2 + 1; ++col) {
+        struct caveS* cave = &caveD[row][col];
+        uint32_t cflag = cave->cflag;
 
-      if (countD.blind == 0) {
         cflag |= CF_TEMP_LIGHT;
         if (cave->fval >= MIN_WALL) cflag |= CF_PERM_LIGHT;
         if (cave->oidx) {
@@ -4087,16 +4087,17 @@ py_move_light(y1, x1, y2, x2)
             cflag |= CF_FIELDMARK;
           }
         }
+        cave->cflag = cflag;
       }
-      cave->cflag = cflag;
     }
+
+    if (near_light(y2, x2)) light_room(y2, x2);
   }
 }
 void
 py_check_view(y, x)
 {
   py_move_light(y, x, y, x);
-  if (near_light(y, x)) light_room(y, x);
   FOR_EACH(mon, { update_mon(it_index); });
 }
 int
@@ -11734,9 +11735,6 @@ dungeon()
             }
 
             py_move_light(uD.y, uD.x, y, x);
-            if (countD.blind == 0) {
-              if (near_light(y, x)) light_room(y, x);
-            }
 
             // Perception check on movement
             turn_flag = TRUE;
