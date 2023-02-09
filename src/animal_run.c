@@ -10539,8 +10539,10 @@ mon_try_spell(midx, cdis)
           msg_print("You resist the effects of the spell.");
         else if (maD[MA_BLIND])
           ma_duration(MA_BLIND, 6);
-        else
+        else {
+          msg_print("Your eyes begin to sting.");
           ma_duration(MA_BLIND, 12 + randint(3));
+        }
         break;
       case 12: /*Cause Confuse */
         if (player_saves())
