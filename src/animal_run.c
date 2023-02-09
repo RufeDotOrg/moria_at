@@ -6196,9 +6196,9 @@ light_line(dir, y, x)
       if (c_ptr->midx) {
         m_ptr = &entity_monD[c_ptr->midx];
         cr_ptr = &creatureD[m_ptr->cidx];
-        mon_desc(c_ptr->midx);
         /* light up and draw monster */
         update_mon(c_ptr->midx);
+        mon_desc(c_ptr->midx);
         if (CD_LIGHT & cr_ptr->cdefense) {
           if (mon_take_hit(c_ptr->midx, damroll(2, 8))) {
             MSG("%s shrivels away in the light!", descD);
