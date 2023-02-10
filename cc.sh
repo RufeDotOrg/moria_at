@@ -13,6 +13,8 @@ if [ -n "$ASAN" ]; then
   DEV_FLAGS+=" -fsanitize=address "
 fi
 
+[ -n "$M" ] && DEV_FLAGS+=" -DM=$M "
+
 hash $CC || exit 1
 [ -z "$CFLAGS" ] && CFLAGS="-O${OPTLEVEL} -g${SYMLEVEL} -I. -fno-omit-frame-pointer "
 

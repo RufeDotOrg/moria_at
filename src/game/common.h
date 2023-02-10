@@ -65,6 +65,15 @@ enum { RELEASE = 0 };
 #define EXTERN extern
 #endif
 
+#ifdef M
+#define CCM(x) ((M & x) != 0)
+#else
+#define CCM(x) 0
+#endif
+enum {
+  CCM_HOTLOAD = 0x1,
+};
+
 // Array for reusable type
 // index is acquired by _use(); freed by _unuse()
 // eid is a stable, generational modulus index into entity array

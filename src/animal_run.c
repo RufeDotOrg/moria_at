@@ -11395,7 +11395,7 @@ dungeon()
     ma_tick();
     inven_check_weight();
     inven_check_light();
-    platform_update();
+    if (CCM(CCM_HOTLOAD)) platform_update();
 
     do {
       draw();
@@ -11838,7 +11838,7 @@ seed_init()
 int
 main()
 {
-  platform_update();
+  platform_init();
 
   seed_init();
 
