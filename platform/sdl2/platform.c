@@ -1352,5 +1352,5 @@ platform_reset()
 {
   // Exit terminates the android activity
   // otherwise main() may resume with stale memory
-  exit(0);
+  if (ANDROID) exit(0);
 }
