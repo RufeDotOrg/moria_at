@@ -1,2 +1,2 @@
-CFLAGS+=" -DEXTERN "
+CFLAGS+=" -DEXTERN=extern "
 LFLAGS="-fpic -shared -nostartfiles "

@@ -61,9 +61,7 @@ enum { RELEASE = 1 };
 enum { RELEASE = 0 };
 #endif
 
-#ifdef EXTERN
-#define EXTERN extern
-#else
+#ifndef EXTERN
 #define EXTERN
 #endif
 
