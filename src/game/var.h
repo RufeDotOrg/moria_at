@@ -1,4 +1,10 @@
 
+// load/save
+EXTERN void **save_addr_ptrD;
+EXTERN int *save_len_ptrD;
+EXTERN char **save_name_ptrD;
+EXTERN int save_field_countD;
+
 // Visual info
 EXTERN struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 EXTERN char vitalinfoD[STATUS_HEIGHT][STATUS_WIDTH];

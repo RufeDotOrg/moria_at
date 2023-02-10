@@ -1186,11 +1186,7 @@ platform_readansi()
   return c;
 }
 
-// load/save
-EXTERN void **save_addr_ptrD;
-EXTERN int *save_len_ptrD;
-EXTERN char **save_name_ptrD;
-EXTERN int save_field_countD;
+// Disk I/O
 static int checksumD;
 void checksum(blob, len) void *blob;
 {
@@ -1253,6 +1249,7 @@ load()
   return 0;
 }
 
+// Initialization
 void
 platform_init()
 {
