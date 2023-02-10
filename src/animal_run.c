@@ -47,6 +47,41 @@ static char log_extD[] = " -more-";
     }                                      \
   }
 
+static int save_lenD[] = {
+    sizeof(countD),   sizeof(dun_level),  sizeof(entity_objD),
+    sizeof(invenD),   sizeof(knownD),     sizeof(maD[0]) * MA_SAVE,
+    sizeof(objD),     sizeof(obj_usedD),  sizeof(player_hpD),
+    sizeof(rnd_seed), sizeof(town_seed),  sizeof(obj_seed),
+    sizeof(statD),    sizeof(store_objD), sizeof(turnD),
+    sizeof(uD),
+};
+#define nameof(x) #x
+static char* save_nameD[] = {
+    nameof(&countD),   nameof(&dun_level), nameof(entity_objD),
+    nameof(invenD),    nameof(knownD),     nameof(maD),
+    nameof(objD),      nameof(&obj_usedD), nameof(player_hpD),
+    nameof(&rnd_seed), nameof(&town_seed), nameof(&obj_seed),
+    nameof(&statD),    nameof(store_objD), nameof(&turnD),
+    nameof(&uD),
+};
+#define addrof(x) x
+static void* save_addrD[] = {
+    addrof(&countD),   addrof(&dun_level), addrof(entity_objD),
+    addrof(invenD),    addrof(knownD),     addrof(maD),
+    addrof(objD),      addrof(&obj_usedD), addrof(player_hpD),
+    addrof(&rnd_seed), addrof(&town_seed), addrof(&obj_seed),
+    addrof(&statD),    addrof(store_objD), addrof(&turnD),
+    addrof(&uD),
+};
+void
+save_mapping()
+{
+  save_len_ptrD = save_lenD;
+  save_name_ptrD = save_nameD;
+  save_addr_ptrD = save_addrD;
+  save_field_countD = AL(save_addrD);
+}
+
 static char
 inkey()
 {
@@ -11723,6 +11758,7 @@ seed_init()
 int
 main()
 {
+  save_mapping();
   platform_init();
 
   seed_init();

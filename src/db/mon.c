@@ -134,7 +134,7 @@ Area of affect (aaf) :  Max range that creature is able to "notice"
                         the player.
                                                                 */
 
-struct creatureS creatureD[] = {
+static struct creatureS creatureD[] = {
     {0},
     {"Filthy Street Urchin",
      0x0012000AL,
@@ -3772,7 +3772,7 @@ struct creatureS creatureD[] = {
      100},
 };
 
-struct attackS attackD[] = {
+static struct attackS attackD[] = {
     {0, 0, 0, 0},   {1, 1, 1, 2},   {1, 1, 1, 3},   {1, 1, 1, 4},
     {1, 1, 1, 5},   {1, 1, 1, 6},   {1, 1, 1, 7},   {1, 1, 1, 8},
     {1, 1, 1, 9},   {1, 1, 1, 10},  {1, 1, 1, 12},  {1, 1, 2, 2},
@@ -3829,4 +3829,4 @@ struct attackS attackD[] = {
     {23, 1, 1, 1},  {23, 5, 1, 3},  {24, 5, 0, 0},
 };
 
-int m_level[MAX_MON_LEVEL + 1];
+static int m_level[MAX_MON_LEVEL + 1];

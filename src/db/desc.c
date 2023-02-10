@@ -1,5 +1,5 @@
 
-char* colors[] = {
+static char* colors[] = {
     /* Do not move the first three */
     "Icky Green",
     "Light Brown",
@@ -52,7 +52,7 @@ char* colors[] = {
     "Yellow",
 };
 
-char* mushrooms[] = {
+static char* mushrooms[] = {
     "Blue",       "Black",      "Black Spotted", "Brown",         "Dark Blue",
     "Dark Green", "Dark Red",   "Ecru",          "Furry",         "Green",
     "Grey",       "Light Blue", "Light Green",   "Plaid",         "Red",
@@ -60,7 +60,7 @@ char* mushrooms[] = {
     "Wrinkled",   "Yellow",
 };
 
-char* woods[] = {
+static char* woods[] = {
     "Aspen",      "Balsa",    "Banyan",   "Birch",  "Cedar",
     "Cottonwood", "Cypress",  "Dogwood",  "Elm",    "Eucalyptus",
     "Hemlock",    "Hickory",  "Ironwood", "Locust", "Mahogany",
@@ -68,7 +68,7 @@ char* woods[] = {
     "Rosewood",   "Spruce",   "Sycamore", "Teak",   "Walnut",
 };
 
-char* metals[] = {
+static char* metals[] = {
     "Aluminum",      "Cast Iron",    "Chromium",
     "Copper",        "Gold",         "Iron",
     "Magnesium",     "Molybdenum",   "Nickel",
@@ -80,7 +80,7 @@ char* metals[] = {
     "Zinc-Plated",
 };
 
-char* rocks[] = {
+static char* rocks[] = {
     "Alexandrite", "Amethyst",     "Aquamarine", "Azurite",   "Beryl",
     "Bloodstone",  "Calcite",      "Carnelian",  "Corundum",  "Diamond",
     "Emerald",     "Fluorite",     "Garnet",     "Granite",   "Jade",
@@ -90,12 +90,12 @@ char* rocks[] = {
     "Turquoise",   "Zircon",
 };
 
-char* amulets[] = {
+static char* amulets[] = {
     "Amber", "Driftwood", "Coral",  "Agate",  "Ivory",          "Obsidian",
     "Bone",  "Brass",     "Bronze", "Pewter", "Tortoise Shell",
 };
 
-char* syllableD[] = {
+static char* syllableD[] = {
     "a",    "ab",   "ag",   "aks",  "ala",  "an",  "ankh", "app", "arg",
     "arze", "ash",  "aus",  "ban",  "bar",  "bat", "bek",  "bie", "bin",
     "bit",  "bjor", "blu",  "bot",  "bu",   "byt", "comp", "con", "cos",
@@ -114,4 +114,4 @@ char* syllableD[] = {
     "um",   "un",   "uni",  "ur",   "val",  "viv", "vly",  "vom", "wah",
     "wed",  "werg", "wex",  "whon", "wun",  "x",   "yerg", "yp",  "zun",
 };
-char titleD[MAX_SUBVAL][10];
+static char titleD[MAX_SUBVAL][10];

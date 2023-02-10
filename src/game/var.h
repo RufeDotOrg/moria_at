@@ -81,7 +81,7 @@ static int player_hpD[AL(player_exp)];
 static int death;
 static int total_winner;
 static int save_exit_flag;
-static int dun_level;
+EXTERN int dun_level;
 static int turn_flag;
 static int new_level_flag;
 static int pack_heavy;

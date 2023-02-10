@@ -82,7 +82,7 @@ enum {
   static int type##D[max];                                                   \
   static int type##_usedD;                                                   \
   static struct type##S entity_##type##D[max];                               \
-  struct type##S* type##_use()                                               \
+  static struct type##S* type##_use()                                        \
   {                                                                          \
     int it = type##_usedD;                                                   \
     int next = it + 1;                                                       \
@@ -103,17 +103,17 @@ enum {
     ent->id = eid;                                                           \
     return ent;                                                              \
   }                                                                          \
-  struct type##S* type##_get(int eid)                                        \
+  static struct type##S* type##_get(int eid)                                 \
   {                                                                          \
     struct type##S* dflt = entity_##type##D;                                 \
     struct type##S* ent = &AS(entity_##type##D, eid);                        \
     return ent->id == eid ? ent : dflt;                                      \
   }                                                                          \
-  int type##_index(struct type##S* ent)                                      \
+  static int type##_index(struct type##S* ent)                               \
   {                                                                          \
     return AM(type##D, ent->id);                                             \
   }                                                                          \
-  void type##_unuse(struct type##S* ent)                                     \
+  static void type##_unuse(struct type##S* ent)                              \
   {                                                                          \
     int eid = ent->id;                                                       \
     int it = 0;                                                              \

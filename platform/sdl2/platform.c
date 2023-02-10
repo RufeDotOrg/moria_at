@@ -43,6 +43,10 @@ EXTERN struct SDL_Renderer *rendererD;
 EXTERN uint32_t texture_formatD;
 EXTERN SDL_PixelFormat *pixel_formatD;
 EXTERN SDL_Surface *mmsurfaceD;
+EXTERN SDL_Rect scale_rectD;
+EXTERN float scaleD;
+EXTERN int rowD, colD;
+EXTERN float rfD, cfD;
 static SDL_Color blackD;
 static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
@@ -171,8 +175,6 @@ struct fontS {
 };
 EXTERN struct fontS fontD;
 EXTERN struct SDL_Texture *font_textureD[MAX_GLYPH];
-EXTERN int rowD, colD;
-EXTERN float rfD, cfD;
 
 static void
 font_debug(struct fontS *font)
@@ -519,13 +521,11 @@ font_texture_alphamod(alpha)
 static SDL_Color mapbgD;
 static SDL_Color lightbgD;
 static SDL_Color shroudbgD;
-SDL_Rect scale_rectD;
-float scaleD;
 
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
-SDL_FRect buttonD[2];
-SDL_FRect padD;
-SDL_FPoint ppD[9];
+EXTERN SDL_FRect buttonD[2];
+EXTERN SDL_FRect padD;
+EXTERN SDL_FPoint ppD[9];
 
 EXTERN SDL_Rect map_rectD;
 EXTERN SDL_Texture *map_textureD;
@@ -1187,6 +1187,10 @@ platform_readansi()
 }
 
 // load/save
+EXTERN void **save_addr_ptrD;
+EXTERN int *save_len_ptrD;
+EXTERN char **save_name_ptrD;
+EXTERN int save_field_countD;
 static int checksumD;
 void checksum(blob, len) void *blob;
 {
@@ -1200,44 +1204,19 @@ void checksum(blob, len) void *blob;
 int
 save()
 {
-  int save_info[] = {
-      sizeof(countD),   sizeof(dun_level),  sizeof(entity_objD),
-      sizeof(invenD),   sizeof(knownD),     sizeof(maD[0]) * MA_SAVE,
-      sizeof(objD),     sizeof(obj_usedD),  sizeof(player_hpD),
-      sizeof(rnd_seed), sizeof(town_seed),  sizeof(obj_seed),
-      sizeof(statD),    sizeof(store_objD), sizeof(turnD),
-      sizeof(uD),
-  };
-#define nameof(x) #x
-  char *save_name[] = {
-      nameof(&countD),   nameof(&dun_level), nameof(entity_objD),
-      nameof(invenD),    nameof(knownD),     nameof(maD),
-      nameof(objD),      nameof(&obj_usedD), nameof(player_hpD),
-      nameof(&rnd_seed), nameof(&town_seed), nameof(&obj_seed),
-      nameof(&statD),    nameof(store_objD), nameof(&turnD),
-      nameof(&uD),
-  };
-#define addrof(x) x
-  void *save_addr[] = {
-      addrof(&countD),   addrof(&dun_level), addrof(entity_objD),
-      addrof(invenD),    addrof(knownD),     addrof(maD),
-      addrof(objD),      addrof(&obj_usedD), addrof(player_hpD),
-      addrof(&rnd_seed), addrof(&town_seed), addrof(&obj_seed),
-      addrof(&statD),    addrof(store_objD), addrof(&turnD),
-      addrof(&uD),
-  };
   int byte_count = 0;
-  for (int it = 0; it < AL(save_info); ++it) {
-    Log("%p %s %d\n", save_addr[it], save_name[it], save_info[it]);
-    byte_count += save_info[it];
+  for (int it = 0; it < save_field_countD; ++it) {
+    Log("%p %s %d\n", save_addr_ptrD[it], save_name_ptrD[it],
+        save_len_ptrD[it]);
+    byte_count += save_len_ptrD[it];
   }
   SDL_RWops *writef = SDL_RWFromFile("savechar", "wb");
   if (writef) {
     checksumD = 0;
     SDL_RWwrite(writef, &byte_count, sizeof(byte_count), 1);
-    for (int it = 0; it < AL(save_info); ++it) {
-      SDL_RWwrite(writef, save_addr[it], save_info[it], 1);
-      checksum(save_addr[it], save_info[it]);
+    for (int it = 0; it < save_field_countD; ++it) {
+      SDL_RWwrite(writef, save_addr_ptrD[it], save_len_ptrD[it], 1);
+      checksum(save_addr_ptrD[it], save_len_ptrD[it]);
     }
     SDL_RWclose(writef);
     return byte_count;
@@ -1247,36 +1226,11 @@ save()
 int
 load()
 {
-  int save_info[] = {
-      sizeof(countD),   sizeof(dun_level),  sizeof(entity_objD),
-      sizeof(invenD),   sizeof(knownD),     sizeof(maD[0]) * MA_SAVE,
-      sizeof(objD),     sizeof(obj_usedD),  sizeof(player_hpD),
-      sizeof(rnd_seed), sizeof(town_seed),  sizeof(obj_seed),
-      sizeof(statD),    sizeof(store_objD), sizeof(turnD),
-      sizeof(uD),
-  };
-#define nameof(x) #x
-  char *save_name[] = {
-      nameof(&countD),   nameof(&dun_level), nameof(entity_objD),
-      nameof(invenD),    nameof(knownD),     nameof(maD),
-      nameof(objD),      nameof(&obj_usedD), nameof(player_hpD),
-      nameof(&rnd_seed), nameof(&town_seed), nameof(&obj_seed),
-      nameof(&statD),    nameof(store_objD), nameof(&turnD),
-      nameof(&uD),
-  };
-#define addrof(x) x
-  void *save_addr[] = {
-      addrof(&countD),   addrof(&dun_level), addrof(entity_objD),
-      addrof(invenD),    addrof(knownD),     addrof(maD),
-      addrof(objD),      addrof(&obj_usedD), addrof(player_hpD),
-      addrof(&rnd_seed), addrof(&town_seed), addrof(&obj_seed),
-      addrof(&statD),    addrof(store_objD), addrof(&turnD),
-      addrof(&uD),
-  };
   int byte_count = 0;
-  for (int it = 0; it < AL(save_info); ++it) {
-    printf("%p %s %d\n", save_addr[it], save_name[it], save_info[it]);
-    byte_count += save_info[it];
+  for (int it = 0; it < save_field_countD; ++it) {
+    printf("%p %s %d\n", save_addr_ptrD[it], save_name_ptrD[it],
+           save_len_ptrD[it]);
+    byte_count += save_len_ptrD[it];
   }
   SDL_RWops *readf = SDL_RWFromFile("savechar", "rb");
   if (readf) {
@@ -1284,14 +1238,14 @@ load()
 
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
     if (save_size == byte_count) {
-      for (int it = 0; it < AL(save_info); ++it) {
-        SDL_RWread(readf, save_addr[it], save_info[it], 1);
+      for (int it = 0; it < save_field_countD; ++it) {
+        SDL_RWread(readf, save_addr_ptrD[it], save_len_ptrD[it], 1);
       }
     }
     SDL_RWclose(readf);
     checksumD = 0;
-    for (int it = 0; it < AL(save_info); ++it) {
-      checksum(save_addr[it], save_info[it]);
+    for (int it = 0; it < save_field_countD; ++it) {
+      checksum(save_addr_ptrD[it], save_len_ptrD[it]);
     }
     return save_size == byte_count;
   }

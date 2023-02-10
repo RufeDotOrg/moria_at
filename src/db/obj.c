@@ -51,7 +51,7 @@
 
 /* Object list (All objects must be defined here)    */
 
-struct treasureS treasureD[] = {
+static struct treasureS treasureD[] = {
     {0},
     {"Poison",
      0x00000001L,
@@ -5608,7 +5608,7 @@ struct treasureS treasureD[] = {
      110},
 };
 
-char* special_nameD[] = {
+static char* special_nameD[] = {
     0,
     "(R)",
     "(RA)",
@@ -5667,10 +5667,10 @@ char* special_nameD[] = {
     "of Slay Animal",
 };
 
-int sorted_objects[AL(treasureD)];
-int o_level[MAX_OBJ_LEVEL + 1];
+static int sorted_objects[AL(treasureD)];
+static int o_level[MAX_OBJ_LEVEL + 1];
 
-uint16_t store_choiceD[MAX_STORE][MAX_STORE_CHOICE] = {
+static uint16_t store_choiceD[MAX_STORE][MAX_STORE_CHOICE] = {
     {269, 87,  86,  86,  87,  87, 124, 269, 87, 350, 349, 348, 347,
      346, 346, 345, 345, 345, 22, 22,  22,  22, 22,  22,  22,  22},
     {95,  96,  97,  110, 104, 105, 106, 107, 111, 112, 113, 115, 117,
@@ -5685,7 +5685,7 @@ uint16_t store_choiceD[MAX_STORE][MAX_STORE_CHOICE] = {
      271, 283, 287, 288, 293, 294, 295, 296, 309, 270, 291, 320, 283},
 };
 
-uint8_t store_stockD[MAX_STORE][MAX_STORE_CHOICE] = {
+static uint8_t store_stockD[MAX_STORE][MAX_STORE_CHOICE] = {
     {5, 5, 1, 1, 1, 5, 1, 5, 5, 1, 1, 1, 3,
      5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5},
     {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -5700,7 +5700,7 @@ uint8_t store_stockD[MAX_STORE][MAX_STORE_CHOICE] = {
      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 };
 
-struct ownerS ownerD[] = {
+static struct ownerS ownerD[] = {
     {"Erick the Honest (Human)", 250, 175, 108, 4, 0, 12},
     {"Mauglin the Grumpy (Dwarf)", 32000, 200, 112, 4, 5, 5},
     {"Arndal Beast-Slayer (Half-Elf)", 10000, 185, 110, 5, 1, 8},
@@ -5721,7 +5721,7 @@ struct ownerS ownerD[] = {
     {"Inglorian the Mage (Human)", 32000, 200, 110, 7, 0, 10},
 };
 /* Buying and selling adjustments for character race VS store  */
-uint8_t rgold_adjD[AL(raceD)][AL(raceD)] = {
+static uint8_t rgold_adjD[AL(raceD)][AL(raceD)] = {
     /*                Hum, HfE, Elf, Hal, Gno, Dwa, HfO, HfT*/
     /* Human      */ {100, 105, 105, 110, 113, 115, 120, 125},
     /* Half-Elf   */ {110, 100, 100, 105, 110, 120, 125, 130},
