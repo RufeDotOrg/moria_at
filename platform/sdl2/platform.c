@@ -7,6 +7,7 @@
 
 #include "art.c"
 #include "auxval.c"
+#include "dlfcn.c"
 #include "font_zip.c"
 #include "player.c"
 #include "random.c"

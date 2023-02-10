@@ -89,6 +89,11 @@ platform_seed()
 }
 
 void
+platform_update()
+{
+}
+
+void
 platform_init()
 {
   if (save_termD[1] == 0) {
