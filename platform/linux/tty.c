@@ -1,5 +1,4 @@
 
-static struct termios save_termD;
 // Common terminal commands
 static char tc_crlfD[] = "\r\n";
 static char tc_clearD[] = "\x1b[2J";

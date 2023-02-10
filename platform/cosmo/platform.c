@@ -20,7 +20,6 @@
 
 #include "tty.c"
 
-static bool platform_initD;
 #define CTRL(C) ((C) ^ 0b01100000)
 #define WRITE(FD, SLIT) write(FD, SLIT, strlen(SLIT))
 #define ENABLE_SAFE_PASTE "\e[?2004h"
@@ -52,9 +51,9 @@ platform_readansi()
 void
 platform_reset()
 {
-  if (platform_initD) {
+  if (save_termD[1]) {
     WRITE(1, DISABLE_MOUSE_TRACKING);
-    ioctl(1, TCSETS, &save_termD);
+    ioctl(1, TCSETS, save_termD);
     write(1, tc_clearD, sizeof(tc_clearD));
     write(1, tc_show_cursorD, sizeof(tc_show_cursorD));
   }
@@ -64,15 +63,8 @@ static int
 _rawmode()
 {
   struct termios t;
-  if (!platform_initD) {
-    platform_initD = 1;
-    if (ioctl(1, TCGETS, &save_termD) != -1) {
-      atexit(platform_reset);
-    } else {
-      return -1;
-    }
-  }
-  memcpy(&t, &save_termD, sizeof(t));
+  ioctl(1, TCGETS, save_termD);
+  memcpy(&t, save_termD, sizeof(t));
   t.c_cc[VMIN] = 1;
   t.c_cc[VTIME] = 1;
   t.c_iflag &= ~(INPCK | ISTRIP | PARMRK | INLCR | IGNCR | ICRNL | IXON |
@@ -99,8 +91,10 @@ platform_seed()
 void
 platform_init()
 {
-  _rawmode();
-  write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
+  if (save_termD[1] == 0) {
+    _rawmode();
+    write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
+  }
 
   platformD.seed = platform_seed;
   platformD.readansi = platform_readansi;

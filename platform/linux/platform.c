@@ -32,18 +32,20 @@ platform_readansi()
 void
 platform_init()
 {
-  fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
+  if (save_termD[1] == 0) {
+    fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
-  ioctl(STDIN_FILENO, TCGETA, &save_termD);
+    ioctl(STDIN_FILENO, TCGETA, save_termD);
 
-  struct termios tbuf;
-  tcgetattr(STDIN_FILENO, &tbuf);
-  tbuf.c_iflag &= ~(ICRNL | IXON);
-  tbuf.c_oflag &= ~(OPOST);
-  tbuf.c_lflag &= ~(ECHO | ICANON | ISIG);
-  tcsetattr(STDIN_FILENO, TCSAFLUSH, &tbuf);
+    struct termios tbuf;
+    tcgetattr(STDIN_FILENO, &tbuf);
+    tbuf.c_iflag &= ~(ICRNL | IXON);
+    tbuf.c_oflag &= ~(OPOST);
+    tbuf.c_lflag &= ~(ECHO | ICANON | ISIG);
+    tcsetattr(STDIN_FILENO, TCSAFLUSH, &tbuf);
 
-  write(STDOUT_FILENO, tc_hide_cursorD, sizeof(tc_hide_cursorD));
+    write(STDOUT_FILENO, tc_hide_cursorD, sizeof(tc_hide_cursorD));
+  }
 
   platformD.seed = platform_auxval_random;
   platformD.readansi = platform_readansi;
@@ -53,8 +55,10 @@ platform_init()
 void
 platform_reset()
 {
-  write(STDOUT_FILENO, tc_clearD, sizeof(tc_clearD));
-  write(STDOUT_FILENO, tc_show_cursorD, sizeof(tc_show_cursorD));
+  if (save_termD[1]) {
+    write(STDOUT_FILENO, tc_clearD, sizeof(tc_clearD));
+    write(STDOUT_FILENO, tc_show_cursorD, sizeof(tc_show_cursorD));
 
-  ioctl(STDIN_FILENO, TCSETA, &save_termD);
+    ioctl(STDIN_FILENO, TCSETA, save_termD);
+  }
 }

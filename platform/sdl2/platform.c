@@ -28,7 +28,7 @@ enum { TOUCH = 1 };
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
 
-BOOL
+int
 char_visible(char c)
 {
   uint8_t vis = c - 0x21;
@@ -53,11 +53,11 @@ static int finger_rowD;
 static int finger_colD;
 static int quitD;
 
-BOOL
+int
 render_init()
 {
   windowD = SDL_CreateWindow("", 0, 0, 1920, 1080, SDL_WINDOW_FULLSCREEN);
-  if (!windowD) return FALSE;
+  if (!windowD) return 0;
 
   int num_display = SDL_GetNumVideoDisplays();
   for (int it = 0; it < num_display; ++it) {
@@ -84,9 +84,9 @@ render_init()
     }
   }
   rendererD = SDL_CreateRenderer(windowD, -1, 0);
-  if (!rendererD) return FALSE;
+  if (!rendererD) return 0;
 
-  if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return FALSE;
+  if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return 0;
 
   Log("SDL RendererInfo "
       "[ rinfo.name %s ] "
@@ -100,13 +100,13 @@ render_init()
 
   {
     int w, h;
-    if (SDL_GetRendererOutputSize(rendererD, &w, &h) != 0) return FALSE;
+    if (SDL_GetRendererOutputSize(rendererD, &w, &h) != 0) return 1;
     Log("Renderer output size %d %d\n", w, h);
   }
 
   Log("display_rectD %d %d\n", display_rectD.w, display_rectD.h);
 
-  return TRUE;
+  return 1;
 }
 
 void
@@ -194,7 +194,7 @@ font_debug(struct fontS *font)
       MAX_FOOTPRINT - MAX_BITMAP - GLYPH_BYTE_COUNT);
 }
 
-BOOL
+int
 font_load()
 {
   return puff((void *)&fontD, &(uint64_t){sizeof(fontD)}, font_zip,
@@ -225,7 +225,7 @@ bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
 static uint8_t artD[96 * 1024];
 static uint64_t art_usedD;
 static struct SDL_Texture *art_textureD[MAX_ART];
-BOOL
+int
 art_io()
 {
   int rc = -1;
@@ -245,7 +245,7 @@ bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
     }
   }
 }
-BOOL
+int
 art_init()
 {
   struct SDL_Renderer *renderer = rendererD;
@@ -268,11 +268,11 @@ art_init()
   SDL_FreeSurface(surface);
 
   for (int it = 0; it < AL(art_textureD); ++it) {
-    if (!art_textureD[it]) return FALSE;
+    if (!art_textureD[it]) return 0;
   }
   Log("Art textures available %ju", AL(art_textureD));
 
-  return TRUE;
+  return 1;
 }
 
 // treasure
@@ -280,7 +280,7 @@ art_init()
 static uint8_t tartD[8 * 1024];
 static uint64_t tart_usedD;
 static struct SDL_Texture *tart_textureD[MAX_TART];
-BOOL
+int
 tart_io()
 {
   int rc = -1;
@@ -291,7 +291,7 @@ tart_io()
   return rc == 0;
 }
 
-BOOL
+int
 tart_init()
 {
   struct SDL_Renderer *renderer = rendererD;
@@ -314,11 +314,11 @@ tart_init()
   SDL_FreeSurface(surface);
 
   for (int it = 0; it < AL(tart_textureD); ++it) {
-    if (!tart_textureD[it]) return FALSE;
+    if (!tart_textureD[it]) return 0;
   }
   Log("Treasure Art textures available %ju", AL(tart_textureD));
 
-  return TRUE;
+  return 1;
 }
 
 // wall
@@ -326,7 +326,7 @@ tart_init()
 static uint8_t wartD[4 * 1024];
 static uint64_t wart_usedD;
 static struct SDL_Texture *wart_textureD[MAX_WART];
-BOOL
+int
 wart_io()
 {
   int rc = -1;
@@ -336,7 +336,7 @@ wart_io()
   return rc == 0;
 }
 
-BOOL
+int
 wart_init()
 {
   struct SDL_Renderer *renderer = rendererD;
@@ -359,11 +359,11 @@ wart_init()
   SDL_FreeSurface(surface);
 
   for (int it = 0; it < AL(wart_textureD); ++it) {
-    if (!wart_textureD[it]) return FALSE;
+    if (!wart_textureD[it]) return 0;
   }
   Log("Wall Art textures available %ju", AL(wart_textureD));
 
-  return TRUE;
+  return 1;
 }
 
 // player
@@ -371,7 +371,7 @@ wart_init()
 static uint8_t partD[4 * 1024];
 static uint64_t part_usedD;
 static struct SDL_Texture *part_textureD[MAX_PART];
-BOOL
+int
 part_io()
 {
   int rc = -1;
@@ -381,7 +381,7 @@ part_io()
   return rc == 0;
 }
 
-BOOL
+int
 part_init()
 {
   struct SDL_Renderer *renderer = rendererD;
@@ -404,20 +404,20 @@ part_init()
   SDL_FreeSurface(surface);
 
   for (int it = 0; it < AL(part_textureD); ++it) {
-    if (!part_textureD[it]) return FALSE;
+    if (!part_textureD[it]) return 0;
   }
   Log("Player Art textures available %ju", AL(part_textureD));
 
-  return TRUE;
+  return 1;
 }
 
-BOOL
+int
 font_init(struct fontS *font)
 {
   struct SDL_Renderer *renderer = rendererD;
   uint32_t format = texture_formatD;
 
-  if (font_textureD[0]) return FALSE;
+  if (font_textureD[0]) return 0;
 
   int16_t width = font->max_pixel_width;
   int16_t height = font->max_pixel_height;
@@ -448,10 +448,10 @@ font_init(struct fontS *font)
 
   for (int i = START_GLYPH; i < END_GLYPH; ++i) {
     uint64_t glyph_index = i - START_GLYPH;
-    if (font_textureD[glyph_index] == 0) return FALSE;
+    if (font_textureD[glyph_index] == 0) return 0;
   }
 
-  return TRUE;
+  return 1;
 }
 
 SDL_Rect

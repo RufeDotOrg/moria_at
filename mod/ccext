@@ -1,0 +1,1 @@
+LFLAGS="-fpic -shared -nostartfiles "

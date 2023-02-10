@@ -43,6 +43,7 @@ CFLAGS+=" $DEV_FLAGS "
 
 TDIR=`dirname $1`
 [ -f ccext ] && source ccext
+[ -f $TDIR/ccext ] && source $TDIR/ccext
 
 echo $CC $1 $CFLAGS $LFLAGS -o bin/$OUTFILE
 time $CC $1 $CFLAGS $LFLAGS -o bin/$OUTFILE || exit 1

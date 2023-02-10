@@ -61,6 +61,10 @@ enum { RELEASE = 1 };
 enum { RELEASE = 0 };
 #endif
 
+#ifndef EXTERN
+#define EXTERN extern
+#endif
+
 // Array for reusable type
 // index is acquired by _use(); freed by _unuse()
 // eid is a stable, generational modulus index into entity array

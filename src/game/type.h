@@ -59,7 +59,7 @@ struct cbS {
   // Other flags
   uint8_t weapon_heavy;
 };
-struct cbS cbD;
+static struct cbS cbD;
 
 struct countS {
   // Player ailment counters
@@ -237,4 +237,4 @@ struct platformS {
   fn readansi;
   fn draw;
 };
-struct platformS platformD;
+EXTERN struct platformS platformD;

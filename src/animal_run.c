@@ -532,9 +532,23 @@ affect_update()
   if (count > 0) len += count;
   affectinfo_usedD = len;
 }
+#include <dlfcn.h>
+static void* dl_ptr;
+void
+platform_update()
+{
+  if (dl_ptr == 0 || dlclose(dl_ptr) == 0) {
+    dl_ptr = dlopen("./bin/render", RTLD_NOW);
+    // if (!dl_ptr) msg_print(dl_error());
+    int (*f_ptr)() = dlsym(dl_ptr, "platform_init");
+    f_ptr();
+  }
+}
+
 void
 draw()
 {
+  platform_update();
   vital_update();
   if (SDL) {
     viz_update();
@@ -710,6 +724,7 @@ int* dir;
 
   return FALSE;
 }
+
 int
 bit_pos(test)
 uint32_t* test;
@@ -11837,7 +11852,7 @@ seed_init()
 int
 main()
 {
-  platform_init();
+  platform_update();
 
   seed_init();
 

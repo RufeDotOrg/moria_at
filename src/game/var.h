@@ -1,25 +1,26 @@
 
 // Visual info
-static struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-static char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-static char vitalinfoD[STATUS_HEIGHT][STATUS_WIDTH];
-static int vitalinfo_usedD[AL(vitalinfoD)];
-static char affectinfoD[160];
-static int affectinfo_usedD;
+EXTERN char save_termD[128];
+EXTERN struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
+EXTERN char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
+EXTERN char vitalinfoD[STATUS_HEIGHT][STATUS_WIDTH];
+EXTERN int vitalinfo_usedD[AL(vitalinfoD)];
+EXTERN char affectinfoD[160];
+EXTERN int affectinfo_usedD;
 
 // Full-screen & overlay (choice)
-static char screenD[SCREEN_HEIGHT][80];
-static int screen_usedD[AL(screenD)];
-static char overlayD[STATUS_HEIGHT][80];
-static int overlay_usedD[AL(overlayD)];
-static uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
-static int minimap_enlargeD;
+EXTERN char screenD[SCREEN_HEIGHT][80];
+EXTERN int screen_usedD[AL(screenD)];
+EXTERN char overlayD[STATUS_HEIGHT][80];
+EXTERN int overlay_usedD[AL(overlayD)];
+EXTERN uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
+EXTERN int minimap_enlargeD;
 
 // Gameplay messages write to a circular queue
-static char msg_cqD[MAX_MSG][80];
-static char msglen_cqD[MAX_MSG];
-static uint32_t msg_writeD;
-static uint32_t msg_countD;
+EXTERN char msg_cqD[MAX_MSG][80];
+EXTERN char msglen_cqD[MAX_MSG];
+EXTERN uint32_t msg_writeD;
+EXTERN uint32_t msg_countD;
 
 // Magic affect counters & names
 static int maD[MA_COUNT];
@@ -102,6 +103,6 @@ static uint8_t knownD[7][MAX_SUBVAL];
 // [INVEN_WIELD, INVEN_AUX] are equipment
 static int invenD[MAX_INVEN];
 static int storeD[MAX_STORE];
-static struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
+EXTERN struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
 static char versionD[] = "XXXX.YYYY.ZZZZ";
 static char git_hashD[] = "AbCdEfGhIjKlMnO";
