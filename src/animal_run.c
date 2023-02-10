@@ -548,7 +548,6 @@ platform_update()
 void
 draw()
 {
-  platform_update();
   vital_update();
   if (SDL) {
     viz_update();
@@ -11410,6 +11409,7 @@ dungeon()
     ma_tick();
     inven_check_weight();
     inven_check_light();
+    platform_update();
 
     do {
       draw();

@@ -35,13 +35,13 @@ char_visible(char c)
   return vis < 0x7f - 0x21;
 }
 // render.c
-static struct SDL_Window *windowD;
-static SDL_Rect display_rectD;
-static float aspectD;
-static struct SDL_Renderer *rendererD;
-static uint32_t texture_formatD;
-static SDL_PixelFormat *pixel_formatD;
-static SDL_Surface *mmsurfaceD;
+EXTERN struct SDL_Window *windowD;
+EXTERN SDL_Rect display_rectD;
+EXTERN float aspectD;
+EXTERN struct SDL_Renderer *rendererD;
+EXTERN uint32_t texture_formatD;
+EXTERN SDL_PixelFormat *pixel_formatD;
+EXTERN SDL_Surface *mmsurfaceD;
 static SDL_Color blackD;
 static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
@@ -168,10 +168,10 @@ struct fontS {
   uint16_t left_adjustment;
   uint64_t bitmap_used;
 };
-static struct fontS fontD;
-static struct SDL_Texture *font_textureD[MAX_GLYPH];
-static int rowD, colD;
-static float rfD, cfD;
+EXTERN struct fontS fontD;
+EXTERN struct SDL_Texture *font_textureD[MAX_GLYPH];
+EXTERN int rowD, colD;
+EXTERN float rfD, cfD;
 
 static void
 font_debug(struct fontS *font)
@@ -218,23 +218,6 @@ bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
   }
 }
 
-// art.c
-#define ART_W 32
-#define ART_H 64
-#define MAX_ART 279
-static uint8_t artD[96 * 1024];
-static uint64_t art_usedD;
-static struct SDL_Texture *art_textureD[MAX_ART];
-int
-art_io()
-{
-  int rc = -1;
-  art_usedD = AL(artD);
-  rc = puff((void *)&artD, &art_usedD, artZ, &(uint64_t){sizeof(artZ)});
-  Log("art_io() [ rc %d ] [ art_usedD %ju ]\n", rc, art_usedD);
-  return rc == 0;
-}
-
 void
 bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
 {
@@ -245,6 +228,24 @@ bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
     }
   }
 }
+
+// art.c
+#define ART_W 32
+#define ART_H 64
+#define MAX_ART 279
+EXTERN uint8_t artD[96 * 1024];
+EXTERN uint64_t art_usedD;
+EXTERN struct SDL_Texture *art_textureD[MAX_ART];
+int
+art_io()
+{
+  int rc = -1;
+  art_usedD = AL(artD);
+  rc = puff((void *)&artD, &art_usedD, artZ, &(uint64_t){sizeof(artZ)});
+  Log("art_io() [ rc %d ] [ art_usedD %ju ]\n", rc, art_usedD);
+  return rc == 0;
+}
+
 int
 art_init()
 {
@@ -277,9 +278,9 @@ art_init()
 
 // treasure
 #define MAX_TART 32
-static uint8_t tartD[8 * 1024];
-static uint64_t tart_usedD;
-static struct SDL_Texture *tart_textureD[MAX_TART];
+EXTERN uint8_t tartD[8 * 1024];
+EXTERN uint64_t tart_usedD;
+EXTERN struct SDL_Texture *tart_textureD[MAX_TART];
 int
 tart_io()
 {
@@ -323,9 +324,9 @@ tart_init()
 
 // wall
 #define MAX_WART 6
-static uint8_t wartD[4 * 1024];
-static uint64_t wart_usedD;
-static struct SDL_Texture *wart_textureD[MAX_WART];
+EXTERN uint8_t wartD[4 * 1024];
+EXTERN uint64_t wart_usedD;
+EXTERN struct SDL_Texture *wart_textureD[MAX_WART];
 int
 wart_io()
 {
@@ -368,9 +369,9 @@ wart_init()
 
 // player
 #define MAX_PART 13
-static uint8_t partD[4 * 1024];
-static uint64_t part_usedD;
-static struct SDL_Texture *part_textureD[MAX_PART];
+EXTERN uint8_t partD[4 * 1024];
+EXTERN uint64_t part_usedD;
+EXTERN struct SDL_Texture *part_textureD[MAX_PART];
 int
 part_io()
 {
@@ -514,21 +515,21 @@ font_texture_alphamod(alpha)
 }
 
 // Texture
-SDL_Texture *map_textureD;
-SDL_Rect map_rectD;
-SDL_Color mapbgD;
-SDL_Color lightbgD;
-SDL_Color shroudbgD;
+static SDL_Color mapbgD;
+static SDL_Color lightbgD;
+static SDL_Color shroudbgD;
 SDL_Rect scale_rectD;
 float scaleD;
-SDL_Texture *text_textureD;
-SDL_Rect text_rectD;
 
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
 SDL_FRect buttonD[2];
 SDL_FRect padD;
 SDL_FPoint ppD[9];
 
+EXTERN SDL_Rect map_rectD;
+EXTERN SDL_Texture *map_textureD;
+EXTERN SDL_Rect text_rectD;
+EXTERN SDL_Texture *text_textureD;
 void
 texture_init()
 {
@@ -538,10 +539,6 @@ texture_init()
   map_rectD = (SDL_Rect){.w = w, .h = h};
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, w, h);
-  mapbgD = (SDL_Color){120, 120, 120, 15};
-  lightbgD = (SDL_Color){220, 220, 220, 45};
-  shroudbgD = (SDL_Color){170, 170, 170, 30};
-
   w = 4 * 1024;
   h = 4 * 1024;
   text_rectD = (SDL_Rect){.w = w, .h = h};
@@ -1320,17 +1317,26 @@ platform_init()
 
   SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
 
-  if (!render_init()) return;
+  if (windowD == 0) {
+    if (!render_init()) return;
 
-  if (!font_load() || !font_init(&fontD)) return;
+    if (!font_load() || !font_init(&fontD)) return;
 
-  texture_init();
+    texture_init();
 
-  if (!art_io() || !art_init()) return;
+    if (!art_io() || !art_init()) return;
+    if (!tart_io() || !tart_init()) return;
+    if (!wart_io() || !wart_init()) return;
+    if (!part_io() || !part_init()) return;
 
-  if (!tart_io() || !tart_init()) return;
-  if (!wart_io() || !wart_init()) return;
-  if (!part_io() || !part_init()) return;
+    mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
+                                                MAX_HEIGHT, 0, texture_formatD);
+  }
+
+  mapbgD = (SDL_Color){120, 120, 120, 15};
+  lightbgD = (SDL_Color){220, 220, 220, 45};
+  shroudbgD = (SDL_Color){170, 170, 170, 30};
+  font_colorD = whiteD;
 
   if (ANDROID)
     platformD.seed = platform_random;
@@ -1340,12 +1346,6 @@ platform_init()
   platformD.save = save;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
-
-  for (int it = 0; it < 8; ++it) sdl_pump();
-
-  font_colorD = whiteD;
-  mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
-                                              MAX_HEIGHT, 0, texture_formatD);
 }
 void
 platform_reset()
