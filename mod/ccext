@@ -1,1 +1,2 @@
+CFLAGS+=" -DEXTERN "
 LFLAGS="-fpic -shared -nostartfiles "
