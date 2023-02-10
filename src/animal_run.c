@@ -123,20 +123,6 @@ get_sym(int row, int col)
   }
   return '#';
 }
-static void
-symmap_update()
-{
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
-  char* sym = &symmapD[0][0];
-  for (int row = rmin; row < rmax; ++row) {
-    for (int col = cmin; col < cmax; ++col) {
-      *sym++ = get_sym(row, col);
-    }
-  }
-}
 /* A simple, fast, integer-based line-of-sight algorithm.  By Joseph Hall,
    4116 Brewster Drive, Raleigh NC 27606.  Email to jnh@ecemwl.ncsu.edu.
 

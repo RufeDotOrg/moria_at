@@ -1,8 +1,6 @@
 
 // Visual info
-EXTERN char save_termD[128];
 EXTERN struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-EXTERN char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 EXTERN char vitalinfoD[STATUS_HEIGHT][STATUS_WIDTH];
 EXTERN int vitalinfo_usedD[AL(vitalinfoD)];
 EXTERN char affectinfoD[160];

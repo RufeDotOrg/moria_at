@@ -1,4 +1,23 @@
 
+// Global application memory
+EXTERN char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
+EXTERN char save_termD[128];
+
+static void
+symmap_update()
+{
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+  char* sym = &symmapD[0][0];
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      *sym++ = get_sym(row, col);
+    }
+  }
+}
+
 // Common terminal commands
 static char tc_crlfD[] = "\r\n";
 static char tc_clearD[] = "\x1b[2J";
