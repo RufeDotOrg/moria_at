@@ -417,6 +417,7 @@ viz_minimap()
 {
   int row, col;
   struct caveS* c_ptr;
+  struct objS* obj;
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
@@ -428,6 +429,14 @@ viz_minimap()
       c_ptr = &caveD[row][col];
       if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
         minimapD[row][col] = 15;
+      else if (CF_VIZ & c_ptr->cflag && c_ptr->oidx) {
+        obj = &entity_objD[c_ptr->oidx];
+        if (obj->tval == TV_UP_STAIR) {
+          minimapD[row][col] = 9;
+        } else if (obj->tval == TV_DOWN_STAIR) {
+          minimapD[row][col] = 10;
+        }
+      }
       if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT || col + 1 == MAX_WIDTH)
         minimapD[row][col] = 15;
       if (row == rmin || row == rmax)
