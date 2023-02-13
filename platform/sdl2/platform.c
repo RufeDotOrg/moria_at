@@ -1250,26 +1250,28 @@ load()
 }
 
 // Initialization
+#define SDL_SCOPE (SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS)
 void
 platform_init()
 {
-  // SDL config
-  SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
-  SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
+  if (!SDL_WasInit(SDL_SCOPE)) {
+    // SDL config
+    SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 
-  // IOS/Android orientation
-  SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
-  SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
+    // IOS/Android orientation
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
+    SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
 
-  // Platform Input isolation
-  if (ANDROID || !TOUCH) {
-    SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
-    SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
-  }
+    // Platform Input isolation
+    if (ANDROID || !TOUCH) {
+      SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+      SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+    }
 
-  SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+    SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
+    SDL_Init(SDL_SCOPE);
 
-  if (windowD == 0) {
     if (!render_init()) return;
 
     if (!font_load() || !font_init(&fontD)) return;
