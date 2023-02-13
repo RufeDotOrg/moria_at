@@ -197,13 +197,14 @@ font_debug(struct fontS *font)
       MAX_FOOTPRINT - MAX_BITMAP - GLYPH_BYTE_COUNT);
 }
 
-int
-font_load()
-{
-  return puff((void *)&fontD, &(uint64_t){sizeof(fontD)}, font_zip,
-              &(uint64_t){sizeof(font_zip)}) == 0;
-}
-
+// hex RGBA to little endian
+#define CHEX(x) __builtin_bswap32(x)
+static uint32_t paletteD[] = {
+    CHEX(0x00000000), CHEX(0xcc000000), CHEX(0x4e9a0600), CHEX(0xc4a00000),
+    CHEX(0x3465a400), CHEX(0x75507b00), CHEX(0x06989a00), CHEX(0xd3d7cf00),
+    CHEX(0x55575300), CHEX(0xef292900), CHEX(0x8ae23400), CHEX(0xfce94f00),
+    CHEX(0x729fcf00), CHEX(0xad7fa800), CHEX(0x34e2e200), CHEX(0xeeeeec00),
+};
 void
 bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
                        struct SDL_Surface *surface)
@@ -213,8 +214,9 @@ bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
   for (int64_t row = 0; row < ph; ++row) {
     uint8_t *dst = pixels + (surface->pitch * (into.y + row)) + (bpp * into.x);
     for (int64_t col = 0; col < pw; ++col) {
-      int val = (*src != 0) ? -1 : 0;
-      memset(dst, val, bpp);
+      SDL_Color c = (*(SDL_Color *)&paletteD[*src & 0xff]);
+      int val = SDL_MapRGB(pixel_formatD, C3(c));
+      memcpy(dst, &val, bpp);
       src += 1;
       dst += bpp;
     }
@@ -227,7 +229,7 @@ bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
   int byte_count = bitmap_size / 8;
   for (int it = 0; it < byte_count; ++it) {
     for (int jt = 0; jt < 8; ++jt) {
-      bitmap[it * 8 + jt] = ((bitfield[it] & (1 << jt)) != 0);
+      bitmap[it * 8 + jt] = ((bitfield[it] & (1 << jt)) != 0) * 15;
     }
   }
 }
@@ -263,7 +265,6 @@ art_init()
        ++it, byte_used += (ART_W * ART_H / 8)) {
     if (byte_used >= byte_count) break;
     bitfield_to_bitmap(&artD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    memset(surface->pixels, 0, surface->h * surface->pitch);
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
                            surface);
     art_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
@@ -309,7 +310,6 @@ tart_init()
        ++it, byte_used += (ART_W * ART_H / 8)) {
     if (byte_used >= byte_count) break;
     bitfield_to_bitmap(&tartD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    memset(surface->pixels, 0, surface->h * surface->pitch);
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
                            surface);
     tart_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
@@ -354,7 +354,6 @@ wart_init()
        ++it, byte_used += (ART_W * ART_H / 8)) {
     if (byte_used >= byte_count) break;
     bitfield_to_bitmap(&wartD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    memset(surface->pixels, 0, surface->h * surface->pitch);
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
                            surface);
     wart_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
@@ -399,7 +398,6 @@ part_init()
        ++it, byte_used += (ART_W * ART_H / 8)) {
     if (byte_used >= byte_count) break;
     bitfield_to_bitmap(&partD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    memset(surface->pixels, 0, surface->h * surface->pitch);
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
                            surface);
     part_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
@@ -416,12 +414,24 @@ part_init()
 }
 
 int
+font_load()
+{
+  return puff((void *)&fontD, &(uint64_t){sizeof(fontD)}, font_zip,
+              &(uint64_t){sizeof(font_zip)}) == 0;
+}
+
+int
 font_init(struct fontS *font)
 {
   struct SDL_Renderer *renderer = rendererD;
   uint32_t format = texture_formatD;
 
   if (font_textureD[0]) return 0;
+
+  // TBD: adopt bitfield for font pixels
+  for (int it = 0; it < MAX_BITMAP; ++it) {
+    if (fontD.bitmap[it]) fontD.bitmap[it] = 15;
+  }
 
   int16_t width = font->max_pixel_width;
   int16_t height = font->max_pixel_height;

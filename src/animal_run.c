@@ -427,13 +427,13 @@ viz_minimap()
     for (col = 0; col < MAX_WIDTH; ++col) {
       c_ptr = &caveD[row][col];
       if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
-        minimapD[row][col] = 1;
+        minimapD[row][col] = 15;
       if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT || col + 1 == MAX_WIDTH)
-        minimapD[row][col] = 1;
+        minimapD[row][col] = 15;
       if (row == rmin || row == rmax)
-        if (col >= cmin && col <= cmax) minimapD[row][col] = 1;
+        if (col >= cmin && col <= cmax) minimapD[row][col] = 8;
       if (col == cmin || col == cmax)
-        if (row >= rmin && row <= rmax) minimapD[row][col] = 1;
+        if (row >= rmin && row <= rmax) minimapD[row][col] = 8;
     }
   }
 }
