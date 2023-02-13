@@ -435,6 +435,8 @@ viz_minimap()
           minimapD[row][col] = 9;
         } else if (obj->tval == TV_DOWN_STAIR) {
           minimapD[row][col] = 10;
+        } else if (obj->tval == TV_VIS_TRAP) {
+          minimapD[row][col] = 11;
         }
       }
       if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT || col + 1 == MAX_WIDTH)
