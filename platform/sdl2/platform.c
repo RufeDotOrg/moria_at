@@ -205,6 +205,7 @@ static uint32_t paletteD[] = {
     CHEX(0x55575300), CHEX(0xef292900), CHEX(0x8ae23400), CHEX(0xfce94f00),
     CHEX(0x729fcf00), CHEX(0xad7fa800), CHEX(0x34e2e200), CHEX(0xeeeeec00),
 };
+static uint32_t rgbaD[AL(paletteD)];
 void
 bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
                        struct SDL_Surface *surface)
@@ -214,9 +215,7 @@ bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
   for (int64_t row = 0; row < ph; ++row) {
     uint8_t *dst = pixels + (surface->pitch * (into.y + row)) + (bpp * into.x);
     for (int64_t col = 0; col < pw; ++col) {
-      SDL_Color c = (*(SDL_Color *)&paletteD[*src & 0xff]);
-      int val = SDL_MapRGB(pixel_formatD, C3(c));
-      memcpy(dst, &val, bpp);
+      memcpy(dst, &rgbaD[*src & 0xff], bpp);
       src += 1;
       dst += bpp;
     }
@@ -1284,6 +1283,11 @@ platform_init()
 
     if (!render_init()) return;
 
+    for (int it = 0; it < AL(paletteD); ++it) {
+      SDL_Color c = (*(SDL_Color *)&paletteD[it]);
+      rgbaD[it] = SDL_MapRGB(pixel_formatD, C3(c));
+    }
+
     if (!font_load() || !font_init(&fontD)) return;
 
     texture_init();
@@ -1295,6 +1299,11 @@ platform_init()
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                                 MAX_HEIGHT, 0, texture_formatD);
+  } else {
+    for (int it = 0; it < AL(paletteD); ++it) {
+      SDL_Color c = (*(SDL_Color *)&paletteD[it]);
+      rgbaD[it] = SDL_MapRGB(pixel_formatD, C3(c));
+    }
   }
 
   mapbgD = (SDL_Color){120, 120, 120, 15};
