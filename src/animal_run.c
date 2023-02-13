@@ -427,24 +427,24 @@ viz_minimap()
   for (row = 0; row < MAX_HEIGHT; ++row) {
     for (col = 0; col < MAX_WIDTH; ++col) {
       c_ptr = &caveD[row][col];
-      if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
-        minimapD[row][col] = 15;
+      if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT || col + 1 == MAX_WIDTH)
+        minimapD[row][col] = BRIGHT + WHITE;
+      else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
+        minimapD[row][col] = BRIGHT + WHITE;
       else if (CF_VIZ & c_ptr->cflag && c_ptr->oidx) {
         obj = &entity_objD[c_ptr->oidx];
         if (obj->tval == TV_UP_STAIR) {
-          minimapD[row][col] = 9;
+          minimapD[row][col] = BRIGHT + RED;
         } else if (obj->tval == TV_DOWN_STAIR) {
-          minimapD[row][col] = 10;
+          minimapD[row][col] = BRIGHT + GREEN;
         } else if (obj->tval == TV_VIS_TRAP) {
-          minimapD[row][col] = 11;
+          minimapD[row][col] = BRIGHT + YELLOW;
         }
       }
-      if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT || col + 1 == MAX_WIDTH)
-        minimapD[row][col] = 15;
       if (row == rmin || row == rmax)
-        if (col >= cmin && col <= cmax) minimapD[row][col] = 8;
+        if (col >= cmin && col <= cmax) minimapD[row][col] = BRIGHT + BLACK;
       if (col == cmin || col == cmax)
-        if (row >= rmin && row <= rmax) minimapD[row][col] = 8;
+        if (row >= rmin && row <= rmax) minimapD[row][col] = BRIGHT + BLACK;
     }
   }
 }
