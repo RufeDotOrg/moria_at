@@ -703,7 +703,9 @@ platform_draw()
   SDL_RenderCopy(rendererD, text_textureD, NULL, &text_rectD);
 
   if (show_map) {
+    SDL_Rect zoom_rect;
     SDL_Rect sprite_rect;
+    SDL_Point rp;
     sprite_rect.w = ART_W;
     sprite_rect.h = ART_H;
     SDL_SetRenderTarget(rendererD, map_textureD);
@@ -734,6 +736,10 @@ platform_draw()
 
         if (!srct) {
           srct = texture_by_sym(sym);
+          if (sym == '@') {
+            zoom_rect = sprite_rect;
+            rp = (SDL_Point){col, row};
+          }
         }
 
         switch (light) {
@@ -754,7 +760,21 @@ platform_draw()
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
     SDL_SetRenderTarget(rendererD, 0);
 
-    SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
+    int zw, zy, zf;
+    zf = 2;
+
+    zw = SYMMAP_WIDTH / 2 >> zf;
+    zy = SYMMAP_HEIGHT / 2 >> zf;
+    if (rp.x + zw > SYMMAP_WIDTH) rp.x = SYMMAP_WIDTH - zw - 1;
+    if (rp.y + zy > SYMMAP_HEIGHT) rp.y = SYMMAP_HEIGHT - zy - 1;
+    rp.x = MAX(0, rp.x - zw);
+    rp.y = MAX(0, rp.y - zy);
+    zoom_rect.x = rp.x * ART_W;
+    zoom_rect.y = rp.y * ART_H;
+    zoom_rect.w = (zw * 2 + 1) * ART_W;
+    zoom_rect.h = (zy * 2 + 1) * ART_H;
+
+    SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &scale_rectD);
   }
 
   if (TOUCH) {
