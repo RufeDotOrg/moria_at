@@ -205,7 +205,6 @@ static uint32_t paletteD[] = {
     CHEX(0x55575300), CHEX(0xef292900), CHEX(0x8ae23400), CHEX(0xfce94f00),
     CHEX(0x729fcf00), CHEX(0xad7fa800), CHEX(0x34e2e200), CHEX(0xeeeeec00),
 };
-enum { BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BRIGHT };
 static uint32_t rgbaD[AL(paletteD)];
 void
 bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,

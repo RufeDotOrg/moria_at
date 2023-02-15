@@ -452,3 +452,5 @@
 
 // Input
 #define ESCAPE '\033'
+// Output
+enum { BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BRIGHT };
