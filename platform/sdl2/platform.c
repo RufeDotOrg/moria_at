@@ -569,7 +569,8 @@ texture_by_sym(char c)
   return t;
 }
 
-#define TOUCH_DIAMETER .05f
+#define TOUCH_DIAMETER .06f
+#define TOUCH_GAP (TOUCH_DIAMETER * 1.25f)
 SDL_FRect
 rect_from_pp(idx)
 {
@@ -971,7 +972,6 @@ SDL_Event event;
     // Input constraints
     padD = (SDL_FRect){0, .5, .25 - (2 * cfD), .5 - (rfD)};
 
-#define TOUCH_GAP (TOUCH_DIAMETER * 1.5f)
     for (int col = 0; col < 3; ++col) {
       for (int row = 0; row < 3; ++row) {
         int idx = col * 3 + row;
@@ -1005,19 +1005,10 @@ SDL_Event *event;
     if (SDL_PointInFRect(&tp, &buttonD[it])) r = 1 + it;
   }
 
-  // TBD: dynamic bounds based on aspectD
-  if (SDL_PointInFRect(&tp, &padD)) {
-    float min_dsq = FLT_MAX;
-    for (int it = 0; it < AL(ppD); ++it) {
-      SDL_FRect rect = rect_from_pp(it);
-      SDL_FPoint center = {rect.x + rect.w / 2, rect.y + rect.h / 2};
-      float dx = tp.x - center.x;
-      float dy = tp.y - center.y;
-      float dsq = dx * dx + dy * dy;
-      if (dsq < min_dsq) {
-        min_dsq = dsq;
-        r = TOUCH_PAD + it;
-      }
+  for (int it = 0; it < AL(ppD); ++it) {
+    SDL_FRect rect = rect_from_pp(it);
+    if (SDL_PointInFRect(&tp, &rect)) {
+      r = TOUCH_PAD + it;
     }
   }
 
