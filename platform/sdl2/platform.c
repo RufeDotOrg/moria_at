@@ -48,6 +48,7 @@ EXTERN SDL_Rect scale_rectD;
 EXTERN float scaleD;
 EXTERN int rowD, colD;
 EXTERN float rfD, cfD;
+static int overlay_copyD[AL(overlay_usedD)];
 static SDL_Color blackD;
 static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
@@ -617,6 +618,7 @@ platform_draw()
       render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row], p);
     }
   } else if (overlay_usedD[0]) {
+    memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
     mode = 1;
     show_map = 0;
     for (int row = 0; row < STATUS_HEIGHT; ++row) {
@@ -633,7 +635,11 @@ platform_draw()
   } else {
     mode = 0;
   }
-  modeD = mode;
+  if (modeD != mode) {
+    finger_rowD = 0;
+    finger_colD = 0;
+    modeD = mode;
+  }
 
   for (int row = 0; row < STATUS_HEIGHT; ++row) {
     SDL_Point p = {0, (row + 1) * height};
@@ -1049,35 +1055,13 @@ SDL_Event *event;
 }
 
 int
-inven_offset(row, input)
-{
-  for (int it = row + input; it >= 0 && it < INVEN_EQUIP; it += input) {
-    if (invenD[it]) return it;
-  }
-  return row;
-}
-int
-equip_offset(row, input)
-{
-  Log("equip row %d input %d", row, input);
-  for (int it = INVEN_EQUIP + row + input; it >= INVEN_EQUIP && it < MAX_INVEN;
-       it += input) {
-    Log("try %d", it);
-    if (invenD[it]) {
-      Log("hit, return %d", it - INVEN_EQUIP);
-      return it - INVEN_EQUIP;
-    }
-  }
-  return row;
-}
-int
 overlay_input(input)
 {
-  Log("overlay");
-  if (finger_colD == 0)
-    return inven_offset(finger_rowD, input);
-  else
-    return equip_offset(finger_rowD, input);
+  int row = finger_rowD;
+  for (int it = row + input; it >= 0 && it < AL(overlay_copyD); it += input) {
+    if (overlay_copyD[it] > 1) return it;
+  }
+  return row;
 }
 
 // Game interface
@@ -1178,8 +1162,6 @@ sdl_pump()
             return c;
         }
       } else if (touch) {
-        finger_rowD = 0;
-        finger_colD = 0;
         switch (touch) {
           case TOUCH_LB:
             if (finger) return 'S';
