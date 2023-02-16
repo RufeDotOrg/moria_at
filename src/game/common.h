@@ -66,9 +66,10 @@ enum { RELEASE = 0 };
 #endif
 
 #ifdef M
-#define CCM(x) ((M & x) != 0)
+#define CCM(x, y) \
+  if ((M & x) != 0) y;
 #else
-#define CCM(x) 0
+#define CCM(x, y)
 #endif
 enum {
   CCM_HOTLOAD = 0x1,

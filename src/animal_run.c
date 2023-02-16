@@ -11326,7 +11326,7 @@ dungeon()
     ma_tick();
     inven_check_weight();
     inven_check_light();
-    if (CCM(CCM_HOTLOAD)) platform_update();
+    CCM(CCM_HOTLOAD, platform_update());
 
     do {
       draw();
