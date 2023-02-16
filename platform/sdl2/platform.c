@@ -598,12 +598,13 @@ rect_from_pp(idx)
 int
 platform_draw()
 {
-  int show_map, mode, height, width;
+  int show_map, mode, height, width, left;
   struct SDL_Texture *texture;
 
   show_map = 1;
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
+  left = fontD.left_adjustment + scale_rectD.x;
 
   SDL_SetRenderTarget(rendererD, text_textureD);
   SDL_RenderFillRect(rendererD, &text_rectD);
@@ -612,7 +613,7 @@ platform_draw()
     mode = 2;
     show_map = 0;
     for (int row = 0; row < AL(screenD); ++row) {
-      SDL_Point p = {0, (row + 1) * height};
+      SDL_Point p = {left, (row + 1) * height};
       render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row], p);
     }
   } else if (overlay_usedD[0]) {
@@ -622,7 +623,7 @@ platform_draw()
       font_colorD =
           (TOUCH && row == finger_rowD) ? (SDL_Color){255, 0, 0, 255} : whiteD;
       SDL_Point p = {
-          (TOUCH && finger_colD) ? 13 * width : 0,
+          left,
           (row + 1) * height,
       };
       render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
@@ -636,13 +637,14 @@ platform_draw()
     }
   } else {
     mode = 0;
-    for (int row = 0; row < STATUS_HEIGHT; ++row) {
-      SDL_Point p = {0, (row + 1) * height};
-      render_font_string(rendererD, &fontD, vitalinfoD[row], AL(vitalinfoD[0]),
-                         p);
-    }
   }
   modeD = mode;
+
+  for (int row = 0; row < STATUS_HEIGHT; ++row) {
+    SDL_Point p = {0, (row + 1) * height};
+    render_font_string(rendererD, &fontD, vitalinfoD[row], AL(vitalinfoD[0]),
+                       p);
+  }
 
   SDL_SetRenderTarget(rendererD, 0);
   SDL_RenderCopy(rendererD, text_textureD, NULL, &text_rectD);
@@ -700,25 +702,25 @@ platform_draw()
     SDL_SetRenderTarget(rendererD, 0);
 
     SDL_RenderCopy(rendererD, map_textureD, NULL, &scale_rectD);
+  }
 
-    if (TOUCH) {
-      {
-        SDL_Color c = {0, 0, 78, 0};
-        SDL_SetRenderDrawColor(rendererD, C(c));
+  if (TOUCH) {
+    {
+      SDL_Color c = {0, 0, 78, 0};
+      SDL_SetRenderDrawColor(rendererD, C(c));
 
-        SDL_Rect pr = {RS(padD, display_rectD)};
-        SDL_RenderFillRect(rendererD, &pr);
-      }
-      {
-        SDL_Color c = {50, 0, 0, 0};
-        SDL_SetRenderDrawColor(rendererD, C(c));
+      SDL_Rect pr = {RS(padD, display_rectD)};
+      SDL_RenderFillRect(rendererD, &pr);
+    }
+    {
+      SDL_Color c = {50, 0, 0, 0};
+      SDL_SetRenderDrawColor(rendererD, C(c));
 
-        for (int it = 0; it < AL(ppD); ++it) {
-          if (ppD[it].x || ppD[it].y) {
-            SDL_FRect r = rect_from_pp(it);
-            SDL_Rect ppr = {RS(r, display_rectD)};
-            SDL_RenderFillRect(rendererD, &ppr);
-          }
+      for (int it = 0; it < AL(ppD); ++it) {
+        if (ppD[it].x || ppD[it].y) {
+          SDL_FRect r = rect_from_pp(it);
+          SDL_Rect ppr = {RS(r, display_rectD)};
+          SDL_RenderFillRect(rendererD, &ppr);
         }
       }
     }
