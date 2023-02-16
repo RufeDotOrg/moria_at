@@ -20,7 +20,7 @@ struct uS {
   int chp_frac;
   int mhp;
   int gold;
-  int pspeed;
+  int pspeed; // TBD: deprecate
   // Stateful affects from magic spells
   int ma_ac;
   int mflag;
@@ -64,7 +64,7 @@ static struct cbS cbD;
 struct countS {
   // Player ailment counters
   int poison;
-  int blind;
+  int blind; //TBD: deprecate
   int confusion;
   int fear;
   int rest;
