@@ -2596,22 +2596,6 @@ struct objS* obj;
   return FALSE;
 }
 int
-oset_actuate(obj)
-struct objS* obj;
-{
-  switch (obj->tval) {
-    case TV_FOOD:
-    case TV_POTION1:
-    case TV_POTION2:
-    case TV_SCROLL1:
-    case TV_SCROLL2:
-    case TV_STAFF:
-    case TV_WAND:
-      return TRUE;
-  }
-  return FALSE;
-}
-int
 oset_gold(obj)
 struct objS* obj;
 {
@@ -11490,7 +11474,7 @@ dungeon()
                   py_zap(iidx);
                 } else if (iidx < INVEN_EQUIP) {
                   inven_wear(iidx);
-                } else if (iidx == INVEN_WIELD) {
+                } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
                   py_offhand();
                 }
               }
