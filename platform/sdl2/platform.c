@@ -1114,11 +1114,9 @@ sdl_pump()
     switch (event.type) {
       case SDL_FINGERDOWN:
         finger_stackD += 1;
-        Log("finger_stackD %d", finger_stackD);
         break;
       case SDL_FINGERUP:
         finger_stackD -= 1;
-        Log("finger_stackD %d", finger_stackD);
         break;
     }
 
