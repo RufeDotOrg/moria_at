@@ -18,7 +18,7 @@
 
 #ifndef ANDROID
 enum { ANDROID };
-enum { TOUCH };
+enum { TOUCH = 1 };
 #else
 enum { TOUCH = 1 };
 #endif
@@ -574,12 +574,19 @@ texture_by_sym(char c)
 SDL_FRect
 rect_from_pp(idx)
 {
-  return (SDL_FRect){
+  SDL_FRect r = {
       ppD[idx].x,
       ppD[idx].y,
       TOUCH_DIAMETER,
       TOUCH_DIAMETER * aspectD,
   };
+  if ((idx + 1) % 2 == 0) {
+    r.x -= .01;
+    r.y -= .01 * aspectD;
+    r.w += .01 * 2;
+    r.h += .01 * aspectD * 2;
+  }
+  return r;
 }
 
 int
