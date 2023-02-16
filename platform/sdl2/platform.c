@@ -19,7 +19,7 @@
 
 #ifndef ANDROID
 enum { ANDROID };
-enum { TOUCH = 1 };
+enum { TOUCH };
 #else
 enum { TOUCH = 1 };
 #endif
@@ -630,11 +630,6 @@ platform_draw()
                          p);
     }
     font_colorD = whiteD;
-    if (TOUCH) {
-      SDL_Point p = {width * 16, 0};
-      char text[2] = {'a' + finger_rowD, 0};
-      render_font_string(rendererD, &fontD, text, 1, p);
-    }
   } else {
     mode = 0;
   }
@@ -762,6 +757,15 @@ platform_draw()
     for (int it = 0; it < AL(buttonD); ++it) {
       SDL_Rect r = {RS(buttonD[it], display_rectD)};
       SDL_RenderFillRect(rendererD, &r);
+    }
+
+    if (mode == 1) {
+      SDL_Rect r = {RS(buttonD[1], display_rectD)};
+      SDL_Point p = {r.x + r.w / 2, r.y + r.h / 2};
+      p.x -= width / 2;
+      p.y -= height / 2;
+      char text = 'a' + finger_rowD;
+      render_font_string(rendererD, &fontD, &text, 1, p);
     }
   }
 
@@ -1044,6 +1048,38 @@ SDL_Event *event;
   return r;
 }
 
+int
+inven_offset(row, input)
+{
+  for (int it = row + input; it >= 0 && it < INVEN_EQUIP; it += input) {
+    if (invenD[it]) return it;
+  }
+  return row;
+}
+int
+equip_offset(row, input)
+{
+  Log("equip row %d input %d", row, input);
+  for (int it = INVEN_EQUIP + row + input; it >= INVEN_EQUIP && it < MAX_INVEN;
+       it += input) {
+    Log("try %d", it);
+    if (invenD[it]) {
+      Log("hit, return %d", it - INVEN_EQUIP);
+      return it - INVEN_EQUIP;
+    }
+  }
+  return row;
+}
+int
+overlay_input(input)
+{
+  Log("overlay");
+  if (finger_colD == 0)
+    return inven_offset(finger_rowD, input);
+  else
+    return equip_offset(finger_rowD, input);
+}
+
 // Game interface
 char
 sdl_pump()
@@ -1142,8 +1178,8 @@ sdl_pump()
             return c;
         }
       } else if (touch) {
-        finger_rowD = -1;
-        finger_colD = -1;
+        finger_rowD = 0;
+        finger_colD = 0;
         switch (touch) {
           case TOUCH_LB:
             if (finger) return 'S';
@@ -1162,34 +1198,29 @@ sdl_pump()
 
     // Overlay (Mode 1)
     if (mode == 1 && event.type == SDL_FINGERDOWN) {
-      switch (touch) {
-        case TOUCH_LB:
-          return ESCAPE;
-        case TOUCH_RB:
-          return 'I';
-      }
-    }
-    if (mode == 1 && (motion.x + motion.y)) {
-      if (!ANDROID || finger_stackD == (finger + 1)) {
-        int row = (motion.y * rowD) - 1;
-        int col = (motion.x / .10);
-        if (row != finger_rowD || col != finger_colD) {
-          finger_rowD = row;
-          finger_colD = col;
-          return (finger_colD == 0) ? '/' : '*';
-        }
-      }
-    }
-    if (mode == 1 && event.type == SDL_FINGERUP) {
-      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (tp.x < .77) {
-        int row = finger_rowD;
-        if (row >= 0 && row < 22) {
-          return 'a' + row;
-        }
-      }
+      if (touch > TOUCH_PAD) {
+        int dir = touch - TOUCH_PAD;
+        int dx = dir_x(dir);
+        int dy = dir_y(dir);
 
-      return (finger_colD == 0) ? '/' : '*';
+        if (dx && !dy) {
+          finger_colD = CLAMP(finger_colD + dx, 0, 1);
+          finger_rowD = 0;
+        }
+        if (dy && !dx) {
+          finger_rowD =
+              overlay_input(dy);  // CLAMP(finger_rowD + dy, 0, INVEN_EQUIP);
+        }
+        Log("touch %d dx %d dy finger_col %d finger_row %d", dx, dy,
+            finger_colD, finger_rowD);
+        return (finger_colD == 0) ? '*' : '/';
+      }
+      if (touch == TOUCH_LB) {
+        return ESCAPE;
+      }
+      if (touch == TOUCH_RB) {
+        return 'a' + finger_rowD;
+      }
     }
 
     // Screen (mode 2)
