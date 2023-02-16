@@ -8809,6 +8809,39 @@ inven_wear(iidx)
     turn_flag = TRUE;
   }
 }
+static void
+py_offhand()
+{
+  struct objS* obj;
+  int tmp, swap;
+  tmp = invenD[INVEN_WIELD] ^ invenD[INVEN_AUX];
+  swap = (tmp != 0);
+  if (invenD[INVEN_WIELD]) {
+    obj = obj_get(invenD[INVEN_WIELD]);
+    if (obj->flags & TR_CURSED) {
+      MSG("Hmm, the item you are %s seems to be cursed.",
+          describe_use(INVEN_WIELD));
+      swap = FALSE;
+    } else {
+      py_bonuses(obj, -1);
+    }
+  }
+
+  if (swap) {
+    obj = obj_get(invenD[INVEN_AUX]);
+    invenD[INVEN_WIELD] ^= tmp;
+    invenD[INVEN_AUX] ^= tmp;
+    if (obj->id) {
+      py_bonuses(obj, 1);
+      obj_desc(obj, TRUE);
+      MSG("primary weapon: %s.", descD);
+    } else {
+      msg_print("No primary weapon.");
+    }
+    calc_bonuses();
+    turn_flag = TRUE;
+  }
+}
 void
 show_version()
 {
@@ -8834,6 +8867,38 @@ show_version()
   line += 1;
   BufMsg(screen, "Programming: %s", "Alan Newton");
   BufMsg(screen, "Art: %s", "Nathan Miller");
+}
+void py_actuate(y, x) int *y, *x;
+{
+  int iidx, into;
+  struct objS* obj;
+
+  iidx = inven_choice("Use which item?");
+  if (iidx >= 0) {
+    obj = obj_get(invenD[iidx]);
+    if (obj->tval == TV_FOOD) {
+      inven_eat(iidx);
+    } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+      inven_quaff(iidx);
+    } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+      inven_read(iidx, y, x);
+    } else if (obj->tval == TV_STAFF) {
+      inven_try_staff(iidx, x, x);
+    } else if (obj->tval == TV_WAND) {
+      py_zap(iidx);
+    } else if (iidx < INVEN_EQUIP) {
+      inven_wear(iidx);
+    } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
+      py_offhand();
+    } else if (iidx >= INVEN_EQUIP) {
+      if (invenD[iidx]) {
+        into = inven_slot();
+        if (into >= 0) {
+          equip_takeoff(iidx, into);
+        }
+      }
+    }
+  }
 }
 void
 py_character()
@@ -8936,7 +9001,6 @@ py_takeoff()
           into = inven_slot();
           if (into >= 0) {
             equip_takeoff(iidx, into);
-            turn_flag = TRUE;
           }
         }
       }
@@ -9958,39 +10022,6 @@ py_look_obj()
       msg_print("That's all you see in that direction");
     else
       msg_print("You see no objects of interest in that direction.");
-  }
-}
-static void
-py_offhand()
-{
-  struct objS* obj;
-  int tmp, swap;
-  tmp = invenD[INVEN_WIELD] ^ invenD[INVEN_AUX];
-  swap = (tmp != 0);
-  if (invenD[INVEN_WIELD]) {
-    obj = obj_get(invenD[INVEN_WIELD]);
-    if (obj->flags & TR_CURSED) {
-      MSG("Hmm, the item you are %s seems to be cursed.",
-          describe_use(INVEN_WIELD));
-      swap = FALSE;
-    } else {
-      py_bonuses(obj, -1);
-    }
-  }
-
-  if (swap) {
-    obj = obj_get(invenD[INVEN_AUX]);
-    invenD[INVEN_WIELD] ^= tmp;
-    invenD[INVEN_AUX] ^= tmp;
-    if (obj->id) {
-      py_bonuses(obj, 1);
-      obj_desc(obj, TRUE);
-      MSG("primary weapon: %s.", descD);
-    } else {
-      msg_print("No primary weapon.");
-    }
-    calc_bonuses();
-    turn_flag = TRUE;
   }
 }
 static int
@@ -11459,25 +11490,7 @@ dungeon()
               break;
             case 'A':
               // Generalized inventory interaction
-              iidx = inven_choice("Use which item?");
-              if (iidx >= 0) {
-                struct objS* obj = obj_get(invenD[iidx]);
-                if (obj->tval == TV_FOOD) {
-                  inven_eat(iidx);
-                } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-                  inven_quaff(iidx);
-                } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-                  inven_read(iidx, &y, &x);
-                } else if (obj->tval == TV_STAFF) {
-                  inven_try_staff(iidx, &x, &x);
-                } else if (obj->tval == TV_WAND) {
-                  py_zap(iidx);
-                } else if (iidx < INVEN_EQUIP) {
-                  inven_wear(iidx);
-                } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
-                  py_offhand();
-                }
-              }
+              py_actuate(&y, &x);
               break;
             case 'C':
               py_character();
