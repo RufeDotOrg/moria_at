@@ -1,4 +1,4 @@
 if [ -d ../SDL2.24.2 ]; then
   CFLAGS+="-I../SDL2.24.2/include"
-  LFLAGS+=" -lSDL2 -L../SDL2.24.2/build/.libs "
+  LFLAGS+=" -lm -lSDL2 -L../SDL2.24.2/build/.libs "
 fi

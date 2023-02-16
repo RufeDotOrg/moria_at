@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <time.h>
 
@@ -535,6 +536,7 @@ enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
 EXTERN SDL_FRect buttonD[2];
 EXTERN SDL_FRect padD;
 EXTERN SDL_FPoint ppD[9];
+static int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 
 EXTERN SDL_Rect map_rectD;
 EXTERN SDL_Texture *map_textureD;
@@ -569,23 +571,27 @@ texture_by_sym(char c)
   return t;
 }
 
-#define TOUCH_DIAMETER .06f
-#define TOUCH_GAP (TOUCH_DIAMETER * 1.25f)
+SDL_FPoint
+center_from_frect(r)
+SDL_FRect r;
+{
+  return (SDL_FPoint){r.x + r.w / 2, r.y + r.h / 2};
+}
+
+#define TOUCH_DIAMETER .04f
+#define TOUCH_GAP (TOUCH_DIAMETER * 1.12f)
 SDL_FRect
 rect_from_pp(idx)
 {
+  float sx = TOUCH_DIAMETER;
+  float sy = TOUCH_DIAMETER * aspectD;
+
   SDL_FRect r = {
-      ppD[idx].x,
-      ppD[idx].y,
-      TOUCH_DIAMETER,
-      TOUCH_DIAMETER * aspectD,
+      ppD[idx].x - sx / 2,
+      ppD[idx].y - sy / 2,
+      sx,
+      sy,
   };
-  if ((idx + 1) % 2 == 0) {
-    r.x -= .01;
-    r.y -= .01 * aspectD;
-    r.w += .01 * 2;
-    r.h += .01 * aspectD * 2;
-  }
   return r;
 }
 
@@ -979,14 +985,14 @@ SDL_Event event;
     // Input constraints
     padD = (SDL_FRect){0, .5, .25 - (2 * cfD), .5 - (rfD)};
 
-    for (int col = 0; col < 3; ++col) {
-      for (int row = 0; row < 3; ++row) {
-        int idx = col * 3 + row;
-        ppD[idx] = (SDL_FPoint){
-            .01 + TOUCH_GAP * row,
-            .80 - TOUCH_GAP * col * aspectD,
-        };
-      }
+    SDL_FPoint center = center_from_frect(padD);
+    ppD[0] = center;
+    float dist = TOUCH_GAP * 2;
+    for (int it = 0; it < 8; ++it) {
+      float cf = cos(it * M_PI / 4);
+      float sf = sin(it * M_PI / 4);
+      ppD[1 + it].x = center.x + cf * dist;
+      ppD[1 + it].y = center.y + sf * dist * aspectD;
     }
 
     for (int it = 0; it < AL(buttonD); ++it) {
@@ -1015,7 +1021,21 @@ SDL_Event *event;
   for (int it = 0; it < AL(ppD); ++it) {
     SDL_FRect rect = rect_from_pp(it);
     if (SDL_PointInFRect(&tp, &rect)) {
-      r = TOUCH_PAD + it;
+      r = TOUCH_PAD + pp_keyD[it];
+    }
+  }
+
+  if (SDL_PointInFRect(&tp, &padD)) {
+    float min_dsq = FLT_MAX;
+    for (int it = 0; it < AL(ppD); ++it) {
+      SDL_FPoint center = ppD[it];
+      float dx = tp.x - center.x;
+      float dy = tp.y - center.y;
+      float dsq = dx * dx + dy * dy;
+      if (dsq < min_dsq) {
+        min_dsq = dsq;
+        r = TOUCH_PAD + pp_keyD[it];
+      }
     }
   }
 
@@ -1110,11 +1130,10 @@ sdl_pump()
     // Playing (Mode 0)
     if (mode == 0 && event.type == SDL_FINGERDOWN) {
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (touch >= TOUCH_PAD) {
-        // SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) / padD.h};
-        // char c = map_touch(finger, rp.y, rp.x);
-        char c = char_by_dir(touch - TOUCH_PAD + 1);
-        Log("char_by_dir %c (%d)", c, touch - TOUCH_PAD + 1);
+      if (touch > TOUCH_PAD) {
+        // SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) /
+        // padD.h}; char c = map_touch(finger, rp.y, rp.x);
+        char c = char_by_dir(touch - TOUCH_PAD);
         switch (finger) {
           case 0:
             return c;
