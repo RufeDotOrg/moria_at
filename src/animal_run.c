@@ -431,14 +431,18 @@ viz_minimap()
         minimapD[row][col] = BRIGHT + WHITE;
       else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
         minimapD[row][col] = BRIGHT + WHITE;
-      else if (CF_VIZ & c_ptr->cflag && c_ptr->oidx) {
+      else if (c_ptr->oidx) {
         obj = &entity_objD[c_ptr->oidx];
-        if (obj->tval == TV_UP_STAIR) {
-          minimapD[row][col] = BRIGHT + RED;
-        } else if (obj->tval == TV_DOWN_STAIR) {
-          minimapD[row][col] = BRIGHT + GREEN;
-        } else if (obj->tval == TV_VIS_TRAP) {
-          minimapD[row][col] = BRIGHT + YELLOW;
+        if (CF_VIZ & c_ptr->cflag) {
+          if (obj->tval == TV_UP_STAIR) {
+            minimapD[row][col] = BRIGHT + RED;
+          } else if (obj->tval == TV_DOWN_STAIR) {
+            minimapD[row][col] = BRIGHT + GREEN;
+          } else if (obj->tval == TV_VIS_TRAP) {
+            minimapD[row][col] = BRIGHT + YELLOW;
+          }
+        } else if (obj->tval == TV_SECRET_DOOR) {
+          minimapD[row][col] = BRIGHT + WHITE;
         }
       }
       if (row == rmin || row == rmax)
