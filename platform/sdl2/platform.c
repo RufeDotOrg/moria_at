@@ -937,6 +937,7 @@ int
 sdl_window_event(event)
 SDL_Event event;
 {
+  int mode = modeD;
   Log("SDL_WindowEvent "
       "[ event %d ] "
       "[ data1 %d data2 %d ]"
@@ -1010,10 +1011,12 @@ SDL_Event event;
     for (int it = 0; it < AL(buttonD); ++it) {
       buttonD[it] = (SDL_FRect){.77 + (.11 * it), .75 - (.22 * it), .11, .22};
     }
-    return -1;
+
+    if (mode) return ' ';
+    platform_draw();
   } else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
-    // Ask for a redraw
-    return ' ';
+    if (mode) return ' ';
+    platform_draw();
   }
   return 0;
 }
