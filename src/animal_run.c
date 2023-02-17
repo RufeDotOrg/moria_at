@@ -7304,7 +7304,7 @@ inven_sort()
   return 1;
 }
 static int
-inven_screen(begin, end)
+inven_display(begin, end)
 {
   int line, count;
 
@@ -7372,7 +7372,7 @@ inven_choice(char* prompt)
           end = MAX_INVEN;
           break;
       }
-      inven_screen(begin, end);
+      inven_display(begin, end);
       if (in_subcommand(prompt, &c)) {
         uint8_t iidx = c - 'a';
         if (iidx < end - begin) {
@@ -8987,7 +8987,7 @@ py_takeoff()
   } else if (equip_count() == 0) {
     msg_print("You aren't wearing anything!");
   } else {
-    inven_screen(INVEN_EQUIP, MAX_INVEN);
+    inven_display(INVEN_EQUIP, MAX_INVEN);
     if (in_subcommand("Take off which item?", &c)) {
       uint8_t iidx = INVEN_EQUIP + (c - 'a');
       if (iidx < MAX_INVEN) {
@@ -9031,10 +9031,10 @@ py_death()
     } else if (c == 'C') {
       py_character();
     } else if (c == 'e') {
-      int count = inven_screen(INVEN_EQUIP, MAX_INVEN);
+      int count = inven_display(INVEN_EQUIP, MAX_INVEN);
       MSG("You were wearing %d items.", count);
     } else if (c == 'i') {
-      int count = inven_screen(0, INVEN_EQUIP);
+      int count = inven_display(0, INVEN_EQUIP);
       MSG("You were carrying %d %s:", count, count > 1 ? "items" : "item");
     } else if (c == 'o') {
       // observe game board
@@ -11425,14 +11425,14 @@ dungeon()
               py_drop(y, x);
               break;
             case 'e': {
-              int count = inven_screen(INVEN_EQUIP, MAX_INVEN);
+              int count = inven_display(INVEN_EQUIP, MAX_INVEN);
               MSG("You wear %d items.", count);
             } break;
             case 'f':
               py_bash(&y, &x);
               break;
             case 'i': {
-              int count = inven_screen(0, INVEN_EQUIP);
+              int count = inven_display(0, INVEN_EQUIP);
               MSG("You carry %d %s:", count, count > 1 ? "items" : "item");
             } break;
             case 'q':
@@ -11496,7 +11496,7 @@ dungeon()
               break;
             case 'I':
               inven_sort();
-              int count = inven_screen(0, INVEN_EQUIP);
+              int count = inven_display(0, INVEN_EQUIP);
               MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
             case 'M':
