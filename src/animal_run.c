@@ -5109,9 +5109,9 @@ ma_bonuses(maffect, factor)
       break;
     case MA_AFROST:
       if (factor > 0)
-        msg_print("You feel safe from cold.");
+        msg_print("You feel safe from frost.");
       else if (factor < 0)
-        msg_print("You no longer feel safe from cold.");
+        msg_print("You no longer feel safe from frost.");
       break;
     case MA_INVULN:
       uD.ma_ac += factor * 100;
@@ -9194,10 +9194,15 @@ poison_gas(dam)
 int
 fire_dam(dam)
 {
-  if (py_tr(TR_RES_FIRE)) dam = dam / 2;
-  if (py_affect(MA_AFIRE)) dam = dam / 2;
+  int absfire, resfire;
+
+  absfire = py_affect(MA_AFIRE);
+  resfire = py_tr(TR_RES_FIRE);
+
+  if (absfire) dam = dam / 2;
+  if (resfire) dam = dam / 2;
   py_take_hit(dam);
-  if (inven_damage(vuln_fire, 3) > 0)
+  if (!absfire && inven_damage(vuln_fire, 3) > 0)
     msg_print("There is smoke coming from your pack!");
   return dam;
 }
@@ -9217,10 +9222,14 @@ acid_dam(dam, verbose)
 int
 frost_dam(dam)
 {
-  if (py_tr(TR_RES_COLD)) dam = dam / 2;
-  if (py_affect(MA_AFROST)) dam = dam / 2;
+  int abscold, rescold;
+
+  abscold = py_affect(MA_AFROST);
+  rescold = py_tr(TR_RES_COLD);
+  if (abscold) dam = dam / 2;
+  if (rescold) dam = dam / 2;
   py_take_hit(dam);
-  if (inven_damage(vuln_frost, 5) > 0)
+  if (!abscold && inven_damage(vuln_frost, 5) > 0)
     msg_print("Something shatters inside your pack!");
   return dam;
 }
@@ -9436,16 +9445,24 @@ mon_attack(midx)
           }
           break;
         case 5: /*Fire attack  */
-          msg_print("You are enveloped in flames!");
-          fire_dam(damage);
+          if (py_affect(MA_AFIRE)) {
+            msg_print("You feel safe from flame.");
+          } else {
+            msg_print("You are enveloped in flame!");
+            fire_dam(damage);
+          }
           break;
         case 6: /*Acid attack  */
           msg_print("You are covered in acid!");
           acid_dam(damage, FALSE);
           break;
         case 7: /*Frost attack  */
-          msg_print("You are covered with frost!");
-          frost_dam(damage);
+          if (py_affect(MA_AFROST)) {
+            msg_print("You feel safe from frost.");
+          } else {
+            msg_print("You are covered with frost!");
+            frost_dam(damage);
+          }
           break;
         case 8: /*Lightning attack*/
           msg_print("Lightning strikes you!");
@@ -10822,8 +10839,12 @@ static void hit_trap(uy, ux) int *uy, *ux;
       }
       break;
     case 12: /* Fire trap*/
-      msg_print("You are enveloped in flames!");
-      fire_dam(dam);
+      if (py_affect(MA_AFIRE)) {
+        msg_print("You feel safe from flame.");
+      } else {
+        msg_print("You are enveloped in flame!");
+        fire_dam(dam);
+      }
       break;
     case 13: /* Acid trap*/
       msg_print("You are splashed with acid!");
