@@ -1055,6 +1055,23 @@ SDL_Event *event;
 }
 
 int
+overlay_bisect(dir)
+{
+  int sample[AL(overlay_copyD)];
+  int sample_used, row;
+
+  sample_used = 0;
+  row = finger_rowD;
+  for (int it = row; it >= 0 && it < AL(overlay_copyD); it += dir) {
+    if (overlay_copyD[it]) {
+      sample[sample_used] = it;
+      sample_used += 1;
+    }
+  }
+
+  return sample[sample_used / 2];
+}
+int
 overlay_input(input)
 {
   int row = finger_rowD;
@@ -1190,8 +1207,10 @@ sdl_pump()
           finger_rowD = 0;
         }
         if (dy && !dx) {
-          finger_rowD =
-              overlay_input(dy);  // CLAMP(finger_rowD + dy, 0, INVEN_EQUIP);
+          if (finger)
+            finger_rowD = overlay_bisect(dy);
+          else
+            finger_rowD = overlay_input(dy);
         }
         Log("touch %d dx %d dy finger_col %d finger_row %d", dx, dy,
             finger_colD, finger_rowD);
