@@ -1063,7 +1063,7 @@ overlay_bisect(dir)
   sample_used = 0;
   row = finger_rowD;
   for (int it = row; it >= 0 && it < AL(overlay_copyD); it += dir) {
-    if (overlay_copyD[it]) {
+    if (overlay_copyD[it] > 1) {
       sample[sample_used] = it;
       sample_used += 1;
     }
