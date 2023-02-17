@@ -1175,8 +1175,8 @@ sdl_pump()
           case 0:
             return c;
           case 1:
-            if (c != ' ') return c & ~0x20;
-            return c;
+            if (c == ' ') return 'R';
+            return c & ~0x20;
         }
       } else if (touch) {
         switch (touch) {
