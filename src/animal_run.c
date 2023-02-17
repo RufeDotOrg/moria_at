@@ -2351,6 +2351,11 @@ struct treasureS* tr_ptr;
   if (k == 0) return TRUE;
   return knownD[k - 1][subval];
 }
+void tr_discovery(tr_ptr) struct treasureS* tr_ptr;
+{
+  // TDB: xp tuning
+  uD.exp += (tr_ptr->level + (uD.lev >> 1)) / uD.lev;
+}
 BOOL
 tr_make_known(tr_ptr)
 struct treasureS* tr_ptr;
@@ -7415,7 +7420,6 @@ inven_eat(iidx)
   struct treasureS* tr_ptr = &treasureD[obj->tidx];
 
   if (obj->tval == TV_FOOD) {
-    msg_print("nom nom nom!!");
     i = obj->flags;
     // Some food has no effect; thus becomes known
     ident = (i == 0);
@@ -7532,17 +7536,16 @@ inven_eat(iidx)
       }
       /* End of food actions.  			*/
     }
-    if (ident) {
-      if (!tr_is_known(tr_ptr)) {
-        /* round half-way case up */
-        uD.exp += (obj->level + (uD.lev >> 1)) / uD.lev;
-        py_experience();
-
+    if (!tr_is_known(tr_ptr)) {
+      if (ident) {
         tr_make_known(tr_ptr);
+        tr_discovery(tr_ptr);
+        py_experience();
+      } else {
+        // sample(obj);
+        msg_print("You eat the food, to unknown effect.");
       }
     }
-    // else if (!known1_p(obj))
-    //   sample(obj);
     py_add_food(obj->p1);
     inven_destroy_one(iidx);
     turn_flag = TRUE;
@@ -7991,10 +7994,13 @@ inven_quaff(iidx)
     }
     if (!tr_is_known(tr_ptr)) {
       if (ident) {
-        // TBD: XP tuning
         tr_make_known(tr_ptr);
+        tr_discovery(tr_ptr);
+        py_experience();
+      } else {
+        // sample(...);
+        msg_print("You drink the potion, to unknown effect.");
       }
-      // else sample(...);
     }
 
     py_add_food(obj->p1);
@@ -8231,15 +8237,13 @@ int *uy, *ux;
       }
       if (!tr_is_known(tr_ptr)) {
         if (ident) {
-          /* round half-way case up */
-          // TDB: xp tuning
-          uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
-          py_experience();
-
           tr_make_known(tr_ptr);
+          tr_discovery(tr_ptr);
+          py_experience();
+        } else {
+          //   sample(i_ptr);
+          msg_print("You read the scroll, to unknown effect.");
         }
-        // else
-        //   sample(i_ptr);
       }
       if (used_up) {
         i_ptr->number -= 1;
@@ -8376,18 +8380,16 @@ inven_try_wand_dir(iidx, dir)
         }
         /* End of Wands.  	    */
       }
-      if (ident) {
-        if (!tr_is_known(tr_ptr)) {
-          /* round half-way case up */
-          // TBD: tuning
-          uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
-          py_experience();
-
+      if (!tr_is_known(tr_ptr)) {
+        if (ident) {
           tr_make_known(tr_ptr);
+          tr_discovery(tr_ptr);
+          py_experience();
+        } else {
+          //   sample(i_ptr);
+          msg_print("You zap the wand, to unknown effect.");
         }
       }
-      // else if (!known1_p(i_ptr))
-      //   sample(i_ptr);
       if (i_ptr->idflag & ID_REVEAL)
         MSG("You have %d charges remaining.", i_ptr->p1);
       if (i_ptr->cost > 125) i_ptr->cost = i_ptr->cost / 2;
@@ -8549,15 +8551,13 @@ int *uy, *ux;
       }
       if (!tr_is_known(tr_ptr)) {
         if (ident) {
-          /* round half-way case up */
-          uD.exp += (i_ptr->level + (uD.lev >> 1)) / uD.lev;
-          py_experience();
-
           tr_make_known(tr_ptr);
+          tr_discovery(tr_ptr);
+          py_experience();
+        } else {
+          // sample(i_ptr);
+          msg_print("You use the staff to unknown effect.");
         }
-        // else {
-        //   sample(i_ptr);
-        // }
       }
       if (i_ptr->idflag & ID_REVEAL)
         MSG("You have %d charges remaining.", i_ptr->p1);
