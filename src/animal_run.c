@@ -11082,39 +11082,41 @@ inven_pawn(iidx)
 static void
 pawn_display()
 {
-  int line, flag;
+  int line;
   int cost, sidx;
   struct objS* obj;
 
   line = 0;
   for (int it = 0; it < INVEN_EQUIP; ++it) {
+    int len = 1;
+    overlayD[line][0] = ' ';
+
     obj = obj_get(invenD[it]);
-    flag = FALSE;
     if (obj->id) {
       obj_desc(obj, TRUE);
       sidx = obj_store_index(obj);
       if (sidx >= 0) {
         cost = store_value(sidx, obj_value(obj), -1);
-        flag = TRUE;
+        len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %-57.057s %d",
+                       'a' + it, descD, cost);
       }
     }
 
-    if (flag) {
-      BufMsg(overlay, "%c) %-57.057s %d", 'a' + it, descD, cost);
-    } else {
-      line += 1;
-    }
+    overlay_usedD[line] = len;
+    line += 1;
   }
 }
 static void
 store_display(sidx)
 {
-  int line;
-  int cost, number;
+  int line, cost, number;
   struct objS* obj;
 
   line = 0;
   for (int it = 0; it < AL(store_objD[0]); ++it) {
+    int len = 1;
+    overlayD[line][0] = ' ';
+
     obj = &store_objD[sidx][it];
     cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
@@ -11124,10 +11126,12 @@ store_display(sidx)
       obj_desc(obj, TRUE);
       obj->number = number;
 
-      BufMsg(overlay, "%c) %-57.057s %d", 'a' + it, descD, cost);
-    } else {
-      line += 1;
+      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %-57.057s %d",
+                     'a' + it, descD, cost);
     }
+
+    overlay_usedD[line] = len;
+    line += 1;
   }
 }
 static void
