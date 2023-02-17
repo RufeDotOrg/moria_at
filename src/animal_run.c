@@ -7351,48 +7351,59 @@ weapon_curse()
   return FALSE;
 }
 static int
-inven_choice(char* prompt)
+inven_choice(char* prompt, char* mode_list)
 {
   char c;
-  int inum, eqnum, mode;
+  int num, mode;
   int begin, end;
+  char subprompt[80];
 
-  mode = 'i';
-  inum = inven_count();
-  eqnum = equip_count();
-  if (inum) {
+  snprintf(subprompt, AL(subprompt), "%s %s", prompt,
+           mode_list[1] ? "(/ equip, * inven)" : "");
+
+  num = 0;
+  for (int it = 0; it < 2 && num == 0; ++it) {
+    mode = mode_list[it];
+    switch (mode) {
+      case '*':
+        num = inven_count();
+        break;
+      case '/':
+        num = equip_count();
+        break;
+    }
+  }
+
+  if (num) {
     do {
       switch (mode) {
-        case 'i':
+        case '*':
           begin = 0;
           end = INVEN_EQUIP;
           break;
-        case 'e':
+        case '/':
           begin = INVEN_WIELD;
           end = MAX_INVEN;
           break;
       }
       inven_display(begin, end);
-      if (in_subcommand(prompt, &c)) {
-        uint8_t iidx = c - 'a';
-        if (iidx < end - begin) {
-          iidx += begin;
-          if (invenD[iidx]) return iidx;
-        } else if (c == 'I') {
-          inven_sort();
-        } else if (c == '*') {
-          mode = 'i';
-        } else if (c == '/') {
-          mode = 'e';
-        } else {
-          mode = 0;
-        }
+
+      if (!in_subcommand(subprompt, &c)) return -1;
+
+      uint8_t iidx = c - 'a';
+      if (iidx < end - begin) {
+        iidx += begin;
+        if (invenD[iidx]) return iidx;
+      } else if (c == 'I') {
+        inven_sort();
       } else {
         mode = 0;
+        for (int it = 0; it < 2; ++it) {
+          if (mode_list[it] == c) mode = c;
+        }
       }
     } while (mode);
-  } else
-    msg_print("You are not carrying anything!");
+  }
   return -1;
 }
 int
@@ -8031,8 +8042,8 @@ int *uy, *ux;
             break;
           case 3:
             ident |= TRUE;
-            choice_idx = inven_choice(
-                "Which armor do you wish to enchant? (/ equip, * inven)");
+            choice_idx =
+                inven_choice("Which armor do you wish to enchant?", "/*");
             if (choice_idx >= 0) {
               used_up = equip_enchant(choice_idx, 1);
             } else {
@@ -8042,8 +8053,8 @@ int *uy, *ux;
           case 4:
             msg_print("This is an identify scroll.");
             ident |= TRUE;
-            choice_idx = inven_choice(
-                "Which item do you wish identified? (/ equip, * inven)");
+            choice_idx =
+                inven_choice("Which item do you wish identified?", "*/");
             if (choice_idx >= 0) {
               used_up = inven_ident(choice_idx);
             } else {
@@ -8138,7 +8149,7 @@ int *uy, *ux;
           case 25:
             msg_print("This is a Recharge-Item scroll.");
             ident |= TRUE;
-            choice_idx = inven_choice("Recharge which item?");
+            choice_idx = inven_choice("Recharge which item?", "*");
             if (choice_idx >= 0 && invenD[choice_idx]) {
               inven_recharge(choice_idx, 60);
             } else
@@ -8174,8 +8185,8 @@ int *uy, *ux;
             break;
           case 35:
             ident |= TRUE;
-            choice_idx = inven_choice(
-                "Which armor do you wish to enchant? (/ equip, * inven)");
+            choice_idx =
+                inven_choice("Which armor do you wish to enchant?", "/*");
             if (choice_idx >= 0) {
               k = randint(2) + 1;
               used_up = equip_enchant(choice_idx, k);
@@ -8591,7 +8602,7 @@ py_drop(y, x)
   struct objS* obj;
 
   if (caveD[y][x].oidx == 0) {
-    iidx = inven_choice("Drop which item? (/ equip, * inven)");
+    iidx = inven_choice("Drop which item?", "*/");
 
     if (iidx >= 0) {
       obj = obj_get(invenD[iidx]);
@@ -8867,7 +8878,7 @@ void py_actuate(y, x) int *y, *x;
   int iidx, into;
   struct objS* obj;
 
-  iidx = inven_choice("Use which item?");
+  iidx = inven_choice("Use which item?", "*/");
   if (iidx >= 0) {
     obj = obj_get(invenD[iidx]);
     if (obj->tval == TV_FOOD) {
@@ -11457,11 +11468,11 @@ dungeon()
               MSG("You carry %d %s:", count, count > 1 ? "items" : "item");
             } break;
             case 'q':
-              iidx = inven_choice("Quaff what?");
+              iidx = inven_choice("Quaff what?", "*");
               if (iidx >= 0) inven_quaff(iidx);
               break;
             case 'r':
-              iidx = inven_choice("Read what?");
+              iidx = inven_choice("Read what?", "*");
               if (iidx >= 0) inven_read(iidx, &y, &x);
               break;
             case 'o':
@@ -11478,7 +11489,7 @@ dungeon()
               show_version();
               break;
             case 'w':
-              iidx = inven_choice("Wear/Wield which item?");
+              iidx = inven_choice("Wear/Wield which item?", "*");
               if (iidx >= 0 && iidx < INVEN_EQUIP) inven_wear(iidx);
               break;
             case 'x':
@@ -11488,11 +11499,11 @@ dungeon()
               py_offhand();
               break;
             case 'z':
-              iidx = inven_choice("Aim which wand?");
+              iidx = inven_choice("Aim which wand?", "*");
               if (iidx >= 0) py_zap(iidx);
               break;
             case 'Z':
-              iidx = inven_choice("Invoke which staff?");
+              iidx = inven_choice("Invoke which staff?", "*");
               if (iidx >= 0) inven_try_staff(iidx, &y, &x);
               break;
             case '<':
@@ -11512,7 +11523,7 @@ dungeon()
               py_disarm(&y, &x);
               break;
             case 'E':
-              iidx = inven_choice("Eat what?");
+              iidx = inven_choice("Eat what?", "*");
               if (iidx >= 0) inven_eat(iidx);
               break;
             case 'I':
@@ -11532,7 +11543,7 @@ dungeon()
               countD.rest = -9999;
               break;
             case 'S':
-              iidx = inven_choice("Study which item? (/ equip, * inven)");
+              iidx = inven_choice("Study which item?", "*/");
               if (iidx >= 0) inven_study(iidx);
               break;
             case 'T':
