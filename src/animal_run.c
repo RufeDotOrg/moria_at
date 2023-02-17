@@ -1488,47 +1488,41 @@ next_to_object(y1, x1)
   return FALSE;
 }
 static void
-place_stairs(typ, num, walls)
+place_stairs(tval, num)
 {
   struct caveS* cave_ptr;
-  int i, j, flag;
+  int i, j, flag, tchar;
   int y1, x1, y2, x2;
 
+  tchar = tval == TV_UP_STAIR ? '<' : '>';
   for (i = 0; i < num; i++) {
     flag = FALSE;
+    j = 0;
     do {
-      j = 0;
+      /* Note: don't let y1/x1 be zero, and don't let y2/x2 be equal
+         to cur_height-1/cur_width-1, these values are always
+         BOUNDARY_ROCK. */
+      y1 = randint(MAX_HEIGHT - 14);
+      x1 = randint(MAX_WIDTH - 14);
+      y2 = y1 + 12;
+      x2 = x1 + 12;
       do {
-        /* Note: don't let y1/x1 be zero, and don't let y2/x2 be equal
-           to cur_height-1/cur_width-1, these values are always
-           BOUNDARY_ROCK. */
-        y1 = randint(MAX_HEIGHT - 14);
-        x1 = randint(MAX_WIDTH - 14);
-        y2 = y1 + 12;
-        x2 = x1 + 12;
         do {
-          do {
-            cave_ptr = &caveD[y1][x1];
-            //  if (next_to_walls(y1, x1) >= walls)
-            if (cave_ptr->fval <= MAX_OPEN_SPACE) {
-              if (next_to_object(y1, x1) == 0) {
-                flag = TRUE;
-                if (typ == 1)
-                  place_stair_tval_tchar(y1, x1, TV_UP_STAIR, '<');
-                else {
-                  place_stair_tval_tchar(y1, x1, TV_DOWN_STAIR, '>');
-                }
-              }
+          cave_ptr = &caveD[y1][x1];
+          //  TBD: (next_to_walls(y1, x1) >= 3)
+          if (cave_ptr->fval <= MAX_OPEN_SPACE) {
+            if (next_to_object(y1, x1) == 0) {
+              flag = TRUE;
+              place_stair_tval_tchar(y1, x1, tval, tchar);
             }
-            x1++;
-          } while ((x1 != x2) && (!flag));
-          x1 = x2 - 12;
-          y1++;
-        } while ((y1 != y2) && (!flag));
-        j++;
-      } while ((!flag) && (j <= 30));
-      walls--;
-    } while (!flag);
+          }
+          x1++;
+        } while ((x1 != x2) && (!flag));
+        x1 = x2 - 12;
+        y1++;
+      } while ((y1 != y2) && (!flag));
+      j++;
+    } while ((!flag) && (j <= 30));
   }
 }
 int
@@ -3360,8 +3354,8 @@ cave_gen()
     try_door(doorstk[i].y - 1, doorstk[i].x);
     try_door(doorstk[i].y + 1, doorstk[i].x);
   }
-  place_stairs(2, randint(2) + 2, 3);
-  place_stairs(1, randint(2), 3);
+  place_stairs(TV_DOWN_STAIR, randint(2));
+  place_stairs(TV_UP_STAIR, 1);
   /* Set up the character co-ords, used by alloc_monster, place_win_monster
    */
   new_spot(&uD.y, &uD.x);
