@@ -440,9 +440,9 @@ viz_minimap()
             minimapD[row][col] = BRIGHT + RED;
           } else if (obj->tval == TV_VIS_TRAP) {
             minimapD[row][col] = BRIGHT + YELLOW;
+          } else if (obj->tval == TV_SECRET_DOOR) {
+            minimapD[row][col] = BRIGHT + WHITE;
           }
-        } else if (obj->tval == TV_SECRET_DOOR) {
-          minimapD[row][col] = BRIGHT + WHITE;
         }
       }
       if (row == rmin || row == rmax)
