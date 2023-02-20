@@ -439,7 +439,7 @@ viz_minimap()
             if (obj->tval == TV_UP_STAIR) {
               color = BRIGHT + CYAN;
             } else if (obj->tval == TV_DOWN_STAIR) {
-              color = BRIGHT + GREEN;
+              color = BRIGHT + RED;
             } else if (obj->tval == TV_VIS_TRAP) {
               color = BRIGHT + YELLOW;
             } else if (obj->tval == TV_SECRET_DOOR) {
