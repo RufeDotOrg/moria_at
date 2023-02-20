@@ -636,7 +636,14 @@ platform_draw()
     mode = 0;
   }
   if (modeD != mode) {
-    finger_rowD = 0;
+    if (overlay_copyD[finger_rowD] <= 1) {
+      for (int it = 0; it < AL(overlay_copyD); it += 1) {
+        if (overlay_copyD[it] > 1) {
+          finger_rowD = it;
+          break;
+        }
+      }
+    }
     finger_colD = 0;
     modeD = mode;
   }
