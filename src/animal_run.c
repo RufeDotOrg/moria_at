@@ -435,9 +435,9 @@ viz_minimap()
         obj = &entity_objD[c_ptr->oidx];
         if (CF_VIZ & c_ptr->cflag) {
           if (obj->tval == TV_UP_STAIR) {
-            minimapD[row][col] = BRIGHT + BLUE;
+            minimapD[row][col] = BRIGHT + CYAN;
           } else if (obj->tval == TV_DOWN_STAIR) {
-            minimapD[row][col] = BRIGHT + RED;
+            minimapD[row][col] = BRIGHT + GREEN;
           } else if (obj->tval == TV_VIS_TRAP) {
             minimapD[row][col] = BRIGHT + YELLOW;
           } else if (obj->tval == TV_SECRET_DOOR) {
