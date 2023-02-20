@@ -5263,6 +5263,18 @@ equip_cursed()
   }
   return -1;
 }
+static void
+equip_act(flag)
+{
+  for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
+    struct objS* obj = obj_get(invenD[it]);
+    if (obj->flags & flag) {
+      obj_desc(obj, TRUE);
+      MSG("%s vibrates for a moment.", descD);
+      return;
+    }
+  }
+}
 static int
 equip_random()
 {
@@ -11357,7 +11369,7 @@ void
 dungeon()
 {
   int c, y, x, iidx;
-  uint32_t dir;
+  uint32_t dir, teleport;
   new_level_flag = FALSE;
 
   if (dun_level == 0) player_maint();
@@ -11370,6 +11382,7 @@ dungeon()
       if ((turnD & ~-1024) == 0) store_maint();
       if (randint(MAX_MALLOC_CHANCE) == 1) alloc_mon(1, MAX_SIGHT, FALSE);
     }
+    teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
     tick();
     ma_tick();
     inven_check_weight();
@@ -11384,8 +11397,9 @@ dungeon()
 
       y = uD.y;
       x = uD.x;
-      if (py_tr(TR_TELEPORT) && randint(100) == 1) {
+      if (teleport) {
         disturb(0, 0);
+        equip_act(TR_TELEPORT);
         py_teleport(40, &y, &x);
       } else if (find_flag) {
         mmove(find_direction, &y, &x);
