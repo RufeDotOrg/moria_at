@@ -670,13 +670,15 @@ platform_draw()
       memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
       show_map = 0;
       for (int row = 0; row < STATUS_HEIGHT; ++row) {
-        font_colorD = (TOUCH && row == finger_rowD)
-                          ? (SDL_Color){255, 0, 0, 255}
-                          : whiteD;
+        font_colorD = whiteD;
         SDL_Point p = {
             left,
             (row + 1) * height,
         };
+        if (TOUCH && row == finger_rowD) {
+          font_colorD = (SDL_Color){255, 0, 0, 255};
+          if (overlay_usedD[row] <= 1) overlayD[row][0] = '-';
+        }
         render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
                            p);
       }
