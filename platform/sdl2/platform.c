@@ -1205,6 +1205,7 @@ sdl_pump()
         int dx = dir_x(dir);
         int dy = dir_y(dir);
 
+        if (!dx && !dy) return 'I';
         if (dx && !dy) {
           finger_colD = CLAMP(finger_colD + dx, 0, 1);
           finger_rowD = 0;
