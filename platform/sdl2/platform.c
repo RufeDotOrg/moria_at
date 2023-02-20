@@ -596,6 +596,48 @@ rect_from_pp(idx)
   return r;
 }
 
+static void
+overlay_init()
+{
+  int row = finger_rowD;
+  finger_colD = 0;
+  if (overlay_usedD[row] <= 1) {
+    for (int it = row + 1; it < AL(overlay_usedD); it += 1) {
+      if (overlay_usedD[it] > 1) {
+        finger_rowD = it;
+        return;
+      }
+    }
+  }
+  if (overlay_usedD[row] <= 1) {
+    for (int it = 0; it < row; ++it) {
+      if (overlay_usedD > 1) {
+        finger_rowD = it;
+        return;
+      }
+    }
+  }
+}
+int
+mode_change()
+{
+  int mode;
+  if (screen_usedD[0])
+    mode = 2;
+  else if (overlay_usedD[0])
+    mode = 1;
+  else
+    mode = 0;
+
+  if (modeD != mode) {
+    modeD = mode;
+
+    if (mode == 1) overlay_init();
+  }
+
+  return mode;
+}
+
 int
 platform_draw()
 {
@@ -610,42 +652,32 @@ platform_draw()
   SDL_SetRenderTarget(rendererD, text_textureD);
   SDL_RenderFillRect(rendererD, &text_rectD);
 
-  if (screen_usedD[0]) {
-    mode = 2;
-    show_map = 0;
-    for (int row = 0; row < AL(screenD); ++row) {
-      SDL_Point p = {left, (row + 1) * height};
-      render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row], p);
-    }
-  } else if (overlay_usedD[0]) {
-    memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
-    mode = 1;
-    show_map = 0;
-    for (int row = 0; row < STATUS_HEIGHT; ++row) {
-      font_colorD =
-          (TOUCH && row == finger_rowD) ? (SDL_Color){255, 0, 0, 255} : whiteD;
-      SDL_Point p = {
-          left,
-          (row + 1) * height,
-      };
-      render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
-                         p);
-    }
-    font_colorD = whiteD;
-  } else {
-    mode = 0;
-  }
-  if (modeD != mode) {
-    if (overlay_copyD[finger_rowD] <= 1) {
-      for (int it = 0; it < AL(overlay_copyD); it += 1) {
-        if (overlay_copyD[it] > 1) {
-          finger_rowD = it;
-          break;
-        }
+  mode = mode_change();
+  switch (mode) {
+    case 2:
+      show_map = 0;
+      for (int row = 0; row < AL(screenD); ++row) {
+        SDL_Point p = {left, (row + 1) * height};
+        render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row],
+                           p);
       }
-    }
-    finger_colD = 0;
-    modeD = mode;
+      break;
+    case 1:
+      memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
+      show_map = 0;
+      for (int row = 0; row < STATUS_HEIGHT; ++row) {
+        font_colorD = (TOUCH && row == finger_rowD)
+                          ? (SDL_Color){255, 0, 0, 255}
+                          : whiteD;
+        SDL_Point p = {
+            left,
+            (row + 1) * height,
+        };
+        render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
+                           p);
+      }
+      font_colorD = whiteD;
+      break;
   }
 
   for (int row = 0; row < STATUS_HEIGHT; ++row) {
