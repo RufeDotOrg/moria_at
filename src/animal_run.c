@@ -5872,26 +5872,6 @@ py_where()
   }
   panel_update(&panelD, uD.y, uD.x, TRUE);
 }
-static int py_inven_filter(begin, end, valid) int (*valid)();
-{
-  int line = 0;
-
-  for (int it = begin; it < end; ++it) {
-    int obj_id = invenD[it];
-    int len = 1;
-    overlayD[line][0] = ' ';
-    struct objS* obj = obj_get(obj_id);
-    if (valid(obj)) {
-      obj_desc(obj, TRUE);
-      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %.77s",
-                     'a' + it - begin, descD);
-    }
-
-    overlay_usedD[line] = len;
-    line += 1;
-  }
-  return line;
-}
 void
 py_add_food(num)
 {
@@ -7337,6 +7317,7 @@ inven_overlay(begin, end)
   int line, count;
 
   line = count = 0;
+  overlay_modeD = 'i';
   for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
     int len = 1;
@@ -11208,6 +11189,7 @@ pawn_entrance()
 {
   char c;
 
+  overlay_modeD = 'p';
   while (1) {
     pawn_display();
     if (!in_subcommand("What would you like to sell to Gilbrook The Thrifty?",
@@ -11228,6 +11210,7 @@ store_entrance(sidx)
 
   snprintf(tmp_str, AL(tmp_str), "What would you like to purchase from %s?",
            ownerD[storeD[sidx]].name);
+  overlay_modeD = 's';
   while (1) {
     store_display(sidx);
     if (!in_subcommand(tmp_str, &c)) break;

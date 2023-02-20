@@ -611,7 +611,7 @@ overlay_init()
   }
   if (overlay_usedD[row] <= 1) {
     for (int it = 0; it < row; ++it) {
-      if (overlay_usedD > 1) {
+      if (overlay_usedD[it] > 1) {
         finger_rowD = it;
         return;
       }
@@ -632,7 +632,11 @@ mode_change()
   if (modeD != mode) {
     modeD = mode;
 
-    if (mode == 1) overlay_init();
+    if (mode == 1) switch (overlay_modeD) {
+        case 'p':
+          overlay_init();
+          break;
+      }
   }
 
   return mode;
