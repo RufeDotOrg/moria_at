@@ -11391,8 +11391,8 @@ dungeon()
 
     do {
       draw();
-      if (countD.rest != 0) break;
-      if (countD.paralysis != 0) break;
+      if (!teleport && countD.rest != 0) break;
+      if (!teleport && countD.paralysis != 0) break;
       turn_flag = FALSE;
 
       y = uD.y;
