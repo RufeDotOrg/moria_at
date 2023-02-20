@@ -8262,12 +8262,17 @@ int *uy, *ux;
           msg_print("You read the scroll, to unknown effect.");
         }
       }
+      // Choice menu allows for sort above, iidx may be invalid
       if (used_up) {
         i_ptr->number -= 1;
         obj_desc(i_ptr, TRUE);
-        i_ptr->number += 1;
         MSG("You have %s.", descD);
-        inven_destroy_one(iidx);
+        if (i_ptr->number == 0) {
+          for (int it = 0; it < INVEN_EQUIP; ++it) {
+            if (invenD[it] == i_ptr->id) invenD[it] = 0;
+          }
+          obj_unuse(i_ptr);
+        }
       }
       turn_flag = TRUE;
       return TRUE;
