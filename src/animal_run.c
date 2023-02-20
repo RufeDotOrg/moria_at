@@ -415,7 +415,7 @@ viz_update()
 void
 viz_minimap()
 {
-  int row, col;
+  int row, col, color;
   struct caveS* c_ptr;
   struct objS* obj;
   int rmin = panelD.panel_row_min;
@@ -423,33 +423,40 @@ viz_minimap()
   int cmin = panelD.panel_col_min;
   int cmax = panelD.panel_col_max;
 
-  memset(minimapD, 0, sizeof(minimapD));
-  for (row = 0; row < MAX_HEIGHT; ++row) {
-    for (col = 0; col < MAX_WIDTH; ++col) {
-      c_ptr = &caveD[row][col];
-      if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT || col + 1 == MAX_WIDTH)
-        minimapD[row][col] = BRIGHT + WHITE;
-      else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
-        minimapD[row][col] = BRIGHT + WHITE;
-      else if (c_ptr->oidx) {
-        obj = &entity_objD[c_ptr->oidx];
-        if (CF_VIZ & c_ptr->cflag) {
-          if (obj->tval == TV_UP_STAIR) {
-            minimapD[row][col] = BRIGHT + CYAN;
-          } else if (obj->tval == TV_DOWN_STAIR) {
-            minimapD[row][col] = BRIGHT + GREEN;
-          } else if (obj->tval == TV_VIS_TRAP) {
-            minimapD[row][col] = BRIGHT + YELLOW;
-          } else if (obj->tval == TV_SECRET_DOOR) {
-            minimapD[row][col] = BRIGHT + WHITE;
+  if (dun_level) {
+    for (row = 0; row < MAX_HEIGHT; ++row) {
+      for (col = 0; col < MAX_WIDTH; ++col) {
+        color = 0;
+        c_ptr = &caveD[row][col];
+        if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT ||
+            col + 1 == MAX_WIDTH)
+          color = BRIGHT + WHITE;
+        else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
+          color = BRIGHT + WHITE;
+        else if (c_ptr->oidx) {
+          obj = &entity_objD[c_ptr->oidx];
+          if (CF_VIZ & c_ptr->cflag) {
+            if (obj->tval == TV_UP_STAIR) {
+              color = BRIGHT + CYAN;
+            } else if (obj->tval == TV_DOWN_STAIR) {
+              color = BRIGHT + GREEN;
+            } else if (obj->tval == TV_VIS_TRAP) {
+              color = BRIGHT + YELLOW;
+            } else if (obj->tval == TV_SECRET_DOOR) {
+              color = BRIGHT + WHITE;
+            }
           }
         }
+        if (row == rmin || row == rmax)
+          if (col >= cmin && col <= cmax) color = BRIGHT + BLACK;
+        if (col == cmin || col == cmax)
+          if (row >= rmin && row <= rmax) color = BRIGHT + BLACK;
+
+        minimapD[row][col] = color;
       }
-      if (row == rmin || row == rmax)
-        if (col >= cmin && col <= cmax) minimapD[row][col] = BRIGHT + BLACK;
-      if (col == cmin || col == cmax)
-        if (row >= rmin && row <= rmax) minimapD[row][col] = BRIGHT + BLACK;
     }
+  } else {
+    minimapD[0][0] = 0;
   }
 }
 // Match single index

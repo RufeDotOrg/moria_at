@@ -740,7 +740,7 @@ platform_draw()
                        });
   }
 
-  if (dun_level != 0) {
+  if (minimapD[0][0]) {
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
                            (SDL_Point){0, 0}, mmsurfaceD);
     SDL_Texture *t = SDL_CreateTextureFromSurface(rendererD, mmsurfaceD);
