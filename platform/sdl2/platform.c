@@ -54,6 +54,7 @@ static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
 static int xD;
 static int modeD;
+static int submodeD;
 static int prevD;
 static int finger_stackD;
 static int finger_rowD;
@@ -597,7 +598,7 @@ rect_from_pp(idx)
 }
 
 static void
-overlay_init()
+overlay_autoselect()
 {
   int row = finger_rowD;
   finger_colD = 0;
@@ -632,11 +633,17 @@ mode_change()
   if (modeD != mode) {
     modeD = mode;
 
-    if (mode == 1) switch (overlay_modeD) {
+    if (mode == 1) switch (overlay_submodeD) {
         case 'p':
-          overlay_init();
+          overlay_autoselect();
           break;
       }
+  }
+
+  if (submodeD != overlay_submodeD) {
+    submodeD = overlay_submodeD;
+    finger_rowD = 0;
+    overlay_autoselect();
   }
 
   return mode;

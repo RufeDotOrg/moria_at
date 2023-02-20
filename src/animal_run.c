@@ -7317,7 +7317,7 @@ inven_overlay(begin, end)
   int line, count;
 
   line = count = 0;
-  overlay_modeD = 'i';
+  overlay_submodeD = 'i';
   for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
     int len = 1;
@@ -11189,7 +11189,7 @@ pawn_entrance()
 {
   char c;
 
-  overlay_modeD = 'p';
+  overlay_submodeD = 'p';
   while (1) {
     pawn_display();
     if (!in_subcommand("What would you like to sell to Gilbrook The Thrifty?",
@@ -11210,7 +11210,7 @@ store_entrance(sidx)
 
   snprintf(tmp_str, AL(tmp_str), "What would you like to purchase from %s?",
            ownerD[storeD[sidx]].name);
-  overlay_modeD = 's';
+  overlay_submodeD = '0' + sidx;
   while (1) {
     store_display(sidx);
     if (!in_subcommand(tmp_str, &c)) break;

@@ -17,7 +17,7 @@ EXTERN char screenD[SCREEN_HEIGHT][80];
 EXTERN int screen_usedD[AL(screenD)];
 EXTERN char overlayD[STATUS_HEIGHT][80];
 EXTERN int overlay_usedD[AL(overlayD)];
-EXTERN int overlay_modeD;
+EXTERN int overlay_submodeD;
 EXTERN uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
 EXTERN int minimap_enlargeD;
 
