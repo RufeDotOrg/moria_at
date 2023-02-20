@@ -10848,9 +10848,6 @@ static void hit_trap(uy, ux) int *uy, *ux;
       delete_object(y, x);
       place_rubble(y, x);
       msg_print("You are hit by falling rock.");
-      // Ready to mine
-      miningD[0] = y;
-      miningD[1] = x;
       break;
     case 10: /* Corrode gas*/
       /* Makes more sense to print the message first, then damage an
@@ -11688,6 +11685,7 @@ dungeon()
         struct caveS* c_ptr = &caveD[y][x];
         struct monS* mon = &entity_monD[c_ptr->midx];
         struct objS* obj = &entity_objD[c_ptr->oidx];
+        int mining[2] = {0};
 
         if (find_flag && (mon->mlit || c_ptr->fval > MAX_OPEN_SPACE)) {
           find_flag = FALSE;
@@ -11732,9 +11730,10 @@ dungeon()
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
           } else if (py_affect(MA_BLIND) == 0) {
-            int* my = &miningD[0];
-            int* mx = &miningD[1];
-            if (*my == y && *mx == x) {
+            mining[0] = y;
+            mining[1] = x;
+
+            if (miningD[0] == y && miningD[1] == x) {
               if (countD.confusion == 0) tunnel(y, x);
             } else {
               if (obj->tval == TV_GOLD) {
@@ -11745,11 +11744,11 @@ dungeon()
               } else if (obj->tval == TV_RUBBLE) {
                 msg_print("You see rubble.");
               }
-              *my = y;
-              *mx = x;
             }
           }
         }
+        miningD[0] = mining[0];
+        miningD[1] = mining[1];
         panel_update(&panelD, uD.y, uD.x, FALSE);
       }
     } while (!turn_flag && !new_level_flag);
