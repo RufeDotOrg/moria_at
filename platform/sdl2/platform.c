@@ -1380,7 +1380,10 @@ load()
 void
 platform_init()
 {
-  if (!SDL_WasInit(SDL_SCOPE)) {
+  int init;
+
+  init = !SDL_WasInit(SDL_SCOPE);
+  if (init) {
     // SDL config
     SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
@@ -1399,12 +1402,14 @@ platform_init()
     SDL_Init(SDL_SCOPE);
 
     if (!render_init()) return;
+  }
 
-    for (int it = 0; it < AL(paletteD); ++it) {
-      SDL_Color c = (*(SDL_Color *)&paletteD[it]);
-      rgbaD[it] = SDL_MapRGB(pixel_formatD, C3(c));
-    }
+  for (int it = 0; it < AL(paletteD); ++it) {
+    SDL_Color c = (*(SDL_Color *)&paletteD[it]);
+    rgbaD[it] = SDL_MapRGB(pixel_formatD, C3(c));
+  }
 
+  if (init) {
     if (!font_load() || !font_init(&fontD)) return;
 
     texture_init();
@@ -1416,11 +1421,6 @@ platform_init()
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                                 MAX_HEIGHT, 0, texture_formatD);
-  } else {
-    for (int it = 0; it < AL(paletteD); ++it) {
-      SDL_Color c = (*(SDL_Color *)&paletteD[it]);
-      rgbaD[it] = SDL_MapRGB(pixel_formatD, C3(c));
-    }
   }
 
   mapbgD = (SDL_Color){120, 120, 120, 15};
