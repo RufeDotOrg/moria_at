@@ -1161,6 +1161,92 @@ SDL_Event *event;
 
   return r;
 }
+int
+sdl_touch_event(event)
+SDL_Event *event;
+{
+  switch (event.type) {
+    case SDL_FINGERDOWN:
+      finger_stackD += 1;
+      break;
+    case SDL_FINGERUP:
+      finger_stackD -= 1;
+      break;
+  }
+
+  // Finger inputs
+  int touch = touch_from_event(&event);
+  int finger = event.tfinger.fingerId;
+  if (TOUCH && !ANDROID) {
+    finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
+  }
+
+  // Playing (Mode 0)
+  if (mode == 0 && event.type == SDL_FINGERDOWN) {
+    SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+    if (touch > TOUCH_PAD) {
+      // SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) /
+      // padD.h}; char c = map_touch(finger, rp.y, rp.x);
+      char c = char_by_dir(touch - TOUCH_PAD);
+      switch (finger) {
+        case 0:
+          return c;
+        case 1:
+          if (c == ' ') return 'R';
+          return c & ~0x20;
+      }
+    } else if (touch) {
+      switch (touch) {
+        case TOUCH_LB:
+          if (finger) return 'S';
+          return 'A';
+        case TOUCH_RB:
+          if (finger) return 'd';
+          return '.';
+      }
+    } else {
+      if (tp.x < .85 && tp.y < .09) return CTRL('p');
+      if (tp.x < .25 && tp.y < .5) return 'C';
+      if (tp.x > .85 && tp.y < .09) return 'v';
+      if (tp.x > .85 && tp.y < .23) return 'M';
+    }
+  }
+
+  // Overlay (Mode 1)
+  if (mode == 1 && event.type == SDL_FINGERDOWN) {
+    if (touch > TOUCH_PAD) {
+      int dir = touch - TOUCH_PAD;
+      int dx = dir_x(dir);
+      int dy = dir_y(dir);
+
+      if (!dx && !dy) return 'I';
+      if (dx && !dy) {
+        finger_colD = CLAMP(finger_colD + dx, 0, 1);
+        finger_rowD = 0;
+      }
+      if (dy && !dx) {
+        if (finger)
+          finger_rowD = overlay_bisect(dy);
+        else
+          finger_rowD = overlay_input(dy);
+      }
+      Log("touch %d dx %d dy finger_col %d finger_row %d", dx, dy, finger_colD,
+          finger_rowD);
+      return (finger_colD == 0) ? '*' : '/';
+    }
+    if (touch == TOUCH_LB) {
+      return ESCAPE;
+    }
+    if (touch == TOUCH_RB) {
+      return 'a' + finger_rowD;
+    }
+  }
+
+  // Screen (mode 2)
+  if (mode == 2) {
+    if (event.type == SDL_FINGERUP) return ' ';
+  }
+}
 
 int
 overlay_bisect(dir)
@@ -1214,103 +1300,8 @@ sdl_pump()
     if (event.type == SDL_KEYDOWN) {
       return sdl_kb_event(event);
     }
-
-    // Finger inputs
-    SDL_FPoint motion = {0};
-    int touch = 0;
-    switch (event.type) {
-      case SDL_FINGERDOWN:
-      case SDL_FINGERUP:
-        touch = touch_from_event(&event);
-        break;
-      case SDL_FINGERMOTION:
-        motion = (SDL_FPoint){event.tfinger.x, event.tfinger.y};
-        break;
-      case SDL_MOUSEMOTION:
-        if (TOUCH && !ANDROID) {
-          motion = (SDL_FPoint){event.motion.x / (float)display_rectD.w,
-                                event.motion.y / (float)display_rectD.h};
-        }
-        break;
-    }
-    switch (event.type) {
-      case SDL_FINGERDOWN:
-        finger_stackD += 1;
-        break;
-      case SDL_FINGERUP:
-        finger_stackD -= 1;
-        break;
-    }
-
-    int finger = event.tfinger.fingerId;
-    if (TOUCH && !ANDROID) {
-      finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
-    }
-
-    // Playing (Mode 0)
-    if (mode == 0 && event.type == SDL_FINGERDOWN) {
-      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (touch > TOUCH_PAD) {
-        // SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) /
-        // padD.h}; char c = map_touch(finger, rp.y, rp.x);
-        char c = char_by_dir(touch - TOUCH_PAD);
-        switch (finger) {
-          case 0:
-            return c;
-          case 1:
-            if (c == ' ') return 'R';
-            return c & ~0x20;
-        }
-      } else if (touch) {
-        switch (touch) {
-          case TOUCH_LB:
-            if (finger) return 'S';
-            return 'A';
-          case TOUCH_RB:
-            if (finger) return 'd';
-            return '.';
-        }
-      } else {
-        if (tp.x < .85 && tp.y < .09) return CTRL('p');
-        if (tp.x < .25 && tp.y < .5) return 'C';
-        if (tp.x > .85 && tp.y < .09) return 'v';
-        if (tp.x > .85 && tp.y < .23) return 'M';
-      }
-    }
-
-    // Overlay (Mode 1)
-    if (mode == 1 && event.type == SDL_FINGERDOWN) {
-      if (touch > TOUCH_PAD) {
-        int dir = touch - TOUCH_PAD;
-        int dx = dir_x(dir);
-        int dy = dir_y(dir);
-
-        if (!dx && !dy) return 'I';
-        if (dx && !dy) {
-          finger_colD = CLAMP(finger_colD + dx, 0, 1);
-          finger_rowD = 0;
-        }
-        if (dy && !dx) {
-          if (finger)
-            finger_rowD = overlay_bisect(dy);
-          else
-            finger_rowD = overlay_input(dy);
-        }
-        Log("touch %d dx %d dy finger_col %d finger_row %d", dx, dy,
-            finger_colD, finger_rowD);
-        return (finger_colD == 0) ? '*' : '/';
-      }
-      if (touch == TOUCH_LB) {
-        return ESCAPE;
-      }
-      if (touch == TOUCH_RB) {
-        return 'a' + finger_rowD;
-      }
-    }
-
-    // Screen (mode 2)
-    if (mode == 2) {
-      if (event.type == SDL_FINGERUP) return ' ';
+    if (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP) {
+      return sdl_touch_event(event);
     }
   } else {
     nanosleep(&(struct timespec){0, 8e6}, 0);
