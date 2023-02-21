@@ -202,10 +202,10 @@ font_debug(struct fontS *font)
 // hex RGBA to little endian
 #define CHEX(x) __builtin_bswap32(x)
 static uint32_t paletteD[] = {
-    CHEX(0x00000000), CHEX(0xcc000000), CHEX(0x4e9a0600), CHEX(0xc4a00000),
-    CHEX(0x3465a400), CHEX(0x75507b00), CHEX(0x06989a00), CHEX(0xd3d7cf00),
-    CHEX(0x55575300), CHEX(0xef292900), CHEX(0x8ae23400), CHEX(0xfce94f00),
-    CHEX(0x729fcf00), CHEX(0xad7fa800), CHEX(0x34e2e200), CHEX(0xeeeeec00),
+    CHEX(0x00000000), CHEX(0xcc0000ff), CHEX(0x4e9a06ff), CHEX(0xc4a000ff),
+    CHEX(0x3465a4ff), CHEX(0x75507bff), CHEX(0x06989aff), CHEX(0xd3d7cfff),
+    CHEX(0x555753ff), CHEX(0xef2929ff), CHEX(0x8ae234ff), CHEX(0xfce94fff),
+    CHEX(0x729fcfff), CHEX(0xad7fa8ff), CHEX(0x34e2e2ff), CHEX(0xeeeeecff),
 };
 static uint32_t rgbaD[AL(paletteD)];
 void
@@ -1406,7 +1406,7 @@ platform_init()
 
   for (int it = 0; it < AL(paletteD); ++it) {
     SDL_Color c = (*(SDL_Color *)&paletteD[it]);
-    rgbaD[it] = SDL_MapRGB(pixel_formatD, C3(c));
+    rgbaD[it] = SDL_MapRGBA(pixel_formatD, C(c));
   }
 
   if (init) {
