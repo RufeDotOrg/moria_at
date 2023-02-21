@@ -11248,10 +11248,31 @@ regenhp(percent)
 void
 player_maint()
 {
-  msg_print("A wind from the Misty Mountains renews your being.");
+  struct objS* obj;
+  struct treasureS* tr_ptr;
+  int flag;
+
+  flag = 0;
   for (int it = 0; it < MAX_A; ++it) {
-    res_stat(it);
+    if (statD.cur_stat[it] < statD.max_stat[it]) {
+      flag = TRUE;
+      res_stat(it);
+    }
   }
+  if (flag) msg_print("A wind from the Misty Mountains renews your being.");
+
+  flag = 0;
+  for (int it = 0; it < MAX_INVEN; ++it) {
+    obj = obj_get(invenD[it]);
+    if (obj->id && (obj->idflag & ID_REVEAL) == 0) {
+      tr_ptr = &treasureD[obj->tidx];
+      tr_make_known(tr_ptr);
+      obj->idflag |= ID_REVEAL;
+      flag = 1;
+    }
+  }
+  if (flag)
+    msg_print("Town inhabitants share knowledge of items you gathered.");
 }
 void
 ma_tick()
