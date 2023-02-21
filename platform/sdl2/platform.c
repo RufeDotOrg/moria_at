@@ -55,7 +55,6 @@ static SDL_Color font_colorD;
 static int xD;
 static int modeD;
 static int submodeD;
-static int prevD;
 static int finger_stackD;
 static int finger_rowD;
 static int finger_colD;
@@ -1095,7 +1094,7 @@ SDL_Event event;
 
 int
 sdl_kb_event(event)
-struct SDL_Event event;
+SDL_Event event;
 {
   SDL_Keymod km = SDL_GetModState();
   int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
@@ -1163,7 +1162,7 @@ SDL_Event *event;
 }
 int
 sdl_touch_event(event)
-SDL_Event *event;
+SDL_Event event;
 {
   switch (event.type) {
     case SDL_FINGERDOWN:
@@ -1175,6 +1174,7 @@ SDL_Event *event;
   }
 
   // Finger inputs
+  int mode = modeD;
   int touch = touch_from_event(&event);
   int finger = event.tfinger.fingerId;
   if (TOUCH && !ANDROID) {
@@ -1246,6 +1246,7 @@ SDL_Event *event;
   if (mode == 2) {
     if (event.type == SDL_FINGERUP) return ' ';
   }
+  return 0;
 }
 
 int
@@ -1279,42 +1280,34 @@ overlay_input(input)
 char
 sdl_pump()
 {
-  int mode, prev;
   SDL_Event event;
+  int ret = 0;
 
-  mode = modeD;
-  prev = prevD;
-  if (SDL_PollEvent(&event)) {
-    if (event.type == SDL_QUIT) {
-      Log("SDL_QUIT");
+  while (ret == 0 && SDL_PollEvent(&event)) {
+    if (TOUCH && (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
+      ret = sdl_touch_event(event);
+    } else if (event.type == SDL_KEYDOWN) {
+      ret = sdl_kb_event(event);
+    } else if (event.type == SDL_QUIT) {
       quitD = TRUE;
-      return 0;
-    }
-    if (event.type == SDL_WINDOWEVENT) {
-      return sdl_window_event(event);
-    }
-    if (event.type == SDL_DISPLAYEVENT) {
+    } else if (event.type == SDL_WINDOWEVENT) {
+      ret = sdl_window_event(event);
+    } else if (event.type == SDL_DISPLAYEVENT) {
       Log("SDL_DisplayEvent [ event %d ]", event.display.event);
-      return 0;
     }
-    if (event.type == SDL_KEYDOWN) {
-      return sdl_kb_event(event);
-    }
-    if (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP) {
-      return sdl_touch_event(event);
-    }
-  } else {
+  }
+
+  if (ret == 0) {
     nanosleep(&(struct timespec){0, 8e6}, 0);
   }
 
-  return 0;
+  return ret;
 }
 
 int
 platform_readansi()
 {
   char c = sdl_pump();
-  if (isalpha(c)) prevD = c;
   if (quitD) return CTRL('c');
   return c;
 }
