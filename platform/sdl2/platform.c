@@ -1286,7 +1286,7 @@ sdl_pump()
   while (ret == 0 && SDL_PollEvent(&event)) {
     if (TOUCH && (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
       ret = sdl_touch_event(event);
-    } else if (event.type == SDL_KEYDOWN) {
+    } else if (!TOUCH && (event.type == SDL_KEYDOWN)) {
       ret = sdl_kb_event(event);
     } else if (event.type == SDL_QUIT) {
       quitD = TRUE;
