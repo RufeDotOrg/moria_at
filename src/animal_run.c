@@ -11462,6 +11462,12 @@ dungeon()
             case '?':
               py_help();
               break;
+            case '-':
+              zoom_factorD = (zoom_factorD - 1) % MAX_ZOOM;
+              break;
+            case '+':
+              zoom_factorD = (zoom_factorD + 1) % MAX_ZOOM;
+              break;
             case ' ':
               break;
             case ',':

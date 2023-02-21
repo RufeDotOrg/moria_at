@@ -9,6 +9,7 @@
 #define STATUS_WIDTH 13
 #define SCREEN_HEIGHT 23
 #define MAX_MSG 16
+#define MAX_ZOOM 4
 
 #define FLOOR_NULL 0
 #define FLOOR_LIGHT 1

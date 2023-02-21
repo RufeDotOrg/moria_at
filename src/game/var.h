@@ -20,6 +20,7 @@ EXTERN int overlay_usedD[AL(overlayD)];
 EXTERN int overlay_submodeD;
 EXTERN uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
 EXTERN int minimap_enlargeD;
+EXTERN uint32_t zoom_factorD;
 
 // Gameplay messages write to a circular queue
 EXTERN char msg_cqD[MAX_MSG][80];

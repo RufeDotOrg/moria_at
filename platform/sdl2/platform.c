@@ -58,7 +58,6 @@ static int submodeD;
 static int finger_stackD;
 static int finger_rowD;
 static int finger_colD;
-static int zoom_factorD;
 static int quitD;
 
 int
@@ -1117,6 +1116,9 @@ SDL_Event event;
       case SDLK_KP_ENTER:
         return ' ';
       case SDLK_KP_PLUS:
+        return '+';
+      case SDLK_KP_MINUS:
+        return '-';
       case SDLK_KP_PERIOD:
         return '.';
       case SDLK_KP_0:
@@ -1210,10 +1212,7 @@ SDL_Event event;
       if (tp.x < .25 && tp.y < .5) return 'C';
       if (tp.x > .85 && tp.y < .09) return 'v';
       if (tp.x > .85 && tp.y < .23) return 'M';
-      if (tp.x > .25 && tp.x < .85 && tp.y > .90) {
-        zoom_factorD = (zoom_factorD + 1) % 4;
-        return -1;
-      }
+      if (tp.x > .25 && tp.x < .85 && tp.y > .90) return '+';
     }
   }
 
