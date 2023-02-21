@@ -1094,6 +1094,39 @@ SDL_Event event;
 }
 
 int
+sdl_kb_event(event)
+struct SDL_Event event;
+{
+  SDL_Keymod km = SDL_GetModState();
+  int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
+
+  if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
+    // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 8;
+    if (isalpha(event.key.keysym.sym)) {
+      if (km & KMOD_CTRL)
+        return CTRL(event.key.keysym.sym);
+      else
+        return event.key.keysym.sym ^ shift;
+    } else {
+      return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
+    }
+  } else {
+    int dir = dir_by_scancode(event.key.keysym.sym);
+    if (dir > 0) return char_by_dir(dir) ^ shift;
+    switch (event.key.keysym.sym) {
+      case SDLK_KP_ENTER:
+        return ' ';
+      case SDLK_KP_PLUS:
+      case SDLK_KP_PERIOD:
+        return '.';
+      case SDLK_KP_0:
+        return 'M';
+    }
+  }
+  return 0;
+}
+
+int
 touch_from_event(event)
 SDL_Event *event;
 {
@@ -1179,32 +1212,7 @@ sdl_pump()
       return 0;
     }
     if (event.type == SDL_KEYDOWN) {
-      SDL_Keymod km = SDL_GetModState();
-      int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
-
-      if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
-        // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 8;
-        if (isalpha(event.key.keysym.sym)) {
-          if (km & KMOD_CTRL)
-            return CTRL(event.key.keysym.sym);
-          else
-            return event.key.keysym.sym ^ shift;
-        } else {
-          return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
-        }
-      } else {
-        int dir = dir_by_scancode(event.key.keysym.sym);
-        if (dir > 0) return char_by_dir(dir) ^ shift;
-        switch (event.key.keysym.sym) {
-          case SDLK_KP_ENTER:
-            return ' ';
-          case SDLK_KP_PLUS:
-          case SDLK_KP_PERIOD:
-            return '.';
-          case SDLK_KP_0:
-            return 'M';
-        }
-      }
+      return sdl_kb_event(event);
     }
 
     // Finger inputs
