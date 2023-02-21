@@ -58,6 +58,7 @@ static int submodeD;
 static int finger_stackD;
 static int finger_rowD;
 static int finger_colD;
+static int zoom_factorD;
 static int quitD;
 
 int
@@ -760,7 +761,7 @@ platform_draw()
     SDL_SetRenderTarget(rendererD, 0);
 
     int zw, zy, zf;
-    zf = 2;
+    zf = zoom_factorD;
 
     zw = SYMMAP_WIDTH / 2 >> zf;
     zy = SYMMAP_HEIGHT / 2 >> zf;
@@ -1209,6 +1210,10 @@ SDL_Event event;
       if (tp.x < .25 && tp.y < .5) return 'C';
       if (tp.x > .85 && tp.y < .09) return 'v';
       if (tp.x > .85 && tp.y < .23) return 'M';
+      if (tp.x > .25 && tp.x < .85 && tp.y > .90) {
+        zoom_factorD = (zoom_factorD + 1) % 4;
+        return -1;
+      }
     }
   }
 
@@ -1428,6 +1433,7 @@ platform_init()
   shroudbgD = (SDL_Color){170, 170, 170, 30};
   font_colorD = whiteD;
 
+  if (ANDROID) zoom_factorD = 2;
   if (ANDROID)
     platformD.seed = platform_random;
   else
