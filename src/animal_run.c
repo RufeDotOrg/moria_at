@@ -476,10 +476,16 @@ py_tr(trflag)
 {
   return (cbD.tflag & trflag) == trflag;
 }
-static char* affectD[][8] = {
+int
+py_speed()
+{
+  return (py_affect(MA_SLOW) + py_tr(TR_SLOWNESS)) -
+         (py_affect(MA_FAST) + py_tr(TR_SPEED));
+}
+static char* affectD[][2] = {
     {"Recall"},
-    {"See Inv"},
-    {"PackHvy"},
+    {"SeeInvis"},
+    {"Burdened"},
     {"Slow (1)", "Slow (2)"},
     {"Fast (1)", "Fast (2)"},
     {"Blind"},
@@ -487,20 +493,15 @@ static char* affectD[][8] = {
     {"Afraid"},
     {"Paralyse"},
     {"Poison"},
-    {"Hungry", "Weak", "Faint"},
+    {"Hungry", "Starving"},
 };
-int
-py_speed()
-{
-  return (py_affect(MA_SLOW) + py_tr(TR_SLOWNESS)) -
-         (py_affect(MA_FAST) + py_tr(TR_SPEED));
-}
 void
 affect_update()
 {
   int active[AL(affectD)];
-  int idx, count, pad, len, sum;
+  int idx, count, pad, padstep, len, sum;
 
+  padstep = SDL ? 10 : 7;
   idx = 0;
   active[idx++] = py_affect(MA_RECALL) != 0;
   active[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
@@ -520,8 +521,7 @@ affect_update()
   active[idx++] = (countD.paralysis != 0);
   active[idx++] = (countD.poison != 0);
   active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
-  active[idx] += (uD.food <= PLAYER_FOOD_WEAK);
-  active[idx++] += (uD.food <= PLAYER_FOOD_FAINT);
+  active[idx++] += (uD.food <= PLAYER_FOOD_WEAK);
 
   len = 0;
   sum = 0;
@@ -531,7 +531,7 @@ affect_update()
                        affectD[it][active[it] - 1]);
       if (count > 0) len += count;
     }
-    pad = MIN((1 + it) * AL(affectD[0]), AL(affectinfoD) - 1);
+    pad = (1 + it) * padstep;
     while (len < pad) affectinfoD[len++] = ' ';
   }
 
@@ -11305,7 +11305,7 @@ tick()
   if (tmp < PLAYER_FOOD_ALERT && uD.food >= PLAYER_FOOD_ALERT) {
     MSG("You are getting hungry.");
   } else if (tmp < PLAYER_FOOD_WEAK && uD.food >= PLAYER_FOOD_WEAK) {
-    MSG("You are getting weak from hunger.");
+    MSG("You are getting weak from starvation.");
   } else if (tmp < 0) {
     strcpy(death_descD, "starvation");
     py_take_hit(-tmp / 16);
