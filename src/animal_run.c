@@ -422,14 +422,16 @@ viz_minimap()
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
   int cmax = panelD.panel_col_max;
+  int y, x;
 
+  y = uD.y;
+  x = uD.x;
   if (dun_level) {
     for (row = 0; row < MAX_HEIGHT; ++row) {
       for (col = 0; col < MAX_WIDTH; ++col) {
         color = 0;
         c_ptr = &caveD[row][col];
-        if (row == 0 || col == 0 || row + 1 == MAX_HEIGHT ||
-            col + 1 == MAX_WIDTH)
+        if (c_ptr->fval == BOUNDARY_WALL)
           color = BRIGHT + WHITE;
         else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
           color = BRIGHT + WHITE;
@@ -447,10 +449,13 @@ viz_minimap()
             }
           }
         }
-        if (row == rmin || row == rmax)
+        if (row == rmin || row == rmax) {
           if (col >= cmin && col <= cmax) color = BRIGHT + BLACK;
-        if (col == cmin || col == cmax)
+        } else if (col == cmin || col == cmax) {
           if (row >= rmin && row <= rmax) color = BRIGHT + BLACK;
+        } else if (row == y && col == x) {
+          color = BRIGHT + BLACK;
+        }
 
         minimapD[row][col] = color;
       }
