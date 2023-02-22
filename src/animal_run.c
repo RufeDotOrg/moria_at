@@ -11255,19 +11255,22 @@ player_maint()
   flag = 0;
   for (int it = 0; it < MAX_A; ++it) {
     if (statD.cur_stat[it] < statD.max_stat[it]) {
-      flag = TRUE;
+      if (!flag) {
+        flag = 1;
+        msg_print("A wind from the Misty Mountains renews your being.");
+      }
       res_stat(it);
     }
   }
-  if (flag) msg_print("A wind from the Misty Mountains renews your being.");
 
   flag = 0;
   for (int it = 0; it < MAX_INVEN; ++it) {
     obj = obj_get(invenD[it]);
+    tr_ptr = &treasureD[obj->tidx];
+
     if (obj->id && (obj->idflag & ID_REVEAL) == 0) {
-      tr_ptr = &treasureD[obj->tidx];
+      obj->idflag = ID_REVEAL;
       tr_make_known(tr_ptr);
-      obj->idflag |= ID_REVEAL;
       flag = 1;
     }
   }
