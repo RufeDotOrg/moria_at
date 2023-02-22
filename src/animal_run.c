@@ -10859,9 +10859,6 @@ static void hit_trap(uy, ux) int *uy, *ux;
       delete_object(y, x);
       place_rubble(y, x);
       msg_print("You are hit by falling rock.");
-      // Prepare rubble as a mining target
-      miningD[0] = y;
-      miningD[1] = x;
       break;
     case 10: /* Corrode gas*/
       /* Makes more sense to print the message first, then damage an
