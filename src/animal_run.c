@@ -418,6 +418,7 @@ viz_minimap()
   int row, col, color;
   struct caveS* c_ptr;
   struct objS* obj;
+  struct monS* mon;
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
@@ -431,11 +432,22 @@ viz_minimap()
       for (col = 0; col < MAX_WIDTH; ++col) {
         color = 0;
         c_ptr = &caveD[row][col];
-        if (c_ptr->fval == BOUNDARY_WALL)
+        mon = &entity_monD[c_ptr->midx];
+        if (mon->mlit)
+          color = BRIGHT + MAGENTA;
+        else if (c_ptr->fval == BOUNDARY_WALL)
           color = BRIGHT + WHITE;
         else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
           color = BRIGHT + WHITE;
-        else if (c_ptr->oidx) {
+        else if (row == rmin || row == rmax) {
+          if (col >= cmin && col <= cmax) color = BRIGHT + BLACK;
+        } else if (col == cmin || col == cmax) {
+          if (row >= rmin && row <= rmax) color = BRIGHT + BLACK;
+        } else if (row == y && col == x) {
+          color = BRIGHT + BLUE;
+        }
+
+        if (color == 0 && c_ptr->oidx) {
           obj = &entity_objD[c_ptr->oidx];
           if (CF_VIZ & c_ptr->cflag) {
             if (obj->tval == TV_UP_STAIR) {
@@ -450,13 +462,6 @@ viz_minimap()
               color = BRIGHT + GREEN;
             }
           }
-        }
-        if (row == rmin || row == rmax) {
-          if (col >= cmin && col <= cmax) color = BRIGHT + BLACK;
-        } else if (col == cmin || col == cmax) {
-          if (row >= rmin && row <= rmax) color = BRIGHT + BLACK;
-        } else if (row == y && col == x) {
-          color = BRIGHT + BLACK;
         }
 
         minimapD[row][col] = color;
