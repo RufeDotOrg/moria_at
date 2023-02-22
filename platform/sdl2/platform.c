@@ -1202,7 +1202,7 @@ SDL_Event event;
       if (tp.x < .25 && tp.y < .5) return 'C';
       if (tp.x > .85 && tp.y < .09) return 'v';
       if (tp.x > .85 && tp.y < .23) return 'M';
-      if (tp.x > .25 && tp.x < .85 && tp.y > .90) return '+';
+      if (tp.x > .25 && tp.x < .85 && tp.y > .90) return '-';
     }
   }
 
