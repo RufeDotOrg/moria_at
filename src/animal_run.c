@@ -446,6 +446,8 @@ viz_minimap()
               color = BRIGHT + YELLOW;
             } else if (obj->tval == TV_SECRET_DOOR) {
               color = BRIGHT + WHITE;
+            } else if (obj->tval != 0 && obj->tval < TV_MAX_PICK_UP) {
+              color = BRIGHT + GREEN;
             }
           }
         }
