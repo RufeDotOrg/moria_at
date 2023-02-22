@@ -11365,13 +11365,16 @@ tick()
     regenhp(regen_amount);
   } else if (countD.poison > 0) {
     if (countD.poison == 1) {
-      msg_print("You have recovered from illness.");
+      msg_print("You feel less ill.");
     } else {
       strcpy(death_descD, "poison");
       py_take_hit(poison_adj());
+      if ((turnD % 16) == 0) {
+        msg_print("You shiver from illness.");
+        disturb(1, 0);
+      }
     }
     countD.poison -= 1;
-    disturb(1, 0);
   }
 
   if (countD.confusion > 0) {
