@@ -10237,6 +10237,18 @@ void py_tunnel(dir, uy, ux) int *uy, *ux;
 
   tunnel(y, x);
 }
+void
+py_autotunnel(y, x)
+{
+  if (py_affect(MA_BLIND) == 0) {
+    if (miningD[0] == y && miningD[1] == x) {
+      tunnel(y, x);
+    } else {
+      miningD[0] = y;
+      miningD[1] = x;
+    }
+  }
+}
 static void make_move(midx, mm) int* mm;
 {
   int i, fy, fx, newy, newx, do_turn, do_move, stuck_door;
@@ -10846,6 +10858,9 @@ static void hit_trap(uy, ux) int *uy, *ux;
       delete_object(y, x);
       place_rubble(y, x);
       msg_print("You are hit by falling rock.");
+      // Prepare rubble as a mining target
+      miningD[0] = y;
+      miningD[1] = x;
       break;
     case 10: /* Corrode gas*/
       /* Makes more sense to print the message first, then damage an
@@ -11715,10 +11730,13 @@ dungeon()
         struct caveS* c_ptr = &caveD[y][x];
         struct monS* mon = &entity_monD[c_ptr->midx];
         struct objS* obj = &entity_objD[c_ptr->oidx];
-        int mining[2] = {0};
 
-        if (find_flag && (mon->mlit || c_ptr->fval > MAX_OPEN_SPACE)) {
+        if (find_flag && mon->mlit) {
+          // Run/Mine is non-combat movement
           find_flag = FALSE;
+        } else if (find_flag && c_ptr->fval > MAX_OPEN_SPACE) {
+          find_flag = FALSE;
+          py_autotunnel(y, x);
         } else {
           // doors known to be jammed are bashed prior to movement
           if (obj->tval == TV_CLOSED_DOOR) {
@@ -11760,25 +11778,16 @@ dungeon()
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
           } else if (py_affect(MA_BLIND) == 0) {
-            mining[0] = y;
-            mining[1] = x;
-
-            if (miningD[0] == y && miningD[1] == x) {
-              if (countD.confusion == 0) tunnel(y, x);
-            } else {
-              if (obj->tval == TV_GOLD) {
-                obj_desc(obj, TRUE);
-                MSG("You see %s glimmering in the %s.", descD,
-                    c_ptr->fval == QUARTZ_WALL ? "quartz vein"
-                                               : "magma intrusion");
-              } else if (obj->tval == TV_RUBBLE) {
-                msg_print("You see rubble.");
-              }
+            if (obj->tval == TV_GOLD) {
+              obj_desc(obj, TRUE);
+              MSG("You see %s glimmering in the %s.", descD,
+                  c_ptr->fval == QUARTZ_WALL ? "quartz vein"
+                                             : "magma intrusion");
+            } else if (obj->tval == TV_RUBBLE) {
+              msg_print("You see rubble.");
             }
           }
         }
-        miningD[0] = mining[0];
-        miningD[1] = mining[1];
         panel_update(&panelD, uD.y, uD.x, FALSE);
       }
     } while (!turn_flag && !new_level_flag);
