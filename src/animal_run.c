@@ -9475,24 +9475,16 @@ mon_attack(midx)
           }
           break;
         case 5: /*Fire attack  */
-          if (py_affect(MA_AFIRE)) {
-            msg_print("You feel safe from flame.");
-          } else {
-            msg_print("You are enveloped in flame!");
-            fire_dam(damage);
-          }
+          msg_print("You are enveloped in flame!");
+          fire_dam(damage);
           break;
         case 6: /*Acid attack  */
           msg_print("You are covered in acid!");
           acid_dam(damage, FALSE);
           break;
         case 7: /*Frost attack  */
-          if (py_affect(MA_AFROST)) {
-            msg_print("You feel safe from frost.");
-          } else {
-            msg_print("You are covered with frost!");
-            frost_dam(damage);
-          }
+          msg_print("You are covered with frost!");
+          frost_dam(damage);
           break;
         case 8: /*Lightning attack*/
           msg_print("Lightning strikes you!");
