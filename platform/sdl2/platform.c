@@ -1237,8 +1237,15 @@ SDL_Event event;
   }
 
   // Screen (mode 2)
-  if (mode == 2) {
-    if (event.type == SDL_FINGERUP) return ' ';
+  if (mode == 2 && event.type == SDL_FINGERUP) return ' ';
+  if (mode == 2 && event.type == SDL_FINGERDOWN) {
+    SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+    if (touch == TOUCH_LB) return ESCAPE;
+    if (touch == TOUCH_RB) return ESCAPE;
+    if (tp.x < .85 && tp.y < .09) return CTRL('p');
+    if (tp.x < .25 && tp.y < .5) return 'C';
+    if (tp.x > .85 && tp.y < .09) return 'v';
+    if (tp.x > .85 && tp.y < .23) return 'o';
   }
   return 0;
 }

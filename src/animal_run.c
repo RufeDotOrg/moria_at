@@ -9031,7 +9031,7 @@ static void
 py_grave()
 {
   int row, col;
-  MSG("Killed by %s. (CTRL-P log) (C/e/i/o/ESC)", death_descD);
+  MSG("Killed by %s. (CTRL-P log) (C/e/i/o/v/ESC)", death_descD);
   row = col = 0;
   for (int it = 0; it < AL(grave); ++it) {
     if (grave[it] == '\n') {
@@ -9064,6 +9064,8 @@ py_death()
       MSG("You were carrying %d %s:", count, count > 1 ? "items" : "item");
     } else if (c == 'o') {
       // observe game board
+    } else if (c == 'v') {
+      show_version();
     } else {
       py_grave();
     }
