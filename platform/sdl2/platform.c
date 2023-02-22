@@ -55,7 +55,6 @@ static SDL_Color font_colorD;
 static int xD;
 static int modeD;
 static int submodeD;
-static int finger_stackD;
 static int finger_rowD;
 static int finger_colD;
 static int quitD;
@@ -1167,15 +1166,6 @@ int
 sdl_touch_event(event)
 SDL_Event event;
 {
-  switch (event.type) {
-    case SDL_FINGERDOWN:
-      finger_stackD += 1;
-      break;
-    case SDL_FINGERUP:
-      finger_stackD -= 1;
-      break;
-  }
-
   // Finger inputs
   int mode = modeD;
   int touch = touch_from_event(&event);
