@@ -9913,6 +9913,7 @@ open_object(y, x)
       else
         flag = TRUE;
       if (flag) {
+        msg_print("You open the chest.");
         obj->flags &= ~CH_LOCKED;
         obj->sn = SN_EMPTY;
         obj->idflag = ID_REVEAL;
