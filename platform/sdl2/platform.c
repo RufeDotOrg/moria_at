@@ -599,7 +599,6 @@ static void
 overlay_autoselect()
 {
   int row = finger_rowD;
-  finger_colD = 0;
   if (overlay_usedD[row] <= 1) {
     for (int it = row + 1; it < AL(overlay_usedD); it += 1) {
       if (overlay_usedD[it] > 1) {
@@ -630,6 +629,7 @@ mode_change()
 
   if (modeD != mode) {
     modeD = mode;
+    finger_colD = 0;
 
     if (mode == 1) switch (overlay_submodeD) {
         case 'p':
@@ -641,6 +641,7 @@ mode_change()
   if (submodeD != overlay_submodeD) {
     submodeD = overlay_submodeD;
     finger_rowD = 0;
+    finger_colD = 0;
     overlay_autoselect();
   }
 
