@@ -629,7 +629,7 @@ mode_change()
 
   if (modeD != mode) {
     modeD = mode;
-    finger_colD = 0;
+    finger_colD = overlay_submodeD != 'e' ? 0 : 1;
 
     if (mode == 1) switch (overlay_submodeD) {
         case 'p':
@@ -641,7 +641,7 @@ mode_change()
   if (submodeD != overlay_submodeD) {
     submodeD = overlay_submodeD;
     finger_rowD = 0;
-    finger_colD = 0;
+    finger_colD = overlay_submodeD != 'e' ? 0 : 1;
     overlay_autoselect();
   }
 

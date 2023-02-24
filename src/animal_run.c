@@ -7329,7 +7329,7 @@ inven_overlay(begin, end)
   int line, count;
 
   line = count = 0;
-  overlay_submodeD = 'i';
+  overlay_submodeD = begin == 0 ? 'i' : 'e';
   for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
     int len = 1;
