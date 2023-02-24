@@ -6235,11 +6235,10 @@ void fire_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         m_ptr = &entity_monD[c_ptr->midx];
         cre = &creatureD[m_ptr->cidx];
 
-        // TBD: animate?
         m_ptr->mlit = TRUE;
 
-        // TBD: lowercase
         mon_desc(c_ptr->midx);
+        descD[0] = descD[0] | 0x20;
         MSG("The %s strikes %s.", bolt_typ, descD);
         if (harm_type & cre->cdefense) {
           dam = dam * 2;
@@ -9377,7 +9376,7 @@ py_attack(y, x)
 
     mon->msleep = 0;
     mon_desc(midx);
-    descD[0] = tolower(descD[0]);
+    descD[0] = descD[0] | 0x20;
     creature_ac = cre->ac;
     /* Loop for number of blows,  trying to hit the critter.	  */
     for (int it = 0; it < blows; ++it) {
@@ -11224,6 +11223,7 @@ store_entrance(sidx)
 {
   char c;
   char tmp_str[80];
+  int buyout;
 
   snprintf(tmp_str, AL(tmp_str), "What would you like to purchase from %s?",
            ownerD[storeD[sidx]].name);
