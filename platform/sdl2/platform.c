@@ -44,6 +44,7 @@ EXTERN struct SDL_Renderer *rendererD;
 EXTERN uint32_t texture_formatD;
 EXTERN SDL_PixelFormat *pixel_formatD;
 EXTERN SDL_Surface *mmsurfaceD;
+EXTERN SDL_Texture *mmtextureD;
 EXTERN SDL_Rect scale_rectD;
 EXTERN float scaleD;
 EXTERN int rowD, colD;
@@ -652,7 +653,6 @@ int
 platform_draw()
 {
   int show_map, mode, height, width, left;
-  struct SDL_Texture *texture;
 
   show_map = 1;
   height = fontD.max_pixel_height;
@@ -812,10 +812,11 @@ platform_draw()
   }
 
   if (minimapD[0][0]) {
+    SDL_Surface *surface = mmsurfaceD;
+    SDL_Texture *texture = mmtextureD;
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
-                           (SDL_Point){0, 0}, mmsurfaceD);
-    SDL_Texture *t = SDL_CreateTextureFromSurface(rendererD, mmsurfaceD);
-    SDL_SetTextureBlendMode(t, SDL_BLENDMODE_NONE);
+                           (SDL_Point){0, 0}, surface);
+    SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
     SDL_Rect r = {
         display_rectD.w - 2 * MAX_WIDTH - width,
         3 * height,
@@ -823,8 +824,7 @@ platform_draw()
         2 * MAX_HEIGHT,
     };
     if (minimap_enlargeD) r = scale_rectD;
-    SDL_RenderCopy(rendererD, t, NULL, &r);
-    SDL_DestroyTexture(t);
+    SDL_RenderCopy(rendererD, texture, NULL, &r);
   }
 
   if (TOUCH) {
@@ -1423,6 +1423,9 @@ platform_init()
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                                 MAX_HEIGHT, 0, texture_formatD);
+    mmtextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
+                                   MAX_WIDTH, MAX_HEIGHT);
+    SDL_SetTextureBlendMode(mmtextureD, SDL_BLENDMODE_NONE);
   }
 
   mapbgD = (SDL_Color){120, 120, 120, 15};
