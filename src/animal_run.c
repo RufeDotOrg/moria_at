@@ -11407,12 +11407,13 @@ dungeon()
 {
   int c, y, x, iidx;
   uint32_t dir, teleport;
-  new_level_flag = FALSE;
 
   if (dun_level == 0) player_maint();
 
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
-  while (!new_level_flag) {
+
+  new_level_flag = FALSE;
+  do {
     msg_countD = 1;
     turnD += 1;
     if (dun_level != 0) {
@@ -11426,11 +11427,12 @@ dungeon()
     inven_check_light();
     CCM(CCM_HOTLOAD, platform_update());
 
+    turn_flag = FALSE;
     do {
       draw();
+      if (new_level_flag) break;
       if (!teleport && countD.rest != 0) break;
       if (!teleport && countD.paralysis != 0) break;
-      turn_flag = FALSE;
 
       y = uD.y;
       x = uD.x;
@@ -11788,11 +11790,11 @@ dungeon()
         }
         panel_update(&panelD, uD.y, uD.x, FALSE);
       }
-    } while (!turn_flag && !new_level_flag);
+    } while (!turn_flag);
 
     ma_tick();
     if (!new_level_flag) creatures();
-  }
+  } while (!new_level_flag);
 }
 void
 mon_level_init()
