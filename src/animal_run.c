@@ -11473,12 +11473,8 @@ dungeon()
           }
         }
 
-        if (c < 037) {
-          dir = map_roguedir(c | 0x60) - '1';
-        } else {
-          dir = map_roguedir(c | 0x20) - '1';
-        }
-
+        // [1, 9] + (jhklnbyuJHKLNBYU)
+        dir = c >= '1' ? map_roguedir(c | 0x20) - '1' : -1;
         if (dir < 9) {
           // 75% random movement
           if (countD.confusion && randint(4) > 1)
@@ -11486,11 +11482,8 @@ dungeon()
           else
             dir += 1;
 
-          if (c < 037) {
-            // Tunneling (CTRL)
-            py_tunnel(dir, &y, &x);
-          } else if (countD.confusion /* can't run during confusion */
-                     || c & 0x20) {
+          if (countD.confusion /* can't run during confusion */
+              || c & 0x20) {
             // Primary movement (lowercase)
             mmove(dir, &y, &x);
           } else {
