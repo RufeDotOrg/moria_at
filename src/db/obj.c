@@ -4000,7 +4000,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      1},
-    {"Detect Invisible",
+    {"See Invisible",
      0x00000400L,
      TV_POTION2,
      '!', /*263*/
