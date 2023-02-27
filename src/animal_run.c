@@ -9968,13 +9968,15 @@ py_search(y, x)
           obj->tval = TV_CLOSED_DOOR;
           obj->tchar = '+';
           c_ptr->cflag |= CF_FIELDMARK;
-        } else if (obj->tval == TV_INVIS_TRAP) {
-          obj->tval = TV_VIS_TRAP;
-          obj->tchar = '^';
-          obj->idflag |= ID_REVEAL;
-          c_ptr->cflag |= CF_FIELDMARK;
-          obj_desc(obj, TRUE);
-          MSG("You have found %s.", descD);
+        } else if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
+          if ((obj->idflag & ID_REVEAL) == 0) {
+            obj->idflag |= ID_REVEAL;
+            obj->tval = TV_VIS_TRAP;
+            obj->tchar = '^';
+            c_ptr->cflag |= CF_FIELDMARK;
+            obj_desc(obj, TRUE);
+            MSG("You have found %s.", descD);
+          }
         } else if (obj->tval == TV_CHEST) {
           if (CH_TRAPPED & obj->flags) {
             obj->idflag = ID_REVEAL;
