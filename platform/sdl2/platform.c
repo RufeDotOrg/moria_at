@@ -764,8 +764,8 @@ platform_draw()
 
     zw = SYMMAP_WIDTH / 2 >> zf;
     zy = SYMMAP_HEIGHT / 2 >> zf;
-    if (rp.x + zw > SYMMAP_WIDTH) rp.x = SYMMAP_WIDTH - zw - 1;
-    if (rp.y + zy > SYMMAP_HEIGHT) rp.y = SYMMAP_HEIGHT - zy - 1;
+    if (rp.x + zw >= SYMMAP_WIDTH) rp.x = SYMMAP_WIDTH - zw - 1;
+    if (rp.y + zy >= SYMMAP_HEIGHT) rp.y = SYMMAP_HEIGHT - zy - 1;
     rp.x = MAX(0, rp.x - zw);
     rp.y = MAX(0, rp.y - zy);
     zoom_rect.x = rp.x * ART_W;
