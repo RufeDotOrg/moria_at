@@ -11757,7 +11757,12 @@ dungeon()
             if (py_affect(MA_BLIND) == 0 && find_flag) find_event(y, x);
 
             if (obj->tval == TV_CHEST) {
-              if (obj->sn != SN_EMPTY) open_object(y, x);
+              if (obj->sn != SN_EMPTY) {
+                open_object(y, x);
+              } else {
+                obj_desc(obj, TRUE);
+                MSG("You see %s here.", descD);
+              }
             } else if (obj->tval == TV_STORE_DOOR) {
               store_entrance(obj->tchar - '1');
             } else if (obj->tval == TV_PAWN_DOOR) {
