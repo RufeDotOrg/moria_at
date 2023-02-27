@@ -4791,7 +4791,7 @@ void obj_detail(obj) struct objS* obj;
   if (reveal && (obj->tval == TV_STAFF || obj->tval == TV_WAND)) {
     sprintf(tmp_str, " (%d charges)", obj->p1);
     strcat(descD, tmp_str);
-  } else if (reveal && eqidx > INVEN_WIELD) {
+  } else if (reveal && (eqidx > INVEN_WIELD || obj->tval == TV_DIGGING)) {
     if ((TR_P1 & obj->flags) && obj->p1) {
       snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->p1);
       strcat(descD, tmp_str);
