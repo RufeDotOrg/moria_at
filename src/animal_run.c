@@ -9088,12 +9088,13 @@ py_help()
   BufMsg(screen, "c: close object");
   BufMsg(screen, "d: drop object");
   BufMsg(screen, "e: equipment");
-  BufMsg(screen, "f: force Bash");
+  BufMsg(screen, "f: force/bash chest/door/monster");
   BufMsg(screen, "i: inventory");
   BufMsg(screen, "q: quaff potion");
   BufMsg(screen, "r: read scroll");
   BufMsg(screen, "o: open object");
   BufMsg(screen, "s: search for traps/doors");
+  BufMsg(screen, "v: version info");
   BufMsg(screen, "w: wear object");
   BufMsg(screen, "x: examine monsters");
   BufMsg(screen, "z: zap wand");
@@ -11543,9 +11544,6 @@ dungeon()
             case 'o':
               py_open();
               break;
-            case 'O':
-              py_look_obj();
-              break;
             case 's':
               msg_print("You search the area.");
               py_search(y, x);
@@ -11560,16 +11558,9 @@ dungeon()
             case 'x':
               py_look_mon();
               break;
-            case 'X':
-              py_offhand();
-              break;
             case 'z':
               iidx = inven_choice("Aim which wand?", "*");
               if (iidx >= 0) py_zap(iidx);
-              break;
-            case 'Z':
-              iidx = inven_choice("Invoke which staff?", "*");
-              if (iidx >= 0) inven_try_staff(iidx, &y, &x);
               break;
             case '<':
               go_up();
@@ -11608,6 +11599,9 @@ dungeon()
                   py_map();
               }
               break;
+            case 'O':
+              py_look_obj();
+              break;
             case 'R':
               countD.rest = -9999;
               break;
@@ -11620,6 +11614,13 @@ dungeon()
               break;
             case 'W':
               py_where();
+              break;
+            case 'X':
+              py_offhand();
+              break;
+            case 'Z':
+              iidx = inven_choice("Invoke which staff?", "*");
+              if (iidx >= 0) inven_try_staff(iidx, &y, &x);
               break;
             case CTRL('c'):
               if (!RELEASE) {
