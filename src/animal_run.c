@@ -3006,47 +3006,6 @@ place_monster(y, x, z, slp)
 
   return FALSE;
 }
-static int
-mon_multiply(mon)
-struct monS* mon;
-{
-  int y, x, fy, fx, i, j, k;
-  struct caveS* c_ptr;
-  int eats_others;
-  int mexp;
-  int count;
-
-  eats_others = creatureD[mon->cidx].cmove & CM_EATS_OTHER;
-  mexp = creatureD[mon->cidx].mexp;
-  y = uD.y;
-  x = uD.x;
-  fy = mon->fy;
-  fx = mon->fx;
-  i = 0;
-  count = 0;
-  do {
-    j = fy - 2 + randint(3);
-    k = fx - 2 + randint(3);
-    // don't create a new creature on top of the old one
-    // don't create a creature on top of the player
-    if ((j != fy || k != fx) && (j != y || k != x)) {
-      c_ptr = &caveD[j][k];
-      if (c_ptr->fval <= MAX_OPEN_SPACE) {
-        if (eats_others) {
-          if (mexp >= creatureD[c_ptr->midx].mexp) {
-            mon_unuse(&entity_monD[c_ptr->midx]);
-            c_ptr->midx = 0;
-          }
-        }
-        if (c_ptr->midx == 0) {
-          return place_monster(j, k, mon->cidx, FALSE);
-        }
-      }
-    }
-    i++;
-  } while (i <= 18);
-  return FALSE;
-}
 int
 summon_monster(y, x)
 {
@@ -3983,6 +3942,49 @@ update_mon(midx)
   else if (m_ptr->mlit) {
     m_ptr->mlit = FALSE;
   }
+}
+static int
+mon_multiply(mon)
+struct monS* mon;
+{
+  int y, x, fy, fx, i, j, k, midx;
+  struct caveS* c_ptr;
+  int eats_others;
+  int mexp;
+  int count;
+
+  eats_others = creatureD[mon->cidx].cmove & CM_EATS_OTHER;
+  mexp = creatureD[mon->cidx].mexp;
+  y = uD.y;
+  x = uD.x;
+  fy = mon->fy;
+  fx = mon->fx;
+  i = 0;
+  count = 0;
+  do {
+    j = fy - 2 + randint(3);
+    k = fx - 2 + randint(3);
+    // don't create a new creature on top of the old one
+    // don't create a creature on top of the player
+    if ((j != fy || k != fx) && (j != y || k != x)) {
+      c_ptr = &caveD[j][k];
+      if (c_ptr->fval <= MAX_OPEN_SPACE) {
+        if (eats_others) {
+          if (mexp >= creatureD[c_ptr->midx].mexp) {
+            mon_unuse(&entity_monD[c_ptr->midx]);
+            c_ptr->midx = 0;
+          }
+        }
+        if (c_ptr->midx == 0) {
+          midx = place_monster(j, k, mon->cidx, FALSE);
+          if (midx) update_mon(midx);
+          return midx;
+        }
+      }
+    }
+    i++;
+  } while (i <= 18);
+  return FALSE;
 }
 void
 light_room(y, x)
