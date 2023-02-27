@@ -9107,7 +9107,7 @@ py_help()
   BufMsg(screen, "D: disarm trap");
   BufMsg(screen, "E: eat object");
   BufMsg(screen, "I: inventory sort");
-  if (!SDL) BufMsg(screen, "M: map dungeon");
+  BufMsg(screen, "M: map dungeon");
   BufMsg(screen, "O: object examination");
   BufMsg(screen, "R: rest until healed");
   BufMsg(screen, "S: study an object");
@@ -11597,12 +11597,16 @@ dungeon()
               MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
             case 'M':
-              screenD[0][0] = ' ';
-              screen_usedD[0] = 1;
-              if (SDL)
-                minimap_enlargeD = TRUE;
-              else if (TTY)
-                py_map();
+              if (dun_level == 0)
+                msg_print("You don't have a map of town.");
+              else {
+                screenD[0][0] = ' ';
+                screen_usedD[0] = 1;
+                if (SDL)
+                  minimap_enlargeD = TRUE;
+                else if (TTY)
+                  py_map();
+              }
               break;
             case 'R':
               countD.rest = -9999;
