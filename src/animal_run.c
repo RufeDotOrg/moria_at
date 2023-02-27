@@ -6069,7 +6069,7 @@ teleport_to(ny, nx)
   py_check_view(y, x);
 }
 // TBD: We may loop infinitely with the added restriction of oidx != 0
-// Phase door and thief (short range) teleport run a higher risk
+// Phase door (short range) teleport runs a higher risk
 void py_teleport(dis, uy, ux) int *uy, *ux;
 {
   int ty, tx, y, x;
@@ -6254,11 +6254,6 @@ void fire_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         }
         // Pause while lit
         msg_pause();
-      } else if (panel_contains(&panelD, y, x)) {
-        // TBD: && (py.flags.blind < 1)
-        // print('*', y, x);
-        /* show the fire_bolt */
-        // put_qio();
       }
     }
     oldy = y;
@@ -9961,7 +9956,6 @@ py_search(y, x)
   chance = uD.search;
   // TBD: tuning; used to divide by 10
   if (countD.confusion) chance /= 8;
-  // TBD: light also reduced search, like blindness
   if (py_affect(MA_BLIND)) chance /= 8;
   // if (p_ptr->image > 0) chance = chance / 10;
   for (i = (y - 1); i <= (y + 1); i++)
@@ -10983,9 +10977,6 @@ struct objS* obj;
       else
         value = 70;
     }
-    // TBD: tuning
-    // else if (obj->idflag & ID_REVEAL)
-    //   value = obj->cost + (obj->cost / 20) * obj->p1;
   }
   /* picks and shovels */
   else if (obj->tval == TV_DIGGING) {
@@ -11351,7 +11342,6 @@ tick()
   uD.food = tmp;
 
   if (py_tr(TR_REGEN)) regen_amount = regen_amount * 3 / 2;
-  // TBD: Search gives resting status
   if (countD.rest != 0) regen_amount = regen_amount * 2;
   // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
 
