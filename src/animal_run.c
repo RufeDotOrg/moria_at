@@ -9207,8 +9207,8 @@ minus_ac(verbose)
 int
 poison_gas(dam)
 {
-  py_take_hit(dam);
-  countD.poison += 12 + randint(dam);
+  py_take_hit(dam / 2);
+  countD.poison += 12 + dam / 2;
   return dam;
 }
 int

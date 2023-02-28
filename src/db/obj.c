@@ -5544,7 +5544,7 @@ static struct treasureS treasureD[] = {
      0,
      0,
      0,
-     {2, 6},
+     {4, 6},
      105},
     {"a gas trap",
      0x00000000L,
