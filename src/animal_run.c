@@ -4306,7 +4306,7 @@ attack_string(adesc)
     case 18:
       return ((" drools on you."));
     case 19:
-      switch (randint(9)) {
+      switch (randint(6)) {
         case 1:
           return ((" insults you!"));
         case 2:
@@ -4316,15 +4316,9 @@ attack_string(adesc)
         case 4:
           return ((" humiliates you!"));
         case 5:
-          return ((" wets on your leg!"));
-        case 6:
-          return ((" defiles you!"));
-        case 7:
           return ((" dances around you!"));
-        case 8:
+        case 6:
           return ((" makes obscene gestures!"));
-        case 9:
-          return ((" moons you!!!"));
       }
     case 99:
       return ((" is repelled."));
@@ -7939,7 +7933,7 @@ inven_quaff(iidx)
           countD.poison = 1;
           if (uD.food > 150) uD.food = 150;
           countD.paralysis = 4;
-          msg_print("The potion makes you vomit!");
+          msg_print("Ugh! Salt water!");
           ident |= TRUE;
           break;
         case 36:
