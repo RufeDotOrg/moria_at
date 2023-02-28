@@ -10481,7 +10481,7 @@ mon_try_spell(midx, cdis)
     /* all except teleport_away() and drain mana spells always disturb */
     if (thrown_spell > 6 && thrown_spell != 17) disturb(1, 0);
     /* save some code/data space here, with a small time penalty */
-    if ((thrown_spell < 14 && thrown_spell > 6) || (thrown_spell == 16)) {
+    if ((thrown_spell < 14 && thrown_spell > 8) || (thrown_spell == 16)) {
       MSG("%s casts a spell.", descD);
     }
     /* Cast the spell.  		     */
@@ -10490,9 +10490,11 @@ mon_try_spell(midx, cdis)
         teleport_away(midx, 5);
         break;
       case 6: /*Teleport Long */
+        MSG("%s casts a teleportation spell.", descD);
         teleport_away(midx, MAX_SIGHT);
         break;
       case 7: /*Teleport To (aka. Summon)  */
+        MSG("%s summons you to their location.", descD);
         teleport_to(mon->fy, mon->fx);
         break;
       case 8: /*Light Wound   */
