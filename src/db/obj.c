@@ -3955,7 +3955,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      1},
-    {"Restore Life Levels",
+    {"Restore Experience",
      0x00000080L,
      TV_POTION2,
      '!', /*260*/
