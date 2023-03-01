@@ -651,13 +651,13 @@ mode_change()
 }
 
 void
-alt_fill(y, x, left, width, height)
+alt_fill(y, x, left, top, width, height)
 {
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
   for (int row = 0; row < y; ++row) {
     SDL_Rect rect = {
         left,
-        (row + 1) * height,
+        top + row * height,
         (x + 1) * width,
         height,
     };
@@ -671,12 +671,13 @@ alt_fill(y, x, left, width, height)
 int
 platform_draw()
 {
-  int show_map, mode, height, width, left;
+  int show_map, mode, height, width, left, top;
 
   show_map = 1;
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
   left = fontD.left_adjustment + scale_rectD.x;
+  top = 3 * height;
 
   SDL_SetRenderTarget(rendererD, text_textureD);
   SDL_RenderFillRect(rendererD, &text_rectD);
@@ -685,22 +686,22 @@ platform_draw()
   switch (mode) {
     case 2:
       show_map = 0;
-      alt_fill(AL(screenD), AL(screenD[0]), left, width, height);
+      alt_fill(AL(screenD), AL(screenD[0]), left, top, width, height);
       for (int row = 0; row < AL(screenD); ++row) {
-        SDL_Point p = {left, (row + 1) * height};
+        SDL_Point p = {left, top + row * height};
         render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row],
                            p);
       }
       break;
     case 1:
       show_map = 0;
-      alt_fill(AL(overlayD), AL(overlayD[0]), left, width, height);
+      alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
       memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
       for (int row = 0; row < AL(overlayD); ++row) {
         font_colorD = whiteD;
         SDL_Point p = {
             left,
-            (row + 1) * height,
+            top + row * height,
         };
         if (TOUCH && row == finger_rowD) {
           font_colorD = (SDL_Color){255, 0, 0, 255};
@@ -713,9 +714,9 @@ platform_draw()
       break;
   }
 
-  alt_fill(AL(vitalinfoD), AL(vitalinfoD[0]), 0, width, height);
+  alt_fill(AL(vitalinfoD), AL(vitalinfoD[0]), 0, top, width, height);
   for (int row = 0; row < AL(vitalinfoD); ++row) {
-    SDL_Point p = {0, (row + 1) * height};
+    SDL_Point p = {0, top + row * height};
     render_font_string(rendererD, &fontD, vitalinfoD[row], AL(vitalinfoD[0]),
                        p);
   }
@@ -811,18 +812,18 @@ platform_draw()
     }
   }
 
-  {
-    render_font_string(rendererD, &fontD, versionD, sizeof(versionD) - 1,
-                       (SDL_Point){
-                           display_rectD.w - 2 * MAX_WIDTH,
-                           height,
-                       });
-    render_font_string(rendererD, &fontD, git_hashD, sizeof(git_hashD) - 1,
-                       (SDL_Point){
-                           display_rectD.w - width / 2 - 2 * MAX_WIDTH,
-                           2 * height,
-                       });
-  }
+  //{
+  //  render_font_string(rendererD, &fontD, versionD, sizeof(versionD) - 1,
+  //                     (SDL_Point){
+  //                         display_rectD.w - 2 * MAX_WIDTH,
+  //                         height,
+  //                     });
+  //  render_font_string(rendererD, &fontD, git_hashD, sizeof(git_hashD) - 1,
+  //                     (SDL_Point){
+  //                         display_rectD.w - width / 2 - 2 * MAX_WIDTH,
+  //                         2 * height,
+  //                     });
+  //}
 
   if (minimapD[0][0]) {
     SDL_Surface *surface = mmsurfaceD;
@@ -832,7 +833,7 @@ platform_draw()
     SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
     SDL_Rect r = {
         display_rectD.w - 2 * MAX_WIDTH - width,
-        3 * height,
+        top,
         2 * MAX_WIDTH,
         2 * MAX_HEIGHT,
     };
@@ -858,6 +859,18 @@ platform_draw()
       render_font_string(rendererD, &fontD, &text, 1, p);
     }
   }
+
+  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
+  SDL_Rect rect = {
+      0,
+      0,
+      (AL(msg_cqD[0]) + 1) * width,
+      height,
+  };
+  SDL_Color c = *(SDL_Color *)&lightingD[2];
+  SDL_SetRenderDrawColor(rendererD, C(c));
+  SDL_RenderFillRect(rendererD, &rect);
+  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
 
   char *msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
@@ -1055,26 +1068,25 @@ SDL_Event event;
 
     float xscale, yscale, scale;
     // reserve space for status width (left)
-    if (px * 13 + mx <= dx) {
+    if (px * AL(vitalinfoD[0]) + mx <= dx) {
       xscale = 1.0f;
     } else {
-      xscale = (float)(dx - px * 13) / mx;
+      xscale = (float)(dx - px * AL(vitalinfoD[0])) / mx;
     }
-    // reserve space for top bar, bottom bar
-    // hack: -8 to fit common 1080 res
-    if (py * 2 - 8 + my <= dy) {
+    // reserve space for top bar
+    if (py + my <= dy) {
       yscale = 1.0f;
     } else {
-      yscale = (float)(dy - py * 2 - 8) / my;
+      yscale = (float)(dy - py) / my;
     }
 
     scale = SDL_min(xscale, yscale);
     mx = map_rectD.w * scale;
     my = map_rectD.h * scale;
     scale_rectD.x = dx / 2 - mx / 2;
-    scale_rectD.y = dy / 2 - my / 2;
-    scale_rectD.w = my;
-    scale_rectD.h = mx;
+    scale_rectD.y = py;
+    scale_rectD.w = mx;
+    scale_rectD.h = my;
     scaleD = scale;
     Log("Scale %.3f (%.3fx %.3fy) %dx %dy %dw %dh", scale, xscale, yscale,
         R(scale_rectD));

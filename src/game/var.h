@@ -23,7 +23,7 @@ EXTERN int minimap_enlargeD;
 EXTERN uint32_t zoom_factorD;
 
 // Gameplay messages write to a circular queue
-EXTERN char msg_cqD[MAX_MSG][80];
+EXTERN char msg_cqD[MAX_MSG][98];
 EXTERN char msglen_cqD[MAX_MSG];
 EXTERN uint32_t msg_writeD;
 EXTERN uint32_t msg_countD;
@@ -94,8 +94,8 @@ static int turn_flag;
 static int new_level_flag;
 static int pack_heavy;
 static int light_bonus;
-static char descD[160];
-static char death_descD[160];
+static char descD[98];
+static char death_descD[98];
 static int miningD[2];
 
 ARR_REUSE(obj, 256);
