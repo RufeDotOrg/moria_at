@@ -692,7 +692,7 @@ platform_draw()
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
   left = fontD.left_adjustment + scale_rectD.x;
-  top = 3 * height;
+  top = 2 * height;
 
   SDL_SetRenderTarget(rendererD, text_textureD);
   SDL_RenderFillRect(rendererD, &text_rectD);
@@ -831,6 +831,7 @@ platform_draw()
 
   SDL_SetRenderDrawColor(rendererD, C(whiteD));
   if (minimapD[0][4]) {
+    top += height / 2;
     SDL_Surface *surface = mmsurfaceD;
     SDL_Texture *texture = mmtextureD;
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
@@ -853,7 +854,7 @@ platform_draw()
       len = snprintf(AP(tmp), "%d feet", dun_level * 50);
       SDL_Point p = {
           r.x + r.w / 2 - (len / 2 * width),
-          top - (height / 2),
+          top - height / 2,
       };
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
@@ -966,7 +967,8 @@ platform_draw()
           affstr[jt] = "";
       }
 
-      len = snprintf(AP(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0], affstr[1], affstr[2]);
+      len = snprintf(AP(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0], affstr[1],
+                     affstr[2]);
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
       p.y += height;
     }
@@ -1177,7 +1179,7 @@ SDL_Event event;
         R(scale_rectD));
 
     // Input constraints
-    padD = (SDL_FRect){0, .5, .25 - (2 * cfD), .5 - (rfD)};
+    padD = (SDL_FRect){0, .5 + rfD, .25 - (2 * cfD), .5 - (rfD)};
 
     SDL_FPoint center = center_from_frect(padD);
     ppD[0] = center;
@@ -1190,7 +1192,7 @@ SDL_Event event;
     }
 
     for (int it = 0; it < AL(buttonD); ++it) {
-      buttonD[it] = (SDL_FRect){.77 + (.11 * it), .75 - (.22 * it), .11, .22};
+      buttonD[it] = (SDL_FRect){.775 + (.11 * it), .78 - (.22 * it), .11, .22};
     }
 
     if (mode) return ' ';
