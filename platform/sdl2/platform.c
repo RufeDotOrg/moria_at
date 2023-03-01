@@ -685,7 +685,8 @@ void rect_frame(r, scale) SDL_Rect r;
 int
 platform_draw()
 {
-  int show_map, mode, height, width, left, top;
+  int show_map, mode, height, width, left, top, len;
+  char tmp[80];
 
   show_map = 1;
   height = fontD.max_pixel_height;
@@ -848,13 +849,20 @@ platform_draw()
     SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
     SDL_Rect r = {
         display_rectD.w - 2 * MAX_WIDTH - width,
-        top,
+        top + height,
         2 * MAX_WIDTH,
         2 * MAX_HEIGHT,
     };
     if (minimap_enlargeD) r = scale_rectD;
     SDL_RenderCopy(rendererD, texture, NULL, &r);
     if (!minimap_enlargeD) rect_frame(r, 3);
+
+    len = snprintf(AP(tmp), "%d feet", dun_level * 50);
+    SDL_Point p = {
+        r.x + r.w / 2 - (len / 2 * width),
+        top - (height / 2),
+    };
+    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
   }
   rect_frame(scale_rectD, 1);
 
@@ -877,29 +885,48 @@ platform_draw()
     }
   }
 
-  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
-  SDL_Rect rect = {
-      0,
-      0,
-      (AL(msg_cqD[0]) + 1) * width,
-      height,
-  };
-  SDL_Color c = *(SDL_Color *)&lightingD[2];
-  SDL_SetRenderDrawColor(rendererD, C(c));
-  SDL_RenderFillRect(rendererD, &rect);
-  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-  rect_frame(rect, 1);
+  {
+    int bar = AL(versionD) * width;
+    SDL_Point p = {
+        (AL(msg_cqD[0]) + 1) * width + 2 * 6,
+        0,
+    };
+    len = snprintf(AP(tmp), "turn: %7d", turnD);
+    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    SDL_Rect rect = {
+        p.x,
+        p.y,
+        len * width,
+        height,
+    };
+    rect_frame(rect, 1);
+  }
 
-  char *msg = AS(msg_cqD, msg_writeD);
-  int msg_used = AS(msglen_cqD, msg_writeD);
-  if (msg_used) {
-    render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
-  } else if (show_map) {
-    msg = AS(msg_cqD, msg_writeD - 1);
-    msg_used = AS(msglen_cqD, msg_writeD - 1);
-    font_texture_alphamod(128);
-    render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
-    font_texture_alphamod(255);
+  {
+    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
+    SDL_Rect rect = {
+        0,
+        0,
+        (AL(msg_cqD[0]) + 1) * width,
+        height,
+    };
+    SDL_Color c = *(SDL_Color *)&lightingD[2];
+    SDL_SetRenderDrawColor(rendererD, C(c));
+    SDL_RenderFillRect(rendererD, &rect);
+    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+    rect_frame(rect, 1);
+
+    char *msg = AS(msg_cqD, msg_writeD);
+    int msg_used = AS(msglen_cqD, msg_writeD);
+    if (msg_used) {
+      render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
+    } else if (show_map) {
+      msg = AS(msg_cqD, msg_writeD - 1);
+      msg_used = AS(msglen_cqD, msg_writeD - 1);
+      font_texture_alphamod(128);
+      render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
+      font_texture_alphamod(255);
+    }
   }
 
   // SDL_Point p = {0, display_rectD.h - height};
