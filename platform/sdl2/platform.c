@@ -674,11 +674,12 @@ alt_fill(y, x, left, top, width, height)
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
 }
 
-void rect_frame(r) SDL_Rect r;
+void rect_frame(r, scale) SDL_Rect r;
 {
-  SDL_RenderDrawRect(rendererD, &RF(r, 3));
-  SDL_RenderDrawRect(rendererD, &RF(r, 4));
-  SDL_RenderDrawRect(rendererD, &RF(r, 6));
+  int i = scale * 3;
+  SDL_RenderDrawRect(rendererD, &RF(r, i));
+  SDL_RenderDrawRect(rendererD, &RF(r, i + 1));
+  SDL_RenderDrawRect(rendererD, &RF(r, i + 3));
 }
 
 int
@@ -699,7 +700,7 @@ platform_draw()
   switch (mode) {
     case 2:
       show_map = 0;
-      alt_fill(AL(screenD), AL(screenD[0]), left, top, width, height);
+      // alt_fill(AL(screenD), AL(screenD[0]), left, top, width, height);
       for (int row = 0; row < AL(screenD); ++row) {
         SDL_Point p = {left, top + row * height};
         render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row],
@@ -802,7 +803,6 @@ platform_draw()
 
     SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &scale_rectD);
     SDL_SetRenderDrawColor(rendererD, C(whiteD));
-    rect_frame(scale_rectD);
   }
 
   if (TOUCH) {
@@ -840,7 +840,7 @@ platform_draw()
   //                     });
   //}
 
-  if (minimapD[0][0]) {
+  if (minimapD[0][4]) {
     SDL_Surface *surface = mmsurfaceD;
     SDL_Texture *texture = mmtextureD;
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
@@ -854,7 +854,9 @@ platform_draw()
     };
     if (minimap_enlargeD) r = scale_rectD;
     SDL_RenderCopy(rendererD, texture, NULL, &r);
+    if (!minimap_enlargeD) rect_frame(r, 3);
   }
+  rect_frame(scale_rectD, 1);
 
   if (TOUCH) {
     SDL_Color c = {0, 0, 78, 0};
@@ -886,7 +888,7 @@ platform_draw()
   SDL_SetRenderDrawColor(rendererD, C(c));
   SDL_RenderFillRect(rendererD, &rect);
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-  rect_frame(rect);
+  rect_frame(rect, 1);
 
   char *msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
@@ -900,8 +902,8 @@ platform_draw()
     font_texture_alphamod(255);
   }
 
-  //SDL_Point p = {0, display_rectD.h - height};
-  //render_font_string(rendererD, &fontD, affectinfoD, affectinfo_usedD, p);
+  // SDL_Point p = {0, display_rectD.h - height};
+  // render_font_string(rendererD, &fontD, affectinfoD, affectinfo_usedD, p);
 
   render_update();
 

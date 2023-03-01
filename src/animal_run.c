@@ -434,13 +434,13 @@ viz_minimap()
         color = 0;
         c_ptr = &caveD[row][col];
         mon = &entity_monD[c_ptr->midx];
-        if (mon->mlit)
+        if (mon->mlit) {
           color = BRIGHT + MAGENTA;
-        else if (c_ptr->fval == BOUNDARY_WALL)
+        } else if (c_ptr->fval == BOUNDARY_WALL) {
+          if ((col % 8) == 4 || (row % 8) == 4) color = BRIGHT + WHITE;
+        } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
           color = BRIGHT + WHITE;
-        else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
-          color = BRIGHT + WHITE;
-        else if (row == y && col == x) {
+        } else if (row == y && col == x) {
           color = BRIGHT + BLUE;
         } else if (row >= rmin && row <= rmax && col >= cmin && col <= cmax) {
           color = BRIGHT + BLACK;
