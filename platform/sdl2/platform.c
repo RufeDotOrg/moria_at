@@ -675,7 +675,7 @@ platform_draw()
     case 1:
       memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
       show_map = 0;
-      for (int row = 0; row < STATUS_HEIGHT; ++row) {
+      for (int row = 0; row < AL(overlayD); ++row) {
         font_colorD = whiteD;
         SDL_Point p = {
             left,
@@ -692,7 +692,7 @@ platform_draw()
       break;
   }
 
-  for (int row = 0; row < STATUS_HEIGHT; ++row) {
+  for (int row = 0; row < AL(overlayD); ++row) {
     SDL_Point p = {0, (row + 1) * height};
     render_font_string(rendererD, &fontD, vitalinfoD[row], AL(vitalinfoD[0]),
                        p);

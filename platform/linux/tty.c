@@ -157,14 +157,14 @@ platform_draw()
       buffer_append(AP(tc_crlfD));
     }
   } else if (overlay_usedD[0]) {
-    for (int row = 0; row < STATUS_HEIGHT; ++row) {
+    for (int row = 0; row < AL(overlayD); ++row) {
       buffer_append(AP(tc_clear_lineD));
       buffer_append(AP(vitalinfoD[row]));
       buffer_append(overlayD[row], overlay_usedD[row]);
       buffer_append(AP(tc_crlfD));
     }
   } else {
-    for (int row = 0; row < STATUS_HEIGHT - 1; ++row) {
+    for (int row = 0; row < AL(vitalinfoD) - 1; ++row) {
       buffer_append(AP(tc_clear_lineD));
       buffer_append(AP(vitalinfoD[row]));
       if (row < AL(symmapD)) buffer_append(AP(symmapD[row]));
