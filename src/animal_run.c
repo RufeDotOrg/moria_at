@@ -440,12 +440,10 @@ viz_minimap()
           color = BRIGHT + WHITE;
         else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL)
           color = BRIGHT + WHITE;
-        else if (row == rmin || row == rmax) {
-          if (col >= cmin && col <= cmax) color = BRIGHT + BLACK;
-        } else if (col == cmin || col == cmax) {
-          if (row >= rmin && row <= rmax) color = BRIGHT + BLACK;
-        } else if (row == y && col == x) {
+        else if (row == y && col == x) {
           color = BRIGHT + BLUE;
+        } else if (row >= rmin && row <= rmax && col >= cmin && col <= cmax) {
+          color = BRIGHT + BLACK;
         }
 
         if (color == 0 && c_ptr->oidx) {
