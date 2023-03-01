@@ -109,14 +109,6 @@ vital_update()
   line += 1;
   BufMsg(vitalinfo, "AC  : %6d", cbD.pac - cbD.hide_toac);
   BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
-  line += 1;
-  if (HACK) {
-    BufMsg(vitalinfo, "DEBUG");
-    BufMsg(vitalinfo, "y,x :%3d,%3d", uD.y, uD.x);
-    BufMsg(vitalinfo, "sec :%3d,%3d", panelD.panel_col, panelD.panel_row);
-  }
-  BufMsg(vitalinfo, "turn: %6d", turnD);
-
   BufPad(vitalinfo, AL(vitalinfoD), AL(vitalinfoD[0]));
 }
 static int
