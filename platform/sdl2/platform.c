@@ -1065,7 +1065,7 @@ char_by_dir(dir)
       return ' ';
   }
 }
-int
+static int
 dir_by_yx(y, x)
 {
   int dir = 5;
@@ -1082,7 +1082,7 @@ dir_by_yx(y, x)
 
 #define xrange 0.33f
 #define yrange 0.28f
-char
+static char
 map_touch(finger, ty, tx)
 float ty, tx;
 {
