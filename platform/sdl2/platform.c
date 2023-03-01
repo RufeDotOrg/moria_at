@@ -27,6 +27,12 @@ enum { TOUCH = 1 };
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
 #define RS(r, s) (r.x * s.w), (r.y * s.h), (r.w * s.w), (r.h * s.h)
+#define RF(r, framing)                                                    \
+  (SDL_Rect)                                                              \
+  {                                                                       \
+    .x = r.x - (framing), .y = r.y - (framing), .w = r.w + 2 * (framing), \
+    .h = r.h + 2 * (framing),                                             \
+  }
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
 
@@ -668,6 +674,13 @@ alt_fill(y, x, left, top, width, height)
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
 }
 
+void rect_frame(r) SDL_Rect r;
+{
+  SDL_RenderDrawRect(rendererD, &RF(r, 3));
+  SDL_RenderDrawRect(rendererD, &RF(r, 4));
+  SDL_RenderDrawRect(rendererD, &RF(r, 6));
+}
+
 int
 platform_draw()
 {
@@ -788,6 +801,8 @@ platform_draw()
     zoom_rect.h = (zy * 2 + 1) * ART_H;
 
     SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &scale_rectD);
+    SDL_SetRenderDrawColor(rendererD, C(whiteD));
+    rect_frame(scale_rectD);
   }
 
   if (TOUCH) {
@@ -871,6 +886,7 @@ platform_draw()
   SDL_SetRenderDrawColor(rendererD, C(c));
   SDL_RenderFillRect(rendererD, &rect);
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+  rect_frame(rect);
 
   char *msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
@@ -884,8 +900,8 @@ platform_draw()
     font_texture_alphamod(255);
   }
 
-  SDL_Point p = {0, display_rectD.h - height};
-  render_font_string(rendererD, &fontD, affectinfoD, affectinfo_usedD, p);
+  //SDL_Point p = {0, display_rectD.h - height};
+  //render_font_string(rendererD, &fontD, affectinfoD, affectinfo_usedD, p);
 
   render_update();
 
@@ -1084,7 +1100,7 @@ SDL_Event event;
     mx = map_rectD.w * scale;
     my = map_rectD.h * scale;
     scale_rectD.x = dx / 2 - mx / 2;
-    scale_rectD.y = py;
+    scale_rectD.y = py + (dy - my - py) / 2;
     scale_rectD.w = mx;
     scale_rectD.h = my;
     scaleD = scale;
