@@ -847,15 +847,21 @@ platform_draw()
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
                            (SDL_Point){0, 0}, surface);
     SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
+    int sr = scale_rectD.x + scale_rectD.w;
+    int ax = display_rectD.w - sr;
+    int mmscale = 2;
+    int crx = (ax - mmscale * MAX_WIDTH) / 2;
     SDL_Rect r = {
-        display_rectD.w - 2 * MAX_WIDTH - width,
+        sr + crx,
         top + height,
-        2 * MAX_WIDTH,
-        2 * MAX_HEIGHT,
+        mmscale * MAX_WIDTH,
+        mmscale * MAX_HEIGHT,
     };
-    if (minimap_enlargeD) r = scale_rectD;
     SDL_RenderCopy(rendererD, texture, NULL, &r);
-    if (!minimap_enlargeD) rect_frame(r, 3);
+    if (minimap_enlargeD) {
+      SDL_RenderCopy(rendererD, texture, NULL, &scale_rectD);
+    }
+    rect_frame(r, 3);
 
     len = snprintf(AP(tmp), "%d feet", dun_level * 50);
     SDL_Point p = {
