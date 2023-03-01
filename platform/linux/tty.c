@@ -167,9 +167,14 @@ platform_draw()
       buffer_append(AP(tc_clear_lineD));
       buffer_append(AP(vitalinfoD[row]));
       if (row < AL(symmapD)) buffer_append(AP(symmapD[row]));
+      if (row < AL(active_affectD)) {
+        if (active_affectD[row]) {
+          char* aff = affectD[row][active_affectD[row] - 1];
+          buffer_append(aff, strlen(aff));
+        }
+      }
       buffer_append(AP(tc_crlfD));
     }
-    buffer_append(affectinfoD, affectinfo_usedD);
   }
   buffer_append(AP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
