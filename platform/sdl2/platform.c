@@ -17,11 +17,11 @@
 
 #include "third_party/zlib/puff.c"
 
-#ifndef ANDROID
-enum { ANDROID };
-enum { TOUCH };
-#else
+#ifdef ANDROID
 enum { TOUCH = 1 };
+#else
+enum { TOUCH };
+enum { ANDROID };
 #endif
 #define CTRL(x) (x & 037)
 #define P(p) p.x, p.y
@@ -804,6 +804,7 @@ platform_draw()
 
     SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &scale_rectD);
     SDL_SetRenderDrawColor(rendererD, C(whiteD));
+    rect_frame(scale_rectD, 1);
   }
 
   if (TOUCH) {
@@ -828,6 +829,7 @@ platform_draw()
     }
   }
 
+  SDL_SetRenderDrawColor(rendererD, C(whiteD));
   if (minimapD[0][4]) {
     SDL_Surface *surface = mmsurfaceD;
     SDL_Texture *texture = mmtextureD;
@@ -844,22 +846,24 @@ platform_draw()
         mmscale * MAX_WIDTH,
         mmscale * MAX_HEIGHT,
     };
-    SDL_RenderCopy(rendererD, texture, NULL, &r);
+    if (mode == 0) {
+      SDL_RenderCopy(rendererD, texture, NULL, &r);
+      rect_frame(r, 3);
+
+      len = snprintf(AP(tmp), "%d feet", dun_level * 50);
+      SDL_Point p = {
+          r.x + r.w / 2 - (len / 2 * width),
+          top - (height / 2),
+      };
+      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    }
     if (minimap_enlargeD) {
       SDL_RenderCopy(rendererD, texture, NULL, &scale_rectD);
+      rect_frame(scale_rectD, 1);
     }
-    rect_frame(r, 3);
-
-    len = snprintf(AP(tmp), "%d feet", dun_level * 50);
-    SDL_Point p = {
-        r.x + r.w / 2 - (len / 2 * width),
-        top - (height / 2),
-    };
-    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
   }
-  rect_frame(scale_rectD, 1);
 
-  {
+  if (mode == 0) {
     int sr = scale_rectD.x + scale_rectD.w;
     int ax = display_rectD.w - sr;
     int mmscale = 2;
@@ -895,6 +899,7 @@ platform_draw()
       char text = 'a' + finger_rowD;
       render_font_string(rendererD, &fontD, &text, 1, p);
     }
+    SDL_SetRenderDrawColor(rendererD, C(whiteD));
   }
 
   {
@@ -941,8 +946,31 @@ platform_draw()
     }
   }
 
-  // SDL_Point p = {0, display_rectD.h - height};
-  // render_font_string(rendererD, &fontD, affectinfoD, affectinfo_usedD, p);
+  if (mode == 0) {
+    int sr = scale_rectD.x + scale_rectD.w;
+    int ax = display_rectD.w - sr;
+    int lx = sr + width;
+    int mmscale = 2;
+    SDL_Point p = {
+        lx,
+        top + 4 * height + mmscale * MAX_HEIGHT + 16,
+    };
+    char *affstr[3];
+    alt_fill(AL(active_affectD) / AL(affstr), 26, p.x, p.y, width, height);
+    for (int it = 0; it < AL(active_affectD) / AL(affstr); ++it) {
+      for (int jt = 0; jt < AL(affstr); ++jt) {
+        int idx = AL(affstr) * it + jt;
+        if (active_affectD[idx])
+          affstr[jt] = affectD[idx][active_affectD[idx] - 1];
+        else
+          affstr[jt] = "";
+      }
+
+      len = snprintf(AP(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0], affstr[1], affstr[2]);
+      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+      p.y += height;
+    }
+  }
 
   render_update();
 

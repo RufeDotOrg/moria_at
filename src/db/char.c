@@ -1,6 +1,6 @@
 
 
-struct classS classD[] = {
+static struct classS classD[] = {
     {"Warrior", 9, 25, 14, 1, 38, 70, 55, 18, {5, -2, -2, 2, 2, -1}, 0, 0, 0},
     {"Mage",
      0,
@@ -70,7 +70,7 @@ struct classS classD[] = {
 };
 
 // level adjustment
-int level_adj[][MAX_LA] = {
+static int level_adj[][MAX_LA] = {
     /*         bth    bthb   device  disarm   save/misc hit  */
     /* Warrior */ {4, 4, 2, 2, 3},
     /* Mage    */ {2, 2, 4, 3, 3},
@@ -80,7 +80,7 @@ int level_adj[][MAX_LA] = {
     /* Paladin */ {3, 3, 3, 2, 3},
 };
 
-struct raceS raceD[] = {
+static struct raceS raceD[] = {
     {
         "Human", {0, 0, 0, 0, 0, 0},
         14,      6,
@@ -206,7 +206,7 @@ struct raceS raceD[] = {
     },
 };
 
-char* spell_nameD[] = {
+static char* spell_nameD[] = {
     /* Mage Spells */
     "Magic Missile",
     "Detect Monsters",
@@ -273,15 +273,28 @@ char* spell_nameD[] = {
     "Holy Word",
 };
 
-char stat_nameD[MAX_A][5] = {
+static char stat_nameD[MAX_A][5] = {
     "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
 };
-char* stat_lossD[] = {
+static char* stat_lossD[] = {
     "You feel weaker",      "You have trouble thinking clearly",
     "You feel very naive",  "You feel clumsy",
     "Your body is damaged", "Your skin starts to itch",
 };
-char* stat_restD[] = {
+static char* stat_restD[] = {
     "strength",  "intelligence", "wisdom",
     "dexterity", "constitution", "charisma",
+};
+static char* affectD[][2] = {
+    {"Recall"},
+    {"SeeInvis"},
+    {"Burdened"},
+    {"Slow (1)", "Slow (2)"},
+    {"Fast (1)", "Fast (2)"},
+    {"Blind"},
+    {"Confused"},
+    {"Afraid"},
+    {"Paralyse"},
+    {"Poison"},
+    {"Hungry", "Starving"},
 };

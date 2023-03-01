@@ -480,70 +480,30 @@ py_speed()
   return (py_affect(MA_SLOW) + py_tr(TR_SLOWNESS)) -
          (py_affect(MA_FAST) + py_tr(TR_SPEED));
 }
-static char* affectD[][2] = {
-    {"Recall"},
-    {"SeeInvis"},
-    {"Burdened"},
-    {"Slow (1)", "Slow (2)"},
-    {"Fast (1)", "Fast (2)"},
-    {"Blind"},
-    {"Confused"},
-    {"Afraid"},
-    {"Paralyse"},
-    {"Poison"},
-    {"Hungry", "Starving"},
-};
 void
 affect_update()
 {
-  int active[AL(affectD)];
-  int idx, count, pad, padstep, len, sum;
-
-  padstep = SDL ? 10 : 7;
-  idx = 0;
-  active[idx++] = py_affect(MA_RECALL) != 0;
-  active[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
-  active[idx++] = (pack_heavy != 0);
-
+  int idx = 0;
   int pspeed = py_speed();
+
+  active_affectD[idx++] = py_affect(MA_RECALL) != 0;
+  active_affectD[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
+  active_affectD[idx++] = (pack_heavy != 0);
+
   // Slow
-  active[idx] = pspeed > 0;
-  active[idx++] += pspeed > 1;
+  active_affectD[idx] = pspeed > 0;
+  active_affectD[idx++] += pspeed > 1;
   // Fast
-  active[idx] = pspeed < 0;
-  active[idx++] += pspeed < -1;
+  active_affectD[idx] = pspeed < 0;
+  active_affectD[idx++] += pspeed < -1;
 
-  active[idx++] = (maD[MA_BLIND] != 0);
-  active[idx++] = (countD.confusion != 0);
-  active[idx++] = (countD.fear != 0);
-  active[idx++] = (countD.paralysis != 0);
-  active[idx++] = (countD.poison != 0);
-  active[idx] = (uD.food <= PLAYER_FOOD_ALERT);
-  active[idx++] += (uD.food <= PLAYER_FOOD_WEAK);
-
-  len = 0;
-  sum = 0;
-  for (int it = 0; it < idx; ++it) {
-    if (active[it]) {
-      count = snprintf(&affectinfoD[len], AL(affectinfoD) - len, "%s ",
-                       affectD[it][active[it] - 1]);
-      if (count > 0) len += count;
-    }
-    pad = (1 + it) * padstep;
-    while (len < pad) affectinfoD[len++] = ' ';
-  }
-
-  static char d0[] = "Town Level";
-  if (dun_level != 0) {
-    count = snprintf(&affectinfoD[len], AL(affectinfoD) - len, "%d feet",
-                     dun_level * 50);
-  } else if (AL(affectinfoD) - len > AL(d0)) {
-    count = AL(d0);
-    strcpy(&affectinfoD[len], d0);
-  }
-
-  if (count > 0) len += count;
-  affectinfo_usedD = len;
+  active_affectD[idx++] = (maD[MA_BLIND] != 0);
+  active_affectD[idx++] = (countD.confusion != 0);
+  active_affectD[idx++] = (countD.fear != 0);
+  active_affectD[idx++] = (countD.paralysis != 0);
+  active_affectD[idx++] = (countD.poison != 0);
+  active_affectD[idx] = (uD.food <= PLAYER_FOOD_ALERT);
+  active_affectD[idx++] += (uD.food <= PLAYER_FOOD_WEAK);
 }
 void
 draw()
@@ -11390,6 +11350,8 @@ dungeon()
 
   new_level_flag = FALSE;
   do {
+    CCM(CCM_HOTLOAD, platform_update());
+
     msg_countD = 1;
     turnD += 1;
     if (dun_level != 0) {
@@ -11401,7 +11363,6 @@ dungeon()
     ma_tick();
     inven_check_weight();
     inven_check_light();
-    CCM(CCM_HOTLOAD, platform_update());
 
     turn_flag = FALSE;
     do {
