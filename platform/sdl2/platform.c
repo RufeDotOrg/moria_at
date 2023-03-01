@@ -209,9 +209,9 @@ static uint32_t paletteD[] = {
 };
 static uint32_t rgbaD[AL(paletteD)];
 static uint32_t lightingD[] = {
-    CHEX(0x7878780f),
-    CHEX(0xaaaaaa1e),
-    CHEX(0xdcdcdc2d),
+    CHEX(0x77777730),
+    CHEX(0xaaaaaa30),
+    CHEX(0xdddddd30),
 };
 void
 bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
