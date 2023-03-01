@@ -208,6 +208,11 @@ static uint32_t paletteD[] = {
     CHEX(0x729fcfff), CHEX(0xad7fa8ff), CHEX(0x34e2e2ff), CHEX(0xeeeeecff),
 };
 static uint32_t rgbaD[AL(paletteD)];
+static uint32_t lightingD[] = {
+    CHEX(0x7878780f),
+    CHEX(0xaaaaaa1e),
+    CHEX(0xdcdcdc2d),
+};
 void
 bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
                        struct SDL_Surface *surface)
@@ -529,10 +534,6 @@ font_texture_alphamod(alpha)
 }
 
 // Texture
-static SDL_Color mapbgD;
-static SDL_Color lightbgD;
-static SDL_Color shroudbgD;
-
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
 EXTERN SDL_FRect buttonD[2];
 EXTERN SDL_FRect padD;
@@ -741,17 +742,8 @@ platform_draw()
           }
         }
 
-        switch (light) {
-          case 0:
-            SDL_SetRenderDrawColor(rendererD, C(mapbgD));
-            break;
-          case 1:
-            SDL_SetRenderDrawColor(rendererD, C(shroudbgD));
-            break;
-          case 2:
-            SDL_SetRenderDrawColor(rendererD, C(lightbgD));
-            break;
-        }
+        SDL_Color c = *(SDL_Color *)&lightingD[light];
+        SDL_SetRenderDrawColor(rendererD, C(c));
         SDL_RenderFillRect(rendererD, &sprite_rect);
         SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
       }
@@ -1428,9 +1420,6 @@ platform_init()
     SDL_SetTextureBlendMode(mmtextureD, SDL_BLENDMODE_NONE);
   }
 
-  mapbgD = (SDL_Color){120, 120, 120, 15};
-  lightbgD = (SDL_Color){220, 220, 220, 45};
-  shroudbgD = (SDL_Color){170, 170, 170, 30};
   font_colorD = whiteD;
 
   if (ANDROID) zoom_factorD = 2;
