@@ -23,12 +23,13 @@ static char log_extD[] = " -more-";
     msg_game(vtype, len);                                       \
   }
 
-#define BufMsg(name, text, ...)                                         \
-  {                                                                     \
-    int used = name##_usedD[line];                                      \
-    used += snprintf(name##D[line] + used, AL(name##D[0]) - used, text, \
-                     ##__VA_ARGS__);                                    \
-    name##_usedD[line++] = used;                                        \
+#define BufMsg(name, text, ...)                                     \
+  {                                                                 \
+    int used = name##_usedD[line];                                  \
+    int avail = AL(name##D[0]) - used;                              \
+    int r;                                                          \
+    r = snprintf(name##D[line] + used, avail, text, ##__VA_ARGS__); \
+    if (r > 0 && r <= avail) name##_usedD[line++] = used + r;       \
   }
 #define BufLineAppend(name, line, text, ...)                             \
   {                                                                      \
@@ -5738,7 +5739,6 @@ magic_init()
   int i, j, k, h;
   void* tmp;
   uint32_t seed;
-  char string[80];
 
   seed = rnd_seed;
   rnd_seed = obj_seed;
@@ -5783,18 +5783,18 @@ magic_init()
     mushrooms[j] = tmp;
   }
   for (h = 0; h < AL(titleD); h++) {
-    string[0] = 0;
+    descD[0] = 0;
     k = randint(2) + 1;
     for (i = 0; i < k; i++) {
       for (j = randint(2); j > 0; j--)
-        strcat(string, syllableD[randint(AL(syllableD)) - 1]);
-      if (i < k - 1) strcat(string, " ");
+        strcat(descD, syllableD[randint(AL(syllableD)) - 1]);
+      if (i < k - 1) strcat(descD, " ");
     }
-    if (string[8] == ' ')
-      string[8] = '\0';
+    if (descD[8] == ' ')
+      descD[8] = '\0';
     else
-      string[9] = '\0';
-    strcat(titleD[h], string);
+      descD[9] = '\0';
+    strcat(titleD[h], descD);
   }
   rnd_seed = seed;
 }
@@ -7320,18 +7320,18 @@ inven_overlay(begin, end)
   overlay_submodeD = begin == 0 ? 'i' : 'e';
   for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
-    int len = 1;
     overlayD[line][0] = ' ';
 
     if (obj_id) {
       count += 1;
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, TRUE);
-      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %.77s",
-                     'a' + it - begin, descD);
+    } else {
+      descD[0] = 0;
     }
 
-    overlay_usedD[line] = len;
+    overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]),
+                                   "%c) %.77s", 'a' + it - begin, descD);
     line += 1;
   }
   return count;
@@ -8926,7 +8926,7 @@ py_character()
   BufMsg(screen, "%-17.017s: %s", "Gender", uD.male ? "Male" : "Female");
   BufMsg(screen, "%-17.017s: %s", "Class", classD[uD.clidx].name);
 
-  BufPad(screen, MAX_A, 38);
+  BufPad(screen, MAX_A, 35);
 
   line = 0;
   BufMsg(screen, "%-13.013s: %d", "Age", 16);
@@ -8934,7 +8934,7 @@ py_character()
   BufMsg(screen, "%-13.013s: %d", "Weight", uD.wt);
   BufMsg(screen, "%-13.013s: %d", "Social Class", 1);
 
-  BufPad(screen, MAX_A, 61);
+  BufPad(screen, MAX_A, 57);
 
   line = 0;
   for (int it = 0; it < MAX_A; ++it) {
@@ -8951,7 +8951,7 @@ py_character()
   BufMsg(screen, "%-13.013s: %6d", "+ To Armor", cbD.ptoac - cbD.hide_toac);
   BufMsg(screen, "%-13.013s: %6d", "Total Armor", cbD.pac - cbD.hide_toac);
 
-  BufPad(screen, MAX_A * 2, 28);
+  BufPad(screen, MAX_A * 2, 24);
 
   line = MAX_A + 1;
   BufMsg(screen, "%-11.011s: %6d", "Level", uD.lev);
@@ -8960,7 +8960,7 @@ py_character()
   BufMsg(screen, "%-11.011s: %6d", "Exp to Adv", lev_exp(uD.lev));
   BufMsg(screen, "%-11.011s: %6d", "Gold", uD.gold);
 
-  BufPad(screen, MAX_A * 2, 52);
+  BufPad(screen, MAX_A * 2, 46);
 
   line = MAX_A + 1;
   BufMsg(screen, "%-15.015s: %6d", "Max Hit Points", uD.mhp);
@@ -8980,13 +8980,13 @@ py_character()
   BufMsg(screen, "%-13.013s: %6d", "Fighting", xbth);
   BufMsg(screen, "%-13.013s: %6d", "Bows", 0);
   BufMsg(screen, "%-13.013s: %6d", "Saving Throw", xsave);
-  BufPad(screen, MAX_A * 3, 28);
+  BufPad(screen, MAX_A * 3, 23);
 
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
   BufMsg(screen, "%-12.012s: %6d", "Disarming", xdis);
   BufMsg(screen, "%-12.012s: %6d", "Magic Device", xdev);
-  BufPad(screen, MAX_A * 3, 55);
+  BufPad(screen, MAX_A * 3, 49);
 
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-12.012s: %6d", "Perception", MAX(40 - uD.fos, 0));

@@ -650,6 +650,24 @@ mode_change()
   return mode;
 }
 
+void
+alt_fill(y, x, left, width, height)
+{
+  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
+  for (int row = 0; row < y; ++row) {
+    SDL_Rect rect = {
+        left,
+        (row + 1) * height,
+        (x + 1) * width,
+        height,
+    };
+    SDL_Color c = *(SDL_Color *)&lightingD[row & 0x1];
+    SDL_SetRenderDrawColor(rendererD, C(c));
+    SDL_RenderFillRect(rendererD, &rect);
+  }
+  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+}
+
 int
 platform_draw()
 {
@@ -667,6 +685,7 @@ platform_draw()
   switch (mode) {
     case 2:
       show_map = 0;
+      alt_fill(AL(screenD), AL(screenD[0]), left, width, height);
       for (int row = 0; row < AL(screenD); ++row) {
         SDL_Point p = {left, (row + 1) * height};
         render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row],
@@ -674,8 +693,9 @@ platform_draw()
       }
       break;
     case 1:
-      memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
       show_map = 0;
+      alt_fill(AL(overlayD), AL(overlayD[0]), left, width, height);
+      memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
       for (int row = 0; row < AL(overlayD); ++row) {
         font_colorD = whiteD;
         SDL_Point p = {
@@ -693,7 +713,8 @@ platform_draw()
       break;
   }
 
-  for (int row = 0; row < AL(overlayD); ++row) {
+  alt_fill(AL(vitalinfoD), AL(vitalinfoD[0]), 0, width, height);
+  for (int row = 0; row < AL(vitalinfoD); ++row) {
     SDL_Point p = {0, (row + 1) * height};
     render_font_string(rendererD, &fontD, vitalinfoD[row], AL(vitalinfoD[0]),
                        p);
