@@ -828,19 +828,6 @@ platform_draw()
     }
   }
 
-  //{
-  //  render_font_string(rendererD, &fontD, versionD, sizeof(versionD) - 1,
-  //                     (SDL_Point){
-  //                         display_rectD.w - 2 * MAX_WIDTH,
-  //                         height,
-  //                     });
-  //  render_font_string(rendererD, &fontD, git_hashD, sizeof(git_hashD) - 1,
-  //                     (SDL_Point){
-  //                         display_rectD.w - width / 2 - 2 * MAX_WIDTH,
-  //                         2 * height,
-  //                     });
-  //}
-
   if (minimapD[0][4]) {
     SDL_Surface *surface = mmsurfaceD;
     SDL_Texture *texture = mmtextureD;
@@ -871,6 +858,25 @@ platform_draw()
     if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
   }
   rect_frame(scale_rectD, 1);
+
+  {
+    int sr = scale_rectD.x + scale_rectD.w;
+    int ax = display_rectD.w - sr;
+    int mmscale = 2;
+    int crx;
+
+    crx = (ax - sizeof(versionD) * width) / 2;
+    SDL_Point p = {
+        sr + crx,
+        top + height + mmscale * MAX_HEIGHT + 16,
+    };
+    render_font_string(rendererD, &fontD, versionD, sizeof(versionD) - 1, p);
+
+    crx = (ax - sizeof(git_hashD) * width) / 2;
+    p.x = sr + crx;
+    p.y += height;
+    render_font_string(rendererD, &fontD, git_hashD, sizeof(git_hashD) - 1, p);
+  }
 
   if (TOUCH) {
     SDL_Color c = {0, 0, 78, 0};
