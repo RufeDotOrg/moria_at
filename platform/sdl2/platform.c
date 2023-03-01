@@ -1311,11 +1311,11 @@ SDL_Event event;
           return '.';
       }
     } else {
-      if (tp.x < .85 && tp.y < .09) return CTRL('p');
-      if (tp.x < .25 && tp.y < .5) return 'C';
-      if (tp.x > .85 && tp.y < .09) return 'v';
-      if (tp.x > .85 && tp.y < .23) return 'M';
-      if (tp.x > .25 && tp.x < .85 && tp.y > .90) return '-';
+      if (tp.y < .09) return CTRL('p');
+      if (tp.x < .23 && tp.y < .5) return 'C';
+      if (tp.x > .775 && tp.y < .24) return 'M';
+      if (tp.x > .775 && tp.y < .30) return 'v';
+      if (tp.x > .23 && tp.x < .775 && tp.y > .90) return '-';
     }
   }
 
