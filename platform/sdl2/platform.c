@@ -1269,13 +1269,6 @@ SDL_Event *event;
     if (SDL_PointInFRect(&tp, &buttonD[it])) r = 1 + it;
   }
 
-  for (int it = 0; it < AL(ppD); ++it) {
-    SDL_FRect rect = rect_from_pp(it);
-    if (SDL_PointInFRect(&tp, &rect)) {
-      r = TOUCH_PAD + pp_keyD[it];
-    }
-  }
-
   if (SDL_PointInFRect(&tp, &padD)) {
     float min_dsq = FLT_MAX;
     for (int it = 0; it < AL(ppD); ++it) {
