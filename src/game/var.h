@@ -12,7 +12,7 @@ EXTERN int vitalinfo_usedD[AL(vitalinfoD)];
 EXTERN int active_affectD[16];
 
 // Full-screen & overlay (choice)
-EXTERN char screenD[22][72];
+EXTERN char screenD[22][98];
 EXTERN int screen_usedD[AL(screenD)];
 EXTERN char overlayD[22][72];
 EXTERN int overlay_usedD[AL(overlayD)];
