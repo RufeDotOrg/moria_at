@@ -1532,6 +1532,8 @@ platform_init()
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
     SDL_Init(SDL_SCOPE);
 
+    if (ANDROID) SDL_DisableScreenSaver();
+
     if (!render_init()) return;
   }
 
