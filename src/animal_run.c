@@ -593,6 +593,7 @@ msg_history()
   char* log;
   int log_used, line;
 
+  screen_submodeD = 1;
   line = 0;
   for (int it = 1; it < MAX_MSG; ++it) {
     log = AS(msg_cqD, msg_writeD + it);
@@ -7518,6 +7519,7 @@ inven_study(iidx)
   obj = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[obj->tidx];
   if (obj->id) {
+    screen_submodeD = 1;
     if (HACK) obj->idflag = ID_REVEAL;
     eqidx = may_equip(obj->tval);
 
@@ -8807,6 +8809,7 @@ show_version()
 
   versionD[AL(versionD) - 1] = 0;
 
+  screen_submodeD = 1;
   line = 0;
   BufMsg(screen, "Version: %s", versionD);
   BufMsg(screen, "Git Hash: %s", git_hashD);
@@ -8868,13 +8871,7 @@ py_character()
   line = 0;
   col = 0;
 
-  BufMsg(screen, "%-17.017s: %s", "Race", raceD[uD.ridx].name);
-  BufMsg(screen, "%-17.017s: %s", "Gender", uD.male ? "Male" : "Female");
-  BufMsg(screen, "%-17.017s: %s", "Class", classD[uD.clidx].name);
-
-  BufPad(screen, MAX_A, 35);
-
-  line = 0;
+  screen_submodeD = 1;
   BufMsg(screen, "%-13.013s: %d", "Age", 16);
   BufMsg(screen, "%-13.013s: %d", "Height", 74);
   BufMsg(screen, "%-13.013s: %d", "Weight", uD.wt);
@@ -8938,6 +8935,13 @@ py_character()
   BufMsg(screen, "%-12.012s: %6d", "Perception", MAX(40 - uD.fos, 0));
   BufMsg(screen, "%-12.012s: %6d", "Searching", uD.search);
   BufMsg(screen, "%-12.012s: %d feet", "Infra-Vision", uD.infra * 10);
+
+  BufPad(screen, MAX_A, 35);
+
+  line = 0;
+
+  MSG("Name: %-20.020s Race: %-20.020s Class: %-20.020s", "...",
+      raceD[uD.ridx].name, classD[uD.clidx].name);
 }
 void
 py_takeoff()
@@ -8967,6 +8971,7 @@ py_takeoff()
 static void
 py_grave()
 {
+  screen_submodeD = 0;
   int row, col;
   MSG("Killed by %s. (CTRL-P log) (C/e/i/o/v/ESC)", death_descD);
   row = col = 0;
@@ -9015,8 +9020,7 @@ py_help()
 {
   int line = 0;
 
-  msg_print("Gameplay Commands");
-  BufMsg(screen, "? - help");
+  screen_submodeD = 1;
   BufMsg(screen, ",: pickup object");
   BufMsg(screen, "c: close object");
   BufMsg(screen, "d: drop object");
@@ -9034,9 +9038,9 @@ py_help()
   BufMsg(screen, "<: up stairs");
   BufMsg(screen, ">: down stairs");
 
-  BufPad(screen, AL(screenD), 30);
+  BufPad(screen, AL(screenD), 34);
 
-  line = 1;
+  line = 0;
   BufMsg(screen, "C: character screen");
   BufMsg(screen, "D: disarm trap");
   BufMsg(screen, "E: eat object");
@@ -9049,10 +9053,11 @@ py_help()
   BufMsg(screen, "W: where about the dungeon");
   BufMsg(screen, "X: exchange primary weapon to offhand");
   BufMsg(screen, "Z: staff invocation");
-  BufMsg(screen, ".: automatic object interaction (experimental)");
+  BufMsg(screen, ".: automatic dungeon interaction");
   line += 1;
   BufMsg(screen, "CTRL-p: message history");
-  BufMsg(screen, "CTRL-x: save and exit (experiemntal)");
+  BufMsg(screen, "CTRL-x: save and exit (test)");
+  msg_print("? - help");
 
   if (HACK) {
     msg_pause();
@@ -11519,6 +11524,7 @@ dungeon()
               if (dun_level == 0)
                 msg_print("You don't have a map of town.");
               else {
+                screen_submodeD = 0;
                 screenD[0][0] = ' ';
                 screen_usedD[0] = 1;
                 if (SDL)

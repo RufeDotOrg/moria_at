@@ -15,6 +15,7 @@ EXTERN int active_affectD[12];
 // Full-screen & overlay (choice)
 EXTERN char screenD[22][98];
 EXTERN int screen_usedD[AL(screenD)];
+EXTERN int screen_submodeD;
 EXTERN char overlayD[22][72];
 EXTERN int overlay_usedD[AL(overlayD)];
 EXTERN int overlay_submodeD;

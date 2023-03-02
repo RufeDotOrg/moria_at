@@ -701,11 +701,21 @@ platform_draw()
   switch (mode) {
     case 2:
       show_map = 0;
-      // alt_fill(AL(screenD), AL(screenD[0]), left, top, width, height);
+      if (screen_submodeD)
+        alt_fill(AL(screenD), AL(screenD[0]), left, top, width, height);
       for (int row = 0; row < AL(screenD); ++row) {
         SDL_Point p = {left, top + row * height};
         render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row],
                            p);
+      }
+      if (screen_submodeD) {
+        SDL_Rect r = {
+            left,
+            top,
+            (AL(screenD[0]) + 1) * width,
+            AL(screenD) * height,
+        };
+        rect_frame(r, 1);
       }
       break;
     case 1:
