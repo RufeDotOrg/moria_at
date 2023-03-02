@@ -728,12 +728,46 @@ platform_draw()
       font_colorD = whiteD;
       break;
   }
+  {
+    alt_fill(AL(vitalD), 26 + 1, 0, top, width, height);
+    for (int it = 0; it < MAX_A; ++it) {
+      len = snprintf(AP(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
+                     vitalD[it], stat_nameD[it], vital_statD[it]);
+      SDL_Point p = {width / 2, top + it * height};
+      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    }
+    SDL_Rect r = {width / 2, top, (26 + 1) * width, MAX_A * height};
+    rect_frame(r, 1);
+  }
+  {
+    char *affstr[3];
+    SDL_Point p = {
+        width / 2,
+        top + (MAX_A)*height + 6,
+    };
+    alt_fill(AL(active_affectD) / AL(affstr), 26 + 1, p.x, p.y, width, height);
+    enum { AFF_Y = AL(active_affectD) / AL(affstr) };
+    for (int it = 0; it < AFF_Y; ++it) {
+      for (int jt = 0; jt < AL(affstr); ++jt) {
+        int idx = AL(affstr) * it + jt;
+        if (active_affectD[idx])
+          affstr[jt] = affectD[idx][active_affectD[idx] - 1];
+        else
+          affstr[jt] = "";
+      }
 
-  alt_fill(AL(vitalinfoD), AL(vitalinfoD[0]), 0, top, width, height);
-  for (int row = 0; row < AL(vitalinfoD); ++row) {
-    SDL_Point p = {0, top + row * height};
-    render_font_string(rendererD, &fontD, vitalinfoD[row], AL(vitalinfoD[0]),
-                       p);
+      len = snprintf(AP(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0], affstr[1],
+                     affstr[2]);
+      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+      p.y += height;
+    }
+    SDL_Rect r = {
+        width / 2,
+        top + (MAX_A)*height + 6,
+        (26 + 1) * width,
+        AFF_Y * height,
+    };
+    rect_frame(r, 1);
   }
 
   SDL_SetRenderTarget(rendererD, 0);
@@ -947,33 +981,6 @@ platform_draw()
     }
   }
 
-  if (mode == 0) {
-    int sr = scale_rectD.x + scale_rectD.w;
-    int ax = display_rectD.w - sr;
-    int lx = sr + width;
-    int mmscale = 2;
-    SDL_Point p = {
-        lx,
-        top + 4 * height + mmscale * MAX_HEIGHT + 16,
-    };
-    char *affstr[3];
-    alt_fill(AL(active_affectD) / AL(affstr), 26, p.x, p.y, width, height);
-    for (int it = 0; it < AL(active_affectD) / AL(affstr); ++it) {
-      for (int jt = 0; jt < AL(affstr); ++jt) {
-        int idx = AL(affstr) * it + jt;
-        if (active_affectD[idx])
-          affstr[jt] = affectD[idx][active_affectD[idx] - 1];
-        else
-          affstr[jt] = "";
-      }
-
-      len = snprintf(AP(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0], affstr[1],
-                     affstr[2]);
-      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
-      p.y += height;
-    }
-  }
-
   render_update();
 
   return 1;
@@ -1155,10 +1162,10 @@ SDL_Event event;
 
     float xscale, yscale, scale;
     // reserve space for status width (left)
-    if (px * AL(vitalinfoD[0]) + mx <= dx) {
+    if (px * 26 + mx <= dx) {
       xscale = 1.0f;
     } else {
-      xscale = (float)(dx - px * AL(vitalinfoD[0])) / mx;
+      xscale = (float)(dx - px * 26 / mx);
     }
     // reserve space for top bar
     if (py + my <= dy) {

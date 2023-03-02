@@ -7,9 +7,10 @@ EXTERN int save_field_countD;
 
 // Visual info
 EXTERN struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-EXTERN char vitalinfoD[16][26];
-EXTERN int vitalinfo_usedD[AL(vitalinfoD)];
-EXTERN int active_affectD[16];
+EXTERN int vitalD[6];
+EXTERN int vital_statD[6];
+EXTERN int vital_usedD;
+EXTERN int active_affectD[12];
 
 // Full-screen & overlay (choice)
 EXTERN char screenD[22][98];

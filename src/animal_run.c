@@ -95,21 +95,18 @@ inkey()
 void
 vital_update()
 {
-  AC(vitalinfo_usedD);
+  int used = 0;
+  vitalD[used++] = uD.lev;
+  vitalD[used++] = uD.exp;
+  vitalD[used++] = uD.mhp;
+  vitalD[used++] = uD.chp;
+  vitalD[used++] = cbD.pac - cbD.hide_toac;
+  vitalD[used++] = uD.gold;
+  vital_usedD = used;
 
-  int line = 0;
   for (int it = 0; it < MAX_A; ++it) {
-    BufMsg(vitalinfo, "%-4.04s: %6d", stat_nameD[it], statD.use_stat[it]);
+    vital_statD[it] = statD.cur_stat[it];
   }
-  line += 1;
-  BufMsg(vitalinfo, "LEV : %6d", uD.lev);
-  BufMsg(vitalinfo, "EXP :%7d", uD.exp);
-  BufMsg(vitalinfo, "MHP : %6d", uD.mhp);
-  BufMsg(vitalinfo, "CHP : %6d", uD.chp);
-  line += 1;
-  BufMsg(vitalinfo, "AC  : %6d", cbD.pac - cbD.hide_toac);
-  BufMsg(vitalinfo, "GOLD: %6d", uD.gold);
-  BufPad(vitalinfo, AL(vitalinfoD), AL(vitalinfoD[0]));
 }
 static int
 obj_lit(obj)
@@ -8871,7 +8868,6 @@ py_character()
   line = 0;
   col = 0;
 
-  BufMsg(screen, "%-17.017s: %s", "Name", "...");
   BufMsg(screen, "%-17.017s: %s", "Race", raceD[uD.ridx].name);
   BufMsg(screen, "%-17.017s: %s", "Gender", uD.male ? "Male" : "Female");
   BufMsg(screen, "%-17.017s: %s", "Class", classD[uD.clidx].name);
