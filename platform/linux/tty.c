@@ -163,13 +163,32 @@ platform_draw()
       buffer_append(AP(tc_crlfD));
     }
   } else {
-    for (int row = 0; row < AL(vitalinfoD); ++row) {
+    char vital[SYMMAP_HEIGHT][13];
+    int it, row;
+
+    memset(vital, 0x20202020, sizeof(vital));
+    row = 0;
+    for (it = 0; it < MAX_A; ++it, ++row) {
+      snprintf(vital[row], AL(vital[0]), "%-4.04s: %6d", stat_nameD[it],
+               vital_statD[it]);
+    }
+    row += 1;
+    it = 0;
+    snprintf(vital[row++], AL(vital[0]), "LEV : %6d", vital_statD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "EXP :%7d", vital_statD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "MHP : %6d", vital_statD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "CHP : %6d", vital_statD[it++]);
+    row += 1;
+    snprintf(vital[row++], AL(vital[0]), "AC  : %6d", vital_statD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "GOLD: %6d", vital_statD[it++]);
+
+    for (it = 0; it < SYMMAP_HEIGHT; ++it) {
       buffer_append(AP(tc_clear_lineD));
-      buffer_append(AP(vitalinfoD[row]));
-      if (row < AL(symmapD)) buffer_append(AP(symmapD[row]));
-      if (row < AL(active_affectD)) {
-        if (active_affectD[row]) {
-          char* aff = affectD[row][active_affectD[row] - 1];
+      if (it < row) buffer_append(vital[it], AL(vital[0]));
+      buffer_append(AP(symmapD[it]));
+      if (it < AL(active_affectD)) {
+        if (active_affectD[it]) {
+          char* aff = affectD[it][active_affectD[it] - 1];
           buffer_append(aff, strlen(aff));
         }
       }
