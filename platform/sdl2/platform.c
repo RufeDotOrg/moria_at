@@ -65,6 +65,7 @@ static int submodeD;
 static int finger_rowD;
 static int finger_colD;
 static int quitD;
+static int last_pressD;
 
 int
 render_init()
@@ -82,6 +83,7 @@ render_init()
       aspectD = (float)display_rectD.w / display_rectD.h;
     }
   }
+  Log("Aspect ratio %.03f", aspectD);
 
   int num_driver = SDL_GetNumRenderDrivers();
   Log("%d NumRenderDrivers\n", num_driver);
@@ -867,6 +869,10 @@ platform_draw()
         if (ppD[it].x || ppD[it].y) {
           SDL_FRect r = rect_from_pp(it);
           SDL_Rect ppr = {RS(r, display_rectD)};
+          if (pp_keyD[it] + TOUCH_PAD == last_pressD)
+            SDL_SetRenderDrawColor(rendererD, 0x00, 0xd0, 0, 0xff);
+          else
+            SDL_SetRenderDrawColor(rendererD, C(c));
           SDL_RenderFillRect(rendererD, &ppr);
         }
       }
@@ -1151,6 +1157,7 @@ SDL_Event event;
     display_rectD.w = event.window.data1;
     display_rectD.h = event.window.data2;
     aspectD = (float)display_rectD.w / display_rectD.h;
+    Log("Aspect ratio %.03f", aspectD);
 
     int dx, dy;
     dx = event.window.data1;
@@ -1270,18 +1277,20 @@ SDL_Event *event;
   }
 
   if (SDL_PointInFRect(&tp, &padD)) {
-    float min_dsq = FLT_MAX;
+    float err_dsq = FLT_MAX;
     for (int it = 0; it < AL(ppD); ++it) {
       SDL_FPoint center = ppD[it];
-      float dx = tp.x - center.x;
-      float dy = tp.y - center.y;
-      float dsq = dx * dx + dy * dy;
-      if (dsq < min_dsq) {
-        min_dsq = dsq;
+      float dx = (tp.x - center.x) * aspectD;
+      float dy = (tp.y - center.y);
+      float dm = MAX(dx * dx, dy * dy);
+
+      if (dm < err_dsq) {
+        err_dsq = dm;
         r = TOUCH_PAD + pp_keyD[it];
       }
     }
   }
+  last_pressD = r;
 
   return r;
 }
