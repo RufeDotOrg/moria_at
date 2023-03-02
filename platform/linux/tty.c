@@ -184,7 +184,7 @@ platform_draw()
 
     for (it = 0; it < SYMMAP_HEIGHT; ++it) {
       buffer_append(AP(tc_clear_lineD));
-      if (it < row) buffer_append(vital[it], AL(vital[0]));
+      buffer_append(vital[it], AL(vital[0]) - 1);
       buffer_append(AP(symmapD[it]));
       if (it < AL(active_affectD)) {
         if (active_affectD[it]) {
