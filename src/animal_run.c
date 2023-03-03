@@ -547,6 +547,7 @@ msg_pause()
     do {
       c = inkey();
       if (c == ESCAPE) break;
+      if (c == CTRL('c')) break;
     } while (c != ' ');
     msg_advance();
   }
@@ -624,6 +625,8 @@ char* command;
   draw();
   do {
     c = inkey();
+    if (c == ESCAPE) break;
+    if (c == CTRL('c')) break;
   } while (c == ' ');
   *command = c;
   AS(msglen_cqD, msg_writeD) = 0;
