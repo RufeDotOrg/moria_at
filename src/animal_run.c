@@ -456,7 +456,7 @@ viz_minimap()
       }
     }
   } else {
-    minimapD[0][0] = 0;
+    *(int64_t*)minimapD = 0;
   }
 }
 // Match single index
