@@ -51,6 +51,8 @@ EXTERN uint32_t texture_formatD;
 EXTERN SDL_PixelFormat *pixel_formatD;
 EXTERN SDL_Surface *mmsurfaceD;
 EXTERN SDL_Texture *mmtextureD;
+EXTERN SDL_Surface *tpsurfaceD;
+EXTERN SDL_Texture *tptextureD;
 EXTERN SDL_Rect scale_rectD;
 EXTERN float scaleD;
 EXTERN int rowD, colD;
@@ -590,7 +592,7 @@ SDL_FRect r;
 
 #define TOUCH_DIAMETER .04f
 #define TOUCH_GAP (TOUCH_DIAMETER * 1.12f)
-SDL_FRect
+static SDL_FRect
 rect_from_pp(idx)
 {
   float sx = TOUCH_DIAMETER;
@@ -853,13 +855,13 @@ platform_draw()
     rect_frame(scale_rectD, 1);
   }
 
-  if (TOUCH) {
+  if (TOUCH && tpsurfaceD) {
     {
       SDL_Color c = {0, 0, 78, 0};
       SDL_SetRenderDrawColor(rendererD, C(c));
 
       SDL_Rect pr = {RS(padD, display_rectD)};
-      SDL_RenderFillRect(rendererD, &pr);
+      SDL_RenderCopy(rendererD, tptextureD, 0, &pr);
     }
     {
       SDL_Color c = {50, 0, 0, 0};
@@ -869,11 +871,10 @@ platform_draw()
         if (ppD[it].x || ppD[it].y) {
           SDL_FRect r = rect_from_pp(it);
           SDL_Rect ppr = {RS(r, display_rectD)};
-          if (pp_keyD[it] + TOUCH_PAD == last_pressD)
+          if (pp_keyD[it] + TOUCH_PAD == last_pressD) {
             SDL_SetRenderDrawColor(rendererD, 0x00, 0xd0, 0, 0xff);
-          else
-            SDL_SetRenderDrawColor(rendererD, C(c));
-          SDL_RenderFillRect(rendererD, &ppr);
+            SDL_RenderFillRect(rendererD, &ppr);
+          }
         }
       }
     }
@@ -1140,6 +1141,43 @@ float ty, tx;
   return -1;
 }
 
+static int
+nearest_pp(y, x)
+{
+  int r = -1;
+  int64_t min_dsq = INT64_MAX;
+  for (int it = 0; it < AL(ppD); ++it) {
+    int ppx = ppD[it].x * display_rectD.w;
+    int ppy = ppD[it].y * display_rectD.h;
+    int dx = ppx - x;
+    int dy = ppy - y;
+    int dsq = dx * dx + dy * dy;
+    if (it % 2 == 1) dsq *= .4;
+    if (dsq < min_dsq) {
+      min_dsq = dsq;
+      r = it;
+    }
+  }
+  return r;
+}
+
+static void surface_ppfill(surface) SDL_Surface *surface;
+{
+  uint8_t bpp = surface->format->BytesPerPixel;
+  uint8_t *pixels = surface->pixels;
+  int oy = padD.y * display_rectD.h;
+  int ox = padD.x * display_rectD.w;
+  int w = padD.w * display_rectD.w;
+  int h = padD.h * display_rectD.h;
+  for (int64_t row = 0; row < surface->h; ++row) {
+    uint8_t *dst = pixels + (surface->pitch * row);
+    for (int64_t col = 0; col < surface->w; ++col) {
+      memcpy(dst, &rgbaD[nearest_pp(row + oy, col + ox)], bpp);
+      dst += bpp;
+    }
+  }
+}
+
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -1159,6 +1197,8 @@ SDL_Event event;
     aspectD = (float)display_rectD.w / display_rectD.h;
     Log("Aspect ratio %.03f", aspectD);
 
+    int dw = event.window.data1;
+    int dh = event.window.data2;
     int dx, dy;
     dx = event.window.data1;
     dy = event.window.data2;
@@ -1170,12 +1210,12 @@ SDL_Event event;
     my = map_rectD.h;
 
     // Console row/col
-    rowD = display_rectD.h / py;
-    colD = display_rectD.w / px;
+    rowD = dh / py;
+    colD = dw / px;
     rfD = 1.0f / rowD;
     cfD = 1.0f / colD;
-    Log("font %dw %dh console %drow %dcol rf/cf %f %f\n", px, py, rowD, colD,
-        rfD, cfD);
+    Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", px, py,
+        rowD, colD, rfD, cfD);
 
     float xscale, yscale, scale;
     // reserve space for status width (left)
@@ -1203,7 +1243,8 @@ SDL_Event event;
         R(scale_rectD));
 
     // Input constraints
-    padD = (SDL_FRect){0, .5 + rfD, .25 - (2 * cfD), .5 - (rfD)};
+    int tsize = 26 + 2;
+    padD = (SDL_FRect){0, .5 + rfD, tsize * cfD, tsize * cfD * aspectD};
 
     SDL_FPoint center = center_from_frect(padD);
     ppD[0] = center;
@@ -1217,6 +1258,19 @@ SDL_Event event;
 
     for (int it = 0; it < AL(buttonD); ++it) {
       buttonD[it] = (SDL_FRect){.775 + (.11 * it), .78 - (.22 * it), .11, .22};
+    }
+
+    if (TOUCH) {
+      if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
+      tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(
+          SDL_SWSURFACE, padD.w * dw, padD.h * dh, 0, texture_formatD);
+      if (tptextureD) SDL_DestroyTexture(tptextureD);
+      tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
+                                     padD.w * dw, padD.h * dh);
+      SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
+      surface_ppfill(tpsurfaceD);
+      SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels,
+                        tpsurfaceD->pitch);
     }
 
     if (mode) return ' ';
@@ -1264,7 +1318,7 @@ SDL_Event event;
   return 0;
 }
 
-int
+static int
 touch_from_event(event)
 SDL_Event *event;
 {
@@ -1277,24 +1331,15 @@ SDL_Event *event;
   }
 
   if (SDL_PointInFRect(&tp, &padD)) {
-    float err_dsq = FLT_MAX;
-    for (int it = 0; it < AL(ppD); ++it) {
-      SDL_FPoint center = ppD[it];
-      float dx = (tp.x - center.x) * aspectD;
-      float dy = (tp.y - center.y);
-      float dm = MAX(dx * dx, dy * dy);
-
-      if (dm < err_dsq) {
-        err_dsq = dm;
-        r = TOUCH_PAD + pp_keyD[it];
-      }
-    }
+    SDL_Point tpp = {tp.x * display_rectD.w, tp.y * display_rectD.h};
+    int n = nearest_pp(tpp.y, tpp.x);
+    r = TOUCH_PAD + pp_keyD[n];
   }
   last_pressD = r;
 
   return r;
 }
-int
+static int
 sdl_touch_event(event)
 SDL_Event event;
 {
