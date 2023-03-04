@@ -20,7 +20,7 @@
 #ifdef ANDROID
 enum { TOUCH = 1 };
 #else
-enum { TOUCH = 1};
+enum { TOUCH };
 enum { ANDROID };
 #endif
 #define CTRL(x) (x & 037)
@@ -60,9 +60,10 @@ EXTERN SDL_Rect text_rectD;
 EXTERN SDL_Texture *text_textureD;
 
 EXTERN SDL_Rect scale_rectD;
-EXTERN float scaleD;
 EXTERN int rowD, colD;
 EXTERN float rfD, cfD;
+EXTERN static float columnD[3];
+
 static int overlay_copyD[AL(overlay_usedD)];
 static SDL_Color blackD = {0, 0, 0, 255};
 static SDL_Color whiteD = {255, 255, 255, 255};
@@ -671,7 +672,6 @@ platform_draw()
   show_map = 1;
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
-  left = fontD.left_adjustment + scale_rectD.x;
   top = 2 * height;
 
   SDL_SetRenderTarget(rendererD, text_textureD);
@@ -681,6 +681,7 @@ platform_draw()
   switch (mode) {
     case 2:
       show_map = 0;
+      left = columnD[1] * display_rectD.w;
       if (screen_submodeD)
         alt_fill(AL(screenD), AL(screenD[0]), left, top, width, height);
       for (int row = 0; row < AL(screenD); ++row) {
@@ -700,6 +701,7 @@ platform_draw()
       break;
     case 1:
       show_map = 0;
+      left = columnD[1] * display_rectD.w;
       alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
       memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
       for (int row = 0; row < AL(overlayD); ++row) {
@@ -864,12 +866,12 @@ platform_draw()
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
                            (SDL_Point){0, 0}, surface);
     SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
-    int sr = scale_rectD.x + scale_rectD.w;
-    int ax = display_rectD.w - sr;
+    left = columnD[2] * display_rectD.w;
+    int ax = display_rectD.w - left;
     int mmscale = 2;
-    int crx = (ax - mmscale * MAX_WIDTH) / 2;
+    int pad = (ax - mmscale * MAX_WIDTH) / 2;
     SDL_Rect r = {
-        sr + crx,
+        left + pad,
         top + height,
         mmscale * MAX_WIDTH,
         mmscale * MAX_HEIGHT,
@@ -892,20 +894,20 @@ platform_draw()
   }
 
   if (mode == 0) {
-    int sr = scale_rectD.x + scale_rectD.w;
-    int ax = display_rectD.w - sr;
+    left = columnD[2] * display_rectD.w;
+    int ax = display_rectD.w - left;
     int mmscale = 2;
-    int crx;
+    int pad;
 
-    crx = (ax - sizeof(versionD) * width) / 2;
+    pad = (ax - sizeof(versionD) * width) / 2;
     SDL_Point p = {
-        sr + crx,
+        left + pad,
         top + height + mmscale * MAX_HEIGHT + 16,
     };
     render_font_string(rendererD, &fontD, versionD, sizeof(versionD) - 1, p);
 
-    crx = (ax - sizeof(git_hashD) * width) / 2;
-    p.x = sr + crx;
+    pad = (ax - sizeof(git_hashD) * width) / 2;
+    p.x = left + pad;
     p.y += height;
     render_font_string(rendererD, &fontD, git_hashD, sizeof(git_hashD) - 1, p);
   }
@@ -1211,29 +1213,43 @@ SDL_Event event;
     scale_rectD.y = fheight + (dh - mh - fheight) / 2;
     scale_rectD.w = mw;
     scale_rectD.h = mh;
-    scaleD = scale;
     Log("Scale %.3f (%.3fx %.3fy) %dw %dh %dw %dh", scale, xscale, yscale,
         R(scale_rectD));
 
+    // Column
+    float c1, c2;
+    c1 = (26 + 2) * cfD;
+    c2 = c1 + ((float)mw / dw);
+    columnD[0] = 0.0f;
+    columnD[1] = c1;
+    columnD[2] = c2;
+    Log("Column %.03f %.03f", c1, c2);
+
     // Input constraints
-    int tsize = 26 + 2;
-    padD = (SDL_FRect){0, .5 + rfD, tsize * cfD, tsize * cfD * aspectD};
-
-    SDL_FPoint center = center_from_frect(padD);
-    ppD[0] = center;
-    float dist = TOUCH_GAP * 2;
-    for (int it = 0; it < 8; ++it) {
-      float cf = cos(it * M_PI / 4);
-      float sf = sin(it * M_PI / 4);
-      ppD[1 + it].x = center.x + cf * dist;
-      ppD[1 + it].y = center.y + sf * dist * aspectD;
-    }
-
-    for (int it = 0; it < AL(buttonD); ++it) {
-      buttonD[it] = (SDL_FRect){.775 + (.11 * it), .78 - (.22 * it), .11, .22};
-    }
-
     if (TOUCH) {
+      padD = (SDL_FRect){.w = c1, .h = c1 * aspectD};
+      padD.y = 1.0 - padD.h;
+
+      SDL_FPoint center = center_from_frect(padD);
+      ppD[0] = center;
+      float dist = TOUCH_GAP * 2;
+      for (int it = 0; it < 8; ++it) {
+        float cf = cos(it * M_PI / 4);
+        float sf = sin(it * M_PI / 4);
+        ppD[1 + it].x = center.x + cf * dist;
+        ppD[1 + it].y = center.y + sf * dist * aspectD;
+      }
+
+      float c2w, c2h;
+      c2w = 1.0 - c2;
+      c2h = c2w * aspectD;
+      for (int it = 0; it < AL(buttonD); ++it) {
+        SDL_FRect r = (SDL_FRect){.w = c2w * .5f, .h = c2h * .5f};
+        r.x = 1.0 - r.w * (2 - it);
+        r.y = 1.0 - r.h * (1 + it);
+        buttonD[it] = r;
+      }
+
       if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
       tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(
           SDL_SWSURFACE, padD.w * dw, padD.h * dh, 0, texture_formatD);
