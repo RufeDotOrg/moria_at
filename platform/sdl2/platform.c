@@ -811,8 +811,6 @@ platform_draw()
         SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
       }
     }
-    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-    SDL_SetRenderTarget(rendererD, 0);
 
     int zw, zy, zf;
     zf = zoom_factorD;
@@ -825,12 +823,16 @@ platform_draw()
     rp.y = MAX(0, rp.y - zy);
     zoom_rect.x = rp.x * ART_W;
     zoom_rect.y = rp.y * ART_H;
-    zoom_rect.w = (zw * 2 + 1) * ART_W;
-    zoom_rect.h = (zy * 2 + 1) * ART_H;
+    zoom_rect.w = (zw * 2 + (zf != 0)) * ART_W;
+    zoom_rect.h = (zy * 2 + (zf != 0)) * ART_H;
+
+    SDL_SetRenderDrawColor(rendererD, C(whiteD));
+    SDL_RenderDrawRect(rendererD, &zoom_rect);
+
+    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+    SDL_SetRenderTarget(rendererD, 0);
 
     SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &scale_rectD);
-    SDL_SetRenderDrawColor(rendererD, C(whiteD));
-    rect_frame(scale_rectD, 1);
   }
 
   if (TOUCH && tpsurfaceD) {
@@ -889,7 +891,6 @@ platform_draw()
     }
     if (minimap_enlargeD) {
       SDL_RenderCopy(rendererD, texture, NULL, &scale_rectD);
-      rect_frame(scale_rectD, 1);
     }
   }
 
@@ -1178,11 +1179,9 @@ SDL_Event event;
     aspectD = (float)dw / dh;
     Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspectD);
 
-    int fwidth, fheight, mw, mh;
+    int fwidth, fheight;
     fwidth = fontD.max_pixel_width;
     fheight = fontD.max_pixel_height;
-    mw = map_rectD.w;
-    mh = map_rectD.h;
 
     // Console row/col
     rowD = dh / fheight;
@@ -1192,38 +1191,29 @@ SDL_Event event;
     Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", fwidth,
         fheight, rowD, colD, rfD, cfD);
 
-    float xscale, yscale, scale;
-    // reserve space for status width (left)
-    if (fwidth * 26 + mw <= dw) {
-      xscale = 1.0f;
+    // Map scaling due to vertical constraint
+    float scale;
+    if (fheight + map_rectD.h <= dh) {
+      scale = 1.0f;
     } else {
-      xscale = (float)(dw - fwidth * 26 / mw);
+      scale = (dh - fheight) / (float)map_rectD.h;
     }
-    // reserve space for top bar
-    if (fheight + mh <= dh) {
-      yscale = 1.0f;
-    } else {
-      yscale = (float)(dh - fheight) / mh;
-    }
-
-    scale = SDL_min(xscale, yscale);
-    mw = map_rectD.w * scale;
-    mh = map_rectD.h * scale;
-    scale_rectD.x = dw / 2 - mw / 2;
-    scale_rectD.y = fheight + (dh - mh - fheight) / 2;
-    scale_rectD.w = mw;
-    scale_rectD.h = mh;
-    Log("Scale %.3f (%.3fx %.3fy) %dw %dh %dw %dh", scale, xscale, yscale,
-        R(scale_rectD));
+    Log("Scale %.3f", scale);
+    scale_rectD =
+        (SDL_Rect){.w = map_rectD.w * scale, .h = map_rectD.h * scale};
 
     // Column
     float c1, c2;
     c1 = (26 + 2) * cfD;
-    c2 = c1 + ((float)mw / dw);
+    c2 = c1 + ((float)scale_rectD.w / dw);
     columnD[0] = 0.0f;
     columnD[1] = c1;
     columnD[2] = c2;
     Log("Column %.03f %.03f", c1, c2);
+
+    // Map position
+    scale_rectD.x = columnD[1] * dw;
+    scale_rectD.y = dh - scale_rectD.h;
 
     // Input constraints
     if (TOUCH) {
