@@ -621,18 +621,19 @@ char* command;
   char c;
   char* msg;
 
+  overlay_actD = 0;
   msg = AS(msg_cqD, msg_writeD);
   AS(msglen_cqD, msg_writeD) =
       snprintf(msg, MAX_MSGLEN, "%s", prompt ? prompt : "");
   draw();
   do {
     c = inkey();
-    if (c == ESCAPE) break;
-    if (c == CTRL('c')) break;
+    if (c == ESCAPE) return 0;
+    if (c == CTRL('c')) return 0;
   } while (c == ' ');
   *command = c;
   AS(msglen_cqD, msg_writeD) = 0;
-  return (c != ESCAPE && c != CTRL('c'));
+  return 1;
 }
 static char
 map_roguedir(comval)
@@ -5248,7 +5249,7 @@ inven_drop(iidx, y, x)
     MSG("You drop %s.", descD);
     turn_flag = TRUE;
   } else {
-    MSG("There is already an object on the ground here.");
+    msg_print("There is already an object on the ground here.");
   }
 }
 BOOL
@@ -8827,39 +8828,44 @@ void py_actuate(y, x) int *y, *x;
   int iidx, into;
   struct objS* obj;
 
-  overlay_actD = 0;
-  iidx = inven_choice("Use which item?", "*/");
-  if (iidx >= 0) {
-    if (overlay_actD == 'd') {
-      inven_drop(iidx, *y, *x);
-    } else if (overlay_actD == 'S') {
-      obj_study(obj_get(invenD[iidx]));
-    } else {
-      obj = obj_get(invenD[iidx]);
-      if (obj->tval == TV_FOOD) {
-        inven_eat(iidx);
-      } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-        inven_quaff(iidx);
-      } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-        inven_read(iidx, y, x);
-      } else if (obj->tval == TV_STAFF) {
-        inven_try_staff(iidx, x, x);
-      } else if (obj->tval == TV_WAND) {
-        py_zap(iidx);
-      } else if (iidx < INVEN_EQUIP) {
-        inven_wear(iidx);
-      } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
-        py_offhand();
-      } else if (iidx >= INVEN_EQUIP) {
-        if (invenD[iidx]) {
-          into = inven_slot();
-          if (into >= 0) {
-            equip_takeoff(iidx, into);
+  overlay_submodeD = 'i';
+  do {
+    msg_pause();
+    iidx =
+        inven_choice("Use which item?", overlay_submodeD == 'e' ? "/*" : "*/");
+
+    if (iidx >= 0) {
+      if (overlay_actD == 'd') {
+        inven_drop(iidx, uD.y, uD.x);
+      } else if (overlay_actD == 'S') {
+        obj_study(obj_get(invenD[iidx]));
+      } else {
+        obj = obj_get(invenD[iidx]);
+        if (obj->tval == TV_FOOD) {
+          inven_eat(iidx);
+        } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+          inven_quaff(iidx);
+        } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+          inven_read(iidx, y, x);
+        } else if (obj->tval == TV_STAFF) {
+          inven_try_staff(iidx, x, x);
+        } else if (obj->tval == TV_WAND) {
+          py_zap(iidx);
+        } else if (iidx < INVEN_EQUIP) {
+          inven_wear(iidx);
+        } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
+          py_offhand();
+        } else if (iidx >= INVEN_EQUIP) {
+          if (invenD[iidx]) {
+            into = inven_slot();
+            if (into >= 0) {
+              equip_takeoff(iidx, into);
+            }
           }
         }
       }
     }
-  }
+  } while (!turn_flag && iidx >= 0);
 }
 void
 py_character()
@@ -11153,9 +11159,15 @@ pawn_entrance()
     }
     uint8_t item = c - 'a';
 
-    if (item < INVEN_EQUIP) inven_pawn(item);
+    if (item < INVEN_EQUIP) {
+      if (overlay_actD == 'S')
+        obj_study(obj_get(invenD[item]));
+      else
+        inven_pawn(item);
+    }
     if (c == 'I') inven_sort();
   }
+  msg_advance();
 }
 static void
 store_entrance(sidx)
@@ -11169,7 +11181,6 @@ store_entrance(sidx)
   overlay_submodeD = '0' + sidx;
   while (1) {
     store_display(sidx);
-    overlay_actD = 0;
     if (!in_subcommand(tmp_str, &c)) break;
     uint8_t item = c - 'a';
 
@@ -11181,6 +11192,7 @@ store_entrance(sidx)
     }
     if (c == 'I') inven_sort();
   }
+  msg_advance();
 }
 static void
 regenhp(percent)
