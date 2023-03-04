@@ -20,7 +20,7 @@
 #ifdef ANDROID
 enum { TOUCH = 1 };
 #else
-enum { TOUCH };
+enum { TOUCH = 1};
 enum { ANDROID };
 #endif
 #define CTRL(x) (x & 037)
@@ -86,12 +86,7 @@ render_init()
     SDL_Rect r;
     SDL_GetDisplayBounds(it, &r);
     Log("%d Display) %d %d %d %d\n", it, r.x, r.y, r.w, r.h);
-    if (r.x == 0 && r.y == 0) {
-      display_rectD = r;
-      aspectD = (float)display_rectD.w / display_rectD.h;
-    }
   }
-  Log("Aspect ratio %.03f", aspectD);
 
   int num_driver = SDL_GetNumRenderDrivers();
   Log("%d NumRenderDrivers\n", num_driver);
@@ -126,8 +121,6 @@ render_init()
     if (SDL_GetRendererOutputSize(rendererD, &w, &h) != 0) return 1;
     Log("Renderer output size %d %d\n", w, h);
   }
-
-  Log("display_rectD %d %d\n", display_rectD.w, display_rectD.h);
 
   return 1;
 }
@@ -1173,56 +1166,53 @@ SDL_Event event;
       event.window.event, event.window.data1, event.window.data2);
   if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
       (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED &&
-       (scale_rectD.x == 0 || display_rectD.w != event.window.data1 ||
+       (display_rectD.w != event.window.data1 ||
         display_rectD.h != event.window.data2))) {
     display_rectD.w = event.window.data1;
     display_rectD.h = event.window.data2;
-    aspectD = (float)display_rectD.w / display_rectD.h;
-    Log("Aspect ratio %.03f", aspectD);
 
     int dw = event.window.data1;
     int dh = event.window.data2;
-    int dx, dy;
-    dx = event.window.data1;
-    dy = event.window.data2;
-    int px, py;
-    px = fontD.max_pixel_width;
-    py = fontD.max_pixel_height;
-    int mx, my;
-    mx = map_rectD.w;
-    my = map_rectD.h;
+    aspectD = (float)dw / dh;
+    Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspectD);
+
+    int fwidth, fheight, mw, mh;
+    fwidth = fontD.max_pixel_width;
+    fheight = fontD.max_pixel_height;
+    mw = map_rectD.w;
+    mh = map_rectD.h;
 
     // Console row/col
-    rowD = dh / py;
-    colD = dw / px;
+    rowD = dh / fheight;
+    colD = dw / fwidth;
     rfD = 1.0f / rowD;
     cfD = 1.0f / colD;
-    Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", px, py,
-        rowD, colD, rfD, cfD);
+    Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", fwidth,
+        fheight, rowD, colD, rfD, cfD);
 
     float xscale, yscale, scale;
     // reserve space for status width (left)
-    if (px * 26 + mx <= dx) {
+    if (fwidth * 26 + mw <= dw) {
       xscale = 1.0f;
     } else {
-      xscale = (float)(dx - px * 26 / mx);
+      xscale = (float)(dw - fwidth * 26 / mw);
     }
     // reserve space for top bar
-    if (py + my <= dy) {
+    if (fheight + mh <= dh) {
       yscale = 1.0f;
     } else {
-      yscale = (float)(dy - py) / my;
+      yscale = (float)(dh - fheight) / mh;
     }
 
     scale = SDL_min(xscale, yscale);
-    mx = map_rectD.w * scale;
-    my = map_rectD.h * scale;
-    scale_rectD.x = dx / 2 - mx / 2;
-    scale_rectD.y = py + (dy - my - py) / 2;
-    scale_rectD.w = mx;
-    scale_rectD.h = my;
+    mw = map_rectD.w * scale;
+    mh = map_rectD.h * scale;
+    scale_rectD.x = dw / 2 - mw / 2;
+    scale_rectD.y = fheight + (dh - mh - fheight) / 2;
+    scale_rectD.w = mw;
+    scale_rectD.h = mh;
     scaleD = scale;
-    Log("Scale %.3f (%.3fx %.3fy) %dx %dy %dw %dh", scale, xscale, yscale,
+    Log("Scale %.3f (%.3fx %.3fy) %dw %dh %dw %dh", scale, xscale, yscale,
         R(scale_rectD));
 
     // Input constraints
@@ -1608,6 +1598,10 @@ platform_init()
   platformD.save = save;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
+
+  while (scale_rectD.x == 0) {
+    sdl_pump();
+  }
 }
 void
 platform_reset()
