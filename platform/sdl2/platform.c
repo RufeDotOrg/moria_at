@@ -939,7 +939,7 @@ platform_draw()
         (AL(msg_cqD[0]) + 1) * width + 2 * 6,
         0,
     };
-    len = snprintf(AP(tmp), "turn: %7d", turnD);
+    len = snprintf(AP(tmp), "turn:%7d", turnD);
     if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     SDL_Rect rect = {
         p.x,
