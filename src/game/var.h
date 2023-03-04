@@ -19,6 +19,7 @@ EXTERN int screen_submodeD;
 EXTERN char overlayD[22][72];
 EXTERN int overlay_usedD[AL(overlayD)];
 EXTERN int overlay_submodeD;
+EXTERN int overlay_actD;
 EXTERN uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
 EXTERN int minimap_enlargeD;
 EXTERN uint32_t zoom_factorD;

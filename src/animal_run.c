@@ -5205,6 +5205,48 @@ void py_bonuses(obj, factor) struct objS* obj;
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
   if (obj->sn == SN_INFRAVISION) uD.infra += amount;
 }
+void
+equip_takeoff(iidx, into_slot)
+{
+  struct objS* obj;
+  obj = obj_get(invenD[iidx]);
+  if (obj->flags & TR_CURSED) {
+    MSG("Hmm, the item you are %s seems to be cursed.", describe_use(iidx));
+  } else {
+    if (into_slot >= 0) {
+      invenD[into_slot] = obj->id;
+      obj_desc(obj, TRUE);
+      MSG("You take off %c) %s.", 'a' + into_slot, descD);
+    }
+    invenD[iidx] = 0;
+
+    if (iidx != INVEN_AUX) {
+      py_bonuses(obj, -1);
+      calc_bonuses();
+    }
+    turn_flag = TRUE;
+  }
+}
+void
+inven_drop(iidx, y, x)
+{
+  struct objS* obj;
+  obj = obj_get(invenD[iidx]);
+
+  if (iidx >= INVEN_EQUIP) {
+    equip_takeoff(iidx, -1);
+  } else {
+    invenD[iidx] = 0;
+  }
+
+  obj->fy = y;
+  obj->fx = x;
+  caveD[y][x].oidx = obj_index(obj);
+
+  obj_desc(obj, TRUE);
+  MSG("You drop %s.", descD);
+  turn_flag = TRUE;
+}
 BOOL
 player_saves()
 {
@@ -8532,28 +8574,6 @@ int *uy, *ux;
 
   return FALSE;
 }
-void
-equip_takeoff(iidx, into_slot)
-{
-  struct objS* obj;
-  obj = obj_get(invenD[iidx]);
-  if (obj->flags & TR_CURSED) {
-    MSG("Hmm, the item you are %s seems to be cursed.", describe_use(iidx));
-  } else {
-    if (into_slot >= 0) {
-      invenD[into_slot] = obj->id;
-      obj_desc(obj, TRUE);
-      MSG("You take off %c) %s.", 'a' + into_slot, descD);
-    }
-    invenD[iidx] = 0;
-
-    if (iidx != INVEN_AUX) {
-      py_bonuses(obj, -1);
-      calc_bonuses();
-    }
-    turn_flag = TRUE;
-  }
-}
 static void
 py_drop(y, x)
 {
@@ -8565,21 +8585,7 @@ py_drop(y, x)
     iidx = inven_choice("Drop which item?", "*/");
 
     if (iidx >= 0) {
-      obj = obj_get(invenD[iidx]);
-
-      if (iidx >= INVEN_EQUIP) {
-        equip_takeoff(iidx, -1);
-      } else {
-        invenD[iidx] = 0;
-      }
-
-      obj->fy = y;
-      obj->fx = x;
-      caveD[y][x].oidx = obj_index(obj);
-
-      obj_desc(obj, TRUE);
-      MSG("You drop %s.", descD);
-      turn_flag = TRUE;
+      inven_drop(iidx, y, x);
     }
   } else {
     MSG("There is already an object on the ground here.");
@@ -8839,28 +8845,33 @@ void py_actuate(y, x) int *y, *x;
   int iidx, into;
   struct objS* obj;
 
+  overlay_actD = 0;
   iidx = inven_choice("Use which item?", "*/");
   if (iidx >= 0) {
-    obj = obj_get(invenD[iidx]);
-    if (obj->tval == TV_FOOD) {
-      inven_eat(iidx);
-    } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-      inven_quaff(iidx);
-    } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-      inven_read(iidx, y, x);
-    } else if (obj->tval == TV_STAFF) {
-      inven_try_staff(iidx, x, x);
-    } else if (obj->tval == TV_WAND) {
-      py_zap(iidx);
-    } else if (iidx < INVEN_EQUIP) {
-      inven_wear(iidx);
-    } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
-      py_offhand();
-    } else if (iidx >= INVEN_EQUIP) {
-      if (invenD[iidx]) {
-        into = inven_slot();
-        if (into >= 0) {
-          equip_takeoff(iidx, into);
+    if (overlay_actD == 'd') {
+      inven_drop(iidx, *y, *x);
+    } else {
+      obj = obj_get(invenD[iidx]);
+      if (obj->tval == TV_FOOD) {
+        inven_eat(iidx);
+      } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+        inven_quaff(iidx);
+      } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+        inven_read(iidx, y, x);
+      } else if (obj->tval == TV_STAFF) {
+        inven_try_staff(iidx, x, x);
+      } else if (obj->tval == TV_WAND) {
+        py_zap(iidx);
+      } else if (iidx < INVEN_EQUIP) {
+        inven_wear(iidx);
+      } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
+        py_offhand();
+      } else if (iidx >= INVEN_EQUIP) {
+        if (invenD[iidx]) {
+          into = inven_slot();
+          if (into >= 0) {
+            equip_takeoff(iidx, into);
+          }
         }
       }
     }
