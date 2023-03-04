@@ -49,16 +49,22 @@ EXTERN float aspectD;
 EXTERN struct SDL_Renderer *rendererD;
 EXTERN uint32_t texture_formatD;
 EXTERN SDL_PixelFormat *pixel_formatD;
+
 EXTERN SDL_Surface *mmsurfaceD;
 EXTERN SDL_Texture *mmtextureD;
 EXTERN SDL_Surface *tpsurfaceD;
 EXTERN SDL_Texture *tptextureD;
+EXTERN SDL_Rect map_rectD;
+EXTERN SDL_Texture *map_textureD;
+EXTERN SDL_Rect text_rectD;
+EXTERN SDL_Texture *text_textureD;
+
 EXTERN SDL_Rect scale_rectD;
 EXTERN float scaleD;
 EXTERN int rowD, colD;
 EXTERN float rfD, cfD;
 static int overlay_copyD[AL(overlay_usedD)];
-static SDL_Color blackD;
+static SDL_Color blackD = {0, 0, 0, 255};
 static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
 static int xD;
@@ -131,7 +137,7 @@ render_update()
 {
   SDL_Renderer *r = rendererD;
   SDL_RenderPresent(r);
-  SDL_SetRenderDrawColor(r, blackD.r, blackD.g, blackD.b, blackD.a);
+  SDL_SetRenderDrawColor(r, C(blackD));
   SDL_RenderClear(r);
 }
 
@@ -451,9 +457,6 @@ font_init(struct fontS *font)
 
   int16_t width = font->max_pixel_width;
   int16_t height = font->max_pixel_height;
-  rowD = display_rectD.h / height;
-  colD = display_rectD.w / width;
-  Log("font %dw %dh row/col %d %d\n", width, height, rowD, colD);
 
   struct SDL_Surface *surface =
       SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, width, height, 0, format);
@@ -549,26 +552,6 @@ EXTERN SDL_FRect buttonD[2];
 EXTERN SDL_FRect padD;
 EXTERN SDL_FPoint ppD[9];
 static int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
-
-EXTERN SDL_Rect map_rectD;
-EXTERN SDL_Texture *map_textureD;
-EXTERN SDL_Rect text_rectD;
-EXTERN SDL_Texture *text_textureD;
-void
-texture_init()
-{
-  int w, h;
-  w = SYMMAP_WIDTH * ART_W;
-  h = SYMMAP_HEIGHT * ART_H;
-  map_rectD = (SDL_Rect){.w = w, .h = h};
-  map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
-                                   SDL_TEXTUREACCESS_TARGET, w, h);
-  w = 4 * 1024;
-  h = 4 * 1024;
-  text_rectD = (SDL_Rect){.w = w, .h = h};
-  text_textureD = SDL_CreateTexture(rendererD, texture_formatD,
-                                    SDL_TEXTUREACCESS_TARGET, w, h);
-}
 
 SDL_Texture *
 texture_by_sym(char c)
@@ -1592,8 +1575,6 @@ platform_init()
   if (init) {
     if (!font_load() || !font_init(&fontD)) return;
 
-    texture_init();
-
     if (!art_io() || !art_init()) return;
     if (!tart_io() || !tart_init()) return;
     if (!wart_io() || !wart_init()) return;
@@ -1604,6 +1585,16 @@ platform_init()
     mmtextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
                                    MAX_WIDTH, MAX_HEIGHT);
     SDL_SetTextureBlendMode(mmtextureD, SDL_BLENDMODE_NONE);
+    map_rectD =
+        (SDL_Rect){.w = SYMMAP_WIDTH * ART_W, .h = SYMMAP_HEIGHT * ART_H};
+    map_textureD =
+        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+                          map_rectD.w, map_rectD.h);
+    SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
+    text_rectD = (SDL_Rect){.w = 4 * 1024, .h = 4 * 1024};
+    text_textureD =
+        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+                          text_rectD.w, text_rectD.h);
   }
 
   font_colorD = whiteD;
