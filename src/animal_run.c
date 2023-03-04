@@ -5233,19 +5233,23 @@ inven_drop(iidx, y, x)
   struct objS* obj;
   obj = obj_get(invenD[iidx]);
 
-  if (iidx >= INVEN_EQUIP) {
-    equip_takeoff(iidx, -1);
+  if (caveD[y][x].oidx == 0) {
+    if (iidx >= INVEN_EQUIP) {
+      equip_takeoff(iidx, -1);
+    } else {
+      invenD[iidx] = 0;
+    }
+
+    obj->fy = y;
+    obj->fx = x;
+    caveD[y][x].oidx = obj_index(obj);
+
+    obj_desc(obj, TRUE);
+    MSG("You drop %s.", descD);
+    turn_flag = TRUE;
   } else {
-    invenD[iidx] = 0;
+    MSG("There is already an object on the ground here.");
   }
-
-  obj->fy = y;
-  obj->fx = x;
-  caveD[y][x].oidx = obj_index(obj);
-
-  obj_desc(obj, TRUE);
-  MSG("You drop %s.", descD);
-  turn_flag = TRUE;
 }
 BOOL
 player_saves()
@@ -7555,186 +7559,181 @@ inven_eat(iidx)
   }
   return FALSE;
 }
-void
-inven_study(iidx)
+void obj_study(obj) struct objS* obj;
 {
-  struct objS* obj;
   struct treasureS* tr_ptr;
   int line;
   int blows, eqidx;
 
-  obj = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[obj->tidx];
-  if (obj->id) {
-    screen_submodeD = 1;
-    if (HACK) obj->idflag = ID_REVEAL;
-    eqidx = may_equip(obj->tval);
+  screen_submodeD = 1;
+  if (HACK) obj->idflag = ID_REVEAL;
+  eqidx = may_equip(obj->tval);
 
-    obj_desc(obj, TRUE);
-    MSG("You study %s.", descD);
+  obj_desc(obj, TRUE);
+  MSG("You study %s.", descD);
 
-    line = 0;
-    strcpy(descD, tr_ptr->name);
-    obj_prefix(obj, FALSE);
-    BufMsg(screen, "%-17.017s: %s", "Name", descD);
-    BufMsg(screen, "%-17.017s: %d Lbs", "Weight",
-           obj->number * obj->weight / 10);
-    if (obj->idflag & ID_REVEAL) {
-      if (oset_tohitdam(obj)) {
-        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-        BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
-      } else if (eqidx == INVEN_BODY) {
-        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-      }
-      if (obj->ac) {
-        BufMsg(screen, "%-17.017s: %+d", "Base Armor", obj->ac);
-      }
-      if (obj->toac) {
-        BufMsg(screen, "%-17.017s: %+d", "+ To Armor", obj->toac);
-      }
-      if (obj->toac || obj->ac || eqidx == INVEN_HEAD) {
-        BufMsg(screen, "%-17.017s: %+d", "Total Armor", obj->ac + obj->toac);
-      }
+  line = 0;
+  strcpy(descD, tr_ptr->name);
+  obj_prefix(obj, FALSE);
+  BufMsg(screen, "%-17.017s: %s", "Name", descD);
+  BufMsg(screen, "%-17.017s: %d Lbs", "Weight", obj->number * obj->weight / 10);
+  if (obj->idflag & ID_REVEAL) {
+    if (oset_tohitdam(obj)) {
+      BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
+      BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
+    } else if (eqidx == INVEN_BODY) {
+      BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
     }
-    if (eqidx == INVEN_WIELD) {
-      BufMsg(screen, "%-17.017s: (%dd%d)", "Damage Dice", obj->damage[0],
-             obj->damage[1]);
-
-      BufMsg(screen, "%-17.017s: [%d - %d]", "Damage per Blow",
-             (obj->damage[0]), (obj->damage[0] * obj->damage[1]));
-
-      if (obj->idflag & ID_REVEAL) {
-        if (obj->todam >= 0) {
-          BufLineAppend(screen, line - 1, " + %d", obj->todam);
-        } else {
-          BufLineAppend(screen, line - 1, " - %d", -obj->todam);
-        }
-      } else {
-        BufLineAppend(screen, line - 1, "?");
-      }
-
-      blows = attack_blows(obj->weight);
-      BufMsg(screen, "%-17.017s: %d", "Number of Blows", blows);
-      if (obj->idflag & ID_REVEAL) {
-        BufMsg(screen, "%-17.017s: [%d - %d]", "Total Damage",
-               blows * MAX(obj->damage[0] + obj->todam, 1),
-               blows * MAX((obj->damage[0] * obj->damage[1] + obj->todam), 1));
-      } else {
-        BufMsg(screen, "%-17.017s: [%d - %d]?", "Total Damage",
-               blows * MAX(obj->damage[0], 1),
-               blows * MAX((obj->damage[0] * obj->damage[1]), 1));
-      }
+    if (obj->ac) {
+      BufMsg(screen, "%-17.017s: %+d", "Base Armor", obj->ac);
     }
-    if (eqidx >= INVEN_EQUIP) {
-      line += 1;
-      if (obj->idflag & ID_REVEAL) {
-        if (obj->flags & TR_SEARCH) {
-          if (obj->p1) BufMsg(screen, "%-17.017s: %+d", "Search", obj->p1);
-        }
-        if (obj->flags & TR_STEALTH) {
-          if (obj->p1) BufMsg(screen, "%-17.017s: %+d", "Stealth", obj->p1);
-        }
-        if (obj->flags & TR_TUNNEL) {
-          BufMsg(screen, "%-17.017s: %+d", "Digging", obj->p1);
-        }
-        for (int it = 0; it < MAX_A; ++it) {
-          if (obj->flags & (1 << it)) {
-            BufMsg(screen, "%-17.017s: %+d", stat_nameD[it], obj->p1);
-            if (obj->flags & TR_SUST_STAT)
-              BufMsg(screen, "and %scannot be reduced", stat_nameD[it]);
-          }
-        }
-        if (obj->flags & TR_SLOW_DIGEST) {
-          BufMsg(screen, "and slows digestion");
-        }
-        if (obj->flags & TR_AGGRAVATE) {
-          BufMsg(screen, "and aggravates monsters");
-        }
-        if (obj->flags & TR_TELEPORT) {
-          BufMsg(screen, "and randomly teleports you");
-        }
-        if (obj->flags & TR_REGEN) {
-          BufMsg(screen, "and increases health regeneration");
-        }
-        if (obj->flags & TR_SPEED) {
-          BufMsg(screen, "and increases speed");
-        }
-
-        if (obj->flags & TR_EGO_WEAPON) {
-          BufMsg(screen, "one of the following damage multipliers:");
-        }
-        if (obj->flags & TR_SLAY_DRAGON) {
-          BufMsg(screen, "  x4 vs dragons");
-        }
-        if (obj->flags & TR_SLAY_UNDEAD) {
-          BufMsg(screen, "  x3 vs undead");
-        }
-        if (obj->flags & TR_SLAY_ANIMAL) {
-          BufMsg(screen, "  x2 vs animals");
-        }
-        if (obj->flags & TR_SLAY_EVIL) {
-          BufMsg(screen, "  x2 vs evil");
-        }
-        if (obj->flags & TR_FROST_BRAND) {
-          BufMsg(screen, "  x1.5 vs vulnerable to cold");
-        }
-        if (obj->flags & TR_FLAME_TONGUE) {
-          BufMsg(screen, "  x1.5 vs vulnerable to fire");
-        }
-
-        if (obj->flags & TR_RES_FIRE) {
-          BufMsg(screen, "and grants resistence to fire damage");
-        }
-        if (obj->flags & TR_RES_ACID) {
-          BufMsg(screen, "and grants resistence to acid damage");
-        }
-        if (obj->flags & TR_RES_COLD) {
-          BufMsg(screen, "and grants resistence to cold damage");
-        }
-        if (obj->flags & TR_RES_LIGHT) {
-          BufMsg(screen, "and grants resistence to lightning damage");
-        }
-        if (obj->sn == SN_SU) {
-          BufMsg(screen, "and grants resistence to life drain");
-        }
-        if (obj->flags & TR_FREE_ACT) {
-          BufMsg(screen, "and immunity to paralysis");
-        }
-        if (obj->flags & TR_SEE_INVIS) {
-          BufMsg(screen, "and grants sight of invisible monsters");
-        }
-        if (obj->flags & TR_FFALL) {
-          BufMsg(screen, "and prevents falling");
-        }
-        if (obj->flags & TR_SLOWNESS) {
-          BufMsg(screen, "and slows you down");
-        }
-        if (obj->flags & TR_CURSED) {
-          BufMsg(screen, "... is known to be cursed!");
-        }
-      } else {
-        if (obj->idflag & ID_CORRODED) {
-          BufMsg(screen, "... is corroded, providing no protection from acid.");
-        }
-
-        if (obj->idflag & ID_PLAIN) {
-          BufMsg(screen, "... is known to be plain.");
-        } else if (obj->idflag & ID_DAMD) {
-          BufMsg(screen, "... is known to be cursed!");
-        } else if (obj->idflag & ID_MAGIK) {
-          BufMsg(screen, "... is known to be magical!");
-        } else if (obj->idflag & ID_RARE) {
-          BufMsg(screen, "... is known to be rare!");
-        } else {
-          BufMsg(screen, "... is unidentified!");
-        }
-      }
-    } else {
-      if (!tr_is_known(tr_ptr)) {
-        BufMsg(screen, "... has unknown effects!");
-      }
+    if (obj->toac) {
+      BufMsg(screen, "%-17.017s: %+d", "+ To Armor", obj->toac);
+    }
+    if (obj->toac || obj->ac || eqidx == INVEN_HEAD) {
+      BufMsg(screen, "%-17.017s: %+d", "Total Armor", obj->ac + obj->toac);
     }
   }
+  if (eqidx == INVEN_WIELD) {
+    BufMsg(screen, "%-17.017s: (%dd%d)", "Damage Dice", obj->damage[0],
+           obj->damage[1]);
+
+    BufMsg(screen, "%-17.017s: [%d - %d]", "Damage per Blow", (obj->damage[0]),
+           (obj->damage[0] * obj->damage[1]));
+
+    if (obj->idflag & ID_REVEAL) {
+      if (obj->todam >= 0) {
+        BufLineAppend(screen, line - 1, " + %d", obj->todam);
+      } else {
+        BufLineAppend(screen, line - 1, " - %d", -obj->todam);
+      }
+    } else {
+      BufLineAppend(screen, line - 1, "?");
+    }
+
+    blows = attack_blows(obj->weight);
+    BufMsg(screen, "%-17.017s: %d", "Number of Blows", blows);
+    if (obj->idflag & ID_REVEAL) {
+      BufMsg(screen, "%-17.017s: [%d - %d]", "Total Damage",
+             blows * MAX(obj->damage[0] + obj->todam, 1),
+             blows * MAX((obj->damage[0] * obj->damage[1] + obj->todam), 1));
+    } else {
+      BufMsg(screen, "%-17.017s: [%d - %d]?", "Total Damage",
+             blows * MAX(obj->damage[0], 1),
+             blows * MAX((obj->damage[0] * obj->damage[1]), 1));
+    }
+  }
+  if (eqidx >= INVEN_EQUIP) {
+    line += 1;
+    if (obj->idflag & ID_REVEAL) {
+      if (obj->flags & TR_SEARCH) {
+        if (obj->p1) BufMsg(screen, "%-17.017s: %+d", "Search", obj->p1);
+      }
+      if (obj->flags & TR_STEALTH) {
+        if (obj->p1) BufMsg(screen, "%-17.017s: %+d", "Stealth", obj->p1);
+      }
+      if (obj->flags & TR_TUNNEL) {
+        BufMsg(screen, "%-17.017s: %+d", "Digging", obj->p1);
+      }
+      for (int it = 0; it < MAX_A; ++it) {
+        if (obj->flags & (1 << it)) {
+          BufMsg(screen, "%-17.017s: %+d", stat_nameD[it], obj->p1);
+          if (obj->flags & TR_SUST_STAT)
+            BufMsg(screen, "and %scannot be reduced", stat_nameD[it]);
+        }
+      }
+      if (obj->flags & TR_SLOW_DIGEST) {
+        BufMsg(screen, "and slows digestion");
+      }
+      if (obj->flags & TR_AGGRAVATE) {
+        BufMsg(screen, "and aggravates monsters");
+      }
+      if (obj->flags & TR_TELEPORT) {
+        BufMsg(screen, "and randomly teleports you");
+      }
+      if (obj->flags & TR_REGEN) {
+        BufMsg(screen, "and increases health regeneration");
+      }
+      if (obj->flags & TR_SPEED) {
+        BufMsg(screen, "and increases speed");
+      }
+
+      if (obj->flags & TR_EGO_WEAPON) {
+        BufMsg(screen, "one of the following damage multipliers:");
+      }
+      if (obj->flags & TR_SLAY_DRAGON) {
+        BufMsg(screen, "  x4 vs dragons");
+      }
+      if (obj->flags & TR_SLAY_UNDEAD) {
+        BufMsg(screen, "  x3 vs undead");
+      }
+      if (obj->flags & TR_SLAY_ANIMAL) {
+        BufMsg(screen, "  x2 vs animals");
+      }
+      if (obj->flags & TR_SLAY_EVIL) {
+        BufMsg(screen, "  x2 vs evil");
+      }
+      if (obj->flags & TR_FROST_BRAND) {
+        BufMsg(screen, "  x1.5 vs vulnerable to cold");
+      }
+      if (obj->flags & TR_FLAME_TONGUE) {
+        BufMsg(screen, "  x1.5 vs vulnerable to fire");
+      }
+
+      if (obj->flags & TR_RES_FIRE) {
+        BufMsg(screen, "and grants resistence to fire damage");
+      }
+      if (obj->flags & TR_RES_ACID) {
+        BufMsg(screen, "and grants resistence to acid damage");
+      }
+      if (obj->flags & TR_RES_COLD) {
+        BufMsg(screen, "and grants resistence to cold damage");
+      }
+      if (obj->flags & TR_RES_LIGHT) {
+        BufMsg(screen, "and grants resistence to lightning damage");
+      }
+      if (obj->sn == SN_SU) {
+        BufMsg(screen, "and grants resistence to life drain");
+      }
+      if (obj->flags & TR_FREE_ACT) {
+        BufMsg(screen, "and immunity to paralysis");
+      }
+      if (obj->flags & TR_SEE_INVIS) {
+        BufMsg(screen, "and grants sight of invisible monsters");
+      }
+      if (obj->flags & TR_FFALL) {
+        BufMsg(screen, "and prevents falling");
+      }
+      if (obj->flags & TR_SLOWNESS) {
+        BufMsg(screen, "and slows you down");
+      }
+      if (obj->flags & TR_CURSED) {
+        BufMsg(screen, "... is known to be cursed!");
+      }
+    } else {
+      if (obj->idflag & ID_CORRODED) {
+        BufMsg(screen, "... is corroded, providing no protection from acid.");
+      }
+
+      if (obj->idflag & ID_PLAIN) {
+        BufMsg(screen, "... is known to be plain.");
+      } else if (obj->idflag & ID_DAMD) {
+        BufMsg(screen, "... is known to be cursed!");
+      } else if (obj->idflag & ID_MAGIK) {
+        BufMsg(screen, "... is known to be magical!");
+      } else if (obj->idflag & ID_RARE) {
+        BufMsg(screen, "... is known to be rare!");
+      } else {
+        BufMsg(screen, "... is unidentified!");
+      }
+    }
+  } else {
+    if (!tr_is_known(tr_ptr)) {
+      BufMsg(screen, "... has unknown effects!");
+    }
+  }
+  msg_pause();
 }
 int
 inven_quaff(iidx)
@@ -8574,23 +8573,6 @@ int *uy, *ux;
 
   return FALSE;
 }
-static void
-py_drop(y, x)
-{
-  char c;
-  int iidx;
-  struct objS* obj;
-
-  if (caveD[y][x].oidx == 0) {
-    iidx = inven_choice("Drop which item?", "*/");
-
-    if (iidx >= 0) {
-      inven_drop(iidx, y, x);
-    }
-  } else {
-    MSG("There is already an object on the ground here.");
-  }
-}
 static int
 py_inven_slot()
 {
@@ -8850,6 +8832,8 @@ void py_actuate(y, x) int *y, *x;
   if (iidx >= 0) {
     if (overlay_actD == 'd') {
       inven_drop(iidx, *y, *x);
+    } else if (overlay_actD == 'S') {
+      obj_study(obj_get(invenD[iidx]));
     } else {
       obj = obj_get(invenD[iidx]);
       if (obj->tval == TV_FOOD) {
@@ -11185,10 +11169,16 @@ store_entrance(sidx)
   overlay_submodeD = '0' + sidx;
   while (1) {
     store_display(sidx);
+    overlay_actD = 0;
     if (!in_subcommand(tmp_str, &c)) break;
     uint8_t item = c - 'a';
 
-    if (item < MAX_STORE_INVEN) store_item_purchase(sidx, item);
+    if (item < MAX_STORE_INVEN) {
+      if (overlay_actD == 'S')
+        obj_study(&store_objD[sidx][item]);
+      else
+        store_item_purchase(sidx, item);
+    }
     if (c == 'I') inven_sort();
   }
 }
@@ -11469,7 +11459,8 @@ dungeon()
               close_object();
               break;
             case 'd':
-              py_drop(y, x);
+              iidx = inven_choice("Drop which item?", "*/");
+              if (iidx >= 0) inven_drop(iidx, uD.y, uD.x);
               break;
             case 'e': {
               int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
@@ -11557,7 +11548,7 @@ dungeon()
               break;
             case 'S':
               iidx = inven_choice("Study which item?", "*/");
-              if (iidx >= 0) inven_study(iidx);
+              if (iidx >= 0) obj_study(obj_get(invenD[iidx]));
               break;
             case 'T':
               py_takeoff();
