@@ -424,7 +424,7 @@ viz_minimap()
         c_ptr = &caveD[row][col];
         mon = &entity_monD[c_ptr->midx];
         if (mon->mlit) {
-          color = BRIGHT + RED;
+          color = BRIGHT + MAGENTA;
         } else if (c_ptr->fval == BOUNDARY_WALL) {
           if ((col % 8) == 4 || (row % 8) == 4) color = BRIGHT + WHITE;
         } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
@@ -439,7 +439,7 @@ viz_minimap()
             if (obj->tval == TV_UP_STAIR) {
               color = BRIGHT + CYAN;
             } else if (obj->tval == TV_DOWN_STAIR) {
-              color = BRIGHT + MAGENTA;
+              color = BRIGHT + RED;
             } else if (obj->tval == TV_VIS_TRAP) {
               color = BRIGHT + YELLOW;
             } else if (obj->tval == TV_SECRET_DOOR) {
