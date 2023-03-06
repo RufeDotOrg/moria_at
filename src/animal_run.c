@@ -10393,11 +10393,16 @@ static void mon_try_multiply(mon) struct monS* mon;
 
   if ((k < 4) && (randint((k + 1) * MON_MULT_ADJ) == 1)) mon_multiply(mon);
 }
+static char* mon_spell_nameD[] = {
+    "phase door",     "teleport",       "summon",        "wounds",
+    "serious wounds", "paralysis",      "blindness",     "confusion",
+    "fear",           "summon monster", "summon undead", "slow",
+};
 static int
 mon_try_spell(midx, cdis)
 {
-  uint32_t i, nasty, maxlev;
-  int k, chance, thrown_spell, r1;
+  uint32_t i, maxlev;
+  int k, chance, thrown_spell, spell_index, r1;
   int spell_choice[32];
   int took_turn;
   struct monS* mon;
@@ -10434,24 +10439,22 @@ mon_try_spell(midx, cdis)
     }
     /* Choose a spell to cast  		       */
     thrown_spell = spell_choice[randint(k) - 1];
-    thrown_spell++;
-    /* all except teleport_away() and drain mana spells always disturb */
-    if (thrown_spell > 6 && thrown_spell != 17) disturb(1, 0);
-    /* save some code/data space here, with a small time penalty */
-    if ((thrown_spell < 14 && thrown_spell > 8) || (thrown_spell == 16)) {
-      MSG("%s casts a spell.", descD);
+    spell_index = thrown_spell >> 2;
+    ++thrown_spell;
+
+    if (spell_index < AL(spell_nameD)) {
+      MSG("%s casts a spell of %s.", descD, spell_nameD[spell_index]);
     }
+
     /* Cast the spell.  		     */
     switch (thrown_spell) {
       case 5: /*Teleport Short*/
         teleport_away(midx, 5);
         break;
       case 6: /*Teleport Long */
-        MSG("%s casts a teleportation spell.", descD);
         teleport_away(midx, MAX_SIGHT);
         break;
       case 7: /*Teleport To (aka. Summon)  */
-        MSG("%s summons you to their location.", descD);
         teleport_to(mon->fy, mon->fx);
         break;
       case 8: /*Light Wound   */
@@ -10482,7 +10485,6 @@ mon_try_spell(midx, cdis)
         else if (maD[MA_BLIND])
           ma_duration(MA_BLIND, 6);
         else {
-          msg_print("Your eyes begin to sting.");
           ma_duration(MA_BLIND, 12 + randint(3));
         }
         break;
@@ -10504,13 +10506,11 @@ mon_try_spell(midx, cdis)
         break;
       case 14: /*Summon Monster*/
       {
-        MSG("%s magically summons a monster!", descD);
         int midx = summon_monster(uD.y, uD.x);
         update_mon(midx);
       } break;
       case 15: /*Summon Undead*/
       {
-        MSG("%s magically summons an undead!", descD);
         int midx = summon_undead(uD.y, uD.x);
         update_mon(midx);
       } break;
