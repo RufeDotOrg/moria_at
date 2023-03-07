@@ -10446,7 +10446,7 @@ mon_try_spell(midx, cdis)
     ++thrown_spell;
 
     if (spell_index < AL(spell_nameD)) {
-      MSG("%s casts a spell of %s.", descD, spell_nameD[spell_index]);
+      MSG("%s casts a spell of %s.", descD, mon_spell_nameD[spell_index]);
     }
 
     /* Cast the spell.  		     */
