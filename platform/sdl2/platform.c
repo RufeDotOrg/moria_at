@@ -1549,13 +1549,16 @@ platform_init()
 
     // IOS/Android orientation
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
-    SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
 
     // Platform Input isolation
-    if (ANDROID || !TOUCH) {
-      SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
+    // Mouse->Touch
+    if (TOUCH)
+      SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
+    else
       SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
-    }
+    // Touch->Mouse
+    if (ANDROID) SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
     SDL_Init(SDL_SCOPE);

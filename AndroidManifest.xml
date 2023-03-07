@@ -14,10 +14,10 @@
     <!-- Touchscreen support -->
     <uses-feature
         android:name="android.hardware.touchscreen"
-        android:required="false" />
+        android:required="true" />
 
     <!-- Game controller support -->
-    <uses-feature
+    <!-- <uses-feature
         android:name="android.hardware.bluetooth"
         android:required="false" />
     <uses-feature
@@ -25,12 +25,12 @@
         android:required="false" />
     <uses-feature
         android:name="android.hardware.usb.host"
-        android:required="false" />
+        android:required="false" /> -->
 
     <!-- External mouse input events -->
-    <uses-feature
+    <!-- <uses-feature
         android:name="android.hardware.type.pc"
-        android:required="false" />
+        android:required="false" /> -->
 
     <!-- Audio recording support -->
     <!-- if you want to capture audio, uncomment this. -->
@@ -83,9 +83,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
             <!-- Let Android know that we can handle some USB devices and should receive this event -->
-            <intent-filter>
+	    <!-- <intent-filter>
                 <action android:name="android.hardware.usb.action.USB_DEVICE_ATTACHED" />
-            </intent-filter>
+	    </intent-filter> -->
             <!-- Drop file event -->
             <!--
             <intent-filter>
