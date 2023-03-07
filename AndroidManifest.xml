@@ -60,7 +60,7 @@
 
          An example Java class can be found in README-android.md
     -->
-    <application android:label="@string/app_name"
+    <application android:label="moria"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
         android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
@@ -71,7 +71,7 @@
          -->
      
         <activity android:name="moriaActivity"
-            android:label="@string/app_name"
+            android:label="moria"
             android:alwaysRetainTaskState="true"
             android:launchMode="singleInstance"
             android:configChanges="layoutDirection|locale|orientation|uiMode|screenLayout|screenSize|smallestScreenSize|keyboard|keyboardHidden|navigation"
