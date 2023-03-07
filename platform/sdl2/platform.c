@@ -1386,7 +1386,6 @@ SDL_Event event;
       if (finger) return 'I';
       overlay_actD = 'S';
       return 'a' + finger_rowD;
-      //return ESCAPE;
     }
     if (touch == TOUCH_RB) {
       if (finger) overlay_actD = 'd';
