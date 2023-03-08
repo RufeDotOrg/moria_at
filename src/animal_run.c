@@ -7430,7 +7430,7 @@ inven_eat(iidx)
     i = obj->flags;
     // Some food has no effect; thus becomes known
     ident = (i == 0);
-    if (i == 0) msg_print("Nom, nom, nom.");
+    msg_print("Nom, nom, nom.");
     while (i != 0) {
       j = bit_pos(&i) + 1;
       /* Foods  				*/
