@@ -1329,10 +1329,10 @@ SDL_Event event;
   if (TOUCH && !ANDROID) {
     finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
   }
+  SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
 
   // Playing (Mode 0)
   if (mode == 0 && event.type == SDL_FINGERDOWN) {
-    SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
     if (touch > TOUCH_PAD) {
       // SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) /
       // padD.h}; char c = map_touch(finger, rp.y, rp.x);
@@ -1383,7 +1383,6 @@ SDL_Event event;
       return (finger_colD == 0) ? '*' : '/';
     }
     if (touch == TOUCH_LB) {
-      if (finger) return 'I';
       overlay_actD = 'S';
       return 'a' + finger_rowD;
     }
@@ -1391,6 +1390,7 @@ SDL_Event event;
       if (finger) overlay_actD = 'd';
       return 'a' + finger_rowD;
     }
+    if (tp.x > .23 && tp.x < .775 && tp.y > .90) return 'I';
   }
 
   // Screen (mode 2)
