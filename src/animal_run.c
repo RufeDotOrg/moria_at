@@ -438,14 +438,14 @@ viz_minimap()
         } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
           color = BRIGHT + WHITE;
         } else if (row == y && col == x) {
-          color = BRIGHT + BLUE;
+          color = BRIGHT + CYAN;
         }
 
         if (color == 0 && c_ptr->oidx) {
           obj = &entity_objD[c_ptr->oidx];
           if (CF_VIZ & c_ptr->cflag) {
             if (obj->tval == TV_UP_STAIR) {
-              color = BRIGHT + CYAN;
+              color = BRIGHT + GREEN;
             } else if (obj->tval == TV_DOWN_STAIR) {
               color = BRIGHT + RED;
             } else if (obj->tval == TV_VIS_TRAP) {
@@ -453,7 +453,7 @@ viz_minimap()
             } else if (obj->tval == TV_SECRET_DOOR) {
               color = BRIGHT + WHITE;
             } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
-              color = BRIGHT + GREEN;
+              color = BRIGHT + BLUE;
             }
           }
         }
