@@ -10442,10 +10442,10 @@ mon_try_spell(midx, cdis)
     }
     /* Choose a spell to cast  		       */
     thrown_spell = spell_choice[randint(k) - 1];
-    spell_index = thrown_spell >> 2;
+    spell_index = thrown_spell - 4;
     ++thrown_spell;
 
-    if (spell_index < AL(spell_nameD)) {
+    if (spell_index < AL(mon_spell_nameD)) {
       MSG("%s casts a spell of %s.", descD, mon_spell_nameD[spell_index]);
     }
 
