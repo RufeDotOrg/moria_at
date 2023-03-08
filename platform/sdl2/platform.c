@@ -20,7 +20,7 @@
 #ifdef ANDROID
 enum { TOUCH = 1 };
 #else
-enum { TOUCH };
+enum { TOUCH = 1 };
 enum { ANDROID };
 #endif
 #define CTRL(x) (x & 037)
@@ -71,8 +71,9 @@ static SDL_Color font_colorD;
 static int xD;
 static int modeD;
 static int submodeD;
-static int finger_rowD;
-static int finger_colD;
+static uint8_t row_stateD[256];
+static uint8_t finger_rowD;
+static uint8_t finger_colD;
 static int quitD;
 static int last_pressD;
 
@@ -628,9 +629,15 @@ mode_change()
   }
 
   if (submodeD != overlay_submodeD) {
+    uint8_t prev = submodeD;
+    uint8_t next = overlay_submodeD;
     submodeD = overlay_submodeD;
-    finger_rowD = 0;
-    finger_colD = overlay_submodeD != 'e' ? 0 : 1;
+
+    Log("submode change %c (%d)->%c (%d)", prev, finger_rowD, next,
+        row_stateD[next]);
+    row_stateD[prev] = finger_rowD;
+    finger_rowD = row_stateD[next];
+    finger_colD = next == 'e' ? 1 : 0;
     overlay_autoselect();
   }
 
@@ -1369,8 +1376,12 @@ SDL_Event event;
 
       if (!dx && !dy) return ESCAPE;
       if (dx && !dy) {
-        finger_colD = CLAMP(finger_colD + dx, 0, 1);
-        finger_rowD = 0;
+        if (finger) {
+          overlay_actD = 'd';
+          return 'a' + finger_rowD;
+        } else {
+          finger_colD = CLAMP(finger_colD + dx, 0, 1);
+        }
       }
       if (dy && !dx) {
         if (finger)
@@ -1387,7 +1398,6 @@ SDL_Event event;
       return 'a' + finger_rowD;
     }
     if (touch == TOUCH_RB) {
-      if (finger) overlay_actD = 'd';
       return 'a' + finger_rowD;
     }
     if (tp.x > .23 && tp.x < .775 && tp.y > .90) return 'I';
