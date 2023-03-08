@@ -20,7 +20,7 @@
 #ifdef ANDROID
 enum { TOUCH = 1 };
 #else
-enum { TOUCH = 1 };
+enum { TOUCH };
 enum { ANDROID };
 #endif
 #define CTRL(x) (x & 037)

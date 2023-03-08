@@ -22,6 +22,14 @@ static char log_extD[] = " -more-";
     vtype[len] = 0;                                             \
     msg_game(vtype, len);                                       \
   }
+// This clobbers unflushed messages, and does not persist to history
+#define MSG_NOHISTORY(x, ...)                                                 \
+  {                                                                           \
+    char* msg = AS(msg_cqD, msg_writeD);                                      \
+    AS(msglen_cqD, msg_writeD) = snprintf(msg, MAX_MSGLEN, x, ##__VA_ARGS__); \
+    draw();                                                                   \
+    AS(msglen_cqD, msg_writeD) = 0;                                           \
+  }
 
 #define BufMsg(name, text, ...)                                     \
   {                                                                 \
@@ -619,20 +627,15 @@ char* prompt;
 char* command;
 {
   char c;
-  char* msg;
 
   overlay_actD = 0;
-  msg = AS(msg_cqD, msg_writeD);
-  AS(msglen_cqD, msg_writeD) =
-      snprintf(msg, MAX_MSGLEN, "%s", prompt ? prompt : "");
-  draw();
+  MSG_NOHISTORY("%s", prompt ? prompt : "");
   do {
     c = inkey();
     if (c == ESCAPE) return 0;
     if (c == CTRL('c')) return 0;
   } while (c == ' ');
   *command = c;
-  AS(msglen_cqD, msg_writeD) = 0;
   return 1;
 }
 static char
@@ -674,18 +677,17 @@ get_dir(prompt, dir)
 char* prompt;
 int* dir;
 {
-  char command;
-
+  char c, command;
   if (!prompt) prompt = "Which direction?";
-  if (in_subcommand(prompt, &command)) {
-    command = map_roguedir(command);
-    if (command >= '1' && command <= '9' && command != '5') {
-      *dir = command - '0';
-      return TRUE;
-    }
+  MSG_NOHISTORY("%s", prompt);
+  c = inkey();
+  command = map_roguedir(c);
+  if (command >= '1' && command <= '9' && command != '5') {
+    *dir = command - '0';
+    return 1;
   }
 
-  return FALSE;
+  return 0;
 }
 
 int
