@@ -914,7 +914,7 @@ platform_draw()
   }
 
   if (TOUCH) {
-    SDL_Color c = {0, 0, 78, 0};
+    SDL_Color c = *(SDL_Color *)&paletteD[BLUE];
     SDL_SetRenderDrawColor(rendererD, C(c));
 
     for (int it = 0; it < AL(buttonD); ++it) {
@@ -1231,7 +1231,7 @@ SDL_Event event;
       }
 
       float c2w, c2h;
-      c2w = 1.0 - c2;
+      c2w = MIN(1.0 - c2, c1);
       c2h = c2w * aspectD;
       for (int it = 0; it < AL(buttonD); ++it) {
         SDL_FRect r = (SDL_FRect){.w = c2w * .5f, .h = c2h * .5f};
