@@ -6225,9 +6225,10 @@ void fire_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
     mmove(dir, &y, &x);
     dist++;
     c_ptr = &caveD[y][x];
-    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE)
+    if ((dist > OBJ_BOLT_RANGE) || c_ptr->fval >= MIN_CLOSED_SPACE) {
       flag = TRUE;
-    else {
+      MSG("The %s strikes a wall.", bolt_typ);
+    } else {
       if (c_ptr->midx) {
         flag = TRUE;
         m_ptr = &entity_monD[c_ptr->midx];
