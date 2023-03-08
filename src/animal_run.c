@@ -10123,7 +10123,7 @@ tunnel(y, x)
       msg_print("You tunnel into the granite wall.");
       do {
         turn_count += 1;
-        py_search(y, x);
+        py_search(uD.y, uD.x);
         if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
       } while (turn_count < 5);
     } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
@@ -10154,7 +10154,7 @@ tunnel(y, x)
 
   turn_flag = TRUE;
 }
-void py_tunnel(dir, uy, ux) int *uy, *ux;
+static void py_tunnel(dir, uy, ux) int *uy, *ux;
 {
   int y, x;
   struct caveS* c_ptr;
@@ -10187,7 +10187,7 @@ void py_tunnel(dir, uy, ux) int *uy, *ux;
 
   tunnel(y, x);
 }
-void
+static void
 py_autotunnel(y, x)
 {
   if (py_affect(MA_BLIND) == 0) {
