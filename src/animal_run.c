@@ -10326,8 +10326,9 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   reduce = 0;
   while (cdis) reduce = bit_pos(&cdis);
   reduce += 1;
-  MSG("[%d/%d@%d", dam_hp, reduce, distance(y, x, fy, fx));
-  dam_hp = dam_hp / reduce;
+  MSG("[%d/%d@%d", dam_hp + 1, reduce, distance(y, x, fy, fx));
+  /* at least one damage, prevents randint(0) with poison_gas() */
+  dam_hp = dam_hp / reduce + 1;
   get_flags(breath, &weapon_type, &harm_type, &destroy);
   for (i = y - 2; i <= y + 2; i++)
     for (j = x - 2; j <= x + 2; j++)
@@ -10368,8 +10369,7 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
       dam = light_dam(dam_hp);
       break;
     case GF_POISON_GAS:
-      /* prevents randint(0) problem with poison_gas, also */
-      dam = poison_gas(dam_hp + 1);
+      dam = poison_gas(dam_hp);
       break;
     case GF_ACID:
       dam = acid_dam(dam_hp, TRUE);
@@ -10382,8 +10382,6 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
       break;
   }
   MSG("-%d]", dam);
-  /* show the ball of gas */
-  // put_qio();
 }
 static void mon_try_multiply(mon) struct monS* mon;
 {
