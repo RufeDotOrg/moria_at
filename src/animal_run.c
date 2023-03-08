@@ -8876,12 +8876,10 @@ void py_actuate(y, x) int *y, *x;
 void
 py_character()
 {
-  int line, col, col_width;
+  int line;
   int xbth, xdis, xsave, xdev;
 
-  col_width = 20;
   line = 0;
-  col = 0;
 
   screen_submodeD = 1;
   BufMsg(screen, "%-13.013s: %d", "Age", 16);
@@ -8952,8 +8950,9 @@ py_character()
 
   line = 0;
 
-  MSG("Name: %-20.020s Race: %-20.020s Class: %-20.020s", "...",
-      raceD[uD.ridx].name, classD[uD.clidx].name);
+  MSG_NOHISTORY("Name: %-20.020s Race: %-20.020s Class: %-20.020s", "...",
+                raceD[uD.ridx].name, classD[uD.clidx].name);
+  inkey();
 }
 void
 py_takeoff()
