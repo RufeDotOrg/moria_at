@@ -6918,7 +6918,7 @@ inven_recharge(iidx, amount)
   } else {
     amount = (amount / (i_ptr->level + 2)) + 1;
     i_ptr->p1 += 2 + randint(amount);
-    i_ptr->idflag &= ~(ID_REVEAL | ID_EMPTY);
+    i_ptr->idflag = ID_REVEAL;
   }
 }
 int
