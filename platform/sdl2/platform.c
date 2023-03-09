@@ -1174,10 +1174,10 @@ SDL_Event event;
       "[ data1 %d data2 %d ]"
       "",
       event.window.event, event.window.data1, event.window.data2);
-  if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
-      (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED &&
-       (display_rectD.w != event.window.data1 ||
-        display_rectD.h != event.window.data2))) {
+  if ((event.window.event == SDL_WINDOWEVENT_RESIZED ||
+       event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) &&
+      (display_rectD.w != event.window.data1 ||
+       display_rectD.h != event.window.data2)) {
     display_rectD.w = event.window.data1;
     display_rectD.h = event.window.data2;
 
