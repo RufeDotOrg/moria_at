@@ -4033,7 +4033,7 @@ unlight_area(y, x)
     }
   }
 
-  see_print("Darkness surrounds you.");
+  if (known) see_print("Darkness surrounds you.");
 
   return known;
 }
