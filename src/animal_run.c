@@ -7793,9 +7793,8 @@ inven_quaff(iidx)
           lose_stat(A_STR);
           break;
         case 3:
-          if (res_stat(A_STR)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_STR);
+          ident |= inc_stat(A_STR);
           break;
         case 4:
           if (inc_stat(A_INT)) {
@@ -7808,9 +7807,8 @@ inven_quaff(iidx)
           lose_stat(A_INT);
           break;
         case 6:
-          if (res_stat(A_INT)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_INT);
+          ident |= inc_stat(A_INT);
           break;
         case 7:
           if (inc_stat(A_WIS)) {
@@ -7823,9 +7821,8 @@ inven_quaff(iidx)
           lose_stat(A_WIS);
           break;
         case 9:
-          if (res_stat(A_WIS)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_WIS);
+          ident |= inc_stat(A_WIS);
           break;
         case 10:
           if (inc_stat(A_CHR)) {
@@ -7838,9 +7835,8 @@ inven_quaff(iidx)
           lose_stat(A_CHR);
           break;
         case 12:
-          if (res_stat(A_CHR)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_CHR);
+          ident |= inc_stat(A_CHR);
           break;
         case 13:
           ident |= py_heal_hit(damroll(2, 7));
@@ -7913,14 +7909,12 @@ inven_quaff(iidx)
           }
           break;
         case 27:
-          if (res_stat(A_DEX)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_DEX);
+          ident |= inc_stat(A_DEX);
           break;
         case 28:
-          if (res_stat(A_CON)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_CON);
+          ident |= inc_stat(A_CON);
           break;
         case 29:
           if (py_affect(MA_BLIND)) {

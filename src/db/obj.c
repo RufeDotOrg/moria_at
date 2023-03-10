@@ -3460,7 +3460,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      3},
-    {"Restore Strength",
+    {"Enhance Strength",
      0x00000004L,
      TV_POTION1,
      '!', /*227*/
@@ -3505,7 +3505,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      25},
-    {"Restore Intelligence",
+    {"Enhance Intelligence",
      0x00000020L,
      TV_POTION1,
      '!', /*230*/
@@ -3550,7 +3550,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      25},
-    {"Restore Wisdom",
+    {"Enhance Wisdom",
      0x00000100L,
      TV_POTION1,
      '!', /*233*/
@@ -3595,7 +3595,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      25},
-    {"Restore Charisma",
+    {"Enhance Charisma",
      0x00000800L,
      TV_POTION1,
      '!', /*236*/
@@ -3835,7 +3835,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      25},
-    {"Restore Dexterity",
+    {"Enhance Dexterity",
      0x04000000L,
      TV_POTION1,
      '!', /*252*/
@@ -3850,7 +3850,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"Restore Constitution",
+    {"Enhance Constitution",
      0x68000000L,
      TV_POTION1,
      '!', /*253*/
@@ -5679,8 +5679,8 @@ static uint16_t store_choiceD[MAX_STORE][MAX_STORE_CHOICE] = {
      31, 35, 38, 46, 50, 58, 59, 60, 66, 68, 69, 30, 31},
     {323, 324, 325, 326, 181, 181, 234, 238, 241, 242, 258, 260, 58,
      59,  60,  261, 218, 221, 266, 238, 238, 241, 241, 242, 324, 221},
-    {174, 175, 176, 177, 177, 182, 186, 190, 193, 194, 202, 207, 228,
-     231, 237, 253, 254, 182, 186, 190, 193, 194, 221, 265, 221, 221},
+    {174, 175, 176, 177, 177, 182, 186, 190, 193, 194, 202, 207, 182,
+     182, 207, 202, 181, 182, 186, 190, 193, 194, 221, 265, 221, 221},
     {319, 142, 143, 154, 165, 168, 169, 141, 320, 321, 321, 322, 270,
      271, 283, 287, 288, 293, 294, 295, 296, 309, 270, 291, 320, 283},
 };
