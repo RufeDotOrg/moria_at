@@ -9258,7 +9258,7 @@ py_shield_attack(y, x)
                    (statD.use_stat[A_DEX] * (BTH_PLUS_ADJ - 1)) - (adj / 2);
 
     if (test_hit(base_tohit, adj, statD.use_stat[A_DEX], cr_ptr->ac)) {
-      MSG("You hit %s.", descD);
+      MSG("You bash %s.", descD);
       k = pdamroll(shield->damage);
       k = critical_blow(shield->weight / 4 + statD.use_stat[A_STR], 0, adj, k);
       k += uD.wt / 60 + 3;
@@ -11699,8 +11699,10 @@ dungeon()
         } else {
           // doors known to be jammed are bashed prior to movement
           if (obj->tval == TV_CLOSED_DOOR) {
-            if (obj->p1 < 0 && (obj->idflag & ID_REVEAL)) {
-              bash(y, x);
+            if (mon->id == 0) {
+              if (obj->p1 < 0 && (obj->idflag & ID_REVEAL)) {
+                bash(y, x);
+              }
             }
           }
 
