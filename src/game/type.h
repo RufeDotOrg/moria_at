@@ -218,6 +218,7 @@ struct monS {
   uint8_t mlit;
   uint8_t mstunned;
   uint8_t mconfused;
+  uint8_t msilenced;
 };
 
 struct ownerS {

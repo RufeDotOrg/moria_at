@@ -6862,6 +6862,7 @@ dispel_creature(cflag, damage)
         los(y, x, mon->fy, mon->fx)) {
       dispel = TRUE;
       mon->mlit = TRUE;
+      mon->msilenced = TRUE;
       mon_desc(it_index);
       if (mon_take_hit(it_index, randint(damage))) {
         MSG("%s dissolves!", descD);
@@ -10442,7 +10443,7 @@ mon_try_spell(midx, cdis)
   chance = cr_ptr->spells & CS_FREQ;
 
   /* confused monsters don't cast; including turn undead */
-  if (mon->mconfused) took_turn = FALSE;
+  if (mon->mconfused || mon->msilenced) took_turn = FALSE;
   /* 1 in x chance of casting spell  	   */
   else if (randint(chance) != 1)
     took_turn = FALSE;
