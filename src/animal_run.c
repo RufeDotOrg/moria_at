@@ -11258,6 +11258,7 @@ player_maint()
     }
   }
 
+  inven_sort();
   flag = 0;
   for (int it = 0; it < MAX_INVEN; ++it) {
     obj = obj_get(invenD[it]);
