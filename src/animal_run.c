@@ -5689,7 +5689,7 @@ py_init()
   } while ((player_hpD[MAX_PLAYER_LEVEL - 1] < min_value) ||
            (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
 
-  int start_equip[] = {30, 87};
+  int start_equip[] = {30, 87, 221};
   for (int it = 0; it < AL(start_equip); ++it) {
     struct objS* obj = obj_use();
     tr_obj_copy(start_equip[it], obj);
