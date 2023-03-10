@@ -7294,6 +7294,30 @@ ptr_xor(void* a, void* b)
   return (void*)((uint64_t)a ^ (uint64_t)b);
 }
 static int
+obj_cmp(a, b)
+struct objS *a, *b;
+{
+  int astack, bstack, ar, br, at, bt, ak, bk;
+
+  astack = a->subval & STACK_ANY;
+  bstack = b->subval & STACK_ANY;
+  if (astack != bstack) return astack - bstack;
+
+  if (astack) {
+    ak = tr_is_known(&treasureD[a->tidx]);
+    bk = tr_is_known(&treasureD[b->tidx]);
+    if (ak != bk) return ak - bk;
+  } else {
+    ar = a->idflag & ID_REVEAL;
+    br = b->idflag & ID_REVEAL;
+    if (ar != br) return ar - br;
+  }
+
+  at = a->tval;
+  bt = b->tval;
+  return at - bt;
+}
+static int
 inven_sort()
 {
   int i, j;
@@ -7304,7 +7328,7 @@ inven_sort()
 
   for (i = 0; i < INVEN_EQUIP; ++i) {
     for (j = i + 1; j < INVEN_EQUIP; ++j) {
-      if (obj[j]->tval > obj[i]->tval) {
+      if (obj_cmp(obj[j], obj[i]) > 0) {
         swap = ptr_xor(obj[j], obj[i]);
         obj[j] = ptr_xor(obj[j], swap);
         obj[i] = ptr_xor(obj[i], swap);
