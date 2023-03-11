@@ -4648,7 +4648,7 @@ mon_take_hit(midx, dam)
 BOOL
 is_a_vowel(chr)
 {
-  char c = chr;
+  char c = chr | 0x20;
   switch (c) {
     case 'a':
     case 'e':
