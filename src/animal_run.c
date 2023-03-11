@@ -587,18 +587,9 @@ static void msg_game(msg, msglen) char* msg;
   if (countD.rest != 0) countD.rest = 0;
   find_flag = FALSE;
 }
-static void
-msg_print(char* text)
-{
-  msg_game(text, strlen(text));
-}
-static int
-see_print(char* text)
-{
-  BOOL see = (maD[MA_BLIND] == 0);
-  if (see) msg_print(text);
-  return see;
-}
+#define msg_print(x) msg_game(AP(x))
+#define see_print(x) \
+  if (maD[MA_BLIND] == 0) msg_game(AP(x))
 void
 msg_history()
 {
@@ -8537,7 +8528,8 @@ int *uy, *ux;
             break;
           case 20:
             if (equip_remove_curse()) {
-              ident |= see_print("The staff glows blue for a moment..");
+              ident = TRUE;
+              see_print("The staff glows blue for a moment..");
             }
             break;
           case 21:
