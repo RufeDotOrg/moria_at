@@ -1329,7 +1329,7 @@ static struct treasureS treasureD[] = {
      0,
      {0, 0},
      1},
-    {"& Brass Lantern~",
+    {"& Brass Lantern",
      0x00000000L,
      TV_LIGHT,
      '~', /* 85*/
@@ -1344,7 +1344,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      1},
-    {"& Wooden Torch~",
+    {"& Wooden Torch",
      0x00000000L,
      TV_LIGHT,
      '~', /* 86*/
