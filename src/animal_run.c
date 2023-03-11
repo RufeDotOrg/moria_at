@@ -4708,6 +4708,13 @@ void obj_detail(obj) struct objS* obj;
   eqidx = may_equip(obj->tval);
   reveal = (obj->idflag & ID_REVEAL) != 0;
   tmp_str[0] = 0;
+
+  if (eqidx == INVEN_WIELD) {
+    snprintf(tmp_str, AL(tmp_str), " (%dx) (%dd%d)", attack_blows(obj->weight),
+             obj->damage[0], obj->damage[1]);
+    strcat(descD, tmp_str);
+  }
+
   if (obj->sn && reveal) {
     if (eqidx == INVEN_WIELD) {
       if (obj->p1) {
@@ -4725,7 +4732,10 @@ void obj_detail(obj) struct objS* obj;
   }
 
   if (reveal && (obj->tval == TV_STAFF || obj->tval == TV_WAND)) {
-    sprintf(tmp_str, " (%d charges)", obj->p1);
+    snprintf(tmp_str, AL(tmp_str), " (%d charges)", obj->p1);
+    strcat(descD, tmp_str);
+  } else if (reveal && obj->tval == TV_LIGHT) {
+    snprintf(tmp_str, AL(tmp_str), " (%+d,+0)", light_adj(obj->p1));
     strcat(descD, tmp_str);
   } else if (reveal && (eqidx > INVEN_WIELD || obj->tval == TV_DIGGING)) {
     if ((TR_P1 & obj->flags) && obj->p1) {
@@ -4763,15 +4773,13 @@ void obj_detail(obj) struct objS* obj;
 }
 void obj_desc(obj, prefix) struct objS* obj;
 {
-  char* basenm;
-  char damstr[80];
+  char* name;
   int indexx, unknown, append_name, tmp;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
   indexx = mask_subval(obj->subval);
-  basenm = tr_ptr->name;
-  damstr[0] = 0;
+  name = tr_ptr->name;
   unknown = !(tr_is_known(tr_ptr) || (obj->idflag & ID_REVEAL));
   append_name = FALSE;
   switch (obj->tval) {
@@ -4779,16 +4787,12 @@ void obj_desc(obj, prefix) struct objS* obj;
     case TV_CHEST:
       break;
     case TV_LIGHT:
-      snprintf(damstr, AL(damstr), " (%+d,+0)", light_adj(obj->p1));
       break;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
-      snprintf(damstr, AL(damstr), " (%dx) (%dd%d)", attack_blows(obj->weight),
-               obj->damage[0], obj->damage[1]);
       break;
     case TV_DIGGING:
-      snprintf(damstr, AL(damstr), " (%dd%d)", obj->damage[0], obj->damage[1]);
       break;
     case TV_BOOTS:
     case TV_GLOVES:
@@ -4801,56 +4805,56 @@ void obj_desc(obj, prefix) struct objS* obj;
     case TV_AMULET:
       if (unknown) {
         snprintf(descD, AL(descD), "& %s Amulet", amulets[indexx]);
-        basenm = 0;
+        name = 0;
       } else {
-        basenm = "& Amulet";
+        name = "& Amulet";
         append_name = TRUE;
       }
       break;
     case TV_RING:
       if (unknown) {
-        basenm = 0;
+        name = 0;
         snprintf(descD, AL(descD), "& %s Ring", rocks[indexx]);
       } else {
-        basenm = "& Ring";
+        name = "& Ring";
         append_name = TRUE;
       }
       break;
     case TV_STAFF:
       if (unknown) {
-        basenm = 0;
+        name = 0;
         snprintf(descD, AL(descD), "& %s Staff", woods[indexx]);
       } else {
-        basenm = "& Staff";
+        name = "& Staff";
         append_name = TRUE;
       }
       break;
     case TV_WAND:
       if (unknown) {
-        basenm = 0;
+        name = 0;
         snprintf(descD, AL(descD), "& %s Wand", metals[indexx]);
       } else {
-        basenm = "& Wand";
+        name = "& Wand";
         append_name = TRUE;
       }
       break;
     case TV_SCROLL1:
     case TV_SCROLL2:
       if (unknown) {
-        basenm = 0;
+        name = 0;
         snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"", titleD[indexx]);
       } else {
-        basenm = "& Scroll~";
+        name = "& Scroll~";
         append_name = TRUE;
       }
       break;
     case TV_POTION1:
     case TV_POTION2:
       if (unknown) {
-        basenm = 0;
+        name = 0;
         snprintf(descD, AL(descD), "& %s Potion~", colors[indexx]);
       } else {
-        basenm = "& Potion~";
+        name = "& Potion~";
         append_name = TRUE;
       }
       break;
@@ -4862,25 +4866,25 @@ void obj_desc(obj, prefix) struct objS* obj;
           snprintf(descD, AL(descD), "& %s Mushroom~", mushrooms[indexx]);
         else if (indexx <= 20)
           snprintf(descD, AL(descD), "& Hairy %s Mold~", mushrooms[indexx]);
-        if (indexx <= 20) basenm = 0;
+        if (indexx <= 20) name = 0;
       } else {
         append_name = TRUE;
         if (indexx <= 15)
-          basenm = "& Mushroom~";
+          name = "& Mushroom~";
         else if (indexx <= 20)
-          basenm = "& Hairy Mold~";
+          name = "& Hairy Mold~";
         else
           /* Ordinary food does not have a name appended.  */
           append_name = FALSE;
       }
       break;
     case TV_MAGIC_BOOK:
-      snprintf(descD, AL(descD), "& Book~ of Magic Spells %s", basenm);
-      basenm = 0;
+      snprintf(descD, AL(descD), "& Book~ of Magic Spells %s", name);
+      name = 0;
       break;
     case TV_PRAYER_BOOK:
-      snprintf(descD, AL(descD), "& Holy Book~ of Prayers %s", basenm);
-      basenm = 0;
+      snprintf(descD, AL(descD), "& Holy Book~ of Prayers %s", name);
+      name = 0;
       break;
     case TV_GOLD:
       strcpy(descD, gold_nameD[obj->subval]);
@@ -4896,21 +4900,17 @@ void obj_desc(obj, prefix) struct objS* obj;
       return;
     case TV_VIS_TRAP:
       break;
-    // case TV_STORE_DOOR:
-    //   sprintf(descD, "the entrance to the %s.",
-    //   object_list[obj->index].name); return;
     case TV_GLYPH:
       break;
     default:
       snprintf(descD, AL(descD), "Error in objdes(): %d", obj->tval);
       return;
   }
-  if (basenm) strcpy(descD, basenm);
-  if (append_name) {
-    strcat(descD, " of ");
-    strcat(descD, tr_ptr->name);
-  }
-  if (damstr[0]) strcat(descD, damstr);
+  if (append_name)
+    snprintf(descD, AL(descD), "%s of %s", name, tr_ptr->name);
+  else if (name)
+    strcpy(descD, name);
+
   obj_prefix(obj, prefix);
   if (prefix) obj_detail(obj);
 }
