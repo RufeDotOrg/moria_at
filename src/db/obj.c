@@ -5065,7 +5065,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      1},
-    {"some Filthy Rags",
+    {"Filthy Rags",
      0x00000000L,
      TV_SOFT_ARMOR,
      '~', /*334*/
@@ -5095,7 +5095,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      0},
-    {"some shards of pottery",
+    {"shards of pottery",
      0x00000000L,
      TV_MISC,
      '~', /*336*/

@@ -12,6 +12,7 @@ static int find_openarea;
 static int find_breakright, find_breakleft;
 static int find_prevdir;
 
+static char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
 static char log_extD[] = " -more-";
 #define MSG(x, ...)                                             \
@@ -4698,18 +4699,11 @@ void obj_prefix(obj, plural) struct objS* obj;
     /* handle 'no more' case specially */
     else if (obj->number < 1) {
       /* check for "some" at start */
-      if (!strncmp("some", obj_name, 4))
-        snprintf(descD, AL(descD), "no more %s", &obj_name[5]);
-      /* here if no article */
-      else
-        snprintf(descD, AL(descD), "no more %s", obj_name);
+      snprintf(descD, AL(descD), "no more %s", obj_name);
     } else
       strcpy(descD, obj_name);
   } else {
-    if (!strncmp("some", obj_name, 4))
-      strcpy(descD, &obj_name[5]);
-    else if (obj_name[0] == '&')
-      /* eliminate the '& ' at the beginning */
+    if (obj_name[0] == '&')
       strcpy(descD, &obj_name[2]);
     else
       strcpy(descD, obj_name);
@@ -11598,7 +11592,7 @@ dungeon()
               break;
             case CTRL('c'):
               if (!RELEASE) {
-                strcpy(death_descD, "quitting");
+                memcpy(death_descD, AP(quit_stringD));
                 death = 1;
                 return;  // Interrupt game
               }
@@ -11609,7 +11603,7 @@ dungeon()
             case CTRL('x'): {
               save_exit_flag = TRUE;
               new_level_flag = TRUE;
-              strcpy(death_descD, "quitting");
+              memcpy(death_descD, AP(quit_stringD));
             } break;
             default:
               break;
@@ -11874,7 +11868,7 @@ main()
     }
   }
 
-  if (strcmp("quitting", death_descD) != 0) py_death();
+  if (memcmp(death_descD, AP(quit_stringD)) != 0) py_death();
 
   platform_reset();
   return 0;
