@@ -4661,7 +4661,7 @@ is_a_vowel(chr)
 }
 void obj_prefix(obj, plural) struct objS* obj;
 {
-  char obj_name[160];
+  char obj_name[AL(descD)-8];
 
   int offset = 0;
   for (int it = 0; it < AL(descD); ++it) {

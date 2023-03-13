@@ -26,7 +26,7 @@ OUTFILE=`basename $1 $EXT`
 
 case $CC in
   gcc )
-    CFLAGS+=" -fmax-errors=3 "
+    CFLAGS+=" -fmax-errors=3 -Wno-implicit-int"
     ;;
   clang )
     CFLAGS+=" -ferror-limit=3 "
