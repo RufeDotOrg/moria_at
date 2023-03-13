@@ -4659,46 +4659,40 @@ is_a_vowel(chr)
   }
   return FALSE;
 }
-void obj_prefix(obj, plural) struct objS* obj;
+void
+desc_fixup(number)
 {
-  char obj_name[AL(descD)-8];
+  char obj_name[AL(descD) - 8];
 
   int offset = 0;
   for (int it = 0; it < AL(descD); ++it) {
     if (descD[it] != '~')
       obj_name[it - offset] = descD[it];
-    else if (plural && obj->number != 1)
+    else if (number != 1)
       obj_name[it - offset] = 's';
     else
       offset += 1;
     if (descD[it] == 0) break;
   }
 
-  if (plural) {
-    /* ampersand is always the first character */
-    if (obj_name[0] == '&') {
-      /* use &obj_name[1], so that & does not appear in output */
-      if (obj->number > 1)
-        snprintf(descD, AL(descD), "%d%s", obj->number, &obj_name[1]);
-      else if (obj->number < 1)
-        snprintf(descD, AL(descD), "%s%s", "no more", &obj_name[1]);
-      else if (is_a_vowel(obj_name[2]))
-        snprintf(descD, AL(descD), "an%s", &obj_name[1]);
-      else
-        snprintf(descD, AL(descD), "a%s", &obj_name[1]);
-    }
-    /* handle 'no more' case specially */
-    else if (obj->number < 1) {
-      /* check for "some" at start */
-      snprintf(descD, AL(descD), "no more %s", obj_name);
-    } else
-      strcpy(descD, obj_name);
-  } else {
-    if (obj_name[0] == '&')
-      strcpy(descD, &obj_name[2]);
+  /* ampersand is always the first character */
+  if (obj_name[0] == '&') {
+    /* use &obj_name[1], so that & does not appear in output */
+    if (number > 1)
+      snprintf(descD, AL(descD), "%d%s", number, &obj_name[1]);
+    else if (number < 1)
+      snprintf(descD, AL(descD), "%s%s", "no more", &obj_name[1]);
+    else if (is_a_vowel(obj_name[2]))
+      snprintf(descD, AL(descD), "an%s", &obj_name[1]);
     else
-      strcpy(descD, obj_name);
+      snprintf(descD, AL(descD), "a%s", &obj_name[1]);
   }
+  /* handle 'no more' case specially */
+  else if (number < 1) {
+    /* check for "some" at start */
+    snprintf(descD, AL(descD), "no more %s", obj_name);
+  } else
+    strcpy(descD, obj_name);
 }
 void obj_detail(obj) struct objS* obj;
 {
@@ -4771,11 +4765,16 @@ void obj_detail(obj) struct objS* obj;
   if (obj->idflag & ID_PLAIN) strcat(descD, " {plain}");
   if (obj->idflag & ID_RARE) strcat(descD, " {rare}");
 }
-void obj_desc(obj, prefix) struct objS* obj;
+void obj_desc(obj, plural) struct objS* obj;
 {
   char* name;
-  int indexx, unknown, append_name, tmp;
+  int indexx, unknown, append_name, number;
   struct treasureS* tr_ptr;
+
+  if (plural)
+    number = obj->number;
+  else
+    number = 1;
 
   tr_ptr = &treasureD[obj->tidx];
   indexx = mask_subval(obj->subval);
@@ -4911,8 +4910,8 @@ void obj_desc(obj, prefix) struct objS* obj;
   else if (name)
     strcpy(descD, name);
 
-  obj_prefix(obj, prefix);
-  if (prefix) obj_detail(obj);
+  desc_fixup(number);
+  if (plural) obj_detail(obj);
 }
 static void
 mon_desc(midx)
@@ -7590,7 +7589,7 @@ void obj_study(obj) struct objS* obj;
 
     line = 0;
     strcpy(descD, tr_ptr->name);
-    obj_prefix(obj, FALSE);
+    obj_desc(obj, FALSE);
     BufMsg(screen, "%-17.017s: %s", "Name", descD);
     BufMsg(screen, "%-17.017s: %d Lbs", "Weight",
            obj->number * obj->weight / 10);
