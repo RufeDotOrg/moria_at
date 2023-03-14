@@ -1908,7 +1908,7 @@ void magic_treasure(obj, level) struct objS* obj;
                 break;
               case 5:
                 obj->p1 = 5 * (1 + randint(4));
-                obj->flags |= (TR_SEE_INVIS | TR_SEARCH);
+                obj->flags |= (TR_SEE_INVIS | TR_SEARCH | TR_SEEING);
                 obj->sn = SN_SEEING;
                 obj->cost += 1000 + obj->p1 * 100;
                 break;
@@ -5102,6 +5102,12 @@ ma_bonuses(maffect, factor)
 static void
 ma_duration(maidx, nturn)
 {
+  struct objS* obj;
+  if (maidx == MA_BLIND && py_tr(TR_SEEING)) {
+    msg_print("Your sight is no worse.");
+    nturn = 0;
+  }
+
   maD[maidx] += 2 * nturn;
 }
 int8_t
@@ -7432,8 +7438,8 @@ inven_eat(iidx)
           ident |= TRUE;
           break;
         case 2:
-          ma_duration(MA_BLIND, randint(250) + 10 * obj->level + 100);
           msg_print("A veil of darkness surrounds you.");
+          ma_duration(MA_BLIND, randint(250) + 10 * obj->level + 100);
           ident |= TRUE;
           break;
         case 3:
@@ -7623,7 +7629,10 @@ void obj_study(obj) struct objS* obj;
       line += 1;
       if (obj->idflag & ID_REVEAL) {
         if (obj->flags & TR_SEARCH) {
-          if (obj->p1) BufMsg(screen, "%-17.017s: %+d", "Search", obj->p1);
+          if (obj->p1) {
+            BufMsg(screen, "%-17.017s: %+d", "Search", obj->p1);
+            BufMsg(screen, "%-17.017s: %+d", "Perception", obj->p1);
+          }
         }
         if (obj->flags & TR_STEALTH) {
           if (obj->p1) BufMsg(screen, "%-17.017s: %+d", "Stealth", obj->p1);
@@ -7690,6 +7699,9 @@ void obj_study(obj) struct objS* obj;
         }
         if (obj->sn == SN_SU) {
           BufMsg(screen, "and grants resistence to life drain");
+        }
+        if (obj->flags & TR_SEEING) {
+          BufMsg(screen, "and grants immunity to blindness");
         }
         if (obj->flags & TR_FREE_ACT) {
           BufMsg(screen, "and immunity to paralysis");
@@ -9420,8 +9432,8 @@ mon_attack(midx)
           if (maD[MA_BLIND]) {
             ma_duration(MA_BLIND, 5);
           } else {
-            ma_duration(MA_BLIND, 10 + randint(cre->level));
             msg_print("Your eyes begin to sting.");
+            ma_duration(MA_BLIND, 10 + randint(cre->level));
           }
           break;
         case 11: /*Paralysis attack*/
@@ -11098,13 +11110,9 @@ store_item_purchase(sidx, item)
       tr_make_known(tr_ptr);
       obj_desc(obj, count != 1);
       uD.gold -= cost;
-      MSG("You bought %s for %d gold (%c).", descD, cost, iidx + 'a');
+      MSG("You bought %s for %d gold (%c) (%d).", descD, cost, iidx + 'a',
+          obj->number);
       store_item_destroy(sidx, item, count);
-
-      if (number > count) {
-        obj_desc(obj, TRUE);
-        MSG("You have %s.", descD);
-      }
     }
     msg_pause();
   }
