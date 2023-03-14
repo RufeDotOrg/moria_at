@@ -10861,21 +10861,14 @@ obj_value(obj)
 struct objS* obj;
 {
   int value;
-  int known;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
   value = obj->cost;
-  known = ((obj->idflag & ID_REVEAL) != 0) || tr_is_known(tr_ptr);
-  /* don't purchase known cursed items */
-  if (obj->idflag & (ID_DAMD | ID_CORRODED))
-    value = 0;
-  else if (((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) ||
-           ((obj->tval >= TV_BOOTS) &&
-            (obj->tval <= TV_SOFT_ARMOR))) { /* Weapons and armor  */
-    if ((obj->idflag & ID_REVEAL) == 0)
-      value = tr_ptr->cost;
-    else if ((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) {
+  if (((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) ||
+      ((obj->tval >= TV_BOOTS) &&
+       (obj->tval <= TV_SOFT_ARMOR))) { /* Weapons and armor  */
+    if ((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) {
       if (obj->tohit < 0)
         value = 0;
       else if (obj->todam < 0)
@@ -10890,43 +10883,18 @@ struct objS* obj;
       else
         value = obj->cost + obj->toac * 100;
     }
-  } else if ((obj->tval == TV_SCROLL1) || (obj->tval == TV_SCROLL2) ||
-             (obj->tval == TV_POTION1) ||
-             (obj->tval == TV_POTION2)) { /* Potions, Scrolls, and Food  */
-    if (!known) value = 20;
-  } else if (obj->tval == TV_FOOD) {
-    if (!known) value = 1;
-  } else if ((obj->tval == TV_AMULET) ||
-             (obj->tval == TV_RING)) { /* Rings and amulets  */
-    if (!known) /* player does not know what type of ring/amulet this is */
-      value = 45;
-    else if ((obj->idflag & ID_REVEAL) == 0)
-      /* player knows what type of ring, but does not know whether it is
-         cursed or not, if refuse to buy cursed objects here, then
-         player can use this to 'identify' cursed objects */
-      value = tr_ptr->cost;
   } else if ((obj->tval == TV_STAFF) ||
              (obj->tval == TV_WAND)) { /* Wands and staffs*/
-    if (!known) {
-      if (obj->tval == TV_WAND)
-        value = 50;
-      else
-        value = 70;
-    }
   }
   /* picks and shovels */
   else if (obj->tval == TV_DIGGING) {
-    if ((obj->idflag & ID_REVEAL) == 0)
-      value = tr_ptr->cost;
+    if (obj->p1 < 0)
+      value = 0;
     else {
-      if (obj->p1 < 0)
-        value = 0;
-      else {
-        /* some digging tools start with non-zero p1 values, so only
-           multiply the plusses by 100, make sure result is positive */
-        value = obj->cost + (obj->p1 - tr_ptr->p1) * 100;
-        if (value < 0) value = 0;
-      }
+      /* some digging tools start with non-zero p1 values, so only
+         multiply the plusses by 100, make sure result is positive */
+      value = obj->cost + (obj->p1 - tr_ptr->p1) * 100;
+      if (value < 0) value = 0;
     }
   }
   /* multiply value by number of items if it is a batch stack item */
