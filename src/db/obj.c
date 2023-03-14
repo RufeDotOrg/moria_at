@@ -5610,7 +5610,7 @@ static struct treasureS treasureD[] = {
 
 static char* special_nameD[] = {
     0,
-    "Resist Elements",
+    "Resistance",
     "Resist Acid",
     "Resist Fire",
     "Resist Cold",
