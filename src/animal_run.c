@@ -4861,12 +4861,12 @@ void obj_desc(obj, plural) struct objS* obj;
       }
       break;
     case TV_MAGIC_BOOK:
-      snprintf(descD, AL(descD), "& Book~ of Magic Spells %s", name);
-      name = 0;
+      name = "& Book~";
+      suffix = tr_ptr->name;
       break;
     case TV_PRAYER_BOOK:
-      snprintf(descD, AL(descD), "& Holy Book~ of Prayers %s", name);
-      name = 0;
+      name = "& Book~";
+      suffix = tr_ptr->name;
       break;
     case TV_GOLD:
       name = gold_nameD[indexx];

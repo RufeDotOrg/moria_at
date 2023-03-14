@@ -4825,7 +4825,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 2},
      5},
-    {"[Beginners-Magick]",
+    {"Beginners-Magick",
      0x0000007FL,
      TV_MAGIC_BOOK,
      '?', /*318*/
@@ -4840,7 +4840,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"[Magick I]",
+    {"Magick I",
      0x0000FF80L,
      TV_MAGIC_BOOK,
      '?', /*319*/
@@ -4855,7 +4855,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"[Magick II]",
+    {"Magick II",
      0x00FF0000L,
      TV_MAGIC_BOOK,
      '?', /*320*/
@@ -4870,7 +4870,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"[The Mages' Guide to Power]",
+    {"The Mages' Guide to Power",
      0x7F000000L,
      TV_MAGIC_BOOK,
      '?', /*321*/
@@ -4885,7 +4885,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"[Beginners Handbook]",
+    {"Beginners Handbook",
      0x000000FFL,
      TV_PRAYER_BOOK,
      '?', /*322*/
@@ -4900,7 +4900,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"[Words of Wisdom]",
+    {"Words of Wisdom",
      0x0000FF00L,
      TV_PRAYER_BOOK,
      '?', /*323*/
@@ -4915,7 +4915,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"[Chants and Blessings]",
+    {"Chants and Blessings",
      0x01FF0000L,
      TV_PRAYER_BOOK,
      '?', /*324*/
@@ -4930,7 +4930,7 @@ static struct treasureS treasureD[] = {
      0,
      {1, 1},
      40},
-    {"[Exorcisms and Dispellings]",
+    {"Exorcisms and Dispellings",
      0x7E000000L,
      TV_PRAYER_BOOK,
      '?', /*325*/
