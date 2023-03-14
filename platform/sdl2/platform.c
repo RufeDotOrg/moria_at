@@ -598,13 +598,14 @@ overlay_autoselect()
     }
   }
   if (overlay_usedD[row] <= 1) {
-    for (int it = 0; it < row; ++it) {
+    for (int it = row - 1; it > 0; --it) {
       if (overlay_usedD[it] > 1) {
         finger_rowD = it;
         return;
       }
     }
   }
+  finger_rowD = 0;
 }
 int
 mode_change()
