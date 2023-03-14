@@ -11519,6 +11519,7 @@ dungeon()
               if (dun_level == 0)
                 msg_print("You don't have a map of town.");
               else {
+                MSG("You map a depth of %d feet.", 50 * dun_level);
                 screen_submodeD = 0;
                 screenD[0][0] = ' ';
                 screen_usedD[0] = 1;
