@@ -11339,6 +11339,31 @@ tick()
     if (countD.protevil == 0) msg_print("You no longer feel safe from evil.");
   }
 }
+int
+dir_by_confusion()
+{
+  struct caveS* c_ptr;
+  int mm[8];
+  int valid = 0;
+  int ny, nx;
+  int dir;
+
+  for (int it = 1; it <= 9; ++it) {
+    ny = uD.y;
+    nx = uD.x;
+    if (it != 5 && mmove(it, &ny, &nx)) {
+      c_ptr = &caveD[ny][nx];
+      if (c_ptr->midx || c_ptr->fval <= MAX_FLOOR) {
+        mm[valid] = it;
+        valid += 1;
+      }
+    }
+  }
+
+  dir = mm[randint(valid) - 1];
+  msg_print("You are confused.");
+  return dir;
+}
 void
 dungeon()
 {
@@ -11417,10 +11442,11 @@ dungeon()
         dir = c >= '1' ? map_roguedir(c | 0x20) - '1' : -1;
         if (dir < 9) {
           // 75% random movement
-          if (countD.confusion && randint(4) > 1)
-            dir = randint(9);
-          else
+          if (countD.confusion && randint(4) > 1) {
+            dir = dir_by_confusion();
+          } else {
             dir += 1;
+          }
 
           if (countD.confusion /* can't run during confusion */
               || c & 0x20) {
