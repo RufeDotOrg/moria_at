@@ -9092,17 +9092,19 @@ py_pickup(y, x, pickup)
     if (!merge && pickup) locn = inven_carry(obj->id);
 
     obj_desc(obj, TRUE);
+    obj_detail(obj);
     if (locn >= 0) {
       obj->fy = 0;
       obj->fx = 0;
       caveD[y][x].oidx = 0;
 
-      MSG("You %s %s (%c).", merge ? "merge" : "have", descD, locn + 'a');
+      MSG("You %s %s%s (%c).", merge ? "merge" : "have", descD, detailD,
+          locn + 'a');
       turn_flag = TRUE;
     } else if (!pickup) {
-      MSG("You see %s here.", descD);
+      MSG("You see %s%s here.", descD, detailD);
     } else {
-      MSG("You can't carry %s.", descD);
+      MSG("You can't carry %s%s.", descD, detailD);
     }
   }
 }
