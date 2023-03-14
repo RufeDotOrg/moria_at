@@ -1073,57 +1073,6 @@ char_by_dir(dir)
       return ' ';
   }
 }
-static int
-dir_by_yx(y, x)
-{
-  int dir = 5;
-  if (y > 0)
-    dir -= 3;
-  else if (y < 0)
-    dir += 3;
-  if (x > 0)
-    dir += 1;
-  else if (x < 0)
-    dir -= 1;
-  return dir;
-}
-
-#define xrange 0.33f
-#define yrange 0.28f
-static char
-map_touch(finger, ty, tx)
-float ty, tx;
-{
-  int y, x;
-  char c;
-
-  x = y = 0;
-  if (ty <= yrange)
-    y = -1;
-  else if (ty >= (1.0 - yrange))
-    y = 1;
-  if (tx <= xrange)
-    x = -1;
-  else if (tx >= (1.0 - xrange))
-    x = 1;
-  c = char_by_dir(dir_by_yx(y, x));
-  Log("touch "
-      "[ finger %d ] "
-      "[ ty tx %f %f ] "
-      "[ dir_by_yx %d,%d ] "
-      "[ char %d ] "
-      "",
-      finger, ty, tx, y, x, c);
-
-  switch (finger) {
-    case 0:
-      return c;
-    case 1:
-      if (x || y) c &= ~0x20;
-      return c;
-  }
-  return -1;
-}
 
 static int
 nearest_pp(y, x)
@@ -1339,8 +1288,6 @@ SDL_Event event;
   // Playing (Mode 0)
   if (mode == 0 && event.type == SDL_FINGERDOWN) {
     if (touch > TOUCH_PAD) {
-      // SDL_FPoint rp = {(tp.x - padD.x) / padD.w, (tp.y - padD.y) /
-      // padD.h}; char c = map_touch(finger, rp.y, rp.x);
       char c = char_by_dir(touch - TOUCH_PAD);
       switch (finger) {
         case 0:
@@ -1387,8 +1334,6 @@ SDL_Event event;
         else
           finger_rowD = overlay_input(dy);
       }
-      Log("touch %d dx %d dy finger_col %d finger_row %d", dx, dy, finger_colD,
-          finger_rowD);
       return (finger_colD == 0) ? '*' : '/';
     }
     if (touch == TOUCH_LB) {
