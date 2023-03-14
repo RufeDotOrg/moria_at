@@ -8379,7 +8379,6 @@ inven_try_wand_dir(iidx, dir)
           msg_print("You zap the wand, to unknown effect.");
         }
       }
-      if (i_ptr->cost > 125) i_ptr->cost = i_ptr->cost / 2;
     } else {
       msg_print("The wand has no charges left.");
       i_ptr->idflag |= ID_EMPTY;
@@ -8547,7 +8546,6 @@ int *uy, *ux;
           msg_print("You use the staff to unknown effect.");
         }
       }
-      if (i_ptr->cost > 150) i_ptr->cost = i_ptr->cost / 2;
     } else {
       msg_print("The staff has no charges left.");
       i_ptr->idflag |= ID_EMPTY;
@@ -10885,6 +10883,7 @@ struct objS* obj;
     }
   } else if ((obj->tval == TV_STAFF) ||
              (obj->tval == TV_WAND)) { /* Wands and staffs*/
+    value = (obj->cost + (obj->cost / 32) * obj->p1) / 2;
   }
   /* picks and shovels */
   else if (obj->tval == TV_DIGGING) {
