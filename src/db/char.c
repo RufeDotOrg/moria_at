@@ -284,6 +284,14 @@ static char* stat_lossD[] = {
     "You feel very naive",  "You feel clumsy",
     "Your body is damaged", "Your skin starts to itch",
 };
+static char* stat_gainD[] = {
+    "Wow!  What bulging muscles",
+    "Aren't you brilliant",
+    "You suddenly have a profound thought",
+    "You feel more limber",
+    "Your body feels tingly",
+    "Gee, ain't you cute",
+};
 static char* stat_restD[] = {
     "strength",  "intelligence", "wisdom",
     "dexterity", "constitution", "charisma",

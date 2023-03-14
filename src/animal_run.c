@@ -5806,6 +5806,7 @@ inc_stat(stat)
     statD.cur_stat[stat] = tmp_stat;
     if (tmp_stat > statD.max_stat[stat]) statD.max_stat[stat] = tmp_stat;
     set_use_stat(stat);
+    MSG("%s!", stat_gainD[stat]);
     return TRUE;
   } else
     return FALSE;
@@ -7746,10 +7747,7 @@ inven_quaff(iidx)
       j += (obj->tval == TV_POTION2) * 32;
       switch (j) {
         case 1:
-          if (inc_stat(A_STR)) {
-            msg_print("Wow!  What bulging muscles!");
-            ident |= TRUE;
-          }
+          ident |= inc_stat(A_STR);
           break;
         case 2:
           ident |= TRUE;
@@ -7760,10 +7758,7 @@ inven_quaff(iidx)
           ident |= inc_stat(A_STR);
           break;
         case 4:
-          if (inc_stat(A_INT)) {
-            msg_print("Aren't you brilliant!");
-            ident |= TRUE;
-          }
+          ident |= inc_stat(A_INT);
           break;
         case 5:
           ident |= TRUE;
@@ -7774,10 +7769,7 @@ inven_quaff(iidx)
           ident |= inc_stat(A_INT);
           break;
         case 7:
-          if (inc_stat(A_WIS)) {
-            msg_print("You suddenly have a profound thought!");
-            ident |= TRUE;
-          }
+          ident |= inc_stat(A_WIS);
           break;
         case 8:
           ident |= TRUE;
@@ -7788,10 +7780,7 @@ inven_quaff(iidx)
           ident |= inc_stat(A_WIS);
           break;
         case 10:
-          if (inc_stat(A_CHR)) {
-            msg_print("Gee, ain't you cute!");
-            ident |= TRUE;
-          }
+          ident |= inc_stat(A_CHR);
           break;
         case 11:
           ident |= TRUE;
@@ -7814,10 +7803,7 @@ inven_quaff(iidx)
           ident |= py_heal_hit(1000);
           break;
         case 17:
-          if (inc_stat(A_CON)) {
-            msg_print("You feel tingly for a moment.");
-            ident |= TRUE;
-          }
+          ident |= inc_stat(A_CON);
           break;
         case 18:
           if (uD.exp < MAX_EXP) {
@@ -7866,10 +7852,7 @@ inven_quaff(iidx)
           ma_duration(MA_SLOW, randint(25) + 15);
           break;
         case 26:
-          if (inc_stat(A_DEX)) {
-            msg_print("You feel more limber!");
-            ident |= TRUE;
-          }
+          ident |= inc_stat(A_DEX);
           break;
         case 27:
           ident |= res_stat(A_DEX);
