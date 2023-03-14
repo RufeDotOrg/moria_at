@@ -633,8 +633,6 @@ mode_change()
     uint8_t next = overlay_submodeD;
     submodeD = overlay_submodeD;
 
-    Log("submode change %c (%d)->%c (%d)", prev, finger_rowD, next,
-        row_stateD[next]);
     row_stateD[prev] = finger_rowD;
     finger_rowD = row_stateD[next];
     finger_colD = next == 'e' ? 1 : 0;
