@@ -5185,7 +5185,7 @@ equip_takeoff(iidx, into_slot)
     if (into_slot >= 0) {
       invenD[into_slot] = obj->id;
       obj_desc(obj, TRUE);
-      MSG("You take off %c) %s.", 'a' + into_slot, descD);
+      MSG("You take off %s (%c).", descD, 'a' + into_slot);
     }
     invenD[iidx] = 0;
 
@@ -5477,10 +5477,8 @@ inven_ident(iidx)
   obj_desc(obj, TRUE);
   if (iidx >= INVEN_EQUIP) {
     calc_bonuses();
-    MSG("%s: %s.", describe_use(iidx), descD);
-  } else {
-    MSG("%c) %s.", iidx + 'a', descD);
   }
+  MSG("%s.", descD);
   return used;
 }
 static int
@@ -9084,7 +9082,7 @@ py_pickup(y, x, pickup)
   /* There's GOLD in them thar hills!      */
   else if (obj->tval == TV_GOLD) {
     uD.gold += obj->cost;
-    MSG("You have found %d gold pieces worth of %s.", obj->cost,
+    MSG("You found %d gold pieces worth of %s.", obj->cost,
         gold_nameD[obj->subval]);
     delete_object(y, x);
     turn_flag = TRUE;
@@ -9099,7 +9097,7 @@ py_pickup(y, x, pickup)
       obj->fx = 0;
       caveD[y][x].oidx = 0;
 
-      MSG("You have %s%c) %s.", merge ? "merge " : "", locn + 'a', descD);
+      MSG("You %s %s (%c).", merge ? "merge" : "have", descD, locn + 'a');
       turn_flag = TRUE;
     } else if (!pickup) {
       MSG("You see %s here.", descD);
@@ -11115,7 +11113,7 @@ store_item_purchase(sidx, item)
       tr_make_known(tr_ptr);
       obj_desc(obj, count != 1);
       uD.gold -= cost;
-      MSG("You bought %c) %s for %d gold.", iidx + 'a', descD, cost);
+      MSG("You bought %s for %d gold (%c).", descD, cost, iidx + 'a');
       store_item_destroy(sidx, item, count);
 
       if (number > count) {
