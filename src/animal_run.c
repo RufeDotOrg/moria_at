@@ -4702,73 +4702,57 @@ void obj_detail(obj) struct objS* obj;
   eqidx = may_equip(obj->tval);
   reveal = (obj->idflag & ID_REVEAL) != 0;
   tmp_str[0] = 0;
-
-  if (eqidx == INVEN_WIELD) {
-    snprintf(tmp_str, AL(tmp_str), " (%dx) (%dd%d)", attack_blows(obj->weight),
-             obj->damage[0], obj->damage[1]);
-    strcat(descD, tmp_str);
-  }
-
-  if (obj->sn && reveal) {
-    if (eqidx == INVEN_WIELD) {
-      if (obj->p1) {
-        snprintf(tmp_str, AL(tmp_str), " (%s%d)", special_nameD[obj->sn],
-                 obj->p1);
-        strcat(descD, tmp_str);
-      } else {
-        snprintf(tmp_str, AL(tmp_str), " (%s)", special_nameD[obj->sn]);
-        strcat(descD, tmp_str);
-      }
-    } else {
-      snprintf(tmp_str, AL(tmp_str), " %s", special_nameD[obj->sn]);
-      strcat(descD, tmp_str);
-    }
-  }
-
-  if (reveal && (obj->tval == TV_STAFF || obj->tval == TV_WAND)) {
-    snprintf(tmp_str, AL(tmp_str), " (%d charges)", obj->p1);
-    strcat(descD, tmp_str);
-  } else if (reveal && obj->tval == TV_LIGHT) {
-    snprintf(tmp_str, AL(tmp_str), " (%+d,+0)", light_adj(obj->p1));
-    strcat(descD, tmp_str);
-  } else if (reveal && (eqidx > INVEN_WIELD || obj->tval == TV_DIGGING)) {
-    if ((TR_P1 & obj->flags) && obj->p1) {
-      snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->p1);
-      strcat(descD, tmp_str);
-    }
-  }
+  detailD[0] = 0;
 
   if (reveal) {
+    if ((obj->tval == TV_STAFF || obj->tval == TV_WAND)) {
+      snprintf(tmp_str, AL(tmp_str), " (%d charges)", obj->p1);
+      strcat(detailD, tmp_str);
+    } else if (obj->tval == TV_LIGHT) {
+      snprintf(tmp_str, AL(tmp_str), " (%+d,+0)", light_adj(obj->p1));
+      strcat(detailD, tmp_str);
+    } else if (eqidx >= INVEN_WIELD) {
+      if ((TR_P1 & obj->flags) && obj->p1) {
+        snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->p1);
+        strcat(detailD, tmp_str);
+      }
+    }
+
     if (oset_tohitdam(obj)) {
       snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
-      strcat(descD, tmp_str);
+      strcat(detailD, tmp_str);
     }
+  } else {
+    if (obj->idflag & ID_MAGIK) strcat(detailD, " {magik}");
+    if (obj->idflag & ID_DAMD) strcat(detailD, " {damned}");
+    if (obj->idflag & ID_EMPTY) strcat(detailD, " {empty}");
+    if (obj->idflag & ID_CORRODED) strcat(detailD, " {corroded}");
+    if (obj->idflag & ID_PLAIN) strcat(detailD, " {plain}");
+    if (obj->idflag & ID_RARE) strcat(detailD, " {rare}");
   }
 
-  if (eqidx > INVEN_WIELD) {
+  if (eqidx == INVEN_WIELD) {
+    snprintf(tmp_str, AL(tmp_str), " (%dx %dd%d)", attack_blows(obj->weight),
+             obj->damage[0], obj->damage[1]);
+    strcat(detailD, tmp_str);
+  } else if (eqidx > INVEN_WIELD) {
     if (obj->tval > TV_MIN_ENCHANT && obj->tval < TV_MAX_ENCHANT) {
       if (reveal)
         snprintf(tmp_str, AL(tmp_str), " [%d%+d AC]", obj->ac, obj->toac);
       else
         snprintf(tmp_str, AL(tmp_str), " [%d AC]", obj->ac);
-      strcat(descD, tmp_str);
+      strcat(detailD, tmp_str);
     } else if (reveal && obj->ac + obj->toac != 0) {
       snprintf(tmp_str, AL(tmp_str), " [%+d AC]", obj->ac + obj->toac);
-      strcat(descD, tmp_str);
+      strcat(detailD, tmp_str);
     }
   }
-
-  if (obj->idflag & ID_MAGIK) strcat(descD, " {magik}");
-  if (obj->idflag & ID_DAMD) strcat(descD, " {damned}");
-  if (obj->idflag & ID_EMPTY) strcat(descD, " {empty}");
-  if (obj->idflag & ID_CORRODED) strcat(descD, " {corroded}");
-  if (obj->idflag & ID_PLAIN) strcat(descD, " {plain}");
-  if (obj->idflag & ID_RARE) strcat(descD, " {rare}");
 }
 void obj_desc(obj, plural) struct objS* obj;
 {
   char* name;
-  int indexx, unknown, append_name, number;
+  char* suffix;
+  int indexx, unknown, number;
   struct treasureS* tr_ptr;
 
   if (plural)
@@ -4777,10 +4761,10 @@ void obj_desc(obj, plural) struct objS* obj;
     number = 1;
 
   tr_ptr = &treasureD[obj->tidx];
-  indexx = mask_subval(obj->subval);
   name = tr_ptr->name;
+  suffix = obj->sn && (obj->idflag & ID_REVEAL) ? special_nameD[obj->sn] : 0;
   unknown = !(tr_is_known(tr_ptr) || (obj->idflag & ID_REVEAL));
-  append_name = FALSE;
+  indexx = mask_subval(obj->subval);
   switch (obj->tval) {
     case TV_MISC:
     case TV_CHEST:
@@ -4807,7 +4791,7 @@ void obj_desc(obj, plural) struct objS* obj;
         name = 0;
       } else {
         name = "& Amulet";
-        append_name = TRUE;
+        suffix = tr_ptr->name;
       }
       break;
     case TV_RING:
@@ -4816,7 +4800,7 @@ void obj_desc(obj, plural) struct objS* obj;
         snprintf(descD, AL(descD), "& %s Ring", rocks[indexx]);
       } else {
         name = "& Ring";
-        append_name = TRUE;
+        suffix = tr_ptr->name;
       }
       break;
     case TV_STAFF:
@@ -4825,7 +4809,7 @@ void obj_desc(obj, plural) struct objS* obj;
         snprintf(descD, AL(descD), "& %s Staff", woods[indexx]);
       } else {
         name = "& Staff";
-        append_name = TRUE;
+        suffix = tr_ptr->name;
       }
       break;
     case TV_WAND:
@@ -4834,7 +4818,7 @@ void obj_desc(obj, plural) struct objS* obj;
         snprintf(descD, AL(descD), "& %s Wand", metals[indexx]);
       } else {
         name = "& Wand";
-        append_name = TRUE;
+        suffix = tr_ptr->name;
       }
       break;
     case TV_SCROLL1:
@@ -4844,7 +4828,7 @@ void obj_desc(obj, plural) struct objS* obj;
         snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"", titleD[indexx]);
       } else {
         name = "& Scroll~";
-        append_name = TRUE;
+        suffix = tr_ptr->name;
       }
       break;
     case TV_POTION1:
@@ -4854,27 +4838,26 @@ void obj_desc(obj, plural) struct objS* obj;
         snprintf(descD, AL(descD), "& %s Potion~", colors[indexx]);
       } else {
         name = "& Potion~";
-        append_name = TRUE;
+        suffix = tr_ptr->name;
       }
       break;
     case TV_FLASK:
       break;
     case TV_FOOD:
-      if (unknown) {
-        if (indexx <= 15)
-          snprintf(descD, AL(descD), "& %s Mushroom~", mushrooms[indexx]);
-        else if (indexx <= 20)
-          snprintf(descD, AL(descD), "& Hairy %s Mold~", mushrooms[indexx]);
-        if (indexx <= 20) name = 0;
-      } else {
-        append_name = TRUE;
-        if (indexx <= 15)
-          name = "& Mushroom~";
-        else if (indexx <= 20)
-          name = "& Hairy Mold~";
-        else
-          /* Ordinary food does not have a name appended.  */
-          append_name = FALSE;
+      if (indexx <= 20) {
+        if (unknown) {
+          if (indexx <= 15)
+            snprintf(descD, AL(descD), "& %s Mushroom~", mushrooms[indexx]);
+          else if (indexx <= 20)
+            snprintf(descD, AL(descD), "& Hairy %s Mold~", mushrooms[indexx]);
+          name = 0;
+        } else {
+          suffix = tr_ptr->name;
+          if (indexx <= 15)
+            name = "& Mushroom~";
+          else if (indexx <= 20)
+            name = "& Hairy Mold~";
+        }
       }
       break;
     case TV_MAGIC_BOOK:
@@ -4886,7 +4869,7 @@ void obj_desc(obj, plural) struct objS* obj;
       name = 0;
       break;
     case TV_GOLD:
-      strcpy(descD, gold_nameD[obj->subval]);
+      name = gold_nameD[indexx];
       break;
     case TV_OPEN_DOOR:
     case TV_CLOSED_DOOR:
@@ -4905,13 +4888,12 @@ void obj_desc(obj, plural) struct objS* obj;
       snprintf(descD, AL(descD), "Error in objdes(): %d", obj->tval);
       return;
   }
-  if (append_name)
-    snprintf(descD, AL(descD), "%s of %s", name, tr_ptr->name);
+  if (suffix)
+    snprintf(descD, AL(descD), "%s of %s", name, suffix);
   else if (name)
     strcpy(descD, name);
 
   desc_fixup(number);
-  if (plural) obj_detail(obj);
 }
 static void
 mon_desc(midx)
@@ -5299,7 +5281,7 @@ equip_enchant(iidx, amount)
   if (iidx >= 0) {
     i_ptr = obj_get(invenD[iidx]);
     if (may_enchant_ac(i_ptr->tval)) {
-      obj_desc(i_ptr, FALSE);
+      obj_desc(i_ptr, TRUE);
       affect = 0;
       for (int it = 0; it < amount; ++it) {
         affect += (enchant(&i_ptr->toac, 10));
@@ -5329,7 +5311,7 @@ equip_curse()
   l = equip_random();
   if (l >= 0) {
     i_ptr = obj_get(invenD[l]);
-    obj_desc(i_ptr, FALSE);
+    obj_desc(i_ptr, TRUE);
     MSG("Your %s glows black, fades.", descD);
     i_ptr->tohit = 0;
     i_ptr->todam = 0;
@@ -5508,7 +5490,7 @@ tohit_enchant(amount)
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
 
   if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-    obj_desc(i_ptr, FALSE);
+    obj_desc(i_ptr, TRUE);
     affect = 0;
     for (int it = 0; it < amount; ++it) {
       affect += (enchant(&i_ptr->tohit, 10));
@@ -5531,7 +5513,7 @@ todam_enchant(amount)
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
 
   if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-    obj_desc(i_ptr, FALSE);
+    obj_desc(i_ptr, TRUE);
     if ((i_ptr->tval >= TV_HAFTED) && (i_ptr->tval <= TV_DIGGING))
       limit = i_ptr->damage[0] * i_ptr->damage[1];
     else /* Bows' and arrows' enchantments should not be limited
@@ -6357,15 +6339,16 @@ twall(y, x)
 int
 wall_to_mud(dir, y, x)
 {
-  int i, wall, rubble, dist, lit;
+  int rubble, door, dist, lit;
   int flag;
   struct caveS* c_ptr;
   struct objS* obj;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
+  char* known;
 
-  wall = FALSE;
   flag = FALSE;
+  known = 0;
   dist = 0;
   do {
     mmove(dir, &y, &x);
@@ -6374,6 +6357,7 @@ wall_to_mud(dir, y, x)
     obj = &entity_objD[c_ptr->oidx];
     lit = (CF_VIZ & c_ptr->cflag) != 0;
     rubble = (obj->tval == TV_RUBBLE);
+    door = (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR);
     m_ptr = &entity_monD[c_ptr->midx];
     cr_ptr = &creatureD[m_ptr->cidx];
 
@@ -6382,24 +6366,20 @@ wall_to_mud(dir, y, x)
     if ((c_ptr->fval >= MIN_WALL) && (c_ptr->fval != BOUNDARY_WALL)) {
       flag = TRUE;
       twall(y, x);
-      if (lit) {
-        msg_print("The wall turns into mud.");
-        wall = TRUE;
-      }
-    } else if (obj->id && (c_ptr->fval >= MIN_CLOSED_SPACE)) {
+      if (lit) known = "wall";
+    } else if (rubble) {
       flag = TRUE;
-      if (panel_contains(&panelD, y, x) && lit) {
-        obj_desc(obj, FALSE);
-        MSG("The %s turns into mud.", descD);
-        wall = TRUE;
-      }
+      if (lit) known = "rubble";
       delete_object(y, x);
-      if (rubble) {
-        if (randint(10) == 1) {
-          place_object(y, x, FALSE);
-          if (lit) msg_print("You have found something!");
-        }
+      if (randint(10) == 1) {
+        place_object(y, x, FALSE);
       }
+      twall(y, x);
+    } else if (door) {
+      flag = TRUE;
+      if (lit) known = "door";
+      delete_object(y, x);
+      twall(y, x);
     }
     if (c_ptr->midx) {
       if (CD_STONE & cr_ptr->cdefense) {
@@ -6416,7 +6396,10 @@ wall_to_mud(dir, y, x)
       }
     }
   } while (!flag);
-  return (wall);
+
+  if (known) MSG("The %s turns into mud.", known);
+
+  return known != 0;
 }
 int
 poly_monster(dir, y, x)
@@ -6460,7 +6443,6 @@ poly_monster(dir, y, x)
 int
 hp_monster(dir, y, x, dam)
 {
-  int i;
   int flag, dist, monster;
   struct caveS* c_ptr;
   struct monS* m_ptr;
@@ -6571,7 +6553,7 @@ sleep_monster(dir, y, x)
 int
 sleep_monster_aoe()
 {
-  int y, x, i, sleep, cdis;
+  int y, x, sleep, cdis;
   struct creatureS* cr_ptr;
 
   y = uD.y;
@@ -6627,7 +6609,6 @@ mass_poly()
 int
 drain_life(dir, y, x)
 {
-  int i;
   int flag, dist, drain;
   struct caveS* c_ptr;
   struct monS* m_ptr;
@@ -7338,12 +7319,15 @@ inven_overlay(begin, end)
       count += 1;
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, TRUE);
+      obj_detail(obj);
     } else {
       descD[0] = 0;
+      detailD[0] = 0;
     }
 
-    overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]),
-                                   "%c) %.77s", 'a' + it - begin, descD);
+    overlay_usedD[line] =
+        snprintf(overlayD[line], AL(overlayD[line]), "%c) %-39.039s%29.029s",
+                 'a' + it - begin, descD, detailD);
     line += 1;
   }
   return count;
@@ -7353,7 +7337,7 @@ weapon_curse()
 {
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
   if (i_ptr->tval != TV_NOTHING) {
-    obj_desc(i_ptr, FALSE);
+    obj_desc(i_ptr, TRUE);
     MSG("Your %s glows black, fades.", descD);
     i_ptr->tohit = -randint(5) - randint(5);
     i_ptr->todam = -randint(5) - randint(5);
@@ -7588,9 +7572,6 @@ void obj_study(obj) struct objS* obj;
     MSG("You study %s.", descD);
 
     line = 0;
-    strcpy(descD, tr_ptr->name);
-    obj_desc(obj, FALSE);
-    BufMsg(screen, "%-17.017s: %s", "Name", descD);
     BufMsg(screen, "%-17.017s: %d Lbs", "Weight",
            obj->number * obj->weight / 10);
     if (obj->idflag & ID_REVEAL) {
@@ -9152,7 +9133,7 @@ minus_ac(verbose)
   j = equip_random();
   if (j >= 0) {
     obj = obj_get(invenD[j]);
-    obj_desc(obj, FALSE);
+    obj_desc(obj, TRUE);
     if (obj->flags & TR_RES_ACID) {
       MSG("Your %s resists damage.", descD);
       minus = TRUE;
@@ -11064,11 +11045,13 @@ pawn_display()
     obj = obj_get(invenD[it]);
     if (obj->id) {
       obj_desc(obj, TRUE);
+      obj_detail(obj);
       sidx = obj_store_index(obj);
       if (sidx >= 0) {
         cost = store_value(sidx, obj_value(obj), -1);
-        len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %-57.057s %d",
-                       'a' + it, descD, cost);
+        len = snprintf(overlayD[line], AL(overlayD[line]),
+                       "%c) %-39.039s%23.023s%6d", 'a' + it, descD, detailD,
+                       cost);
       }
     }
 
@@ -11079,7 +11062,7 @@ pawn_display()
 static void
 store_display(sidx)
 {
-  int line, cost, number;
+  int line, cost;
   struct objS* obj;
 
   line = 0;
@@ -11090,14 +11073,11 @@ store_display(sidx)
     obj = &store_objD[sidx][it];
     cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
-      // TBD: ouch
-      number = obj->number;
-      if ((obj->subval & STACK_BATCH) == 0) obj->number = 1;
-      obj_desc(obj, TRUE);
-      obj->number = number;
-
-      len = snprintf(overlayD[line], AL(overlayD[line]), "%c) %-57.057s %d",
-                     'a' + it, descD, cost);
+      obj_desc(obj, FALSE);
+      obj_detail(obj);
+      len =
+          snprintf(overlayD[line], AL(overlayD[line]),
+                   "%c) %-39.039s%23.023s%6d", 'a' + it, descD, detailD, cost);
     }
 
     overlay_usedD[line] = len;
@@ -11133,11 +11113,7 @@ store_item_purchase(sidx, item)
       obj = obj_get(invenD[iidx]);
       tr_ptr = &treasureD[obj->tidx];
       tr_make_known(tr_ptr);
-      // Ugh:
-      number = obj->number;
-      obj->number = count;
-      obj_desc(obj, TRUE);
-      obj->number = number;
+      obj_desc(obj, count != 1);
       uD.gold -= cost;
       MSG("You bought %c) %s for %d gold.", iidx + 'a', descD, cost);
       store_item_destroy(sidx, item, count);

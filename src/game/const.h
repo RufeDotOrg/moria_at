@@ -115,19 +115,15 @@
 #define SN_IRRITATION		40
 #define SN_VULNERABILITY	41
 #define SN_ENVELOPING		42
-#define SN_FIRE			43
-#define SN_SLAY_EVIL		44
-#define SN_DRAGON_SLAYING	45
-#define SN_EMPTY		46
-#define SN_LOCKED		47
-#define SN_POISON_NEEDLE	48
-#define SN_GAS_TRAP		49
-#define SN_EXPLOSION_DEVICE	50
-#define SN_SUMMONING_RUNES	51
-#define SN_MULTIPLE_TRAPS	52
-#define SN_DISARMED		53
-#define SN_UNLOCKED		54
-#define SN_SLAY_ANIMAL		55
+#define SN_EMPTY		43
+#define SN_LOCKED		44
+#define SN_POISON_NEEDLE	45
+#define SN_GAS_TRAP		46
+#define SN_EXPLOSION_DEVICE	47
+#define SN_SUMMONING_RUNES	48
+#define SN_MULTIPLE_TRAPS	49
+#define SN_DISARMED		50
+#define SN_UNLOCKED		51
 
 /* Treasure constants */
 #define TV_NOTHING 0
