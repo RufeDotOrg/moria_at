@@ -11160,17 +11160,6 @@ player_maint()
   struct treasureS* tr_ptr;
   int flag;
 
-  flag = 0;
-  for (int it = 0; it < MAX_A; ++it) {
-    if (statD.cur_stat[it] < statD.max_stat[it]) {
-      if (!flag) {
-        flag = 1;
-        msg_print("A wind from the Misty Mountains renews your being.");
-      }
-      res_stat(it);
-    }
-  }
-
   inven_sort();
   flag = 0;
   for (int it = 0; it < MAX_INVEN; ++it) {
@@ -11185,6 +11174,27 @@ player_maint()
   }
   if (flag)
     msg_print("Town inhabitants share knowledge of items you gathered.");
+
+  flag = 0;
+  for (int it = 0; it < MAX_A; ++it) {
+    if (statD.cur_stat[it] < statD.max_stat[it]) {
+      if (!flag) {
+        flag = 1;
+        msg_print("A wind from the Misty Mountains renews your being.");
+      }
+      res_stat(it);
+    }
+  }
+
+  for (int sidx = 0; sidx < MAX_STORE; ++sidx) {
+    for (int it = 0; it < MAX_STORE_INVEN; ++it) {
+      if (store_objD[sidx][it].sn) {
+        MSG("Rumor has it, a rare item being sold by %s (%d).",
+            ownerD[storeD[sidx]].name, sidx + 1);
+        break;
+      }
+    }
+  }
 }
 void
 ma_tick()
