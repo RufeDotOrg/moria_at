@@ -5119,6 +5119,14 @@ ma_duration(maidx, nturn)
 
   maD[maidx] += 2 * nturn;
 }
+static int
+ma_clear(maidx)
+{
+  int turn;
+  turn = maD[maidx];
+  maD[maidx] = 0;
+  return turn != 0;
+}
 int8_t
 modify_stat(stat, amount)
 {
@@ -7473,14 +7481,10 @@ inven_eat(iidx)
           }
           break;
         case 7:
-          if (py_affect(MA_BLIND)) {
-            maD[MA_BLIND] = 1;
-            ident |= TRUE;
-          }
+          ident |= ma_clear(MA_BLIND);
           break;
         case 8:
-          ident |= py_affect(MA_FEAR);
-          maD[MA_FEAR] = 0;
+          ident |= ma_clear(MA_FEAR);
           break;
         case 9:
           if (countD.confusion > 0) {
@@ -7885,10 +7889,7 @@ inven_quaff(iidx)
           ident |= inc_stat(A_CON);
           break;
         case 29:
-          if (py_affect(MA_BLIND)) {
-            ident |= TRUE;
-            maD[MA_BLIND] = 1;
-          }
+          ident |= ma_clear(MA_BLIND);
           break;
         case 30:
           if (countD.confusion > 0) {
@@ -7938,8 +7939,7 @@ inven_quaff(iidx)
           ma_duration(MA_SUPERHERO, randint(25) + 25);
           break;
         case 39:
-          ident |= py_affect(MA_FEAR);
-          maD[MA_FEAR] = 0;
+          ident |= ma_clear(MA_FEAR);
           break;
         case 40:
           ident |= restore_level();
@@ -8526,10 +8526,7 @@ int *uy, *ux;
               ident = TRUE;
               countD.poison = 1;
             }
-            if (py_affect(MA_BLIND)) {
-              ident = TRUE;
-              maD[MA_BLIND] = 1;
-            }
+            ident |= ma_clear(MA_BLIND);
             if (countD.confusion > 0) {
               ident = TRUE;
               countD.confusion = 1;
