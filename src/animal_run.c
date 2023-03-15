@@ -5514,19 +5514,22 @@ inven_ident(iidx)
   struct treasureS* tr_ptr;
   int used;
 
-  obj = obj_get(invenD[iidx]);
-  tr_ptr = &treasureD[obj->tidx];
-  used = tr_make_known(tr_ptr);
-  if ((obj->idflag & ID_REVEAL) == 0) {
-    used |= TRUE;
-    obj->idflag = ID_REVEAL;
+  used = FALSE;
+  if (iidx >= 0) {
+    obj = obj_get(invenD[iidx]);
+    tr_ptr = &treasureD[obj->tidx];
+    used |= tr_make_known(tr_ptr);
+    if ((obj->idflag & ID_REVEAL) == 0) {
+      used |= TRUE;
+      obj->idflag = ID_REVEAL;
+    }
+    obj_desc(obj, obj->number);
+    obj_detail(obj);
+    if (iidx >= INVEN_EQUIP) {
+      calc_bonuses();
+    }
+    MSG("%s%s.", descD, detailD);
   }
-  obj_desc(obj, obj->number);
-  obj_detail(obj);
-  if (iidx >= INVEN_EQUIP) {
-    calc_bonuses();
-  }
-  MSG("%s%s.", descD, detailD);
   return used;
 }
 static int
@@ -6918,28 +6921,30 @@ inven_recharge(iidx, amount)
   struct objS* i_ptr;
 
   res = 0;
-  i_ptr = obj_get(invenD[iidx]);
-  if (i_ptr->tval == TV_WAND || i_ptr->tval == TV_STAFF) {
-    res = 1;
-    /* recharge I = recharge(20) = 1/6 failure for empty 10th level wand */
-    /* recharge II = recharge(60) = 1/10 failure for empty 10th level wand*/
-    /* make it harder to recharge high level, and highly charged wands, note
-       that chance can be negative, so check its value before trying to call
-       randint().  */
-    chance = amount + 50 - i_ptr->level - i_ptr->p1;
-    if (chance < 19)
-      chance = 1; /* Automatic failure.  */
-    else
-      chance = randint(chance / 10);
+  if (iidx >= 0) {
+    i_ptr = obj_get(invenD[iidx]);
+    if (i_ptr->tval == TV_WAND || i_ptr->tval == TV_STAFF) {
+      res = 1;
+      /* recharge I = recharge(20) = 1/6 failure for empty 10th level wand */
+      /* recharge II = recharge(60) = 1/10 failure for empty 10th level wand*/
+      /* make it harder to recharge high level, and highly charged wands, note
+         that chance can be negative, so check its value before trying to call
+         randint().  */
+      chance = amount + 50 - i_ptr->level - i_ptr->p1;
+      if (chance < 19)
+        chance = 1; /* Automatic failure.  */
+      else
+        chance = randint(chance / 10);
 
-    if (chance == 1) {
-      msg_print("There is a bright flash of light.");
-      obj_unuse(i_ptr);
-      invenD[iidx] = 0;
-    } else {
-      amount = (amount / (i_ptr->level + 2)) + 1;
-      i_ptr->p1 += 2 + randint(amount);
-      i_ptr->idflag = ID_REVEAL;
+      if (chance == 1) {
+        msg_print("There is a bright flash of light.");
+        obj_unuse(i_ptr);
+        invenD[iidx] = 0;
+      } else {
+        amount = (amount / (i_ptr->level + 2)) + 1;
+        i_ptr->p1 += 2 + randint(amount);
+        i_ptr->idflag = ID_REVEAL;
+      }
     }
   }
   return res;
@@ -8079,14 +8084,14 @@ int *uy, *ux;
             ident |= TRUE;
             choice_idx =
                 inven_choice("Which armor do you wish to enchant?", "/*");
-            if (choice_idx >= 0) used_up = equip_enchant(choice_idx, 1);
+            used_up = equip_enchant(choice_idx, 1);
             break;
           case 4:
             msg_print("This is an identify scroll.");
             ident |= TRUE;
             choice_idx =
                 inven_choice("Which item do you wish identified?", "*/");
-            if (choice_idx >= 0) used_up = inven_ident(choice_idx);
+            used_up = inven_ident(choice_idx);
             break;
           case 5:
             if (equip_remove_curse()) {
@@ -8177,7 +8182,7 @@ int *uy, *ux;
             msg_print("This is a Recharge-Item scroll.");
             ident |= TRUE;
             choice_idx = inven_choice("Recharge which item?", "*");
-            if (choice_idx >= 0) used_up = inven_recharge(choice_idx, 60);
+            used_up = inven_recharge(choice_idx, 60);
             break;
           case 26:
             ident |= extermination();
@@ -8211,10 +8216,8 @@ int *uy, *ux;
             ident |= TRUE;
             choice_idx =
                 inven_choice("Which armor do you wish to enchant?", "/*");
-            if (choice_idx >= 0) {
-              k = randint(2) + 1;
-              used_up = equip_enchant(choice_idx, k);
-            }
+            k = randint(2) + 1;
+            used_up = equip_enchant(choice_idx, k);
             break;
           case 36:
             ident |= equip_curse();
