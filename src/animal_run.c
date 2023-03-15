@@ -5712,7 +5712,9 @@ py_init()
   int start_number[] = {5, 1};
   for (int it = 0; it < AL(start_inven); ++it) {
     struct objS* obj = obj_use();
-    tr_obj_copy(start_inven[it], obj);
+    int tidx = start_inven[it];
+    tr_make_known(&treasureD[tidx]);
+    tr_obj_copy(tidx, obj);
     obj->number = start_number[it];
     obj->idflag = ID_REVEAL;
     invenD[it] = obj->id;
@@ -7586,7 +7588,7 @@ inven_eat(iidx)
       }
       /* End of food actions.  			*/
     }
-    if ((obj->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
+    if (!tr_is_known(tr_ptr)) {
       if (ident) {
         tr_make_known(tr_ptr);
         tr_discovery(tr_ptr);
@@ -8020,7 +8022,7 @@ inven_quaff(iidx)
           break;
       }
     }
-    if ((obj->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
+    if (!tr_is_known(tr_ptr)) {
       if (ident) {
         tr_make_known(tr_ptr);
         tr_discovery(tr_ptr);
@@ -8251,7 +8253,7 @@ int *uy, *ux;
         }
         /* End of Scrolls.  		       */
       }
-      if ((i_ptr->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
+      if (!tr_is_known(tr_ptr)) {
         if (ident) {
           tr_make_known(tr_ptr);
           tr_discovery(tr_ptr);
@@ -8394,7 +8396,7 @@ inven_try_wand_dir(iidx, dir)
         }
         /* End of Wands.  	    */
       }
-      if ((i_ptr->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
+      if (!tr_is_known(tr_ptr)) {
         if (ident) {
           tr_make_known(tr_ptr);
           tr_discovery(tr_ptr);
@@ -8558,7 +8560,7 @@ int *uy, *ux;
             break;
         }
       }
-      if ((i_ptr->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
+      if (!tr_is_known(tr_ptr)) {
         if (ident) {
           tr_make_known(tr_ptr);
           tr_discovery(tr_ptr);
