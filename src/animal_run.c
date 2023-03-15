@@ -4743,17 +4743,12 @@ void obj_detail(obj) struct objS* obj;
     }
   }
 }
-void obj_desc(obj, plural) struct objS* obj;
+void obj_desc(obj, number) struct objS* obj;
 {
   char* name;
   char* suffix;
-  int indexx, unknown, number;
+  int indexx, unknown;
   struct treasureS* tr_ptr;
-
-  if (plural)
-    number = obj->number;
-  else
-    number = 1;
 
   tr_ptr = &treasureD[obj->tidx];
   name = tr_ptr->name;
@@ -5202,7 +5197,7 @@ equip_takeoff(iidx, into_slot)
   } else {
     if (into_slot >= 0) {
       invenD[into_slot] = obj->id;
-      obj_desc(obj, TRUE);
+      obj_desc(obj, 1);
       MSG("You take off %s (%c).", descD, 'a' + into_slot);
     }
     invenD[iidx] = 0;
@@ -5231,7 +5226,7 @@ inven_drop(iidx, y, x)
     obj->fx = x;
     caveD[y][x].oidx = obj_index(obj);
 
-    obj_desc(obj, TRUE);
+    obj_desc(obj, obj->number);
     MSG("You drop %s.", descD);
     turn_flag = TRUE;
   } else {
@@ -5269,7 +5264,7 @@ equip_act(flag)
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
     struct objS* obj = obj_get(invenD[it]);
     if (obj->flags & flag) {
-      obj_desc(obj, TRUE);
+      obj_desc(obj, 1);
       MSG("%s vibrates for a moment.", descD);
       return;
     }
@@ -5299,7 +5294,7 @@ equip_enchant(iidx, amount)
   if (iidx >= 0) {
     i_ptr = obj_get(invenD[iidx]);
     if (may_enchant_ac(i_ptr->tval)) {
-      obj_desc(i_ptr, TRUE);
+      obj_desc(i_ptr, 1);
       affect = 0;
       for (int it = 0; it < amount; ++it) {
         affect += (enchant(&i_ptr->toac, 10));
@@ -5329,7 +5324,7 @@ equip_curse()
   l = equip_random();
   if (l >= 0) {
     i_ptr = obj_get(invenD[l]);
-    obj_desc(i_ptr, TRUE);
+    obj_desc(i_ptr, 1);
     MSG("Your %s glows black, fades.", descD);
     i_ptr->tohit = 0;
     i_ptr->todam = 0;
@@ -5492,7 +5487,7 @@ inven_ident(iidx)
     used |= TRUE;
     obj->idflag = ID_REVEAL;
   }
-  obj_desc(obj, TRUE);
+  obj_desc(obj, obj->number);
   if (iidx >= INVEN_EQUIP) {
     calc_bonuses();
   }
@@ -5506,7 +5501,7 @@ tohit_enchant(amount)
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
 
   if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-    obj_desc(i_ptr, TRUE);
+    obj_desc(i_ptr, 1);
     affect = 0;
     for (int it = 0; it < amount; ++it) {
       affect += (enchant(&i_ptr->tohit, 10));
@@ -5529,7 +5524,7 @@ todam_enchant(amount)
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
 
   if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-    obj_desc(i_ptr, TRUE);
+    obj_desc(i_ptr, 1);
     if ((i_ptr->tval >= TV_HAFTED) && (i_ptr->tval <= TV_DIGGING))
       limit = i_ptr->damage[0] * i_ptr->damage[1];
     else /* Bows' and arrows' enchantments should not be limited
@@ -7335,7 +7330,7 @@ inven_overlay(begin, end)
     if (obj_id) {
       count += 1;
       struct objS* obj = obj_get(obj_id);
-      obj_desc(obj, TRUE);
+      obj_desc(obj, obj->number);
       obj_detail(obj);
     } else {
       descD[0] = 0;
@@ -7354,7 +7349,7 @@ weapon_curse()
 {
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
   if (i_ptr->tval != TV_NOTHING) {
-    obj_desc(i_ptr, TRUE);
+    obj_desc(i_ptr, 1);
     MSG("Your %s glows black, fades.", descD);
     i_ptr->tohit = -randint(5) - randint(5);
     i_ptr->todam = -randint(5) - randint(5);
@@ -7579,7 +7574,7 @@ void obj_study(obj) struct objS* obj;
     if (HACK) obj->idflag = ID_REVEAL;
     eqidx = may_equip(obj->tval);
 
-    obj_desc(obj, TRUE);
+    obj_desc(obj, 1);
     MSG("You study %s.", descD);
 
     line = 0;
@@ -8237,7 +8232,7 @@ int *uy, *ux;
       // Choice menu allows for sort above, iidx may be invalid
       if (used_up) {
         i_ptr->number -= 1;
-        obj_desc(i_ptr, TRUE);
+        obj_desc(i_ptr, i_ptr->number);
         MSG("You have %s.", descD);
         if (i_ptr->number == 0) {
           for (int it = 0; it < INVEN_EQUIP; ++it) {
@@ -8720,7 +8715,7 @@ inven_wear(iidx)
       invenD[eqidx] = obj->id;
 
       py_bonuses(obj, 1);
-      obj_desc(obj, TRUE);
+      obj_desc(obj, 1);
       MSG("You are wearing %s.", descD);
       if (eqidx == INVEN_BODY && obj->tohit) {
         MSG("Cumbersome armor makes more difficult to hit (%+d).", obj->tohit);
@@ -8771,7 +8766,7 @@ py_offhand()
     invenD[INVEN_AUX] ^= tmp;
     if (obj->id) {
       py_bonuses(obj, 1);
-      obj_desc(obj, TRUE);
+      obj_desc(obj, 1);
       MSG("primary weapon: %s.", descD);
     } else {
       msg_print("No primary weapon.");
@@ -9086,7 +9081,7 @@ py_pickup(y, x, pickup)
     merge = inven_merge(obj->id, &locn);
     if (!merge && pickup) locn = inven_carry(obj->id);
 
-    obj_desc(obj, TRUE);
+    obj_desc(obj, obj->number);
     obj_detail(obj);
     if (locn >= 0) {
       obj->fy = 0;
@@ -9128,7 +9123,7 @@ minus_ac(verbose)
   j = equip_random();
   if (j >= 0) {
     obj = obj_get(invenD[j]);
-    obj_desc(obj, TRUE);
+    obj_desc(obj, 1);
     if (obj->flags & TR_RES_ACID) {
       MSG("Your %s resists damage.", descD);
       minus = TRUE;
@@ -9642,7 +9637,7 @@ try_disarm_trap(y, x)
   obj = &entity_objD[c_ptr->oidx];
 
   if (obj->tval == TV_VIS_TRAP) {
-    obj_desc(obj, TRUE);
+    obj_desc(obj, 1);
     // TBD: div is used; verify this number is positive. clean-up code.
     chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
              level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
@@ -9910,7 +9905,7 @@ py_search(y, x)
             obj->tval = TV_VIS_TRAP;
             obj->tchar = '^';
             c_ptr->cflag |= CF_FIELDMARK;
-            obj_desc(obj, TRUE);
+            obj_desc(obj, 1);
             MSG("You have found %s.", descD);
           }
         } else if (obj->tval == TV_CHEST) {
@@ -9979,7 +9974,7 @@ py_look_obj()
         if (oy == ly && ox == lx && obj_lit(obj) &&
             los(y, x, obj->fy, obj->fx)) {
           seen += 1;
-          obj_desc(obj, TRUE);
+          obj_desc(obj, obj->number);
           MSG("You see %s.", descD);
           msg_pause();
         }
@@ -10056,7 +10051,7 @@ tunnel(y, x)
 
     if (iidx != INVEN_WIELD) {
       countD.paralysis = 2;
-      obj_desc(i_ptr, TRUE);
+      obj_desc(i_ptr, 1);
       MSG("You begin tunneling with %s.", descD);
     } else {
       countD.paralysis = -1;
@@ -10707,7 +10702,7 @@ static void hit_trap(uy, ux) int *uy, *ux;
 
   dam = obj->damage[1] ? pdamroll(obj->damage) : 0;
 
-  obj_desc(obj, TRUE);
+  obj_desc(obj, 1);
   strcpy(death_descD, descD);
   switch (obj->subval) {
     case 1: /* Open pit*/
@@ -10983,7 +10978,7 @@ inven_pawn(iidx)
     cost = store_value(sidx, obj_value(obj), -1);
     tr_make_known(tr_ptr);
     obj->idflag = ID_REVEAL;
-    obj_desc(obj, FALSE);
+    obj_desc(obj, 1);
     inven_destroy_one(iidx);
     if (cost == 0) {
       MSG("You donate %s.", descD);
@@ -11008,7 +11003,7 @@ pawn_display()
 
     obj = obj_get(invenD[it]);
     if (obj->id) {
-      obj_desc(obj, TRUE);
+      obj_desc(obj, obj->number);
       obj_detail(obj);
       sidx = obj_store_index(obj);
       if (sidx >= 0) {
@@ -11037,7 +11032,7 @@ store_display(sidx)
     obj = &store_objD[sidx][it];
     cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
-      obj_desc(obj, FALSE);
+      obj_desc(obj, 1);
       obj_detail(obj);
       len =
           snprintf(overlayD[line], AL(overlayD[line]),
@@ -11077,7 +11072,7 @@ store_item_purchase(sidx, item)
       obj = obj_get(invenD[iidx]);
       tr_ptr = &treasureD[obj->tidx];
       tr_make_known(tr_ptr);
-      obj_desc(obj, count != 1);
+      obj_desc(obj, count);
       uD.gold -= cost;
       MSG("You bought %s for %d gold (%c) (%d).", descD, cost, iidx + 'a',
           obj->number);
@@ -11698,13 +11693,8 @@ dungeon()
             if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
             if (py_affect(MA_BLIND) == 0 && find_flag) find_event(y, x);
 
-            if (obj->tval == TV_CHEST) {
-              if (obj->sn != SN_EMPTY) {
-                open_object(y, x);
-              } else {
-                obj_desc(obj, TRUE);
-                MSG("You see %s here.", descD);
-              }
+            if (obj->tval == TV_CHEST && obj->sn != SN_EMPTY) {
+              open_object(y, x);
             } else if (obj->tval == TV_STORE_DOOR) {
               store_entrance(obj->tchar - '1');
             } else if (obj->tval == TV_PAWN_DOOR) {
@@ -11716,7 +11706,7 @@ dungeon()
             open_object(y, x);
           } else if (py_affect(MA_BLIND) == 0) {
             if (obj->tval == TV_GOLD) {
-              obj_desc(obj, TRUE);
+              obj_desc(obj, obj->number);
               MSG("You see %s glimmering in the %s.", descD,
                   c_ptr->fval == QUARTZ_WALL ? "quartz vein"
                                              : "magma intrusion");
