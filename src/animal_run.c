@@ -2949,7 +2949,6 @@ place_monster(y, x, z, slp)
       mon->hp = pdamroll(cre->hd);
     mon->fy = y;
     mon->fx = x;
-    mon->mlit = FALSE;
 
     midx = mon_index(mon);
     caveD[y][x].midx = midx;
@@ -3030,9 +3029,6 @@ alloc_mon(num, dis, slp)
              (distance(y, x, uD.y, uD.x) <= dis));
 
     z = get_mon_num(dun_level);
-    /* Dragons are always created sleeping here, so as to give the player a
-       sporting chance.  */
-    // if (c_list[z].cchar == 'd' || c_list[z].cchar == 'D') slp = TRUE;
     place_monster(y, x, z, slp);
   }
 }
@@ -3964,9 +3960,6 @@ light_room(y, x)
             c_ptr->cflag |= CF_FIELDMARK;
           }
         }
-        if (c_ptr->midx) {
-          update_mon(c_ptr->midx);
-        }
       }
     }
 }
@@ -4005,7 +3998,6 @@ unlight_room(y, x)
         c_ptr->cflag &= ~CF_PERM_LIGHT;
         c_ptr->fval = FLOOR_DARK;
       }
-      if (c_ptr->midx) update_mon(c_ptr->midx);
     }
 }
 int
@@ -6429,7 +6421,7 @@ wall_to_mud(dir, y, x)
 int
 poly_monster(dir, y, x)
 {
-  int dist, flag, poly;
+  int dist, flag, poly, midx;
   struct caveS* c_ptr;
   struct creatureS* cr_ptr;
   struct monS* m_ptr;
@@ -6450,13 +6442,12 @@ poly_monster(dir, y, x)
         flag = TRUE;
         mon_unuse(m_ptr);
         c_ptr->midx = 0;
-        /* Place_monster() should always return TRUE here.  */
-        poly = place_monster(
+        midx = place_monster(
             y, x, randint(m_level[MAX_MON_LEVEL] - m_level[0]) - 1 + m_level[0],
             FALSE);
-        /* don't test c_ptr->fm here, only pl/tl */
-        if (poly && panel_contains(&panelD, y, x) && CF_LIT & c_ptr->cflag)
-          poly = TRUE;
+        if (midx) update_mon(midx);
+        m_ptr = &entity_monD[midx];
+        if (m_ptr->mlit) poly = TRUE;
       } else {
         mon_desc(c_ptr->midx);
         MSG("%s is unaffected.", descD);
@@ -6606,7 +6597,7 @@ sleep_monster_aoe()
 int
 mass_poly()
 {
-  int cdis, y, x, fy, fx, mass;
+  int cdis, y, x, fy, fx, mass, midx;
   struct creatureS* cr_ptr;
 
   y = uD.y;
@@ -6619,10 +6610,11 @@ mass_poly()
     if (cdis <= MAX_SIGHT) {
       cr_ptr = &creatureD[mon->cidx];
       if ((cr_ptr->cmove & CM_WIN) == 0) {
+        mass = TRUE;
         caveD[fy][fx].midx = 0;
         mon_unuse(mon);
 
-        mass = place_monster(
+        place_monster(
             fy, fx,
             randint(m_level[MAX_MON_LEVEL] - m_level[0]) - 1 + m_level[0],
             FALSE);
@@ -10638,11 +10630,11 @@ creatures()
 {
   int move_count, y, x, cdis;
 
+  FOR_EACH(mon, { update_mon(it_index); });
+
   y = uD.y;
   x = uD.x;
   FOR_EACH(mon, {
-    update_mon(it_index);
-
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     move_count = movement_rate(mon_speed(mon));
     for (; move_count > 0; --move_count) {
