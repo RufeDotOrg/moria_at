@@ -7478,9 +7478,6 @@ inven_eat(iidx)
 
   if (obj->tval == TV_FOOD) {
     i = obj->flags;
-    // Some food has no effect; thus becomes known
-    ident = (i == 0);
-    msg_print("Nom, nom, nom.");
     while (i != 0) {
       j = bit_pos(&i) + 1;
       /* Foods  				*/
@@ -7803,6 +7800,7 @@ inven_quaff(iidx)
   if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
     i = obj->flags;
     if (i == 0) msg_print("You feel less thirsty.");
+    // Water and Apple Juice have no affect
     ident = (i == 0);
     while (i != 0) {
       j = bit_pos(&i) + 1;
