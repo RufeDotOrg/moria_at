@@ -5518,10 +5518,11 @@ inven_ident(iidx)
     obj->idflag = ID_REVEAL;
   }
   obj_desc(obj, obj->number);
+  obj_detail(obj);
   if (iidx >= INVEN_EQUIP) {
     calc_bonuses();
   }
-  MSG("%s.", descD);
+  MSG("%s%s.", descD, detailD);
   return used;
 }
 static int
