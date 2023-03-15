@@ -2316,6 +2316,15 @@ knowable_tval_subval(tval, sv)
   }
   return k;
 }
+int
+tr_known(tr_ptr)
+struct treasureS* tr_ptr;
+{
+  int subval = mask_subval(tr_ptr->subval);
+  int k = knowable_tval_subval(tr_ptr->tval, subval);
+  if (k == 0) return 0;
+  return knownD[k - 1][subval];
+}
 BOOL
 tr_is_known(tr_ptr)
 struct treasureS* tr_ptr;
@@ -2323,7 +2332,7 @@ struct treasureS* tr_ptr;
   int subval = mask_subval(tr_ptr->subval);
   int k = knowable_tval_subval(tr_ptr->tval, subval);
   if (k == 0) return TRUE;
-  return knownD[k - 1][subval];
+  return knownD[k - 1][subval] & TRK_FULL;
 }
 void tr_discovery(tr_ptr) struct treasureS* tr_ptr;
 {
@@ -2337,9 +2346,15 @@ struct treasureS* tr_ptr;
   int subval = mask_subval(tr_ptr->subval);
   int k = knowable_tval_subval(tr_ptr->tval, subval);
   if (k == 0) return FALSE;
-  BOOL change = 1 ^ knownD[k - 1][subval];
-  knownD[k - 1][subval] = 1;
-  return change;
+  int current = knownD[k - 1][subval] & TRK_FULL;
+  knownD[k - 1][subval] = TRK_FULL;
+  return current == 0;
+}
+void tr_sample(tr_ptr) struct treasureS* tr_ptr;
+{
+  int subval = mask_subval(tr_ptr->subval);
+  int k = knowable_tval_subval(tr_ptr->tval, subval);
+  if (k) knownD[k - 1][subval] = TRK_SAMPLE;
 }
 BOOL
 obj_reveal(obj)
@@ -4746,13 +4761,16 @@ void obj_desc(obj, number) struct objS* obj;
 {
   char* name;
   char* suffix;
-  int indexx, unknown;
+  char* sample;
+  int trk, indexx, unknown;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
   name = tr_ptr->name;
   suffix = obj->sn && (obj->idflag & ID_REVEAL) ? special_nameD[obj->sn] : 0;
-  unknown = !(tr_is_known(tr_ptr) || (obj->idflag & ID_REVEAL));
+  trk = tr_known(tr_ptr);
+  unknown = !((trk & TRK_FULL) || (obj->idflag & ID_REVEAL));
+  sample = trk & TRK_SAMPLE ? " {sampled}" : "";
   indexx = mask_subval(obj->subval);
   switch (obj->tval) {
     case TV_MISC:
@@ -4795,7 +4813,7 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_STAFF:
       if (unknown) {
         name = 0;
-        snprintf(descD, AL(descD), "& %s Staff", woods[indexx]);
+        snprintf(descD, AL(descD), "& %s Staff%s", woods[indexx], sample);
       } else {
         name = "& Staff";
         suffix = tr_ptr->name;
@@ -4804,7 +4822,7 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_WAND:
       if (unknown) {
         name = 0;
-        snprintf(descD, AL(descD), "& %s Wand", metals[indexx]);
+        snprintf(descD, AL(descD), "& %s Wand%s", metals[indexx], sample);
       } else {
         name = "& Wand";
         suffix = tr_ptr->name;
@@ -4814,7 +4832,8 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_SCROLL2:
       if (unknown) {
         name = 0;
-        snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"", titleD[indexx]);
+        snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"%s", titleD[indexx],
+                 sample);
       } else {
         name = "& Scroll~";
         suffix = tr_ptr->name;
@@ -4824,7 +4843,7 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_POTION2:
       if (unknown) {
         name = 0;
-        snprintf(descD, AL(descD), "& %s Potion~", colors[indexx]);
+        snprintf(descD, AL(descD), "& %s Potion~%s", colors[indexx], sample);
       } else {
         name = "& Potion~";
         suffix = tr_ptr->name;
@@ -4836,9 +4855,11 @@ void obj_desc(obj, number) struct objS* obj;
       if (indexx <= 20) {
         if (unknown) {
           if (indexx <= 15)
-            snprintf(descD, AL(descD), "& %s Mushroom~", mushrooms[indexx]);
+            snprintf(descD, AL(descD), "& %s Mushroom~%s", mushrooms[indexx],
+                     sample);
           else if (indexx <= 20)
-            snprintf(descD, AL(descD), "& Hairy %s Mold~", mushrooms[indexx]);
+            snprintf(descD, AL(descD), "& Hairy %s Mold~%s", mushrooms[indexx],
+                     sample);
           name = 0;
         } else {
           suffix = tr_ptr->name;

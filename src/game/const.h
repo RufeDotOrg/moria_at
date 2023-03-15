@@ -255,6 +255,10 @@
 // Set of flags dependent on p1 value
 #define TR_P1 (TR_STATS | TR_SEARCH | TR_STEALTH | TR_TUNNEL)
 
+/* treasure knowledge */
+#define TRK_FULL 0x01
+#define TRK_SAMPLE 0x02
+
 /* definitions for chests */
 #define CH_LOCKED 0x00000001L
 #define CH_TRAPPED 0x000001F0L
