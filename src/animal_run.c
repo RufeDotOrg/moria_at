@@ -1394,9 +1394,8 @@ static void
 inven_destroy_one(iidx)
 {
   struct objS* obj = obj_get(invenD[iidx]);
-  if (obj->number > 1 && obj->subval & STACK_SINGLE) {
-    obj->number -= 1;
-  } else {
+  obj->number -= 1;
+  if (obj->number < 1) {
     obj_unuse(obj);
     invenD[iidx] = 0;
   }
@@ -5443,6 +5442,16 @@ inven_slot()
   }
   return -1;
 }
+static void inven_used_obj(obj) struct objS* obj;
+{
+  obj->number -= 1;
+  if (obj->number < 1) {
+    for (int it = 0; it < INVEN_EQUIP; ++it) {
+      if (invenD[it] == obj->id) invenD[it] = 0;
+    }
+    obj_unuse(obj);
+  }
+}
 static int
 inven_merge_slot(obj)
 struct objS* obj;
@@ -8221,17 +8230,11 @@ int *uy, *ux;
           msg_print("You read the scroll, to unknown effect.");
         }
       }
-      // Choice menu allows for sort above, iidx may be invalid
       if (used_up) {
-        i_ptr->number -= 1;
-        obj_desc(i_ptr, i_ptr->number);
+        obj_desc(i_ptr, i_ptr->number - 1);
         MSG("You have %s.", descD);
-        if (i_ptr->number == 0) {
-          for (int it = 0; it < INVEN_EQUIP; ++it) {
-            if (invenD[it] == i_ptr->id) invenD[it] = 0;
-          }
-          obj_unuse(i_ptr);
-        }
+        // Choice menu allows for sort above, iidx may be invalid
+        inven_used_obj(i_ptr);
       }
       turn_flag = TRUE;
       return TRUE;
