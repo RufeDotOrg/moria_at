@@ -7899,11 +7899,11 @@ inven_quaff(iidx)
           countD.poison += randint(15) + 10;
           break;
         case 23:
-          if (py_affect(MA_FAST)) ident |= TRUE;
+          ident |= py_affect(MA_FAST) == 0;
           ma_duration(MA_FAST, randint(25) + 15);
           break;
         case 24:
-          if (py_affect(MA_SLOW)) ident |= TRUE;
+          ident |= py_affect(MA_SLOW) == 0;
           ma_duration(MA_SLOW, randint(25) + 15);
           break;
         case 26:
@@ -7956,15 +7956,15 @@ inven_quaff(iidx)
           ident |= TRUE;
           break;
         case 36:
-          if (py_affect(MA_INVULN)) ident |= TRUE;
+          ident |= py_affect(MA_INVULN) == 0;
           ma_duration(MA_INVULN, randint(10) + 10);
           break;
         case 37:
-          if (py_affect(MA_HERO)) ident |= TRUE;
+          ident |= py_affect(MA_HERO) == 0;
           ma_duration(MA_HERO, randint(25) + 25);
           break;
         case 38:
-          if (py_affect(MA_SUPERHERO)) ident |= TRUE;
+          ident |= py_affect(MA_SUPERHERO) == 0;
           ma_duration(MA_SUPERHERO, randint(25) + 25);
           break;
         case 39:
@@ -7974,15 +7974,15 @@ inven_quaff(iidx)
           ident |= restore_level();
           break;
         case 41:
-          if (py_affect(MA_AFIRE)) ident |= TRUE;
+          ident |= (py_affect(MA_AFIRE) == 0);
           ma_duration(MA_AFIRE, randint(20) + 20);
           break;
         case 42:
-          if (py_affect(MA_AFROST)) ident |= TRUE;
+          ident |= (py_affect(MA_AFROST) == 0);
           ma_duration(MA_AFROST, randint(20) + 20);
           break;
         case 43:
-          if (py_tr(TR_SEE_INVIS) == 0) ident |= TRUE;
+          ident |= py_tr(TR_SEE_INVIS) == 0;
           ma_duration(MA_SEE_INVIS, randint(12) + 12);
           break;
         case 44:
@@ -8508,11 +8508,11 @@ int *uy, *ux;
             }
             break;
           case 17:
-            if (py_affect(MA_FAST)) ident |= TRUE;
+            ident |= py_affect(MA_FAST) == 0;
             ma_duration(MA_FAST, randint(30) + 15);
             break;
           case 18:
-            if (py_affect(MA_SLOW)) ident |= TRUE;
+            ident |= py_affect(MA_SLOW) == 0;
             ma_duration(MA_SLOW, randint(30) + 15);
             break;
           case 19:
