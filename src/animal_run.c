@@ -438,7 +438,7 @@ viz_minimap()
           if ((col % 8) == 4 || (row % 8) == 4) color = BRIGHT + WHITE;
         } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
           color = BRIGHT + WHITE;
-        } else if (row == y && col == x) {
+        } else if (CF_TEMP_LIGHT & c_ptr->cflag) {
           color = BRIGHT + CYAN;
         }
 
@@ -4055,8 +4055,10 @@ py_move_light(y1, x1, y2, x2)
         struct caveS* cave = &caveD[row][col];
         uint32_t cflag = cave->cflag;
 
-        cflag |= CF_TEMP_LIGHT;
-        if (cave->fval >= MIN_WALL) cflag |= CF_PERM_LIGHT;
+        if (cave->fval >= MIN_WALL)
+          cflag |= CF_PERM_LIGHT;
+        else
+          cflag |= CF_TEMP_LIGHT;
         if (cave->oidx) {
           struct objS* obj = &entity_objD[cave->oidx];
           if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
