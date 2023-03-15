@@ -248,6 +248,7 @@
 #define TR_RES_LIGHT 0x02000000L
 #define TR_FFALL 0x04000000L
 #define TR_SEEING 0x08000000L
+#define TR_HERO 0x10000000L
 #define TR_TUNNEL 0x20000000L
 #define TR_SLOWNESS 0x40000000L
 #define TR_CURSED 0x80000000L
@@ -275,6 +276,7 @@
 #define MA_SEE_INVIS 8  // TBD: move to immediate (breaks save format)
 #define MA_SEE_INFRA 9
 #define MA_BLIND 10
+#define MA_FEAR 11
 #define MA_DETECT_MON 15
 #define MA_DETECT_EVIL 16
 #define MA_DETECT_INVIS 17

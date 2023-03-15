@@ -66,7 +66,7 @@ struct countS {
   int poison;
   int blind; //TBD: deprecate
   int confusion;
-  int fear;
+  int fear; //TBD: deprecate
   int rest;
   int paralysis;
   // Player protection counters

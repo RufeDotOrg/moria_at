@@ -507,7 +507,7 @@ affect_update()
 
   active_affectD[idx++] = (maD[MA_BLIND] != 0);
   active_affectD[idx++] = (countD.confusion != 0);
-  active_affectD[idx++] = (countD.fear != 0);
+  active_affectD[idx++] = py_affect(MA_FEAR) != 0;
   active_affectD[idx++] = (countD.paralysis != 0);
   active_affectD[idx++] = (countD.poison != 0);
   active_affectD[idx] = (uD.food <= PLAYER_FOOD_ALERT);
@@ -4965,6 +4965,7 @@ calc_bonuses()
   /* Add in temporary spell increases  */
   ac += uD.ma_ac;
   if (py_affect(MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
+  if (py_affect(MA_HERO) || py_affect(MA_SUPERHERO)) tflag |= TR_HERO;
 
   // Summarize ac
   cbD.ptohit = tohit;
@@ -5023,6 +5024,7 @@ ma_bonuses(maffect, factor)
         msg_print("You feel like a HERO!");
       else if (factor < 0)
         msg_print("The heroism wears off.");
+      maD[MA_FEAR] = 0;
       break;
     case MA_SUPERHERO:
       uD.chp += (factor > 0) * 20;
@@ -5033,6 +5035,7 @@ ma_bonuses(maffect, factor)
         msg_print("You feel like a SUPER-HERO!");
       else if (factor < 0)
         msg_print("The super heroism wears off.");
+      maD[MA_FEAR] = 0;
       break;
     case MA_FAST:
       if (factor > 0)
@@ -5074,6 +5077,9 @@ ma_bonuses(maffect, factor)
       if (factor < 0) msg_print("The veil of darkness lifts.");
       py_check_view(uD.y, uD.x);
       break;
+    case MA_FEAR:
+      if (factor < 0) msg_print("You feel bolder now.");
+      break;
     case MA_DETECT_MON:
       break;
     case MA_DETECT_EVIL:
@@ -5105,6 +5111,9 @@ ma_duration(maidx, nturn)
   struct objS* obj;
   if (maidx == MA_BLIND && py_tr(TR_SEEING)) {
     msg_print("Your sight is no worse.");
+    nturn = 0;
+  } else if (maidx == MA_FEAR && py_tr(TR_HERO)) {
+    msg_print("A hero recovers quickly.");
     nturn = 0;
   }
 
@@ -5161,7 +5170,7 @@ void py_bonuses(obj, factor) struct objS* obj;
   int amount;
 
   if (obj->sn == SN_BLINDNESS && factor > 0) ma_duration(MA_BLIND, 1000);
-  if (obj->sn == SN_TIMIDNESS && factor > 0) countD.fear += 50;
+  if (obj->sn == SN_TIMIDNESS && factor > 0) ma_duration(MA_FEAR, 50);
   if (TR_SLOW_DIGEST & obj->flags) uD.food_digest -= factor;
   if (TR_REGEN & obj->flags) uD.food_digest += factor * 3;
 
@@ -7443,7 +7452,7 @@ inven_eat(iidx)
           ident |= TRUE;
           break;
         case 3:
-          countD.fear += randint(10) + obj->level;
+          ma_duration(MA_FEAR, randint(10) + obj->level);
           msg_print("You feel terrified!");
           ident |= TRUE;
           break;
@@ -7470,10 +7479,8 @@ inven_eat(iidx)
           }
           break;
         case 8:
-          if (countD.fear > 0) {
-            countD.fear = 1;
-            ident = TRUE;
-          }
+          ident |= py_affect(MA_FEAR);
+          maD[MA_FEAR] = 0;
           break;
         case 9:
           if (countD.confusion > 0) {
@@ -7928,8 +7935,8 @@ inven_quaff(iidx)
           ma_duration(MA_SUPERHERO, randint(25) + 25);
           break;
         case 39:
-          ident |= countD.fear > 0;
-          countD.fear = MIN(countD.fear, 1);
+          ident |= py_affect(MA_FEAR);
+          maD[MA_FEAR] = 0;
           break;
         case 40:
           ident |= restore_level();
@@ -9218,7 +9225,7 @@ py_shield_attack(y, x)
   struct objS* shield;
 
   turn_flag = TRUE;
-  if (countD.fear) {
+  if (py_affect(MA_FEAR)) {
     MSG("You are too afraid to bash anyone!");
   } else if (!invenD[INVEN_ARM]) {
     MSG("You must wear a shield to bash monsters!");
@@ -9278,7 +9285,7 @@ py_attack(y, x)
   struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
   turn_flag = TRUE;
-  if (countD.fear) {
+  if (py_affect(MA_FEAR)) {
     msg_print("You are too afraid!");
   } else {
     tohit = cbD.ptohit + light_bonus;
@@ -9396,12 +9403,12 @@ mon_attack(midx)
           py_take_hit(damage);
 
           if (player_saves()) {
-            if (countD.fear == 0) msg_print("You remain bold.");
-          } else if (countD.fear == 0) {
+            if (maD[MA_FEAR] == 0) msg_print("You remain bold.");
+          } else if (maD[MA_FEAR] == 0) {
             msg_print("You are suddenly afraid!");
-            countD.fear += 3 + randint(cre->level);
+            ma_duration(MA_FEAR, 3 + randint(cre->level));
           } else {
-            countD.fear += 3;
+            ma_duration(MA_FEAR, 3);
           }
           break;
         case 5: /*Fire attack  */
@@ -10480,10 +10487,10 @@ mon_try_spell(midx, cdis)
       case 13: /*Cause Fear    */
         if (player_saves())
           msg_print("You resist the effects of the spell.");
-        else if (countD.fear > 0)
-          countD.fear += 2;
+        else if (maD[MA_FEAR])
+          ma_duration(MA_FEAR, 2);
         else
-          countD.fear = randint(5) + 3;
+          ma_duration(MA_FEAR, randint(5) + 3);
         break;
       case 14: /*Summon Monster*/
       {
@@ -11283,18 +11290,11 @@ tick()
       msg_print("You feel less confused.");
     }
   }
-  if (countD.fear > 0) {
-    if (py_affect(MA_HERO) || py_affect(MA_SUPERHERO)) countD.fear = 1;
-    countD.fear -= 1;
-    if (countD.fear == 0) {
-      msg_print("You feel bolder now.");
-    }
-  }
 
   if (countD.rest < 0) {
     countD.rest += 1;
     if (uD.chp == uD.mhp) {
-      int aff = py_affect(MA_BLIND) + countD.confusion + countD.fear +
+      int aff = py_affect(MA_BLIND) + countD.confusion + py_affect(MA_FEAR) +
                 py_affect(MA_RECALL);
       if (aff == 0) countD.rest = 0;
     }
