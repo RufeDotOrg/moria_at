@@ -38,22 +38,22 @@
 #define CHUNK_WIDTH 32
 #define CHUNK_COL (MAX_HEIGHT / CHUNK_HEIGHT)
 #define CHUNK_ROW (MAX_WIDTH / CHUNK_WIDTH)
-#define CHUNK_SQ (CHUNK_COL*CHUNK_ROW)
+#define CHUNK_SQ (CHUNK_COL * CHUNK_ROW)
 
-#define ROOM_HEIGHT (CHUNK_HEIGHT/2-1)
-#define ROOM_WIDTH (CHUNK_WIDTH/2-1)
+#define ROOM_HEIGHT (CHUNK_HEIGHT / 2 - 1)
+#define ROOM_WIDTH (CHUNK_WIDTH / 2 - 1)
 
-#define DUN_TUN_RND 9       /* 1/Chance of Random direction	       */
-#define DUN_TUN_CHG 70      /* Chance of changing direction (99 max) */
-#define DUN_TUN_CON 15      /* Chance of extra tunneling	       */
-#define DUN_TUN_PEN 25      /* % chance of room doors		       */
-#define DUN_TUN_JCT 15      /* % chance of doors at tunnel junctions */
-#define DUN_STR_DEN  5      /* Density of streamers          */
-#define DUN_STR_RNG  2      /* Width of streamers          */
-#define DUN_STR_MAG  3      /* Number of magma streamers         */
-#define DUN_STR_MC   90     /* 1/x chance of treasure per magma      */
-#define DUN_STR_QUA  2      /* Number of quartz streamers        */
-#define DUN_STR_QC   40     /* 1/x chance of treasure per quartz     */
+#define DUN_TUN_RND 9  /* 1/Chance of Random direction        */
+#define DUN_TUN_CHG 70 /* Chance of changing direction (99 max) */
+#define DUN_TUN_CON 15 /* Chance of extra tunneling        */
+#define DUN_TUN_PEN 25 /* % chance of room doors         */
+#define DUN_TUN_JCT 15 /* % chance of doors at tunnel junctions */
+#define DUN_STR_DEN 5  /* Density of streamers          */
+#define DUN_STR_RNG 2  /* Width of streamers          */
+#define DUN_STR_MAG 3  /* Number of magma streamers         */
+#define DUN_STR_MC 90  /* 1/x chance of treasure per magma      */
+#define DUN_STR_QUA 2  /* Number of quartz streamers        */
+#define DUN_STR_QC 40  /* 1/x chance of treasure per quartz     */
 #define DUN_ROOM_MEAN 32
 #define MIN_MALLOC_LEVEL 14
 #define RND_MALLOC_LEVEL 8
@@ -73,57 +73,57 @@
 #define STORE_TURN_AROUND 8
 
 /* indexes into the special name table */
-#define SN_R			1
-#define SN_RA			2
-#define SN_RF			3
-#define SN_RC			4
-#define SN_RL			5
-#define SN_HA			6
-#define SN_DF			7
-#define SN_SA			8
-#define SN_SD			9
-#define SN_SE			10
-#define SN_SU			11
-#define SN_FT			12
-#define SN_FB			13
-#define SN_FREE_ACTION		14
-#define SN_SLAYING		15
-#define SN_CLUMSINESS		16
-#define SN_WEAKNESS		17
-#define SN_SLOW_DESCENT		18
-#define SN_SPEED		19
-#define SN_STEALTH		20
-#define SN_SLOWNESS		21
-#define SN_NOISE		22
-#define SN_GREAT_MASS		23
-#define SN_INTELLIGENCE		24
-#define SN_WISDOM		25
-#define SN_INFRAVISION		26
-#define SN_MIGHT		27
-#define SN_LORDLINESS		28
-#define SN_MAGI			29
-#define SN_BEAUTY		30
-#define SN_SEEING		31
-#define SN_REGENERATION		32
-#define SN_STUPIDITY		33
-#define SN_DULLNESS		34
-#define SN_BLINDNESS		35
-#define SN_TIMIDNESS		36
-#define SN_TELEPORTATION	37
-#define SN_UGLINESS		38
-#define SN_PROTECTION		39
-#define SN_IRRITATION		40
-#define SN_VULNERABILITY	41
-#define SN_ENVELOPING		42
-#define SN_EMPTY		43
-#define SN_LOCKED		44
-#define SN_POISON_NEEDLE	45
-#define SN_GAS_TRAP		46
-#define SN_EXPLOSION_DEVICE	47
-#define SN_SUMMONING_RUNES	48
-#define SN_MULTIPLE_TRAPS	49
-#define SN_DISARMED		50
-#define SN_UNLOCKED		51
+#define SN_R 1
+#define SN_RA 2
+#define SN_RF 3
+#define SN_RC 4
+#define SN_RL 5
+#define SN_HA 6
+#define SN_DF 7
+#define SN_SA 8
+#define SN_SD 9
+#define SN_SE 10
+#define SN_SU 11
+#define SN_FT 12
+#define SN_FB 13
+#define SN_FREE_ACTION 14
+#define SN_SLAYING 15
+#define SN_CLUMSINESS 16
+#define SN_WEAKNESS 17
+#define SN_SLOW_DESCENT 18
+#define SN_SPEED 19
+#define SN_STEALTH 20
+#define SN_SLOWNESS 21
+#define SN_NOISE 22
+#define SN_GREAT_MASS 23
+#define SN_INTELLIGENCE 24
+#define SN_WISDOM 25
+#define SN_INFRAVISION 26
+#define SN_MIGHT 27
+#define SN_LORDLINESS 28
+#define SN_MAGI 29
+#define SN_BEAUTY 30
+#define SN_SEEING 31
+#define SN_REGENERATION 32
+#define SN_STUPIDITY 33
+#define SN_DULLNESS 34
+#define SN_BLINDNESS 35
+#define SN_TIMIDNESS 36
+#define SN_TELEPORTATION 37
+#define SN_UGLINESS 38
+#define SN_PROTECTION 39
+#define SN_IRRITATION 40
+#define SN_VULNERABILITY 41
+#define SN_ENVELOPING 42
+#define SN_EMPTY 43
+#define SN_LOCKED 44
+#define SN_POISON_NEEDLE 45
+#define SN_GAS_TRAP 46
+#define SN_EXPLOSION_DEVICE 47
+#define SN_SUMMONING_RUNES 48
+#define SN_MULTIPLE_TRAPS 49
+#define SN_DISARMED 50
+#define SN_UNLOCKED 51
 
 /* Treasure constants */
 #define TV_NOTHING 0
@@ -189,31 +189,31 @@
 #define MAX_DUNGEON_OBJ 345
 #define OBJ_GREAT 12  // 1/x treasure is a big surprise!
 
-/* Magic Treasure Generation constants				*/
-/* Note: Number of special objects, and degree of enchantments	 */
-/*	 can be adjusted here.					 */
-#define OBJ_STD_ADJ	 125  /* Adjust STD per level * 100	       */
-#define OBJ_STD_MIN	 7    /* Minimum STD			       */
-#define OBJ_TOWN_LEVEL	 7    /* Town object generation level	       */
-#define OBJ_BASE_MAGIC	 15   /* Base amount of magic		       */
-#define OBJ_BASE_MAX	 70   /* Max amount of magic		       */
-#define OBJ_DIV_SPECIAL	 6    /* magic_chance/#	 special magic	      */
-#define OBJ_DIV_CURSED	 13   /* 10*magic_chance/#  cursed items	 */
+/* Magic Treasure Generation constants    */
+/* Note: Number of special objects, and degree of enchantments  */
+/*  can be adjusted here.      */
+#define OBJ_STD_ADJ 125   /* Adjust STD per level * 100        */
+#define OBJ_STD_MIN 7     /* Minimum STD          */
+#define OBJ_TOWN_LEVEL 7  /* Town object generation level        */
+#define OBJ_BASE_MAGIC 15 /* Base amount of magic         */
+#define OBJ_BASE_MAX 70   /* Max amount of magic         */
+#define OBJ_DIV_SPECIAL 6 /* magic_chance/#  special magic       */
+#define OBJ_DIV_CURSED 13 /* 10*magic_chance/#  cursed items  */
 
 #define OBJ_RUNE_TIDX 351 /* Rune of protection treasure index */
 #define OBJ_MUSH_TIDX 352 /* Create food treasure index */
 #define OBJ_TRAP_BEGIN 353
 #define OBJ_TRAP_END 371
-#define MAX_TRAP (OBJ_TRAP_END-OBJ_TRAP_BEGIN)
+#define MAX_TRAP (OBJ_TRAP_END - OBJ_TRAP_BEGIN)
 
 /* spell types used by get_flags(), breathe(), fire_bolt() and fire_ball() */
 #define GF_MAGIC_MISSILE 0
-#define GF_LIGHTNING	1
-#define GF_POISON_GAS	2
-#define GF_ACID		3
-#define GF_FROST	4
-#define GF_FIRE		5
-#define GF_HOLY_ORB	6
+#define GF_LIGHTNING 1
+#define GF_POISON_GAS 2
+#define GF_ACID 3
+#define GF_FROST 4
+#define GF_FIRE 5
+#define GF_HOLY_ORB 6
 
 // Wearable obj flags
 #define TR_STATS 0x0000003FL /* the stats must be the low 6 bits */
@@ -248,8 +248,6 @@
 #define TR_RES_LIGHT 0x02000000L
 #define TR_FFALL 0x04000000L
 #define TR_SEEING 0x08000000L
-// #define TR_BLIND 0x08000000L
-// #define TR_TIMID 0x10000000L
 #define TR_TUNNEL 0x20000000L
 #define TR_SLOWNESS 0x40000000L
 #define TR_CURSED 0x80000000L
@@ -257,13 +255,13 @@
 #define TR_P1 (TR_STATS | TR_SEARCH | TR_STEALTH | TR_TUNNEL)
 
 /* definitions for chests */
-#define CH_LOCKED	0x00000001L
-#define CH_TRAPPED	0x000001F0L
-#define CH_LOSE_STR	0x00000010L
-#define CH_POISON	0x00000020L
-#define CH_PARALYSED	0x00000040L
-#define CH_EXPLODE	0x00000080L
-#define CH_SUMMON	0x00000100L
+#define CH_LOCKED 0x00000001L
+#define CH_TRAPPED 0x000001F0L
+#define CH_LOSE_STR 0x00000010L
+#define CH_POISON 0x00000020L
+#define CH_PARALYSED 0x00000040L
+#define CH_EXPLODE 0x00000080L
+#define CH_SUMMON 0x00000100L
 
 /* magic effects */
 #define MA_BLESS 0
@@ -274,7 +272,7 @@
 #define MA_AFIRE 5
 #define MA_AFROST 6
 #define MA_INVULN 7
-#define MA_SEE_INVIS 8 // TBD: move to immediate (breaks save format)
+#define MA_SEE_INVIS 8  // TBD: move to immediate (breaks save format)
 #define MA_SEE_INFRA 9
 #define MA_BLIND 10
 #define MA_DETECT_MON 15
@@ -285,15 +283,15 @@
 // Magic affects less than this value are persistent in the save file
 #define MA_SAVE 14
 
-#define OBJ_BOLT_RANGE	 18   /* Maximum range of bolts and balls      */
+#define OBJ_BOLT_RANGE 18 /* Maximum range of bolts and balls      */
 
-/* Creature constants						*/
+/* Creature constants      */
 #define MAX_MON_LEVEL 40
-#define MON_NASTY 50     // 1/x monsters are a big baddie
-#define MON_DRAIN_EXP 2 /* Percent of player exp drained per hit */
-#define MON_SUMMON_ADJ 2 /* Adjust level of summoned creatures    */
-#define MON_MULT_ADJ 7 /* High value slows multiplication       */
-#define MAX_WIN_MON 2 /* Total number of win creatures */
+#define MON_NASTY 50      // 1/x monsters are a big baddie
+#define MON_DRAIN_EXP 2   /* Percent of player exp drained per hit */
+#define MON_SUMMON_ADJ 2  /* Adjust level of summoned creatures    */
+#define MON_MULT_ADJ 7    /* High value slows multiplication       */
+#define MAX_WIN_MON 2     /* Total number of win creatures */
 #define WIN_MON_APPEAR 50 /* Level where winning creature begins */
 #define CRE_LEV_ADJ 3
 #define MAX_SIGHT 20 /* Maximum dis a creature can be seen    */
@@ -331,28 +329,28 @@
 #define CM_WIN 0x80000000L
 
 /* creature spell definitions */
-#define CS_FREQ		0x0000000FL
-#define CS_SPELLS	0x0001FFF0L
-#define CS_TEL_SHORT	0x00000010L
-#define CS_TEL_LONG	0x00000020L
-#define CS_TEL_TO	0x00000040L
-#define CS_LGHT_WND	0x00000080L
-#define CS_SER_WND	0x00000100L
-#define CS_HOLD_PER	0x00000200L
-#define CS_BLIND	0x00000400L
-#define CS_CONFUSE	0x00000800L
-#define CS_FEAR		0x00001000L
-#define CS_SUMMON_MON	0x00002000L
-#define CS_SUMMON_UND	0x00004000L
-#define CS_SLOW_PER	0x00008000L
-#define CS_DRAIN_MANA	0x00010000L
+#define CS_FREQ 0x0000000FL
+#define CS_SPELLS 0x0001FFF0L
+#define CS_TEL_SHORT 0x00000010L
+#define CS_TEL_LONG 0x00000020L
+#define CS_TEL_TO 0x00000040L
+#define CS_LGHT_WND 0x00000080L
+#define CS_SER_WND 0x00000100L
+#define CS_HOLD_PER 0x00000200L
+#define CS_BLIND 0x00000400L
+#define CS_CONFUSE 0x00000800L
+#define CS_FEAR 0x00001000L
+#define CS_SUMMON_MON 0x00002000L
+#define CS_SUMMON_UND 0x00004000L
+#define CS_SLOW_PER 0x00008000L
+#define CS_DRAIN_MANA 0x00010000L
 
-#define CS_BREATHE	0x00F80000L /* may also just indicate resistance */
-#define CS_BR_LIGHT	0x00080000L /* if no spell frequency set */
-#define CS_BR_GAS	0x00100000L
-#define CS_BR_ACID	0x00200000L
-#define CS_BR_FROST	0x00400000L
-#define CS_BR_FIRE	0x00800000L
+#define CS_BREATHE 0x00F80000L  /* may also just indicate resistance */
+#define CS_BR_LIGHT 0x00080000L /* if no spell frequency set */
+#define CS_BR_GAS 0x00100000L
+#define CS_BR_ACID 0x00200000L
+#define CS_BR_FROST 0x00400000L
+#define CS_BR_FIRE 0x00800000L
 
 /* creature defense flags */
 #define CD_DRAGON 0x0001
@@ -374,20 +372,20 @@
 /* Player constants */
 #define MAX_PLAYER_LEVEL 40
 #define MAX_EXP 9999999 /* Maximum player experience */
-#define USE_DEVICE	  3   /* x> Harder devices x< Easier devices   */
+#define USE_DEVICE 3    /* x> Harder devices x< Easier devices   */
 
 #define BTH_PLUS_ADJ 3  // base-to-hit per plus-to-hit
 
-#define PLAYER_FOOD_FULL 10000   /* Getting full			       */
+#define PLAYER_FOOD_FULL 10000   /* Getting full          */
 #define PLAYER_FOOD_MAX 15000    /* Maximum food value, beyond is wasted  */
-#define PLAYER_FOOD_FAINT 300    /* Character begins fainting	       */
+#define PLAYER_FOOD_FAINT 300    /* Character begins fainting        */
 #define PLAYER_FOOD_WEAK 1000    /* Warn player that he is getting very low*/
 #define PLAYER_FOOD_ALERT 2000   /* Warn player that he is getting low    */
-#define PLAYER_REGEN_FAINT 33    /* Regen factor>>16 when fainting	 */
-#define PLAYER_REGEN_WEAK 98     /* Regen factor>>16 when weak	 */
-#define PLAYER_REGEN_NORMAL 197  /* Regen factor>>16 when full	 */
-#define PLAYER_REGEN_HPBASE 1442 /* Min amount hp regen>>16		 */
-#define PLAYER_REGEN_MNBASE 524  /* Min amount mana regen>>16	 */
+#define PLAYER_REGEN_FAINT 33    /* Regen factor>>16 when fainting  */
+#define PLAYER_REGEN_WEAK 98     /* Regen factor>>16 when weak  */
+#define PLAYER_REGEN_NORMAL 197  /* Regen factor>>16 when full  */
+#define PLAYER_REGEN_HPBASE 1442 /* Min amount hp regen>>16   */
+#define PLAYER_REGEN_MNBASE 524  /* Min amount mana regen>>16  */
 
 /* Class spell types */
 #define SP_MAGE 1
@@ -419,13 +417,13 @@
 #define INVEN_AUX 33
 #define MAX_INVEN 34
 
-#define ID_MAGIK 0x1  /* obj_sense() magic */
-#define ID_DAMD 0x2   /* wore something cursed and known bad */
-#define ID_EMPTY 0x4  /* wand/staff known to have 0 charges */
-#define ID_REVEAL 0x08 /* full object identity is known */
-#define ID_CORRODED 0x10 /* armor is known to provide no protection from acid/gas damage */
-#define ID_PLAIN 0x20 /* obj_sense() not magic or cursed */
-#define ID_RARE 0x40 /* obj_sense() special name item */
+#define ID_MAGIK 0x1     /* obj_sense() magic */
+#define ID_DAMD 0x2      /* wore something cursed and known bad */
+#define ID_EMPTY 0x4     /* wand/staff known to have 0 charges */
+#define ID_REVEAL 0x08   /* full object identity is known */
+#define ID_CORRODED 0x10 /* provides no protection from acid/gas damage */
+#define ID_PLAIN 0x20    /* obj_sense() not magic or cursed */
+#define ID_RARE 0x40     /* obj_sense() special name item */
 
 /* tval sub type */
 #define MAX_SUBVAL 64
