@@ -4974,7 +4974,7 @@ calc_bonuses()
   }
 
   /* Add in temporary spell increases  */
-  ac += uD.ma_ac;
+  toac += uD.ma_ac;
   if (py_affect(MA_SEE_INVIS)) tflag |= TR_SEE_INVIS;
   if (py_affect(MA_HERO) || py_affect(MA_SUPERHERO)) tflag |= TR_HERO;
 
