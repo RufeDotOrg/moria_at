@@ -2021,6 +2021,7 @@ void magic_treasure(obj, level) struct objS* obj;
 
     case TV_LIGHT:
       obj->p1 = randint(obj->p1);
+      obj->idflag = ID_REVEAL;
       break;
 
     case TV_WAND:
