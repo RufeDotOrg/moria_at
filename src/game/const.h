@@ -102,7 +102,7 @@
 #define SN_MIGHT 27
 #define SN_LORDLINESS 28
 #define SN_MAGI 29
-#define SN_BEAUTY 30
+#define SN_COURAGE 30
 #define SN_SEEING 31
 #define SN_REGENERATION 32
 #define SN_STUPIDITY 33

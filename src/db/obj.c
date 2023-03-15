@@ -5639,7 +5639,7 @@ static char* special_nameD[] = {
     "Might",
     "Lordliness",
     "the Magi",
-    "Beauty",
+    "Courage",
     "Seeing",
     "Regeneration",
     "Stupidity",

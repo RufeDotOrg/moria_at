@@ -1902,8 +1902,8 @@ void magic_treasure(obj, level) struct objS* obj;
                 break;
               case 4:
                 obj->p1 = randint(3);
-                obj->flags |= TR_CHR;
-                obj->sn = SN_BEAUTY;
+                obj->flags |= (TR_CHR | TR_CON | TR_SUST_STAT | TR_HERO);
+                obj->sn = SN_COURAGE;
                 obj->cost += 750;
                 break;
               case 5:
@@ -7651,23 +7651,23 @@ void obj_study(obj) struct objS* obj;
           if (obj->flags & (1 << it)) {
             BufMsg(screen, "%-17.017s: %+d", stat_nameD[it], obj->p1);
             if (obj->flags & TR_SUST_STAT)
-              BufMsg(screen, "and %scannot be reduced", stat_nameD[it]);
+              BufMsg(screen, "%scannot be reduced", stat_nameD[it]);
           }
         }
         if (obj->flags & TR_SLOW_DIGEST) {
-          BufMsg(screen, "and slows digestion");
+          BufMsg(screen, "slows digestion");
         }
         if (obj->flags & TR_AGGRAVATE) {
-          BufMsg(screen, "and aggravates monsters");
+          BufMsg(screen, "aggravates monsters");
         }
         if (obj->flags & TR_TELEPORT) {
-          BufMsg(screen, "and randomly teleports you");
+          BufMsg(screen, "randomly teleports you");
         }
         if (obj->flags & TR_REGEN) {
-          BufMsg(screen, "and increases health regeneration");
+          BufMsg(screen, "increases health regeneration");
         }
         if (obj->flags & TR_SPEED) {
-          BufMsg(screen, "and increases speed");
+          BufMsg(screen, "increases speed");
         }
 
         if (obj->flags & TR_EGO_WEAPON) {
@@ -7693,34 +7693,37 @@ void obj_study(obj) struct objS* obj;
         }
 
         if (obj->flags & TR_RES_FIRE) {
-          BufMsg(screen, "and grants resistence to fire damage");
+          BufMsg(screen, "grants resistence to fire damage");
         }
         if (obj->flags & TR_RES_ACID) {
-          BufMsg(screen, "and grants resistence to acid damage");
+          BufMsg(screen, "grants resistence to acid damage");
         }
         if (obj->flags & TR_RES_COLD) {
-          BufMsg(screen, "and grants resistence to cold damage");
+          BufMsg(screen, "grants resistence to cold damage");
         }
         if (obj->flags & TR_RES_LIGHT) {
-          BufMsg(screen, "and grants resistence to lightning damage");
+          BufMsg(screen, "grants resistence to lightning damage");
         }
         if (obj->sn == SN_SU) {
-          BufMsg(screen, "and grants resistence to life drain");
+          BufMsg(screen, "grants resistence to life drain");
         }
         if (obj->flags & TR_SEEING) {
-          BufMsg(screen, "and grants immunity to blindness");
+          BufMsg(screen, "grants immunity to blindness");
+        }
+        if (obj->flags & TR_HERO) {
+          BufMsg(screen, "grants immunity to fear");
         }
         if (obj->flags & TR_FREE_ACT) {
-          BufMsg(screen, "and immunity to paralysis");
+          BufMsg(screen, "immunity to paralysis");
         }
         if (obj->flags & TR_SEE_INVIS) {
-          BufMsg(screen, "and grants sight of invisible monsters");
+          BufMsg(screen, "grants sight of invisible monsters");
         }
         if (obj->flags & TR_FFALL) {
-          BufMsg(screen, "and prevents falling");
+          BufMsg(screen, "prevents falling");
         }
         if (obj->flags & TR_SLOWNESS) {
-          BufMsg(screen, "and slows you down");
+          BufMsg(screen, "slows you down");
         }
         if (obj->flags & TR_CURSED) {
           BufMsg(screen, "... is known to be cursed!");
