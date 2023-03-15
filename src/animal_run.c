@@ -5703,12 +5703,13 @@ py_init()
     obj->idflag |= ID_REVEAL;
     invenD[may_equip(obj->tval)] = obj->id;
   }
-  int start_inven[] = {22, 221}; // food ration, scroll of recall
+  int start_inven[] = {22, 221};  // food ration, scroll of recall
   int start_number[] = {5, 1};
   for (int it = 0; it < AL(start_inven); ++it) {
     struct objS* obj = obj_use();
     tr_obj_copy(start_inven[it], obj);
     obj->number = start_number[it];
+    obj->idflag = ID_REVEAL;
     invenD[it] = obj->id;
   }
 
@@ -7580,13 +7581,13 @@ inven_eat(iidx)
       }
       /* End of food actions.  			*/
     }
-    if (!tr_is_known(tr_ptr)) {
+    if ((obj->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
       if (ident) {
         tr_make_known(tr_ptr);
         tr_discovery(tr_ptr);
         py_experience();
       } else {
-        // sample(obj);
+        tr_sample(tr_ptr);
         msg_print("You eat the food, to unknown effect.");
       }
     }
@@ -8013,13 +8014,13 @@ inven_quaff(iidx)
           break;
       }
     }
-    if (!tr_is_known(tr_ptr)) {
+    if ((obj->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
       if (ident) {
         tr_make_known(tr_ptr);
         tr_discovery(tr_ptr);
         py_experience();
       } else {
-        // sample(...);
+        tr_sample(tr_ptr);
         msg_print("You drink the potion, to unknown effect.");
       }
     }
@@ -8243,13 +8244,13 @@ int *uy, *ux;
         }
         /* End of Scrolls.  		       */
       }
-      if (!tr_is_known(tr_ptr)) {
+      if ((i_ptr->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
         if (ident) {
           tr_make_known(tr_ptr);
           tr_discovery(tr_ptr);
           py_experience();
         } else {
-          //   sample(i_ptr);
+          tr_sample(tr_ptr);
           msg_print("You read the scroll, to unknown effect.");
         }
       }
@@ -8387,13 +8388,13 @@ inven_try_wand_dir(iidx, dir)
         }
         /* End of Wands.  	    */
       }
-      if (!tr_is_known(tr_ptr)) {
+      if ((i_ptr->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
         if (ident) {
           tr_make_known(tr_ptr);
           tr_discovery(tr_ptr);
           py_experience();
         } else {
-          //   sample(i_ptr);
+          tr_sample(tr_ptr);
           msg_print("You zap the wand, to unknown effect.");
         }
       }
@@ -8551,13 +8552,13 @@ int *uy, *ux;
             break;
         }
       }
-      if (!tr_is_known(tr_ptr)) {
+      if ((i_ptr->idflag & ID_REVEAL) == 0 && !tr_is_known(tr_ptr)) {
         if (ident) {
           tr_make_known(tr_ptr);
           tr_discovery(tr_ptr);
           py_experience();
         } else {
-          // sample(i_ptr);
+          tr_sample(tr_ptr);
           msg_print("You use the staff to unknown effect.");
         }
       }
