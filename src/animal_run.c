@@ -5696,42 +5696,20 @@ py_init()
   } while ((player_hpD[MAX_PLAYER_LEVEL - 1] < min_value) ||
            (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
 
-  int start_equip[] = {30, 87, 221};
+  int start_equip[] = {30, 87};
   for (int it = 0; it < AL(start_equip); ++it) {
     struct objS* obj = obj_use();
     tr_obj_copy(start_equip[it], obj);
     obj->idflag |= ID_REVEAL;
     invenD[may_equip(obj->tval)] = obj->id;
   }
-  for (int it = 0; it < 1; ++it) {
-    struct objS* food = obj_use();
-    // 22 = 1 ration of food
-    tr_obj_copy(22, food);
-    food->number = 5;
-    invenD[it] = food->id;
-  }
-  int inven_test[] = {};  // scrolls: 174 222
-  for (int it = 0; it < AL(inven_test); ++it) {
-    int iidx = inven_slot();
-    if (iidx == -1) break;
-
+  int start_inven[] = {22, 221}; // food ration, scroll of recall
+  int start_number[] = {5, 1};
+  for (int it = 0; it < AL(start_inven); ++it) {
     struct objS* obj = obj_use();
-    tr_obj_copy(inven_test[it], obj);
-    magic_treasure(obj, dun_level);
-    tr_make_known(&treasureD[obj->tidx]);
-    invenD[iidx] = obj->id;
-  }
-  int magik_test[] = {};
-  for (int it = 0; it < AL(magik_test); ++it) {
-    int iidx = inven_slot();
-    if (iidx == -1) break;
-
-    struct objS* obj = obj_use();
-    do {
-      tr_obj_copy(magik_test[it], obj);
-      magic_treasure(obj, dun_level);
-    } while (0);  // obj->sn == SN_EMPTY;
-    invenD[iidx] = obj->id;
+    tr_obj_copy(start_inven[it], obj);
+    obj->number = start_number[it];
+    invenD[it] = obj->id;
   }
 
   uD.food = 7500;
@@ -5740,6 +5718,30 @@ py_init()
 
   if (HACK) {
     uD.gold = 100000;
+
+    int inven_test[] = {};  // scrolls: 174 222
+    for (int it = 0; it < AL(inven_test); ++it) {
+      int iidx = inven_slot();
+      if (iidx == -1) break;
+
+      struct objS* obj = obj_use();
+      tr_obj_copy(inven_test[it], obj);
+      magic_treasure(obj, dun_level);
+      tr_make_known(&treasureD[obj->tidx]);
+      invenD[iidx] = obj->id;
+    }
+    int magik_test[] = {};
+    for (int it = 0; it < AL(magik_test); ++it) {
+      int iidx = inven_slot();
+      if (iidx == -1) break;
+
+      struct objS* obj = obj_use();
+      do {
+        tr_obj_copy(magik_test[it], obj);
+        magic_treasure(obj, dun_level);
+      } while (0);  // obj->sn == SN_EMPTY;
+      invenD[iidx] = obj->id;
+    }
   }
 }
 void
