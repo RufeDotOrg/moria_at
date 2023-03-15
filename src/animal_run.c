@@ -5230,11 +5230,14 @@ equip_takeoff(iidx, into_slot)
   }
 }
 void
-inven_drop(iidx, y, x)
+inven_drop(iidx)
 {
+  int y, x;
   struct objS* obj;
   obj = obj_get(invenD[iidx]);
 
+  y = uD.y;
+  x = uD.x;
   if (caveD[y][x].oidx == 0) {
     if (iidx >= INVEN_EQUIP) {
       equip_takeoff(iidx, -1);
@@ -8823,7 +8826,7 @@ show_version()
   BufMsg(screen, "Programming: %s", "Alan Newton");
   BufMsg(screen, "Art: %s", "Nathan Miller");
 }
-void py_actuate(y, x) int *y, *x;
+void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
   int iidx, into;
   struct objS* obj;
@@ -8836,7 +8839,7 @@ void py_actuate(y, x) int *y, *x;
 
     if (iidx >= 0) {
       if (overlay_actD == 'd') {
-        inven_drop(iidx, uD.y, uD.x);
+        inven_drop(iidx);
       } else if (overlay_actD == 'S') {
         obj_study(obj_get(invenD[iidx]));
       } else {
@@ -8846,9 +8849,9 @@ void py_actuate(y, x) int *y, *x;
         } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
           inven_quaff(iidx);
         } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-          inven_read(iidx, y, x);
+          inven_read(iidx, y_ptr, x_ptr);
         } else if (obj->tval == TV_STAFF) {
-          inven_try_staff(iidx, x, x);
+          inven_try_staff(iidx, x_ptr, x_ptr);
         } else if (obj->tval == TV_WAND) {
           py_zap(iidx);
         } else if (iidx < INVEN_EQUIP) {
@@ -10704,14 +10707,12 @@ int *uy, *ux;
 
   return FALSE;
 }
-static void hit_trap(uy, ux) int *uy, *ux;
+static void hit_trap(y, x, uy, ux) int *uy, *ux;
 {
-  int y, x, num, dam;
+  int num, dam;
   struct caveS* c_ptr;
   struct objS* obj;
 
-  y = *uy;
-  x = *ux;
   c_ptr = &caveD[y][x];
   obj = &entity_objD[c_ptr->oidx];
 
@@ -10813,10 +10814,11 @@ static void hit_trap(uy, ux) int *uy, *ux;
       break;
     case 11: /* Summon mon*/
       msg_print("A strange rune on the floor glows and fades.");
+      msg_pause();
       delete_object(y, x);
       num = 2 + randint(3);
       for (int it = 0; it < num; it++) {
-        summon_monster(uD.y, uD.x);
+        summon_monster(y, x);
       }
       break;
     case 12: /* Fire trap*/
@@ -11459,7 +11461,7 @@ dungeon()
               break;
             case 'd':
               iidx = inven_choice("Drop which item?", "*/");
-              if (iidx >= 0) inven_drop(iidx, uD.y, uD.x);
+              if (iidx >= 0) inven_drop(iidx);
               break;
             case 'e': {
               int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
@@ -11702,7 +11704,7 @@ dungeon()
               if (obj->idflag & ID_REVEAL) try_disarm_trap(y, x);
             }
             if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
-              hit_trap(&y, &x);
+              hit_trap(y, x, &y, &x);
             }
 
             py_move_light(uD.y, uD.x, y, x);
