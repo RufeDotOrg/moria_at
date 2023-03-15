@@ -298,14 +298,15 @@ static char* stat_restD[] = {
 };
 static char* affectD[][2] = {
     {"Recall"},
-    {"SeeInvis"},
+    {"Hungry", "Starving"},
     {"Burdened"},
-    {"Slow (1)", "Slow (2)"},
     {"Fast (1)", "Fast (2)"},
+    {"Slow (1)", "Slow (2)"},
     {"Blind"},
-    {"Confused"},
+    {"Hero"},
     {"Afraid"},
+    {"Confused"},
+    {"SeeInvis"},
     {"Paralyse"},
     {"Poison"},
-    {"Hungry", "Starving"},
 };

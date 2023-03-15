@@ -495,23 +495,26 @@ affect_update()
   int pspeed = py_speed();
 
   active_affectD[idx++] = py_affect(MA_RECALL) != 0;
-  active_affectD[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
+  active_affectD[idx] = (uD.food <= PLAYER_FOOD_ALERT);
+  active_affectD[idx++] += (uD.food <= PLAYER_FOOD_WEAK);
   active_affectD[idx++] = (pack_heavy != 0);
 
-  // Slow
-  active_affectD[idx] = pspeed > 0;
-  active_affectD[idx++] += pspeed > 1;
   // Fast
   active_affectD[idx] = pspeed < 0;
   active_affectD[idx++] += pspeed < -1;
-
+  // Slow
+  active_affectD[idx] = pspeed > 0;
+  active_affectD[idx++] += pspeed > 1;
+  // Blind
   active_affectD[idx++] = (maD[MA_BLIND] != 0);
+
+  active_affectD[idx++] = py_tr(TR_HERO);
+  active_affectD[idx++] = py_affect(MA_FEAR);
   active_affectD[idx++] = (countD.confusion != 0);
-  active_affectD[idx++] = py_affect(MA_FEAR) != 0;
+
+  active_affectD[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
   active_affectD[idx++] = (countD.paralysis != 0);
   active_affectD[idx++] = (countD.poison != 0);
-  active_affectD[idx] = (uD.food <= PLAYER_FOOD_ALERT);
-  active_affectD[idx++] += (uD.food <= PLAYER_FOOD_WEAK);
 }
 void
 draw()
@@ -11206,29 +11209,29 @@ player_maint()
 void
 ma_tick()
 {
-  uint32_t new_mflag, delta;
+  uint32_t active, delta;
 
-  new_mflag = 0;
+  active = 0;
   for (int it = 0; it < AL(maD); ++it) {
     int val = maD[it];
     if (val) {
       val -= 1;
       maD[it] = val;
-      new_mflag |= (1 << it);
+      active |= (1 << it);
     }
   }
 
-  delta = uD.mflag ^ new_mflag;
+  delta = uD.mflag ^ active;
   for (int it = 0; it < AL(maD); ++it) {
     if (delta & (1 << it)) {
-      if (new_mflag & (1 << it)) {
+      if (active & (1 << it)) {
         ma_bonuses(it, 1);
       } else {
         ma_bonuses(it, -1);
       }
     }
   }
-  uD.mflag = new_mflag;
+  uD.mflag = active;
   if (delta) {
     calc_bonuses();
   }
