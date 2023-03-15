@@ -7588,11 +7588,10 @@ inven_eat(iidx)
         py_experience();
       } else {
         tr_sample(tr_ptr);
-        msg_print("You eat the food, to unknown effect.");
       }
     }
     py_add_food(obj->p1);
-    obj_desc(i_ptr, obj->number - 1);
+    obj_desc(obj, obj->number - 1);
     MSG("You have %s.", descD);
     inven_destroy_one(iidx);
     turn_flag = TRUE;
@@ -8023,12 +8022,11 @@ inven_quaff(iidx)
         py_experience();
       } else {
         tr_sample(tr_ptr);
-        msg_print("You drink the potion, to unknown effect.");
       }
     }
 
     py_add_food(obj->p1);
-    obj_desc(i_ptr, obj->number - 1);
+    obj_desc(obj, obj->number - 1);
     MSG("You have %s.", descD);
     inven_destroy_one(iidx);
     turn_flag = TRUE;
@@ -8255,7 +8253,6 @@ int *uy, *ux;
           py_experience();
         } else {
           tr_sample(tr_ptr);
-          msg_print("You read the scroll, to unknown effect.");
         }
       }
       if (used_up) {
@@ -8399,7 +8396,7 @@ inven_try_wand_dir(iidx, dir)
           py_experience();
         } else {
           tr_sample(tr_ptr);
-          msg_print("You zap the wand, to unknown effect.");
+          msg_print("You try the wand, to unknown effect.");
         }
       }
     } else {
@@ -8563,7 +8560,7 @@ int *uy, *ux;
           py_experience();
         } else {
           tr_sample(tr_ptr);
-          msg_print("You use the staff to unknown effect.");
+          msg_print("You try the staff to unknown effect.");
         }
       }
     } else {
