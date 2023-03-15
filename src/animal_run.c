@@ -7592,6 +7592,8 @@ inven_eat(iidx)
       }
     }
     py_add_food(obj->p1);
+    obj_desc(i_ptr, obj->number - 1);
+    MSG("You have %s.", descD);
     inven_destroy_one(iidx);
     turn_flag = TRUE;
     return TRUE;
@@ -8026,6 +8028,8 @@ inven_quaff(iidx)
     }
 
     py_add_food(obj->p1);
+    obj_desc(i_ptr, obj->number - 1);
+    MSG("You have %s.", descD);
     inven_destroy_one(iidx);
     turn_flag = TRUE;
 
