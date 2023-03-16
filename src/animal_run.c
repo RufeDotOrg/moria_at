@@ -7311,6 +7311,7 @@ destroy_area(y, x)
   }
   msg_print("There is a searing blast of light!");
   ma_duration(MA_BLIND, 10 + randint(10));
+  py_move_light(y, x, y, x);
 }
 void
 starlite(y, x)
