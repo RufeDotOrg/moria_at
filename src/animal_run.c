@@ -4724,7 +4724,7 @@ void obj_detail(obj) struct objS* obj;
       snprintf(tmp_str, AL(tmp_str), " (%+d,+0)", light_adj(obj->p1));
       strcat(detailD, tmp_str);
     } else if (eqidx >= INVEN_WIELD) {
-      if ((TR_P1 & obj->flags) && obj->p1) {
+      if (obj->p1 && ((TR_P1 & obj->flags) || obj->sn)) {
         snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->p1);
         strcat(detailD, tmp_str);
       }
