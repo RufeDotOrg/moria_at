@@ -5253,7 +5253,8 @@ inven_drop(iidx)
     caveD[y][x].oidx = obj_index(obj);
 
     obj_desc(obj, obj->number);
-    MSG("You drop %s.", descD);
+    obj_detail(obj);
+    MSG("You drop %s%s.", descD, detailD);
     turn_flag = TRUE;
   } else {
     msg_print("There is already an object on the ground here.");
