@@ -4424,6 +4424,15 @@ think_adj(stat)
     return (0);
 }
 int
+udevice()
+{
+  int xdev = uD.save + think_adj(A_INT) +
+             (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
+
+  if (countD.confusion) xdev /= 2;
+  return xdev;
+}
+int
 tohit_adj()
 {
   int total, stat;
@@ -8276,9 +8285,7 @@ inven_try_wand_dir(iidx, dir)
     y = uD.y;
     x = uD.x;
     ident = FALSE;
-    chance = uD.save + think_adj(A_INT) - (int)i_ptr->level +
-             (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
-    if (countD.confusion) chance = chance / 2;
+    chance = udevice() - i_ptr->level;
     if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
       chance = USE_DEVICE; /* Give everyone a slight chance */
     if (chance <= 0) chance = 1;
@@ -8431,9 +8438,7 @@ int *uy, *ux;
   i_ptr = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[i_ptr->tidx];
   if (i_ptr->tval == TV_STAFF) {
-    chance = uD.save + think_adj(A_INT) - i_ptr->level - 5 +
-             (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
-    if (countD.confusion) chance = chance / 2;
+    chance = udevice() - i_ptr->level - 5;
     if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
       chance = USE_DEVICE; /* Give everyone a slight chance */
     if (chance <= 0) chance = 1;
@@ -8864,7 +8869,7 @@ void
 py_character()
 {
   int line;
-  int xbth, xdis, xsave, xdev;
+  int xbth, xdis, xsave;
 
   line = 0;
 
@@ -8913,8 +8918,6 @@ py_character()
          (level_adj[uD.clidx][LA_DISARM] * uD.lev / 3);
   xsave =
       uD.save + think_adj(A_WIS) + (level_adj[uD.clidx][LA_SAVE] * uD.lev / 3);
-  xdev = uD.save + think_adj(A_INT) +
-         (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
 
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-13.013s: %6d", "Fighting", xbth);
@@ -8925,7 +8928,7 @@ py_character()
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
   BufMsg(screen, "%-12.012s: %6d", "Disarming", xdis);
-  BufMsg(screen, "%-12.012s: %6d", "Magic Device", xdev);
+  BufMsg(screen, "%-12.012s: %6d", "Magic Device", udevice());
   BufPad(screen, MAX_A * 3, 49);
 
   line = 2 * MAX_A + 1;
@@ -9652,7 +9655,6 @@ try_disarm_trap(y, x)
 
   if (obj->tval == TV_VIS_TRAP) {
     obj_desc(obj, 1);
-    // TBD: div is used; verify this number is positive. clean-up code.
     chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
              level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
     if (countD.confusion) chance /= 8;
