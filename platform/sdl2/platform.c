@@ -937,7 +937,7 @@ platform_draw()
       char text = 'a' + finger_rowD;
       render_font_string(rendererD, &fontD, &text, 1, p);
     }
-    if (mode == 1) {
+    if (mode == 1 || mode == 2) {
       SDL_Rect r = {RS(buttonD[0], display_rectD)};
       SDL_Point p = {r.x + r.w / 2, r.y + r.h / 2};
       p.x -= width * 6 / 2;
