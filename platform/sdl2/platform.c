@@ -927,6 +927,7 @@ platform_draw()
       SDL_Rect r = {RS(buttonD[it], display_rectD)};
       SDL_RenderFillRect(rendererD, &r);
     }
+    SDL_SetRenderDrawColor(rendererD, C(whiteD));
 
     if (mode == 1) {
       SDL_Rect r = {RS(buttonD[1], display_rectD)};
@@ -936,7 +937,13 @@ platform_draw()
       char text = 'a' + finger_rowD;
       render_font_string(rendererD, &fontD, &text, 1, p);
     }
-    SDL_SetRenderDrawColor(rendererD, C(whiteD));
+    if (mode == 1) {
+      SDL_Rect r = {RS(buttonD[0], display_rectD)};
+      SDL_Point p = {r.x + r.w / 2, r.y + r.h / 2};
+      p.x -= width * 6 / 2;
+      p.y -= height / 2;
+      render_font_string(rendererD, &fontD, AP("cancel"), p);
+    }
   }
 
   {
@@ -1320,7 +1327,10 @@ SDL_Event event;
       int dx = dir_x(dir);
       int dy = dir_y(dir);
 
-      if (!dx && !dy) return ESCAPE;
+      if (!dx && !dy) {
+        overlay_actD = 'S';
+        return 'a' + finger_rowD;
+      }
       if (dx && !dy) {
         if (finger) {
           overlay_actD = 'd';
@@ -1338,8 +1348,7 @@ SDL_Event event;
       return (finger_colD == 0) ? '*' : '/';
     }
     if (touch == TOUCH_LB) {
-      overlay_actD = 'S';
-      return 'a' + finger_rowD;
+      return ESCAPE;
     }
     if (touch == TOUCH_RB) {
       return 'a' + finger_rowD;
