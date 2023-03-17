@@ -5536,54 +5536,32 @@ inven_ident(iidx)
   return used;
 }
 static int
-tohit_enchant(amount)
-{
-  int affect;
-  struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
-
-  if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-    obj_desc(i_ptr, 1);
-    affect = 0;
-    for (int it = 0; it < amount; ++it) {
-      affect += (enchant(&i_ptr->tohit, 10));
-    }
-    if (affect) {
-      MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
-      i_ptr->flags &= ~TR_CURSED;
-      calc_bonuses();
-    } else
-      msg_print("The enchantment fails.");
-    return TRUE;
-  }
-
-  return FALSE;
-}
-static int
-todam_enchant(amount)
+weapon_enchant(iidx, tohit, todam)
 {
   int affect, limit;
-  struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
 
-  if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-    obj_desc(i_ptr, 1);
-    if ((i_ptr->tval >= TV_HAFTED) && (i_ptr->tval <= TV_DIGGING))
+  if (iidx >= 0) {
+    struct objS* i_ptr = obj_get(invenD[iidx]);
+    if (may_equip(i_ptr->tval) == INVEN_WIELD) {
+      affect = 0;
       limit = i_ptr->damage[0] * i_ptr->damage[1];
-    else /* Bows' and arrows' enchantments should not be limited
-            by their low base damages */
-      limit = 10;
 
-    affect = 0;
-    for (int it = 0; it < amount; ++it) {
-      affect += (enchant(&i_ptr->todam, limit));
+      for (int it = 0; it < tohit; ++it) {
+        affect += (enchant(&i_ptr->tohit, 10));
+      }
+      for (int it = 0; it < todam; ++it) {
+        affect += (enchant(&i_ptr->todam, limit));
+      }
+
+      if (affect) {
+        obj_desc(i_ptr, 1);
+        MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
+        i_ptr->flags &= ~TR_CURSED;
+        calc_bonuses();
+      } else
+        msg_print("The enchantment fails.");
+      return TRUE;
     }
-
-    if (affect) {
-      MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
-      i_ptr->flags &= ~TR_CURSED;
-      calc_bonuses();
-    } else
-      msg_print("The enchantment fails.");
-    return TRUE;
   }
 
   return FALSE;
@@ -8079,10 +8057,16 @@ int *uy, *ux;
         /* Scrolls.  		*/
         switch (j) {
           case 1:
-            ident |= tohit_enchant(1);
+            ident |= TRUE;
+            choice_idx =
+                inven_choice("Which weapon do you wish to enchant?", "/*");
+            used_up = weapon_enchant(choice_idx, 1, 0);
             break;
           case 2:
-            ident |= todam_enchant(1);
+            ident |= TRUE;
+            choice_idx =
+                inven_choice("Which weapon do you wish to enchant?", "/*");
+            used_up = weapon_enchant(choice_idx, 0, 1);
             break;
           case 3:
             ident |= TRUE;
@@ -8210,8 +8194,10 @@ int *uy, *ux;
             ident |= dispel_creature(CD_UNDEAD, 60);
             break;
           case 33:
-            ident |= tohit_enchant(randint(2));
-            ident |= todam_enchant(randint(2));
+            ident |= TRUE;
+            choice_idx =
+                inven_choice("Which weapon do you wish to enchant?", "/*");
+            used_up = weapon_enchant(choice_idx, randint(2), randint(2));
             break;
           case 34:
             ident |= weapon_curse();
