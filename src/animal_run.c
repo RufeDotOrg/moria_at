@@ -7760,7 +7760,7 @@ void obj_study(obj) struct objS* obj;
           BufMsg(screen, "grants immunity to fear");
         }
         if (obj->flags & TR_FREE_ACT) {
-          BufMsg(screen, "immunity to paralysis");
+          BufMsg(screen, "grants immunity to paralysis");
         }
         if (obj->flags & TR_SEE_INVIS) {
           BufMsg(screen, "grants sight of invisible monsters");

@@ -5616,7 +5616,7 @@ static char* special_nameD[] = {
     "Resist Cold",
     "Resist Lightning",
     "Holy Avenger",
-    "Defender",
+    "Defense",
     "Slay Animal",
     "Slay Dragon",
     "Slay Evil",
