@@ -4424,6 +4424,12 @@ think_adj(stat)
     return (0);
 }
 int
+usave()
+{
+  return uD.save + think_adj(A_WIS) +
+         (level_adj[uD.clidx][LA_SAVE] * uD.lev / 3);
+}
+int
 udevice()
 {
   int xdev = uD.save + think_adj(A_INT) +
@@ -4431,6 +4437,14 @@ udevice()
 
   if (countD.confusion) xdev /= 2;
   return xdev;
+}
+int
+udisarm()
+{
+  int xdis = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+             level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
+  if (countD.confusion) xdis /= 8;
+  return xdis;
 }
 int
 tohit_adj()
@@ -5272,9 +5286,7 @@ inven_drop(iidx)
 BOOL
 player_saves()
 {
-  int adj = level_adj[uD.clidx][LA_SAVE];
-
-  return (randint(100) <= (uD.save + think_adj(A_WIS) + (adj * uD.lev / 3)));
+  return (randint(100) <= usave());
 }
 static int
 equip_count()
@@ -8869,7 +8881,7 @@ void
 py_character()
 {
   int line;
-  int xbth, xdis, xsave;
+  int xbth;
 
   line = 0;
 
@@ -8914,20 +8926,15 @@ py_character()
   BufMsg(screen, "%-15.015s: %6d", "Cur Mana", 0);
 
   xbth = uD.bth + uD.lev * level_adj[uD.clidx][LA_BTH];
-  xdis = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
-         (level_adj[uD.clidx][LA_DISARM] * uD.lev / 3);
-  xsave =
-      uD.save + think_adj(A_WIS) + (level_adj[uD.clidx][LA_SAVE] * uD.lev / 3);
 
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-13.013s: %6d", "Fighting", xbth);
-  BufMsg(screen, "%-13.013s: %6d", "Bows", 0);
-  BufMsg(screen, "%-13.013s: %6d", "Saving Throw", xsave);
+  BufMsg(screen, "%-13.013s: %6d", "Saving Throw", usave());
   BufPad(screen, MAX_A * 3, 23);
 
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
-  BufMsg(screen, "%-12.012s: %6d", "Disarming", xdis);
+  BufMsg(screen, "%-12.012s: %6d", "Disarming", udisarm());
   BufMsg(screen, "%-12.012s: %6d", "Magic Device", udevice());
   BufPad(screen, MAX_A * 3, 49);
 
@@ -9655,9 +9662,7 @@ try_disarm_trap(y, x)
 
   if (obj->tval == TV_VIS_TRAP) {
     obj_desc(obj, 1);
-    chance = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
-             level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
-    if (countD.confusion) chance /= 8;
+    chance = udisarm();
     if (chance + 100 - obj->level > randint(100)) {
       MSG("You have disarmed %s.", descD);
       uD.exp += obj->p1;
