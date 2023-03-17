@@ -435,7 +435,7 @@ viz_minimap()
         if (mon->mlit) {
           color = BRIGHT + MAGENTA;
         } else if (c_ptr->fval == BOUNDARY_WALL) {
-          if ((col % 8) == 4 || (row % 8) == 4) color = BRIGHT + WHITE;
+          color = BRIGHT + WHITE;
         } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
           color = BRIGHT + WHITE;
         } else if (CF_TEMP_LIGHT & c_ptr->cflag) {
