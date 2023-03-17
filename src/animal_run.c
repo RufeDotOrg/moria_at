@@ -5300,17 +5300,13 @@ equip_act(flag)
 static int
 equip_random()
 {
-  int tmp[6], k;
+  int slot[] = {
+      INVEN_BODY, INVEN_ARM, INVEN_OUTER, INVEN_HANDS, INVEN_HEAD, INVEN_FEET,
+  };
+  int k;
 
-  k = 0;
-  if (invenD[INVEN_BODY]) tmp[k++] = INVEN_BODY;
-  if (invenD[INVEN_ARM]) tmp[k++] = INVEN_ARM;
-  if (invenD[INVEN_OUTER]) tmp[k++] = INVEN_OUTER;
-  if (invenD[INVEN_HANDS]) tmp[k++] = INVEN_HANDS;
-  if (invenD[INVEN_HEAD]) tmp[k++] = INVEN_HEAD;
-  if (invenD[INVEN_FEET]) tmp[k++] = INVEN_FEET;
-  if (k > 0) return tmp[randint(k) - 1];
-  return -1;
+  k = slot[randint(AL(slot) - 1)];
+  return invenD[k] ? k : -1;
 }
 static int
 equip_enchant(iidx, amount)
@@ -9151,12 +9147,12 @@ minus_ac(verbose)
       calc_bonuses();
       minus = TRUE;
     } else {
-      if ((obj->idflag & ID_CORRODED) == 0 || verbose) {
-        obj->idflag |= ID_CORRODED;
-        MSG("Your %s is corroded, acid burns your flesh!", descD);
-      }
+      obj->idflag |= ID_CORRODED;
     }
   }
+
+  if (verbose && !minus) msg_print("Acid is on your flesh!");
+
   return (minus);
 }
 int
