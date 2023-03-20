@@ -10458,19 +10458,19 @@ mon_try_spell(midx, cdis)
         break;
       case 8: /*Light Wound   */
         if (player_saves())
-          msg_print("You resist the effects of the spell.");
+          msg_print("You resist!");
         else
           py_take_hit(damroll(3, 8));
         break;
       case 9: /*Serious Wound */
         if (player_saves())
-          msg_print("You resist the effects of the spell.");
+          msg_print("You resist!");
         else
           py_take_hit(damroll(8, 8));
         break;
       case 10: /*Hold Person    */
         if (py_tr(TR_FREE_ACT))
-          msg_print("You are unaffected by paralysis.");
+          msg_print("You resist!");
         else if (player_saves())
           msg_print("You resist the effects of the spell.");
         else if (countD.paralysis > 0)
@@ -10480,7 +10480,7 @@ mon_try_spell(midx, cdis)
         break;
       case 11: /*Cause Blindness*/
         if (player_saves())
-          msg_print("You resist the effects of the spell.");
+          msg_print("You resist!");
         else if (maD[MA_BLIND])
           ma_duration(MA_BLIND, 6);
         else {
@@ -10489,7 +10489,7 @@ mon_try_spell(midx, cdis)
         break;
       case 12: /*Cause Confuse */
         if (player_saves())
-          msg_print("You resist the effects of the spell.");
+          msg_print("You resist!");
         else if (countD.confusion)
           countD.confusion += 2;
         else
@@ -10497,7 +10497,7 @@ mon_try_spell(midx, cdis)
         break;
       case 13: /*Cause Fear    */
         if (player_saves())
-          msg_print("You resist the effects of the spell.");
+          msg_print("You resist!");
         else if (maD[MA_FEAR])
           ma_duration(MA_FEAR, 2);
         else
@@ -10515,9 +10515,9 @@ mon_try_spell(midx, cdis)
       } break;
       case 16: /*Slow Person   */
         if (py_tr(TR_FREE_ACT))
-          msg_print("You are unaffected by the spell.");
+          msg_print("You are unaffected.");
         else if (player_saves())
-          msg_print("You resist the effects of the spell.");
+          msg_print("You resist!");
         else if (py_affect(MA_SLOW))
           ma_duration(MA_SLOW, 2);
         else
