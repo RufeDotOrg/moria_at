@@ -596,16 +596,16 @@ overlay_autoselect()
         return;
       }
     }
-  }
-  if (overlay_usedD[row] <= 1) {
+
     for (int it = row - 1; it > 0; --it) {
       if (overlay_usedD[it] > 1) {
         finger_rowD = it;
         return;
       }
     }
+
+    finger_rowD = 0;
   }
-  finger_rowD = 0;
 }
 int
 mode_change()
@@ -637,7 +637,7 @@ mode_change()
     row_stateD[prev] = finger_rowD;
     finger_rowD = row_stateD[next];
     finger_colD = next == 'e' ? 1 : 0;
-    if (overlay_usedD[finger_rowD] == 0) overlay_autoselect();
+    overlay_autoselect();
   }
 
   return mode;
