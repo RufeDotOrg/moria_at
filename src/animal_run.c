@@ -7632,6 +7632,15 @@ void obj_study(obj) struct objS* obj;
     line = 0;
     BufMsg(screen, "%-17.017s: %d Lbs", "Weight",
            obj->number * obj->weight / 10);
+    if (tr_is_known(tr_ptr)) {
+      if (obj->tval == TV_WAND || obj->tval == TV_STAFF) {
+        int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
+        BufMsg(screen, "%-17.017s: %+d", "Device Skill", diff);
+      }
+    } else {
+      BufMsg(screen, "... has unknown effects!");
+    }
+
     if (obj->idflag & ID_REVEAL) {
       if (oset_tohitdam(obj)) {
         BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
@@ -7790,10 +7799,6 @@ void obj_study(obj) struct objS* obj;
         } else {
           BufMsg(screen, "... is unidentified!");
         }
-      }
-    } else {
-      if (!tr_is_known(tr_ptr)) {
-        BufMsg(screen, "... has unknown effects!");
       }
     }
     msg_pause();
