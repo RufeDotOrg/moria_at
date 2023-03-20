@@ -678,7 +678,7 @@ platform_draw()
   show_map = 1;
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
-  top = 2 * height;
+  top = scale_rectD.y + 6;
 
   SDL_SetRenderTarget(rendererD, text_textureD);
   SDL_RenderFillRect(rendererD, &text_rectD);
@@ -1175,7 +1175,7 @@ SDL_Event event;
 
     // Map position
     scale_rectD.x = columnD[1] * dw;
-    scale_rectD.y = dh - scale_rectD.h;
+    scale_rectD.y = fheight + (dh - scale_rectD.h - fheight) / 2;
 
     // Input constraints
     if (TOUCH) {
