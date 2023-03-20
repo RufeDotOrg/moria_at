@@ -7759,9 +7759,6 @@ void obj_study(obj) struct objS* obj;
         if (obj->flags & TR_RES_LIGHT) {
           BufMsg(screen, "grants resistence to lightning damage");
         }
-        if (obj->sn == SN_SU) {
-          BufMsg(screen, "grants resistence to life drain");
-        }
         if (obj->flags & TR_SEEING) {
           BufMsg(screen, "grants immunity to blindness");
         }
@@ -7782,6 +7779,16 @@ void obj_study(obj) struct objS* obj;
         }
         if (obj->flags & TR_CURSED) {
           BufMsg(screen, "... is known to be cursed!");
+        }
+        if (obj->sn == SN_SU) {
+          BufMsg(screen, "grants resistence to life drain");
+        }
+        if (obj->sn == SN_INFRAVISION) {
+          BufMsg(screen, "grants infra-vision up to %+d feet", obj->p1 * 10);
+        }
+        if (obj->sn == SN_LORDLINESS) {
+          BufMsg(screen, "improves skill with magic devices by %+d",
+                 obj->p1 * 4);
         }
       } else {
         if (obj->idflag & ID_CORRODED) {
