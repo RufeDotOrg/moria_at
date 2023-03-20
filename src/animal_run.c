@@ -3100,8 +3100,6 @@ place_gold(y, x)
     obj->level = 1;
 
     obj->cost += (8 * randint(obj->cost)) + randint(8);
-    if (uD.y == y && uD.x == x)
-      msg_print("You feel something roll beneath your feet.");
   }
 }
 void
@@ -3121,9 +3119,6 @@ place_object(y, x, must_be_small)
     obj->fx = x;
 
     magic_treasure(obj, dun_level);
-
-    if (uD.y == y && uD.x == x)
-      msg_print("You feel something roll beneath your feet.");
   }
 }
 void
@@ -4589,97 +4584,6 @@ test_hit(bth, level_adj, pth, ac)
   else
     return FALSE;
 }
-// TBD: rewrite
-static void
-summon_object(y, x, num, typ)
-{
-  int i, j, k;
-  struct caveS* c_ptr;
-  int real_typ;
-
-  if ((typ == 1) || (typ == 5))
-    real_typ = 1; /* typ == 1 -> objects */
-  else
-    real_typ = 256; /* typ == 2 -> gold */
-  do {
-    i = 0;
-    do {
-      j = y - 3 + randint(5);
-      k = x - 3 + randint(5);
-      if (in_bounds(j, k) && los(y, x, j, k)) {
-        c_ptr = &caveD[j][k];
-        if (c_ptr->fval <= MAX_OPEN_SPACE && (c_ptr->oidx == 0)) {
-          if ((typ == 3) || (typ == 7))
-          /* typ == 3 -> 50% objects, 50% gold */
-          {
-            if (randint(100) < 50)
-              real_typ = 1;
-            else
-              real_typ = 256;
-          }
-          if (real_typ == 1)
-            place_object(j, k, (typ >= 4));
-          else
-            place_gold(j, k);
-
-          if (c_ptr->cflag & CF_LIT) c_ptr->cflag |= CF_FIELDMARK;
-          i = 20;
-        }
-      }
-      i++;
-    } while (i <= 20);
-    num--;
-  } while (num != 0);
-}
-void
-mon_death(y, x, flags)
-{
-  int i, number;
-
-  if (flags & CM_CARRY_OBJ)
-    i = 1;
-  else
-    i = 0;
-  if (flags & CM_CARRY_GOLD) i += 2;
-  if (flags & CM_SMALL_OBJ) i += 4;
-
-  number = 0;
-  if ((flags & CM_60_RANDOM) && (randint(100) < 60)) number++;
-  if ((flags & CM_90_RANDOM) && (randint(100) < 90)) number++;
-  if (flags & CM_1D2_OBJ) number += randint(2);
-  if (flags & CM_2D2_OBJ) number += damroll(2, 2);
-  if (flags & CM_4D2_OBJ) number += damroll(4, 2);
-  if (number > 0) summon_object(y, x, number, i);
-
-  if (flags & CM_WIN)
-    if (!death) /* maybe the player died in mid-turn */
-    {
-      total_winner = TRUE;
-      msg_print("*** CONGRATULATIONS *** You have won the game.");
-    }
-}
-static int
-mon_take_hit(midx, dam)
-{
-  struct monS* mon = &entity_monD[midx];
-  struct creatureS* cre = &creatureD[mon->cidx];
-  int death_blow;
-
-  mon->msleep = 0;
-  mon->hp -= MAX(dam, 1);
-  death_blow = mon->hp < 0;
-
-  if (death_blow) {
-    // TBD: frac_exp
-    uD.exp += (cre->mexp * cre->level) / uD.lev;
-
-    caveD[mon->fy][mon->fx].midx = 0;
-    mon_death(mon->fy, mon->fx, cre->cmove);
-    mon_unuse(mon);
-  }
-
-  return death_blow;
-}
 BOOL
 is_a_vowel(chr)
 {
@@ -4948,6 +4852,106 @@ mon_desc(midx)
     snprintf(death_descD, AL(death_descD), "An %s", cre->name);
   else
     snprintf(death_descD, AL(death_descD), "A %s", cre->name);
+}
+// TBD: rewrite
+static void
+summon_object(y, x, num, typ)
+{
+  int i, j, k;
+  int py, px;
+  struct caveS* c_ptr;
+  struct objS* obj;
+  int real_typ;
+
+  py = uD.y;
+  px = uD.x;
+
+  if ((typ == 1) || (typ == 5))
+    real_typ = 1; /* typ == 1 -> objects */
+  else
+    real_typ = 256; /* typ == 2 -> gold */
+  do {
+    i = 0;
+    do {
+      j = y - 3 + randint(5);
+      k = x - 3 + randint(5);
+      if (in_bounds(j, k) && los(y, x, j, k)) {
+        c_ptr = &caveD[j][k];
+        if (c_ptr->fval <= MAX_OPEN_SPACE && (c_ptr->oidx == 0)) {
+          if ((typ == 3) || (typ == 7))
+          /* typ == 3 -> 50% objects, 50% gold */
+          {
+            if (randint(100) < 50)
+              real_typ = 1;
+            else
+              real_typ = 256;
+          }
+          if (real_typ == 1)
+            place_object(j, k, (typ >= 4));
+          else
+            place_gold(j, k);
+
+          if (j == py && k == px) {
+            msg_print("You feel something roll beneath your feet.");
+          }
+
+          if (c_ptr->cflag & CF_LIT) c_ptr->cflag |= CF_FIELDMARK;
+          i = 20;
+        }
+      }
+      i++;
+    } while (i <= 20);
+    num--;
+  } while (num != 0);
+}
+void
+mon_death(y, x, flags)
+{
+  int i, number;
+
+  if (flags & CM_CARRY_OBJ)
+    i = 1;
+  else
+    i = 0;
+  if (flags & CM_CARRY_GOLD) i += 2;
+  if (flags & CM_SMALL_OBJ) i += 4;
+
+  number = 0;
+  if ((flags & CM_60_RANDOM) && (randint(100) < 60)) number++;
+  if ((flags & CM_90_RANDOM) && (randint(100) < 90)) number++;
+  if (flags & CM_1D2_OBJ) number += randint(2);
+  if (flags & CM_2D2_OBJ) number += damroll(2, 2);
+  if (flags & CM_4D2_OBJ) number += damroll(4, 2);
+  if (number > 0) summon_object(y, x, number, i);
+
+  if (flags & CM_WIN)
+    if (!death) /* maybe the player died in mid-turn */
+    {
+      total_winner = TRUE;
+      msg_print("*** CONGRATULATIONS *** You have won the game.");
+    }
+}
+static int
+mon_take_hit(midx, dam)
+{
+  struct monS* mon = &entity_monD[midx];
+  struct creatureS* cre = &creatureD[mon->cidx];
+  int death_blow;
+
+  mon->msleep = 0;
+  mon->hp -= MAX(dam, 1);
+  death_blow = mon->hp < 0;
+
+  if (death_blow) {
+    // TBD: frac_exp
+    uD.exp += (cre->mexp * cre->level) / uD.lev;
+
+    caveD[mon->fy][mon->fx].midx = 0;
+    mon_death(mon->fy, mon->fx, cre->cmove);
+    mon_unuse(mon);
+  }
+
+  return death_blow;
 }
 void
 calc_hitpoints(level)
