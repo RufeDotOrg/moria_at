@@ -508,7 +508,7 @@ affect_update()
   // Blind
   active_affectD[idx++] = (maD[MA_BLIND] != 0);
 
-  active_affectD[idx++] = py_tr(TR_HERO);
+  active_affectD[idx++] = py_affect(MA_HERO) + (2 * py_affect(MA_SUPERHERO));
   active_affectD[idx++] = py_affect(MA_FEAR);
   active_affectD[idx++] = (countD.confusion != 0);
 
