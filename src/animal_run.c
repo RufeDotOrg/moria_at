@@ -5236,6 +5236,7 @@ void py_bonuses(obj, factor) struct objS* obj;
   }
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
   if (obj->sn == SN_INFRAVISION) uD.infra += amount;
+  if (obj->sn == SN_LORDLINESS) uD.save += (amount * 4);
 }
 void
 equip_takeoff(iidx, into_slot)
