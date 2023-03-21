@@ -5236,7 +5236,7 @@ void py_bonuses(obj, factor) struct objS* obj;
   }
   if (TR_STEALTH & obj->flags) uD.stealth += amount;
   if (obj->sn == SN_INFRAVISION) uD.infra += amount;
-  if (obj->sn == SN_LORDLINESS) uD.save += (amount * 4);
+  if (obj->sn == SN_LORDLINESS) uD.save += (amount * 10);
 }
 void
 equip_takeoff(iidx, into_slot)
@@ -7788,7 +7788,7 @@ void obj_study(obj) struct objS* obj;
         }
         if (obj->sn == SN_LORDLINESS) {
           BufMsg(screen, "improves skill with magic devices by %+d",
-                 obj->p1 * 4);
+                 obj->p1 * 10);
         }
       } else {
         if (obj->idflag & ID_CORRODED) {
