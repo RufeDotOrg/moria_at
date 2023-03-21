@@ -4419,29 +4419,6 @@ think_adj(stat)
     return (0);
 }
 int
-usave()
-{
-  return uD.save + think_adj(A_WIS) +
-         (level_adj[uD.clidx][LA_SAVE] * uD.lev / 3);
-}
-int
-udevice()
-{
-  int xdev = uD.save + think_adj(A_INT) +
-             (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
-
-  if (countD.confusion) xdev /= 2;
-  return xdev;
-}
-int
-udisarm()
-{
-  int xdis = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
-             level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
-  if (countD.confusion) xdis /= 8;
-  return xdis;
-}
-int
 tohit_adj()
 {
   int total, stat;
@@ -4566,6 +4543,29 @@ todam_adj()
     return (5);
   else
     return (6);
+}
+int
+usave()
+{
+  return uD.save + think_adj(A_WIS) +
+         (level_adj[uD.clidx][LA_SAVE] * uD.lev / 3);
+}
+int
+udevice()
+{
+  int xdev = uD.save + think_adj(A_INT) +
+             (level_adj[uD.clidx][LA_DEVICE] * uD.lev / 3);
+
+  if (countD.confusion) xdev /= 2;
+  return xdev;
+}
+int
+udisarm()
+{
+  int xdis = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
+             level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
+  if (countD.confusion) xdis /= 8;
+  return xdis;
 }
 int
 test_hit(bth, level_adj, pth, ac)
