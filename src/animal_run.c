@@ -7397,7 +7397,7 @@ inven_overlay(begin, end)
     }
 
     overlay_usedD[line] =
-        snprintf(overlayD[line], AL(overlayD[line]), "%c) %-47.047s%28.028s",
+        snprintf(overlayD[line], AL(overlayD[line]), "%c) %-47.047s%29.029s",
                  'a' + it - begin, descD, detailD);
     line += 1;
   }
@@ -11051,7 +11051,7 @@ pawn_display()
       if (sidx >= 0) {
         cost = store_value(sidx, obj_value(obj), -1);
         len = snprintf(overlayD[line], AL(overlayD[line]),
-                       "%c) %-46.046s%23.023s %5d", 'a' + it, descD, detailD,
+                       "%c) %-47.046s%23.023s %5d", 'a' + it, descD, detailD,
                        cost);
       }
     }
@@ -11078,7 +11078,7 @@ store_display(sidx)
       obj_detail(obj);
       len =
           snprintf(overlayD[line], AL(overlayD[line]),
-                   "%c) %-46.046s%23.023s %5d", 'a' + it, descD, detailD, cost);
+                   "%c) %-47.047s%23.023s %5d", 'a' + it, descD, detailD, cost);
     }
 
     overlay_usedD[line] = len;

@@ -651,7 +651,7 @@ alt_fill(y, x, left, top, width, height)
     SDL_Rect rect = {
         left,
         top + row * height,
-        (x + 1) * width,
+        x * width,
         height,
     };
     SDL_Color c = *(SDL_Color *)&lightingD[row & 0x1];
@@ -1192,11 +1192,12 @@ SDL_Event event;
         ppD[1 + it].y = center.y + sf * dist * aspectD;
       }
 
-      float c2w, c2h;
-      c2w = MIN(1.0 - c2, c1);
-      c2h = c2w * aspectD;
+      float c3w, c3h;
+      float c3 = c1 + AL(overlayD[0]) * cfD;
+      c3w = MIN(1.0 - c3, c1);
+      c3h = c3w * aspectD;
       for (int it = 0; it < AL(buttonD); ++it) {
-        SDL_FRect r = (SDL_FRect){.w = c2w * .5f, .h = c2h * .5f};
+        SDL_FRect r = (SDL_FRect){.w = c3w, .h = c3h};
         r.x = 1.0 - r.w * (2 - it);
         r.y = 1.0 - r.h * (1 + it);
         buttonD[it] = r;
