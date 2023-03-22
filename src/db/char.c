@@ -273,7 +273,7 @@ static char* spell_nameD[] = {
     "Holy Word",
 };
 
-static char stat_nameD[MAX_A][5] = {
+static char stat_abbrD[MAX_A][5] = {
     "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
 };
 static char vital_nameD[6][5] = {
@@ -292,7 +292,7 @@ static char* stat_gainD[] = {
     "Your body feels tingly",
     "Gee, ain't you cute",
 };
-static char* stat_restD[] = {
+static char* stat_nameD[] = {
     "strength",  "intelligence", "wisdom",
     "dexterity", "constitution", "charisma",
 };

@@ -169,7 +169,7 @@ platform_draw()
     memset(vital, 0x20202020, sizeof(vital));
     row = 0;
     for (it = 0; it < MAX_A; ++it, ++row) {
-      snprintf(vital[row], AL(vital[0]), "%-4.04s: %6d", stat_nameD[it],
+      snprintf(vital[row], AL(vital[0]), "%-4.04s: %6d", stat_abbrD[it],
                vital_statD[it]);
     }
     row += 1;

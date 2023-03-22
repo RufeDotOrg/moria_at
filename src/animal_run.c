@@ -5894,7 +5894,7 @@ res_stat(stat)
   if (statD.max_stat[stat] != statD.cur_stat[stat]) {
     statD.cur_stat[stat] = statD.max_stat[stat];
     set_use_stat(stat);
-    MSG("You feel your natural %s returning.", stat_restD[stat]);
+    MSG("You feel your natural %s returning.", stat_nameD[stat]);
     return TRUE;
   }
   return FALSE;
@@ -7713,7 +7713,7 @@ void obj_study(obj) struct objS* obj;
           if (obj->flags & (1 << it)) {
             BufMsg(screen, "%-17.017s: %+d", stat_nameD[it], obj->p1);
             if (obj->flags & TR_SUST_STAT)
-              BufMsg(screen, "%scannot be reduced", stat_nameD[it]);
+              BufMsg(screen, "%s cannot be reduced", stat_nameD[it]);
           }
         }
         if (obj->flags & TR_SLOW_DIGEST) {
@@ -8915,11 +8915,12 @@ py_character()
   BufMsg(screen, "%-13.013s: %d", "Weight", uD.wt);
   BufMsg(screen, "%-13.013s: %d", "Social Class", 1);
 
-  BufPad(screen, MAX_A, 57);
+  BufPad(screen, MAX_A, 48);
 
   line = 0;
   for (int it = 0; it < MAX_A; ++it) {
-    BufMsg(screen, "%-4.04s:%5d", stat_nameD[it], statD.use_stat[it]);
+    BufMsg(screen, "%c%-12.012s:%5d", stat_nameD[it][0] & ~0x20,
+           &stat_nameD[it][1], statD.use_stat[it]);
     if (statD.max_stat[it] > statD.cur_stat[it]) {
       BufLineAppend(screen, line - 1, "  %d", statD.max_stat[it]);
     }

@@ -730,7 +730,7 @@ platform_draw()
     alt_fill(AL(vitalD), 26 + 1, 0, top, width, height);
     for (int it = 0; it < MAX_A; ++it) {
       len = snprintf(AP(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
-                     vitalD[it], stat_nameD[it], vital_statD[it]);
+                     vitalD[it], stat_abbrD[it], vital_statD[it]);
       SDL_Point p = {width / 2, top + it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
