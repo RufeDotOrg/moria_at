@@ -4671,14 +4671,11 @@ void obj_detail(obj) struct objS* obj;
              obj->damage[0], obj->damage[1]);
     strcat(detailD, tmp_str);
   } else if (eqidx > INVEN_WIELD) {
-    if (obj->tval > TV_MIN_ENCHANT && obj->tval < TV_MAX_ENCHANT) {
+    if (obj->ac + obj->toac != 0) {
       if (reveal)
         snprintf(tmp_str, AL(tmp_str), " [%d%+d AC]", obj->ac, obj->toac);
       else
         snprintf(tmp_str, AL(tmp_str), " [%d AC]", obj->ac);
-      strcat(detailD, tmp_str);
-    } else if (reveal && obj->ac + obj->toac != 0) {
-      snprintf(tmp_str, AL(tmp_str), " [%+d AC]", obj->ac + obj->toac);
       strcat(detailD, tmp_str);
     }
   }
