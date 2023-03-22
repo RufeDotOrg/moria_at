@@ -7623,8 +7623,9 @@ void obj_study(obj) struct objS* obj;
 {
   struct treasureS* tr_ptr;
   int line;
-  int blows, eqidx;
+  int reveal, blows, eqidx;
 
+  reveal = obj->idflag & ID_REVEAL;
   if (obj->tidx) {
     tr_ptr = &treasureD[obj->tidx];
     screen_submodeD = 1;
@@ -7646,21 +7647,12 @@ void obj_study(obj) struct objS* obj;
       BufMsg(screen, "... has unknown effects!");
     }
 
-    if (obj->idflag & ID_REVEAL) {
+    if (reveal) {
       if (oset_tohitdam(obj)) {
         BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
         BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
       } else if (eqidx == INVEN_BODY) {
         BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-      }
-      if (obj->ac) {
-        BufMsg(screen, "%-17.017s: %+d", "Base Armor", obj->ac);
-      }
-      if (obj->toac) {
-        BufMsg(screen, "%-17.017s: %+d", "+ To Armor", obj->toac);
-      }
-      if (obj->toac || obj->ac || eqidx == INVEN_HEAD) {
-        BufMsg(screen, "%-17.017s: %+d", "Total Armor", obj->ac + obj->toac);
       }
     }
     if (eqidx == INVEN_WIELD) {
@@ -7692,6 +7684,16 @@ void obj_study(obj) struct objS* obj;
                blows * MAX((obj->damage[0] * obj->damage[1]), 1));
       }
     }
+    if (eqidx >= INVEN_WIELD) {
+      if (reveal && (obj->ac || obj->toac)) {
+        line += 1;
+        if (obj->ac) BufMsg(screen, "%-17.017s: %d", "Base Armor", obj->ac);
+        if (obj->toac)
+          BufMsg(screen, "%-17.017s: %+d", "+ To Armor", obj->toac);
+        BufMsg(screen, "%-17.017s: %+d", "Total Armor", obj->ac + obj->toac);
+      }
+    }
+
     if (eqidx >= INVEN_EQUIP) {
       line += 1;
       if (obj->idflag & ID_REVEAL) {
