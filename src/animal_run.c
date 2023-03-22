@@ -2317,14 +2317,16 @@ knowable_tval_subval(tval, sv)
   }
   return k;
 }
-int
-tr_known(tr_ptr)
-struct treasureS* tr_ptr;
+static void tr_unknown_sample(tr_ptr, unknown, sample) struct treasureS* tr_ptr;
+int* unknown;
+char** sample;
 {
   int subval = mask_subval(tr_ptr->subval);
   int k = knowable_tval_subval(tr_ptr->tval, subval);
-  if (k == 0) return 0;
-  return knownD[k - 1][subval];
+  int trk = 0;
+  if (k) trk = knownD[k - 1][subval];
+  *unknown = (trk & TRK_FULL) == 0;
+  *sample = trk & TRK_SAMPLE ? " {sampled}" : "";
 }
 BOOL
 tr_is_known(tr_ptr)
@@ -4692,15 +4694,18 @@ void obj_desc(obj, number) struct objS* obj;
   char* name;
   char* suffix;
   char* sample;
-  int trk, indexx, unknown;
+  int indexx, unknown;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
   name = tr_ptr->name;
-  suffix = obj->sn && (obj->idflag & ID_REVEAL) ? special_nameD[obj->sn] : 0;
-  trk = tr_known(tr_ptr);
-  unknown = !((trk & TRK_FULL) || (obj->idflag & ID_REVEAL));
-  sample = trk & TRK_SAMPLE ? " {sampled}" : "";
+  suffix = 0;
+  tr_unknown_sample(tr_ptr, &unknown, &sample);
+
+  if (obj->idflag & ID_REVEAL) {
+    unknown = 0;
+    suffix = special_nameD[obj->sn];
+  }
   indexx = mask_subval(obj->subval);
   switch (obj->tval) {
     case TV_MISC:
