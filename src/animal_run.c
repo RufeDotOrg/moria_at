@@ -1613,7 +1613,6 @@ m_bonus(base, max_std, level)
   x = (ABS(tmp) / 10) + base;
   return (x);
 }
-#define SN(x) special_nameD[x]
 void magic_treasure(obj, level) struct objS* obj;
 {
   int chance, special, cursed, i;
@@ -4652,11 +4651,6 @@ void obj_detail(obj) struct objS* obj;
     } else if (obj->tval == TV_LIGHT) {
       snprintf(tmp_str, AL(tmp_str), " (%+d,+0)", light_adj(obj->p1));
       strcat(detailD, tmp_str);
-    } else if (eqidx >= INVEN_WIELD) {
-      if (obj->p1 && ((TR_P1 & obj->flags) || obj->sn)) {
-        snprintf(tmp_str, AL(tmp_str), " (%+d)", obj->p1);
-        strcat(detailD, tmp_str);
-      }
     }
 
     if (oset_tohitdam(obj)) {
@@ -4694,17 +4688,19 @@ void obj_desc(obj, number) struct objS* obj;
   char* name;
   char* suffix;
   char* sample;
-  int indexx, unknown;
+  int indexx, unknown, p1;
   struct treasureS* tr_ptr;
 
   tr_ptr = &treasureD[obj->tidx];
   name = tr_ptr->name;
-  suffix = 0;
-  tr_unknown_sample(tr_ptr, &unknown, &sample);
 
+  suffix = 0;
+  p1 = 0;
+  tr_unknown_sample(tr_ptr, &unknown, &sample);
   if (obj->idflag & ID_REVEAL) {
     unknown = 0;
     suffix = special_nameD[obj->sn];
+    p1 = obj->p1;
   }
   indexx = mask_subval(obj->subval);
   switch (obj->tval) {
@@ -4718,6 +4714,7 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_SWORD:
       break;
     case TV_DIGGING:
+      suffix = "digging";
       break;
     case TV_BOOTS:
     case TV_GLOVES:
@@ -4752,6 +4749,7 @@ void obj_desc(obj, number) struct objS* obj;
       } else {
         name = "& Staff";
         suffix = tr_ptr->name;
+        p1 = 0;
       }
       break;
     case TV_WAND:
@@ -4761,6 +4759,7 @@ void obj_desc(obj, number) struct objS* obj;
       } else {
         name = "& Wand";
         suffix = tr_ptr->name;
+        p1 = 0;
       }
       break;
     case TV_SCROLL1:
@@ -4782,6 +4781,7 @@ void obj_desc(obj, number) struct objS* obj;
       } else {
         name = "& Potion~";
         suffix = tr_ptr->name;
+        p1 = 0;
       }
       break;
     case TV_FLASK:
@@ -4798,6 +4798,7 @@ void obj_desc(obj, number) struct objS* obj;
           name = 0;
         } else {
           suffix = tr_ptr->name;
+          p1 = 0;
           if (indexx <= 15)
             name = "& Mushroom~";
           else if (indexx <= 20)
@@ -4833,10 +4834,14 @@ void obj_desc(obj, number) struct objS* obj;
       snprintf(descD, AL(descD), "Error in objdes(): %d", obj->tval);
       return;
   }
-  if (suffix)
-    snprintf(descD, AL(descD), "%s of %s", name, suffix);
-  else if (name)
+  if (suffix) {
+    if (p1)
+      snprintf(descD, AL(descD), "%s of %s (%+d)", name, suffix, p1);
+    else
+      snprintf(descD, AL(descD), "%s of %s", name, suffix);
+  } else if (name) {
     strcpy(descD, name);
+  }
 
   desc_fixup(number);
 }
@@ -7397,7 +7402,7 @@ inven_overlay(begin, end)
     }
 
     overlay_usedD[line] =
-        snprintf(overlayD[line], AL(overlayD[line]), "%c) %-47.047s%29.029s",
+        snprintf(overlayD[line], AL(overlayD[line]), "%c) %-52.052s%24.024s",
                  'a' + it - begin, descD, detailD);
     line += 1;
   }
@@ -11051,7 +11056,7 @@ pawn_display()
       if (sidx >= 0) {
         cost = store_value(sidx, obj_value(obj), -1);
         len = snprintf(overlayD[line], AL(overlayD[line]),
-                       "%c) %-47.046s%23.023s %5d", 'a' + it, descD, detailD,
+                       "%c) %-52.052s%18.018s %5d", 'a' + it, descD, detailD,
                        cost);
       }
     }
@@ -11078,7 +11083,7 @@ store_display(sidx)
       obj_detail(obj);
       len =
           snprintf(overlayD[line], AL(overlayD[line]),
-                   "%c) %-47.047s%23.023s %5d", 'a' + it, descD, detailD, cost);
+                   "%c) %-52.052s%18.018s %5d", 'a' + it, descD, detailD, cost);
     }
 
     overlay_usedD[line] = len;
