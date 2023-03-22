@@ -5160,6 +5160,9 @@ ma_duration(maidx, nturn)
   } else if (maidx == MA_FEAR && py_tr(TR_HERO)) {
     msg_print("A hero recovers quickly.");
     nturn = 0;
+  } else if (maidx == MA_DETECT_INVIS || maidx == MA_DETECT_EVIL) {
+    // expiration occurs on the rising edge of ma_tick()
+    nturn += 1;
   }
 
   maD[maidx] += 2 * nturn;
@@ -11389,7 +11392,7 @@ dungeon()
     }
     teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
     tick();
-    ma_tick();
+    ma_tick();  // falling
     inven_check_weight();
     inven_check_light();
 
@@ -11764,7 +11767,7 @@ dungeon()
       }
     } while (!turn_flag);
 
-    ma_tick();
+    ma_tick();  // rising
     if (!new_level_flag) creatures();
   } while (!new_level_flag);
 }
