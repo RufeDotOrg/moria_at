@@ -7729,7 +7729,7 @@ void obj_study(obj) struct objS* obj;
           BufMsg(screen, "increases health regeneration");
         }
         if (obj->flags & TR_SPEED) {
-          BufMsg(screen, "increases speed");
+          BufMsg(screen, "increases movement and attack speed");
         }
 
         if (obj->flags & TR_EGO_WEAPON) {
@@ -7779,10 +7779,10 @@ void obj_study(obj) struct objS* obj;
           BufMsg(screen, "grants sight of invisible monsters");
         }
         if (obj->flags & TR_FFALL) {
-          BufMsg(screen, "prevents falling");
+          BufMsg(screen, "prevents falling through trap doors");
         }
         if (obj->flags & TR_SLOWNESS) {
-          BufMsg(screen, "slows you down");
+          BufMsg(screen, "slows movement and attack speed");
         }
         if (obj->flags & TR_CURSED) {
           BufMsg(screen, "... is known to be cursed!");
