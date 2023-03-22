@@ -16,7 +16,7 @@ EXTERN int active_affectD[12];
 EXTERN char screenD[22][98];
 EXTERN int screen_usedD[AL(screenD)];
 EXTERN int screen_submodeD;
-EXTERN char overlayD[22][72];
+EXTERN char overlayD[22][80];
 EXTERN int overlay_usedD[AL(overlayD)];
 EXTERN int overlay_submodeD;
 EXTERN int overlay_actD;
