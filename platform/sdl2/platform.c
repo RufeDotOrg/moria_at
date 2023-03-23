@@ -974,7 +974,7 @@ platform_draw()
   {
     int bar = AL(versionD) * width;
     SDL_Point p = {
-        (AL(msg_cqD[0]) + 1) * width + 2 * 6,
+        AL(msg_cqD[0]) * width + 2 * 6,
         0,
     };
     if (msg_moreD) {
@@ -997,7 +997,7 @@ platform_draw()
     SDL_Rect rect = {
         0,
         0,
-        (AL(msg_cqD[0]) + 1) * width,
+        (AL(msg_cqD[0])) * width,
         height,
     };
     SDL_Color c = *(SDL_Color *)&lightingD[2];
