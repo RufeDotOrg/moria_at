@@ -2586,6 +2586,14 @@ struct objS* obj;
   return FALSE;
 }
 int
+oset_enchant(obj)
+struct objS* obj;
+{
+  uint32_t tv = obj->tval;
+  tv -= TV_MIN_ENCHANT;
+  return tv <= (TV_MAX_ENCHANT - TV_MIN_ENCHANT);
+}
+int
 oset_gold(obj)
 struct objS* obj;
 {
@@ -5598,6 +5606,33 @@ weapon_enchant(iidx, tohit, todam)
 
   return FALSE;
 }
+static int
+weapon_special(iidx, lev)
+{
+  struct objS* obj;
+
+  if (iidx >= 0) {
+    obj = obj_get(invenD[iidx]);
+
+    if (oset_enchant(obj)) {
+      int tidx = obj->tidx;
+      if (iidx >= INVEN_EQUIP) py_bonuses(obj, -1);
+      do {
+        tr_obj_copy(tidx, obj);
+        magic_treasure(obj, lev);
+      } while (!obj->sn || obj->cost <= 0);
+      obj->idflag = ID_REVEAL;
+      if (iidx >= INVEN_EQUIP) py_bonuses(obj, 1);
+
+      obj_desc(obj, 1);
+      MSG("Your %s glows brightly.", descD);
+
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
 static void
 py_take_hit(damage)
 {
@@ -8242,8 +8277,8 @@ int *uy, *ux;
           case 33:
             ident |= TRUE;
             choice_idx =
-                inven_choice("Which weapon do you wish to enchant?", "/*");
-            used_up = weapon_enchant(choice_idx, randint(2), randint(2));
+                inven_choice("Which weapon do you wish to *Enchant*?", "/*");
+            used_up = weapon_special(choice_idx, i_ptr->level);
             break;
           case 34:
             ident |= weapon_curse();
