@@ -852,7 +852,7 @@ platform_draw()
       SDL_Color c = {50, 0, 0, 0};
       SDL_SetRenderDrawColor(rendererD, C(c));
 
-      for (int it = 0; it < AL(ppD); ++it) {
+      for (int it = 1; it < AL(ppD); ++it) {
         if (ppD[it].x || ppD[it].y) {
           SDL_FRect r = rect_from_pp(it);
           SDL_Rect ppr = {RS(r, display_rectD)};
@@ -862,6 +862,32 @@ platform_draw()
           }
         }
       }
+    }
+    if (msg_moreD) {
+      static int tapD;
+      tapD = (tapD + 1) % 4;
+      switch (tapD) {
+        case 0:
+          font_colorD = *(SDL_Color *)&paletteD[RED];
+          break;
+        case 1:
+          font_colorD = *(SDL_Color *)&paletteD[GREEN];
+          break;
+        case 2:
+          font_colorD = *(SDL_Color *)&paletteD[BLUE];
+          break;
+        case 3:
+          font_colorD = *(SDL_Color *)&paletteD[WHITE];
+          break;
+      }
+
+      static char moreD[] = "-more-";
+      SDL_Point p = {ppD[0].x * display_rectD.w, ppD[0].y * display_rectD.h};
+      p.x -= AL(moreD) / 2 * width;
+      p.y -= height / 2;
+      render_font_string(rendererD, &fontD, AP(moreD), p);
+
+      font_colorD = whiteD;
     }
   }
 

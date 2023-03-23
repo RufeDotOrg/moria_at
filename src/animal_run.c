@@ -554,8 +554,9 @@ msg_pause()
     msg_moreD = 1;
 
     // wait for user to acknowledge prior buffer -more-
-    draw();
+    if (!SDL) draw();
     do {
+      if (SDL) draw();
       c = inkey();
       if (c == ESCAPE) break;
       if (c == CTRL('c')) break;
