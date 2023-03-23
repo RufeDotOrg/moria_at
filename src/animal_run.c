@@ -10483,7 +10483,7 @@ mon_try_spell(midx, cdis)
   chance = cr_ptr->spells & CS_FREQ;
 
   /* confused monsters don't cast; including turn undead */
-  if (mon->mconfused || mon->msilenced) took_turn = FALSE;
+  if (mon->mconfused) took_turn = FALSE;
   /* 1 in x chance of casting spell  	   */
   else if (randint(chance) != 1)
     took_turn = FALSE;
@@ -10495,149 +10495,152 @@ mon_try_spell(midx, cdis)
     took_turn = FALSE;
   else /* Creature is going to cast a spell   */
   {
-    took_turn = TRUE;
-    mon_desc(midx);
-
     /* Extract all possible spells into spell_choice */
     i = (cr_ptr->spells & ~CS_FREQ);
+    if (mon->msilenced) i &= ~CS_SPELLS;
     k = 0;
     while (i != 0) {
       spell_choice[k] = bit_pos(&i);
       k++;
     }
-    /* Choose a spell to cast  		       */
-    thrown_spell = spell_choice[randint(k) - 1];
-    spell_index = thrown_spell - 4;
-    ++thrown_spell;
 
-    if (spell_index < AL(mon_spell_nameD)) {
-      MSG("%s casts a spell of %s.", descD, mon_spell_nameD[spell_index]);
-    }
+    if (k == 0) {
+      took_turn = FALSE;
+    } else {
+      took_turn = TRUE;
 
-    /* Cast the spell.  		     */
-    switch (thrown_spell) {
-      case 5: /*Teleport Short*/
-        teleport_away(midx, 5);
-        break;
-      case 6: /*Teleport Long */
-        teleport_away(midx, MAX_SIGHT);
-        break;
-      case 7: /*Teleport To (aka. Summon)  */
-        teleport_to(mon->fy, mon->fx);
-        break;
-      case 8: /*Light Wound   */
-        if (player_saves())
-          msg_print("You resist!");
-        else
-          py_take_hit(damroll(3, 8));
-        break;
-      case 9: /*Serious Wound */
-        if (player_saves())
-          msg_print("You resist!");
-        else
-          py_take_hit(damroll(8, 8));
-        break;
-      case 10: /*Hold Person    */
-        if (py_tr(TR_FREE_ACT))
-          msg_print("You resist!");
-        else if (player_saves())
-          msg_print("You resist the effects of the spell.");
-        else if (countD.paralysis > 0)
-          countD.paralysis += 2;
-        else
-          countD.paralysis = randint(5) + 4;
-        break;
-      case 11: /*Cause Blindness*/
-        if (player_saves())
-          msg_print("You resist!");
-        else if (maD[MA_BLIND])
-          ma_duration(MA_BLIND, 6);
-        else {
-          ma_duration(MA_BLIND, 12 + randint(3));
-        }
-        break;
-      case 12: /*Cause Confuse */
-        if (player_saves())
-          msg_print("You resist!");
-        else if (countD.confusion)
-          countD.confusion += 2;
-        else
-          countD.confusion = randint(5) + 3;
-        break;
-      case 13: /*Cause Fear    */
-        if (player_saves())
-          msg_print("You resist!");
-        else if (maD[MA_FEAR])
-          ma_duration(MA_FEAR, 2);
-        else
-          ma_duration(MA_FEAR, randint(5) + 3);
-        break;
-      case 14: /*Summon Monster*/
-      {
-        int midx = summon_monster(uD.y, uD.x);
-        update_mon(midx);
-      } break;
-      case 15: /*Summon Undead*/
-      {
-        int midx = summon_undead(uD.y, uD.x);
-        update_mon(midx);
-      } break;
-      case 16: /*Slow Person   */
-        if (py_tr(TR_FREE_ACT))
-          msg_print("You are unaffected.");
-        else if (player_saves())
-          msg_print("You resist!");
-        else if (py_affect(MA_SLOW))
-          ma_duration(MA_SLOW, 2);
-        else
-          ma_duration(MA_SLOW, randint(5) + 3);
-        break;
-      case 17: /*Drain Mana   */
-        //   if (uD.cmana > 0) {
-        //     disturb(1, 0);
-        //     MSG("%sdraws psychic energy from you!", descD);
-        //     if (mon->mlit) {
-        //       MSG("%sappears healthier.", descD);
-        //     }
-        //     r1 = (randint(cr_ptr->level) >> 1) + 1;
-        //     if (r1 > uD.cmana) {
-        //       r1 = uD.cmana;
-        //       uD.cmana = 0;
-        //       uD.cmana_frac = 0;
-        //     } else
-        //       uD.cmana -= r1;
-        //     mon->hp += 6 * (r1);
-        //   }
-        break;
-      case 20: /*Breath Light */
-        MSG("[%d] %s breathes lightning.", mon->hp, descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_LIGHTNING,
-                       (mon->hp >> (1 + maxlev)));
-        break;
-      case 21: /*Breath Gas   */
-        MSG("[%d] %s breathes gas.", mon->hp, descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS,
-                       (mon->hp >> (1 + maxlev)));
-        break;
-      case 22: /*Breath Acid   */
-        MSG("[%d] %s breathes acid.", mon->hp, descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID,
-                       (mon->hp >> (1 + maxlev)));
-        break;
-      case 23: /*Breath Frost */
-        MSG("[%d] %s breathes frost.", mon->hp, descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST,
-                       (mon->hp >> (1 + maxlev)));
-        break;
-      case 24: /*Breath Fire   */
-        MSG("[%d] %s breathes fire.", mon->hp, descD);
-        mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE,
-                       (mon->hp >> (1 + maxlev)));
-        break;
-      default:
-        MSG("%s cast unknown spell.", descD);
+      thrown_spell = spell_choice[randint(k) - 1];
+      spell_index = thrown_spell - 4;
+      ++thrown_spell;
+
+      mon_desc(midx);
+      if (spell_index < AL(mon_spell_nameD)) {
+        MSG("%s casts a spell of %s.", descD, mon_spell_nameD[spell_index]);
+      }
+
+      switch (thrown_spell) {
+        case 5: /*Teleport Short*/
+          teleport_away(midx, 5);
+          break;
+        case 6: /*Teleport Long */
+          teleport_away(midx, MAX_SIGHT);
+          break;
+        case 7: /*Teleport To (aka. Summon)  */
+          teleport_to(mon->fy, mon->fx);
+          break;
+        case 8: /*Light Wound   */
+          if (player_saves())
+            msg_print("You resist!");
+          else
+            py_take_hit(damroll(3, 8));
+          break;
+        case 9: /*Serious Wound */
+          if (player_saves())
+            msg_print("You resist!");
+          else
+            py_take_hit(damroll(8, 8));
+          break;
+        case 10: /*Hold Person    */
+          if (py_tr(TR_FREE_ACT))
+            msg_print("You resist!");
+          else if (player_saves())
+            msg_print("You resist the effects of the spell.");
+          else if (countD.paralysis > 0)
+            countD.paralysis += 2;
+          else
+            countD.paralysis = randint(5) + 4;
+          break;
+        case 11: /*Cause Blindness*/
+          if (player_saves())
+            msg_print("You resist!");
+          else if (maD[MA_BLIND])
+            ma_duration(MA_BLIND, 6);
+          else {
+            ma_duration(MA_BLIND, 12 + randint(3));
+          }
+          break;
+        case 12: /*Cause Confuse */
+          if (player_saves())
+            msg_print("You resist!");
+          else if (countD.confusion)
+            countD.confusion += 2;
+          else
+            countD.confusion = randint(5) + 3;
+          break;
+        case 13: /*Cause Fear    */
+          if (player_saves())
+            msg_print("You resist!");
+          else if (maD[MA_FEAR])
+            ma_duration(MA_FEAR, 2);
+          else
+            ma_duration(MA_FEAR, randint(5) + 3);
+          break;
+        case 14: /*Summon Monster*/
+        {
+          int midx = summon_monster(uD.y, uD.x);
+          update_mon(midx);
+        } break;
+        case 15: /*Summon Undead*/
+        {
+          int midx = summon_undead(uD.y, uD.x);
+          update_mon(midx);
+        } break;
+        case 16: /*Slow Person   */
+          if (py_tr(TR_FREE_ACT))
+            msg_print("You are unaffected.");
+          else if (player_saves())
+            msg_print("You resist!");
+          else if (py_affect(MA_SLOW))
+            ma_duration(MA_SLOW, 2);
+          else
+            ma_duration(MA_SLOW, randint(5) + 3);
+          break;
+        case 17: /*Drain Mana   */
+          //   if (uD.cmana > 0) {
+          //     disturb(1, 0);
+          //     MSG("%sdraws psychic energy from you!", descD);
+          //     if (mon->mlit) {
+          //       MSG("%sappears healthier.", descD);
+          //     }
+          //     r1 = (randint(cr_ptr->level) >> 1) + 1;
+          //     if (r1 > uD.cmana) {
+          //       r1 = uD.cmana;
+          //       uD.cmana = 0;
+          //       uD.cmana_frac = 0;
+          //     } else
+          //       uD.cmana -= r1;
+          //     mon->hp += 6 * (r1);
+          //   }
+          break;
+        case 20: /*Breath Light */
+          MSG("[%d] %s breathes lightning.", mon->hp, descD);
+          mon_breath_dam(midx, mon->fy, mon->fx, GF_LIGHTNING,
+                         (mon->hp >> (1 + maxlev)));
+          break;
+        case 21: /*Breath Gas   */
+          MSG("[%d] %s breathes gas.", mon->hp, descD);
+          mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS,
+                         (mon->hp >> (1 + maxlev)));
+          break;
+        case 22: /*Breath Acid   */
+          MSG("[%d] %s breathes acid.", mon->hp, descD);
+          mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID,
+                         (mon->hp >> (1 + maxlev)));
+          break;
+        case 23: /*Breath Frost */
+          MSG("[%d] %s breathes frost.", mon->hp, descD);
+          mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST,
+                         (mon->hp >> (1 + maxlev)));
+          break;
+        case 24: /*Breath Fire   */
+          MSG("[%d] %s breathes fire.", mon->hp, descD);
+          mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE,
+                         (mon->hp >> (1 + maxlev)));
+          break;
+        default:
+          MSG("%s cast unknown spell.", descD);
+      }
     }
-    /* End of spells  			       */
   }
   return took_turn;
 }
