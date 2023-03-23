@@ -972,44 +972,39 @@ platform_draw()
   }
 
   {
-    int bar = AL(versionD) * width;
-    SDL_Point p = {
-        AL(msg_cqD[0]) * width + 2 * 6,
-        0,
-    };
-    if (msg_moreD) {
-      len = snprintf(AP(tmp), "-more %d-", msg_moreD);
-    } else {
-      len = snprintf(AP(tmp), "turn:%7d", turnD);
-    }
-    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
-    SDL_Rect rect = {
-        p.x,
-        p.y,
-        len * width,
-        height,
-    };
-    rect_frame(rect, 1);
-  }
+    char *msg = AS(msg_cqD, msg_writeD);
+    int msg_used = AS(msglen_cqD, msg_writeD);
 
-  {
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
     SDL_Rect rect = {
         0,
         0,
-        (AL(msg_cqD[0])) * width,
+        msg_used * width,
         height,
     };
+    SDL_Rect rect2 = {
+        rect.w + 2 * 6,
+        0,
+        (AL("-more-") - 1) * width,
+        height,
+    };
+
     SDL_Color c = *(SDL_Color *)&lightingD[2];
     SDL_SetRenderDrawColor(rendererD, C(c));
+
     SDL_RenderFillRect(rendererD, &rect);
+    if (msg_moreD) SDL_RenderFillRect(rendererD, &rect2);
+
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
     rect_frame(rect, 1);
+    if (msg_moreD) rect_frame(rect2, 1);
 
-    char *msg = AS(msg_cqD, msg_writeD);
-    int msg_used = AS(msglen_cqD, msg_writeD);
     if (msg_used) {
       render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
+      if (msg_moreD) {
+        SDL_Point p = {rect2.x, 0};
+        render_font_string(rendererD, &fontD, AP("-more-"), p);
+      }
     } else if (show_map) {
       msg = AS(msg_cqD, msg_writeD - 1);
       msg_used = AS(msglen_cqD, msg_writeD - 1);
