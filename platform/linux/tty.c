@@ -149,6 +149,9 @@ platform_draw()
   if (msg_used) {
     buffer_append(msg, msg_used);
   }
+  if (msg_moreD) {
+    buffer_append(AP(" -more-"));
+  }
   buffer_append(AP(tc_crlfD));
   if (screen_usedD[0]) {
     for (int row = 0; row < AL(screenD); ++row) {

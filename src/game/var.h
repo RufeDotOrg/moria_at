@@ -27,6 +27,7 @@ EXTERN uint32_t zoom_factorD;
 // Gameplay messages write to a circular queue
 EXTERN char msg_cqD[MAX_MSG][98];
 EXTERN char msglen_cqD[MAX_MSG];
+EXTERN int msg_moreD;
 EXTERN uint32_t msg_writeD;
 EXTERN uint32_t msg_countD;
 

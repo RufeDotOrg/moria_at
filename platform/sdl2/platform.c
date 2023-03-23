@@ -951,7 +951,12 @@ platform_draw()
         (AL(msg_cqD[0]) + 1) * width + 2 * 6,
         0,
     };
-    len = snprintf(AP(tmp), "turn:%7d", turnD);
+    if (msg_moreD) {
+      memcpy(tmp, AP("-more-"));
+      len = AL("-more-");
+    } else {
+      len = snprintf(AP(tmp), "turn:%7d", turnD);
+    }
     if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     SDL_Rect rect = {
         p.x,

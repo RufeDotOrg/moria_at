@@ -14,10 +14,9 @@ static int find_prevdir;
 
 static char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
-static char log_extD[] = " -more-";
 #define MSG(x, ...)                                             \
   {                                                             \
-    char vtype[MAX_MSGLEN - AL(log_extD)];                      \
+    char vtype[MAX_MSGLEN];                                     \
     int len = snprintf(vtype, sizeof(vtype), x, ##__VA_ARGS__); \
     len = CLAMP(len, 0, sizeof(vtype) - 1);                     \
     vtype[len] = 0;                                             \
@@ -552,9 +551,7 @@ msg_pause()
   log_used = AS(msglen_cqD, msg_writeD);
   if (log_used) {
     log = AS(msg_cqD, msg_writeD);
-    log_used = MIN(log_used, MAX_MSGLEN - AL(log_extD));
-    log_used += snprintf(log + log_used, AL(log_extD), "%s", log_extD);
-    AS(msglen_cqD, msg_writeD) = log_used;
+    msg_moreD = 1;
 
     // wait for user to acknowledge prior buffer -more-
     draw();
@@ -564,15 +561,17 @@ msg_pause()
       if (c == CTRL('c')) break;
     } while (c != ' ');
     msg_advance();
+    msg_moreD = 0;
   }
 }
+
 static void msg_game(msg, msglen) char* msg;
 {
   char* log;
   int log_used;
 
   log_used = AS(msglen_cqD, msg_writeD);
-  if (log_used + msglen + AL(log_extD) >= MAX_MSGLEN) {
+  if (log_used + msglen >= MAX_MSGLEN) {
     msg_pause();
     msg_countD += 1;
   }
