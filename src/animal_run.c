@@ -551,7 +551,7 @@ msg_pause()
   log_used = AS(msglen_cqD, msg_writeD);
   if (log_used) {
     log = AS(msg_cqD, msg_writeD);
-    msg_moreD = 1;
+    msg_moreD += 1;
 
     // wait for user to acknowledge prior buffer -more-
     if (!SDL) draw();
@@ -562,7 +562,6 @@ msg_pause()
       if (c == CTRL('c')) break;
     } while (c != ' ');
     msg_advance();
-    msg_moreD = 0;
   }
 }
 
@@ -574,7 +573,6 @@ static void msg_game(msg, msglen) char* msg;
   log_used = AS(msglen_cqD, msg_writeD);
   if (log_used + msglen >= MAX_MSGLEN) {
     msg_pause();
-    msg_countD += 1;
   }
 
   log = AS(msg_cqD, msg_writeD);
@@ -582,7 +580,7 @@ static void msg_game(msg, msglen) char* msg;
   if (log_used) {
     log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, " %s", msg);
   } else {
-    log_used = snprintf(log, MAX_MSGLEN, "%d| %s", msg_countD, msg);
+    log_used = snprintf(log, MAX_MSGLEN, "%s", msg);
   }
 
   if (log_used > 0) AS(msglen_cqD, msg_writeD) = log_used;
@@ -11428,7 +11426,7 @@ dungeon()
   do {
     CCM(CCM_HOTLOAD, platform_update());
 
-    msg_countD = 1;
+    msg_moreD = 0;
     turnD += 1;
     if (dun_level != 0) {
       if ((turnD & ~-1024) == 0) store_maint();

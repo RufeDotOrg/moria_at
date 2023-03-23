@@ -978,8 +978,7 @@ platform_draw()
         0,
     };
     if (msg_moreD) {
-      memcpy(tmp, AP("-more-"));
-      len = AL("-more-");
+      len = snprintf(AP(tmp), "-more %d-", msg_moreD);
     } else {
       len = snprintf(AP(tmp), "turn:%7d", turnD);
     }
