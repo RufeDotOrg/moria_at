@@ -5607,27 +5607,32 @@ weapon_enchant(iidx, tohit, todam)
   return FALSE;
 }
 static int
-weapon_special(iidx, lev)
+make_special_type(iidx, lev, weapon_enchant)
 {
+  int is_weapon, valid;
   struct objS* obj;
 
   if (iidx >= 0) {
     obj = obj_get(invenD[iidx]);
+    if (obj->tval != TV_DIGGING) {
+      is_weapon = (INVEN_WIELD == may_equip(obj->tval));
+      valid = (is_weapon == weapon_enchant);
 
-    if (oset_enchant(obj)) {
-      int tidx = obj->tidx;
-      if (iidx >= INVEN_EQUIP) py_bonuses(obj, -1);
-      do {
-        tr_obj_copy(tidx, obj);
-        magic_treasure(obj, lev);
-      } while (!obj->sn || obj->cost <= 0);
-      obj->idflag = ID_REVEAL;
-      if (iidx >= INVEN_EQUIP) py_bonuses(obj, 1);
+      if (valid && oset_enchant(obj)) {
+        int tidx = obj->tidx;
+        if (iidx >= INVEN_EQUIP) py_bonuses(obj, -1);
+        do {
+          tr_obj_copy(tidx, obj);
+          magic_treasure(obj, lev);
+        } while (!obj->sn || obj->cost <= 0);
+        obj->idflag = ID_REVEAL;
+        if (iidx >= INVEN_EQUIP) py_bonuses(obj, 1);
 
-      obj_desc(obj, 1);
-      MSG("Your %s glows brightly.", descD);
+        obj_desc(obj, 1);
+        MSG("Your %s glows brightly.", descD);
 
-      return TRUE;
+        return TRUE;
+      }
     }
   }
 
@@ -8278,7 +8283,7 @@ int *uy, *ux;
             ident |= TRUE;
             choice_idx =
                 inven_choice("Which weapon do you wish to *Enchant*?", "/*");
-            used_up = weapon_special(choice_idx, i_ptr->level);
+            used_up = make_special_type(choice_idx, i_ptr->level, 1);
             break;
           case 34:
             ident |= weapon_curse();
@@ -8286,9 +8291,8 @@ int *uy, *ux;
           case 35:
             ident |= TRUE;
             choice_idx =
-                inven_choice("Which armor do you wish to enchant?", "/*");
-            k = randint(2) + 1;
-            used_up = equip_enchant(choice_idx, k);
+                inven_choice("Which armor do you wish to *Enchant*?", "/*");
+            used_up = make_special_type(choice_idx, i_ptr->level, 0);
             break;
           case 36:
             ident |= equip_curse();
