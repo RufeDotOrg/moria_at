@@ -568,22 +568,18 @@ msg_pause()
 static void msg_game(msg, msglen) char* msg;
 {
   char* log;
-  int log_used;
+  int log_used, msg_used;
 
   log_used = AS(msglen_cqD, msg_writeD);
   if (log_used + msglen >= MAX_MSGLEN) {
     msg_pause();
+    log_used = 0;
   }
 
   log = AS(msg_cqD, msg_writeD);
-  log_used = AS(msglen_cqD, msg_writeD);
-  if (log_used) {
-    log_used += snprintf(log + log_used, MAX_MSGLEN - log_used, " %s", msg);
-  } else {
-    log_used = snprintf(log, MAX_MSGLEN, "%s", msg);
-  }
+  msg_used = snprintf(log + log_used, MAX_MSGLEN - log_used, " %s", msg);
 
-  if (log_used > 0) AS(msglen_cqD, msg_writeD) = log_used;
+  if (msg_used > 0) AS(msglen_cqD, msg_writeD) = log_used + msg_used;
 
   if (countD.rest != 0) countD.rest = 0;
   find_flag = FALSE;
