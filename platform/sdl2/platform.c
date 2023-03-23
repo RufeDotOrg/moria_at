@@ -913,7 +913,7 @@ platform_draw()
       SDL_RenderCopy(rendererD, texture, NULL, &r);
       rect_frame(r, 3);
 
-      len = snprintf(AP(tmp), "%d feet", dun_level * 50);
+      len = snprintf(AP(tmp), "turn:%7d", turnD);
       SDL_Point p = {
           r.x + r.w / 2 - (len / 2 * width),
           top - height / 2,
@@ -931,11 +931,16 @@ platform_draw()
     int mmscale = 2;
     int pad;
 
+    SDL_Point p = {0, top + height + mmscale * MAX_HEIGHT + 16};
+
+    len = snprintf(AP(tmp), "%d feet", dun_level * 50);
+    pad = (ax - len * width) / 2;
+    p.x = left + pad;
+    render_font_string(rendererD, &fontD, tmp, len, p);
+
     pad = (ax - sizeof(versionD) * width) / 2;
-    SDL_Point p = {
-        left + pad,
-        top + height + mmscale * MAX_HEIGHT + 16,
-    };
+    p.x = left + pad;
+    p.y += 2 * height;
     render_font_string(rendererD, &fontD, versionD, sizeof(versionD) - 1, p);
 
     pad = (ax - sizeof(git_hashD) * width) / 2;
