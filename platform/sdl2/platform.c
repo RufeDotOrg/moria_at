@@ -974,42 +974,43 @@ platform_draw()
   {
     char *msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
+    int more_used = snprintf(AP(tmp), "-more %d-", msg_moreD);
 
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
     SDL_Rect rect = {
-        0,
+        15 * width,
         0,
         msg_used * width,
         height,
     };
     SDL_Rect rect2 = {
-        rect.w + 2 * 6,
+        width / 2,
         0,
-        (AL("-more-") - 1) * width,
+        more_used * width,
         height,
     };
 
     SDL_Color c = *(SDL_Color *)&lightingD[2];
     SDL_SetRenderDrawColor(rendererD, C(c));
 
-    SDL_RenderFillRect(rendererD, &rect);
     if (msg_moreD) SDL_RenderFillRect(rendererD, &rect2);
+    SDL_RenderFillRect(rendererD, &rect);
 
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-    rect_frame(rect, 1);
+    if (rect.w) rect_frame(rect, 1);
     if (msg_moreD) rect_frame(rect2, 1);
 
+    SDL_Point p = {rect.x, 0};
+    SDL_Point p2 = {rect2.x, 0};
     if (msg_used) {
-      render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
-      if (msg_moreD) {
-        SDL_Point p = {rect2.x, 0};
-        render_font_string(rendererD, &fontD, AP("-more-"), p);
-      }
+      render_font_string(rendererD, &fontD, msg, msg_used,
+                         (SDL_Point){rect.x, 0});
+      if (msg_moreD) render_font_string(rendererD, &fontD, tmp, more_used, p2);
     } else if (show_map) {
       msg = AS(msg_cqD, msg_writeD - 1);
       msg_used = AS(msglen_cqD, msg_writeD - 1);
       font_texture_alphamod(128);
-      render_font_string(rendererD, &fontD, msg, msg_used, (SDL_Point){0, 0});
+      render_font_string(rendererD, &fontD, msg, msg_used, p);
       font_texture_alphamod(255);
     }
   }
