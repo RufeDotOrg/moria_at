@@ -544,7 +544,8 @@ font_texture_alphamod(alpha)
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
 EXTERN SDL_FRect buttonD[2];
 EXTERN SDL_FRect padD;
-EXTERN SDL_FPoint ppD[9];
+EXTERN SDL_Point ppD[9];
+EXTERN SDL_Rect pp_rectD;
 static int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 
 SDL_Texture *
@@ -560,6 +561,22 @@ texture_by_sym(char c)
   return t;
 }
 
+//  cos of (it * M_PI / 4);
+static float cos_table[] = {1.000,  0.707,  0.000,  -0.707,
+                            -1.000, -0.707, -0.000, 0.707};
+static float
+cos_lookup(idx)
+{
+  return cos_table[idx];
+}
+static float
+sin_lookup(idx)
+{
+  idx += 6;
+  idx %= AL(cos_table);
+  return cos_table[idx];
+}
+
 SDL_FPoint
 center_from_frect(r)
 SDL_FRect r;
@@ -567,21 +584,11 @@ SDL_FRect r;
   return (SDL_FPoint){r.x + r.w / 2, r.y + r.h / 2};
 }
 
-#define TOUCH_DIAMETER .04f
-#define TOUCH_GAP (TOUCH_DIAMETER * 1.12f)
-static SDL_FRect
-rect_from_pp(idx)
+static void
+pprect_index(idx)
 {
-  float sx = TOUCH_DIAMETER;
-  float sy = TOUCH_DIAMETER * aspectD;
-
-  SDL_FRect r = {
-      ppD[idx].x - sx / 2,
-      ppD[idx].y - sy / 2,
-      sx,
-      sy,
-  };
-  return r;
+  pp_rectD.x = ppD[idx].x - pp_rectD.w / 2;
+  pp_rectD.y = ppD[idx].y - pp_rectD.h / 2;
 }
 
 static void
@@ -854,11 +861,10 @@ platform_draw()
 
       for (int it = 1; it < AL(ppD); ++it) {
         if (ppD[it].x || ppD[it].y) {
-          SDL_FRect r = rect_from_pp(it);
-          SDL_Rect ppr = {RS(r, display_rectD)};
           if (pp_keyD[it] + TOUCH_PAD == last_pressD) {
+            pprect_index(it);
             SDL_SetRenderDrawColor(rendererD, 0x00, 0xd0, 0, 0xff);
-            SDL_RenderFillRect(rendererD, &ppr);
+            SDL_RenderFillRect(rendererD, &pp_rectD);
           }
         }
       }
@@ -882,7 +888,7 @@ platform_draw()
       }
 
       static char moreD[] = "-more-";
-      SDL_Point p = {ppD[0].x * display_rectD.w, ppD[0].y * display_rectD.h};
+      SDL_Point p = ppD[0];
       p.x -= AL(moreD) / 2 * width;
       p.y -= height / 2;
       render_font_string(rendererD, &fontD, AP(moreD), p);
@@ -1118,12 +1124,13 @@ nearest_pp(y, x)
   int r = -1;
   int64_t min_dsq = INT64_MAX;
   for (int it = 0; it < AL(ppD); ++it) {
-    int ppx = ppD[it].x * display_rectD.w;
-    int ppy = ppD[it].y * display_rectD.h;
+    int ppx = ppD[it].x;
+    int ppy = ppD[it].y;
     int dx = ppx - x;
     int dy = ppy - y;
     int dsq = dx * dx + dy * dy;
-    if (it % 2 == 1) dsq *= .4;
+#define TOUCH_CARDINAL_WEIGHT .43f
+    if (it % 2 == 1) dsq *= TOUCH_CARDINAL_WEIGHT;
     if (dsq < min_dsq) {
       min_dsq = dsq;
       r = it;
@@ -1210,16 +1217,28 @@ SDL_Event event;
     // Input constraints
     if (TOUCH) {
       padD = (SDL_FRect){.w = c1, .h = c1 * aspectD};
-      padD.y = 1.0 - padD.h;
+#define TOUCH_LIFT .1f
+      padD.y = 1.0 - padD.h - TOUCH_LIFT;
 
       SDL_FPoint center = center_from_frect(padD);
-      ppD[0] = center;
-      float dist = TOUCH_GAP * 2;
+      int cx = center.x * display_rectD.w;
+      int cy = center.y * display_rectD.h;
+      ppD[0] = (SDL_Point){cx, cy};
+
+#define TOUCH_RATIO .375f
+      float dist = padD.w * TOUCH_RATIO;
+      Log("dist %.03f pad %.03fx%.03f", dist, padD.w, padD.h);
+#define TOUCH_VIZ_RATIO .15f
+      pp_rectD = (SDL_Rect){
+          .w = display_rectD.w * padD.w * TOUCH_VIZ_RATIO,
+          .h = display_rectD.h * padD.h * TOUCH_VIZ_RATIO,
+      };
+
       for (int it = 0; it < 8; ++it) {
-        float cf = cos(it * M_PI / 4);
-        float sf = sin(it * M_PI / 4);
-        ppD[1 + it].x = center.x + cf * dist;
-        ppD[1 + it].y = center.y + sf * dist * aspectD;
+        int ox = cos_lookup(it) * dist * display_rectD.w;
+        int oy = sin_lookup(it) * dist * aspectD * display_rectD.h;
+        ppD[1 + it].x = cx + ox;
+        ppD[1 + it].y = cy + oy;
       }
 
       float c3w, c3h;
@@ -1229,7 +1248,7 @@ SDL_Event event;
       for (int it = 0; it < AL(buttonD); ++it) {
         SDL_FRect r = (SDL_FRect){.w = c3w, .h = c3h};
         r.x = 1.0 - r.w * (2 - it);
-        r.y = 1.0 - r.h * (1 + it);
+        r.y = 1.0 - r.h * (1 + it) - TOUCH_LIFT;
         buttonD[it] = r;
       }
 
