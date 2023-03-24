@@ -953,15 +953,16 @@ platform_draw()
   }
 
   if (TOUCH) {
-    SDL_Color c = *(SDL_Color *)&paletteD[BLUE];
-    SDL_SetRenderDrawColor(rendererD, C(c));
+    int bc[] = {RED, GREEN};
 
     for (int it = 0; it < AL(buttonD); ++it) {
       SDL_Rect r = {RS(buttonD[it], display_rectD)};
+      SDL_Color c = *(SDL_Color *)&paletteD[bc[it]];
+      SDL_SetRenderDrawColor(rendererD, C(c));
       SDL_RenderFillRect(rendererD, &r);
     }
-    SDL_SetRenderDrawColor(rendererD, C(whiteD));
 
+    SDL_SetRenderDrawColor(rendererD, C(whiteD));
     if (mode == 1) {
       SDL_Rect r = {RS(buttonD[1], display_rectD)};
       SDL_Point p = {r.x + r.w / 2, r.y + r.h / 2};
