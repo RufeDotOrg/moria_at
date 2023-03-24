@@ -1362,8 +1362,8 @@ SDL_Event event;
     } else {
       if (tp.y < .09) return CTRL('p');
       if (tp.x < .23 && tp.y < .5) return 'C';
-      if (tp.x > .775 && tp.y < .24) return 'M';
-      if (tp.x > .775 && tp.y < .30) return 'v';
+      if (tp.x > .775 && tp.y < .28) return 'M';
+      if (tp.x > .775 && tp.y < .34) return 'v';
       if (tp.x > .23 && tp.x < .775 && tp.y > .90) return '-';
     }
   }
