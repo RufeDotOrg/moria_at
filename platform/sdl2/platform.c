@@ -985,9 +985,15 @@ platform_draw()
     int msg_used = AS(msglen_cqD, msg_writeD);
     int more_used = snprintf(AP(tmp), "-more %d-", msg_moreD);
 
-    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
+    // Gameplay shows previous message to help the player out
+    if (!msg_used && show_map) {
+      msg = AS(msg_cqD, msg_writeD - 1);
+      msg_used = AS(msglen_cqD, msg_writeD - 1);
+      font_texture_alphamod(128);  // faded
+    }
+
     SDL_Rect rect = {
-        15 * width,
+        display_rectD.w / 2 - msg_used * width / 2,
         0,
         msg_used * width,
         height,
@@ -998,30 +1004,31 @@ platform_draw()
         more_used * width,
         height,
     };
-
-    SDL_Color c = *(SDL_Color *)&lightingD[2];
-    SDL_SetRenderDrawColor(rendererD, C(c));
-
-    if (msg_moreD) SDL_RenderFillRect(rendererD, &rect2);
-    SDL_RenderFillRect(rendererD, &rect);
-
-    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-    if (rect.w) rect_frame(rect, 1);
-    if (msg_moreD) rect_frame(rect2, 1);
-
+    SDL_Rect rect3 = {
+        display_rectD.w - more_used * width - width / 2,
+        0,
+        more_used * width,
+        height,
+    };
     SDL_Point p = {rect.x, 0};
     SDL_Point p2 = {rect2.x, 0};
+    SDL_Point p3 = {rect3.x, 0};
+
     if (msg_used) {
-      render_font_string(rendererD, &fontD, msg, msg_used,
-                         (SDL_Point){rect.x, 0});
-      if (msg_moreD) render_font_string(rendererD, &fontD, tmp, more_used, p2);
-    } else if (show_map) {
-      msg = AS(msg_cqD, msg_writeD - 1);
-      msg_used = AS(msglen_cqD, msg_writeD - 1);
-      font_texture_alphamod(128);
+      SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+      rect_frame(rect, 1);
+      if (msg_moreD) {
+        rect_frame(rect2, 1);
+        rect_frame(rect3, 1);
+      }
+
       render_font_string(rendererD, &fontD, msg, msg_used, p);
-      font_texture_alphamod(255);
+      if (msg_moreD) {
+        render_font_string(rendererD, &fontD, tmp, more_used, p2);
+        render_font_string(rendererD, &fontD, tmp, more_used, p3);
+      }
     }
+    font_texture_alphamod(255);
   }
 
   render_update();
