@@ -936,7 +936,10 @@ platform_draw()
 
     SDL_Point p = {0, top + height + mmscale * MAX_HEIGHT + 16};
 
-    len = snprintf(AP(tmp), "%d feet", dun_level * 50);
+    if (dun_level)
+      len = snprintf(AP(tmp), "%d feet", dun_level * 50);
+    else
+      len = snprintf(AP(tmp), "%s", "Town Level");
     pad = (ax - len * width) / 2;
     p.x = left + pad;
     render_font_string(rendererD, &fontD, tmp, len, p);
