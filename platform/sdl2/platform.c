@@ -25,13 +25,17 @@ enum { ANDROID };
 #define CTRL(x) (x & 037)
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
-#define RS(r, s) (r.x * s.w), (r.y * s.h), (r.w * s.w), (r.h * s.h)
+#define RS(r, scale) \
+  (r.x * scale.w), (r.y * scale.h), (r.w * scale.w), (r.h * scale.h)
 #define RF(r, framing)                                                    \
   (SDL_Rect)                                                              \
   {                                                                       \
     .x = r.x - (framing), .y = r.y - (framing), .w = r.w + 2 * (framing), \
     .h = r.h + 2 * (framing),                                             \
   }
+// FRect center
+#define FRC(r) r.x + r.w * .5f, r.y + r.h * .5f
+// Color
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
 
@@ -575,13 +579,6 @@ sin_lookup(idx)
   idx += 6;
   idx %= AL(cos_table);
   return cos_table[idx];
-}
-
-SDL_FPoint
-center_from_frect(r)
-SDL_FRect r;
-{
-  return (SDL_FPoint){r.x + r.w / 2, r.y + r.h / 2};
 }
 
 static void
@@ -1220,7 +1217,7 @@ SDL_Event event;
 #define TOUCH_LIFT .1f
       padD.y = 1.0 - padD.h - TOUCH_LIFT;
 
-      SDL_FPoint center = center_from_frect(padD);
+      SDL_FPoint center = {FRC(padD)};
       int cx = center.x * display_rectD.w;
       int cy = center.y * display_rectD.h;
       ppD[0] = (SDL_Point){cx, cy};
