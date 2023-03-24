@@ -6274,7 +6274,7 @@ light_line(dir, y, x)
     mmove(dir, &y, &x);
   } while (!flag);
 }
-void fire_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
+void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
 {
   int i, oldy, oldx, dist, flag;
   uint32_t weapon_type;
@@ -6302,25 +6302,26 @@ void fire_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         m_ptr = &entity_monD[c_ptr->midx];
         cre = &creatureD[m_ptr->cidx];
 
+        // Bolt lit target
         m_ptr->mlit = TRUE;
-
         mon_desc(c_ptr->midx);
         descD[0] = descD[0] | 0x20;
         MSG("The %s strikes %s.", bolt_typ, descD);
+        msg_pause();
+
         if (harm_type & cre->cdefense) {
           dam = dam * 2;
         } else if (weapon_type & cre->spells) {
           dam = dam / 4;
         }
-        mon_desc(c_ptr->midx);
+
+        descD[0] = descD[0] & ~0x20;
         if (mon_take_hit(c_ptr->midx, dam)) {
           MSG("%s dies in a fit of agony.", descD);
           py_experience();
         } else {
           MSG("%s screams in agony.", descD);
         }
-        // Pause while lit
-        msg_pause();
       }
     }
     oldy = y;
@@ -8378,15 +8379,15 @@ inven_try_wand_dir(iidx, dir)
             ident |= TRUE;
             break;
           case 2:
-            fire_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_nameD[8]);
+            magic_bolt(GF_LIGHTNING, dir, y, x, damroll(4, 8), spell_nameD[8]);
             ident |= TRUE;
             break;
           case 3:
-            fire_bolt(GF_FROST, dir, y, x, damroll(6, 8), spell_nameD[14]);
+            magic_bolt(GF_FROST, dir, y, x, damroll(6, 8), spell_nameD[14]);
             ident |= TRUE;
             break;
           case 4:
-            fire_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_nameD[22]);
+            magic_bolt(GF_FIRE, dir, y, x, damroll(9, 8), spell_nameD[22]);
             ident |= TRUE;
             break;
           case 5:
@@ -8417,8 +8418,8 @@ inven_try_wand_dir(iidx, dir)
             ident |= td_destroy2(dir, y, x);
             break;
           case 14:
-            fire_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6),
-                      spell_nameD[0]);
+            magic_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6),
+                       spell_nameD[0]);
             ident |= TRUE;
             break;
           case 15:
