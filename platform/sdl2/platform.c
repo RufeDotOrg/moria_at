@@ -1244,7 +1244,7 @@ SDL_Event event;
 
       float c3w, c3h;
       float c3 = c1 + AL(overlayD[0]) * cfD;
-      c3w = MIN(1.0 - c3, c1);
+      c3w = MIN(1.0 - c3, c1 * .5f);
       c3h = c3w * aspectD;
       for (int it = 0; it < AL(buttonD); ++it) {
         SDL_FRect r = (SDL_FRect){.w = c3w, .h = c3h};
