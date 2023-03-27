@@ -11435,6 +11435,10 @@ dungeon()
 
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
 
+  if (dun_level)
+    snprintf(AP(dun_descD), "%d feet", dun_level * 50);
+  else
+    snprintf(AP(dun_descD), "%s", "town square");
   new_level_flag = FALSE;
   do {
     CCM(CCM_HOTLOAD, platform_update());
@@ -11609,18 +11613,15 @@ dungeon()
               MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
             case 'M':
-              if (dun_level == 0)
-                msg_print("You don't have a map of town.");
-              else {
-                MSG("You map a depth of %d feet.", 50 * dun_level);
-                screen_submodeD = 0;
-                screenD[0][0] = ' ';
-                screen_usedD[0] = 1;
-                if (SDL)
-                  minimap_enlargeD = TRUE;
-                else if (TTY)
-                  py_map();
-              }
+              screen_submodeD = 0;
+              screenD[0][0] = ' ';
+              screen_usedD[0] = 1;
+              if (SDL)
+                minimap_enlargeD = TRUE;
+              else if (TTY)
+                py_map();
+              MSG_NOHISTORY("You study a map of %s.", dun_descD);
+              inkey();
               break;
             case 'O':
               py_look_obj();

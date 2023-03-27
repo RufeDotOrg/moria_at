@@ -935,10 +935,7 @@ platform_draw()
     render_font_string(rendererD, &fontD, tmp, len, p);
 
     p.y += 2 * height + MMSCALE * MAX_HEIGHT;
-    if (dun_level)
-      len = snprintf(AP(tmp), "%d feet", dun_level * 50);
-    else
-      len = snprintf(AP(tmp), "%s", "Town Level");
+    len = snprintf(AP(tmp), "%s", dun_descD);
     pad = (ax - len * width) / 2;
     p.x = left + pad;
     render_font_string(rendererD, &fontD, tmp, len, p);
