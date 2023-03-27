@@ -80,6 +80,8 @@ static uint8_t finger_colD;
 static int quitD;
 static int last_pressD;
 
+#define MMSCALE 2
+
 int
 render_init()
 {
@@ -896,7 +898,6 @@ platform_draw()
 
   SDL_SetRenderDrawColor(rendererD, C(whiteD));
   if (minimapD[0][4]) {
-    top += height / 2;
     SDL_Surface *surface = mmsurfaceD;
     SDL_Texture *texture = mmtextureD;
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
@@ -904,25 +905,18 @@ platform_draw()
     SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
     left = columnD[2] * display_rectD.w;
     int ax = display_rectD.w - left;
-    int mmscale = 2;
-    int pad = (ax - mmscale * MAX_WIDTH) / 2;
+    int pad = (ax - MMSCALE * MAX_WIDTH) / 2;
     SDL_Rect r = {
         left + pad,
-        top + height,
-        mmscale * MAX_WIDTH,
-        mmscale * MAX_HEIGHT,
+        top + height + height / 2,
+        MMSCALE * MAX_WIDTH,
+        MMSCALE * MAX_HEIGHT,
     };
     if (mode == 0) {
       SDL_RenderCopy(rendererD, texture, NULL, &r);
       rect_frame(r, 3);
-
-      len = snprintf(AP(tmp), "turn:%7d", turnD);
-      SDL_Point p = {
-          r.x + r.w / 2 - (len / 2 * width),
-          top - height / 2,
-      };
-      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
+
     if (minimap_enlargeD) {
       SDL_RenderCopy(rendererD, texture, NULL, &scale_rectD);
     }
@@ -931,11 +925,16 @@ platform_draw()
   if (mode == 0) {
     left = columnD[2] * display_rectD.w;
     int ax = display_rectD.w - left;
-    int mmscale = 2;
     int pad;
 
-    SDL_Point p = {0, top + height + mmscale * MAX_HEIGHT + 16};
+    SDL_Point p = {0, top};
 
+    len = snprintf(AP(tmp), "turn:%7d", turnD);
+    pad = (ax - len * width) / 2;
+    p.x = left + pad;
+    render_font_string(rendererD, &fontD, tmp, len, p);
+
+    p.y += 2 * height + MMSCALE * MAX_HEIGHT;
     if (dun_level)
       len = snprintf(AP(tmp), "%d feet", dun_level * 50);
     else
