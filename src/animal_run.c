@@ -355,6 +355,51 @@ struct vizS* viz;
   }
   return 0;
 }
+static int
+cave_color(row, col, rmin, rmax, cmin, cmax)
+{
+  struct caveS* c_ptr;
+  struct monS* mon;
+  struct objS* obj;
+  int color = 0;
+
+  c_ptr = &caveD[row][col];
+  mon = &entity_monD[c_ptr->midx];
+  if (mon->mlit) {
+    color = BRIGHT + MAGENTA;
+  } else if (c_ptr->fval == BOUNDARY_WALL) {
+    color = BRIGHT + WHITE;
+  } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
+    color = BRIGHT + WHITE;
+  } else if (CF_TEMP_LIGHT & c_ptr->cflag) {
+    color = BRIGHT + CYAN;
+  }
+
+  if (color == 0 && c_ptr->oidx) {
+    obj = &entity_objD[c_ptr->oidx];
+    if (CF_VIZ & c_ptr->cflag) {
+      if (obj->tval == TV_UP_STAIR) {
+        color = BRIGHT + GREEN;
+      } else if (obj->tval == TV_DOWN_STAIR) {
+        color = BRIGHT + RED;
+      } else if (obj->tval == TV_VIS_TRAP) {
+        color = BRIGHT + YELLOW;
+      } else if (obj->tval == TV_SECRET_DOOR) {
+        color = BRIGHT + WHITE;
+      } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
+        color = BRIGHT + BLUE;
+      } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
+        color = BRIGHT + GREEN;
+      }
+    }
+  }
+  if (color == 0 &&
+      (row >= rmin && row <= rmax && col >= cmin && col <= cmax)) {
+    color = BRIGHT + BLACK;
+  }
+
+  return color;
+}
 static void
 viz_update()
 {
@@ -413,60 +458,31 @@ viz_update()
 void
 viz_minimap()
 {
-  int row, col, color;
-  struct caveS* c_ptr;
-  struct objS* obj;
-  struct monS* mon;
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
   int cmax = panelD.panel_col_max;
-  int y, x;
-
-  y = uD.y;
-  x = uD.x;
+  int color;
   if (dun_level) {
-    for (row = 0; row < MAX_HEIGHT; ++row) {
-      for (col = 0; col < MAX_WIDTH; ++col) {
-        color = 0;
-        c_ptr = &caveD[row][col];
-        mon = &entity_monD[c_ptr->midx];
-        if (mon->mlit) {
-          color = BRIGHT + MAGENTA;
-        } else if (c_ptr->fval == BOUNDARY_WALL) {
-          color = BRIGHT + WHITE;
-        } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
-          color = BRIGHT + WHITE;
-        } else if (CF_TEMP_LIGHT & c_ptr->cflag) {
-          color = BRIGHT + CYAN;
-        }
-
-        if (color == 0 && c_ptr->oidx) {
-          obj = &entity_objD[c_ptr->oidx];
-          if (CF_VIZ & c_ptr->cflag) {
-            if (obj->tval == TV_UP_STAIR) {
-              color = BRIGHT + GREEN;
-            } else if (obj->tval == TV_DOWN_STAIR) {
-              color = BRIGHT + RED;
-            } else if (obj->tval == TV_VIS_TRAP) {
-              color = BRIGHT + YELLOW;
-            } else if (obj->tval == TV_SECRET_DOOR) {
-              color = BRIGHT + WHITE;
-            } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
-              color = BRIGHT + BLUE;
-            }
-          }
-        }
-        if (color == 0 &&
-            (row >= rmin && row <= rmax && col >= cmin && col <= cmax)) {
-          color = BRIGHT + BLACK;
-        }
+    for (int row = 0; row < MAX_HEIGHT; ++row) {
+      for (int col = 0; col < MAX_WIDTH; ++col) {
+        color = cave_color(row, col, rmin, rmax, cmin, cmax);
 
         minimapD[row][col] = color;
       }
     }
   } else {
-    *(int64_t*)minimapD = 0;
+    enum { RATIO = MAX_WIDTH / SYMMAP_WIDTH };
+    for (int row = 0; row < MAX_HEIGHT / RATIO; ++row) {
+      for (int col = 0; col < MAX_WIDTH / RATIO; ++col) {
+        color = cave_color(row, col, rmin, rmax, cmin, cmax);
+        for (int i = 0; i < 4; ++i) {
+          for (int j = 0; j < 4; ++j) {
+            minimapD[row * RATIO + i][col * RATIO + j] = color;
+          }
+        }
+      }
+    }
   }
 }
 // Match single index

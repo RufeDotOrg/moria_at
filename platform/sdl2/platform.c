@@ -897,7 +897,7 @@ platform_draw()
   }
 
   SDL_SetRenderDrawColor(rendererD, C(whiteD));
-  if (minimapD[0][4]) {
+  {
     SDL_Surface *surface = mmsurfaceD;
     SDL_Texture *texture = mmtextureD;
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
