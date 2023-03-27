@@ -7675,7 +7675,7 @@ inven_eat(iidx)
   }
   return FALSE;
 }
-void obj_study(obj) struct objS* obj;
+void obj_study(obj, for_sale) struct objS* obj;
 {
   struct treasureS* tr_ptr;
   int line;
@@ -7689,8 +7689,14 @@ void obj_study(obj) struct objS* obj;
     eqidx = may_equip(obj->tval);
 
     line = 0;
-    BufMsg(screen, "%-17.017s: %d Lbs", "Weight",
-           obj->number * obj->weight / 10);
+    BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (each)", obj->weight / 10,
+           obj->weight % 10);
+    if (!for_sale && obj->number > 1) {
+      int sum_weight = obj->number * obj->weight;
+      BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Total Weight", sum_weight / 10,
+             sum_weight % 10);
+    }
+
     if (tr_is_known(tr_ptr)) {
       if (obj->tval == TV_WAND || obj->tval == TV_STAFF) {
         int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
@@ -8927,7 +8933,7 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
       if (overlay_actD == 'd') {
         inven_drop(iidx);
       } else if (overlay_actD == 'S') {
-        obj_study(obj_get(invenD[iidx]));
+        obj_study(obj_get(invenD[iidx]), 0);
       } else {
         obj = obj_get(invenD[iidx]);
         if (obj->tval == TV_FOOD) {
@@ -11200,7 +11206,7 @@ pawn_entrance()
 
     if (item < INVEN_EQUIP) {
       if (overlay_actD == 'S')
-        obj_study(obj_get(invenD[item]));
+        obj_study(obj_get(invenD[item]), 0);
       else
         inven_pawn(item);
     }
@@ -11225,7 +11231,7 @@ store_entrance(sidx)
 
     if (item < MAX_STORE_INVEN) {
       if (overlay_actD == 'S')
-        obj_study(&store_objD[sidx][item]);
+        obj_study(&store_objD[sidx][item], 1);
       else
         store_item_purchase(sidx, item);
     }
@@ -11631,7 +11637,7 @@ dungeon()
               break;
             case 'S':
               iidx = inven_choice("Study which item?", "*/");
-              if (iidx >= 0) obj_study(obj_get(invenD[iidx]));
+              if (iidx >= 0) obj_study(obj_get(invenD[iidx]), 0);
               break;
             case 'T':
               py_takeoff();
