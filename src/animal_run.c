@@ -7672,9 +7672,6 @@ void obj_study(obj) struct objS* obj;
     if (HACK) obj->idflag = ID_REVEAL;
     eqidx = may_equip(obj->tval);
 
-    obj_desc(obj, 1);
-    MSG("You study %s.", descD);
-
     line = 0;
     BufMsg(screen, "%-17.017s: %d Lbs", "Weight",
            obj->number * obj->weight / 10);
@@ -7855,7 +7852,10 @@ void obj_study(obj) struct objS* obj;
         }
       }
     }
-    msg_pause();
+
+    obj_desc(obj, 1);
+    MSG_NOHISTORY("You study %s.", descD);
+    inkey();
   }
 }
 int
