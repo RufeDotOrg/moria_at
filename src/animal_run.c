@@ -7691,7 +7691,7 @@ void obj_study(obj, for_sale) struct objS* obj;
     line = 0;
     BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (each)", obj->weight / 10,
            obj->weight % 10);
-    if (!for_sale && obj->number > 1) {
+    if (!for_sale && (STACK_ANY & obj->subval)) {
       int sum_weight = obj->number * obj->weight;
       BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Total Weight", sum_weight / 10,
              sum_weight % 10);
