@@ -242,3 +242,47 @@ tty_translate(char* str, int len)
 
   return (_from_vt100(c) & mask);
 }
+
+int
+tty_save()
+{
+  int fd, byte_count, save_size;
+  byte_count = 0;
+  for (int it = 0; it < save_field_countD; ++it) {
+    byte_count += save_len_ptrD[it];
+  }
+  fd = open("savechar", O_WRONLY);
+  if (fd) {
+    write(fd, &byte_count, sizeof(byte_count));
+    for (int it = 0; it < save_field_countD; ++it) {
+      write(fd, save_addr_ptrD[it], save_len_ptrD[it]);
+    }
+    close(fd);
+    return byte_count;
+  }
+  return 0;
+}
+int
+tty_load()
+{
+  int fd, byte_count, save_size;
+
+  byte_count = 0;
+  for (int it = 0; it < save_field_countD; ++it) {
+    byte_count += save_len_ptrD[it];
+  }
+
+  fd = open("savechar", O_RDONLY);
+  if (fd != -1) {
+    read(fd, &save_size, sizeof(save_size));
+    if (save_size == byte_count) {
+      for (int it = 0; it < save_field_countD; ++it) {
+        read(fd, save_addr_ptrD[it], save_len_ptrD[it]);
+      }
+    }
+    close(fd);
+    return save_size == byte_count;
+  }
+
+  return fd != -1;
+}

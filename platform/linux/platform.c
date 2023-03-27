@@ -51,6 +51,8 @@ platform_init()
   platformD.seed = platform_auxval_random;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
+  platformD.load = tty_load;
+  platformD.save = tty_save;
 }
 
 void
