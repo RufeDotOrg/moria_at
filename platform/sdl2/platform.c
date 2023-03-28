@@ -38,6 +38,8 @@ enum { ANDROID };
 // Color
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
+#define U4(i) \
+  (i & 0xff), ((i >> 8) & 0xff), ((i >> 16) & 0xff), ((i >> 24) & 0xff)
 
 int
 char_visible(char c)
@@ -68,7 +70,6 @@ EXTERN float rfD, cfD;
 EXTERN static float columnD[3];
 
 static int overlay_copyD[AL(overlay_usedD)];
-static SDL_Color blackD = {0, 0, 0, 255};
 static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
 static int xD;
@@ -137,7 +138,7 @@ render_update()
 {
   SDL_Renderer *r = rendererD;
   SDL_RenderPresent(r);
-  SDL_SetRenderDrawColor(r, C(blackD));
+  SDL_SetRenderDrawColor(r, 0, 0, 0, 0);
   SDL_RenderClear(r);
 }
 
@@ -229,6 +230,12 @@ static uint32_t lightingD[] = {
     CHEX(0xaaaaaa30),
     CHEX(0xdddddd30),
 };
+static SDL_Color *
+color_by_palette(c)
+{
+  return (SDL_Color *)&paletteD[c];
+}
+
 void
 bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
                        struct SDL_Surface *surface)
@@ -652,15 +659,26 @@ void
 alt_fill(y, x, left, top, width, height)
 {
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
-  for (int row = 0; row < y; ++row) {
+
+  SDL_SetRenderDrawColor(rendererD, U4(lightingD[1]));
+  for (int row = 0; row < y; row += 2) {
     SDL_Rect rect = {
         left,
         top + row * height,
         x * width,
         height,
     };
-    SDL_Color c = *(SDL_Color *)&lightingD[row & 0x1];
-    SDL_SetRenderDrawColor(rendererD, C(c));
+    SDL_RenderFillRect(rendererD, &rect);
+  }
+
+  SDL_SetRenderDrawColor(rendererD, U4(lightingD[2]));
+  for (int row = 1; row < y; row += 2) {
+    SDL_Rect rect = {
+        left,
+        top + row * height,
+        x * width,
+        height,
+    };
     SDL_RenderFillRect(rendererD, &rect);
   }
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
@@ -669,6 +687,7 @@ alt_fill(y, x, left, top, width, height)
 void rect_frame(r, scale) SDL_Rect r;
 {
   int i = scale * 3;
+  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
   SDL_RenderDrawRect(rendererD, &RF(r, i));
   SDL_RenderDrawRect(rendererD, &RF(r, i + 1));
   SDL_RenderDrawRect(rendererD, &RF(r, i + 3));
@@ -816,8 +835,7 @@ platform_draw()
           }
         }
 
-        SDL_Color c = *(SDL_Color *)&lightingD[light];
-        SDL_SetRenderDrawColor(rendererD, C(c));
+        SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));
         SDL_RenderFillRect(rendererD, &sprite_rect);
         SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
       }
@@ -848,16 +866,10 @@ platform_draw()
 
   if (TOUCH && tpsurfaceD) {
     {
-      SDL_Color c = {0, 0, 78, 0};
-      SDL_SetRenderDrawColor(rendererD, C(c));
-
       SDL_Rect pr = {RS(padD, display_rectD)};
       SDL_RenderCopy(rendererD, tptextureD, 0, &pr);
     }
     {
-      SDL_Color c = {50, 0, 0, 0};
-      SDL_SetRenderDrawColor(rendererD, C(c));
-
       for (int it = 1; it < AL(ppD); ++it) {
         if (ppD[it].x || ppD[it].y) {
           if (pp_keyD[it] + TOUCH_PAD == last_pressD) {
@@ -873,16 +885,16 @@ platform_draw()
       tapD = (tapD + 1) % 4;
       switch (tapD) {
         case 0:
-          font_colorD = *(SDL_Color *)&paletteD[RED];
+          font_colorD = *color_by_palette(RED);
           break;
         case 1:
-          font_colorD = *(SDL_Color *)&paletteD[GREEN];
+          font_colorD = *color_by_palette(GREEN);
           break;
         case 2:
-          font_colorD = *(SDL_Color *)&paletteD[BLUE];
+          font_colorD = *color_by_palette(BLUE);
           break;
         case 3:
-          font_colorD = *(SDL_Color *)&paletteD[WHITE];
+          font_colorD = *color_by_palette(WHITE);
           break;
       }
 
@@ -896,7 +908,6 @@ platform_draw()
     }
   }
 
-  SDL_SetRenderDrawColor(rendererD, C(whiteD));
   {
     SDL_Surface *surface = mmsurfaceD;
     SDL_Texture *texture = mmtextureD;
@@ -956,12 +967,10 @@ platform_draw()
 
     for (int it = 0; it < AL(buttonD); ++it) {
       SDL_Rect r = {RS(buttonD[it], display_rectD)};
-      SDL_Color c = *(SDL_Color *)&paletteD[bc[it]];
-      SDL_SetRenderDrawColor(rendererD, C(c));
+      SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
       SDL_RenderFillRect(rendererD, &r);
     }
 
-    SDL_SetRenderDrawColor(rendererD, C(whiteD));
     if (mode == 1) {
       SDL_Rect r = {RS(buttonD[1], display_rectD)};
       SDL_Point p = {r.x + r.w / 2, r.y + r.h / 2};
@@ -1578,8 +1587,7 @@ platform_init()
   }
 
   for (int it = 0; it < AL(paletteD); ++it) {
-    SDL_Color c = (*(SDL_Color *)&paletteD[it]);
-    rgbaD[it] = SDL_MapRGBA(pixel_formatD, C(c));
+    rgbaD[it] = SDL_MapRGBA(pixel_formatD, U4(paletteD[it]));
   }
 
   if (init) {
