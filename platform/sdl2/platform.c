@@ -226,9 +226,9 @@ static uint32_t paletteD[] = {
 };
 static uint32_t rgbaD[AL(paletteD)];
 static uint32_t lightingD[] = {
-    CHEX(0x77777730),
-    CHEX(0xaaaaaa30),
-    CHEX(0xdddddd30),
+    CHEX(0x161616ff),
+    CHEX(0x202020ff),
+    CHEX(0x2a2a2aff),
 };
 static SDL_Color *
 color_by_palette(c)
