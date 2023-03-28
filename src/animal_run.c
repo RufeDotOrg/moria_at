@@ -421,14 +421,15 @@ viz_update()
       struct vizS viz = {0};
       if (row != py || col != px) {
         if (mon->mlit) viz.cr = mon->cidx;
+        viz.light = (c_ptr->cflag & CF_SEEN) != 0;
         if (!blind && (CF_VIZ & c_ptr->cflag)) {
           if (c_ptr->cflag & CF_TEMP_LIGHT) {
-            viz.light = 2;
+            viz.light = 3;
           } else if (c_ptr->cflag & CF_LIT) {
             if (los(py, px, row, col))
-              viz.light = 2;
+              viz.light = 3;
             else
-              viz.light = 1;
+              viz.light = 2;
           }
           switch (c_ptr->fval) {
             case GRANITE_WALL:
@@ -448,7 +449,7 @@ viz_update()
         }
       } else {
         viz.sym = '@';
-        viz.light = CF_TEMP_LIGHT;
+        viz.light = 3;
       }
 
       *vptr++ = viz;
@@ -3352,6 +3353,7 @@ town_gen()
   rnd_seed = town_seed;
 
   uint8_t cflag = town_night() ? 0 : (CF_PERM_LIGHT | CF_ROOM);
+  cflag |= CF_SEEN;
   for (int row = 0; row < MAX_HEIGHT; ++row) {
     for (int col = 0; col < MAX_WIDTH; ++col) {
       c_ptr = &caveD[row][col];
@@ -3981,7 +3983,7 @@ light_room(y, x)
     for (j = start_col; j <= end_col; j++) {
       c_ptr = &caveD[i][j];
       if ((c_ptr->cflag & CF_ROOM)) {
-        c_ptr->cflag |= CF_PERM_LIGHT;
+        c_ptr->cflag |= CF_PERM_LIGHT | CF_SEEN;
         if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
         if (c_ptr->oidx) {
           struct objS* obj = &entity_objD[c_ptr->oidx];
@@ -3998,7 +4000,7 @@ illuminate(y, x)
   if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
   for (int col = y - 1; col <= y + 1; ++col) {
     for (int row = x - 1; row <= x + 1; ++row) {
-      caveD[col][row].cflag |= CF_PERM_LIGHT;
+      caveD[col][row].cflag |= (CF_PERM_LIGHT | CF_SEEN);
     }
   }
 
@@ -4067,12 +4069,12 @@ py_move_light(y1, x1, y2, x2)
     for (row = y2 - 1; row <= y2 + 1; ++row) {
       for (col = x2 - 1; col <= x2 + 1; ++col) {
         struct caveS* cave = &caveD[row][col];
-        uint32_t cflag = cave->cflag;
+        uint32_t cflag = cave->cflag | CF_SEEN;
 
         if (cave->fval >= MIN_WALL)
-          cflag |= CF_PERM_LIGHT;
+          cflag |= (CF_PERM_LIGHT);
         else
-          cflag |= CF_TEMP_LIGHT;
+          cflag |= (CF_TEMP_LIGHT);
         if (cave->oidx) {
           struct objS* obj = &entity_objD[cave->oidx];
           if (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE) {
@@ -6269,7 +6271,7 @@ light_line(dir, y, x)
         if ((c_ptr->cflag & CF_ROOM) != 0 && panel_contains(&panelD, y, x))
           light_room(y, x);
       }
-      c_ptr->cflag |= CF_PERM_LIGHT;
+      c_ptr->cflag |= (CF_PERM_LIGHT | CF_SEEN);
 
       if (c_ptr->midx) {
         m_ptr = &entity_monD[c_ptr->midx];
