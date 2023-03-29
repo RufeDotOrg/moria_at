@@ -3828,7 +3828,7 @@ detect_obj(int (*valid)())
       c_ptr = &caveD[i][j];
       obj = &entity_objD[c_ptr->oidx];
       if (valid(obj)) {
-        c_ptr->cflag |= CF_FIELDMARK;
+        c_ptr->cflag |= CF_TEMP_LIGHT;
         // dungeon fixtures become known
         // enables locked/stuck door interaction, trap auto-disarm
         if (obj->tval > TV_MAX_PICK_UP) {
@@ -4912,8 +4912,6 @@ summon_object(y, x, num, typ)
           if (j == py && k == px) {
             msg_print("You feel something roll beneath your feet.");
           }
-
-          if (c_ptr->cflag & CF_LIT) c_ptr->cflag |= CF_FIELDMARK;
           i = 20;
         }
       }
@@ -6440,7 +6438,6 @@ twall(y, x)
     /* should become a corridor space */
     c_ptr->fval = FLOOR_CORR;
   }
-  c_ptr->cflag &= ~CF_FIELDMARK;
   if (panel_contains(&panelD, y, x))
     if (CF_LIT & c_ptr->cflag && c_ptr->oidx)
       msg_print("You have found something!");
@@ -6834,7 +6831,6 @@ build_wall(dir, y, x)
         }
       }
       c_ptr->fval = MAGMA_WALL;
-      c_ptr->cflag &= ~CF_FIELDMARK;
       i++;
       build = TRUE;
     }
@@ -10211,7 +10207,6 @@ tunnel(y, x)
           if (randint(10) == 1) {
             place_object(y, x, FALSE);
             if (CF_LIT & c_ptr->cflag) {
-              c_ptr->cflag |= CF_FIELDMARK;
               msg_print("You have found something!");
             }
           } else {
