@@ -11425,14 +11425,14 @@ dungeon()
   int c, y, x, iidx;
   uint32_t dir, teleport;
 
-  if (dun_level == 0) player_maint();
-
-  uD.max_dlv = MAX(uD.max_dlv, dun_level);
-
   if (dun_level)
     snprintf(AP(dun_descD), "%d feet", dun_level * 50);
   else
     snprintf(AP(dun_descD), "%s", "town square");
+  if (dun_level == 0) player_maint();
+
+  uD.max_dlv = MAX(uD.max_dlv, dun_level);
+
   new_level_flag = FALSE;
   do {
     CCM(CCM_HOTLOAD, platform_update());
