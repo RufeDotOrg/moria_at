@@ -5257,7 +5257,7 @@ void py_bonuses(obj, factor) struct objS* obj;
   if (obj->sn == SN_INFRAVISION) uD.infra += amount;
   if (obj->sn == SN_LORDLINESS) uD.save += (amount * 10);
 }
-void
+int
 equip_takeoff(iidx, into_slot)
 {
   struct objS* obj;
@@ -5277,34 +5277,42 @@ equip_takeoff(iidx, into_slot)
       calc_bonuses();
     }
     turn_flag = TRUE;
+    return TRUE;
   }
+
+  return FALSE;
 }
 void
 inven_drop(iidx)
 {
-  int y, x;
+  int y, x, ok;
   struct objS* obj;
   obj = obj_get(invenD[iidx]);
 
-  y = uD.y;
-  x = uD.x;
-  if (caveD[y][x].oidx == 0) {
-    if (iidx >= INVEN_EQUIP) {
-      equip_takeoff(iidx, -1);
+  if (obj->id) {
+    y = uD.y;
+    x = uD.x;
+    if (caveD[y][x].oidx == 0) {
+      if (iidx >= INVEN_EQUIP) {
+        ok = equip_takeoff(iidx, -1);
+      } else {
+        ok = TRUE;
+        invenD[iidx] = 0;
+      }
+
+      if (ok) {
+        obj->fy = y;
+        obj->fx = x;
+        caveD[y][x].oidx = obj_index(obj);
+
+        obj_desc(obj, obj->number);
+        obj_detail(obj);
+        MSG("You drop %s%s.", descD, detailD);
+        turn_flag = TRUE;
+      }
     } else {
-      invenD[iidx] = 0;
+      msg_print("There is already an object on the ground here.");
     }
-
-    obj->fy = y;
-    obj->fx = x;
-    caveD[y][x].oidx = obj_index(obj);
-
-    obj_desc(obj, obj->number);
-    obj_detail(obj);
-    MSG("You drop %s%s.", descD, detailD);
-    turn_flag = TRUE;
-  } else {
-    msg_print("There is already an object on the ground here.");
   }
 }
 BOOL
