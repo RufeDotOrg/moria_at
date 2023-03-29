@@ -298,7 +298,7 @@ art_init()
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
                            surface);
     art_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_SetTextureBlendMode(art_textureD[it], SDL_BLENDMODE_NONE);
+    SDL_SetTextureBlendMode(art_textureD[it], SDL_BLENDMODE_BLEND);
   }
   SDL_FreeSurface(surface);
 
@@ -815,10 +815,11 @@ platform_draw()
         char sym = viz->sym;
         uint64_t fidx = viz->floor;
         uint64_t light = viz->light;
+        uint64_t dim = viz->dim;
         uint64_t cridx = viz->cr;
         uint64_t tridx = viz->tr;
 
-        // Art priority creature, treasure, fallback to symmap ASCII
+        // Art priority creature, wall, treasure, fallback to symmap ASCII
         SDL_Texture *srct = 0;
         if (cridx && cridx <= AL(art_textureD)) {
           srct = art_textureD[cridx - 1];
@@ -838,7 +839,10 @@ platform_draw()
 
         SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));
         SDL_RenderFillRect(rendererD, &sprite_rect);
+
+        if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
         SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
+        if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
       }
     }
 

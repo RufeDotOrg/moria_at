@@ -4,6 +4,7 @@ struct vizS {
   char sym;
   uint8_t floor;
   uint8_t light;
+  uint8_t dim;
   uint8_t tr;
   uint16_t cr;
 };

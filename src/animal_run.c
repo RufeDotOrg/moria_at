@@ -336,8 +336,10 @@ struct vizS* viz;
       return 16;
     /* Dungeon Fixtures */
     case TV_VIS_TRAP:
-      if (obj->tchar != ' ') return 26;
-      viz->light = 0;
+      if (obj->tchar == ' ')
+        viz->light = 0;
+      else
+        return 26;
       break;
     case TV_RUBBLE:
       return 27;
@@ -420,17 +422,10 @@ viz_update()
       struct objS* obj = &entity_objD[c_ptr->oidx];
       struct vizS viz = {0};
       if (row != py || col != px) {
-        if (mon->mlit) viz.cr = mon->cidx;
         viz.light = (c_ptr->cflag & CF_SEEN) != 0;
-        if (!blind && (CF_VIZ & c_ptr->cflag)) {
-          if (c_ptr->cflag & CF_TEMP_LIGHT) {
-            viz.light = 3;
-          } else if (c_ptr->cflag & CF_LIT) {
-            if (los(py, px, row, col))
-              viz.light = 3;
-            else
-              viz.light = 2;
-          }
+        if (mon->mlit) {
+          viz.cr = mon->cidx;
+        } else if (!blind && (CF_VIZ & c_ptr->cflag)) {
           switch (c_ptr->fval) {
             case GRANITE_WALL:
             case BOUNDARY_WALL:
@@ -442,7 +437,12 @@ viz_update()
             case MAGMA_WALL:
               viz.floor = 5 + (c_ptr->oidx != 0);
               break;
+            case FLOOR_OBST:
+              viz.tr = obj_viz(obj, &viz);
+              break;
             default:
+              viz.light += ((CF_LIT & c_ptr->cflag) != 0);
+              viz.dim = obj->tval && los(py, px, row, col) == 0;
               viz.tr = obj_viz(obj, &viz);
               break;
           }
