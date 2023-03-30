@@ -948,9 +948,10 @@ disturb(search, light)
   find_flag = FALSE;
 }
 static void
-build_room(yval, xval)
+build_room(ychunk, xchunk)
 {
-  int i, j, x, xmax, y, ymax;
+  int x, xmax, y, ymax;
+  int wroom, hroom;
   uint8_t floor;
   struct caveS *c_ptr, *d_ptr;
 
@@ -959,40 +960,34 @@ build_room(yval, xval)
   else
     floor = FLOOR_DARK;
 
-  y = yval - randint(ROOM_HEIGHT / 2);
-  ymax = yval + randint(ROOM_HEIGHT / 2) - 1;
-  x = xval - randint(ROOM_WIDTH / 2);
-  xmax = xval + randint(ROOM_WIDTH / 2) - 1;
+  hroom = CHUNK_HEIGHT - randint(CHUNK_HEIGHT - 4);
+  wroom = CHUNK_WIDTH - randint(CHUNK_WIDTH - 4);
+  y = ychunk * CHUNK_HEIGHT;
+  x = xchunk * CHUNK_WIDTH;
+  ymax = y + hroom;
+  xmax = x + wroom;
 
-  for (i = y; i <= ymax; i++) {
-    for (j = x; j <= xmax; j++) {
+  for (int i = y; i <= ymax; i++) {
+    for (int j = x; j <= xmax; j++) {
       c_ptr = &caveD[i][j];
       c_ptr->fval = floor;
       c_ptr->cflag |= CF_ROOM;
     }
   }
 
-  y -= 1;
-  ymax += 1;
-  x -= 1;
-  xmax += 1;
-  for (i = y; i <= ymax; i++) {
+  for (int i = y; i <= ymax; i++) {
     c_ptr = &caveD[i][x];
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->cflag |= CF_ROOM;
     c_ptr = &caveD[i][xmax];
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->cflag |= CF_ROOM;
   }
 
   c_ptr = &caveD[y][x];
   d_ptr = &caveD[ymax][x];
-  for (i = x; i <= xmax; i++) {
+  for (int i = x; i <= xmax; i++) {
     c_ptr->fval = GRANITE_WALL;
-    c_ptr->cflag |= CF_ROOM;
     c_ptr++;
     d_ptr->fval = GRANITE_WALL;
-    d_ptr->cflag |= CF_ROOM;
     d_ptr++;
   }
 }
@@ -3276,7 +3271,7 @@ cave_gen()
         // Offset the room within the viewport
         yloc[k] = i * CHUNK_HEIGHT + (CHUNK_HEIGHT / 2);
         xloc[k] = j * CHUNK_WIDTH + (CHUNK_WIDTH / 2);
-        build_room(yloc[k], xloc[k]);
+        build_room(i, j);
         k++;
       }
 
