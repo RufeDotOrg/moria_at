@@ -3231,8 +3231,8 @@ place_streamer(fval, treas_chance)
   struct caveS* c_ptr;
 
   /* Choose starting point and direction  	*/
-  y = (MAX_HEIGHT / 2) + ROOM_HEIGHT - randint(SYMMAP_HEIGHT);
-  x = (MAX_WIDTH / 2) + ROOM_WIDTH - randint(SYMMAP_WIDTH);
+  y = (MAX_HEIGHT / 2) - randint(SYMMAP_HEIGHT);
+  x = (MAX_WIDTH / 2) - randint(SYMMAP_WIDTH);
 
   dir = randint(8); /* Number 1-4, 6-9  */
   if (dir > 4) dir = dir + 1;
