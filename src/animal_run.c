@@ -2533,7 +2533,7 @@ struct creatureS* cre;
 {
   return (cre->cmove & CM_INVISIBLE);
 }
-int
+static int
 oset_visible(obj)
 struct objS* obj;
 {
@@ -2830,24 +2830,19 @@ void
 map_area()
 {
   struct caveS* c_ptr;
-  int row, col;
-  int i, j, k, l;
 
-  // TBD: tuning
-  i = panelD.panel_row_min - randint(10);
-  j = panelD.panel_row_max + randint(10);
-  k = panelD.panel_col_min - randint(20);
-  l = panelD.panel_col_max + randint(20);
-  for (col = i; col <= j; col++)
-    for (row = k; row <= l; row++) {
-      c_ptr = &caveD[col][row];
-      if (in_bounds(col, row) && cave_floor_near(col, row)) {
-        if (c_ptr->fval >= MIN_WALL)
+  for (int row = 0; row < MAX_HEIGHT; row++) {
+    for (int col = 0; col < MAX_WIDTH; col++) {
+      c_ptr = &caveD[row][col];
+      if (c_ptr->fval >= MIN_WALL) {
+        if (c_ptr->fval == BOUNDARY_WALL || cave_floor_near(row, col)) {
           c_ptr->cflag |= CF_PERM_LIGHT;
-        else if (c_ptr->oidx && oset_visible(&entity_objD[c_ptr->oidx]))
-          c_ptr->cflag |= CF_FIELDMARK;
+        }
+      } else if (c_ptr->oidx && oset_visible(&entity_objD[c_ptr->oidx])) {
+        c_ptr->cflag |= CF_FIELDMARK;
       }
     }
+  }
 }
 int
 get_obj_num(level, must_be_small)
@@ -3908,7 +3903,6 @@ update_mon(midx)
     }
   }
 
-  if (HACK) flag = TRUE;
   /* Light it up.   */
   if (flag) {
     if (!m_ptr->mlit) {
@@ -11699,18 +11693,9 @@ dungeon()
                 } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
                          caveD[y][x].midx != 0);
                 break;
-              case CTRL('m'):
-                if (mon_usedD) {
-                  int rv = randint(mon_usedD);
-                  struct monS* mon = mon_get(monD[rv - 1]);
-                  MSG("Teleport to monster id %d (%d/%d)", mon->id, rv,
-                      mon_usedD);
-
-                  int fy = mon->fy;
-                  int fx = mon->fx;
-                  py_teleport_near(fy, fx, &y, &x);
-                }
-                break;
+              case CTRL('m'): {
+                map_area();
+              } break;
               case CTRL('o'): {
                 static int y_obj_teleportD;
                 static int x_obj_teleportD;
