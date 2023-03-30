@@ -3264,7 +3264,7 @@ cave_gen()
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
   int i, j, k;
   int y1, x1, y2, x2, pick1, pick2, tmp;
-  int16_t yloc[CHUNK_SQ + 1], xloc[CHUNK_SQ + 1];
+  int16_t yloc[CHUNK_AREA + 1], xloc[CHUNK_AREA + 1];
 
   k = randnor(DUN_ROOM_MEAN, 2);
   for (i = 0; i < k; i++)
@@ -3274,8 +3274,8 @@ cave_gen()
     for (j = 0; j < AL(room_map[0]); j++)
       if (room_map[i][j]) {
         // Offset the room within the viewport
-        yloc[k] = i * CHUNK_HEIGHT + (CHUNK_HEIGHT / 4);
-        xloc[k] = j * CHUNK_WIDTH + (CHUNK_WIDTH / 4);
+        yloc[k] = i * CHUNK_HEIGHT + (CHUNK_HEIGHT / 2);
+        xloc[k] = j * CHUNK_WIDTH + (CHUNK_WIDTH / 2);
         build_room(yloc[k], xloc[k]);
         k++;
       }
@@ -3962,18 +3962,16 @@ void
 light_room(y, x)
 {
   int i, j, start_col, end_col;
-  int tmp1, tmp2, start_row, end_row;
+  int start_row, end_row;
   struct caveS* c_ptr;
   int tval;
 
-  tmp1 = CHUNK_HEIGHT / 2;
-  tmp2 = CHUNK_WIDTH / 2;
-  start_row = (y / tmp1) * tmp1;
-  start_col = (x / tmp2) * tmp2;
-  end_row = start_row + tmp1 - 1;
-  end_col = start_col + tmp2 - 1;
-  for (i = start_row; i <= end_row; i++)
-    for (j = start_col; j <= end_col; j++) {
+  start_row = (y / CHUNK_HEIGHT) * CHUNK_HEIGHT;
+  start_col = (x / CHUNK_WIDTH) * CHUNK_WIDTH;
+  end_row = start_row + CHUNK_HEIGHT;
+  end_col = start_col + CHUNK_WIDTH;
+  for (i = start_row; i < end_row; i++)
+    for (j = start_col; j < end_col; j++) {
       c_ptr = &caveD[i][j];
       if ((c_ptr->cflag & CF_ROOM)) {
         c_ptr->cflag |= CF_PERM_LIGHT | CF_SEEN;
@@ -4001,18 +3999,16 @@ void
 unlight_room(y, x)
 {
   int i, j, start_col, end_col;
-  int tmp1, tmp2, start_row, end_row;
+  int start_row, end_row;
   struct caveS* c_ptr;
   int tval;
 
-  tmp1 = CHUNK_HEIGHT / 2;
-  tmp2 = CHUNK_WIDTH / 2;
-  start_row = (y / tmp1) * tmp1;
-  start_col = (x / tmp2) * tmp2;
-  end_row = start_row + tmp1 - 1;
-  end_col = start_col + tmp2 - 1;
-  for (i = start_row; i <= end_row; i++)
-    for (j = start_col; j <= end_col; j++) {
+  start_row = (y / CHUNK_HEIGHT) * CHUNK_HEIGHT;
+  start_col = (x / CHUNK_WIDTH) * CHUNK_WIDTH;
+  end_row = start_row + CHUNK_HEIGHT;
+  end_col = start_col + CHUNK_WIDTH;
+  for (i = start_row; i < end_row; i++)
+    for (j = start_col; j < end_col; j++) {
       c_ptr = &caveD[i][j];
       if (c_ptr->cflag & CF_ROOM && c_ptr->fval < MAX_FLOOR) {
         c_ptr->cflag &= ~CF_PERM_LIGHT;

@@ -30,19 +30,19 @@
 #define CF_TEMP_LIGHT 0x2
 #define CF_PERM_LIGHT 0x4
 #define CF_FIELDMARK 0x8  // Object bypasses normal visibility rules
-#define CF_SEEN 0x10 // Cave revealed by player or light source
+#define CF_SEEN 0x10      // Cave revealed by player or light source
 #define CF_LIT (CF_TEMP_LIGHT | CF_PERM_LIGHT)
 #define CF_LIT_ROOM (CF_ROOM | CF_PERM_LIGHT)
 #define CF_VIZ (CF_TEMP_LIGHT | CF_PERM_LIGHT | CF_FIELDMARK)
 
-#define CHUNK_HEIGHT 16
-#define CHUNK_WIDTH 32
+#define CHUNK_WIDTH 16
+#define CHUNK_HEIGHT 8
 #define CHUNK_COL (MAX_HEIGHT / CHUNK_HEIGHT)
 #define CHUNK_ROW (MAX_WIDTH / CHUNK_WIDTH)
-#define CHUNK_SQ (CHUNK_COL * CHUNK_ROW)
+#define CHUNK_AREA (CHUNK_COL * CHUNK_ROW)
 
-#define ROOM_HEIGHT (CHUNK_HEIGHT / 2 - 1)
-#define ROOM_WIDTH (CHUNK_WIDTH / 2 - 1)
+#define ROOM_HEIGHT (CHUNK_HEIGHT - 1)
+#define ROOM_WIDTH (CHUNK_WIDTH - 1)
 
 #define DUN_TUN_RND 9  /* 1/Chance of Random direction        */
 #define DUN_TUN_CHG 70 /* Chance of changing direction (99 max) */
