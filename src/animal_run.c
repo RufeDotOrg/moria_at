@@ -947,8 +947,7 @@ disturb(search, light)
   if (countD.rest != 0) countD.rest = 0;
   find_flag = FALSE;
 }
-static void
-build_room(ychunk, xchunk)
+static void build_room(ychunk, xchunk, ycenter, xcenter) int *ycenter, *xcenter;
 {
   int x, xmax, y, ymax;
   int wroom, hroom;
@@ -966,6 +965,8 @@ build_room(ychunk, xchunk)
   x = xchunk * CHUNK_WIDTH;
   ymax = y + hroom;
   xmax = x + wroom;
+  *ycenter = y + hroom / 2;
+  *xcenter = x + wroom / 2;
 
   for (int i = y; i <= ymax; i++) {
     for (int j = x; j <= xmax; j++) {
@@ -3259,7 +3260,7 @@ cave_gen()
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
   int i, j, k;
   int y1, x1, y2, x2, pick1, pick2, tmp;
-  int16_t yloc[CHUNK_AREA + 1], xloc[CHUNK_AREA + 1];
+  int yloc[CHUNK_AREA + 1], xloc[CHUNK_AREA + 1];
 
   k = randnor(DUN_ROOM_MEAN, 2);
   for (i = 0; i < k; i++)
@@ -3268,10 +3269,7 @@ cave_gen()
   for (i = 0; i < AL(room_map); i++)
     for (j = 0; j < AL(room_map[0]); j++)
       if (room_map[i][j]) {
-        // Offset the room within the viewport
-        yloc[k] = i * CHUNK_HEIGHT + (CHUNK_HEIGHT / 2);
-        xloc[k] = j * CHUNK_WIDTH + (CHUNK_WIDTH / 2);
-        build_room(i, j);
+        build_room(i, j, &yloc[k], &xloc[k]);
         k++;
       }
 
