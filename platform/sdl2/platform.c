@@ -843,6 +843,20 @@ platform_draw()
         if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
         SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
         if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
+        switch (viz->fade) {
+          case 1:
+            SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);
+            SDL_RenderFillRect(rendererD, &sprite_rect);
+            break;
+          case 2:
+            SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 64);
+            SDL_RenderFillRect(rendererD, &sprite_rect);
+            break;
+          case 3:
+            SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 98);
+            SDL_RenderFillRect(rendererD, &sprite_rect);
+            break;
+        }
       }
     }
 

@@ -402,6 +402,18 @@ cave_color(row, col, rmin, rmax, cmin, cmax)
 
   return color;
 }
+static int
+fade_by_distance(y1, x1, y2, x2)
+{
+  int dy = y1 - y2;
+  int dx = x1 - x2;
+  int sq = dx * dx + dy * dy;
+
+  if (sq <= 1) return 1;
+  if (sq <= 4) return 2;
+  if (sq <= 9) return 3;
+  return 4;
+}
 static void
 viz_update()
 {
@@ -423,6 +435,7 @@ viz_update()
       struct vizS viz = {0};
       if (row != py || col != px) {
         viz.light = (c_ptr->cflag & CF_SEEN) != 0;
+        viz.fade = fade_by_distance(py, px, row, col) - 1;
         if (mon->mlit) {
           viz.cr = mon->cidx;
         } else if (!blind && (CF_VIZ & c_ptr->cflag)) {
