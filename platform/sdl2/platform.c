@@ -697,10 +697,11 @@ void rect_frame(r, scale) SDL_Rect r;
 int
 platform_draw()
 {
-  int show_map, mode, height, width, left, top, len;
+  int show_map, mode, more, height, width, left, top, len;
   char tmp[80];
 
-  show_map = 1;
+  show_map = 0;
+  more = 0;
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
   top = scale_rectD.y + 6;
@@ -710,8 +711,11 @@ platform_draw()
 
   mode = mode_change();
   switch (mode) {
+    case 0:
+      show_map = 1;
+      more = msg_moreD;
+      break;
     case 2:
-      show_map = 0;
       left = columnD[1] * display_rectD.w;
       if (screen_submodeD)
         alt_fill(AL(screenD), AL(screenD[0]), left, top, width, height);
@@ -731,7 +735,6 @@ platform_draw()
       }
       break;
     case 1:
-      show_map = 0;
       left = columnD[1] * display_rectD.w;
       alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
       memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
@@ -899,7 +902,7 @@ platform_draw()
         }
       }
     }
-    if (msg_moreD) {
+    if (more) {
       static int tapD;
       tapD = (tapD + 1) % 4;
       switch (tapD) {
@@ -1003,7 +1006,9 @@ platform_draw()
   {
     char *msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
-    int more_used = snprintf(AP(tmp), "-more %d-", msg_moreD);
+    int more_used = 0;
+
+    if (more) more_used = snprintf(AP(tmp), "-more %d-", more);
 
     // Gameplay shows previous message to help the player out
     if (!msg_used && show_map) {
@@ -1037,13 +1042,13 @@ platform_draw()
     if (msg_used) {
       SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
       rect_frame(rect, 1);
-      if (msg_moreD) {
+      if (more_used) {
         rect_frame(rect2, 1);
         rect_frame(rect3, 1);
       }
 
       render_font_string(rendererD, &fontD, msg, msg_used, p);
-      if (msg_moreD) {
+      if (more_used) {
         render_font_string(rendererD, &fontD, tmp, more_used, p2);
         render_font_string(rendererD, &fontD, tmp, more_used, p3);
       }
