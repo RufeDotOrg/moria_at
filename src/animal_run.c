@@ -358,7 +358,7 @@ struct vizS* viz;
   return 0;
 }
 static int
-cave_color(row, col, rmin, rmax, cmin, cmax)
+cave_color(row, col)
 {
   struct caveS* c_ptr;
   struct monS* mon;
@@ -375,6 +375,8 @@ cave_color(row, col, rmin, rmax, cmin, cmax)
     color = BRIGHT + WHITE;
   } else if (CF_TEMP_LIGHT & c_ptr->cflag) {
     color = BRIGHT + CYAN;
+  } else if (CF_LIT & c_ptr->cflag) {
+    color = BRIGHT + BLACK;
   }
 
   if (color == 0 && c_ptr->oidx) {
@@ -394,10 +396,6 @@ cave_color(row, col, rmin, rmax, cmin, cmax)
         color = BRIGHT + GREEN;
       }
     }
-  }
-  if (color == 0 &&
-      (row >= rmin && row <= rmax && col >= cmin && col <= cmax)) {
-    color = BRIGHT + BLACK;
   }
 
   return color;
@@ -477,10 +475,19 @@ viz_minimap()
   int cmin = panelD.panel_col_min;
   int cmax = panelD.panel_col_max;
   int color;
-  if (dun_level) {
+
+  if (minimap_enlargeD && dun_level) {
     for (int row = 0; row < MAX_HEIGHT; ++row) {
       for (int col = 0; col < MAX_WIDTH; ++col) {
-        color = cave_color(row, col, rmin, rmax, cmin, cmax);
+        color = cave_color(row, col);
+
+        if (color == 0 &&
+            (row >= rmin && row <= rmax && (col == cmin || col == cmax))) {
+          color = BRIGHT + BLACK;
+        } else if (color == 0 && (col >= cmin && col <= cmax &&
+                                  (row == rmin || row == rmax))) {
+          color = BRIGHT + BLACK;
+        }
 
         minimapD[row][col] = color;
       }
@@ -489,7 +496,7 @@ viz_minimap()
     enum { RATIO = MAX_WIDTH / SYMMAP_WIDTH };
     for (int row = 0; row < MAX_HEIGHT / RATIO; ++row) {
       for (int col = 0; col < MAX_WIDTH / RATIO; ++col) {
-        color = cave_color(row, col, rmin, rmax, cmin, cmax);
+        color = cave_color(row + rmin, col + cmin);
         for (int i = 0; i < 4; ++i) {
           for (int j = 0; j < 4; ++j) {
             minimapD[row * RATIO + i][col * RATIO + j] = color;
