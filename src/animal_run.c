@@ -11687,6 +11687,20 @@ dungeon()
                 uD.chp = uD.mhp;
                 msg_print("You are healed.");
                 break;
+              case CTRL('l'): {
+                static int toggleD;
+                for (int row = 0; row < MAX_HEIGHT; ++row) {
+                  for (int col = 0; col < MAX_WIDTH; ++col) {
+                    if (caveD[row][col].fval <= MAX_OPEN_SPACE) {
+                      if (!toggleD)
+                        caveD[row][col].cflag |= (CF_PERM_LIGHT | CF_ROOM);
+                      else
+                        caveD[row][col].cflag &= ~(CF_PERM_LIGHT | CF_ROOM);
+                    }
+                  }
+                }
+                toggleD = !toggleD;
+              } break;
               case CTRL('t'):
                 msg_print("teleport");
                 do {
