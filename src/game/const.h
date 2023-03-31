@@ -298,7 +298,7 @@
 #define MAX_WIN_MON 2     /* Total number of win creatures */
 #define WIN_MON_APPEAR 50 /* Level where winning creature begins */
 #define CRE_LEV_ADJ 3
-#define MAX_SIGHT 20 /* Maximum dis a creature can be seen    */
+#define MAX_SIGHT 16 /* Maximum distance a creature can be seen (1 chunk) */
 
 /* definitions for creatures, cmove field */
 #define CM_ALL_MV_FLAGS 0x0000003FL
