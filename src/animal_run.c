@@ -12,6 +12,11 @@ static int find_openarea;
 static int find_breakright, find_breakleft;
 static int find_prevdir;
 static jmp_buf restartD;
+static char input_recordD[4 * 1024];
+static int input_record_writeD;
+static int input_record_readD;
+static int input_actionD[4];
+static int input_action_usedD;
 
 static char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
@@ -96,9 +101,17 @@ static char
 inkey()
 {
   char c;
-  do {
-    c = platformD.readansi();
-  } while (c == 0);
+
+  if (input_record_readD < input_record_writeD) {
+    c = AS(input_recordD, input_record_readD++);
+  } else {
+    do {
+      c = platformD.readansi();
+    } while (c == 0);
+    AS(input_recordD, input_record_writeD++) = c;
+    input_record_readD += 1;
+  }
+
   return c;
 }
 void
@@ -3427,6 +3440,9 @@ cave_reset()
   // Release all monsters
   mon_usedD = 0;
   memset(entity_monD, 0, sizeof(entity_monD));
+
+  // Replay state
+  input_record_readD = input_action_usedD = 0;
 }
 BOOL
 panel_contains(panel, y, x)
@@ -10818,13 +10834,19 @@ void
 py_menu()
 {
   char c;
-  int line;
+  int line, enable_rewind;
+
+  enable_rewind = (input_record_writeD <= AL(input_recordD) &&
+                   input_action_usedD <= AL(input_actionD));
 
   overlay_submodeD = 'o';
   while (1) {
     line = 0;
     BufMsg(overlay, "a) Rest until healed, malady expires, or wait for recall");
-    BufMsg(overlay, "b) Restart dungeon level");
+    BufMsg(
+        overlay, "b) %s",
+        enable_rewind ? "Rewind (1 turn)" : "Rewind disabled (out of memory)");
+    BufMsg(overlay, "c) Restart dungeon level");
     if (!in_subcommand("Advanced Game Options", &c)) break;
 
     switch (c) {
@@ -10833,6 +10855,14 @@ py_menu()
         return;
 
       case 'b':
+        if (!enable_rewind) return;
+
+        input_record_writeD = AS(input_actionD, MAX(0, input_action_usedD - 2));
+        cave_reset();
+        longjmp(restartD, 1);
+
+      case 'c':
+        input_record_writeD = 0;
         cave_reset();
         longjmp(restartD, 1);
     }
@@ -11523,6 +11553,7 @@ dungeon()
         mmove(find_direction, &y, &x);
       } else {
         msg_advance();
+        AS(input_actionD, input_action_usedD++) = input_record_readD;
         c = inkey();
 
         // AWN: Period attempts auto-detection of a situational command
@@ -11974,6 +12005,7 @@ main()
     dungeon();
 
     if (!death) {
+      input_record_writeD = 0;
       cave_reset();
       if (platformD.save && platformD.save()) {
         if (save_exit_flag) break;
