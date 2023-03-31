@@ -1376,7 +1376,7 @@ SDL_Event event;
         case 0:
           return c;
         case 1:
-          if (c == ' ') return 'R';
+          if (c == ' ') return '=';
           return c & ~0x20;
       }
     } else if (touch) {

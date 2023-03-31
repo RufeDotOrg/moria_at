@@ -11,6 +11,7 @@ static int find_flag;
 static int find_openarea;
 static int find_breakright, find_breakleft;
 static int find_prevdir;
+static jmp_buf restartD;
 
 static char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
@@ -83,7 +84,7 @@ static void* save_addrD[] = {
     addrof(&uD),
 };
 void
-save_mapping()
+savechar_init()
 {
   save_len_ptrD = save_lenD;
   save_name_ptrD = save_nameD;
@@ -5820,6 +5821,26 @@ py_init()
     }
   }
 }
+static void*
+ptr_xor(void* a, void* b)
+{
+  return (void*)((uint64_t)a ^ (uint64_t)b);
+}
+void sort(array, len) void* array;
+{
+  int i, j;
+  void* swap;
+  void** arr = array;
+  for (i = 0; i < len; ++i) {
+    for (j = i + 1; j < len; ++j) {
+      if (arr[i] > arr[j]) {
+        swap = ptr_xor(arr[j], arr[i]);
+        arr[j] = ptr_xor(arr[j], swap);
+        arr[i] = ptr_xor(arr[i], swap);
+      }
+    }
+  }
+}
 void
 magic_init()
 {
@@ -5833,36 +5854,42 @@ magic_init()
   store_init();
 
   /* The first 3 entries for colors are fixed, (slime & apple juice, water) */
+  sort(AP(colors));
   for (i = 3; i < AL(colors); i++) {
     j = randint(AL(colors) - 3) + 2;
     tmp = colors[i];
     colors[i] = colors[j];
     colors[j] = tmp;
   }
+  sort(AP(woods));
   for (i = 0; i < AL(woods); i++) {
     j = randint(AL(woods)) - 1;
     tmp = woods[i];
     woods[i] = woods[j];
     woods[j] = tmp;
   }
+  sort(AP(metals));
   for (i = 0; i < AL(metals); i++) {
     j = randint(AL(metals)) - 1;
     tmp = metals[i];
     metals[i] = metals[j];
     metals[j] = tmp;
   }
+  sort(AP(rocks));
   for (i = 0; i < AL(rocks); i++) {
     j = randint(AL(rocks)) - 1;
     tmp = rocks[i];
     rocks[i] = rocks[j];
     rocks[j] = tmp;
   }
+  sort(AP(amulets));
   for (i = 0; i < AL(amulets); i++) {
     j = randint(AL(amulets)) - 1;
     tmp = amulets[i];
     amulets[i] = amulets[j];
     amulets[j] = tmp;
   }
+  sort(AP(mushrooms));
   for (i = 0; i < AL(mushrooms); i++) {
     j = randint(AL(mushrooms)) - 1;
     tmp = mushrooms[i];
@@ -5881,7 +5908,7 @@ magic_init()
       descD[8] = '\0';
     else
       descD[9] = '\0';
-    strcat(titleD[h], descD);
+    strcpy(titleD[h], descD);
   }
   rnd_seed = seed;
 }
@@ -7380,11 +7407,6 @@ starlite(y, x)
   see_print("The end of the staff bursts into a blue shimmering light.");
   for (int it = 1; it <= 9; it++)
     if (it != 5) light_line(it, y, x);
-}
-static void*
-ptr_xor(void* a, void* b)
-{
-  return (void*)((uint64_t)a ^ (uint64_t)b);
 }
 static int
 obj_cmp(a, b)
@@ -10792,6 +10814,30 @@ int *uy, *ux;
 
   return FALSE;
 }
+void
+py_menu()
+{
+  char c;
+  int line;
+
+  overlay_submodeD = 'o';
+  while (1) {
+    line = 0;
+    BufMsg(overlay, "a) Rest until healed, malady expires, or wait for recall");
+    BufMsg(overlay, "b) Restart dungeon level");
+    if (!in_subcommand("Advanced Game Options", &c)) break;
+
+    switch (c) {
+      case 'a':
+        countD.rest = -9999;
+        return;
+
+      case 'b':
+        cave_reset();
+        longjmp(restartD, 1);
+    }
+  }
+}
 static void hit_trap(y, x, uy, ux) int *uy, *ux;
 {
   int num, dam;
@@ -11531,6 +11577,10 @@ dungeon()
             case '?':
               py_help();
               break;
+            case '=':
+              py_menu();
+              msg_advance();
+              break;
             case '-':
               zoom_factorD = (zoom_factorD - 1) % MAX_ZOOM;
               break;
@@ -11892,17 +11942,19 @@ seed_init()
 int
 main()
 {
-  save_mapping();
-  platform_init();
-
-  seed_init();
-
-  dun_level = 1;
+  savechar_init();
   mon_level_init();
   obj_level_init();
+
+  platform_init();
+
+  setjmp(restartD);
+
   if (platformD.load && platformD.load()) {
   } else {
+    seed_init();
     py_init();
+    dun_level = 1;
   }
   calc_bonuses();
 
