@@ -874,7 +874,7 @@ platform_draw()
     zoom_rect.w = (zw * 2 + (zf != 0)) * ART_W;
     zoom_rect.h = (zy * 2 + (zf != 0)) * ART_H;
 
-    SDL_SetRenderDrawColor(rendererD, C(whiteD));
+    SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
     SDL_RenderDrawRect(rendererD, &zoom_rect);
 
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
