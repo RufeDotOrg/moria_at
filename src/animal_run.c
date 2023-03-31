@@ -379,7 +379,7 @@ cave_color(row, col)
     color = BRIGHT + BLACK;
   }
 
-  if (color == 0 && c_ptr->oidx) {
+  if (color <= BRIGHT + BLACK && c_ptr->oidx) {
     obj = &entity_objD[c_ptr->oidx];
     if (CF_VIZ & c_ptr->cflag) {
       if (obj->tval == TV_UP_STAIR) {
