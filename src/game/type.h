@@ -237,6 +237,7 @@ struct platformS {
   fn seed;
   fn load;
   fn save;
+  fn erase;
   fn readansi;
   fn draw;
 };

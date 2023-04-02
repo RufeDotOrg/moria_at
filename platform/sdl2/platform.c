@@ -1575,6 +1575,20 @@ load()
 
   return 0;
 }
+int
+erase()
+{
+  SDL_RWops *writef = SDL_RWFromFile("savechar", "w+b");
+  SDL_RWclose(writef);
+
+  for (int it = 0; it < save_field_countD; ++it) {
+    memset(save_addr_ptrD[it], 0, save_len_ptrD[it]);
+  }
+  memset(maD, 0, sizeof(maD));
+  memset(msglen_cqD, 0, sizeof(msglen_cqD));
+
+  return 0;
+}
 
 // Initialization
 #define SDL_SCOPE (SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS)
@@ -1642,12 +1656,10 @@ platform_init()
   font_colorD = whiteD;
 
   if (ANDROID) zoom_factorD = 2;
-  if (ANDROID)
-    platformD.seed = platform_random;
-  else
-    platformD.seed = platform_auxval_random;
+  platformD.seed = platform_random;
   platformD.load = load;
   platformD.save = save;
+  platformD.erase = erase;
   platformD.readansi = platform_readansi;
   platformD.draw = platform_draw;
 

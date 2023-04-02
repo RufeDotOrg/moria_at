@@ -3442,7 +3442,7 @@ cave_reset()
   memset(entity_monD, 0, sizeof(entity_monD));
 
   // Replay state
-  input_record_readD = input_action_usedD = 0;
+  input_record_writeD = input_record_readD = input_action_usedD = 0;
 }
 BOOL
 panel_contains(panel, y, x)
@@ -10843,10 +10843,10 @@ py_menu()
   while (1) {
     line = 0;
     BufMsg(overlay, "a) Rest until healed, malady expires, or wait for recall");
-    BufMsg(
-        overlay, "b) %s",
-        enable_rewind ? "Rewind (1 turn)" : "Rewind disabled (out of memory)");
+    BufMsg(overlay, "b) %s",
+           enable_rewind ? "Rewind turn" : "Rewind disabled (out of memory)");
     BufMsg(overlay, "c) Restart dungeon level");
+    BufMsg(overlay, "d) Restart game (delete character)");
     if (!in_subcommand("Advanced Game Options", &c)) break;
 
     switch (c) {
@@ -10857,14 +10857,22 @@ py_menu()
       case 'b':
         if (!enable_rewind) return;
 
-        input_record_writeD = AS(input_actionD, MAX(0, input_action_usedD - 2));
+        enable_rewind = AS(input_actionD, MAX(0, input_action_usedD - 2));
         cave_reset();
+        input_record_writeD = enable_rewind;
         longjmp(restartD, 1);
 
       case 'c':
-        input_record_writeD = 0;
         cave_reset();
         longjmp(restartD, 1);
+
+      case 'd':
+        if (platformD.erase) {
+          platformD.erase();
+          cave_reset();
+          longjmp(restartD, 1);
+        }
+        break;
     }
   }
 }
@@ -12005,7 +12013,6 @@ main()
     dungeon();
 
     if (!death) {
-      input_record_writeD = 0;
       cave_reset();
       if (platformD.save && platformD.save()) {
         if (save_exit_flag) break;
