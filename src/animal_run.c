@@ -5680,20 +5680,27 @@ int
 py_class_select()
 {
   char c;
-  int line, it;
-  line = 0;
-  for (int it = 0; it < AL(classD); ++it) {
-    overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]), "%c) %s",
-                                   'a' + it, classD[it].name);
-    line += 1;
-  }
+  int line, clidx;
+  int filter[] = {0, 3};
 
-  if (in_subcommand("Which character would you like to play?", &c)) {
+  clidx = -1;
+  do {
+    line = 0;
+    for (int it = 0; it < AL(filter); ++it) {
+      overlay_usedD[line] =
+          snprintf(overlayD[line], AL(overlayD[line]), "%c) %s", 'a' + it,
+                   classD[filter[it]].name);
+      line += 1;
+    }
+
+    if (!in_subcommand("Which character class would you like to play?", &c))
+      break;
     uint8_t iidx = c - 'a';
-    if (iidx > 0 && iidx < AL(classD)) return iidx;
-  }
 
-  return 0;
+    if (iidx < AL(filter)) clidx = filter[iidx];
+  } while (clidx < 0);
+
+  return clidx;
 }
 static void py_stats(stats, len) int8_t* stats;
 {
@@ -5712,13 +5719,12 @@ static void py_stats(stats, len) int8_t* stats;
     stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
 void
-py_init()
+py_init(csel)
 {
   int hitdie;
-  int csel, rsel;
+  int rsel;
   int8_t stat[MAX_A];
 
-  csel = 0;  // py_class_select();
   do {
     rsel = randint(AL(raceD)) - 1;
   } while ((raceD[rsel].rtclass & (1 << csel)) == 0);
@@ -11981,6 +11987,8 @@ seed_init()
 int
 main()
 {
+  int csel;
+
   savechar_init();
   mon_level_init();
   obj_level_init();
@@ -11991,8 +11999,11 @@ main()
 
   if (platformD.load && platformD.load()) {
   } else {
+    csel = py_class_select();
+    if (csel < 0 || csel >= AL(classD)) return 1;
+
     seed_init();
-    py_init();
+    py_init(csel);
     dun_level = 1;
   }
   calc_bonuses();
