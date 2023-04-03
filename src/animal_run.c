@@ -6719,7 +6719,7 @@ sleep_monster(dir, y, x)
   return (sleep);
 }
 int
-sleep_monster_aoe()
+sleep_monster_aoe(maxdis)
 {
   int y, x, sleep, cdis;
   struct creatureS* cr_ptr;
@@ -6729,10 +6729,10 @@ sleep_monster_aoe()
   sleep = FALSE;
   FOR_EACH(mon, {
     cr_ptr = &creatureD[mon->cidx];
-    mon_desc(it_index);
     cdis = distance(y, x, mon->fy, mon->fx);
-    if ((cdis > MAX_SIGHT) || !los(y, x, mon->fy, mon->fx)) continue;
+    if ((cdis > maxdis) || !los(y, x, mon->fy, mon->fx)) continue;
 
+    mon_desc(it_index);
     if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
         (CD_NO_SLEEP & cr_ptr->cdefense)) {
       if (mon->mlit) MSG("%s is unaffected.", descD);
@@ -8566,6 +8566,148 @@ py_zap(iidx)
     inven_try_wand_dir(iidx, dir);
   }
 }
+void py_magic(iidx, y_ptr, x_ptr) int* y_ptr;
+int* x_ptr;
+{
+  char c;
+  struct objS* obj;
+  uint32_t flags;
+  int spell[32], spell_used, first_spell, line, dir;
+
+  obj = obj_get(invenD[iidx]);
+  flags = obj->flags;
+  if (obj->tval == TV_MAGIC_BOOK && flags) {
+    spell_used = 0;
+    while (flags) {
+      spell[spell_used] = bit_pos(&flags);
+      spell_used += 1;
+    }
+    first_spell = spell[0];
+
+    line = 0;
+    for (int it = 0; it < spell_used; ++it) {
+      BufMsg(overlay, "%c) %s", 'a' + it, spell_nameD[spell[it]]);
+    }
+    if (in_subcommand("Cast which spell?", &c)) {
+      uint8_t choice = c - 'a';
+      if (choice < spell_used) {
+        switch (spell[choice] + 1) {
+          case 1:
+            if (get_dir(0, &dir))
+              magic_bolt(GF_MAGIC_MISSILE, dir, uD.y, uD.x, damroll(2, 6),
+                         spell_nameD[0]);
+            break;
+          case 2:
+            ma_duration(MA_DETECT_MON, 1);
+            break;
+          case 3:
+            py_teleport(10, y_ptr, x_ptr);
+            break;
+          case 4:
+            illuminate(uD.y, uD.x);
+            break;
+          case 5:
+            py_heal_hit(damroll(4, 4));
+            break;
+          case 6:
+            detect_obj(oset_sdoor);
+            detect_obj(oset_trap);
+            break;
+          case 7:
+            if (get_dir(0, &dir))
+              fire_ball(GF_POISON_GAS, dir, uD.y, uD.x, 12, spell_nameD[6]);
+            break;
+          case 8:
+            if (get_dir(0, &dir)) confuse_monster(dir, uD.y, uD.x);
+            break;
+          case 9:
+            if (get_dir(0, &dir))
+              magic_bolt(GF_LIGHTNING, dir, uD.y, uD.x, damroll(4, 8),
+                         spell_nameD[8]);
+            break;
+          case 10:
+            td_destroy(uD.y, uD.x);
+            break;
+          case 11:
+            if (get_dir(0, &dir)) sleep_monster(dir, uD.y, uD.x);
+            break;
+          case 12:
+            if (countD.poison > 0) {
+              countD.poison = 1;
+            }
+            break;
+          case 13:
+            py_teleport(uD.lev * 3, y_ptr, x_ptr);
+            break;
+          case 14:
+            equip_remove_curse();
+            break;
+          case 15:
+            if (get_dir(0, &dir))
+              magic_bolt(GF_FROST, dir, uD.y, uD.x, damroll(6, 8),
+                         spell_nameD[14]);
+            break;
+          case 16:
+            if (get_dir(0, &dir)) wall_to_mud(dir, uD.y, uD.x);
+            break;
+          case 17:
+            create_food(uD.y, uD.x);
+            break;
+          case 18:
+            inven_recharge(inven_choice("Recharge which item?", "*"), 20);
+            break;
+          case 19:
+            sleep_monster_aoe(1);
+            break;
+          case 20:
+            if (get_dir(0, &dir)) poly_monster(dir, uD.y, uD.x);
+            break;
+          case 21:
+            inven_ident(
+                inven_choice("Which item do you wish identified?", "*/"));
+            break;
+          case 22:
+            sleep_monster_aoe(MAX_SIGHT);
+            break;
+          case 23:
+            if (get_dir(0, &dir))
+              magic_bolt(GF_FIRE, dir, uD.y, uD.x, damroll(9, 8),
+                         spell_nameD[22]);
+            break;
+          case 24:
+            if (get_dir(0, &dir)) speed_monster(dir, uD.y, uD.x, -1);
+            break;
+          case 25:
+            if (get_dir(0, &dir))
+              fire_ball(GF_FROST, dir, uD.y, uD.x, 48, spell_nameD[24]);
+            break;
+          case 26:
+            inven_recharge(inven_choice("Recharge which item?", "*"), 60);
+            break;
+          case 27:
+            if (get_dir(0, &dir)) teleport_monster(dir, uD.y, uD.x);
+            break;
+          case 28:
+            ma_duration(MA_FAST, randint(20) + uD.lev);
+            break;
+          case 29:
+            if (get_dir(0, &dir))
+              fire_ball(GF_FIRE, dir, uD.y, uD.x, 72, spell_nameD[28]);
+            break;
+          case 30:
+            destroy_area(uD.y, uD.x);
+            break;
+          case 31:
+            // TBD
+            // genocide();
+            break;
+          default:
+            break;
+        }
+      }
+    }
+  }
+}
 int
 inven_try_staff(iidx, uy, ux)
 int *uy, *ux;
@@ -8636,7 +8778,7 @@ int *uy, *ux;
             ident |= speed_monster_aoe(-1);
             break;
           case 14:
-            ident |= sleep_monster_aoe();
+            ident |= sleep_monster_aoe(MAX_SIGHT);
             break;
           case 15:
             ident |= py_heal_hit(randint(8));
@@ -8990,6 +9132,8 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
           inven_try_staff(iidx, x_ptr, x_ptr);
         } else if (obj->tval == TV_WAND) {
           py_zap(iidx);
+        } else if (obj->tval == TV_MAGIC_BOOK) {
+          py_magic(iidx, y_ptr, x_ptr);
         } else if (iidx < INVEN_EQUIP) {
           inven_wear(iidx);
         } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
