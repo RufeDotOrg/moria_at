@@ -5440,16 +5440,18 @@ equip_curse()
 static int
 equip_remove_curse()
 {
-  int eqidx;
+  int flag;
   struct objS* obj;
 
-  eqidx = equip_cursed();
-  if (eqidx > -1) {
-    obj = obj_get(invenD[eqidx]);
-    obj->flags &= ~TR_CURSED;
-    calc_bonuses();
-    return TRUE;
+  flag = FALSE;
+  for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
+    obj = obj_get(invenD[it]);
+    if (obj->flags & TR_CURSED) {
+      flag = TRUE;
+      obj->flags &= ~TR_CURSED;
+    }
   }
+
   return FALSE;
 }
 static int
