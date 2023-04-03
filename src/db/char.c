@@ -217,7 +217,7 @@ static char* spell_nameD[] = {
     "Stinking Cloud",
     "Confusion",
     "Lightning Bolt",
-    "Trap/Door Destruction",
+    "Trap/Door/Lock Destruction",
     "Sleep I",
     "Cure Poison",
     "Teleport Self",
