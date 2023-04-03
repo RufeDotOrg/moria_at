@@ -8590,7 +8590,7 @@ int* x_ptr;
   char c;
   struct objS* obj;
   uint32_t flags;
-  int spell[32], spell_used, first_spell, line, dir, abort;
+  int spell[32], spell_used, first_spell, line, dir;
 
   obj = obj_get(invenD[iidx]);
   flags = obj->flags;
@@ -8601,22 +8601,26 @@ int* x_ptr;
       spell_used += 1;
     }
     first_spell = spell[0];
+    overlay_submodeD = 'C' + mask_subval(obj->subval);
 
-    line = 0;
-    for (int it = 0; it < spell_used; ++it) {
-      BufMsg(overlay, "%c) %s", 'a' + it, spell_nameD[spell[it]]);
-    }
-    if (in_subcommand("Cast which spell?", &c)) {
+    do {
+      line = 0;
+      for (int it = 0; it < spell_used; ++it) {
+        BufMsg(overlay, "%c) %s", 'a' + it, spell_nameD[spell[it]]);
+      }
+
+      if (!in_subcommand("Cast which spell?", &c)) break;
       uint8_t choice = c - 'a';
+
       if (choice < spell_used) {
-        abort = 0;
+        turn_flag = TRUE;
         switch (spell[choice] + 1) {
           case 1:
             if (get_dir(0, &dir))
               magic_bolt(GF_MAGIC_MISSILE, dir, uD.y, uD.x, damroll(2, 6),
                          spell_nameD[0]);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 2:
             ma_duration(MA_DETECT_MON, 1);
@@ -8638,20 +8642,20 @@ int* x_ptr;
             if (get_dir(0, &dir))
               fire_ball(GF_POISON_GAS, dir, uD.y, uD.x, 12, spell_nameD[6]);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 8:
             if (get_dir(0, &dir))
               confuse_monster(dir, uD.y, uD.x);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 9:
             if (get_dir(0, &dir))
               magic_bolt(GF_LIGHTNING, dir, uD.y, uD.x, damroll(4, 8),
                          spell_nameD[8]);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 10:
             td_destroy(uD.y, uD.x);
@@ -8660,7 +8664,7 @@ int* x_ptr;
             if (get_dir(0, &dir))
               sleep_monster(dir, uD.y, uD.x);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 12:
             if (countD.poison > 0) {
@@ -8678,13 +8682,13 @@ int* x_ptr;
               magic_bolt(GF_FROST, dir, uD.y, uD.x, damroll(6, 8),
                          spell_nameD[14]);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 16:
             if (get_dir(0, &dir))
               wall_to_mud(dir, uD.y, uD.x);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 17:
             create_food(uD.y, uD.x);
@@ -8699,7 +8703,7 @@ int* x_ptr;
             if (get_dir(0, &dir))
               poly_monster(dir, uD.y, uD.x);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 21:
             inven_ident(
@@ -8713,19 +8717,19 @@ int* x_ptr;
               magic_bolt(GF_FIRE, dir, uD.y, uD.x, damroll(9, 8),
                          spell_nameD[22]);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 24:
             if (get_dir(0, &dir))
               speed_monster(dir, uD.y, uD.x, -1);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 25:
             if (get_dir(0, &dir))
               fire_ball(GF_FROST, dir, uD.y, uD.x, 48, spell_nameD[24]);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 26:
             inven_recharge(inven_choice("Recharge which item?", "*"), 60);
@@ -8734,7 +8738,7 @@ int* x_ptr;
             if (get_dir(0, &dir))
               teleport_monster(dir, uD.y, uD.x);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 28:
             ma_duration(MA_FAST, randint(20) + uD.lev);
@@ -8743,7 +8747,7 @@ int* x_ptr;
             if (get_dir(0, &dir))
               fire_ball(GF_FIRE, dir, uD.y, uD.x, 72, spell_nameD[28]);
             else
-              abort = 1;
+              turn_flag = 0;
             break;
           case 30:
             destroy_area(uD.y, uD.x);
@@ -8755,10 +8759,8 @@ int* x_ptr;
           default:
             break;
         }
-
-        if (!abort) turn_flag = TRUE;
       }
-    }
+    } while (!turn_flag);
   }
 }
 int
