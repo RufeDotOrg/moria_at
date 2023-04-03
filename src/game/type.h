@@ -22,14 +22,17 @@ struct uS {
   int chp_frac;
   int mhp;
   int gold;
-  int pspeed; // TBD: deprecate
+  uint8_t melee_confuse;
+  uint8_t melee_genocide;
+  uint8_t melee_unused1;
+  uint8_t melee_unused2;
   // Stateful affects from magic spells
   int ma_ac;
   int mflag;
   // Status
   int food;
   int food_digest;
-  uint8_t confuse_monster;
+  uint8_t char_unused1;
   uint8_t clidx;  // class
   uint8_t ridx;   // race
   uint8_t male;
@@ -66,9 +69,9 @@ static struct cbS cbD;
 struct countS {
   // Player ailment counters
   int poison;
-  int blind; //TBD: deprecate
+  int blind;  // TBD: deprecate
   int confusion;
-  int fear; //TBD: deprecate
+  int fear;  // TBD: deprecate
   int rest;
   int paralysis;
   // Player protection counters

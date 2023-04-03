@@ -7012,6 +7012,20 @@ dispel_creature(cflag, damage)
   return (dispel);
 }
 int
+genocide(cidx)
+{
+  int count = 0;
+
+  FOR_EACH(mon, {
+    if (mon->cidx == cidx) {
+      caveD[mon->fy][mon->fx].midx = 0;
+      mon_unuse(mon);
+      count += 1;
+    }
+  });
+  return count != 0;
+}
+int
 mass_genocide(y, x)
 {
   int count;
@@ -8261,9 +8275,9 @@ int *uy, *ux;
             ident |= TRUE;
             break;
           case 11:
-            if (uD.confuse_monster == 0) {
-              msg_print("Your hands begin to glow.");
-              uD.confuse_monster = 1;
+            if (uD.melee_confuse == 0) {
+              msg_print("Your hands begin to glow blue.");
+              uD.melee_confuse = 1;
               ident |= TRUE;
             }
             break;
@@ -8735,8 +8749,8 @@ int* x_ptr;
             destroy_area(uD.y, uD.x);
             break;
           case 31:
-            // TBD
-            // genocide();
+            msg_print("Your hands begin to glow black.");
+            uD.melee_genocide = 1;
             break;
           default:
             break;
@@ -9654,9 +9668,16 @@ py_attack(y, x)
         }
         k += todam;
 
-        if (uD.confuse_monster) {
-          uD.confuse_monster = 0;
-          msg_print("Your hands stop glowing.");
+        if (uD.melee_genocide) {
+          uD.melee_genocide = 0;
+          msg_print("Your hands stop glowing black.");
+          if ((cre->cmove & CM_WIN) == 0) {
+            genocide(mon->cidx);
+            midx = 0;
+          }
+        } else if (uD.melee_confuse) {
+          uD.melee_confuse = 0;
+          msg_print("Your hands stop glowing blue.");
           if ((cre->cdefense & CD_NO_SLEEP) ||
               randint(MAX_MON_LEVEL) < cre->level) {
             MSG("%s is unaffected by confusion.", descD);
@@ -9667,7 +9688,7 @@ py_attack(y, x)
         }
 
         /* See if we done it in.  			 */
-        if (mon_take_hit(midx, k)) {
+        if (midx == 0 || mon_take_hit(midx, k)) {
           MSG("You have slain %s.", descD);
           py_experience();
           blows = 0;
@@ -9870,9 +9891,9 @@ mon_attack(midx)
         } break;
       }
 
-      if (uD.confuse_monster) {
-        uD.confuse_monster = 0;
-        msg_print("Your hands stop glowing.");
+      if (uD.melee_confuse) {
+        uD.melee_confuse = 0;
+        msg_print("Your hands stop glowing blue.");
         mon_desc(midx);
         if ((cre->cdefense & CD_NO_SLEEP) ||
             randint(MAX_MON_LEVEL) < cre->level) {
