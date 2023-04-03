@@ -6436,8 +6436,10 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
             if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis) &&
                 los(y, x, i, j)) {
               c_ptr = &caveD[i][j];
-              if ((c_ptr->oidx) && (*destroy)(&entity_objD[c_ptr->oidx]))
+              if ((c_ptr->oidx) && (*destroy)(&entity_objD[c_ptr->oidx])) {
+                if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
                 delete_object(i, j);
+              }
               if (c_ptr->fval <= MAX_OPEN_SPACE) {
                 if (c_ptr->midx) {
                   m_ptr = &entity_monD[c_ptr->midx];
