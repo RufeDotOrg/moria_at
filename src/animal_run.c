@@ -15,7 +15,7 @@ static jmp_buf restartD;
 static char input_recordD[4 * 1024];
 static int input_record_writeD;
 static int input_record_readD;
-static int input_actionD[4];
+static int input_actionD[1024];
 static int input_action_usedD;
 
 static char quit_stringD[] = "quitting";
