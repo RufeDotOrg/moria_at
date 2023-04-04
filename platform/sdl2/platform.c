@@ -48,26 +48,26 @@ char_visible(char c)
   return vis < 0x7f - 0x21;
 }
 // render.c
-EXTERN struct SDL_Window *windowD;
-EXTERN SDL_Rect display_rectD;
-EXTERN float aspectD;
-EXTERN struct SDL_Renderer *rendererD;
-EXTERN uint32_t texture_formatD;
-EXTERN SDL_PixelFormat *pixel_formatD;
+DATA struct SDL_Window *windowD;
+DATA SDL_Rect display_rectD;
+DATA float aspectD;
+DATA struct SDL_Renderer *rendererD;
+DATA uint32_t texture_formatD;
+DATA SDL_PixelFormat *pixel_formatD;
 
-EXTERN SDL_Surface *mmsurfaceD;
-EXTERN SDL_Texture *mmtextureD;
-EXTERN SDL_Surface *tpsurfaceD;
-EXTERN SDL_Texture *tptextureD;
-EXTERN SDL_Rect map_rectD;
-EXTERN SDL_Texture *map_textureD;
-EXTERN SDL_Rect text_rectD;
-EXTERN SDL_Texture *text_textureD;
+DATA SDL_Surface *mmsurfaceD;
+DATA SDL_Texture *mmtextureD;
+DATA SDL_Surface *tpsurfaceD;
+DATA SDL_Texture *tptextureD;
+DATA SDL_Rect map_rectD;
+DATA SDL_Texture *map_textureD;
+DATA SDL_Rect text_rectD;
+DATA SDL_Texture *text_textureD;
 
-EXTERN SDL_Rect scale_rectD;
-EXTERN int rowD, colD;
-EXTERN float rfD, cfD;
-EXTERN static float columnD[3];
+DATA SDL_Rect scale_rectD;
+DATA int rowD, colD;
+DATA float rfD, cfD;
+DATA float columnD[3];
 
 static int overlay_copyD[AL(overlay_usedD)];
 static SDL_Color whiteD = {255, 255, 255, 255};
@@ -192,8 +192,8 @@ struct fontS {
   uint16_t left_adjustment;
   uint64_t bitmap_used;
 };
-EXTERN struct fontS fontD;
-EXTERN struct SDL_Texture *font_textureD[MAX_GLYPH];
+DATA struct fontS fontD;
+DATA struct SDL_Texture *font_textureD[MAX_GLYPH];
 
 static void
 font_debug(struct fontS *font)
@@ -268,9 +268,9 @@ bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
 #define ART_W 32
 #define ART_H 64
 #define MAX_ART 279
-EXTERN uint8_t artD[96 * 1024];
-EXTERN uint64_t art_usedD;
-EXTERN struct SDL_Texture *art_textureD[MAX_ART];
+DATA uint8_t artD[96 * 1024];
+DATA uint64_t art_usedD;
+DATA struct SDL_Texture *art_textureD[MAX_ART];
 int
 art_io()
 {
@@ -312,9 +312,9 @@ art_init()
 
 // treasure
 #define MAX_TART 32
-EXTERN uint8_t tartD[8 * 1024];
-EXTERN uint64_t tart_usedD;
-EXTERN struct SDL_Texture *tart_textureD[MAX_TART];
+DATA uint8_t tartD[8 * 1024];
+DATA uint64_t tart_usedD;
+DATA struct SDL_Texture *tart_textureD[MAX_TART];
 int
 tart_io()
 {
@@ -357,9 +357,9 @@ tart_init()
 
 // wall
 #define MAX_WART 6
-EXTERN uint8_t wartD[4 * 1024];
-EXTERN uint64_t wart_usedD;
-EXTERN struct SDL_Texture *wart_textureD[MAX_WART];
+DATA uint8_t wartD[4 * 1024];
+DATA uint64_t wart_usedD;
+DATA struct SDL_Texture *wart_textureD[MAX_WART];
 int
 wart_io()
 {
@@ -401,9 +401,9 @@ wart_init()
 
 // player
 #define MAX_PART 13
-EXTERN uint8_t partD[4 * 1024];
-EXTERN uint64_t part_usedD;
-EXTERN struct SDL_Texture *part_textureD[MAX_PART];
+DATA uint8_t partD[4 * 1024];
+DATA uint64_t part_usedD;
+DATA struct SDL_Texture *part_textureD[MAX_PART];
 int
 part_io()
 {
@@ -556,10 +556,10 @@ font_texture_alphamod(alpha)
 
 // Texture
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
-EXTERN SDL_FRect buttonD[2];
-EXTERN SDL_FRect padD;
-EXTERN SDL_Point ppD[9];
-EXTERN SDL_Rect pp_rectD;
+DATA SDL_FRect buttonD[2];
+DATA SDL_FRect padD;
+DATA SDL_Point ppD[9];
+DATA SDL_Rect pp_rectD;
 static int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 
 SDL_Texture *

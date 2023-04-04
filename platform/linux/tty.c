@@ -1,7 +1,7 @@
 
 // Global application memory
-EXTERN char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-EXTERN char save_termD[128];
+DATA char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
+DATA char save_termD[128];
 
 static char
 get_sym(int row, int col)

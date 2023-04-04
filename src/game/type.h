@@ -244,4 +244,4 @@ struct platformS {
   fn readansi;
   fn draw;
 };
-EXTERN struct platformS platformD;
+DATA struct platformS platformD;

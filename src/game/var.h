@@ -1,34 +1,34 @@
 
 // load/save
-EXTERN void **save_addr_ptrD;
-EXTERN int *save_len_ptrD;
-EXTERN char **save_name_ptrD;
-EXTERN int save_field_countD;
+DATA void **save_addr_ptrD;
+DATA int *save_len_ptrD;
+DATA char **save_name_ptrD;
+DATA int save_field_countD;
 
 // Visual info
-EXTERN struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-EXTERN int vitalD[6];
-EXTERN int vital_statD[6];
-EXTERN int vital_usedD;
-EXTERN int active_affectD[12];
+DATA struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
+DATA int vitalD[6];
+DATA int vital_statD[6];
+DATA int vital_usedD;
+DATA int active_affectD[12];
 
 // Full-screen & overlay (choice)
-EXTERN char screenD[22][98];
-EXTERN int screen_usedD[AL(screenD)];
-EXTERN int screen_submodeD;
-EXTERN char overlayD[22][80];
-EXTERN int overlay_usedD[AL(overlayD)];
-EXTERN int overlay_submodeD;
-EXTERN int overlay_actD;
-EXTERN uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
-EXTERN int minimap_enlargeD;
-EXTERN uint32_t zoom_factorD;
+DATA char screenD[22][98];
+DATA int screen_usedD[AL(screenD)];
+DATA int screen_submodeD;
+DATA char overlayD[22][80];
+DATA int overlay_usedD[AL(overlayD)];
+DATA int overlay_submodeD;
+DATA int overlay_actD;
+DATA uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
+DATA int minimap_enlargeD;
+DATA uint32_t zoom_factorD;
 
 // Gameplay messages write to a circular queue
-EXTERN char msg_cqD[MAX_MSG][98];
-EXTERN char msglen_cqD[MAX_MSG];
-EXTERN uint32_t msg_writeD;
-EXTERN uint32_t msg_moreD;
+DATA char msg_cqD[MAX_MSG][98];
+DATA char msglen_cqD[MAX_MSG];
+DATA uint32_t msg_writeD;
+DATA uint32_t msg_moreD;
 
 // Magic affect counters & names
 static int maD[MA_COUNT];
@@ -86,13 +86,13 @@ uint8_t blows_table[][6] = {
 static uint32_t rnd_seed;
 static uint32_t obj_seed;
 static uint32_t town_seed;
-EXTERN int turnD;
+DATA int turnD;
 static int player_hpD[AL(player_exp)];
 static int death;
 static int total_winner;
 static int save_exit_flag;
 static int dun_level;
-EXTERN char dun_descD[16];
+DATA char dun_descD[16];
 static int turn_flag;
 static int new_level_flag;
 static int pack_heavy;

@@ -61,8 +61,9 @@ enum { RELEASE = 1 };
 enum { RELEASE = 0 };
 #endif
 
-#ifndef EXTERN
-#define EXTERN
+// tagged global data for modular builds (memory is application global)
+#ifndef DATA
+#define DATA
 #endif
 
 #ifdef M
