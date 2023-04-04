@@ -752,10 +752,15 @@ platform_draw()
                            p);
       }
       font_colorD = whiteD;
+      {
+        struct SDL_Rect r = {left, top, AL(overlayD[0]) * width,
+                             AL(overlayD) * height};
+        rect_frame(r, 1);
+      }
       break;
   }
   {
-    alt_fill(AL(vitalD), 26 + 1, 0, top, width, height);
+    alt_fill(AL(vitalD), 26 + 2, 0, top, width, height);
     for (int it = 0; it < MAX_A; ++it) {
       len = snprintf(AP(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                      vitalD[it], stat_abbrD[it], vital_statD[it]);
@@ -768,10 +773,10 @@ platform_draw()
   {
     char *affstr[3];
     SDL_Point p = {
-        width / 2,
-        top + (MAX_A)*height + 6,
+        0,
+        top + (MAX_A + 1) * height,
     };
-    alt_fill(AL(active_affectD) / AL(affstr), 26 + 1, p.x, p.y, width, height);
+    alt_fill(AL(active_affectD) / AL(affstr), 26 + 2, p.x, p.y, width, height);
     enum { AFF_Y = AL(active_affectD) / AL(affstr) };
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
@@ -789,7 +794,7 @@ platform_draw()
     }
     SDL_Rect r = {
         width / 2,
-        top + (MAX_A)*height + 6,
+        top + (MAX_A + 1) * height,
         (26 + 1) * width,
         AFF_Y * height,
     };
