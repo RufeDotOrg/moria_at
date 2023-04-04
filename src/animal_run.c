@@ -6691,13 +6691,14 @@ confuse_monster(dir, y, x)
 int
 sleep_monster(dir, y, x)
 {
-  int flag, dist, sleep;
+  int flag, dist, sleep, seen;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
 
   sleep = FALSE;
   flag = FALSE;
+  seen = 0;
   dist = 0;
   do {
     mmove(dir, &y, &x);
@@ -6709,46 +6710,55 @@ sleep_monster(dir, y, x)
       m_ptr = &entity_monD[c_ptr->midx];
       cr_ptr = &creatureD[m_ptr->cidx];
       flag = TRUE;
-      mon_desc(c_ptr->midx);
-      if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
-          (CD_NO_SLEEP & cr_ptr->cdefense)) {
-        MSG("%s is unaffected.", descD);
-      } else {
-        m_ptr->msleep = 500;
-        sleep = TRUE;
-        MSG("%s falls asleep.", descD);
+
+      sleep = ((CD_NO_SLEEP & cr_ptr->cdefense) == 0) &&
+              (randint(MAX_MON_LEVEL) >= cr_ptr->level);
+
+      if (sleep) m_ptr->msleep = 500;
+
+      if (m_ptr->mlit) {
+        mon_desc(c_ptr->midx);
+        if (sleep) {
+          seen += 1;
+          MSG("%s falls asleep.", descD);
+        } else {
+          MSG("%s is unaffected.", descD);
+        }
       }
     }
   } while (!flag);
-  return (sleep);
+  return seen != 0;
 }
 int
 sleep_monster_aoe(maxdis)
 {
-  int y, x, sleep, cdis;
+  int y, x, sleep, cdis, seen;
   struct creatureS* cr_ptr;
 
   y = uD.y;
   x = uD.x;
-  sleep = FALSE;
+  seen = 0;
   FOR_EACH(mon, {
     cr_ptr = &creatureD[mon->cidx];
     cdis = distance(y, x, mon->fy, mon->fx);
     if ((cdis > maxdis) || !los(y, x, mon->fy, mon->fx)) continue;
 
-    mon_desc(it_index);
-    if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
-        (CD_NO_SLEEP & cr_ptr->cdefense)) {
-      if (mon->mlit) MSG("%s is unaffected.", descD);
-    } else {
-      mon->msleep = 500;
-      if (mon->mlit) {
+    sleep = ((CD_NO_SLEEP & cr_ptr->cdefense) == 0) &&
+            (randint(MAX_MON_LEVEL) >= cr_ptr->level);
+
+    if (sleep) mon->msleep = 500;
+
+    if (mon->mlit) {
+      mon_desc(it_index);
+      if (sleep) {
+        seen += 1;
         MSG("%s falls asleep.", descD);
-        sleep = TRUE;
+      } else {
+        MSG("%s is unaffected.", descD)
       }
     }
   });
-  return (sleep);
+  return seen != 0;
 }
 int
 mass_poly()
