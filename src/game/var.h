@@ -118,7 +118,9 @@ DATA struct bufS save_bufD[] = {
     ABUF(player_hpD), BUF(rnd_seed),    BUF(town_seed),    BUF(obj_seed),
     BUF(statD),       ABUF(store_objD), BUF(turnD),        BUF(uD),
 };
-DATA void **save_addr_ptrD;
-DATA int *save_len_ptrD;
-DATA char **save_name_ptrD;
-DATA int save_field_countD;
+DATA int savechar_v001[] = {
+    28, 4, 10240, 136, 448, 56, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 100,
+};
+#define SAVESUM001 16080
+DATA int savesumD[] = {SAVESUM001};
+DATA int *savefieldD[] = {savechar_v001};

@@ -1521,6 +1521,23 @@ platform_readansi()
 // Disk I/O
 static int checksumD;
 int
+version_by_savesum(sum)
+{
+  for (int it = 0; it < AL(savesumD); ++it)
+    if (savesumD[it] == sum) return it;
+  return -1;
+}
+int
+savesum()
+{
+  int sum = 0;
+  for (int it = 0; it < AL(save_bufD); ++it) {
+    struct bufS buf = save_bufD[it];
+    sum += buf.mem_size;
+  }
+  return sum;
+}
+int
 saveclear()
 {
   for (int it = 0; it < AL(save_bufD); ++it) {
@@ -1530,62 +1547,94 @@ saveclear()
   memset(msglen_cqD, 0, sizeof(msglen_cqD));
   return 0;
 }
-void checksum(blob, len) void *blob;
+int checksum(blob, len) void *blob;
 {
   int *iter = blob;
   int count = len / sizeof(int);
   int *end = iter + count;
+  int ret = 0;
   for (; iter < end; ++iter) {
-    checksumD ^= *iter;
+    ret ^= *iter;
   }
+  return ret;
 }
 int
 save()
 {
-  int byte_count = 0;
-  for (int it = 0; it < save_field_countD; ++it) {
-    Log("%p %s %d\n", save_addr_ptrD[it], save_name_ptrD[it],
-        save_len_ptrD[it]);
-    byte_count += save_len_ptrD[it];
-  }
+  int version = AL(savesumD) - 1;
+  int sum = savesumD[version];
+  int *savefield = savefieldD[version];
+
   SDL_RWops *writef = SDL_RWFromFile("savechar", "wb");
   if (writef) {
     checksumD = 0;
-    SDL_RWwrite(writef, &byte_count, sizeof(byte_count), 1);
-    for (int it = 0; it < save_field_countD; ++it) {
-      SDL_RWwrite(writef, save_addr_ptrD[it], save_len_ptrD[it], 1);
-      checksum(save_addr_ptrD[it], save_len_ptrD[it]);
+    SDL_RWwrite(writef, &sum, sizeof(sum), 1);
+    for (int it = 0; it < AL(save_bufD); ++it) {
+      struct bufS buf = save_bufD[it];
+      SDL_RWwrite(writef, buf.mem, savefield[it], 1);
+      int ck = checksum(buf.mem, savefield[it]);
+      checksumD ^= ck;
     }
     SDL_RWclose(writef);
-    return byte_count;
+    Log("version %d save checksum %x", version, checksumD);
+    return sum;
+  }
+  return 0;
+}
+int
+devsave()
+{
+  int sum = savesum();
+  SDL_RWops *writef = SDL_RWFromFile("savechar", "wb");
+  if (writef) {
+    checksumD = 0;
+    SDL_RWwrite(writef, &sum, sizeof(sum), 1);
+    for (int it = 0; it < AL(save_bufD); ++it) {
+      struct bufS buf = save_bufD[it];
+      SDL_RWwrite(writef, buf.mem, buf.mem_size, 1);
+      int ck = checksum(buf.mem, buf.mem_size);
+      checksumD ^= ck;
+    }
+    SDL_RWclose(writef);
+    Log("save checksum %x", checksumD);
+    return sum;
   }
   return 0;
 }
 int
 load()
 {
-  int byte_count = 0;
-  for (int it = 0; it < save_field_countD; ++it) {
-    printf("%p %s %d\n", save_addr_ptrD[it], save_name_ptrD[it],
-           save_len_ptrD[it]);
-    byte_count += save_len_ptrD[it];
-  }
+  saveclear();
+
   SDL_RWops *readf = SDL_RWFromFile("savechar", "rb");
   if (readf) {
     int save_size = 0;
 
-    SDL_RWread(readf, &save_size, sizeof(save_size), 1);
-    if (save_size == byte_count) {
-      for (int it = 0; it < save_field_countD; ++it) {
-        SDL_RWread(readf, save_addr_ptrD[it], save_len_ptrD[it], 1);
-      }
-    }
-    SDL_RWclose(readf);
     checksumD = 0;
-    for (int it = 0; it < save_field_countD; ++it) {
-      checksum(save_addr_ptrD[it], save_len_ptrD[it]);
+    SDL_RWread(readf, &save_size, sizeof(save_size), 1);
+    int version = version_by_savesum(save_size);
+    if (version >= 0) {
+      int *savefield = savefieldD[version];
+      for (int it = 0; it < AL(save_bufD); ++it) {
+        struct bufS buf = save_bufD[it];
+        SDL_RWread(readf, buf.mem, savefield[it], 1);
+        int ck = checksum(buf.mem, savefield[it]);
+        checksumD ^= ck;
+      }
+      Log("version %d load char checksum %x", version, checksumD);
+      SDL_RWclose(readf);
+      return 1;
+    } else if (save_size == savesum()) {
+      for (int it = 0; it < AL(save_bufD); ++it) {
+        struct bufS buf = save_bufD[it];
+        SDL_RWread(readf, buf.mem, buf.mem_size, 1);
+        int ck = checksum(buf.mem, buf.mem_size);
+        checksumD ^= ck;
+      }
+      Log("load char checksum %x", checksumD);
+      SDL_RWclose(readf);
+      return 1;
     }
-    return save_size == byte_count;
   }
 
   return 0;
@@ -1593,10 +1642,10 @@ load()
 int
 erase()
 {
+  saveclear();
+
   SDL_RWops *writef = SDL_RWFromFile("savechar", "w+b");
   SDL_RWclose(writef);
-
-  saveclear();
 
   return 0;
 }
