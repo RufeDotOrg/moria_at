@@ -5651,6 +5651,7 @@ py_class_select()
   int filter[] = {0, 3};
 
   clidx = -1;
+  overlay_submodeD = 'c';
   do {
     line = 0;
     for (int it = 0; it < AL(filter); ++it) {
