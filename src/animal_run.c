@@ -8599,178 +8599,186 @@ int* x_ptr;
 {
   char c;
   struct objS* obj;
-  uint32_t flags;
-  int spell[32], spell_used, first_spell, line, dir;
+  uint32_t flags, first_spell;
+  int spell[32], spell_used, line, dir;
+  int spell_type;
 
   obj = obj_get(invenD[iidx]);
   flags = obj->flags;
   if (obj->tval == TV_MAGIC_BOOK && flags) {
-    spell_used = 0;
-    while (flags) {
-      spell[spell_used] = bit_pos(&flags);
-      spell_used += 1;
-    }
-    first_spell = spell[0];
-    overlay_submodeD = 'C' + mask_subval(obj->subval);
-
-    do {
-      line = 0;
-      for (int it = 0; it < spell_used; ++it) {
-        BufMsg(overlay, "%c) %s", 'a' + it, spell_nameD[spell[it]]);
+    spell_type = classD[uD.clidx].spell;
+    first_spell = classD[uD.clidx].first_spell_lev - 1;
+    if (spell_type != SP_MAGE)
+      msg_print("You cannot make sense of the magical runes in this book.");
+    else if (first_spell >= uD.lev)
+      msg_print("You yearn to understand the magical runes filling this book.");
+    else {
+      spell_used = 0;
+      while (flags) {
+        spell[spell_used] = bit_pos(&flags);
+        spell_used += 1;
       }
+      overlay_submodeD = 'C' + mask_subval(obj->subval);
 
-      if (!in_subcommand("Cast which spell?", &c)) break;
-      uint8_t choice = c - 'a';
-
-      if (choice < spell_used) {
-        turn_flag = TRUE;
-        switch (spell[choice] + 1) {
-          case 1:
-            if (get_dir(0, &dir))
-              magic_bolt(GF_MAGIC_MISSILE, dir, uD.y, uD.x, damroll(2, 6),
-                         spell_nameD[0]);
-            else
-              turn_flag = 0;
-            break;
-          case 2:
-            ma_duration(MA_DETECT_MON, 1);
-            break;
-          case 3:
-            py_teleport(10, y_ptr, x_ptr);
-            break;
-          case 4:
-            illuminate(uD.y, uD.x);
-            break;
-          case 5:
-            py_heal_hit(damroll(4, 4));
-            break;
-          case 6:
-            detect_obj(oset_sdoor);
-            detect_obj(oset_trap);
-            break;
-          case 7:
-            if (get_dir(0, &dir))
-              fire_ball(GF_POISON_GAS, dir, uD.y, uD.x, 12, spell_nameD[6]);
-            else
-              turn_flag = 0;
-            break;
-          case 8:
-            if (get_dir(0, &dir))
-              confuse_monster(dir, uD.y, uD.x);
-            else
-              turn_flag = 0;
-            break;
-          case 9:
-            if (get_dir(0, &dir))
-              magic_bolt(GF_LIGHTNING, dir, uD.y, uD.x, damroll(4, 8),
-                         spell_nameD[8]);
-            else
-              turn_flag = 0;
-            break;
-          case 10:
-            td_destroy(uD.y, uD.x);
-            break;
-          case 11:
-            if (get_dir(0, &dir))
-              sleep_monster(dir, uD.y, uD.x);
-            else
-              turn_flag = 0;
-            break;
-          case 12:
-            if (countD.poison > 0) {
-              countD.poison = 1;
-            }
-            break;
-          case 13:
-            py_teleport(uD.lev * 3, y_ptr, x_ptr);
-            break;
-          case 14:
-            equip_remove_curse();
-            break;
-          case 15:
-            if (get_dir(0, &dir))
-              magic_bolt(GF_FROST, dir, uD.y, uD.x, damroll(6, 8),
-                         spell_nameD[14]);
-            else
-              turn_flag = 0;
-            break;
-          case 16:
-            if (get_dir(0, &dir))
-              wall_to_mud(dir, uD.y, uD.x);
-            else
-              turn_flag = 0;
-            break;
-          case 17:
-            create_food(uD.y, uD.x);
-            break;
-          case 18:
-            inven_recharge(inven_choice("Recharge which item?", "*"), 20);
-            break;
-          case 19:
-            sleep_monster_aoe(1);
-            break;
-          case 20:
-            if (get_dir(0, &dir))
-              poly_monster(dir, uD.y, uD.x);
-            else
-              turn_flag = 0;
-            break;
-          case 21:
-            inven_ident(
-                inven_choice("Which item do you wish identified?", "*/"));
-            break;
-          case 22:
-            sleep_monster_aoe(MAX_SIGHT);
-            break;
-          case 23:
-            if (get_dir(0, &dir))
-              magic_bolt(GF_FIRE, dir, uD.y, uD.x, damroll(9, 8),
-                         spell_nameD[22]);
-            else
-              turn_flag = 0;
-            break;
-          case 24:
-            if (get_dir(0, &dir))
-              speed_monster(dir, uD.y, uD.x, -1);
-            else
-              turn_flag = 0;
-            break;
-          case 25:
-            if (get_dir(0, &dir))
-              fire_ball(GF_FROST, dir, uD.y, uD.x, 48, spell_nameD[24]);
-            else
-              turn_flag = 0;
-            break;
-          case 26:
-            inven_recharge(inven_choice("Recharge which item?", "*"), 60);
-            break;
-          case 27:
-            if (get_dir(0, &dir))
-              teleport_monster(dir, uD.y, uD.x);
-            else
-              turn_flag = 0;
-            break;
-          case 28:
-            ma_duration(MA_FAST, randint(20) + uD.lev);
-            break;
-          case 29:
-            if (get_dir(0, &dir))
-              fire_ball(GF_FIRE, dir, uD.y, uD.x, 72, spell_nameD[28]);
-            else
-              turn_flag = 0;
-            break;
-          case 30:
-            destroy_area(uD.y, uD.x);
-            break;
-          case 31:
-            msg_print("Your hands begin to glow black.");
-            uD.melee_genocide = 1;
-            break;
-          default:
-            break;
+      do {
+        line = 0;
+        for (int it = 0; it < spell_used; ++it) {
+          BufMsg(overlay, "%c) %s", 'a' + it, spell_nameD[spell[it]]);
         }
-      }
-    } while (!turn_flag);
+
+        if (!in_subcommand("Cast which spell?", &c)) break;
+        uint8_t choice = c - 'a';
+
+        if (choice < spell_used) {
+          turn_flag = TRUE;
+          switch (spell[choice] + 1) {
+            case 1:
+              if (get_dir(0, &dir))
+                magic_bolt(GF_MAGIC_MISSILE, dir, uD.y, uD.x, damroll(2, 6),
+                           spell_nameD[0]);
+              else
+                turn_flag = 0;
+              break;
+            case 2:
+              ma_duration(MA_DETECT_MON, 1);
+              break;
+            case 3:
+              py_teleport(10, y_ptr, x_ptr);
+              break;
+            case 4:
+              illuminate(uD.y, uD.x);
+              break;
+            case 5:
+              py_heal_hit(damroll(4, 4));
+              break;
+            case 6:
+              detect_obj(oset_sdoor);
+              detect_obj(oset_trap);
+              break;
+            case 7:
+              if (get_dir(0, &dir))
+                fire_ball(GF_POISON_GAS, dir, uD.y, uD.x, 12, spell_nameD[6]);
+              else
+                turn_flag = 0;
+              break;
+            case 8:
+              if (get_dir(0, &dir))
+                confuse_monster(dir, uD.y, uD.x);
+              else
+                turn_flag = 0;
+              break;
+            case 9:
+              if (get_dir(0, &dir))
+                magic_bolt(GF_LIGHTNING, dir, uD.y, uD.x, damroll(4, 8),
+                           spell_nameD[8]);
+              else
+                turn_flag = 0;
+              break;
+            case 10:
+              td_destroy(uD.y, uD.x);
+              break;
+            case 11:
+              if (get_dir(0, &dir))
+                sleep_monster(dir, uD.y, uD.x);
+              else
+                turn_flag = 0;
+              break;
+            case 12:
+              if (countD.poison > 0) {
+                countD.poison = 1;
+              }
+              break;
+            case 13:
+              py_teleport(uD.lev * 3, y_ptr, x_ptr);
+              break;
+            case 14:
+              equip_remove_curse();
+              break;
+            case 15:
+              if (get_dir(0, &dir))
+                magic_bolt(GF_FROST, dir, uD.y, uD.x, damroll(6, 8),
+                           spell_nameD[14]);
+              else
+                turn_flag = 0;
+              break;
+            case 16:
+              if (get_dir(0, &dir))
+                wall_to_mud(dir, uD.y, uD.x);
+              else
+                turn_flag = 0;
+              break;
+            case 17:
+              create_food(uD.y, uD.x);
+              break;
+            case 18:
+              inven_recharge(inven_choice("Recharge which item?", "*"), 20);
+              break;
+            case 19:
+              sleep_monster_aoe(1);
+              break;
+            case 20:
+              if (get_dir(0, &dir))
+                poly_monster(dir, uD.y, uD.x);
+              else
+                turn_flag = 0;
+              break;
+            case 21:
+              inven_ident(
+                  inven_choice("Which item do you wish identified?", "*/"));
+              break;
+            case 22:
+              sleep_monster_aoe(MAX_SIGHT);
+              break;
+            case 23:
+              if (get_dir(0, &dir))
+                magic_bolt(GF_FIRE, dir, uD.y, uD.x, damroll(9, 8),
+                           spell_nameD[22]);
+              else
+                turn_flag = 0;
+              break;
+            case 24:
+              if (get_dir(0, &dir))
+                speed_monster(dir, uD.y, uD.x, -1);
+              else
+                turn_flag = 0;
+              break;
+            case 25:
+              if (get_dir(0, &dir))
+                fire_ball(GF_FROST, dir, uD.y, uD.x, 48, spell_nameD[24]);
+              else
+                turn_flag = 0;
+              break;
+            case 26:
+              inven_recharge(inven_choice("Recharge which item?", "*"), 60);
+              break;
+            case 27:
+              if (get_dir(0, &dir))
+                teleport_monster(dir, uD.y, uD.x);
+              else
+                turn_flag = 0;
+              break;
+            case 28:
+              ma_duration(MA_FAST, randint(20) + uD.lev);
+              break;
+            case 29:
+              if (get_dir(0, &dir))
+                fire_ball(GF_FIRE, dir, uD.y, uD.x, 72, spell_nameD[28]);
+              else
+                turn_flag = 0;
+              break;
+            case 30:
+              destroy_area(uD.y, uD.x);
+              break;
+            case 31:
+              msg_print("Your hands begin to glow black.");
+              uD.melee_genocide = 1;
+              break;
+            default:
+              break;
+          }
+        }
+      } while (!turn_flag);
+    }
   }
 }
 int
