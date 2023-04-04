@@ -1,4 +1,22 @@
 
+// reference to buffer of known length in bytes
+struct bufS {
+  void *mem;
+  uint64_t mem_size;
+};
+// Buffer
+#define BUF(x)    \
+  (struct bufS)   \
+  {               \
+    &x, sizeof(x) \
+  }
+// Array Buffer
+#define ABUF(x)  \
+  (struct bufS)  \
+  {              \
+    x, sizeof(x) \
+  }
+
 // Platform visualization info
 struct vizS {
   char sym;
@@ -129,6 +147,14 @@ struct statS {
   int8_t use_stat[MAX_A]; /* Play value, see set_use_stat() */
 };
 static struct statS statD;
+
+// Player spell
+struct spellS {
+  uint8_t splevel;
+  uint8_t spmana;
+  uint8_t spfail;
+  uint8_t spexp; /* 1/4 of exp gained for learning spell */
+};
 
 struct panelS {
   int panel_row;

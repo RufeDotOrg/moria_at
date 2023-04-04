@@ -1,10 +1,4 @@
 
-// load/save
-DATA void **save_addr_ptrD;
-DATA int *save_len_ptrD;
-DATA char **save_name_ptrD;
-DATA int save_field_countD;
-
 // Visual info
 DATA struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 DATA int vitalD[6];
@@ -116,3 +110,15 @@ static int storeD[MAX_STORE];
 static struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
 static char versionD[] = "XXXX.YYYY.ZZZZ";
 static char git_hashD[] = "AbCdEfGhIjKlMnO";
+
+// load/save
+DATA struct bufS save_bufD[] = {
+    BUF(countD),      BUF(dun_level),   ABUF(entity_objD), ABUF(invenD),
+    ABUF(knownD),     ABUF(maD),        ABUF(objD),        BUF(obj_usedD),
+    ABUF(player_hpD), BUF(rnd_seed),    BUF(town_seed),    BUF(obj_seed),
+    BUF(statD),       ABUF(store_objD), BUF(turnD),        BUF(uD),
+};
+DATA void **save_addr_ptrD;
+DATA int *save_len_ptrD;
+DATA char **save_name_ptrD;
+DATA int save_field_countD;

@@ -1520,6 +1520,16 @@ platform_readansi()
 
 // Disk I/O
 static int checksumD;
+int
+saveclear()
+{
+  for (int it = 0; it < AL(save_bufD); ++it) {
+    struct bufS buf = save_bufD[it];
+    memset(buf.mem, 0, buf.mem_size);
+  }
+  memset(msglen_cqD, 0, sizeof(msglen_cqD));
+  return 0;
+}
 void checksum(blob, len) void *blob;
 {
   int *iter = blob;
@@ -1586,11 +1596,7 @@ erase()
   SDL_RWops *writef = SDL_RWFromFile("savechar", "w+b");
   SDL_RWclose(writef);
 
-  for (int it = 0; it < save_field_countD; ++it) {
-    memset(save_addr_ptrD[it], 0, save_len_ptrD[it]);
-  }
-  memset(maD, 0, sizeof(maD));
-  memset(msglen_cqD, 0, sizeof(msglen_cqD));
+  saveclear();
 
   return 0;
 }
