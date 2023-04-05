@@ -8762,9 +8762,7 @@ int* x_ptr;
                  ((1 << it) & spmask) != 0);
         }
 
-        char prompt[80];
-        snprintf(prompt, AL(prompt), "Cast which spell? (%d spcount)", spcount);
-        if (!in_subcommand(prompt, &c)) break;
+        if (!in_subcommand("Recite which spell?", &c)) break;
         uint8_t choice = c - 'a';
 
         if (choice < book_used) {
@@ -9280,6 +9278,7 @@ py_character()
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-13.013s: %6d", "Fighting", xbth);
   BufMsg(screen, "%-13.013s: %6d", "Saving Throw", usave());
+  BufMsg(screen, "%-13.013s: %6d", "Spell Memory", uspellcount());
   BufPad(screen, MAX_A * 3, 23);
 
   line = 2 * MAX_A + 1;
