@@ -4542,6 +4542,23 @@ todam_adj()
     return (6);
 }
 int
+umana_by_level(level)
+{
+  int splev, tadj, sptype;
+  sptype = classD[uD.clidx].spell;
+  if (sptype) {
+    splev = level - classD[uD.clidx].first_spell_lev + 1;
+    if (splev > 0) {
+      tadj = think_adj(sptype == SP_MAGE ? A_INT : A_WIS);
+      if (tadj > 0) {
+        tadj = 1 + CLAMP(tadj - 1, 1, 6);
+        return 1 + tadj * splev / 2;
+      }
+    }
+  }
+  return 0;
+}
+int
 uspellcount()
 {
   int splev, tadj, sptype;
@@ -5013,6 +5030,19 @@ calc_hitpoints(level)
   uD.mhp = hitpoints;
 }
 void
+calc_mana(level)
+{
+  int new_mana = umana_by_level(level);
+
+  if (uD.mmana != new_mana) {
+    // Scale current mana to the new maximum
+    int value = ((uD.cmana << 16) + uD.cmana_frac) / uD.mmana * new_mana;
+    uD.cmana = value >> 16;
+    uD.cmana_frac = value & 0xFFFF;
+    uD.mmana = new_mana;
+  }
+}
+void
 calc_bonuses()
 {
   int tflag;
@@ -5247,15 +5277,11 @@ set_use_stat(stat)
     calc_bonuses();
   } else if (stat == A_DEX) {
     calc_bonuses();
-  } else if (stat == A_CON)
+  } else if (stat == A_CON) {
     calc_hitpoints(uD.lev);
-  // else if (stat == A_INT) {
-  //   if (class[py.misc.pclass].spell == MAGE) calc_spells(A_INT);
-  //   calc_mana(A_INT);
-  // } else if (stat == A_WIS) {
-  //   if (class[py.misc.pclass].spell == PRIEST) calc_spells(A_WIS);
-  //   calc_mana(A_WIS);
-  // }
+  } else if (stat == A_INT || stat == A_WIS) {
+    calc_mana(uD.lev);
+  }
 }
 void py_bonuses(obj, factor) struct objS* obj;
 {
@@ -5787,6 +5813,7 @@ py_init(csel)
 
   uD.mhp = uD.chp = hitdie + con_adj();
   uD.chp_frac = 0;
+  uD.cmana = uD.mmana = umana_by_level(1);
   uD.lev = 1;
 
   int min_value = (MAX_PLAYER_LEVEL * 3 / 8 * (hitdie - 1)) + MAX_PLAYER_LEVEL;
@@ -6098,6 +6125,7 @@ py_experience()
     lev += 1;
     MSG("Welcome to level %d.", lev);
     calc_hitpoints(lev);
+    calc_mana(lev);
 
     need_exp = lev_exp(lev);
     if (exp > need_exp) {
@@ -6105,16 +6133,6 @@ py_experience()
       dif_exp = exp - need_exp;
       exp = need_exp + (dif_exp / 2);
     }
-
-    // TBD: spell/mana
-    // c_ptr = &class[p_ptr->pclass];
-    // if (c_ptr->spell == MAGE) {
-    //   calc_spells(A_INT);
-    //   calc_mana(A_INT);
-    // } else if (c_ptr->spell == PRIEST) {
-    //   calc_spells(A_WIS);
-    //   calc_mana(A_WIS);
-    // }
   }
 
   uD.exp = exp;
@@ -6146,7 +6164,6 @@ int
 py_lose_experience(amount)
 {
   int lev, exp;
-  struct classS* c_ptr;
   struct objS* obj;
 
   obj = obj_get(invenD[INVEN_WIELD]);
@@ -6161,14 +6178,7 @@ py_lose_experience(amount)
       uD.lev = lev;
 
       calc_hitpoints(lev);
-      c_ptr = &classD[uD.clidx];
-      // if (c_ptr->spell == MAGE) {
-      //   calc_spells(A_INT);
-      //   calc_mana(A_INT);
-      // } else if (c_ptr->spell == PRIEST) {
-      //   calc_spells(A_WIS);
-      //   calc_mana(A_WIS);
-      // }
+      calc_mana(lev);
     }
 
     return TRUE;
@@ -9282,8 +9292,8 @@ py_character()
   line = MAX_A + 1;
   BufMsg(screen, "%-15.015s: %6d", "Max Hit Points", uD.mhp);
   BufMsg(screen, "%-15.015s: %6d", "Cur Hit Points", uD.chp);
-  BufMsg(screen, "%-15.015s: %6d", "Max Mana", 0);
-  BufMsg(screen, "%-15.015s: %6d", "Cur Mana", 0);
+  BufMsg(screen, "%-15.015s: %6d", "Max Mana", uD.mmana);
+  BufMsg(screen, "%-15.015s: %6d", "Cur Mana", uD.cmana);
 
   xbth = uD.bth + uD.lev * level_adj[uD.clidx][LA_BTH];
 
@@ -11586,6 +11596,23 @@ regenhp(percent)
   uD.chp = chp;
   uD.chp_frac = chp_frac;
 }
+static void
+regenmana(percent)
+{
+  uint32_t new_value;
+  int cmana;
+
+  new_value = uD.mmana * percent + PLAYER_REGEN_MNBASE + uD.cmana_frac;
+  cmana = uD.cmana + (new_value >> 16);
+
+  if (cmana >= uD.mmana) {
+    uD.cmana = uD.mmana;
+    uD.cmana_frac = 0;
+  } else {
+    uD.cmana = cmana;
+    uD.cmana_frac = new_value & 0xFFFF;
+  }
+}
 void
 player_maint()
 {
@@ -11691,7 +11718,7 @@ tick()
 
   if (py_tr(TR_REGEN)) regen_amount = regen_amount * 3 / 2;
   if (countD.rest != 0) regen_amount = regen_amount * 2;
-  // if (p_ptr->cmana < p_ptr->mana) regenmana(regen_amount);
+  if (uD.cmana < uD.mmana) regenmana(regen_amount);
 
   if (countD.poison == 0) {
     regenhp(regen_amount);

@@ -64,6 +64,10 @@ struct uS {
   int infra;
   int mult_exp;  // multiplier for exp-per-level
   int wt;
+  // Spell state
+  int cmana;
+  int cmana_frac;
+  int mmana;
 };
 static struct uS uD;
 
