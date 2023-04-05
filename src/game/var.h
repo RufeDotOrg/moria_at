@@ -27,6 +27,7 @@ DATA uint32_t msg_moreD;
 // Magic affect counters & names
 static int maD[MA_COUNT];
 static uint8_t spell_orderD[32];
+static uint8_t spell_chanceD[32];
 
 uint32_t player_exp[MAX_PLAYER_LEVEL] = {
     10,      25,       45,       70,       100,      140,     200,

@@ -5033,6 +5033,8 @@ void
 calc_mana(level)
 {
   int new_mana = umana_by_level(level);
+  struct spellS* spelltable;
+  int sptype, chance;
 
   if (uD.mmana != new_mana) {
     // Scale current mana to the new maximum
@@ -5040,6 +5042,19 @@ calc_mana(level)
     uD.cmana = value >> 16;
     uD.cmana_frac = value & 0xFFFF;
     uD.mmana = new_mana;
+  }
+
+  sptype = classD[uD.clidx].spell;
+  if (sptype) {
+    spelltable = uspelltable();
+    for (int it = 0; it < AL(spellD[0]); ++it) {
+      chance = spelltable[it].spfail - 3 * (uD.lev - spelltable[it].splevel);
+      chance -= 3 * (think_adj(sptype == SP_MAGE ? A_INT : A_WIS) - 1);
+      if (spelltable[it].spmana > uD.cmana)
+        chance += 5 * (spelltable[it].spmana - uD.cmana);
+
+      spell_chanceD[it] = CLAMP(chance, 5, 95);
+    }
   }
 }
 void
@@ -8779,9 +8794,12 @@ int* x_ptr;
       do {
         line = 0;
         for (int it = 0; it < book_used; ++it) {
-          BufMsg(overlay, "%c) %32.032s %8.08s (level %d) (mana %d)", 'a' + it,
-                 spell_nameD[book[it]], ((1 << it) & spmask) ? "" : "unknown",
-                 spelltable[book[it]].splevel, spelltable[book[it]].spmana);
+          BufMsg(overlay,
+                 "%c) %32.032s %8.08s (level %d) (mana %d) (failure %d%%)",
+                 'a' + it, spell_nameD[book[it]],
+                 ((1 << it) & spmask) ? "" : "unknown",
+                 spelltable[book[it]].splevel, spelltable[book[it]].spmana,
+                 spell_chanceD[book[it]]);
         }
 
         if (!in_subcommand("Cast which spell?", &c)) break;
@@ -12308,6 +12326,7 @@ main(int argc, char** argv)
     dun_level = 1;
   }
   calc_bonuses();
+  calc_mana(uD.lev);
 
   magic_init();
 
