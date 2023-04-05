@@ -8794,10 +8794,12 @@ int* x_ptr;
             turn_flag = try_spell(spidx, y_ptr, x_ptr);
           } else {
             turn_flag = TRUE;
-            if (spelltable[spidx].splevel > uD.lev || !gain_spell(spidx))
-              msg_print(
-                  "You study the magical runes but are unable to retain the "
-                  "knowledge at this time.");
+            msg_print("You study the magical runes.");
+            if (spelltable[spidx].splevel > uD.lev || !gain_spell(spidx)) {
+              msg_print("You are unable to retain the knowledge at this time.");
+            } else {
+              MSG("You learn %s!", spell_nameD[spidx]);
+            }
           }
         }
       } while (!turn_flag);
