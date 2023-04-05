@@ -246,16 +246,18 @@ tty_translate(char* str, int len)
 int
 tty_save()
 {
-  int fd, byte_count, save_size;
+  int fd, byte_count;
   byte_count = 0;
-  for (int it = 0; it < save_field_countD; ++it) {
-    byte_count += save_len_ptrD[it];
+  for (int it = 0; it < AL(save_bufD); ++it) {
+    struct bufS buf = save_bufD[it];
+    byte_count += buf.mem_size;
   }
   fd = open("savechar", O_WRONLY);
   if (fd) {
     write(fd, &byte_count, sizeof(byte_count));
-    for (int it = 0; it < save_field_countD; ++it) {
-      write(fd, save_addr_ptrD[it], save_len_ptrD[it]);
+    for (int it = 0; it < AL(save_bufD); ++it) {
+      struct bufS buf = save_bufD[it];
+      write(fd, buf.mem, buf.mem_size);
     }
     close(fd);
     return byte_count;
@@ -268,16 +270,18 @@ tty_load()
   int fd, byte_count, save_size;
 
   byte_count = 0;
-  for (int it = 0; it < save_field_countD; ++it) {
-    byte_count += save_len_ptrD[it];
+  for (int it = 0; it < AL(save_bufD); ++it) {
+    struct bufS buf = save_bufD[it];
+    byte_count += buf.mem_size;
   }
 
   fd = open("savechar", O_RDONLY);
   if (fd != -1) {
     read(fd, &save_size, sizeof(save_size));
     if (save_size == byte_count) {
-      for (int it = 0; it < save_field_countD; ++it) {
-        read(fd, save_addr_ptrD[it], save_len_ptrD[it]);
+      for (int it = 0; it < AL(save_bufD); ++it) {
+        struct bufS buf = save_bufD[it];
+        read(fd, buf.mem, buf.mem_size);
       }
     }
     close(fd);
