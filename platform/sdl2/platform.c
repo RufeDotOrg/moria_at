@@ -777,6 +777,7 @@ platform_draw()
         top + (MAX_A + 1) * height,
     };
     alt_fill(AL(active_affectD) / AL(affstr), 26 + 2, p.x, p.y, width, height);
+    p.x = width / 2;
     enum { AFF_Y = AL(active_affectD) / AL(affstr) };
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
