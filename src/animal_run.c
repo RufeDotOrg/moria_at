@@ -4572,6 +4572,15 @@ uspellmask()
   }
   return spmask;
 }
+struct spellS*
+uspelltable()
+{
+  int clidx = uD.clidx;
+  if (clidx) {
+    return spellD[clidx - 1];
+  }
+  return 0;
+}
 int
 usave()
 {
@@ -8735,6 +8744,7 @@ int* x_ptr;
   uint32_t flags, first_spell;
   int book[32], book_used, line;
   int sptype, spmask, spidx, spcount;
+  struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
   flags = obj->flags;
@@ -8748,6 +8758,7 @@ int* x_ptr;
     else {
       spmask = uspellmask();
       spcount = uspellcount();
+      spelltable = uspelltable();
       book_used = 0;
       while (flags) {
         book[book_used] = bit_pos(&flags);
@@ -8758,8 +8769,9 @@ int* x_ptr;
       do {
         line = 0;
         for (int it = 0; it < book_used; ++it) {
-          BufMsg(overlay, "%c) %32.032s (%d)", 'a' + it, spell_nameD[book[it]],
-                 ((1 << it) & spmask) != 0);
+          BufMsg(overlay, "%c) %32.032s %8.08s (level %d) (mana %d)", 'a' + it,
+                 spell_nameD[book[it]], ((1 << it) & spmask) ? "" : "unknown",
+                 spelltable[book[it]].splevel, spelltable[book[it]].spmana);
         }
 
         if (!in_subcommand("Recite which spell?", &c)) break;
@@ -8772,7 +8784,7 @@ int* x_ptr;
             turn_flag = try_spell(spidx, y_ptr, x_ptr);
           } else {
             turn_flag = TRUE;
-            if (!gain_spell(spidx))
+            if (spelltable[spidx].splevel > uD.lev || !gain_spell(spidx))
               msg_print(
                   "You study the magical runes but are unable to retain the "
                   "knowledge at this time.");
