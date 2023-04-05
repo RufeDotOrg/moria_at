@@ -126,8 +126,8 @@ DATA int savechar_v001[AL(save_bufD)] = {
 };
 #define SAVESUM001 16080
 static int savechar_v002[] = {
-    28, 4, 10240, 136, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 112, 32,
+    28, 4, 10240, 136, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 116, 32,
 };
-#define SAVESUM002 16144
+#define SAVESUM002 16148
 DATA int savesumD[] = {SAVESUM001, SAVESUM002};
 DATA int *savefieldD[] = {savechar_v001, savechar_v002};

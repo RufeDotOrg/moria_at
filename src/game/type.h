@@ -68,6 +68,7 @@ struct uS {
   int cmana;
   int cmana_frac;
   int mmana;
+  uint32_t spell_worked;
 };
 static struct uS uD;
 
