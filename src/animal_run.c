@@ -11580,21 +11580,18 @@ static void
 regenhp(percent)
 {
   uint32_t new_value;
-  int chp, mhp, chp_frac;
+  int chp;
 
-  mhp = uD.mhp;
-  new_value = mhp * percent + PLAYER_REGEN_HPBASE + uD.chp_frac;
+  new_value = uD.mhp * percent + PLAYER_REGEN_HPBASE + uD.chp_frac;
   chp = uD.chp + (new_value >> 16);
-  chp_frac = (new_value & 0xFFFF);
 
-  /* set frac to zero even if equal */
-  if (chp >= mhp) {
-    chp = mhp;
-    chp_frac = 0;
+  if (chp >= uD.mhp) {
+    uD.chp = uD.mhp;
+    uD.chp_frac = 0;
+  } else {
+    uD.chp = chp;
+    uD.chp_frac = (new_value & 0xFFFF);
   }
-
-  uD.chp = chp;
-  uD.chp_frac = chp_frac;
 }
 static void
 regenmana(percent)
