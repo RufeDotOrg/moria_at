@@ -26,7 +26,7 @@ DATA uint32_t msg_moreD;
 
 // Magic affect counters & names
 static int maD[MA_COUNT];
-static int spell_orderD[32];
+static uint8_t spell_orderD[32];
 
 uint32_t player_exp[MAX_PLAYER_LEVEL] = {
     10,      25,       45,       70,       100,      140,     200,
@@ -124,5 +124,9 @@ DATA int savechar_v001[AL(save_bufD)] = {
     28, 4, 10240, 136, 448, 56, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 100, 0,
 };
 #define SAVESUM001 16080
-DATA int savesumD[] = {SAVESUM001};
-DATA int *savefieldD[] = {savechar_v001};
+static int savechar_v002[] = {
+    28, 4, 10240, 136, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 112, 32,
+};
+#define SAVESUM002 16144
+DATA int savesumD[] = {SAVESUM001, SAVESUM002};
+DATA int *savefieldD[] = {savechar_v001, savechar_v002};

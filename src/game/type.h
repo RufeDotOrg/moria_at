@@ -91,9 +91,9 @@ static struct cbS cbD;
 struct countS {
   // Player ailment counters
   int poison;
-  int blind;  // TBD: deprecate
+  int unused_count1;
   int confusion;
-  int fear;  // TBD: deprecate
+  int unused_count2;
   int rest;
   int paralysis;
   // Player protection counters

@@ -12255,7 +12255,7 @@ static char* save_nameD[] = {
     nameof(&statD),    nameof(store_objD),   nameof(&turnD),
     nameof(&uD),       nameof(spell_orderD),
 };
-#define VERSION 2
+#define VERSION 3
 static void
 dump_layout()
 {
