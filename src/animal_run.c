@@ -4542,6 +4542,23 @@ todam_adj()
     return (6);
 }
 int
+uspellcount()
+{
+  int splev, tadj, sptype;
+  sptype = classD[uD.clidx].spell;
+  if (sptype) {
+    splev = uD.lev - classD[uD.clidx].first_spell_lev;
+    if (splev > 0) {
+      tadj = think_adj(sptype == SP_MAGE ? A_INT : A_WIS);
+      if (tadj > 0) {
+        tadj = CLAMP(tadj - 2, 2, 5);
+        return tadj * splev / 2;
+      }
+    }
+  }
+  return 0;
+}
+int
 usave()
 {
   return uD.save + think_adj(A_WIS) +
@@ -12174,39 +12191,34 @@ seed_init()
   // Burn randomness after seeding
   for (int it = randint(100); it != 0; --it) rnd();
 }
-static int save_lenD[] = {
-    sizeof(countD),   sizeof(dun_level),  sizeof(entity_objD),
-    sizeof(invenD),   sizeof(knownD),     sizeof(maD[0]) * MA_SAVE,
-    sizeof(objD),     sizeof(obj_usedD),  sizeof(player_hpD),
-    sizeof(rnd_seed), sizeof(town_seed),  sizeof(obj_seed),
-    sizeof(statD),    sizeof(store_objD), sizeof(turnD),
-    sizeof(uD),
-};
 #define nameof(x) #x
 static char* save_nameD[] = {
-    nameof(&countD),   nameof(&dun_level), nameof(entity_objD),
-    nameof(invenD),    nameof(knownD),     nameof(maD),
-    nameof(objD),      nameof(&obj_usedD), nameof(player_hpD),
-    nameof(&rnd_seed), nameof(&town_seed), nameof(&obj_seed),
-    nameof(&statD),    nameof(store_objD), nameof(&turnD),
-    nameof(&uD),
+    nameof(&countD),   nameof(&dun_level),   nameof(entity_objD),
+    nameof(invenD),    nameof(knownD),       nameof(maD),
+    nameof(objD),      nameof(&obj_usedD),   nameof(player_hpD),
+    nameof(&rnd_seed), nameof(&town_seed),   nameof(&obj_seed),
+    nameof(&statD),    nameof(store_objD),   nameof(&turnD),
+    nameof(&uD),       nameof(spell_orderD),
 };
+#define VERSION 2
 static void
-dump_layout(version)
+dump_layout()
 {
-  int sum = 0;
+  int sum;
   for (int it = 0; it < AL(save_nameD); ++it) {
     printf("%s ", save_nameD[it]);
   }
   printf("\n");
 
-  printf("static int savechar_v%03d[] = {\n  ", version);
-  for (int it = 0; it < AL(save_lenD); ++it) {
-    printf("%d, ", save_lenD[it]);
-    sum += save_lenD[it];
+  printf("static int savechar_v%03d[] = {\n  ", VERSION);
+  sum = 0;
+  for (int it = 0; it < AL(save_bufD); ++it) {
+    struct bufS buf = save_bufD[it];
+    printf("%jd, ", buf.mem_size);
+    sum += buf.mem_size;
   }
   printf("\n};\n");
-  printf("#define SAVESUM%03d %d\n", version, sum);
+  printf("#define SAVESUM%03d %d\n", VERSION, sum);
 }
 int
 main(int argc, char** argv)
