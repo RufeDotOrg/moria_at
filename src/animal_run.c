@@ -8784,14 +8784,23 @@ int* x_ptr;
                  spelltable[book[it]].splevel, spelltable[book[it]].spmana);
         }
 
-        if (!in_subcommand("Recite which spell?", &c)) break;
+        if (!in_subcommand("Cast which spell?", &c)) break;
         uint8_t choice = c - 'a';
 
         if (choice < book_used) {
           spidx = book[choice];
 
           if ((1 << spidx) & spmask) {
-            turn_flag = try_spell(spidx, y_ptr, x_ptr);
+            if (!try_spell(spidx, y_ptr, x_ptr)) continue;
+            turn_flag = TRUE;
+            if (uD.cmana < spelltable[spidx].spmana) {
+              uD.cmana = 0;
+              uD.cmana_frac = 0;
+              msg_print("Your low mana has damaged your health!");
+              dec_stat(A_CON);
+            } else {
+              uD.cmana -= spelltable[spidx].spmana;
+            }
           } else {
             turn_flag = TRUE;
             msg_print("You study the magical runes.");
