@@ -158,7 +158,7 @@ struct spellS {
   uint8_t splevel;
   uint8_t spmana;
   uint8_t spfail;
-  uint8_t spexp; /* 1/4 of exp gained for learning spell */
+  uint8_t spexp;
 };
 
 struct panelS {

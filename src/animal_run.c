@@ -8811,6 +8811,13 @@ int* x_ptr;
           if ((1 << spidx) & spmask) {
             if (!try_spell(spidx, y_ptr, x_ptr)) continue;
             turn_flag = TRUE;
+
+            if ((uD.spell_worked & (1 << spidx)) == 0) {
+              uD.spell_worked |= (1 << spidx);
+              uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
+              py_experience();
+            }
+
             if (uD.cmana < spelltable[spidx].spmana) {
               uD.cmana = 0;
               uD.cmana_frac = 0;
