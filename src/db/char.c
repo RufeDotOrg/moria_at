@@ -322,8 +322,8 @@ struct spellS spellD[AL(classD) - 1][31] = {
 static char stat_abbrD[MAX_A][5] = {
     "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
 };
-static char vital_nameD[6][5] = {
-    "LEV ", "EXP ", "MHP ", "CHP ", "AC  ", "GOLD",
+static char vital_nameD[8][5] = {
+    "LEV ", "EXP ", "MANA", "MHP ", "CHP ", "AC  ", "GOLD", "",
 };
 static char* stat_lossD[] = {
     "You feel weaker",      "You have trouble thinking clearly",

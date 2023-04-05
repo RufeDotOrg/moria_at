@@ -767,14 +767,19 @@ platform_draw()
       SDL_Point p = {width / 2, top + it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
-    SDL_Rect r = {width / 2, top, (26 + 1) * width, MAX_A * height};
+    for (int it = MAX_A; it < AL(vitalD) - 1; ++it) {
+      len = snprintf(AP(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
+      SDL_Point p = {width / 2, top + it * height};
+      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    }
+    SDL_Rect r = {width / 2, top, (26 + 1) * width, AL(vitalD) * height};
     rect_frame(r, 1);
   }
   {
     char *affstr[3];
     SDL_Point p = {
         0,
-        top + (MAX_A + 1) * height,
+        top + (AL(vitalD) + 1) * height,
     };
     alt_fill(AL(active_affectD) / AL(affstr), 26 + 2, p.x, p.y, width, height);
     p.x = width / 2;
@@ -795,7 +800,7 @@ platform_draw()
     }
     SDL_Rect r = {
         width / 2,
-        top + (MAX_A + 1) * height,
+        top + (AL(vitalD) + 1) * height,
         (26 + 1) * width,
         AFF_Y * height,
     };

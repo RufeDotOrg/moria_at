@@ -1,7 +1,7 @@
 
 // Visual info
 DATA struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
-DATA int vitalD[6];
+DATA int vitalD[8];
 DATA int vital_statD[6];
 DATA int vital_usedD;
 DATA int active_affectD[12];

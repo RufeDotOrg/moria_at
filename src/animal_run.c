@@ -85,6 +85,7 @@ vital_update()
   int used = 0;
   vitalD[used++] = uD.lev;
   vitalD[used++] = uD.exp;
+  vitalD[used++] = uD.cmana;
   vitalD[used++] = uD.mhp;
   vitalD[used++] = uD.chp;
   vitalD[used++] = cbD.pac - cbD.hide_toac;
