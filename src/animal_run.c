@@ -7195,23 +7195,22 @@ int
 turn_undead()
 {
   int py, px, cdis, turn_und;
-  struct monS* m_ptr;
   struct creatureS* cr_ptr;
 
   py = uD.y;
   px = uD.x;
   turn_und = FALSE;
   FOR_EACH(mon, {
-    cr_ptr = &creatureD[m_ptr->cidx];
-    cdis = distance(py, px, m_ptr->fy, m_ptr->fx);
+    cr_ptr = &creatureD[mon->cidx];
+    cdis = distance(py, px, mon->fy, mon->fx);
     if ((cdis <= MAX_SIGHT) && (CD_UNDEAD & cr_ptr->cdefense) &&
-        los(py, px, m_ptr->fy, m_ptr->fx)) {
+        los(py, px, mon->fy, mon->fx)) {
       if (((uD.lev + 1) > cr_ptr->level) || (randint(5) == 1)) {
         turn_und = TRUE;
-        m_ptr->mconfused = uD.lev;
+        mon->mconfused = uD.lev;
       }
 
-      if (m_ptr->mlit) {
+      if (mon->mlit) {
         mon_desc(it_index);
         if (turn_und) {
           MSG("%s runs frantically!", descD);
