@@ -8851,7 +8851,11 @@ int* x_ptr;
 
   obj = obj_get(invenD[iidx]);
   flags = obj->flags;
-  if (obj->tval == TV_MAGIC_BOOK && flags) {
+  if (py_affect(MA_BLIND))
+    msg_print("You can't see to read the book.");
+  else if (countD.confusion) {
+    msg_print("You are too confused to read a book.");
+  } else if (obj->tval == TV_MAGIC_BOOK && flags) {
     sptype = classD[uD.clidx].spell;
     first_spell = classD[uD.clidx].first_spell_lev - 1;
     if (sptype != SP_MAGE)
@@ -9051,7 +9055,11 @@ int* x_ptr;
 
   obj = obj_get(invenD[iidx]);
   flags = obj->flags;
-  if (obj->tval == TV_PRAYER_BOOK && flags) {
+  if (py_affect(MA_BLIND))
+    msg_print("You can't see to read the book.");
+  else if (countD.confusion) {
+    msg_print("You are too confused to read a book.");
+  } else if (obj->tval == TV_PRAYER_BOOK && flags) {
     sptype = classD[uD.clidx].spell;
     first_spell = classD[uD.clidx].first_spell_lev - 1;
     if (sptype != SP_PRIEST)
