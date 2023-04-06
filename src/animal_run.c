@@ -8693,7 +8693,7 @@ gain_prayer()
       gain[gain_count++] = bit_pos(&knowable);
     }
 
-    while (open_count) {
+    while (open_count && gain_count) {
       idx = randint(gain_count) - 1;
       open_count -= 1;
       spell_orderD[open[open_count]] = 1 + gain[idx];
