@@ -9564,6 +9564,7 @@ py_character()
 {
   int line;
   int xbth;
+  int sptype;
 
   line = 0;
 
@@ -9613,7 +9614,9 @@ py_character()
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-13.013s: %6d", "Fighting", xbth);
   BufMsg(screen, "%-13.013s: %6d", "Saving Throw", usave());
-  BufMsg(screen, "%-13.013s: %6d", "Spell Memory", uspellcount());
+  sptype = classD[uD.clidx].spell;
+  BufMsg(screen, "%-13.013s: %6d",
+         sptype == SP_MAGE ? "Spell Memory" : "Prayer Memory", uspellcount());
   BufPad(screen, MAX_A * 3, 23);
 
   line = 2 * MAX_A + 1;
