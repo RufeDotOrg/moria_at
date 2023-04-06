@@ -5013,10 +5013,12 @@ mon_take_hit(midx, dam)
   return death_blow;
 }
 void
-calc_hitpoints(level)
+calc_hitpoints()
 {
+  int level;
   int hitpoints;
 
+  level = uD.lev;
   hitpoints = player_hpD[level - 1] + (con_adj() * level);
   /* always give at least one point per level + 1 */
   if (hitpoints < (level + 1)) hitpoints = level + 1;
@@ -5031,9 +5033,9 @@ calc_hitpoints(level)
   uD.mhp = hitpoints;
 }
 void
-calc_mana(level)
+calc_mana()
 {
-  int new_mana = umana_by_level(level);
+  int new_mana = umana_by_level(uD.lev);
   struct spellS* spelltable;
   int sptype, chance;
 
@@ -5294,9 +5296,9 @@ set_use_stat(stat)
   } else if (stat == A_DEX) {
     calc_bonuses();
   } else if (stat == A_CON) {
-    calc_hitpoints(uD.lev);
+    calc_hitpoints();
   } else if (stat == A_INT || stat == A_WIS) {
-    calc_mana(uD.lev);
+    calc_mana();
   }
 }
 void py_bonuses(obj, factor) struct objS* obj;
@@ -6140,8 +6142,6 @@ py_experience()
 
     lev += 1;
     MSG("Welcome to level %d.", lev);
-    calc_hitpoints(lev);
-    calc_mana(lev);
 
     need_exp = lev_exp(lev);
     if (exp > need_exp) {
@@ -6154,6 +6154,9 @@ py_experience()
   uD.exp = exp;
   uD.max_exp = MAX(exp, uD.max_exp);
   uD.lev = lev;
+
+  calc_hitpoints();
+  calc_mana();
 }
 int
 restore_level()
@@ -6193,8 +6196,8 @@ py_lose_experience(amount)
     if (uD.lev != lev) {
       uD.lev = lev;
 
-      calc_hitpoints(lev);
-      calc_mana(lev);
+      calc_hitpoints();
+      calc_mana();
     }
 
     return TRUE;
@@ -12613,7 +12616,7 @@ main(int argc, char** argv)
     dun_level = 1;
   }
   calc_bonuses();
-  calc_mana(uD.lev);
+  calc_mana();
 
   magic_init();
 
