@@ -4623,6 +4623,49 @@ udisarm()
   return xdis;
 }
 int
+gain_prayer()
+{
+  int spcount = uspellcount();
+  struct spellS* spelltable;
+  uint32_t knowable, known;
+  int open[32], gain[32];
+  int open_count, gain_count;
+  int idx;
+
+  known = 0;
+  open_count = 0;
+  for (int it = 0; it < spcount; ++it) {
+    if (spell_orderD[it])
+      known |= (1 << (spell_orderD[it] - 1));
+    else
+      open[open_count++] = it;
+  }
+
+  if (open_count) {
+    knowable = 0;
+    spelltable = uspelltable();
+    for (int it = 0; it < AL(spellD[0]); ++it) {
+      if (spelltable[it].splevel <= uD.lev) knowable |= (1 << it);
+    }
+
+    knowable &= ~known;
+    gain_count = 0;
+    while (knowable) {
+      gain[gain_count++] = bit_pos(&knowable);
+    }
+
+    while (open_count && gain_count) {
+      idx = randint(gain_count) - 1;
+      open_count -= 1;
+      spell_orderD[open[open_count]] = 1 + gain[idx];
+      MSG("You believe in the prayer to %s.", prayer_nameD[gain[idx]]);
+      gain[idx] = gain[gain_count - 1];
+      gain_count -= 1;
+    }
+  }
+  return 0;
+}
+int
 test_hit(bth, level_adj, pth, ac)
 {
   int i, die;
@@ -8659,49 +8702,6 @@ py_zap(iidx)
     }
     inven_try_wand_dir(iidx, dir);
   }
-}
-int
-gain_prayer()
-{
-  int spcount = uspellcount();
-  struct spellS* spelltable;
-  uint32_t knowable, known;
-  int open[32], gain[32];
-  int open_count, gain_count;
-  int idx;
-
-  known = 0;
-  open_count = 0;
-  for (int it = 0; it < spcount; ++it) {
-    if (spell_orderD[it])
-      known |= (1 << (spell_orderD[it] - 1));
-    else
-      open[open_count++] = it;
-  }
-
-  if (open_count) {
-    knowable = 0;
-    spelltable = uspelltable();
-    for (int it = 0; it < AL(spellD[0]); ++it) {
-      if (spelltable[it].splevel <= uD.lev) knowable |= (1 << it);
-    }
-
-    knowable &= ~known;
-    gain_count = 0;
-    while (knowable) {
-      gain[gain_count++] = bit_pos(&knowable);
-    }
-
-    while (open_count && gain_count) {
-      idx = randint(gain_count) - 1;
-      open_count -= 1;
-      spell_orderD[open[open_count]] = 1 + gain[idx];
-      MSG("You believe in the prayer to %s.", prayer_nameD[gain[idx]]);
-      gain[idx] = gain[gain_count - 1];
-      gain_count -= 1;
-    }
-  }
-  return 0;
 }
 int
 gain_spell(spidx)
