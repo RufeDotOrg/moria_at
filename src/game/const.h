@@ -395,6 +395,7 @@
 #define SP_MAGE 1
 #define SP_PRIEST 2
 #define SP_EXP_MULT 4
+#define SP_MAX 31
 
 /* Class level adjustment */
 #define LA_BTH 0

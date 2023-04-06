@@ -4570,7 +4570,7 @@ uspellcount()
       tadj = think_adj(sptype == SP_MAGE ? A_INT : A_WIS);
       if (tadj > 0) {
         tadj = CLAMP(tadj - 2, 2, 5);
-        return tadj * splev / 2;
+        return CLAMP(tadj * splev / 2, 1, SP_MAX);
       }
     }
   }
@@ -5046,7 +5046,10 @@ calc_mana(level)
   }
 
   sptype = classD[uD.clidx].spell;
+
   if (sptype) {
+    if (sptype == SP_PRIEST) gain_prayer();
+
     spelltable = uspelltable();
     for (int it = 0; it < AL(spellD[0]); ++it) {
       chance = spelltable[it].spfail - 3 * (uD.lev - spelltable[it].splevel);
@@ -5730,7 +5733,7 @@ py_class_select()
 {
   char c;
   int line, clidx;
-  int filter[] = {0, 1, 3};
+  int filter[] = {0, 1, 2, 3};
 
   clidx = -1;
   overlay_submodeD = 'c';
@@ -7188,6 +7191,38 @@ create_food(y, x)
     msg_print("Food rolls beneath your feet.");
   }
 }
+int
+turn_undead()
+{
+  int py, px, cdis, turn_und;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+
+  py = uD.y;
+  px = uD.x;
+  turn_und = FALSE;
+  FOR_EACH(mon, {
+    cr_ptr = &creatureD[m_ptr->cidx];
+    cdis = distance(py, px, m_ptr->fy, m_ptr->fx);
+    if ((cdis <= MAX_SIGHT) && (CD_UNDEAD & cr_ptr->cdefense) &&
+        los(py, px, m_ptr->fy, m_ptr->fx)) {
+      if (((uD.lev + 1) > cr_ptr->level) || (randint(5) == 1)) {
+        turn_und = TRUE;
+        m_ptr->mconfused = uD.lev;
+      }
+
+      if (m_ptr->mlit) {
+        mon_desc(it_index);
+        if (turn_und) {
+          MSG("%s runs frantically!", descD);
+        } else {
+          MSG("%s is unaffected.", descD);
+        }
+      }
+    }
+  });
+  return (turn_und);
+}
 void
 warding_glyph(y, x)
 {
@@ -8627,6 +8662,49 @@ py_zap(iidx)
   }
 }
 int
+gain_prayer()
+{
+  int spcount = uspellcount();
+  struct spellS* spelltable;
+  uint32_t knowable, known;
+  int open[32], gain[32];
+  int open_count, gain_count;
+  int idx;
+
+  known = 0;
+  open_count = 0;
+  for (int it = 0; it < spcount; ++it) {
+    if (spell_orderD[it])
+      known |= (1 << (spell_orderD[it] - 1));
+    else
+      open[open_count++] = it;
+  }
+
+  if (open_count) {
+    knowable = 0;
+    spelltable = uspelltable();
+    for (int it = 0; it < AL(spellD[0]); ++it) {
+      if (spelltable[it].splevel <= uD.lev) knowable |= (1 << it);
+    }
+
+    knowable &= ~known;
+    gain_count = 0;
+    while (knowable) {
+      gain[gain_count++] = bit_pos(&knowable);
+    }
+
+    while (open_count) {
+      idx = randint(gain_count) - 1;
+      open_count -= 1;
+      spell_orderD[open[open_count]] = 1 + gain[idx];
+      MSG("You believe in the prayer to %s.", prayer_nameD[gain[idx]]);
+      gain[idx] = gain[gain_count - 1];
+      gain_count -= 1;
+    }
+  }
+  return 0;
+}
+int
 gain_spell(spidx)
 {
   int spcount = uspellcount();
@@ -8835,6 +8913,197 @@ int* x_ptr;
             } else {
               MSG("You learn %s!", spell_nameD[spidx]);
             }
+          }
+        }
+      } while (!turn_flag);
+    }
+  }
+}
+int
+try_prayer(pridx, y_ptr, x_ptr)
+int* y_ptr;
+int* x_ptr;
+{
+  int dir;
+  switch (pridx + 1) {
+    case 1:
+      ma_duration(MA_DETECT_EVIL, 1);
+      break;
+    case 2:
+      py_heal_hit(damroll(3, 3));
+      break;
+    case 3:
+      ma_duration(MA_BLESS, randint(12) + 12);
+      break;
+    case 4:
+      ma_clear(MA_FEAR);
+      break;
+    case 5:
+      illuminate(uD.y, uD.x);
+      break;
+    case 6:
+      detect_obj(oset_trap);
+      break;
+    case 7:
+      detect_obj(oset_sdoor);
+      break;
+    case 8:
+      if (countD.poison) countD.poison = MAX(1, countD.poison / 2);
+      break;
+    case 9:
+      if (!get_dir(0, &dir)) return 0;
+      confuse_monster(dir, uD.y, uD.x);
+      break;
+    case 10:
+      py_teleport(uD.lev * 3, y_ptr, x_ptr);
+      break;
+    case 11:
+      py_heal_hit(damroll(4, 4));
+      break;
+    case 12:
+      ma_duration(MA_BLESS, randint(24) + 24);
+      break;
+    case 13:
+      sleep_monster_aoe(1);
+      break;
+    case 14:
+      create_food(uD.y, uD.x);
+      break;
+    case 15:
+      equip_remove_curse();
+      break;
+    case 16:
+      ma_duration(MA_AFIRE, randint(10) + 10);
+      ma_duration(MA_AFROST, randint(10) + 10);
+      break;
+    case 17:
+      if (countD.poison > 0) countD.poison = 1;
+      break;
+    case 18:
+      if (!get_dir(0, &dir)) return 0;
+
+      fire_ball(GF_HOLY_ORB, dir, uD.y, uD.x, (damroll(3, 6) + uD.lev),
+                "Black Sphere");
+      break;
+    case 19:
+      py_heal_hit(damroll(8, 4));
+      break;
+    case 20:
+      ma_duration(MA_DETECT_INVIS, randint(24) + 24);
+      break;
+    case 21:
+      countD.protevil += randint(25) + 3 * uD.lev;
+      break;
+    case 22:
+      earthquake();
+      break;
+    case 23:
+      map_area();
+      break;
+    case 24:
+      py_heal_hit(damroll(16, 4));
+      break;
+    case 25:
+      turn_undead();
+      break;
+    case 26:
+      ma_duration(MA_BLESS, randint(48) + 48);
+      break;
+    case 27:
+      dispel_creature(CD_UNDEAD, 3 * uD.lev);
+      break;
+    case 28:
+      py_heal_hit(200);
+      break;
+    case 29:
+      dispel_creature(CD_EVIL, 3 * uD.lev);
+      break;
+    case 30:
+      warding_glyph(uD.y, uD.x);
+      break;
+    case 31:
+      ma_clear(MA_FEAR);
+      if (countD.poison > 0) countD.poison = 1;
+      py_heal_hit(1000);
+      for (int i = A_STR; i <= A_CHR; i++) res_stat(i);
+      dispel_creature(CD_EVIL, 4 * uD.lev);
+      turn_undead();
+      maD[MA_INVULN] = 0;
+      ma_duration(MA_INVULN, 3);
+      break;
+    default:
+      break;
+  }
+  return 1;
+}
+void py_prayer(iidx, y_ptr, x_ptr) int* y_ptr;
+int* x_ptr;
+{
+  char c;
+  struct objS* obj;
+  uint32_t flags, first_spell;
+  int book[32], book_used, line;
+  int sptype, spmask, spidx, spcount;
+  struct spellS* spelltable;
+
+  obj = obj_get(invenD[iidx]);
+  flags = obj->flags;
+  if (obj->tval == TV_PRAYER_BOOK && flags) {
+    sptype = classD[uD.clidx].spell;
+    first_spell = classD[uD.clidx].first_spell_lev - 1;
+    if (sptype != SP_PRIEST)
+      msg_print("You cannot believe the text written in this book.");
+    else if (first_spell >= uD.lev)
+      msg_print("You read of lineages and legends; what meaning do they hold?");
+    else {
+      spmask = uspellmask();
+      spcount = uspellcount();
+      spelltable = uspelltable();
+      book_used = 0;
+      while (flags) {
+        book[book_used] = bit_pos(&flags);
+        book_used += 1;
+      }
+      overlay_submodeD = 'P' + mask_subval(obj->subval);
+
+      do {
+        line = 0;
+        for (int it = 0; it < book_used; ++it) {
+          BufMsg(overlay,
+                 "%c) %32.032s %8.08s (level %d) (mana %d) (failure %d%%)",
+                 'a' + it, prayer_nameD[book[it]],
+                 ((1 << it) & spmask) ? "" : "unknown",
+                 spelltable[book[it]].splevel, spelltable[book[it]].spmana,
+                 spell_chanceD[book[it]]);
+        }
+
+        if (!in_subcommand("Recite which prayer?", &c)) break;
+        uint8_t choice = c - 'a';
+
+        if (choice < book_used) {
+          spidx = book[choice];
+
+          if ((1 << spidx) & spmask) {
+            if (!try_prayer(spidx, y_ptr, x_ptr)) continue;
+            turn_flag = TRUE;
+
+            if ((uD.spell_worked & (1 << spidx)) == 0) {
+              uD.spell_worked |= (1 << spidx);
+              uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
+              py_experience();
+            }
+
+            if (uD.cmana < spelltable[spidx].spmana) {
+              uD.cmana = 0;
+              uD.cmana_frac = 0;
+              msg_print("Your low mana has damaged your health!");
+              dec_stat(A_CON);
+            } else {
+              uD.cmana -= spelltable[spidx].spmana;
+            }
+          } else {
+            turn_flag = TRUE;
+            MSG("You have no belief in the prayer of %s.", prayer_nameD[spidx]);
           }
         }
       } while (!turn_flag);
@@ -9267,6 +9536,8 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
           py_zap(iidx);
         } else if (obj->tval == TV_MAGIC_BOOK) {
           py_magic(iidx, y_ptr, x_ptr);
+        } else if (obj->tval == TV_PRAYER_BOOK) {
+          py_prayer(iidx, y_ptr, x_ptr);
         } else if (iidx < INVEN_EQUIP) {
           inven_wear(iidx);
         } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {

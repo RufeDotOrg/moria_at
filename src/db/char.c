@@ -208,38 +208,25 @@ static struct raceS raceD[] = {
 
 static char* spell_nameD[] = {
     /* Mage Spells */
-    "Magic Missile",
-    "Detect Monsters",
-    "Phase Door",
-    "Light Area",
-    "Cure Light Wounds",
-    "Find Hidden Traps/Doors",
-    "Stinking Cloud",
-    "Confusion",
-    "Lightning Bolt",
-    "Trap/Door/Lock Destruction",
-    "Sleep Bolt",
-    "Cure Poison",
-    "Teleport Self",
-    "Remove Curse",
-    "Frost Bolt",
-    "Turn Stone to Mud",
-    "Create Food",
-    "Recharge Item I",
-    "Sleep Adjacent",
-    "Polymorph Other",
-    "Identify",
-    "Sleep Area",
-    "Fire Bolt",
-    "Slow Monster",
-    "Frost Ball",
-    "Recharge Item II",
-    "Teleport Other",
-    "Haste Self",
-    "Fire Ball",
-    "Word of Destruction",
+    "Magic Missile",     "Detect Monsters",
+    "Phase Door",        "Light Area",
+    "Cure Light Wounds", "Find Hidden Traps/Doors",
+    "Stinking Cloud",    "Confusion",
+    "Lightning Bolt",    "Trap/Door/Lock Destruction",
+    "Sleep Bolt",        "Cure Poison",
+    "Teleport Self",     "Remove Curse",
+    "Frost Bolt",        "Turn Stone to Mud",
+    "Create Food",       "Recharge Item I",
+    "Sleep Adjacent",    "Polymorph Other",
+    "Identify",          "Sleep Area",
+    "Fire Bolt",         "Slow Monster",
+    "Frost Ball",        "Recharge Item II",
+    "Teleport Other",    "Haste Self",
+    "Fire Ball",         "Word of Destruction",
     "Genocide",
-    /* Priest Spells, start at index 31 */
+};
+static char* prayer_nameD[] = {
+    /* Priest Prayers */
     "Detect Evil",
     "Cure Light Wounds",
     "Bless",
@@ -272,7 +259,7 @@ static char* spell_nameD[] = {
     "Glyph of Warding",
     "Holy Word",
 };
-struct spellS spellD[AL(classD) - 1][31] = {
+struct spellS spellD[AL(classD) - 1][SP_MAX] = {
     {/* Mage     */
      {1, 1, 22, 1},    {1, 1, 23, 1},     {1, 2, 24, 1},    {1, 2, 26, 1},
      {3, 3, 25, 2},    {3, 3, 25, 1},     {3, 3, 27, 2},    {3, 4, 30, 1},
