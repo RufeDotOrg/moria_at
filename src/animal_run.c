@@ -5054,9 +5054,6 @@ calc_mana(level)
     for (int it = 0; it < AL(spellD[0]); ++it) {
       chance = spelltable[it].spfail - 3 * (uD.lev - spelltable[it].splevel);
       chance -= 3 * (think_adj(sptype == SP_MAGE ? A_INT : A_WIS) - 1);
-      if (spelltable[it].spmana > uD.cmana)
-        chance += 5 * (spelltable[it].spmana - uD.cmana);
-
       spell_chanceD[it] = CLAMP(chance, 5, 95);
     }
   }
@@ -8888,13 +8885,16 @@ int* x_ptr;
           spidx = book[choice];
 
           if ((1 << spidx) & spmask) {
-            if (!try_spell(spidx, y_ptr, x_ptr)) continue;
-            turn_flag = TRUE;
+            if (randint(100) < spell_chanceD[spidx]) {
+              msg_print("You failed to get the spell off!");
+            } else {
+              if (!try_spell(spidx, y_ptr, x_ptr)) continue;
 
-            if ((uD.spell_worked & (1 << spidx)) == 0) {
-              uD.spell_worked |= (1 << spidx);
-              uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
-              py_experience();
+              if ((uD.spell_worked & (1 << spidx)) == 0) {
+                uD.spell_worked |= (1 << spidx);
+                uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
+                py_experience();
+              }
             }
 
             if (uD.cmana < spelltable[spidx].spmana) {
@@ -8905,6 +8905,7 @@ int* x_ptr;
             } else {
               uD.cmana -= spelltable[spidx].spmana;
             }
+            turn_flag = TRUE;
           } else {
             turn_flag = TRUE;
             msg_print("You study the magical runes.");
@@ -9084,13 +9085,16 @@ int* x_ptr;
           spidx = book[choice];
 
           if ((1 << spidx) & spmask) {
-            if (!try_prayer(spidx, y_ptr, x_ptr)) continue;
-            turn_flag = TRUE;
+            if (randint(100) < spell_chanceD[spidx]) {
+              msg_print("You lost your concentration!");
+            } else {
+              if (!try_prayer(spidx, y_ptr, x_ptr)) continue;
 
-            if ((uD.spell_worked & (1 << spidx)) == 0) {
-              uD.spell_worked |= (1 << spidx);
-              uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
-              py_experience();
+              if ((uD.spell_worked & (1 << spidx)) == 0) {
+                uD.spell_worked |= (1 << spidx);
+                uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
+                py_experience();
+              }
             }
 
             if (uD.cmana < spelltable[spidx].spmana) {
@@ -9101,6 +9105,7 @@ int* x_ptr;
             } else {
               uD.cmana -= spelltable[spidx].spmana;
             }
+            turn_flag = TRUE;
           } else {
             turn_flag = TRUE;
             MSG("You have no belief in the prayer of %s.", prayer_nameD[spidx]);
