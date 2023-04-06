@@ -8847,7 +8847,7 @@ int* x_ptr;
   struct objS* obj;
   uint32_t flags, first_spell;
   int book[32], book_used, line;
-  int sptype, spmask, spidx, spcount;
+  int sptype, spmask, spidx;
   struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
@@ -8861,7 +8861,6 @@ int* x_ptr;
       msg_print("You yearn to understand the magical runes filling this book.");
     else {
       spmask = uspellmask();
-      spcount = uspellcount();
       spelltable = uspelltable();
       book_used = 0;
       while (flags) {
@@ -9047,7 +9046,7 @@ int* x_ptr;
   struct objS* obj;
   uint32_t flags, first_spell;
   int book[32], book_used, line;
-  int sptype, spmask, spidx, spcount;
+  int sptype, spmask, spidx;
   struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
@@ -9061,7 +9060,6 @@ int* x_ptr;
       msg_print("You read of lineages and legends; what meaning do they hold?");
     else {
       spmask = uspellmask();
-      spcount = uspellcount();
       spelltable = uspelltable();
       book_used = 0;
       while (flags) {
