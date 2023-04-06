@@ -8872,12 +8872,13 @@ int* x_ptr;
       do {
         line = 0;
         for (int it = 0; it < book_used; ++it) {
+          spidx = book[it];
           BufMsg(overlay,
                  "%c) %32.032s %8.08s (level %d) (mana %d) (failure %d%%)",
-                 'a' + it, spell_nameD[book[it]],
-                 ((1 << it) & spmask) ? "" : "unknown",
-                 spelltable[book[it]].splevel, spelltable[book[it]].spmana,
-                 spell_chanceD[book[it]]);
+                 'a' + it, spell_nameD[spidx],
+                 ((1 << spidx) & spmask) ? "" : "unknown",
+                 spelltable[spidx].splevel, spelltable[spidx].spmana,
+                 spell_chanceD[spidx]);
         }
 
         if (!in_subcommand("Cast which spell?", &c)) break;
@@ -9071,12 +9072,13 @@ int* x_ptr;
       do {
         line = 0;
         for (int it = 0; it < book_used; ++it) {
+          spidx = book[it];
           BufMsg(overlay,
                  "%c) %32.032s %8.08s (level %d) (mana %d) (failure %d%%)",
-                 'a' + it, prayer_nameD[book[it]],
-                 ((1 << it) & spmask) ? "" : "unknown",
-                 spelltable[book[it]].splevel, spelltable[book[it]].spmana,
-                 spell_chanceD[book[it]]);
+                 'a' + it, prayer_nameD[spidx],
+                 ((1 << spidx) & spmask) ? "" : "unknown",
+                 spelltable[spidx].splevel, spelltable[spidx].spmana,
+                 spell_chanceD[spidx]);
         }
 
         if (!in_subcommand("Recite which prayer?", &c)) break;
