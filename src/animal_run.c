@@ -5732,7 +5732,7 @@ py_class_select()
 {
   char c;
   int line, clidx;
-  int filter[] = {0, 1, 2, 3};
+  int filter[] = {0, 1, 2, 3, 5};
 
   clidx = -1;
   overlay_submodeD = 'c';
