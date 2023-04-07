@@ -9517,11 +9517,25 @@ bow_by_projectile(pidx)
   return -1;
 }
 static int
+obj_dupe_num(obj, num)
+struct objS* obj;
+{
+  int id = obj_use()->id;
+  if (id) {
+    struct objS* other = obj_get(id);
+    memcpy(other, obj, sizeof(struct objS));
+    other->id = id;
+    other->number = num;
+    return id;
+  }
+
+  return 0;
+}
+static int
 obj_thrown(obj, y, x)
 struct objS* obj;
 {
   struct caveS* c_ptr;
-  struct objS* dropobj;
   int dropid;
   int flag, i, j, k;
 
@@ -9542,17 +9556,9 @@ struct objS* obj;
   } while (!flag && k <= 9);
 
   if (flag) {
-    dropobj = obj_use();
-    dropid = dropobj->id;
-
-    if (dropid) {
-      tr_obj_copy(obj->tidx, dropobj);
-      dropobj->tohit = obj->tohit;
-      dropobj->todam = obj->todam;
-      dropobj->number = 1;
-      c_ptr->oidx = dropid;
-      return TRUE;
-    }
+    dropid = obj_dupe_num(obj, 1);
+    c_ptr->oidx = dropid;
+    return dropid != 0;
   }
 
   return FALSE;
