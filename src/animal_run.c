@@ -9489,6 +9489,102 @@ inven_wear(iidx)
     turn_flag = TRUE;
   }
 }
+void
+inven_throw_dir(iidx, dir)
+{
+  int tbth, tpth, tdam, tdis, adj;
+  int y, x, fromy, fromx, cdis;
+  int flag, drop;
+  struct caveS* c_ptr;
+  struct objS* obj;
+  struct monS* m_ptr;
+  struct creatureS* cr_ptr;
+  char tname[AL(descD)];
+
+  obj = obj_get(invenD[iidx]);
+  if (obj->tval == TV_PROJECTILE) {
+    obj_desc(obj, 1);
+    inven_destroy_num(iidx, 1);
+
+    // TBD: dynamics
+    // facts(&throw_obj, &tbth, &tpth, &tdam, &tdis);
+    tdis = 10;
+    tbth = 0;
+    tpth = 0;
+
+    fromy = y = uD.y;
+    fromx = x = uD.x;
+    cdis = 0;
+    flag = FALSE;
+    drop = FALSE;
+    do {
+      mmove(dir, &y, &x);
+      c_ptr = &caveD[y][x];
+      cdis++;
+
+      if (cdis > tdis || c_ptr->fval >= MIN_CLOSED_SPACE) {
+        drop = TRUE;
+      } else if (c_ptr->midx) {
+        flag = TRUE;
+        m_ptr = &entity_monD[c_ptr->midx];
+        cr_ptr = &creatureD[m_ptr->cidx];
+
+        adj = uD.lev * level_adj[uD.clidx][LA_BTHB];
+        if (m_ptr->mlit == 0) {
+          tpth /= 2;
+          tbth /= 2;
+          adj /= 2;
+        }
+        tbth = tbth - cdis;
+
+        if (test_hit(tbth, adj, tpth, cr_ptr->ac)) {
+          strcpy(tname, descD);
+          mon_desc(c_ptr->midx);
+          descD[0] |= 0x20;
+          MSG("You hear a cry as the %s strikes %s.", tname, descD);
+
+          tdam = pdamroll(obj->damage);
+          // TBD: named projectile weapons with damage multipliers?
+          // tdam = tot_dam(obj, tdam, i);
+          tdam = critical_blow(obj->weight, tpth, tdam, LA_BTHB);
+          if (tdam < 0) tdam = 0;
+          if (mon_take_hit(c_ptr->midx, tdam)) {
+            MSG("You have killed %s.", descD);
+            py_experience();
+          }
+        } else {
+          drop = TRUE;
+        }
+      }
+
+      if (drop) {
+        flag = TRUE;
+        // TBD: chance it lands on the dungeon floor
+        MSG("The %s breaks on the dungeon floor.", descD);
+        //   drop_throw(fromy, fromx, &throw_obj);
+      }
+
+      fromy = y;
+      fromx = x;
+    } while (!flag);
+
+    turn_flag = TRUE;
+  }
+}
+void
+py_throw(iidx)
+{
+  int dir;
+  if (get_dir(0, &dir)) {
+    if (countD.confusion) {
+      msg_print("You are confused.");
+      do {
+        dir = randint(9);
+      } while (dir == 5);
+    }
+    inven_throw_dir(iidx, dir);
+  }
+}
 static void
 py_offhand()
 {
@@ -9567,7 +9663,9 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
         obj_study(obj_get(invenD[iidx]), 0);
       } else {
         obj = obj_get(invenD[iidx]);
-        if (obj->tval == TV_FOOD) {
+        if (obj->tval == TV_PROJECTILE) {
+          py_throw(iidx);
+        } else if (obj->tval == TV_FOOD) {
           inven_eat(iidx);
         } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
           inven_quaff(iidx);
