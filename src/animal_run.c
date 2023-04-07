@@ -9516,6 +9516,47 @@ bow_by_projectile(pidx)
   }
   return -1;
 }
+static int
+obj_thrown(obj, y, x)
+struct objS* obj;
+{
+  struct caveS* c_ptr;
+  struct objS* dropobj;
+  int dropid;
+  int flag, i, j, k;
+
+  i = y;
+  j = x;
+  k = 0;
+  flag = FALSE;
+  do {
+    if (in_bounds(i, j)) {
+      c_ptr = &caveD[i][j];
+      if (c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) flag = TRUE;
+    }
+    if (!flag) {
+      i = y + randint(3) - 2;
+      j = x + randint(3) - 2;
+      k++;
+    }
+  } while (!flag && k <= 9);
+
+  if (flag) {
+    dropobj = obj_use();
+    dropid = dropobj->id;
+
+    if (dropid) {
+      tr_obj_copy(obj->tidx, dropobj);
+      dropobj->tohit = obj->tohit;
+      dropobj->todam = obj->todam;
+      dropobj->number = 1;
+      c_ptr->oidx = dropid;
+      return TRUE;
+    }
+  }
+
+  return FALSE;
+}
 void
 inven_throw_dir(iidx, dir)
 {
@@ -9610,10 +9651,12 @@ inven_throw_dir(iidx, dir)
 
       if (drop) {
         flag = TRUE;
-        // TBD: chance it lands on the dungeon floor
         descD[0] &= ~0x20;
-        MSG("%s breaks on the dungeon floor.", descD);
-        //   drop_throw(fromy, fromx, &throw_obj);
+        if (randint(10) > 1 && obj_thrown(obj, fromy, fromx)) {
+          MSG("%s lands on the dungeon floor.", descD);
+        } else {
+          MSG("%s breaks on the dungeon floor.", descD);
+        }
       }
 
       fromy = y;
