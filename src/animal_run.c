@@ -9507,11 +9507,6 @@ inven_throw_dir(iidx, dir)
     obj_desc(obj, 1);
     inven_destroy_num(iidx, 1);
 
-    // TBD: dynamics
-    // facts(&throw_obj, &tbth, &tpth, &tdam, &tdis);
-    tbth = uD.bowth;
-    tpth = 0;
-
     fromy = y = uD.y;
     fromx = x = uD.x;
     cdis = 0;
@@ -9530,6 +9525,9 @@ inven_throw_dir(iidx, dir)
         cr_ptr = &creatureD[m_ptr->cidx];
 
         adj = uD.lev * level_adj[uD.clidx][LA_BTHB];
+        tbth = uD.bowth;
+        tpth = cbD.ptohit + obj->tohit;
+        // TBD: bow launcher dynamics
         if (m_ptr->mlit == 0) {
           tpth /= 2;
           tbth /= 2;
@@ -9543,7 +9541,7 @@ inven_throw_dir(iidx, dir)
           descD[0] |= 0x20;
           MSG("You hear a cry as the %s strikes %s.", tname, descD);
 
-          tdam = pdamroll(obj->damage);
+          tdam = pdamroll(obj->damage) + obj->todam;
           // TBD: named projectile weapons with damage multipliers?
           // tdam = tot_dam(obj, tdam, i);
           tdam = critical_blow(obj->weight, tpth, tdam, LA_BTHB);
