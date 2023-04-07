@@ -5644,15 +5644,14 @@ static void inven_used_obj(obj) struct objS* obj;
   }
 }
 static int
-inven_merge_slot(obj)
+inven_obj_mergecount(obj, number)
 struct objS* obj;
 {
-  int tval, p1, subval, number;
+  int tval, p1, subval;
 
   tval = obj->tval;
   p1 = obj->p1;
   subval = obj->subval;
-  number = obj->number;
   if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
@@ -11828,7 +11827,7 @@ store_item_purchase(sidx, item)
     count = obj->subval & STACK_BATCH ? obj->number : 1;
     cost = store_value(sidx, obj_value(obj), 1);
     if (uD.gold >= cost) {
-      if ((iidx = inven_merge_slot(obj)) >= 0) {
+      if ((iidx = inven_obj_mergecount(obj, count)) >= 0) {
         obj_get(invenD[iidx])->number += count;
         flag = TRUE;
       } else if ((iidx = inven_slot()) >= 0) {
