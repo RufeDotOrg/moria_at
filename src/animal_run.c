@@ -2736,7 +2736,8 @@ store_tr_stack(sidx, tr_index, stack)
     for (int it = 0; it < AL(store_objD[0]); ++it) {
       obj = &store_objD[sidx][it];
       if (obj->tidx == tr_index) {
-        obj->number += stack;
+        stack = MIN(255, stack + obj->number);
+        obj->number = stack;
         return FALSE;
       }
     }
@@ -2748,8 +2749,8 @@ store_tr_stack(sidx, tr_index, stack)
       do {
         tr_obj_copy(tr_index, obj);
         magic_treasure(obj, OBJ_TOWN_LEVEL);
-        obj->number = stack;
       } while (obj->cost <= 0 || obj->cost >= ownerD[storeD[sidx]].max_cost);
+      obj->number = stack;
       obj->idflag = ID_REVEAL;
       return TRUE;
     }
