@@ -5210,7 +5210,7 @@ ma_bonuses(maffect, factor)
     case MA_BLESS:
       uD.ma_ac += factor * 2;
       uD.bth += factor * 5;
-      // uD.bthb += factor * 5;
+      uD.bowth += factor * 5;
       if (factor > 0)
         msg_print("You feel righteous!");
       else if (factor < 0)
@@ -5220,7 +5220,7 @@ ma_bonuses(maffect, factor)
       uD.chp += (factor > 0) * 10;
       uD.mhp += factor * 10;
       uD.bth += factor * 12;
-      // uD.bthb += factor * 12;
+      uD.bowth += factor * 12;
       if (factor > 0)
         msg_print("You feel like a HERO!");
       else if (factor < 0)
@@ -5231,7 +5231,7 @@ ma_bonuses(maffect, factor)
       uD.chp += (factor > 0) * 20;
       uD.mhp += factor * 20;
       uD.bth += factor * 24;
-      // uD.bthb += factor * 24;
+      uD.bowth += factor * 24;
       if (factor > 0)
         msg_print("You feel like a SUPER-HERO!");
       else if (factor < 0)
@@ -5803,16 +5803,14 @@ py_class_select()
 {
   char c;
   int line, clidx;
-  int filter[] = {0, 1, 2, 3, 5};
 
   clidx = -1;
   overlay_submodeD = 'c';
   do {
     line = 0;
-    for (int it = 0; it < AL(filter); ++it) {
-      overlay_usedD[line] =
-          snprintf(overlayD[line], AL(overlayD[line]), "%c) %s", 'a' + it,
-                   classD[filter[it]].name);
+    for (int it = 0; it < AL(classD); ++it) {
+      overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]),
+                                     "%c) %s", 'a' + it, classD[it].name);
       line += 1;
     }
 
@@ -5820,7 +5818,7 @@ py_class_select()
       break;
     uint8_t iidx = c - 'a';
 
-    if (iidx < AL(filter)) clidx = filter[iidx];
+    if (iidx < AL(classD)) clidx = iidx;
   } while (clidx < 0);
 
   return clidx;
@@ -5859,8 +5857,11 @@ py_init(csel)
   for (int it = 0; it < MAX_A; ++it) {
     stat[it] += r_ptr->attr[it];
   }
+
+  uD.male = 1 - randint(2);
   // TBD: age
   // TBD: height
+
   hitdie = r_ptr->bhitdie;
   uD.ridx = rsel;
   uD.bth = r_ptr->bth;
@@ -5871,13 +5872,12 @@ py_init(csel)
   uD.save = r_ptr->bsav;
   uD.infra = r_ptr->infra;
   uD.mult_exp = r_ptr->b_exp;
-  int male = 1 - randint(2);
-  if (male) {
+  if (uD.male) {
     uD.wt = randnor(r_ptr->m_b_wt, r_ptr->m_m_wt);
   } else {
     uD.wt = randnor(r_ptr->f_b_wt, r_ptr->f_m_wt);
   }
-  uD.male = male;
+  uD.bowth = r_ptr->bthb;
 
   int clidx = csel;
   struct classS* cl_ptr = &classD[clidx];
@@ -5890,6 +5890,7 @@ py_init(csel)
   uD.stealth += cl_ptr->mstl;
   uD.save += cl_ptr->msav;
   uD.mult_exp += cl_ptr->m_exp;
+  uD.bowth += cl_ptr->mbthb;
 
   for (int it = 0; it < MAX_A; ++it) {
     stat[it] += cl_ptr->mattr[it];
@@ -9509,7 +9510,7 @@ inven_throw_dir(iidx, dir)
     // TBD: dynamics
     // facts(&throw_obj, &tbth, &tpth, &tdam, &tdis);
     tdis = 10;
-    tbth = 0;
+    tbth = uD.bowth;
     tpth = 0;
 
     fromy = y = uD.y;
@@ -9699,7 +9700,7 @@ void
 py_character()
 {
   int line;
-  int xbth;
+  int xbth, xbowth;
   int sptype;
 
   line = 0;
@@ -9746,9 +9747,11 @@ py_character()
   BufMsg(screen, "%-15.015s: %6d", "Cur Mana", uD.cmana);
 
   xbth = uD.bth + uD.lev * level_adj[uD.clidx][LA_BTH];
+  xbowth = uD.bowth + uD.lev * level_adj[uD.clidx][LA_BTHB];
 
   line = 2 * MAX_A + 1;
   BufMsg(screen, "%-13.013s: %6d", "Fighting", xbth);
+  BufMsg(screen, "%-13.013s: %6d", "Bows", xbowth);
   BufMsg(screen, "%-13.013s: %6d", "Saving Throw", usave());
   sptype = classD[uD.clidx].spell;
   BufMsg(screen, "%-13.013s: %6d",

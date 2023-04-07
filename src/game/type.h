@@ -69,6 +69,8 @@ struct uS {
   int cmana_frac;
   int mmana;
   uint32_t spell_worked;
+  // Ranged attack
+  int bowth;
 };
 static struct uS uD;
 
