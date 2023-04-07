@@ -268,6 +268,8 @@ struct vizS* viz;
       return 32;
     case TV_PROJECTILE:
       return 13;
+    case TV_LAUNCHER:
+      return 15;
     case TV_LIGHT:
       return 21;
       // Worn
@@ -2605,6 +2607,7 @@ struct objS* obj;
 {
   switch (obj->tval) {
     case TV_PROJECTILE:
+    case TV_LAUNCHER:
       return TRUE;
     case TV_HAFTED:
     case TV_POLEARM:
@@ -4790,6 +4793,14 @@ void obj_detail(obj) struct objS* obj;
     if (obj->idflag & ID_RARE) strcat(detailD, " {rare}");
   }
 
+  if (obj->tval == TV_PROJECTILE) {
+    snprintf(tmp_str, AL(tmp_str), " (%dd%d)", obj->damage[0], obj->damage[1]);
+    strcat(detailD, tmp_str);
+  } else if (obj->tval == TV_LAUNCHER) {
+    snprintf(tmp_str, AL(tmp_str), " (%dx)", obj->damage[1]);
+    strcat(detailD, tmp_str);
+  }
+
   if (eqidx == INVEN_WIELD) {
     snprintf(tmp_str, AL(tmp_str), " (%dx %dd%d)", attack_blows(obj->weight),
              obj->damage[0], obj->damage[1]);
@@ -4829,6 +4840,8 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_CHEST:
       break;
     case TV_PROJECTILE:
+      break;
+    case TV_LAUNCHER:
       break;
     case TV_LIGHT:
       break;
@@ -9490,10 +9503,24 @@ inven_wear(iidx)
     turn_flag = TRUE;
   }
 }
+int
+bow_by_projectile(pidx)
+{
+  struct objS *obj, *objp;
+  objp = obj_get(invenD[pidx]);
+  if (objp->tval == TV_PROJECTILE) {
+    for (int it = 0; it < INVEN_EQUIP; ++it) {
+      obj = obj_get(invenD[it]);
+      if (obj->tval == TV_LAUNCHER && obj->p1 == objp->p1) return it;
+    }
+  }
+  return -1;
+}
 void
 inven_throw_dir(iidx, dir)
 {
   int tbth, tpth, tdam, adj;
+  int wtohit, wtodam;
   int y, x, fromy, fromx, cdis;
   int flag, drop;
   struct caveS* c_ptr;
@@ -9501,6 +9528,25 @@ inven_throw_dir(iidx, dir)
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
   char tname[AL(descD)];
+
+  if (invenD[INVEN_WIELD]) {
+    obj = obj_get(invenD[INVEN_WIELD]);
+    wtohit = -obj->tohit;
+    wtodam = -obj->todam;
+  } else {
+    wtohit = wtodam = 0;
+  }
+
+  int bowidx = bow_by_projectile(iidx);
+  if (bowidx >= 0) {
+    obj = obj_get(invenD[bowidx]);
+    obj_desc(obj, 1);
+    obj_detail(obj);
+    MSG("You grasp %s%s.", descD, detailD);
+
+    wtohit += obj->tohit;
+    wtodam += obj->todam;
+  }
 
   obj = obj_get(invenD[iidx]);
   if (obj->tval == TV_PROJECTILE) {
@@ -9525,9 +9571,12 @@ inven_throw_dir(iidx, dir)
         cr_ptr = &creatureD[m_ptr->cidx];
 
         adj = uD.lev * level_adj[uD.clidx][LA_BTHB];
-        tbth = uD.bowth;
-        tpth = cbD.ptohit + obj->tohit;
-        // TBD: bow launcher dynamics
+        if (bowidx >= 0) {
+          tbth = uD.bowth;
+        } else {
+          tbth = uD.bowth * 24 / 32;
+        }
+        tpth = cbD.ptohit + obj->tohit + wtohit;
         if (m_ptr->mlit == 0) {
           tpth /= 2;
           tbth /= 2;
@@ -9536,16 +9585,20 @@ inven_throw_dir(iidx, dir)
         tbth = tbth - cdis;
 
         if (test_hit(tbth, adj, tpth, cr_ptr->ac)) {
+          tdam = pdamroll(obj->damage) + obj->todam + wtodam;
+          if (bowidx >= 0) {
+            tdam *= obj_get(invenD[bowidx])->damage[1];
+          }
+          // TBD: named projectile weapons with damage multipliers?
+          // tdam = tot_dam(obj, tdam, i);
+          tdam = critical_blow(obj->weight, tpth, adj, tdam);
+          if (tdam < 0) tdam = 0;
+
           strcpy(tname, descD);
           mon_desc(c_ptr->midx);
           descD[0] |= 0x20;
-          MSG("You hear a cry as the %s strikes %s.", tname, descD);
+          MSG("You hear a cry as the %s strikes %s (%d).", tname, descD, tdam);
 
-          tdam = pdamroll(obj->damage) + obj->todam;
-          // TBD: named projectile weapons with damage multipliers?
-          // tdam = tot_dam(obj, tdam, i);
-          tdam = critical_blow(obj->weight, tpth, tdam, LA_BTHB);
-          if (tdam < 0) tdam = 0;
           if (mon_take_hit(c_ptr->midx, tdam)) {
             MSG("You have killed %s.", descD);
             py_experience();
@@ -9558,7 +9611,8 @@ inven_throw_dir(iidx, dir)
       if (drop) {
         flag = TRUE;
         // TBD: chance it lands on the dungeon floor
-        MSG("The %s breaks on the dungeon floor.", descD);
+        descD[0] &= ~0x20;
+        MSG("%s breaks on the dungeon floor.", descD);
         //   drop_throw(fromy, fromx, &throw_obj);
       }
 
