@@ -11666,7 +11666,7 @@ struct objS* obj;
     }
   }
   /* multiply value by number of items if it is a batch stack item */
-  if (obj->subval & STACK_BATCH) value = value * obj->number;
+  if (obj->subval & STACK_PROJECTILE) value = value * obj->number;
   return (value);
 }
 // Object Value * Chrisma Adjustment * Racial Adjustment * Inflation
@@ -11825,7 +11825,7 @@ store_item_purchase(sidx, item)
   flag = FALSE;
   obj = &store_objD[sidx][item];
   if (obj->tidx) {
-    count = obj->subval & STACK_BATCH ? obj->number : 1;
+    count = obj->subval & STACK_PROJECTILE ? obj->number : 1;
     cost = store_value(sidx, obj_value(obj), 1);
     if (uD.gold >= cost) {
       if ((iidx = inven_obj_mergecount(obj, count)) >= 0) {

@@ -435,10 +435,10 @@
 #define MAX_SUBVAL 64
 #define MASK_SUBVAL (MAX_SUBVAL - 1)
 
-// Potion/Scroll/Food: single slot; +/-1 per interaction
+// Potion/Scroll/Food: +/- 1 per interaction
 #define STACK_SINGLE 0x40
-// Arrows/Bolts/Pebbles/Spike: single slot; +/- obj->number on interaction
-#define STACK_BATCH 0x80
+// Arrows/Bolts/Pebbles: +/- N (obj->number) on interaction
+#define STACK_PROJECTILE 0x80
 #define STACK_ANY 0xc0
 
 /* Stat indexes */
