@@ -9493,7 +9493,7 @@ inven_wear(iidx)
 void
 inven_throw_dir(iidx, dir)
 {
-  int tbth, tpth, tdam, tdis, adj;
+  int tbth, tpth, tdam, adj;
   int y, x, fromy, fromx, cdis;
   int flag, drop;
   struct caveS* c_ptr;
@@ -9509,7 +9509,6 @@ inven_throw_dir(iidx, dir)
 
     // TBD: dynamics
     // facts(&throw_obj, &tbth, &tpth, &tdam, &tdis);
-    tdis = 10;
     tbth = uD.bowth;
     tpth = 0;
 
@@ -9523,7 +9522,7 @@ inven_throw_dir(iidx, dir)
       c_ptr = &caveD[y][x];
       cdis++;
 
-      if (cdis > tdis || c_ptr->fval >= MIN_CLOSED_SPACE) {
+      if (cdis > MAX_SIGHT || c_ptr->fval >= MIN_CLOSED_SPACE) {
         drop = TRUE;
       } else if (c_ptr->midx) {
         flag = TRUE;
