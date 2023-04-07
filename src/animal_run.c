@@ -5937,8 +5937,8 @@ py_init(csel)
     obj->idflag |= ID_REVEAL;
     invenD[may_equip(obj->tval)] = obj->id;
   }
-  int start_inven[] = {83, 22, 221};  // food ration, scroll of recall
-  int start_number[] = {255, 5, 1};
+  int start_inven[] = {22, 221};  // food ration, scroll of recall
+  int start_number[] = {5, 1};
   for (int it = 0; it < AL(start_inven); ++it) {
     struct objS* obj = obj_use();
     int tidx = start_inven[it];
