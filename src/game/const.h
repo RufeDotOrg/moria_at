@@ -127,6 +127,7 @@
 #define TV_NOTHING 0
 #define TV_MISC 1
 #define TV_CHEST 2
+#define TV_PROJECTILE 5
 /* min tval for wearable items, all items between TV_MIN_WEAR and TV_MAX_WEAR
    use the same flag bits, see the TR_* defines */
 #define TV_MIN_WEAR 10

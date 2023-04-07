@@ -266,6 +266,8 @@ struct vizS* viz;
         return 23;
     case TV_CHEST:
       return 32;
+    case TV_PROJECTILE:
+      return 13;
     case TV_LIGHT:
       return 21;
       // Worn
@@ -1398,14 +1400,20 @@ describe_use(iidx)
   return p;
 }
 static void
-inven_destroy_one(iidx)
+inven_destroy(iidx)
 {
   struct objS* obj = obj_get(invenD[iidx]);
-  obj->number -= 1;
-  if (obj->number < 1) {
-    obj_unuse(obj);
-    invenD[iidx] = 0;
-  }
+  obj_unuse(obj);
+  invenD[iidx] = 0;
+}
+static void
+inven_destroy_num(iidx, number)
+{
+  struct objS* obj = obj_get(invenD[iidx]);
+  if (obj->number <= number)
+    inven_destroy(iidx);
+  else
+    obj->number -= number;
 }
 static int
 inven_copy_num(iidx, copy, num)
@@ -1622,7 +1630,7 @@ m_bonus(base, max_std, level)
 }
 void magic_treasure(obj, level) struct objS* obj;
 {
-  int chance, special, cursed, i;
+  int chance, special, cursed;
   int tmp;
 
   chance = OBJ_BASE_MAGIC + level;
@@ -2278,6 +2286,22 @@ void magic_treasure(obj, level) struct objS* obj;
       }
       break;
 
+    case TV_PROJECTILE:
+      tmp = 0;
+      for (int i = 0; i < 7; i++) tmp += randint(6);
+      obj->number = tmp;
+
+      if (magik(chance)) {
+        obj->tohit += m_bonus(1, 35, level);
+        obj->todam += m_bonus(1, 35, level);
+      } else if (magik(cursed)) {
+        obj->tohit -= m_bonus(5, 55, level);
+        obj->todam -= m_bonus(5, 55, level);
+        obj->flags |= TR_CURSED;
+        obj->cost = 0;
+      }
+      break;
+
     case TV_FOOD:
       if (obj->number > 1) obj->number = randint(obj->number);
       break;
@@ -2580,6 +2604,8 @@ oset_tohitdam(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
+    case TV_PROJECTILE:
+      return TRUE;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
@@ -4802,6 +4828,8 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_MISC:
     case TV_CHEST:
       break;
+    case TV_PROJECTILE:
+      break;
     case TV_LIGHT:
       break;
     case TV_HAFTED:
@@ -5895,8 +5923,8 @@ py_init(csel)
     obj->idflag |= ID_REVEAL;
     invenD[may_equip(obj->tval)] = obj->id;
   }
-  int start_inven[] = {22, 221};  // food ration, scroll of recall
-  int start_number[] = {5, 1};
+  int start_inven[] = {83, 22, 221};  // food ration, scroll of recall
+  int start_number[] = {255, 5, 1};
   for (int it = 0; it < AL(start_inven); ++it) {
     struct objS* obj = obj_use();
     int tidx = start_inven[it];
@@ -7848,7 +7876,7 @@ inven_eat(iidx)
     py_add_food(obj->p1);
     obj_desc(obj, obj->number - 1);
     MSG("You have %s.", descD);
-    inven_destroy_one(iidx);
+    inven_destroy_num(iidx, 1);
     turn_flag = TRUE;
     return TRUE;
   } else {
@@ -8304,7 +8332,7 @@ inven_quaff(iidx)
     py_add_food(obj->p1);
     obj_desc(obj, obj->number - 1);
     MSG("You have %s.", descD);
-    inven_destroy_one(iidx);
+    inven_destroy_num(iidx, 1);
     turn_flag = TRUE;
 
     return TRUE;
@@ -9344,7 +9372,7 @@ inven_consume_flask()
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     obj = obj_get(invenD[it]);
     if (obj->tval == TV_FLASK) {
-      inven_destroy_one(it);
+      inven_destroy_num(it, 1);
       msg_print(
           "Your lantern's light is renewed by pouring in a flask of oil.");
       return TRUE;
@@ -9827,7 +9855,7 @@ int inven_damage(typ, perc) int (*typ)();
   for (it = 0; it < INVEN_EQUIP; it++) {
     struct objS* obj = obj_get(invenD[it]);
     if ((*typ)(obj) && (randint(100) < perc)) {
-      inven_destroy_one(it);
+      inven_destroy_num(it, 1);
       j++;
     }
   }
@@ -10189,7 +10217,7 @@ mon_attack(midx)
           else {
             int i = inven_random();
             if (i >= 0) {
-              inven_destroy_one(i);
+              inven_destroy_num(i, 1);
               msg_print("Your backpack feels lighter.");
             }
           }
@@ -10234,7 +10262,7 @@ mon_attack(midx)
         {
           int l = inven_food();
           if (l >= 0) {
-            inven_destroy_one(l);
+            inven_destroy_num(l, 1);
             msg_print("It got at your rations!");
           }
         } break;
@@ -11713,6 +11741,7 @@ struct objS* obj;
     case TV_SOFT_ARMOR:
       return 1;
       // int weaponsmith(element) int element;
+    case TV_PROJECTILE:
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
@@ -11741,17 +11770,18 @@ inven_pawn(iidx)
 {
   struct objS* obj;
   struct treasureS* tr_ptr;
-  int sidx, cost;
+  int sidx, count, cost;
 
   obj = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[obj->tidx];
   sidx = obj_store_index(obj);
   if (sidx >= 0) {
+    count = obj->subval & STACK_PROJECTILE ? obj->number : 1;
     cost = store_value(sidx, obj_value(obj), -1);
     tr_make_known(tr_ptr);
     obj->idflag = ID_REVEAL;
-    obj_desc(obj, 1);
-    inven_destroy_one(iidx);
+    obj_desc(obj, count);
+    inven_destroy_num(iidx, count);
     if (cost == 0) {
       MSG("You donate %s.", descD);
     } else {
@@ -11818,7 +11848,7 @@ store_display(sidx)
 static void
 store_item_purchase(sidx, item)
 {
-  int iidx, count, cost, flag, number;
+  int iidx, count, cost, flag;
   struct objS* obj;
   struct treasureS* tr_ptr;
 
