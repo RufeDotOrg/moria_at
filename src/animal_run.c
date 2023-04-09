@@ -9598,7 +9598,6 @@ inven_throw_dir(iidx, dir)
   obj = obj_get(invenD[iidx]);
   if (obj->tval == TV_PROJECTILE) {
     obj_desc(obj, 1);
-    inven_destroy_num(iidx, 1);
 
     fromy = y = uD.y;
     fromx = x = uD.x;
@@ -9669,6 +9668,7 @@ inven_throw_dir(iidx, dir)
       fromx = x;
     } while (!flag);
 
+    inven_destroy_num(iidx, 1);
     turn_flag = TRUE;
   }
 }
