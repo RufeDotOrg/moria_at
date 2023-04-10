@@ -9345,6 +9345,7 @@ int* locn;
       struct objS* i_ptr = obj_get(invenD[it]);
       if (tval == i_ptr->tval && p1 == i_ptr->p1 && subval == i_ptr->subval &&
           number + i_ptr->number < 256) {
+        MSG("Merging %d items.", obj->number);
         obj->number += i_ptr->number;
         obj_unuse(i_ptr);
         invenD[it] = obj_id;
@@ -10042,8 +10043,7 @@ py_pickup(y, x, pickup)
       obj->fx = 0;
       caveD[y][x].oidx = 0;
 
-      MSG("You %s %s%s (%c).", merge ? "merge" : "have", descD, detailD,
-          locn + 'a');
+      MSG("You have %s%s (%c).", descD, detailD, locn + 'a');
       turn_flag = TRUE;
     } else if (!pickup) {
       MSG("You see %s%s here.", descD, detailD);
