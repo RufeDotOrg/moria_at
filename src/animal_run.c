@@ -12338,33 +12338,25 @@ dungeon()
 {
   int c, y, x, iidx;
   uint32_t dir, teleport;
+  int town;
 
-  if (dun_level)
-    snprintf(AP(dun_descD), "%d feet", dun_level * 50);
-  else
-    snprintf(AP(dun_descD), "%s", "town square");
-  if (dun_level == 0) player_maint();
-
+  town = (dun_level == 0);
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
 
+  if (town)
+    snprintf(AP(dun_descD), "%s", "town square");
+  else
+    snprintf(AP(dun_descD), "%d feet", dun_level * 50);
+  if (town) player_maint();
+
   new_level_flag = FALSE;
+  teleport = FALSE;
   do {
     CCM(CCM_HOTLOAD, platform_update());
 
-    msg_moreD = 0;
-    turnD += 1;
-    if (dun_level != 0) {
-      if ((turnD & ~-1024) == 0) store_maint();
-      if (randint(MAX_MALLOC_CHANCE) == 1) alloc_mon(1, MAX_SIGHT, FALSE);
-    }
-    teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
-    tick();
-    ma_tick();  // falling
-    inven_check_weight();
-    inven_check_light();
-
     turn_flag = FALSE;
     do {
+      msg_moreD = 0;
       draw();
       if (new_level_flag) break;
       if (!teleport && countD.rest != 0) break;
@@ -12742,7 +12734,19 @@ dungeon()
     } while (!turn_flag);
 
     ma_tick();  // rising
-    if (!new_level_flag) creatures();
+    if (!new_level_flag) {
+      creatures();
+      teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
+      if (!town && randint(MAX_MALLOC_CHANCE) == 1)
+        alloc_mon(1, MAX_SIGHT, FALSE);
+    }
+
+    if (!town && (turnD & ~-1024) == 0) store_maint();
+    turnD += 1;
+    tick();
+    ma_tick();  // falling
+    inven_check_weight();
+    inven_check_light();
   } while (!new_level_flag);
 }
 void
@@ -12817,8 +12821,12 @@ main(int argc, char** argv)
     seed_init();
     py_init(csel);
     dun_level = 1;
+
+    inven_check_weight();
+    inven_check_light();
   }
   calc_bonuses();
+  calc_hitpoints();
   calc_mana();
 
   magic_init();
