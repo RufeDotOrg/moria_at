@@ -6025,7 +6025,7 @@ magic_init()
   store_init();
 
   /* The first 3 entries for colors are fixed, (slime & apple juice, water) */
-  sort(AP(colors));
+  sort(&colors[3], AL(colors) - 3);
   for (i = 3; i < AL(colors); i++) {
     j = randint(AL(colors) - 3) + 2;
     tmp = colors[i];
