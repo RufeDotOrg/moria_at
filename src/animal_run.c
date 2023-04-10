@@ -2765,6 +2765,17 @@ store_tr_stack(sidx, tr_index, stack)
     }
   }
 
+  if (tr_ptr->subval & STACK_PROJECTILE) {
+    for (int it = 0; it < AL(store_objD[0]); ++it) {
+      obj = &store_objD[sidx][it];
+      if (obj->tidx == tr_index) {
+        stack = MIN(255, randint(stack) + obj->number);
+        obj->number = stack;
+        return FALSE;
+      }
+    }
+  }
+
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     obj = &store_objD[sidx][it];
     if (obj->tidx == 0) {
@@ -11873,6 +11884,8 @@ struct objS* obj;
       else
         value = obj->cost + obj->toac * 100;
     }
+  } else if (obj->tval == TV_PROJECTILE) {
+    value = obj->cost + (obj->tohit + obj->todam + obj->toac) * 5;
   } else if ((obj->tval == TV_STAFF) ||
              (obj->tval == TV_WAND)) { /* Wands and staffs*/
     value = (obj->cost + (obj->cost / 32) * obj->p1) / 2;
@@ -12029,7 +12042,7 @@ store_display(sidx)
     obj = &store_objD[sidx][it];
     cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
-      obj_desc(obj, 1);
+      obj_desc(obj, obj->subval & STACK_PROJECTILE ? obj->number : 1);
       obj_detail(obj);
       len =
           snprintf(overlayD[line], AL(overlayD[line]),
