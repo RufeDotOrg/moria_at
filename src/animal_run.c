@@ -1623,6 +1623,21 @@ m_bonus(base, max_std, level)
   x = (ABS(tmp) / 10) + base;
   return (x);
 }
+int
+light_adj(p1)
+{
+  int bonus;
+  if (p1 > 7500) {
+    bonus = 3;
+  } else if (p1 > 3000) {
+    bonus = 2;
+  } else if (p1) {
+    bonus = 1;
+  } else {
+    bonus = 0;
+  }
+  return bonus;
+}
 void magic_treasure(obj, level) struct objS* obj;
 {
   int chance, special, cursed;
@@ -2029,7 +2044,9 @@ void magic_treasure(obj, level) struct objS* obj;
       break;
 
     case TV_LIGHT:
-      obj->p1 = randint(obj->p1);
+      tmp = randint(obj->p1);
+      obj->p1 = tmp;
+      obj->tohit = light_adj(tmp);
       obj->idflag = ID_REVEAL;
       break;
 
@@ -4187,21 +4204,6 @@ attack_blows(weight)
   else
     str_index = 6;
   return blows_table[str_index][dex_index];
-}
-int
-light_adj(p1)
-{
-  int bonus;
-  if (p1 > 7500) {
-    bonus = 3;
-  } else if (p1 > 3000) {
-    bonus = 2;
-  } else if (p1) {
-    bonus = 1;
-  } else {
-    bonus = 0;
-  }
-  return bonus;
 }
 int
 bth_adj(attype)
