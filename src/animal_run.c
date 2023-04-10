@@ -96,13 +96,6 @@ vital_update()
     vital_statD[it] = statD.cur_stat[it];
   }
 }
-static int
-obj_lit(obj)
-struct objS* obj;
-{
-  if (obj->fy && obj->fx) return (CF_VIZ & caveD[obj->fy][obj->fx].cflag) != 0;
-  return 0;
-}
 /* A simple, fast, integer-based line-of-sight algorithm.  By Joseph Hall,
    4116 Brewster Drive, Raleigh NC 27606.  Email to jnh@ecemwl.ncsu.edu.
 
@@ -10921,11 +10914,12 @@ py_look_obj()
     lx = dir_x(dir);
     int seen = 0;
     FOR_EACH(obj, {
+      if (obj->fy == 0 || obj->fx == 0) continue;
       if (obj->tval > TV_MAX_PICK_UP && obj->tval != TV_VIS_TRAP) continue;
-      if (obj->fy && distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
+      if (distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
         oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
         ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
-        if (oy == ly && ox == lx && obj_lit(obj) &&
+        if (oy == ly && ox == lx && (CF_VIZ & caveD[obj->fy][obj->fx].cflag) &&
             los(y, x, obj->fy, obj->fx)) {
           seen += 1;
           obj_desc(obj, obj->number);
