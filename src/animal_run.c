@@ -5703,15 +5703,14 @@ static int
 inven_obj_mergecount(obj, number)
 struct objS* obj;
 {
-  int tval, p1, subval;
+  int tval, subval;
 
   tval = obj->tval;
-  p1 = obj->p1;
   subval = obj->subval;
   if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
-      if (tval == i_ptr->tval && p1 == i_ptr->p1 && subval == i_ptr->subval &&
+      if (tval == i_ptr->tval && subval == i_ptr->subval &&
           number + i_ptr->number < 256) {
         return it;
       }
@@ -9341,17 +9340,16 @@ static int
 inven_merge(obj_id, locn)
 int* locn;
 {
-  int tval, p1, subval, number;
+  int tval, subval, number;
   struct objS* obj = obj_get(obj_id);
 
   tval = obj->tval;
-  p1 = obj->p1;
   subval = obj->subval;
   number = obj->number;
   if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
-      if (tval == i_ptr->tval && p1 == i_ptr->p1 && subval == i_ptr->subval &&
+      if (tval == i_ptr->tval && subval == i_ptr->subval &&
           number + i_ptr->number < 256) {
         MSG("Merging %d items.", obj->number);
         obj->number += i_ptr->number;
