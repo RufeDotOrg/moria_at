@@ -5607,7 +5607,7 @@ equip_disenchant()
 
   flag = FALSE;
   // INVEN_AUX is protected
-  switch (randint(7)) {
+  switch (randint(8)) {
     case 1:
       i = INVEN_WIELD;
       break;
@@ -5628,6 +5628,9 @@ equip_disenchant()
       break;
     case 7:
       i = INVEN_FEET;
+      break;
+    case 8:
+      i = INVEN_LAUNCHER;
       break;
   }
   obj = obj_get(invenD[i]);
