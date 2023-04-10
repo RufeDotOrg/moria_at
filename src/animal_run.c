@@ -11976,8 +11976,8 @@ inven_pawn(iidx)
   tr_ptr = &treasureD[obj->tidx];
   sidx = obj_store_index(obj);
   if (sidx >= 0) {
-    count = obj->subval & STACK_PROJECTILE ? obj->number : 1;
     cost = store_value(sidx, obj_value(obj), -1);
+    count = (cost == 0 || STACK_PROJECTILE & obj->subval) ? obj->number : 1;
     tr_make_known(tr_ptr);
     obj->idflag = ID_REVEAL;
     obj_desc(obj, count);
