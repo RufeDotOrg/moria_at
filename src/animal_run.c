@@ -3294,11 +3294,12 @@ void
 cave_gen()
 {
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
-  int i, j, k;
+  int i, j, k, alloc_level;
   int y1, x1, y2, x2, pick1, pick2, tmp;
   int yloc[CHUNK_AREA + 1], xloc[CHUNK_AREA + 1];
 
-  k = randnor(DUN_ROOM_MEAN, 2);
+  alloc_level = CLAMP(dun_level / 2, 2, 15);
+  k = randnor(DUN_ROOM_MEAN + alloc_level, 2);
   for (i = 0; i < k; i++)
     room_map[randint(AL(room_map)) - 1][randint(AL(room_map[0])) - 1] = 1;
   k = 0;
@@ -3348,7 +3349,6 @@ cave_gen()
    */
   new_spot(&uD.y, &uD.x);
 
-  int alloc_level = CLAMP(dun_level / 2, 2, 15);
   alloc_mon((randint(RND_MALLOC_LEVEL) + MIN_MALLOC_LEVEL + alloc_level), 0,
             TRUE);
   if (dun_level >= 7) alloc_obj(set_corr, 3, randint(alloc_level));

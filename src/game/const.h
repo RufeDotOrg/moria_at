@@ -52,7 +52,7 @@
 #define DUN_STR_MC 90  /* 1/x chance of treasure per magma      */
 #define DUN_STR_QUA 2  /* Number of quartz streamers        */
 #define DUN_STR_QC 40  /* 1/x chance of treasure per quartz     */
-#define DUN_ROOM_MEAN 32
+#define DUN_ROOM_MEAN 16
 #define MIN_MALLOC_LEVEL 14
 #define RND_MALLOC_LEVEL 8
 #define TREAS_ROOM_MEAN 7
