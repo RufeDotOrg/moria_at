@@ -71,6 +71,8 @@ struct uS {
   uint32_t spell_worked;
   // Ranged attack
   int bowth;
+  int unused1;
+  int unused2;
 };
 static struct uS uD;
 

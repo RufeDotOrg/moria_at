@@ -12810,35 +12810,6 @@ seed_init()
   // Burn randomness after seeding
   for (int it = randint(100); it != 0; --it) rnd();
 }
-#define nameof(x) #x
-static char* save_nameD[] = {
-    nameof(&countD),   nameof(&dun_level),   nameof(entity_objD),
-    nameof(invenD),    nameof(knownD),       nameof(maD),
-    nameof(objD),      nameof(&obj_usedD),   nameof(player_hpD),
-    nameof(&rnd_seed), nameof(&town_seed),   nameof(&obj_seed),
-    nameof(&statD),    nameof(store_objD),   nameof(&turnD),
-    nameof(&uD),       nameof(spell_orderD),
-};
-#define VERSION 3
-static void
-dump_layout()
-{
-  int sum;
-  for (int it = 0; it < AL(save_nameD); ++it) {
-    printf("%s ", save_nameD[it]);
-  }
-  printf("\n");
-
-  printf("static int savechar_v%03d[] = {\n  ", VERSION);
-  sum = 0;
-  for (int it = 0; it < AL(save_bufD); ++it) {
-    struct bufS buf = save_bufD[it];
-    printf("%jd, ", buf.mem_size);
-    sum += buf.mem_size;
-  }
-  printf("\n};\n");
-  printf("#define SAVESUM%03d %d\n", VERSION, sum);
-}
 int
 main(int argc, char** argv)
 {
