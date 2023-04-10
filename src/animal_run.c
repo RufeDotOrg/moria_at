@@ -2611,6 +2611,8 @@ struct objS* obj;
       return (obj->tohit || obj->todam);
     case TV_RING:
       return (obj->tohit || obj->todam);
+    case TV_LIGHT:
+      return TRUE;
   }
   return FALSE;
 }
@@ -4778,9 +4780,6 @@ void obj_detail(obj) struct objS* obj;
   if (reveal) {
     if ((obj->tval == TV_STAFF || obj->tval == TV_WAND)) {
       snprintf(tmp_str, AL(tmp_str), " (%d charges)", obj->p1);
-      strcat(detailD, tmp_str);
-    } else if (obj->tval == TV_LIGHT) {
-      snprintf(tmp_str, AL(tmp_str), " (%+d,+0)", light_adj(obj->p1));
       strcat(detailD, tmp_str);
     }
 
@@ -9403,7 +9402,7 @@ void
 inven_check_light()
 {
   struct objS* obj;
-  int p1;
+  int p1, tohit;
 
   if (invenD[INVEN_LIGHT]) {
     obj = obj_get(invenD[INVEN_LIGHT]);
@@ -9414,7 +9413,11 @@ inven_check_light()
     }
     obj->p1 = p1;
 
-    light_bonus = light_adj(p1);
+    tohit = light_adj(p1);
+    if (tohit != obj->tohit) {
+      obj->tohit = tohit;
+      calc_bonuses();
+    }
   }
 }
 static int
@@ -9827,8 +9830,7 @@ py_character()
   }
 
   line = MAX_A + 1;
-  BufMsg(screen, "%-13.013s: %6d", "+ To Hit",
-         cbD.ptohit - cbD.hide_tohit + light_bonus);
+  BufMsg(screen, "%-13.013s: %6d", "+ To Hit", cbD.ptohit - cbD.hide_tohit);
   BufMsg(screen, "%-13.013s: %6d", "+ To Damage", cbD.ptodam - cbD.hide_todam);
   BufMsg(screen, "%-13.013s: %6d", "+ To Armor", cbD.ptoac - cbD.hide_toac);
   BufMsg(screen, "%-13.013s: %6d", "Total Armor", cbD.pac - cbD.hide_toac);
@@ -10232,7 +10234,7 @@ py_attack(y, x)
   if (py_affect(MA_FEAR)) {
     msg_print("You are too afraid!");
   } else {
-    tohit = cbD.ptohit + light_bonus;
+    tohit = cbD.ptohit;
     todam = cbD.ptodam;
     base_tohit = uD.bth;
     lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];

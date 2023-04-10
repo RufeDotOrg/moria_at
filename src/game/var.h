@@ -92,7 +92,6 @@ DATA char dun_descD[16];
 static int turn_flag;
 static int new_level_flag;
 static int pack_heavy;
-static int light_bonus;
 static char descD[98];
 static char detailD[98];
 static char death_descD[98];
