@@ -33,7 +33,7 @@ dump_layout(version)
 int
 main()
 {
-  dump_layout(AL(savefieldD) + 1);
+  dump_layout(AL(savefieldD));
 
   return 0;
 }

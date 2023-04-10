@@ -120,17 +120,17 @@ DATA struct bufS save_bufD[] = {
     BUF(statD),         ABUF(store_objD), BUF(turnD),        BUF(uD),
     ABUF(spell_orderD),
 };
-DATA int savechar_v001[AL(save_bufD)] = {
+DATA int savechar_v000[AL(save_bufD)] = {
     28, 4, 10240, 136, 448, 56, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 100, 0,
 };
-#define SAVESUM001 16080
-static int savechar_v002[] = {
+#define SAVESUM000 16080
+static int savechar_v001[] = {
     28, 4, 10240, 136, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 116, 32,
 };
-#define SAVESUM002 16148
-static int savechar_v003[] = {
+#define SAVESUM001 16148
+static int savechar_v002[] = {
     28, 4, 10240, 140, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 128, 32,
 };
-#define SAVESUM003 16164
-DATA int savesumD[] = {SAVESUM001, SAVESUM002, SAVESUM003};
-DATA int *savefieldD[] = {savechar_v001, savechar_v002, savechar_v003};
+#define SAVESUM002 16164
+DATA int savesumD[] = {SAVESUM000, SAVESUM001, SAVESUM002};
+DATA int *savefieldD[] = {savechar_v000, savechar_v001, savechar_v002};
