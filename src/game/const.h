@@ -423,7 +423,8 @@
 #define INVEN_LIGHT 32
 #define INVEN_EQUIP_END 33
 #define INVEN_AUX 33
-#define MAX_INVEN 34
+#define INVEN_LAUNCHER 34
+#define MAX_INVEN 35
 
 #define ID_MAGIK 0x1     /* obj_sense() magic */
 #define ID_DAMD 0x2      /* wore something cursed and known bad */

@@ -2690,6 +2690,9 @@ may_equip(tval)
     case TV_RING:
       slot = INVEN_RING;
       break;
+    case TV_LAUNCHER:
+      slot = INVEN_LAUNCHER;
+      break;
   }
   return slot;
 }
@@ -9515,13 +9518,9 @@ bow_by_projectile(pidx)
 {
   struct objS *obj, *objp;
   objp = obj_get(invenD[pidx]);
-  if (objp->tval == TV_PROJECTILE) {
-    for (int it = 0; it < INVEN_EQUIP; ++it) {
-      obj = obj_get(invenD[it]);
-      if (obj->tval == TV_LAUNCHER && obj->p1 == objp->p1) return it;
-    }
-  }
-  return -1;
+  obj = obj_get(invenD[INVEN_LAUNCHER]);
+
+  return (obj->p1 == objp->p1) ? invenD[INVEN_LAUNCHER] : 0;
 }
 static int
 obj_dupe_num(obj, num)
@@ -9591,9 +9590,9 @@ inven_throw_dir(iidx, dir)
     wtohit = wtodam = 0;
   }
 
-  int bowidx = bow_by_projectile(iidx);
-  if (bowidx >= 0) {
-    obj = obj_get(invenD[bowidx]);
+  int bowid = bow_by_projectile(iidx);
+  if (bowid) {
+    obj = obj_get(bowid);
     obj_desc(obj, 1);
     obj_detail(obj);
     MSG("You grasp %s%s.", descD, detailD);
@@ -9624,7 +9623,7 @@ inven_throw_dir(iidx, dir)
         cr_ptr = &creatureD[m_ptr->cidx];
 
         adj = uD.lev * level_adj[uD.clidx][LA_BTHB];
-        if (bowidx >= 0) {
+        if (bowid) {
           tbth = uD.bowth;
         } else {
           tbth = uD.bowth * 24 / 32;
@@ -9639,9 +9638,8 @@ inven_throw_dir(iidx, dir)
 
         if (test_hit(tbth, adj, tpth, cr_ptr->ac)) {
           tdam = pdamroll(obj->damage) + obj->todam + wtodam;
-          if (bowidx >= 0) {
-            tdam *= obj_get(invenD[bowidx])->damage[1];
-          }
+          if (bowid) tdam *= obj_get(bowid)->damage[1];
+
           // TBD: named projectile weapons with damage multipliers?
           // tdam = tot_dam(obj, tdam, i);
           tdam = critical_blow(obj->weight, tpth, adj, tdam);
@@ -9665,7 +9663,7 @@ inven_throw_dir(iidx, dir)
         flag = TRUE;
         descD[0] &= ~0x20;
         if (randint(10) > 1 && obj_thrown(obj, fromy, fromx)) {
-          MSG("%s lands on the dungeon floor.", descD);
+          MSG("%s strikes the dungeon floor.", descD);
         } else {
           MSG("%s breaks on the dungeon floor.", descD);
         }
