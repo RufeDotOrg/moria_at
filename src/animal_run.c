@@ -11648,19 +11648,14 @@ void
 py_menu()
 {
   char c;
-  int line, enable_rewind;
-
-  enable_rewind = (input_record_writeD <= AL(input_recordD) &&
-                   input_action_usedD <= AL(input_actionD));
+  int line;
 
   overlay_submodeD = 'o';
   while (1) {
     line = 0;
     BufMsg(overlay, "a) Rest until healed, malady expires, or wait for recall");
-    BufMsg(overlay, "b) %s",
-           enable_rewind ? "Rewind turn" : "Rewind disabled (out of memory)");
-    BufMsg(overlay, "c) Restart dungeon level");
-    BufMsg(overlay, "d) Restart game (delete character)");
+    BufMsg(overlay, "b) Restart dungeon level");
+    BufMsg(overlay, "c) Restart game (delete character)");
     if (!in_subcommand("Advanced Game Options", &c)) break;
 
     switch (c) {
@@ -11669,18 +11664,10 @@ py_menu()
         return;
 
       case 'b':
-        if (!enable_rewind) return;
-
-        enable_rewind = AS(input_actionD, MAX(0, input_action_usedD - 2));
         cave_reset();
-        input_record_writeD = enable_rewind;
         longjmp(restartD, 1);
 
       case 'c':
-        cave_reset();
-        longjmp(restartD, 1);
-
-      case 'd':
         if (platformD.erase) {
           platformD.erase();
           cave_reset();
