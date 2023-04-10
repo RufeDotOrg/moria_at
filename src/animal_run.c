@@ -9650,7 +9650,7 @@ inven_throw_dir(iidx, dir)
           strcpy(tname, descD);
           mon_desc(c_ptr->midx);
           descD[0] |= 0x20;
-          MSG("You hear a cry as the %s strikes %s (%d).", tname, descD, tdam);
+          MSG("You hear a cry as the %s strikes %s.", tname, descD);
 
           if (mon_take_hit(c_ptr->midx, tdam)) {
             MSG("You have killed %s.", descD);
