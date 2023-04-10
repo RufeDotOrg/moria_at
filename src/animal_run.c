@@ -3725,12 +3725,15 @@ find_event(y, x)
     row = y;
     col = x;
     if (mmove(newdir, &row, &col)) {
-      /* Objects player can see (Including doors?) cause a stop. */
       c_ptr = &caveD[row][col];
+
+      /* Objects player can see (Including doors?) cause a stop. */
       if (c_ptr->oidx != 0) {
         t = entity_objD[c_ptr->oidx].tval;
-        if (t != TV_INVIS_TRAP && t != TV_SECRET_DOOR &&
-            (t != TV_OPEN_DOOR || !find_ignore_doors)) {
+        if (t == TV_INVIS_TRAP && t == TV_SECRET_DOOR) {
+        } else if (t == TV_OPEN_DOOR && find_ignore_doors) {
+        } else if (t == TV_GOLD && c_ptr->fval >= MIN_CLOSED_SPACE) {
+        } else {
           find_flag = FALSE;
           return;
         }
