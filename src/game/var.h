@@ -128,5 +128,9 @@ static int savechar_v002[] = {
     28, 4, 10240, 136, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 116, 32,
 };
 #define SAVESUM002 16148
-DATA int savesumD[] = {SAVESUM001, SAVESUM002};
-DATA int *savefieldD[] = {savechar_v001, savechar_v002};
+static int savechar_v003[] = {
+    28, 4, 10240, 140, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 128, 32,
+};
+#define SAVESUM003 16164
+DATA int savesumD[] = {SAVESUM001, SAVESUM002, SAVESUM003};
+DATA int *savefieldD[] = {savechar_v001, savechar_v002, savechar_v003};
