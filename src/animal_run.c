@@ -5794,10 +5794,15 @@ weapon_enchant(iidx, tohit, todam)
 
   if (iidx >= 0) {
     struct objS* i_ptr = obj_get(invenD[iidx]);
-    if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-      affect = 0;
+    if (i_ptr->tval == TV_LAUNCHER)
+      limit = 10;
+    else if (may_equip(i_ptr->tval) == INVEN_WIELD)
       limit = i_ptr->damage[0] * i_ptr->damage[1];
+    else
+      limit = 0;
 
+    if (limit) {
+      affect = 0;
       for (int it = 0; it < tohit; ++it) {
         affect += (enchant(&i_ptr->tohit, 10));
       }
@@ -5812,11 +5817,10 @@ weapon_enchant(iidx, tohit, todam)
         calc_bonuses();
       } else
         msg_print("The enchantment fails.");
-      return TRUE;
     }
   }
 
-  return FALSE;
+  return limit != 0;
 }
 static int
 make_special_type(iidx, lev, weapon_enchant)
