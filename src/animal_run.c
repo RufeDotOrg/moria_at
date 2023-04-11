@@ -12077,8 +12077,8 @@ store_item_purchase(sidx, item)
       tr_make_known(tr_ptr);
       obj_desc(obj, count);
       uD.gold -= cost;
-      MSG("You bought %s for %d gold (%c) (%d).", descD, cost, iidx + 'a',
-          obj->number);
+      MSG("You bought %s for %d gold (%c).", descD, cost, iidx + 'a');
+      if (obj->number != count) MSG("You have %d.", obj->number);
       store_item_destroy(sidx, item, count);
     }
     msg_pause();
