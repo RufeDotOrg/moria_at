@@ -2313,16 +2313,6 @@ void magic_treasure(obj, level) struct objS* obj;
       tmp = 0;
       for (int i = 0; i < 7; i++) tmp += randint(6);
       obj->number = tmp;
-
-      if (magik(chance)) {
-        obj->tohit += m_bonus(1, 35, level);
-        obj->todam += m_bonus(1, 35, level);
-      } else if (magik(cursed)) {
-        obj->tohit -= m_bonus(5, 55, level);
-        obj->todam -= m_bonus(5, 55, level);
-        obj->flags |= TR_CURSED;
-        obj->cost = 0;
-      }
       break;
 
     case TV_FOOD:
@@ -2627,7 +2617,6 @@ oset_tohitdam(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    case TV_PROJECTILE:
     case TV_LAUNCHER:
       return TRUE;
     case TV_HAFTED:
@@ -11922,8 +11911,6 @@ struct objS* obj;
       else
         value = obj->cost + obj->toac * 100;
     }
-  } else if (obj->tval == TV_PROJECTILE) {
-    value = obj->cost + (obj->tohit + obj->todam + obj->toac) * 5;
   } else if ((obj->tval == TV_STAFF) ||
              (obj->tval == TV_WAND)) { /* Wands and staffs*/
     value = (obj->cost + (obj->cost / 32) * obj->p1) / 2;
