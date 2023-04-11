@@ -2641,6 +2641,41 @@ struct objS* obj;
   tv -= TV_MIN_ENCHANT;
   return tv <= (TV_MAX_ENCHANT - TV_MIN_ENCHANT);
 }
+static int
+oset_rare(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_HELM:
+    case TV_SHIELD:
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+      return TRUE;
+  }
+  return FALSE;
+}
+static int
+oset_armor(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_HELM:
+    case TV_SHIELD:
+    case TV_HARD_ARMOR:
+    case TV_SOFT_ARMOR:
+      return TRUE;
+  }
+  return FALSE;
+}
 int
 oset_gold(obj)
 struct objS* obj;
@@ -4820,7 +4855,7 @@ void obj_detail(obj) struct objS* obj;
     if (reveal && (obj->ac || obj->toac)) {
       snprintf(tmp_str, AL(tmp_str), " [%d%+d AC]", obj->ac, obj->toac);
       strcat(detailD, tmp_str);
-    } else if (oset_enchant(obj)) {
+    } else if (oset_armor(obj)) {
       snprintf(tmp_str, AL(tmp_str), " [%d AC]", obj->ac);
       strcat(detailD, tmp_str);
     }
@@ -5786,16 +5821,15 @@ weapon_enchant(iidx, tohit, todam)
 static int
 make_special_type(iidx, lev, weapon_enchant)
 {
-  int is_weapon, valid;
+  int is_weapon;
   struct objS* obj;
 
   if (iidx >= 0) {
     obj = obj_get(invenD[iidx]);
-    if (obj->tval != TV_DIGGING) {
+    if (oset_rare(obj)) {
       is_weapon = (INVEN_WIELD == may_equip(obj->tval));
-      valid = (is_weapon == weapon_enchant);
 
-      if (valid && oset_enchant(obj)) {
+      if (is_weapon == weapon_enchant) {
         int tidx = obj->tidx;
         if (iidx >= INVEN_EQUIP) py_bonuses(obj, -1);
         do {

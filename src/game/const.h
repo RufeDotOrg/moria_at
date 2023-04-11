@@ -128,14 +128,11 @@
 #define TV_MISC 1
 #define TV_CHEST 2
 #define TV_PROJECTILE 5
-#define TV_LAUNCHER 6 // deploying projectiles since 1984
-/* min tval for wearable items, all items between TV_MIN_WEAR and TV_MAX_WEAR
-   use the same flag bits, see the TR_* defines */
-#define TV_MIN_WEAR 10
 #define TV_LIGHT 15
 /* items tested for enchantments, i.e. the MAGIK inscription, see the
    sense_magik() procedure */
-#define TV_MIN_ENCHANT 21
+#define TV_MIN_ENCHANT 20
+#define TV_LAUNCHER 20 // deploying projectiles since 1984
 #define TV_HAFTED 21
 #define TV_POLEARM 22
 #define TV_SWORD 23
@@ -151,8 +148,6 @@
 #define TV_MAX_ENCHANT 39
 #define TV_AMULET 40
 #define TV_RING 45
-/* max tval for wearable items */
-#define TV_MAX_WEAR 50
 #define TV_STAFF 55
 #define TV_WAND 65
 #define TV_SCROLL1 70
