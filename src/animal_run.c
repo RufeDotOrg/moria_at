@@ -11897,10 +11897,8 @@ struct objS* obj;
 
   tr_ptr = &treasureD[obj->tidx];
   value = obj->cost;
-  if (((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) ||
-      ((obj->tval >= TV_BOOTS) &&
-       (obj->tval <= TV_SOFT_ARMOR))) { /* Weapons and armor  */
-    if ((obj->tval >= TV_HAFTED) && (obj->tval <= TV_SWORD)) {
+  if (oset_rare(obj)) {
+    if (may_equip(obj->tval) == INVEN_WIELD) {
       if (obj->tohit < 0)
         value = 0;
       else if (obj->todam < 0)
@@ -11929,6 +11927,13 @@ struct objS* obj;
       value = obj->cost + (obj->p1 - tr_ptr->p1) * 100;
       if (value < 0) value = 0;
     }
+  } else if (obj->tval == TV_LAUNCHER) {
+    if (obj->tohit < 0)
+      value = 0;
+    else if (obj->todam < 0)
+      value = 0;
+    else
+      value = obj->cost + (obj->tohit + obj->todam) * 100;
   }
   /* multiply value by number of items if it is a batch stack item */
   if (obj->subval & STACK_PROJECTILE) value = value * obj->number;
