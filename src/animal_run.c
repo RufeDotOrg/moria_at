@@ -4845,14 +4845,12 @@ void obj_detail(obj) struct objS* obj;
   } else if (obj->tval == TV_LAUNCHER) {
     snprintf(tmp_str, AL(tmp_str), " (%dx)", obj->damage[1]);
     strcat(detailD, tmp_str);
-  }
-
-  if (eqidx == INVEN_WIELD) {
+  } else if (eqidx == INVEN_WIELD) {
     snprintf(tmp_str, AL(tmp_str), " (%dx %dd%d)", attack_blows(obj->weight),
              obj->damage[0], obj->damage[1]);
     strcat(detailD, tmp_str);
   } else if (eqidx > INVEN_WIELD) {
-    if (reveal && (obj->ac || obj->toac)) {
+    if (reveal && (oset_armor(obj) || obj->toac)) {
       snprintf(tmp_str, AL(tmp_str), " [%d%+d AC]", obj->ac, obj->toac);
       strcat(detailD, tmp_str);
     } else if (oset_armor(obj)) {
