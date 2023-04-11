@@ -1650,6 +1650,17 @@ void magic_treasure(obj, level) struct objS* obj;
 
   /* Depending on treasure type, it can have certain magical properties*/
   switch (obj->tval) {
+    case TV_LAUNCHER:
+      if (magik(chance)) {
+        obj->tohit += m_bonus(1, 30, level);
+        obj->todam += m_bonus(1, 20, level);
+      } else if (magik(cursed)) {
+        obj->tohit -= m_bonus(1, 50, level);
+        obj->todam -= m_bonus(1, 30, level);
+        obj->flags |= TR_CURSED;
+        obj->cost = 0;
+      }
+      break;
     case TV_SHIELD:
     case TV_HARD_ARMOR:
     case TV_SOFT_ARMOR:
