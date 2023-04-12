@@ -502,6 +502,29 @@ py_speed()
          (py_affect(MA_FAST) + py_tr(TR_SPEED));
 }
 int
+think_adj(stat)
+{
+  int value;
+
+  value = statD.use_stat[stat];
+  if (value > 117)
+    return (7);
+  else if (value > 107)
+    return (6);
+  else if (value > 87)
+    return (5);
+  else if (value > 67)
+    return (4);
+  else if (value > 17)
+    return (3);
+  else if (value > 14)
+    return (2);
+  else if (value > 7)
+    return (1);
+  else
+    return (0);
+}
+int
 uspellcount()
 {
   int splev, tadj, sptype;
@@ -4525,29 +4548,6 @@ poison_adj()
       break;
   }
   return i;
-}
-int
-think_adj(stat)
-{
-  int value;
-
-  value = statD.use_stat[stat];
-  if (value > 117)
-    return (7);
-  else if (value > 107)
-    return (6);
-  else if (value > 87)
-    return (5);
-  else if (value > 67)
-    return (4);
-  else if (value > 17)
-    return (3);
-  else if (value > 14)
-    return (2);
-  else if (value > 7)
-    return (1);
-  else
-    return (0);
 }
 int
 tohit_adj()
