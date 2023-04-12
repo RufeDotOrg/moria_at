@@ -11990,6 +11990,7 @@ struct objS* obj;
     case TV_SOFT_ARMOR:
       return 1;
       // int weaponsmith(element) int element;
+    case TV_LAUNCHER:
     case TV_PROJECTILE:
     case TV_HAFTED:
     case TV_POLEARM:
