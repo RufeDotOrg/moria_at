@@ -5993,9 +5993,11 @@ py_init(csel)
   } while ((player_hpD[MAX_PLAYER_LEVEL - 1] < min_value) ||
            (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
 
-  int start_equip[] = {0, 30, 87, 22, 221};
+  int start_equip[] = {30, 87, 22, 0, 0};
   int class_equip[AL(classD)] = {221, 319, 323, 124, 343, 323};
-  start_equip[0] = class_equip[clidx];
+  int race_equip[AL(raceD)] = {87, 81, 82, 52, 90, 78, 127, 128};
+  start_equip[AL(start_equip) - 2] = class_equip[clidx];
+  start_equip[AL(start_equip) - 1] = race_equip[rsel];
   int iidx = 0;
   for (int it = 0; it < AL(start_equip); ++it) {
     int tidx = start_equip[it];
@@ -6010,6 +6012,9 @@ py_init(csel)
     switch (tidx) {
       case 22:  // More Food rations
         obj->number = 5;
+        break;
+      case 343:
+        obj->number = 24 + randint(7);
         break;
     }
 
@@ -12885,6 +12890,7 @@ main(int argc, char** argv)
     py_init(csel);
     dun_level = 1;
 
+    inven_sort();
     inven_check_weight();
     inven_check_light();
   }
