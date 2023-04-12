@@ -501,12 +501,54 @@ py_speed()
   return (py_affect(MA_SLOW) + py_tr(TR_SLOWNESS)) -
          (py_affect(MA_FAST) + py_tr(TR_SPEED));
 }
+int
+uspellcount()
+{
+  int splev, tadj, sptype;
+  sptype = classD[uD.clidx].spell;
+  if (sptype) {
+    splev = uD.lev - classD[uD.clidx].first_spell_lev + 1;
+    if (splev > 0) {
+      tadj = think_adj(sptype == SP_MAGE ? A_INT : A_WIS);
+      if (tadj > 0) {
+        tadj = CLAMP(tadj - 2, 2, 5);
+        return CLAMP(tadj * splev / 2, 1, SP_MAX);
+      }
+    }
+  }
+  return 0;
+}
+int
+uspellmask()
+{
+  int spcount;
+  uint32_t spmask;
+  spcount = uspellcount();
+  spmask = 0;
+  for (int it = 0; it < spcount; ++it) {
+    if (spell_orderD[it]) {
+      spmask |= (1 << (spell_orderD[it] - 1));
+    }
+  }
+  return spmask;
+}
+struct spellS*
+uspelltable()
+{
+  int clidx = uD.clidx;
+  if (clidx) {
+    return spellD[clidx - 1];
+  }
+  return 0;
+}
 void
 affect_update()
 {
   int idx = 0;
+  int spcount = uspellcount();
   int pspeed = py_speed();
 
+  // Recall, hungry, pack_heavy
   active_affectD[idx++] = py_affect(MA_RECALL) != 0;
   active_affectD[idx] = (uD.food <= PLAYER_FOOD_ALERT);
   active_affectD[idx++] += (uD.food <= PLAYER_FOOD_WEAK);
@@ -521,13 +563,18 @@ affect_update()
   // Blind
   active_affectD[idx++] = (maD[MA_BLIND] != 0);
 
+  // Hero, feare, confusion
   active_affectD[idx++] = py_affect(MA_HERO) + (2 * py_affect(MA_SUPERHERO));
   active_affectD[idx++] = py_affect(MA_FEAR);
   active_affectD[idx++] = (countD.confusion != 0);
 
+  // SeeInvis, paralysis, poison
   active_affectD[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
   active_affectD[idx++] = (countD.paralysis != 0);
   active_affectD[idx++] = (countD.poison != 0);
+
+  // Gain spells, ...
+  active_affectD[idx++] = (spcount && spell_orderD[spcount - 1] == 0);
 }
 void
 draw()
@@ -4642,46 +4689,6 @@ umana_by_level(level)
         return 1 + tadj * splev / 2;
       }
     }
-  }
-  return 0;
-}
-int
-uspellcount()
-{
-  int splev, tadj, sptype;
-  sptype = classD[uD.clidx].spell;
-  if (sptype) {
-    splev = uD.lev - classD[uD.clidx].first_spell_lev + 1;
-    if (splev > 0) {
-      tadj = think_adj(sptype == SP_MAGE ? A_INT : A_WIS);
-      if (tadj > 0) {
-        tadj = CLAMP(tadj - 2, 2, 5);
-        return CLAMP(tadj * splev / 2, 1, SP_MAX);
-      }
-    }
-  }
-  return 0;
-}
-int
-uspellmask()
-{
-  int spcount;
-  uint32_t spmask;
-  spcount = uspellcount();
-  spmask = 0;
-  for (int it = 0; it < spcount; ++it) {
-    if (spell_orderD[it]) {
-      spmask |= (1 << (spell_orderD[it] - 1));
-    }
-  }
-  return spmask;
-}
-struct spellS*
-uspelltable()
-{
-  int clidx = uD.clidx;
-  if (clidx) {
-    return spellD[clidx - 1];
   }
   return 0;
 }

@@ -4,7 +4,7 @@ DATA struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 DATA int vitalD[8];
 DATA int vital_statD[6];
 DATA int vital_usedD;
-DATA int active_affectD[12];
+DATA int active_affectD[15];
 
 // Full-screen & overlay (choice)
 DATA char screenD[22][98];
