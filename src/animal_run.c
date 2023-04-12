@@ -5993,23 +5993,31 @@ py_init(csel)
   } while ((player_hpD[MAX_PLAYER_LEVEL - 1] < min_value) ||
            (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
 
-  int start_equip[] = {30, 87};
+  int start_equip[] = {0, 30, 87, 22, 221};
+  int class_equip[AL(classD)] = {221, 319, 323, 124, 343, 323};
+  start_equip[0] = class_equip[clidx];
+  int iidx = 0;
   for (int it = 0; it < AL(start_equip); ++it) {
+    int tidx = start_equip[it];
+    struct treasureS* tr_ptr = &treasureD[tidx];
+    int eqidx = may_equip(tr_ptr->tval);
+
     struct objS* obj = obj_use();
-    tr_obj_copy(start_equip[it], obj);
-    obj->idflag |= ID_REVEAL;
-    invenD[may_equip(obj->tval)] = obj->id;
-  }
-  int start_inven[] = {22, 221};  // food ration, scroll of recall
-  int start_number[] = {5, 1};
-  for (int it = 0; it < AL(start_inven); ++it) {
-    struct objS* obj = obj_use();
-    int tidx = start_inven[it];
-    tr_make_known(&treasureD[tidx]);
+    tr_make_known(tr_ptr);
     tr_obj_copy(tidx, obj);
-    obj->number = start_number[it];
     obj->idflag = ID_REVEAL;
-    invenD[it] = obj->id;
+
+    switch (tidx) {
+      case 22:  // More Food rations
+        obj->number = 5;
+        break;
+    }
+
+    obj->idflag |= ID_REVEAL;
+    if (eqidx > 0 && invenD[eqidx] == 0)
+      invenD[eqidx] = obj->id;
+    else
+      invenD[iidx++] = obj->id;
   }
 
   uD.food = 7500;
