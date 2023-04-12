@@ -3947,6 +3947,13 @@ detect_mon(int (*valid)())
       }
     }
   });
+
+  if (flag) {
+    msg_print("You sense a presence!");
+  } else {
+    msg_print("You detect nothing unusual.");
+  }
+
   return flag;
 }
 void
@@ -8520,11 +8527,8 @@ int *uy, *ux;
             ident |= TRUE;
             break;
           case 20:
-            if (detect_mon(crset_invisible)) {
-              ident |= TRUE;
-              ma_duration(MA_DETECT_INVIS, 1);
-              msg_print("You sense the presence of invisible creatures!");
-            }
+            ident |= detect_mon(crset_invisible);
+            ma_duration(MA_DETECT_INVIS, 1);
             break;
           case 21:
             if (aggravate_monster(20)) {
@@ -8819,6 +8823,7 @@ int* x_ptr;
                  spell_nameD[0]);
       break;
     case 2:
+      detect_mon(crset_visible);
       ma_duration(MA_DETECT_MON, 1);
       break;
     case 3:
@@ -9025,6 +9030,7 @@ int* x_ptr;
   int dir;
   switch (pridx + 1) {
     case 1:
+      detect_mon(crset_evil);
       ma_duration(MA_DETECT_EVIL, 1);
       break;
     case 2:
@@ -9087,6 +9093,7 @@ int* x_ptr;
       py_heal_hit(damroll(8, 4));
       break;
     case 20:
+      detect_mon(crset_invisible);
       ma_duration(MA_DETECT_INVIS, randint(24) + 24);
       break;
     case 21:
@@ -9292,10 +9299,8 @@ int *uy, *ux;
             ident |= py_heal_hit(randint(8));
             break;
           case 16:
-            if (detect_mon(crset_invisible)) {
-              ident |= TRUE;
-              ma_duration(MA_DETECT_INVIS, 1);
-            }
+            ident |= detect_mon(crset_invisible);
+            ma_duration(MA_DETECT_INVIS, 1);
             break;
           case 17:
             ident |= py_affect(MA_FAST) == 0;
@@ -9315,11 +9320,8 @@ int *uy, *ux;
             }
             break;
           case 21:
-            if (detect_mon(crset_evil)) {
-              ident |= TRUE;
-              ma_duration(MA_DETECT_EVIL, 1);
-              msg_print("You sense the presence of evil!");
-            }
+            ident |= detect_mon(crset_evil);
+            ma_duration(MA_DETECT_EVIL, 1);
             break;
           case 22:
             if (countD.poison > 0) {
