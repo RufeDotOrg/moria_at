@@ -4,7 +4,6 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "auxval.c"
 #include "dlfcn.c"
 #include "tty.c"
 

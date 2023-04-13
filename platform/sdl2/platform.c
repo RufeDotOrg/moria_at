@@ -6,7 +6,6 @@
 #define Log SDL_Log
 
 #include "art.c"
-#include "auxval.c"
 #include "dlfcn.c"
 #include "font_zip.c"
 #include "player.c"
@@ -762,13 +761,13 @@ platform_draw()
   {
     alt_fill(AL(vitalD), 26 + 2, 0, top, width, height);
     for (int it = 0; it < MAX_A; ++it) {
-      len = snprintf(AP(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
+      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                      vitalD[it], stat_abbrD[it], vital_statD[it]);
       SDL_Point p = {width / 2, top + it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
     for (int it = MAX_A; it < AL(vitalD) - 1; ++it) {
-      len = snprintf(AP(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
+      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
       SDL_Point p = {width / 2, top + it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
@@ -793,7 +792,7 @@ platform_draw()
           affstr[jt] = "";
       }
 
-      len = snprintf(AP(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0], affstr[1],
+      len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0], affstr[1],
                      affstr[2]);
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
       p.y += height;
@@ -973,13 +972,13 @@ platform_draw()
 
     SDL_Point p = {0, top};
 
-    len = snprintf(AP(tmp), "turn:%7d", turnD);
+    len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
     pad = (ax - len * width) / 2;
     p.x = left + pad;
     render_font_string(rendererD, &fontD, tmp, len, p);
 
     p.y += 2 * height + MMSCALE * MAX_HEIGHT;
-    len = snprintf(AP(tmp), "%s", dun_descD);
+    len = snprintf(tmp, AL(tmp), "%s", dun_descD);
     pad = (ax - len * width) / 2;
     p.x = left + pad;
     render_font_string(rendererD, &fontD, tmp, len, p);
@@ -1019,7 +1018,7 @@ platform_draw()
     int msg_used = AS(msglen_cqD, msg_writeD);
     int more_used = 0;
 
-    if (more) more_used = snprintf(AP(tmp), "-more %d-", more);
+    if (more) more_used = snprintf(tmp, AL(tmp), "-more %d-", more);
 
     // Gameplay shows previous message to help the player out
     if (!msg_used && show_map) {
