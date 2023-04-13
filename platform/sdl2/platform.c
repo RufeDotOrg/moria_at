@@ -9,7 +9,6 @@
 #include "dlfcn.c"
 #include "font_zip.c"
 #include "player.c"
-#include "random.c"
 #include "treasure.c"
 #include "wall.c"
 
@@ -792,8 +791,8 @@ platform_draw()
           affstr[jt] = "";
       }
 
-      len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0], affstr[1],
-                     affstr[2]);
+      len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
+                     affstr[1], affstr[2]);
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
       p.y += height;
     }
@@ -1523,6 +1522,17 @@ platform_readansi()
   return c;
 }
 
+int
+platform_random()
+{
+  int ret = -1;
+  SDL_RWops *readf = SDL_RWFromFile("/dev/urandom", "rb");
+  if (readf) SDL_RWread(readf, &ret, sizeof(ret), 1);
+  SDL_RWclose(readf);
+  Log("seed %d", ret);
+  return ret;
+}
+
 // Disk I/O
 static int checksumD;
 int
@@ -1609,12 +1619,11 @@ devsave()
 int
 load()
 {
+  int save_size = 0;
   saveclear();
 
   SDL_RWops *readf = SDL_RWFromFile("savechar", "rb");
   if (readf) {
-    int save_size = 0;
-
     checksumD = 0;
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
     int version = version_by_savesum(save_size);
@@ -1627,8 +1636,6 @@ load()
         checksumD ^= ck;
       }
       Log("version %d load char checksum %x", version, checksumD);
-      SDL_RWclose(readf);
-      return 1;
     } else if (save_size == savesum()) {
       for (int it = 0; it < AL(save_bufD); ++it) {
         struct bufS buf = save_bufD[it];
@@ -1637,12 +1644,15 @@ load()
         checksumD ^= ck;
       }
       Log("load char checksum %x", checksumD);
-      SDL_RWclose(readf);
-      return 1;
+    } else {
+      Log("load char invalid size %d", save_size);
+      save_size = 0;
     }
+
+    SDL_RWclose(readf);
   }
 
-  return 0;
+  return save_size != 0;
 }
 int
 erase()
