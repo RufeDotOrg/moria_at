@@ -36,8 +36,7 @@ case $EXT in
   .c )
     CFLAGS+=" -Wno-implicit-function-declaration "
     ;;
-  .cc ) ;&
-  .cpp )
+  ".cpp" | ".cc" )
     CFLAGS+=" -fno-asynchronous-unwind-tables -fno-rtti -fno-exceptions -std=c++17 "
     CFLAGS+=" -ffp-contract=off -freciprocal-math -fno-math-errno "
 
