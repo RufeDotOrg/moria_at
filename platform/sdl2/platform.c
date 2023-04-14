@@ -528,7 +528,6 @@ render_font_string(struct SDL_Renderer *renderer, struct fontS *font,
                           .y = origin.y,
                           .w = font->max_pixel_width,
                           .h = font->max_pixel_height};
-  const char *iter = string;
   uint64_t whitespace = font->max_pixel_width;
 
   for (int it = 0; it < len; ++it) {
@@ -1437,8 +1436,6 @@ static void surface_ppfill(surface) SDL_Surface *surface;
   uint8_t *pixels = surface->pixels;
   int oy = padD.y * display_rectD.h;
   int ox = padD.x * display_rectD.w;
-  int w = padD.w * display_rectD.w;
-  int h = padD.h * display_rectD.h;
   for (int64_t row = 0; row < surface->h; ++row) {
     uint8_t *dst = pixels + (surface->pitch * row);
     for (int64_t col = 0; col < surface->w; ++col) {

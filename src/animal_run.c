@@ -2629,7 +2629,6 @@ store_item_destroy(sidx, item, count)
 int
 store_tr_stack(sidx, tr_index, stack)
 {
-  int item;
   struct treasureS* tr_ptr;
   struct objS* obj;
 
@@ -3002,7 +3001,7 @@ static char* gold_nameD[MAX_GOLD] = {
 void
 place_gold(y, x)
 {
-  int i, cur_pos;
+  int i;
   struct objS* obj;
 
   obj = obj_use();
@@ -3173,7 +3172,7 @@ cave_gen()
 {
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
   int i, j, k, alloc_level;
-  int y1, x1, y2, x2, pick1, pick2, tmp;
+  int y1, x1, y2, x2, pick1, pick2;
   int yloc[CHUNK_AREA + 1], xloc[CHUNK_AREA + 1];
 
   alloc_level = CLAMP(dun_level / 2, 2, 15);
@@ -3513,7 +3512,6 @@ static void get_moves(midx, mm) int* mm;
 static int
 see_wall(dir, y, x)
 {
-  char c;
   if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
     return TRUE;
   else if (caveD[y][x].fval >= MIN_WALL && CF_VIZ & caveD[y][x].cflag)
@@ -3884,7 +3882,6 @@ light_room(y, x)
   int i, j, start_col, end_col;
   int start_row, end_row;
   struct caveS* c_ptr;
-  int tval;
 
   start_row = (y / CHUNK_HEIGHT) * CHUNK_HEIGHT;
   start_col = (x / CHUNK_WIDTH) * CHUNK_WIDTH;
@@ -3921,7 +3918,6 @@ unlight_room(y, x)
   int i, j, start_col, end_col;
   int start_row, end_row;
   struct caveS* c_ptr;
-  int tval;
 
   start_row = (y / CHUNK_HEIGHT) * CHUNK_HEIGHT;
   start_col = (x / CHUNK_WIDTH) * CHUNK_WIDTH;
@@ -4817,7 +4813,6 @@ summon_object(y, x, num, typ)
   int i, j, k;
   int py, px;
   struct caveS* c_ptr;
-  struct objS* obj;
   int real_typ;
 
   py = uD.y;
@@ -4963,7 +4958,6 @@ calc_bonuses()
   int ac, toac;
   int wtohit, tohit, todam;
   int hide_tohit, hide_todam, hide_toac;
-  struct objS* obj;
 
   wtohit = weight_tohit_adj();
   tohit = wtohit + tohit_adj();
@@ -5133,7 +5127,6 @@ ma_bonuses(maffect, factor)
 static void
 ma_duration(maidx, nturn)
 {
-  struct objS* obj;
   if (maidx == MA_BLIND && py_tr(TR_SEEING)) {
     msg_print("Your sight is no worse.");
     nturn = 0;
@@ -5547,33 +5540,33 @@ static int
 weapon_enchant(iidx, tohit, todam)
 {
   int affect, limit;
+  struct objS* i_ptr;
 
+  limit = 0;
   if (iidx >= 0) {
-    struct objS* i_ptr = obj_get(invenD[iidx]);
+    i_ptr = obj_get(invenD[iidx]);
     if (i_ptr->tval == TV_LAUNCHER)
       limit = 10;
     else if (may_equip(i_ptr->tval) == INVEN_WIELD)
       limit = i_ptr->damage[0] * i_ptr->damage[1];
-    else
-      limit = 0;
+  }
 
-    if (limit) {
-      affect = 0;
-      for (int it = 0; it < tohit; ++it) {
-        affect += (enchant(&i_ptr->tohit, 10));
-      }
-      for (int it = 0; it < todam; ++it) {
-        affect += (enchant(&i_ptr->todam, limit));
-      }
-
-      if (affect) {
-        obj_desc(i_ptr, 1);
-        MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
-        i_ptr->flags &= ~TR_CURSED;
-        calc_bonuses();
-      } else
-        msg_print("The enchantment fails.");
+  if (limit) {
+    affect = 0;
+    for (int it = 0; it < tohit; ++it) {
+      affect += (enchant(&i_ptr->tohit, 10));
     }
+    for (int it = 0; it < todam; ++it) {
+      affect += (enchant(&i_ptr->todam, limit));
+    }
+
+    if (affect) {
+      obj_desc(i_ptr, 1);
+      MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
+      i_ptr->flags &= ~TR_CURSED;
+      calc_bonuses();
+    } else
+      msg_print("The enchantment fails.");
   }
 
   return limit != 0;
@@ -5964,7 +5957,7 @@ res_stat(stat)
 static void
 py_where()
 {
-  int y, x, dir;
+  int dir;
   while (get_dir("Map: Look which direction?", &dir)) {
     mmove(dir, &panelD.panel_row, &panelD.panel_col);
     if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
@@ -6242,7 +6235,6 @@ get_flags(int typ, uint32_t* weapon_type, int* harm_type, int (**destroy)())
 void
 light_line(dir, y, x)
 {
-  int i;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -6285,7 +6277,7 @@ light_line(dir, y, x)
 }
 void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
 {
-  int i, oldy, oldx, dist, flag;
+  int oldy, oldx, dist, flag;
   uint32_t weapon_type;
   int harm_type;
   int (*dummy)();
@@ -6340,7 +6332,7 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
 void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
 {
   int i, j;
-  int dam, max_dis, thit, tkill, k, tmp;
+  int dam, max_dis, thit, tkill;
   int oldy, oldx, dist, flag, harm_type;
   uint32_t weapon_type;
   int (*destroy)();
@@ -6703,7 +6695,7 @@ sleep_monster_aoe(maxdis)
 int
 mass_poly()
 {
-  int cdis, y, x, fy, fx, mass, midx;
+  int cdis, y, x, fy, fx, mass;
   struct creatureS* cr_ptr;
 
   y = uD.y;
@@ -6801,7 +6793,6 @@ td_destroy2(dir, y, x)
 int
 build_wall(dir, y, x)
 {
-  int i;
   int build, damage, dist, flag;
   struct caveS* c_ptr;
   struct monS* m_ptr;
@@ -6845,7 +6836,6 @@ build_wall(dir, y, x)
         }
       }
       c_ptr->fval = MAGMA_WALL;
-      i++;
       build = TRUE;
     }
   } while (!flag);
@@ -8179,7 +8169,7 @@ inven_read(iidx, uy, ux)
 int *uy, *ux;
 {
   uint32_t i;
-  int j, k, y, x;
+  int j, k;
   int ident, used_up, choice_idx;
   struct objS* i_ptr;
   struct treasureS* tr_ptr;
@@ -9276,7 +9266,7 @@ struct objS* obj;
 void
 inven_wear(iidx)
 {
-  int eqidx, eqidx_count;
+  int eqidx;
   struct objS* obj;
 
   obj = obj_get(invenD[iidx]);
@@ -9810,7 +9800,6 @@ py_help()
     msg_pause();
     msg_print("Hack Commands");
 
-    char c;
     line = 0;
     BufMsg(screen, "CTRL('f'): food");
     BufMsg(screen, "CTRL('h'): heal");
@@ -10357,7 +10346,7 @@ close_object()
 void
 chest_trap(y, x)
 {
-  int i, j, k;
+  int i;
   struct objS* obj;
 
   obj = &entity_objD[caveD[y][x].oidx];
@@ -10909,7 +10898,7 @@ py_autotunnel(y, x)
 }
 static void make_move(midx, mm) int* mm;
 {
-  int i, fy, fx, newy, newx, do_turn, do_move, stuck_door;
+  int i, fy, fx, newy, newx, do_turn, do_move;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -11113,7 +11102,7 @@ static int
 mon_try_spell(midx, cdis)
 {
   uint32_t i, maxlev;
-  int k, chance, thrown_spell, spell_index, r1;
+  int k, chance, thrown_spell, spell_index;
   int spell_choice[32];
   int took_turn;
   struct monS* mon;
@@ -11884,7 +11873,6 @@ store_entrance(sidx)
 {
   char c;
   char tmp_str[80];
-  int buyout;
 
   snprintf(tmp_str, AL(tmp_str), "What would you like to purchase from %s?",
            ownerD[storeD[sidx]].name);
