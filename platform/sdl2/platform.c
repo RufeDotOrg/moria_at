@@ -39,8 +39,6 @@ enum { ANDROID };
 
 // TBD: clean-up
 int los();
-int dir_y();
-int dir_x();
 
 int
 char_visible(char c)

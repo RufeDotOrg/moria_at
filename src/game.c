@@ -2,6 +2,7 @@
 #include "game/const.h"
 #include "game/type.h"
 #include "game/var.h"
+#include "game/xxinline.c"
 
 #include "db/char.c"
 #include "db/desc.c"
