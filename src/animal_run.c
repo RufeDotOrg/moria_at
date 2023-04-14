@@ -5294,15 +5294,6 @@ equip_count()
   }
   return count;
 }
-static int
-equip_cursed()
-{
-  for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
-    struct objS* obj = obj_get(invenD[it]);
-    if (obj->flags & TR_CURSED) return it;
-  }
-  return -1;
-}
 static void
 equip_act(flag)
 {
@@ -10903,39 +10894,6 @@ tunnel(y, x)
     msg_print("You dig with your hands, making no progress.");
 
   turn_flag = TRUE;
-}
-static void py_tunnel(dir, uy, ux) int *uy, *ux;
-{
-  int y, x;
-  struct caveS* c_ptr;
-
-  y = *uy;
-  x = *ux;
-  mmove(dir, &y, &x);
-
-  c_ptr = &caveD[y][x];
-
-  if (c_ptr->midx) {
-    *uy = y;
-    *ux = x;
-    return;
-  }
-
-  /* Don't let the player tunnel somewhere illegal, this is necessary to
-     prevent the player from getting a free attack by trying to tunnel
-     somewhere where it has no effect.  */
-  if (c_ptr->fval < MIN_WALL &&
-      (c_ptr->oidx == 0 || (entity_objD[c_ptr->oidx].tval != TV_RUBBLE &&
-                            entity_objD[c_ptr->oidx].tval != TV_SECRET_DOOR))) {
-    if (c_ptr->oidx == 0) {
-      msg_print("Tunnel through what?  Empty air?!?");
-    } else {
-      msg_print("You can't tunnel through that.");
-    }
-    return;
-  }
-
-  tunnel(y, x);
 }
 static void
 py_autotunnel(y, x)
