@@ -1,2 +1,0 @@
-CFLAGS+=" -DDATA=extern "
-LFLAGS="-fpic -shared -nostartfiles "

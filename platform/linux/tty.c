@@ -119,6 +119,16 @@ py_map()
   *iter++ = CH(BR);
   screen_usedD[orow + 2] = (MINIMAP_WIDTH + 2);
 }
+int
+platform_predraw()
+{
+  if (minimap_enlargeD) {
+    py_map();
+  } else {
+    symmap_update();
+  }
+  return 1;
+}
 
 // Common terminal commands
 static char tc_crlfD[] = "\r\n";
@@ -244,7 +254,7 @@ tty_translate(char* str, int len)
 }
 
 int
-tty_save()
+platform_save()
 {
   int fd, byte_count;
   byte_count = 0;
@@ -265,7 +275,7 @@ tty_save()
   return 0;
 }
 int
-tty_load()
+platform_load()
 {
   int fd, byte_count, save_size;
 
@@ -289,4 +299,22 @@ tty_load()
   }
 
   return fd != -1;
+}
+int
+platform_erase()
+{
+  int fd = open("savechar", O_WRONLY);
+  close(fd);
+  return fd != -1;
+}
+int
+platform_random()
+{
+  int seed, fd;
+  fd = open("/dev/urandom", O_RDONLY);
+  if (fd != -1) {
+    read(fd, &seed, sizeof(seed));
+    close(fd);
+  }
+  return seed;
 }

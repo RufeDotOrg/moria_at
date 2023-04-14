@@ -1,10 +1,10 @@
 #include <errno.h>
 #include <fcntl.h>
+#include <setjmp.h>
 #include <sys/ioctl.h>
 #include <termios.h>
 #include <unistd.h>
 
-#include "dlfcn.c"
 #include "tty.c"
 
 int
@@ -29,8 +29,8 @@ platform_readansi()
   return -1;
 }
 
-void
-platform_init()
+int
+platform_pregame()
 {
   if (save_termD[1] == 0) {
     fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
@@ -47,15 +47,11 @@ platform_init()
     write(STDOUT_FILENO, tc_hide_cursorD, sizeof(tc_hide_cursorD));
   }
 
-  platformD.seed = platform_auxval_random;
-  platformD.readansi = platform_readansi;
-  platformD.draw = platform_draw;
-  platformD.load = tty_load;
-  platformD.save = tty_save;
+  return 0;
 }
 
-void
-platform_reset()
+int
+platform_postgame()
 {
   if (save_termD[1]) {
     write(STDOUT_FILENO, tc_clearD, sizeof(tc_clearD));
@@ -63,4 +59,6 @@ platform_reset()
 
     ioctl(STDIN_FILENO, TCSETA, save_termD);
   }
+
+  return 0;
 }

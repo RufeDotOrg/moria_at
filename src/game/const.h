@@ -132,7 +132,7 @@
 /* items tested for enchantments, i.e. the MAGIK inscription, see the
    sense_magik() procedure */
 #define TV_MIN_ENCHANT 20
-#define TV_LAUNCHER 20 // deploying projectiles since 1984
+#define TV_LAUNCHER 20  // deploying projectiles since 1984
 #define TV_HAFTED 21
 #define TV_POLEARM 22
 #define TV_SWORD 23
@@ -450,5 +450,6 @@
 
 // Input
 #define ESCAPE '\033'
+#define CTRL(x) (x & 0x1f)
 // Output
 enum { BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BRIGHT };

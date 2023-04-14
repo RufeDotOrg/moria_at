@@ -272,11 +272,14 @@ struct ownerS {
 };
 
 struct platformS {
+  fn pregame;
+  fn postgame;
   fn seed;
   fn load;
   fn save;
   fn erase;
   fn readansi;
+  fn predraw;
   fn draw;
 };
 DATA struct platformS platformD;

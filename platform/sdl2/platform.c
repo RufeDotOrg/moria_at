@@ -1,4 +1,4 @@
-#include <stdio.h>
+#include <setjmp.h>
 #include <time.h>
 
 #include "SDL.h"
@@ -6,7 +6,6 @@
 #define Log SDL_Log
 
 #include "art.c"
-#include "dlfcn.c"
 #include "font_zip.c"
 #include "player.c"
 #include "treasure.c"
@@ -20,7 +19,6 @@ enum { TOUCH = 1 };
 enum { TOUCH };
 enum { ANDROID };
 #endif
-#define CTRL(x) (x & 037)
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
 #define RS(r, scale) \
@@ -38,6 +36,11 @@ enum { ANDROID };
 #define C3(c) c.r, c.g, c.b
 #define U4(i) \
   (i & 0xff), ((i >> 8) & 0xff), ((i >> 16) & 0xff), ((i >> 24) & 0xff)
+
+// TBD: clean-up
+int los();
+int dir_y();
+int dir_x();
 
 int
 char_visible(char c)
@@ -587,6 +590,256 @@ sin_lookup(idx)
   idx += 6;
   idx %= AL(cos_table);
   return cos_table[idx];
+}
+
+// Draw
+int
+obj_viz(obj, viz)
+struct objS *obj;
+struct vizS *viz;
+{
+  if (obj->tval != TV_INVIS_TRAP) viz->sym = obj->tchar;
+  switch (obj->tval) {
+      // Misc
+    case TV_MISC:
+      if (obj->tchar == 's')
+        return 25;
+      else if (obj->tchar == '!')
+        return 4;
+      else  // '~'
+        return 23;
+    case TV_CHEST:
+      return 32;
+    case TV_PROJECTILE:
+      return 13;
+    case TV_LAUNCHER:
+      return 15;
+    case TV_LIGHT:
+      return 21;
+      // Worn
+    case TV_HAFTED:
+      return 10;
+    case TV_POLEARM:
+      return 6;
+    case TV_SWORD:
+      return 14;
+    case TV_DIGGING:
+      return 10;
+    case TV_BOOTS:
+    case TV_GLOVES:
+    case TV_CLOAK:
+    case TV_HELM:
+      return 11;
+    case TV_SHIELD:
+      return 2;
+    case TV_HARD_ARMOR:
+      return 9;
+    case TV_SOFT_ARMOR:
+      return 1;
+    case TV_AMULET:
+      return 3;
+    case TV_RING:
+      return 7;
+      // Activate
+    case TV_STAFF:
+      return 12;
+    case TV_WAND:
+      return 5;
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+      return 8;
+    case TV_POTION1:
+    case TV_POTION2:
+    case TV_FLASK:
+      return 4;
+    case TV_FOOD:
+      return 19;
+    case TV_MAGIC_BOOK:
+      return 18;
+    case TV_PRAYER_BOOK:
+      return 17;
+      // Gold
+      // TBD: copper/silver/gold/mithril/gems by subval
+    case TV_GOLD:
+      return 16;
+    /* Dungeon Fixtures */
+    case TV_VIS_TRAP:
+      if (obj->tchar == ' ')
+        viz->light = 0;
+      else
+        return 26;
+      break;
+    case TV_RUBBLE:
+      return 27;
+    case TV_OPEN_DOOR:
+      return 28;
+    case TV_CLOSED_DOOR:
+      return 29;
+    case TV_UP_STAIR:
+      return 30;
+    case TV_DOWN_STAIR:
+      return 31;
+    case TV_SECRET_DOOR:
+      viz->floor = 2;
+      break;
+  }
+  return 0;
+}
+static int
+cave_color(row, col)
+{
+  struct caveS *c_ptr;
+  struct monS *mon;
+  struct objS *obj;
+  int color = 0;
+
+  c_ptr = &caveD[row][col];
+  mon = &entity_monD[c_ptr->midx];
+  if (mon->mlit) {
+    color = BRIGHT + MAGENTA;
+  } else if (c_ptr->fval == BOUNDARY_WALL) {
+    color = BRIGHT + WHITE;
+  } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
+    color = BRIGHT + WHITE;
+  } else if (CF_TEMP_LIGHT & c_ptr->cflag) {
+    color = BRIGHT + CYAN;
+  } else if (CF_LIT & c_ptr->cflag) {
+    color = BRIGHT + BLACK;
+  }
+
+  if (color <= BRIGHT + BLACK && c_ptr->oidx) {
+    obj = &entity_objD[c_ptr->oidx];
+    if (CF_VIZ & c_ptr->cflag) {
+      if (obj->tval == TV_UP_STAIR) {
+        color = BRIGHT + GREEN;
+      } else if (obj->tval == TV_DOWN_STAIR) {
+        color = BRIGHT + RED;
+      } else if (obj->tval == TV_VIS_TRAP) {
+        color = BRIGHT + YELLOW;
+      } else if (obj->tval == TV_SECRET_DOOR) {
+        color = BRIGHT + WHITE;
+      } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
+        color = BRIGHT + BLUE;
+      } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
+        color = BRIGHT + GREEN;
+      }
+    }
+  }
+
+  return color;
+}
+static int
+fade_by_distance(y1, x1, y2, x2)
+{
+  int dy = y1 - y2;
+  int dx = x1 - x2;
+  int sq = dx * dx + dy * dy;
+
+  if (sq <= 1) return 1;
+  if (sq <= 4) return 2;
+  if (sq <= 9) return 3;
+  return 4;
+}
+static void
+viz_update()
+{
+  int blind, py, px;
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+
+  struct vizS *vptr = &vizD[0][0];
+  blind = maD[MA_BLIND];
+  py = uD.y;
+  px = uD.x;
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      struct caveS *c_ptr = &caveD[row][col];
+      struct monS *mon = &entity_monD[c_ptr->midx];
+      struct objS *obj = &entity_objD[c_ptr->oidx];
+      struct vizS viz = {0};
+      if (row != py || col != px) {
+        viz.light = (c_ptr->cflag & CF_SEEN) != 0;
+        viz.fade = fade_by_distance(py, px, row, col) - 1;
+        if (mon->mlit) {
+          viz.cr = mon->cidx;
+        } else if (!blind && (CF_VIZ & c_ptr->cflag)) {
+          switch (c_ptr->fval) {
+            case GRANITE_WALL:
+            case BOUNDARY_WALL:
+              viz.floor = 1;
+              break;
+            case QUARTZ_WALL:
+              viz.floor = 3 + (c_ptr->oidx != 0);
+              break;
+            case MAGMA_WALL:
+              viz.floor = 5 + (c_ptr->oidx != 0);
+              break;
+            case FLOOR_OBST:
+              viz.tr = obj_viz(obj, &viz);
+              break;
+            default:
+              viz.light += ((CF_LIT & c_ptr->cflag) != 0);
+              viz.dim = obj->tval && los(py, px, row, col) == 0;
+              viz.tr = obj_viz(obj, &viz);
+              break;
+          }
+        }
+      } else {
+        viz.sym = '@';
+        viz.light = 3;
+      }
+
+      *vptr++ = viz;
+    }
+  }
+}
+void
+viz_minimap()
+{
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+  int color;
+
+  if (minimap_enlargeD && dun_level) {
+    for (int row = 0; row < MAX_HEIGHT; ++row) {
+      for (int col = 0; col < MAX_WIDTH; ++col) {
+        color = cave_color(row, col);
+
+        if (color == 0 &&
+            (row >= rmin && row <= rmax && (col == cmin || col == cmax))) {
+          color = BRIGHT + BLACK;
+        } else if (color == 0 && (col >= cmin && col <= cmax &&
+                                  (row == rmin || row == rmax))) {
+          color = BRIGHT + BLACK;
+        }
+
+        minimapD[row][col] = color;
+      }
+    }
+  } else {
+    enum { RATIO = MAX_WIDTH / SYMMAP_WIDTH };
+    for (int row = 0; row < MAX_HEIGHT / RATIO; ++row) {
+      for (int col = 0; col < MAX_WIDTH / RATIO; ++col) {
+        color = cave_color(row + rmin, col + cmin);
+        for (int i = 0; i < 4; ++i) {
+          for (int j = 0; j < 4; ++j) {
+            minimapD[row * RATIO + i][col * RATIO + j] = color;
+          }
+        }
+      }
+    }
+  }
+}
+int
+platform_predraw()
+{
+  viz_update();
+  viz_minimap();
+  return 1;
 }
 
 static void
@@ -1369,6 +1622,34 @@ SDL_Event *event;
 
   return r;
 }
+
+int
+overlay_bisect(dir)
+{
+  int sample[AL(overlay_copyD)];
+  int sample_used, row;
+
+  sample_used = 0;
+  row = finger_rowD;
+  for (int it = row; it >= 0 && it < AL(overlay_copyD); it += dir) {
+    if (overlay_copyD[it] > 1) {
+      sample[sample_used] = it;
+      sample_used += 1;
+    }
+  }
+
+  return sample[sample_used / 2];
+}
+int
+overlay_input(input)
+{
+  int row = finger_rowD;
+  for (int it = row + input; it >= 0 && it < AL(overlay_copyD); it += input) {
+    if (overlay_copyD[it] > 1) return it;
+  }
+  return row;
+}
+
 static int
 sdl_touch_event(event)
 SDL_Event event;
@@ -1459,33 +1740,6 @@ SDL_Event event;
   return 0;
 }
 
-int
-overlay_bisect(dir)
-{
-  int sample[AL(overlay_copyD)];
-  int sample_used, row;
-
-  sample_used = 0;
-  row = finger_rowD;
-  for (int it = row; it >= 0 && it < AL(overlay_copyD); it += dir) {
-    if (overlay_copyD[it] > 1) {
-      sample[sample_used] = it;
-      sample_used += 1;
-    }
-  }
-
-  return sample[sample_used / 2];
-}
-int
-overlay_input(input)
-{
-  int row = finger_rowD;
-  for (int it = row + input; it >= 0 && it < AL(overlay_copyD); it += input) {
-    if (overlay_copyD[it] > 1) return it;
-  }
-  return row;
-}
-
 // Game interface
 char
 sdl_pump()
@@ -1574,7 +1828,7 @@ int checksum(blob, len) void *blob;
   return ret;
 }
 int
-save()
+platform_save()
 {
   int version = AL(savesumD) - 1;
   int sum = savesumD[version];
@@ -1617,7 +1871,7 @@ devsave()
   return 0;
 }
 int
-load()
+platform_load()
 {
   int save_size = 0;
   saveclear();
@@ -1655,7 +1909,7 @@ load()
   return save_size != 0;
 }
 int
-erase()
+platform_erase()
 {
   saveclear();
 
@@ -1667,8 +1921,8 @@ erase()
 
 // Initialization
 #define SDL_SCOPE (SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS)
-void
-platform_init()
+int
+platform_pregame()
 {
   int init;
 
@@ -1696,7 +1950,7 @@ platform_init()
 
     if (ANDROID) SDL_DisableScreenSaver();
 
-    if (!render_init()) return;
+    if (!render_init()) return 1;
   }
 
   for (int it = 0; it < AL(paletteD); ++it) {
@@ -1704,12 +1958,12 @@ platform_init()
   }
 
   if (init) {
-    if (!font_load() || !font_init(&fontD)) return;
+    if (!font_load() || !font_init(&fontD)) return 2;
 
-    if (!art_io() || !art_init()) return;
-    if (!tart_io() || !tart_init()) return;
-    if (!wart_io() || !wart_init()) return;
-    if (!part_io() || !part_init()) return;
+    if (!art_io() || !art_init()) return 3;
+    if (!tart_io() || !tart_init()) return 3;
+    if (!wart_io() || !wart_init()) return 3;
+    if (!part_io() || !part_init()) return 3;
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                                 MAX_HEIGHT, 0, texture_formatD);
@@ -1731,21 +1985,18 @@ platform_init()
   font_colorD = whiteD;
 
   if (ANDROID) zoom_factorD = 2;
-  platformD.seed = platform_random;
-  platformD.load = load;
-  platformD.save = save;
-  platformD.erase = erase;
-  platformD.readansi = platform_readansi;
-  platformD.draw = platform_draw;
 
   while (scale_rectD.x == 0) {
     sdl_pump();
   }
+
+  return 0;
 }
-void
-platform_reset()
+int
+platform_postgame()
 {
   // Exit terminates the android activity
   // otherwise main() may resume with stale memory
   if (ANDROID) exit(0);
+  return 0;
 }

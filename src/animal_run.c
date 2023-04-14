@@ -242,247 +242,6 @@ los(fromY, fromX, toY, toX)
     }
   }
 }
-int
-obj_viz(obj, viz)
-struct objS* obj;
-struct vizS* viz;
-{
-  if (obj->tval != TV_INVIS_TRAP) viz->sym = obj->tchar;
-  switch (obj->tval) {
-      // Misc
-    case TV_MISC:
-      if (obj->tchar == 's')
-        return 25;
-      else if (obj->tchar == '!')
-        return 4;
-      else  // '~'
-        return 23;
-    case TV_CHEST:
-      return 32;
-    case TV_PROJECTILE:
-      return 13;
-    case TV_LAUNCHER:
-      return 15;
-    case TV_LIGHT:
-      return 21;
-      // Worn
-    case TV_HAFTED:
-      return 10;
-    case TV_POLEARM:
-      return 6;
-    case TV_SWORD:
-      return 14;
-    case TV_DIGGING:
-      return 10;
-    case TV_BOOTS:
-    case TV_GLOVES:
-    case TV_CLOAK:
-    case TV_HELM:
-      return 11;
-    case TV_SHIELD:
-      return 2;
-    case TV_HARD_ARMOR:
-      return 9;
-    case TV_SOFT_ARMOR:
-      return 1;
-    case TV_AMULET:
-      return 3;
-    case TV_RING:
-      return 7;
-      // Activate
-    case TV_STAFF:
-      return 12;
-    case TV_WAND:
-      return 5;
-    case TV_SCROLL1:
-    case TV_SCROLL2:
-      return 8;
-    case TV_POTION1:
-    case TV_POTION2:
-    case TV_FLASK:
-      return 4;
-    case TV_FOOD:
-      return 19;
-    case TV_MAGIC_BOOK:
-      return 18;
-    case TV_PRAYER_BOOK:
-      return 17;
-      // Gold
-      // TBD: copper/silver/gold/mithril/gems by subval
-    case TV_GOLD:
-      return 16;
-    /* Dungeon Fixtures */
-    case TV_VIS_TRAP:
-      if (obj->tchar == ' ')
-        viz->light = 0;
-      else
-        return 26;
-      break;
-    case TV_RUBBLE:
-      return 27;
-    case TV_OPEN_DOOR:
-      return 28;
-    case TV_CLOSED_DOOR:
-      return 29;
-    case TV_UP_STAIR:
-      return 30;
-    case TV_DOWN_STAIR:
-      return 31;
-    case TV_SECRET_DOOR:
-      viz->floor = 2;
-      break;
-  }
-  return 0;
-}
-static int
-cave_color(row, col)
-{
-  struct caveS* c_ptr;
-  struct monS* mon;
-  struct objS* obj;
-  int color = 0;
-
-  c_ptr = &caveD[row][col];
-  mon = &entity_monD[c_ptr->midx];
-  if (mon->mlit) {
-    color = BRIGHT + MAGENTA;
-  } else if (c_ptr->fval == BOUNDARY_WALL) {
-    color = BRIGHT + WHITE;
-  } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
-    color = BRIGHT + WHITE;
-  } else if (CF_TEMP_LIGHT & c_ptr->cflag) {
-    color = BRIGHT + CYAN;
-  } else if (CF_LIT & c_ptr->cflag) {
-    color = BRIGHT + BLACK;
-  }
-
-  if (color <= BRIGHT + BLACK && c_ptr->oidx) {
-    obj = &entity_objD[c_ptr->oidx];
-    if (CF_VIZ & c_ptr->cflag) {
-      if (obj->tval == TV_UP_STAIR) {
-        color = BRIGHT + GREEN;
-      } else if (obj->tval == TV_DOWN_STAIR) {
-        color = BRIGHT + RED;
-      } else if (obj->tval == TV_VIS_TRAP) {
-        color = BRIGHT + YELLOW;
-      } else if (obj->tval == TV_SECRET_DOOR) {
-        color = BRIGHT + WHITE;
-      } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
-        color = BRIGHT + BLUE;
-      } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
-        color = BRIGHT + GREEN;
-      }
-    }
-  }
-
-  return color;
-}
-static int
-fade_by_distance(y1, x1, y2, x2)
-{
-  int dy = y1 - y2;
-  int dx = x1 - x2;
-  int sq = dx * dx + dy * dy;
-
-  if (sq <= 1) return 1;
-  if (sq <= 4) return 2;
-  if (sq <= 9) return 3;
-  return 4;
-}
-static void
-viz_update()
-{
-  int blind, py, px;
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
-
-  struct vizS* vptr = &vizD[0][0];
-  blind = maD[MA_BLIND];
-  py = uD.y;
-  px = uD.x;
-  for (int row = rmin; row < rmax; ++row) {
-    for (int col = cmin; col < cmax; ++col) {
-      struct caveS* c_ptr = &caveD[row][col];
-      struct monS* mon = &entity_monD[c_ptr->midx];
-      struct objS* obj = &entity_objD[c_ptr->oidx];
-      struct vizS viz = {0};
-      if (row != py || col != px) {
-        viz.light = (c_ptr->cflag & CF_SEEN) != 0;
-        viz.fade = fade_by_distance(py, px, row, col) - 1;
-        if (mon->mlit) {
-          viz.cr = mon->cidx;
-        } else if (!blind && (CF_VIZ & c_ptr->cflag)) {
-          switch (c_ptr->fval) {
-            case GRANITE_WALL:
-            case BOUNDARY_WALL:
-              viz.floor = 1;
-              break;
-            case QUARTZ_WALL:
-              viz.floor = 3 + (c_ptr->oidx != 0);
-              break;
-            case MAGMA_WALL:
-              viz.floor = 5 + (c_ptr->oidx != 0);
-              break;
-            case FLOOR_OBST:
-              viz.tr = obj_viz(obj, &viz);
-              break;
-            default:
-              viz.light += ((CF_LIT & c_ptr->cflag) != 0);
-              viz.dim = obj->tval && los(py, px, row, col) == 0;
-              viz.tr = obj_viz(obj, &viz);
-              break;
-          }
-        }
-      } else {
-        viz.sym = '@';
-        viz.light = 3;
-      }
-
-      *vptr++ = viz;
-    }
-  }
-}
-void
-viz_minimap()
-{
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
-  int color;
-
-  if (minimap_enlargeD && dun_level) {
-    for (int row = 0; row < MAX_HEIGHT; ++row) {
-      for (int col = 0; col < MAX_WIDTH; ++col) {
-        color = cave_color(row, col);
-
-        if (color == 0 &&
-            (row >= rmin && row <= rmax && (col == cmin || col == cmax))) {
-          color = BRIGHT + BLACK;
-        } else if (color == 0 && (col >= cmin && col <= cmax &&
-                                  (row == rmin || row == rmax))) {
-          color = BRIGHT + BLACK;
-        }
-
-        minimapD[row][col] = color;
-      }
-    }
-  } else {
-    enum { RATIO = MAX_WIDTH / SYMMAP_WIDTH };
-    for (int row = 0; row < MAX_HEIGHT / RATIO; ++row) {
-      for (int col = 0; col < MAX_WIDTH / RATIO; ++col) {
-        color = cave_color(row + rmin, col + cmin);
-        for (int i = 0; i < 4; ++i) {
-          for (int j = 0; j < 4; ++j) {
-            minimapD[row * RATIO + i][col * RATIO + j] = color;
-          }
-        }
-      }
-    }
-  }
-}
 // Match single index
 static int
 py_affect(maid)
@@ -603,18 +362,13 @@ void
 draw()
 {
   vital_update();
-  if (SDL) {
-    viz_update();
-    viz_minimap();
-  } else if (TTY) {
-    symmap_update();
-  }
+  platformD.predraw();
   affect_update();
 
   platformD.draw();
   AC(screen_usedD);
   AC(overlay_usedD);
-  if (SDL) minimap_enlargeD = FALSE;
+  minimap_enlargeD = FALSE;
 }
 
 void
@@ -638,9 +392,8 @@ msg_pause()
     msg_moreD += 1;
 
     // wait for user to acknowledge prior buffer -more-
-    if (!SDL) draw();
     do {
-      if (SDL) draw();
+      draw();
       c = inkey();
       if (c == ESCAPE) break;
       if (c == CTRL('c')) break;
@@ -11732,11 +11485,9 @@ py_menu()
         longjmp(restartD, 1);
 
       case 'c':
-        if (platformD.erase) {
-          platformD.erase();
-          cave_reset();
-          longjmp(restartD, 1);
-        }
+        platformD.erase();
+        cave_reset();
+        longjmp(restartD, 1);
         break;
     }
   }
@@ -12420,8 +12171,6 @@ dungeon()
   new_level_flag = FALSE;
   teleport = FALSE;
   do {
-    CCM(CCM_HOTLOAD, platform_update());
-
     turn_flag = FALSE;
     do {
       msg_moreD = 0;
@@ -12589,10 +12338,8 @@ dungeon()
               screen_submodeD = 0;
               screenD[0][0] = ' ';
               screen_usedD[0] = 1;
-              if (SDL)
-                minimap_enlargeD = TRUE;
-              else if (TTY)
-                py_map();
+              minimap_enlargeD = TRUE;
+              platformD.predraw();
               MSG_NOHISTORY("You study a map of %s.", dun_descD);
               inkey();
               break;
@@ -12855,7 +12602,7 @@ seed_init()
   uint32_t seed;
 
   seed = 0;
-  if (platformD.seed) seed = platformD.seed();
+  seed = platformD.seed();
   if (seed == 0) seed = 5381;
 
   obj_seed = seed;
@@ -12869,6 +12616,22 @@ seed_init()
   // Burn randomness after seeding
   for (int it = randint(100); it != 0; --it) rnd();
 }
+
+static int
+platform_init()
+{
+  platformD.pregame = platform_pregame;
+  platformD.postgame = platform_postgame;
+  platformD.seed = platform_random;
+  platformD.load = platform_load;
+  platformD.save = platform_save;
+  platformD.erase = platform_erase;
+  platformD.readansi = platform_readansi;
+  platformD.predraw = platform_predraw;
+  platformD.draw = platform_draw;
+
+  return 0;
+}
 int
 main(int argc, char** argv)
 {
@@ -12878,6 +12641,7 @@ main(int argc, char** argv)
   obj_level_init();
 
   platform_init();
+  platformD.pregame();
 
   setjmp(restartD);
 
@@ -12915,7 +12679,7 @@ main(int argc, char** argv)
 
     if (!death) {
       cave_reset();
-      if (platformD.save && platformD.save()) {
+      if (platformD.save()) {
         if (save_exit_flag) break;
       }
     }
@@ -12923,6 +12687,6 @@ main(int argc, char** argv)
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) py_death();
 
-  platform_reset();
+  platformD.postgame();
   return 0;
 }

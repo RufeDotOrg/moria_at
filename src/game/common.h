@@ -54,27 +54,18 @@ typedef int (*fn)();
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
 
+// tagged global data for modular builds (memory is application global)
+#ifndef DATA
+#define DATA
+#endif
+
+// Game build variants
 #ifdef RELEASE
 #undef RELEASE
 enum { RELEASE = 1 };
 #else
 enum { RELEASE = 0 };
 #endif
-
-// tagged global data for modular builds (memory is application global)
-#ifndef DATA
-#define DATA
-#endif
-
-#ifdef M
-#define CCM(x, y) \
-  if ((M & x) != 0) y;
-#else
-#define CCM(x, y)
-#endif
-enum {
-  CCM_HOTLOAD = 0x1,
-};
 
 // Array for reusable type
 // index is acquired by _use(); freed by _unuse()

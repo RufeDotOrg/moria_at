@@ -48,8 +48,8 @@ platform_readansi()
   return -1;
 }
 
-void
-platform_reset()
+int
+platform_postgame()
 {
   if (save_termD[1]) {
     WRITE(1, DISABLE_MOUSE_TRACKING);
@@ -57,6 +57,7 @@ platform_reset()
     write(1, tc_clearD, sizeof(tc_clearD));
     write(1, tc_show_cursorD, sizeof(tc_show_cursorD));
   }
+  return 0;
 }
 
 static int
@@ -88,22 +89,13 @@ platform_seed()
   return seed;
 }
 
-void
-platform_update()
-{
-}
-
-void
-platform_init()
+int
+platform_pregame()
 {
   if (save_termD[1] == 0) {
     _rawmode();
     write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
   }
 
-  platformD.seed = platform_seed;
-  platformD.readansi = platform_readansi;
-  platformD.draw = platform_draw;
-  platformD.load = tty_load;
-  platformD.save = tty_save;
+  return 0;
 }
