@@ -9089,6 +9089,24 @@ int *uy, *ux;
 
   return FALSE;
 }
+int
+inven_flask(iidx)
+{
+  struct objS* flask;
+  struct objS* light;
+
+  light = obj_get(invenD[INVEN_LIGHT]);
+  flask = obj_get(invenD[iidx]);
+  if ((light->tval == TV_LIGHT && light->subval == 1) &&
+      flask->tval == TV_FLASK) {
+    inven_destroy_num(iidx, 1);
+    light->p1 = CLAMP(light->p1 + 7500, 0, 15000);
+    msg_print("Your lantern's light is renewed by pouring in a flask of oil.");
+    turn_flag = TRUE;
+    return TRUE;
+  }
+  return FALSE;
+}
 static int
 py_inven_slot()
 {
@@ -9161,10 +9179,7 @@ inven_consume_flask()
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     obj = obj_get(invenD[it]);
     if (obj->tval == TV_FLASK) {
-      inven_destroy_num(it, 1);
-      msg_print(
-          "Your lantern's light is renewed by pouring in a flask of oil.");
-      return TRUE;
+      return inven_flask(it);
     }
   }
 
@@ -9174,18 +9189,17 @@ void
 inven_check_light()
 {
   struct objS* obj;
-  int p1, tohit;
+  int tohit;
 
   if (invenD[INVEN_LIGHT]) {
     obj = obj_get(invenD[INVEN_LIGHT]);
-    p1 = MAX(obj->p1 - 1, 0);
 
-    if (obj->subval == 1 && p1 <= 7500) {
-      if (inven_consume_flask()) p1 += 7500;
+    if (obj->subval == 1 && obj->p1 <= 7500) {
+      inven_consume_flask();
     }
-    obj->p1 = p1;
 
-    tohit = light_adj(p1);
+    obj->p1 = MAX(obj->p1 - 1, 0);
+    tohit = light_adj(obj->p1);
     if (tohit != obj->tohit) {
       obj->tohit = tohit;
       calc_bonuses();
@@ -9554,6 +9568,8 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
           py_magic(iidx, y_ptr, x_ptr);
         } else if (obj->tval == TV_PRAYER_BOOK) {
           py_prayer(iidx, y_ptr, x_ptr);
+        } else if (obj->tval == TV_FLASK) {
+          inven_flask(iidx);
         } else if (iidx < INVEN_EQUIP) {
           inven_wear(iidx);
         } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
