@@ -1069,15 +1069,30 @@ platform_draw()
     SDL_Rect r = {width / 2, top, (26 + 1) * width, AL(vitalD) * height};
     rect_frame(r, 1);
   }
-  {
+
+  if (mode == 0) {
     char *affstr[3];
+    enum { AFF_Y = AL(active_affectD) / AL(affstr) };
     SDL_Point p = {
-        0,
+        width / 2,
         top + (AL(vitalD) + 1) * height,
     };
-    alt_fill(AL(active_affectD) / AL(affstr), 26 + 2, p.x, p.y, width, height);
-    p.x = width / 2;
-    enum { AFF_Y = AL(active_affectD) / AL(affstr) };
+    if (scale_rectD.w != map_rectD.w) {
+      // Narrow mode
+      p = (SDL_Point){
+          columnD[2] * display_rectD.w + width / 2,
+          .5 * display_rectD.h - (AFF_Y / 2 * height) - height / 2,
+      };
+    }
+    SDL_Rect r = {
+        p.x,
+        p.y,
+        (26 + 1) * width,
+        AFF_Y * height,
+    };
+
+    alt_fill(AFF_Y, 26 + 2, p.x, p.y, width, height);
+    p.x += width / 2;
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
         int idx = AL(affstr) * it + jt;
@@ -1092,12 +1107,6 @@ platform_draw()
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
       p.y += height;
     }
-    SDL_Rect r = {
-        width / 2,
-        top + (AL(vitalD) + 1) * height,
-        (26 + 1) * width,
-        AFF_Y * height,
-    };
     rect_frame(r, 1);
   }
 
