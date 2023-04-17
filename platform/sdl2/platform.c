@@ -1560,7 +1560,7 @@ SDL_Event event;
         scale_rectD.x,
         scale_rectD.y,
         (c3c - c1) * dw,
-        (1.0 - c3h - lift) * dh - fheight - 12,
+        dh - scale_rectD.y - (c3h + lift) * dh,
     };
 
     // Input constraints
