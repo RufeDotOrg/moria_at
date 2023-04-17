@@ -1274,16 +1274,15 @@ platform_draw()
     pad = (ax - len * width) / 2;
     p.x = left + pad;
     render_font_string(rendererD, &fontD, tmp, len, p);
+  }
 
-    pad = (ax - sizeof(versionD) * width) / 2;
-    p.x = left + pad;
-    p.y += 2 * height;
-    render_font_string(rendererD, &fontD, versionD, sizeof(versionD) - 1, p);
-
-    pad = (ax - sizeof(git_hashD) * width) / 2;
-    p.x = left + pad;
-    p.y += height;
-    render_font_string(rendererD, &fontD, git_hashD, sizeof(git_hashD) - 1, p);
+  if (mode == 0) {
+    SDL_Point p = {
+        textdst_rectD.x + textdst_rectD.w + width,
+        display_rectD.h - height,
+    };
+    render_font_string(rendererD, &fontD, versionD + 9, sizeof(versionD) - 10,
+                       p);
   }
 
   if (TOUCH) {
@@ -1737,8 +1736,8 @@ SDL_Event event;
       if (tp.y < .09) return CTRL('p');
       if (tp.x < .23 && tp.y < .5) return 'C';
       if (tp.x > .775 && tp.y < .28) return 'M';
-      if (tp.x > .775 && tp.y < .34) return 'v';
       if (tp.x > .23 && tp.x < .775 && tp.y > .90) return '-';
+      if (tp.x >= .775 && tp.y > .90) return 'v';
     }
   }
 
