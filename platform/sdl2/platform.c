@@ -61,6 +61,7 @@ DATA SDL_Texture *tptextureD;
 DATA SDL_Rect map_rectD;
 DATA SDL_Texture *map_textureD;
 DATA SDL_Rect text_rectD;
+DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
 
 DATA SDL_Rect scale_rectD;
@@ -942,20 +943,93 @@ void rect_frame(r, scale) SDL_Rect r;
   SDL_RenderDrawRect(rendererD, &RF(r, i + 3));
 }
 
+static void
+overlay_draw(width, height)
+{
+  int left = 6;
+  int top = 6;
+  SDL_Rect src_rect = {
+      0,
+      0,
+      AL(overlayD[0]) * width + left * 2,
+      AL(overlayD) * height + top * 2,
+  };
+
+  SDL_SetRenderTarget(rendererD, text_textureD);
+  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+  SDL_RenderFillRect(rendererD, &src_rect);
+
+  alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
+  memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
+  for (int row = 0; row < AL(overlayD); ++row) {
+    font_colorD = whiteD;
+    SDL_Point p = {
+        left,
+        top + row * height,
+    };
+    if (TOUCH && row == finger_rowD) {
+      font_colorD = (SDL_Color){255, 0, 0, 255};
+      if (overlay_usedD[row] <= 1) overlayD[row][0] = '-';
+    }
+    render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row], p);
+  }
+  font_colorD = whiteD;
+  {
+    struct SDL_Rect r = {left, top, AL(overlayD[0]) * width,
+                         AL(overlayD) * height};
+    rect_frame(r, 1);
+  }
+
+  SDL_SetRenderTarget(rendererD, 0);
+  SDL_RenderCopy(rendererD, text_textureD, &src_rect, &textdst_rectD);
+}
+
+static void
+screen_draw(width, height)
+{
+  int left = 6;
+  int top = 6;
+  int max_len = 80;
+
+  for (int it = 0; it < AL(screenD); ++it) {
+    max_len = MAX(max_len, screen_usedD[it]);
+  }
+
+  SDL_Rect src_rect = {
+      0,
+      0,
+      max_len * width + left * 2,
+      AL(screenD) * height + top * 2,
+  };
+
+  SDL_SetRenderTarget(rendererD, text_textureD);
+  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+  SDL_RenderFillRect(rendererD, &src_rect);
+
+  if (screen_submodeD) alt_fill(AL(screenD), max_len, left, top, width, height);
+  for (int row = 0; row < AL(screenD); ++row) {
+    SDL_Point p = {left, top + row * height};
+    render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row], p);
+  }
+  if (screen_submodeD) {
+    SDL_Rect r = {
+        left,
+        top,
+        max_len * width,
+        AL(screenD) * height,
+    };
+    rect_frame(r, 1);
+  }
+
+  SDL_SetRenderTarget(rendererD, 0);
+  SDL_RenderCopy(rendererD, text_textureD, &src_rect, &textdst_rectD);
+}
+
 int
 platform_draw()
 {
   int show_map, mode, more, height, width, left, top, len;
   char tmp[80];
-
-  show_map = 0;
-  more = 0;
-  height = fontD.max_pixel_height;
-  width = fontD.max_pixel_width;
-  top = scale_rectD.y + 6;
-
-  SDL_SetRenderTarget(rendererD, text_textureD);
-  SDL_RenderFillRect(rendererD, &text_rectD);
 
   mode = mode_change();
   switch (mode) {
@@ -963,50 +1037,22 @@ platform_draw()
       show_map = 1;
       more = msg_moreD;
       break;
-    case 2:
-      left = columnD[1] * display_rectD.w;
-      if (screen_submodeD)
-        alt_fill(AL(screenD), AL(screenD[0]), left, top, width, height);
-      for (int row = 0; row < AL(screenD); ++row) {
-        SDL_Point p = {left, top + row * height};
-        render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row],
-                           p);
-      }
-      if (screen_submodeD) {
-        SDL_Rect r = {
-            left,
-            top,
-            (AL(screenD[0]) + 1) * width,
-            AL(screenD) * height,
-        };
-        rect_frame(r, 1);
-      }
-      break;
     case 1:
-      left = columnD[1] * display_rectD.w;
-      alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
-      memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
-      for (int row = 0; row < AL(overlayD); ++row) {
-        font_colorD = whiteD;
-        SDL_Point p = {
-            left,
-            top + row * height,
-        };
-        if (TOUCH && row == finger_rowD) {
-          font_colorD = (SDL_Color){255, 0, 0, 255};
-          if (overlay_usedD[row] <= 1) overlayD[row][0] = '-';
-        }
-        render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row],
-                           p);
-      }
-      font_colorD = whiteD;
-      {
-        struct SDL_Rect r = {left, top, AL(overlayD[0]) * width,
-                             AL(overlayD) * height};
-        rect_frame(r, 1);
-      }
+      show_map = 0;
+      more = 0;
+      overlay_draw(fontD.max_pixel_width, fontD.max_pixel_height);
+      break;
+    case 2:
+      show_map = 0;
+      more = 0;
+      screen_draw(fontD.max_pixel_width, fontD.max_pixel_height);
       break;
   }
+
+  height = fontD.max_pixel_height;
+  width = fontD.max_pixel_width;
+  top = scale_rectD.y + 6;
+
   {
     alt_fill(AL(vitalD), 26 + 2, 0, top, width, height);
     for (int it = 0; it < MAX_A; ++it) {
@@ -1054,9 +1100,6 @@ platform_draw()
     };
     rect_frame(r, 1);
   }
-
-  SDL_SetRenderTarget(rendererD, 0);
-  SDL_RenderCopy(rendererD, text_textureD, NULL, &text_rectD);
 
   if (show_map) {
     SDL_Rect zoom_rect;
@@ -1267,7 +1310,12 @@ platform_draw()
     int msg_used = AS(msglen_cqD, msg_writeD);
     int more_used = 0;
 
-    if (more) more_used = snprintf(tmp, AL(tmp), "-more %d-", more);
+    if (more) {
+      if (map_rectD.w != scale_rectD.w)
+        more_used = snprintf(tmp, AL(tmp), "-");
+      else
+        more_used = snprintf(tmp, AL(tmp), "-more %d-", more);
+    }
 
     // Gameplay shows previous message to help the player out
     if (!msg_used && show_map) {
@@ -1479,10 +1527,10 @@ SDL_Event event;
 
     // Map scaling due to vertical constraint
     float scale;
-    if (fheight + map_rectD.h <= dh) {
+    if (10 + fheight + map_rectD.h <= dh) {
       scale = 1.0f;
     } else {
-      scale = (dh - fheight) / (float)map_rectD.h;
+      scale = (dh - fheight - 10) / (float)map_rectD.h;
     }
     Log("Scale %.3f", scale);
     scale_rectD =
@@ -1501,11 +1549,24 @@ SDL_Event event;
     scale_rectD.x = columnD[1] * dw;
     scale_rectD.y = fheight + (dh - scale_rectD.h - fheight) / 2;
 
+    // Right hand controls
+    float lift = dh > 720 ? .1f : 0.f;
+    float c3w, c3h, c3c;
+    float c3 = c1 + AL(overlayD[0]) * cfD;
+    c3c = c2 + (1.0 - c2) * .5;
+    c3w = MAX(1.0 - c3, 8 * cfD);
+    c3h = c3w * aspectD;
+    textdst_rectD = (SDL_Rect){
+        scale_rectD.x,
+        scale_rectD.y,
+        (c3c - c1) * dw,
+        (1.0 - c3h - lift) * dh - fheight - 12,
+    };
+
     // Input constraints
     if (TOUCH) {
       padD = (SDL_FRect){.w = c1, .h = c1 * aspectD};
-#define TOUCH_LIFT .1f
-      padD.y = 1.0 - padD.h - TOUCH_LIFT;
+      padD.y = 1.0 - padD.h - lift;
 
       SDL_FPoint center = {FRC(padD)};
       int cx = center.x * display_rectD.w;
@@ -1528,14 +1589,10 @@ SDL_Event event;
         ppD[1 + it].y = cy + oy;
       }
 
-      float c3w, c3h;
-      float c3 = c1 + AL(overlayD[0]) * cfD;
-      c3w = MIN(1.0 - c3, c1 * .5f);
-      c3h = c3w * aspectD;
       for (int it = 0; it < AL(buttonD); ++it) {
         SDL_FRect r = (SDL_FRect){.w = c3w, .h = c3h};
-        r.x = 1.0 - r.w * (2 - it);
-        r.y = 1.0 - r.h * (1 + it) - TOUCH_LIFT;
+        r.x = c3c - r.w * (1 - it);
+        r.y = 1.0 - r.h * (1 + it) - lift;
         buttonD[it] = r;
       }
 
