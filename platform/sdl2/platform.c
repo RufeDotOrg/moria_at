@@ -92,6 +92,7 @@ static uint8_t finger_colD;
 static uint8_t finger_countD;
 static int quitD;
 static int last_pressD;
+static SDL_Point hdpi_scaleD;
 
 #define MMSCALE 2
 
@@ -142,6 +143,7 @@ render_init()
     int w, h;
     if (SDL_GetRendererOutputSize(rendererD, &w, &h) != 0) return 1;
     Log("Renderer output size %d %d\n", w, h);
+    hdpi_scaleD = (SDL_Point){w, h};
   }
 
   return 1;
@@ -1532,8 +1534,8 @@ SDL_Event event;
     int dh = event.window.data2;
 
     if (__APPLE__) {
-      dw *= 3;
-      dh *= 3;
+      dw *= hdpi_scaleD.x/dw;
+      dh *= hdpi_scaleD.y/dh;
     }
     display_rectD.w = dw;
     display_rectD.h = dh;
