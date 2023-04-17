@@ -13,14 +13,21 @@
 
 #include "third_party/zlib/puff.c"
 
-#ifdef ANDROID
+#ifndef __APPLE__
+enum { __APPLE__ };
+#endif
+
+#ifndef ANDROID
+enum { ANDROID };
+#endif
+
+#if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
-enum { WINDOW };
 #else
 enum { TOUCH };
-enum { ANDROID };
-enum { WINDOW };
 #endif
+
+enum { WINDOW };
 #define WINDOW_X 1920  // 1560
 #define WINDOW_Y 1080  // 720
 #define P(p) p.x, p.y
@@ -82,6 +89,7 @@ static int submodeD;
 static uint8_t row_stateD[256];
 static uint8_t finger_rowD;
 static uint8_t finger_colD;
+static uint8_t finger_countD;
 static int quitD;
 static int last_pressD;
 
@@ -90,9 +98,9 @@ static int last_pressD;
 int
 render_init()
 {
-  windowD =
-      SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y,
-                       WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN);
+  int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
+  if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
+  windowD = SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y, winflag);
   if (!windowD) return 0;
 
   int num_display = SDL_GetNumVideoDisplays();
@@ -1058,21 +1066,22 @@ platform_draw()
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
   top = scale_rectD.y + 6;
+  left = columnD[0] * display_rectD.w / 2;
 
   {
-    alt_fill(AL(vitalD), 26 + 2, 0, top, width, height);
+    alt_fill(AL(vitalD), 26 + 2, left, top, width, height);
     for (int it = 0; it < MAX_A; ++it) {
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                      vitalD[it], stat_abbrD[it], vital_statD[it]);
-      SDL_Point p = {width / 2, top + it * height};
+      SDL_Point p = {left + width / 2, top + it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
     for (int it = MAX_A; it < AL(vitalD) - 1; ++it) {
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
-      SDL_Point p = {width / 2, top + it * height};
+      SDL_Point p = {left + width / 2, top + it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
-    SDL_Rect r = {width / 2, top, (26 + 1) * width, AL(vitalD) * height};
+    SDL_Rect r = {left + width / 2, top, (26 + 1) * width, AL(vitalD) * height};
     rect_frame(r, 1);
   }
 
@@ -1080,13 +1089,13 @@ platform_draw()
     char *affstr[3];
     enum { AFF_Y = AL(active_affectD) / AL(affstr) };
     SDL_Point p = {
-        width / 2,
+        left + width / 2,
         top + (AL(vitalD) + 1) * height,
     };
     if (scale_rectD.w != map_rectD.w) {
       // Narrow mode
       p = (SDL_Point){
-          columnD[2] * display_rectD.w + width / 2,
+          columnD[2] * display_rectD.w,
           .5 * display_rectD.h - (AFF_Y / 2 * height) - height / 2,
       };
     }
@@ -1519,11 +1528,15 @@ SDL_Event event;
        event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) &&
       (display_rectD.w != event.window.data1 ||
        display_rectD.h != event.window.data2)) {
-    display_rectD.w = event.window.data1;
-    display_rectD.h = event.window.data2;
-
     int dw = event.window.data1;
     int dh = event.window.data2;
+
+    if (__APPLE__) {
+      dw *= 3;
+      dh *= 3;
+    }
+    display_rectD.w = dw;
+    display_rectD.h = dh;
     aspectD = (float)dw / dh;
     Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspectD);
 
@@ -1551,15 +1564,22 @@ SDL_Event event;
         (SDL_Rect){.w = map_rectD.w * scale, .h = map_rectD.h * scale};
 
     // Column
-    float c1, c2, c3;
+    float c0, c1, c2, c3;
+    c0 = 0.0f;
     c1 = (26 + 2) * cfD;
     c2 = c1 + ((float)scale_rectD.w / dw);
     c3 = c2 + (1.0 - c2) * .5;
-    columnD[0] = 0.0f;
+    if (dw > 2 * 1024) {
+      c1 = .5 - (float)scale_rectD.w / dw / 2;
+      c2 = .5 + (float)scale_rectD.w / dw / 2;
+      c3 = c2 + (1.0 - c2) * .5;
+      c0 = c1 - (26 + 2) * cfD;
+    }
+    columnD[0] = c0;
     columnD[1] = c1;
     columnD[2] = c2;
     columnD[3] = c3;
-    Log("Column %.03f %.03f", c1, c2);
+    Log("Column %.03f %.03f %.03f %.03f", c0, c1, c2, c3);
 
     // Map position
     scale_rectD.x = columnD[1] * dw;
@@ -1569,7 +1589,7 @@ SDL_Event event;
     float lift = dh > 720 ? .1f : 0.f;
     float c3w, c3h;
     float c3o = c1 + AL(overlayD[0]) * cfD;
-    c3w = MAX(1.0 - c3o, 8 * cfD);
+    c3w = CLAMP(1.0 - c3o, 8 * cfD, 16 * cfD);
     c3h = c3w * aspectD;
     textdst_rectD = (SDL_Rect){
         scale_rectD.x,
@@ -1580,7 +1600,8 @@ SDL_Event event;
 
     // Input constraints
     if (TOUCH) {
-      padD = (SDL_FRect){.w = c1, .h = c1 * aspectD};
+      padD = (SDL_FRect){.w = c1 - c0, .h = (c1 - c0) * aspectD};
+      padD.x = c0 / 2;
       padD.y = 1.0 - padD.h - lift;
 
       SDL_FPoint center = {FRC(padD)};
@@ -1682,7 +1703,7 @@ SDL_Event *event;
 
   if (SDL_PointInFRect(&tp, &padD)) {
     SDL_Point tpp = {tp.x * display_rectD.w, tp.y * display_rectD.h};
-    int n = nearest_pp(tpp.y, tpp.x);
+    int n = nearest_pp(tpp.y - padD.y, tpp.x - padD.x);
     r = TOUCH_PAD + pp_keyD[n];
   }
   last_pressD = r;
@@ -1724,8 +1745,8 @@ SDL_Event event;
   // Finger inputs
   int mode = modeD;
   int touch = touch_from_event(&event);
-  int finger = event.tfinger.fingerId;
-  if (TOUCH && !ANDROID) {
+  int finger = finger_countD - 1;
+  if (TOUCH && !(ANDROID || __APPLE__)) {
     finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
   }
   SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
@@ -1816,7 +1837,9 @@ sdl_pump()
 
   while (ret == 0 && SDL_PollEvent(&event)) {
     if (TOUCH && (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
+      finger_countD += (event.type == SDL_FINGERDOWN);
       ret = sdl_touch_event(event);
+      finger_countD -= (event.type == SDL_FINGERUP);
     } else if (!TOUCH && (event.type == SDL_KEYDOWN)) {
       ret = sdl_kb_event(event);
     } else if (event.type == SDL_QUIT) {
@@ -1999,7 +2022,7 @@ platform_pregame()
     SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
     SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 
-    // IOS/Android orientation
+    // __APPLE__/Android orientation
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
 
     // Platform Input isolation
@@ -2015,7 +2038,7 @@ platform_pregame()
     SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
     SDL_Init(SDL_SCOPE);
 
-    if (ANDROID) SDL_DisableScreenSaver();
+    if (__APPLE__ || ANDROID) SDL_DisableScreenSaver();
 
     if (!render_init()) return 1;
   }
@@ -2051,7 +2074,7 @@ platform_pregame()
 
   font_colorD = whiteD;
 
-  if (ANDROID) zoom_factorD = 2;
+  if (ANDROID || __APPLE__) zoom_factorD = 2;
 
   if (WINDOW) {
     SDL_Event event;
