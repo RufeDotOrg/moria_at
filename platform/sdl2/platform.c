@@ -15,10 +15,14 @@
 
 #ifdef ANDROID
 enum { TOUCH = 1 };
+enum { WINDOW };
 #else
 enum { TOUCH };
 enum { ANDROID };
+enum { WINDOW };
 #endif
+#define WINDOW_X 1920  // 1560
+#define WINDOW_Y 1080  // 720
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
 #define RS(r, scale) \
@@ -86,7 +90,9 @@ static int last_pressD;
 int
 render_init()
 {
-  windowD = SDL_CreateWindow("", 0, 0, 1920, 1080, SDL_WINDOW_FULLSCREEN);
+  windowD =
+      SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y,
+                       WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN);
   if (!windowD) return 0;
 
   int num_display = SDL_GetNumVideoDisplays();
@@ -2046,6 +2052,14 @@ platform_pregame()
   font_colorD = whiteD;
 
   if (ANDROID) zoom_factorD = 2;
+
+  if (WINDOW) {
+    SDL_Event event;
+    event.window.event = SDL_WINDOWEVENT_RESIZED;
+    event.window.data1 = WINDOW_X;
+    event.window.data2 = WINDOW_Y;
+    sdl_window_event(event);
+  }
 
   while (scale_rectD.x == 0) {
     sdl_pump();
