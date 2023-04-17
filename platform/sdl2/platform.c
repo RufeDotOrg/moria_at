@@ -67,7 +67,7 @@ DATA SDL_Texture *text_textureD;
 DATA SDL_Rect scale_rectD;
 DATA int rowD, colD;
 DATA float rfD, cfD;
-DATA float columnD[3];
+DATA float columnD[4];
 
 static int overlay_copyD[AL(overlay_usedD)];
 static SDL_Color whiteD = {255, 255, 255, 255};
@@ -1545,12 +1545,14 @@ SDL_Event event;
         (SDL_Rect){.w = map_rectD.w * scale, .h = map_rectD.h * scale};
 
     // Column
-    float c1, c2;
+    float c1, c2, c3;
     c1 = (26 + 2) * cfD;
     c2 = c1 + ((float)scale_rectD.w / dw);
+    c3 = c2 + (1.0 - c2) * .5;
     columnD[0] = 0.0f;
     columnD[1] = c1;
     columnD[2] = c2;
+    columnD[3] = c3;
     Log("Column %.03f %.03f", c1, c2);
 
     // Map position
@@ -1559,15 +1561,14 @@ SDL_Event event;
 
     // Right hand controls
     float lift = dh > 720 ? .1f : 0.f;
-    float c3w, c3h, c3c;
-    float c3 = c1 + AL(overlayD[0]) * cfD;
-    c3c = c2 + (1.0 - c2) * .5;
-    c3w = MAX(1.0 - c3, 8 * cfD);
+    float c3w, c3h;
+    float c3o = c1 + AL(overlayD[0]) * cfD;
+    c3w = MAX(1.0 - c3o, 8 * cfD);
     c3h = c3w * aspectD;
     textdst_rectD = (SDL_Rect){
         scale_rectD.x,
         scale_rectD.y,
-        (c3c - c1) * dw,
+        (c3 - c1) * dw,
         dh - scale_rectD.y - (c3h + lift) * dh,
     };
 
@@ -1599,7 +1600,7 @@ SDL_Event event;
 
       for (int it = 0; it < AL(buttonD); ++it) {
         SDL_FRect r = (SDL_FRect){.w = c3w, .h = c3h};
-        r.x = c3c - r.w * (1 - it);
+        r.x = c3 - r.w * (1 - it);
         r.y = 1.0 - r.h * (1 + it) - lift;
         buttonD[it] = r;
       }
