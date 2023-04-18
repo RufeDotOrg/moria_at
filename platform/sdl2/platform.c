@@ -28,7 +28,7 @@ enum { TOUCH };
 #endif
 
 enum { WINDOW };
-#define WINDOW_X 1920  // 1560
+#define WINDOW_X 1920  // 1440
 #define WINDOW_Y 1080  // 720
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
@@ -75,6 +75,7 @@ DATA SDL_Texture *map_textureD;
 DATA SDL_Rect text_rectD;
 DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
+DATA SDL_Rect affectdst_rectD;
 
 DATA SDL_Rect gameplay_rectD;
 DATA int rowD, colD;
@@ -1031,6 +1032,48 @@ screen_draw(width, height)
   if (is_text) rect_frame(textdst_rectD, 1);
 }
 
+static void
+affect_draw(width, height)
+{
+  char tmp[80];
+  int len;
+  char *affstr[3];
+  enum { AFF_Y = AL(active_affectD) / AL(affstr) };
+  SDL_Rect src_rect = {
+      0,
+      0,
+      26 * width,
+      AFF_Y * height,
+  };
+
+  SDL_SetRenderTarget(rendererD, text_textureD);
+  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+  SDL_RenderFillRect(rendererD, &src_rect);
+
+  alt_fill(AFF_Y, 26, 0, 0, width, height);
+  for (int it = 0; it < AFF_Y; ++it) {
+    for (int jt = 0; jt < AL(affstr); ++jt) {
+      int idx = AL(affstr) * it + jt;
+      if (active_affectD[idx])
+        affstr[jt] = affectD[idx][active_affectD[idx] - 1];
+      else
+        affstr[jt] = "";
+    }
+
+    len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
+                   affstr[1], affstr[2]);
+    SDL_Point p = {
+        0,
+        it * height,
+    };
+    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+  }
+
+  SDL_SetRenderTarget(rendererD, 0);
+  SDL_RenderCopy(rendererD, text_textureD, &src_rect, &affectdst_rectD);
+  rect_frame(affectdst_rectD, 1);
+}
+
 int
 platform_draw()
 {
@@ -1078,43 +1121,7 @@ platform_draw()
   }
 
   if (mode == 0) {
-    char *affstr[3];
-    enum { AFF_Y = AL(active_affectD) / AL(affstr) };
-    SDL_Point p = {
-        left + width / 2,
-        top + (AL(vitalD) + 1) * height,
-    };
-    if (gameplay_rectD.w != map_rectD.w) {
-      // Narrow mode
-      p = (SDL_Point){
-          columnD[2] * display_rectD.w,
-          .5 * display_rectD.h - (AFF_Y / 2 * height) - height / 2,
-      };
-    }
-    SDL_Rect r = {
-        p.x,
-        p.y,
-        (26 + 1) * width,
-        AFF_Y * height,
-    };
-
-    alt_fill(AFF_Y, 26 + 2, p.x, p.y, width, height);
-    p.x += width / 2;
-    for (int it = 0; it < AFF_Y; ++it) {
-      for (int jt = 0; jt < AL(affstr); ++jt) {
-        int idx = AL(affstr) * it + jt;
-        if (active_affectD[idx])
-          affstr[jt] = affectD[idx][active_affectD[idx] - 1];
-        else
-          affstr[jt] = "";
-      }
-
-      len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
-                     affstr[1], affstr[2]);
-      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
-      p.y += height;
-    }
-    rect_frame(r, 1);
+    affect_draw(width, height);
   }
 
   if (show_map) {
@@ -1573,6 +1580,23 @@ SDL_Event event;
     // Map position
     gameplay_rectD.x = columnD[1] * dw;
     gameplay_rectD.y = fheight + (dh - gameplay_rectD.h - fheight) / 2;
+
+    // Affect Text
+    if (scale != 1.0) {
+      affectdst_rectD = (SDL_Rect){
+          c2 * dw,
+          .5 * dh - (5 * fheight / 2),
+          (1.0 - c2) * dw,
+          5 * fheight,
+      };
+    } else {
+      affectdst_rectD = (SDL_Rect){
+          c0 * dw + fwidth / 2,
+          gameplay_rectD.y + (AL(vitalD) + 1) * fheight,
+          (26 + 1) * fwidth,
+          5 * fheight,
+      };
+    }
 
     // Right hand controls
     float lift = dh > 720 ? .1f : 0.f;
