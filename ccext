@@ -1,4 +1,5 @@
-if [ -d sdl2 ]; then
+readlink src/platform | grep 'sdl2'
+if [ $? -eq 0 ]; then
   CFLAGS+=" -Isdl2/include "
   LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
 fi
