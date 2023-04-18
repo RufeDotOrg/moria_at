@@ -2086,7 +2086,7 @@ platform_pregame()
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           map_rectD.w, map_rectD.h);
     SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
-    text_rectD = (SDL_Rect){.w = 4 * 1024, .h = 4 * 1024};
+    text_rectD = (SDL_Rect){.w = 2 * 1024, .h = 2 * 1024};
     text_textureD =
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           text_rectD.w, text_rectD.h);
