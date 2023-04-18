@@ -30,64 +30,64 @@ struct vizS {
 
 // U the player
 struct uS {
-  int y;
-  int x;
-  int exp;
-  int max_exp;
-  int lev;
-  int max_dlv;
-  int chp;
-  int chp_frac;
-  int mhp;
-  int gold;
+  int32_t y;
+  int32_t x;
+  int32_t exp;
+  int32_t max_exp;
+  int32_t lev;
+  int32_t max_dlv;
+  int32_t chp;
+  int32_t chp_frac;
+  int32_t mhp;
+  int32_t gold;
   uint8_t melee_confuse;
   uint8_t melee_genocide;
   uint8_t melee_unused1;
   uint8_t melee_unused2;
   // Stateful affects from magic spells
-  int ma_ac;
-  int mflag;
+  int32_t ma_ac;
+  int32_t mflag;
   // Status
-  int food;
-  int food_digest;
+  int32_t food;
+  int32_t food_digest;
   uint8_t char_unused1;
   uint8_t clidx;  // class
   uint8_t ridx;   // race
   uint8_t male;
   // initialized by class/race
-  int bth;
-  int search;
-  int fos;  // Frequency of search
-  int disarm;
-  int stealth;
-  int save;
-  int infra;
-  int mult_exp;  // multiplier for exp-per-level
-  int wt;
+  int32_t bth;
+  int32_t search;
+  int32_t fos;  // Frequency of search
+  int32_t disarm;
+  int32_t stealth;
+  int32_t save;
+  int32_t infra;
+  int32_t mult_exp;  // multiplier for exp-per-level
+  int32_t wt;
   // Spell state
-  int cmana;
-  int cmana_frac;
-  int mmana;
+  int32_t cmana;
+  int32_t cmana_frac;
+  int32_t mmana;
   uint32_t spell_worked;
   // Ranged attack
-  int bowth;
-  int unused1;
-  int unused2;
+  int32_t bowth;
+  int32_t unused1;
+  int32_t unused2;
 };
 static struct uS uD;
 
 // Calculated bonus; see calc_bonuses()
 struct cbS {
-  int ptohit;
-  int ptodam;
-  int pac;
-  int ptoac;
-  int hide_toac;
-  int hide_tohit;
-  int hide_todam;
-  int prev_weapon;
+  int32_t ptohit;
+  int32_t ptodam;
+  int32_t pac;
+  int32_t ptoac;
+  int32_t hide_toac;
+  int32_t hide_tohit;
+  int32_t hide_todam;
+  int32_t prev_weapon;
   // Treasure flags from equipment
-  int tflag;
+  int32_t tflag;
   // Other flags
   uint8_t weapon_heavy;
 };
@@ -95,14 +95,14 @@ static struct cbS cbD;
 
 struct countS {
   // Player ailment counters
-  int poison;
-  int unused_count1;
-  int confusion;
-  int unused_count2;
-  int rest;
-  int paralysis;
+  int32_t poison;
+  int32_t unused_count1;
+  int32_t confusion;
+  int32_t unused_count2;
+  int32_t rest;
+  int32_t paralysis;
   // Player protection counters
-  int protevil;
+  int32_t protevil;
 };
 static struct countS countD;
 
@@ -166,12 +166,12 @@ struct spellS {
 };
 
 struct panelS {
-  int panel_row;
-  int panel_row_min;
-  int panel_row_max;
-  int panel_col;
-  int panel_col_min;
-  int panel_col_max;
+  int32_t panel_row;
+  int32_t panel_row_min;
+  int32_t panel_row_max;
+  int32_t panel_col;
+  int32_t panel_col_min;
+  int32_t panel_col_max;
 };
 static struct panelS panelD;
 
@@ -202,7 +202,7 @@ struct treasureS {
 };
 
 struct objS {
-  int id;
+  int32_t id;
   uint32_t flags;
   uint8_t fy;
   uint8_t fx;
@@ -248,11 +248,11 @@ struct attackS {
 };
 
 struct monS {
-  int id;
+  int32_t id;
   uint16_t cidx;  // creature definition
   uint16_t msleep;
-  int mspeed;
-  int hp;
+  int32_t mspeed;
+  int32_t hp;
   uint8_t fy;
   uint8_t fx;
   uint8_t mlit;
