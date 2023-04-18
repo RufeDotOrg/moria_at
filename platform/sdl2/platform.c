@@ -41,7 +41,8 @@ enum { WINDOW };
     .h = r.h + 2 * (framing),                                             \
   }
 // FRect center
-#define FRC(r) r.x + r.w * .5f, r.y + r.h * .5f
+#define F4CENTER(r) r.x + r.w * .5f, r.y + r.h * .5f
+#define R4CENTER(r) r.x + r.w / 2, r.y + r.h / 2
 // Color
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
@@ -75,7 +76,7 @@ DATA SDL_Rect text_rectD;
 DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
 
-DATA SDL_Rect scale_rectD;
+DATA SDL_Rect gameplay_rectD;
 DATA int rowD, colD;
 DATA float rfD, cfD;
 DATA float columnD[4];
@@ -571,7 +572,7 @@ font_texture_alphamod(alpha)
 
 // Texture
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
-DATA SDL_FRect buttonD[2];
+DATA SDL_Rect buttonD[2];
 DATA SDL_FRect padD;
 DATA SDL_Point ppD[9];
 DATA SDL_Rect pp_rectD;
@@ -962,8 +963,8 @@ void rect_frame(r, scale) SDL_Rect r;
 static void
 overlay_draw(width, height)
 {
-  int left = 6;
-  int top = 6;
+  int left = 0;
+  int top = 0;
   SDL_Rect src_rect = {
       0,
       0,
@@ -990,22 +991,19 @@ overlay_draw(width, height)
     render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row], p);
   }
   font_colorD = whiteD;
-  {
-    struct SDL_Rect r = {left, top, AL(overlayD[0]) * width,
-                         AL(overlayD) * height};
-    rect_frame(r, 1);
-  }
 
   SDL_SetRenderTarget(rendererD, 0);
   SDL_RenderCopy(rendererD, text_textureD, &src_rect, &textdst_rectD);
+  rect_frame(textdst_rectD, 1);
 }
 
 static void
 screen_draw(width, height)
 {
-  int left = 6;
-  int top = 6;
+  int left = 0;
+  int top = 0;
   int max_len = 80;
+  int is_text = (screen_submodeD != 0);
 
   for (int it = 0; it < AL(screenD); ++it) {
     max_len = MAX(max_len, screen_usedD[it]);
@@ -1022,23 +1020,15 @@ screen_draw(width, height)
   SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
   SDL_RenderFillRect(rendererD, &src_rect);
 
-  if (screen_submodeD) alt_fill(AL(screenD), max_len, left, top, width, height);
+  if (is_text) alt_fill(AL(screenD), max_len, left, top, width, height);
   for (int row = 0; row < AL(screenD); ++row) {
     SDL_Point p = {left, top + row * height};
     render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row], p);
   }
-  if (screen_submodeD) {
-    SDL_Rect r = {
-        left,
-        top,
-        max_len * width,
-        AL(screenD) * height,
-    };
-    rect_frame(r, 1);
-  }
 
   SDL_SetRenderTarget(rendererD, 0);
   SDL_RenderCopy(rendererD, text_textureD, &src_rect, &textdst_rectD);
+  if (is_text) rect_frame(textdst_rectD, 1);
 }
 
 int
@@ -1067,7 +1057,7 @@ platform_draw()
 
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
-  top = scale_rectD.y + 6;
+  top = gameplay_rectD.y + 6;
   left = columnD[0] * display_rectD.w / 2;
 
   {
@@ -1094,7 +1084,7 @@ platform_draw()
         left + width / 2,
         top + (AL(vitalD) + 1) * height,
     };
-    if (scale_rectD.w != map_rectD.w) {
+    if (gameplay_rectD.w != map_rectD.w) {
       // Narrow mode
       p = (SDL_Point){
           columnD[2] * display_rectD.w,
@@ -1211,7 +1201,7 @@ platform_draw()
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
     SDL_SetRenderTarget(rendererD, 0);
 
-    SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &scale_rectD);
+    SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &gameplay_rectD);
   }
 
   if (TOUCH && tpsurfaceD) {
@@ -1279,7 +1269,7 @@ platform_draw()
     }
 
     if (minimap_enlargeD) {
-      SDL_RenderCopy(rendererD, texture, NULL, &scale_rectD);
+      SDL_RenderCopy(rendererD, texture, NULL, &gameplay_rectD);
     }
   }
 
@@ -1315,14 +1305,12 @@ platform_draw()
     int bc[] = {RED, GREEN};
 
     for (int it = 0; it < AL(buttonD); ++it) {
-      SDL_Rect r = {RS(buttonD[it], display_rectD)};
       SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
-      SDL_RenderFillRect(rendererD, &r);
+      SDL_RenderFillRect(rendererD, &buttonD[it]);
     }
 
     if (mode == 1) {
-      SDL_Rect r = {RS(buttonD[1], display_rectD)};
-      SDL_Point p = {r.x + r.w / 2, r.y + r.h / 2};
+      SDL_Point p = {R4CENTER(buttonD[1])};
       p.x -= width / 2;
       p.y -= height / 2;
       char text = 'a' + finger_rowD;
@@ -1336,7 +1324,7 @@ platform_draw()
     int more_used = 0;
 
     if (more) {
-      if (map_rectD.w != scale_rectD.w)
+      if (map_rectD.w != gameplay_rectD.w)
         more_used = snprintf(tmp, AL(tmp), "-");
       else
         more_used = snprintf(tmp, AL(tmp), "-more %d-", more);
@@ -1534,8 +1522,8 @@ SDL_Event event;
     int dh = event.window.data2;
 
     if (__APPLE__) {
-      dw *= hdpi_scaleD.x/dw;
-      dh *= hdpi_scaleD.y/dh;
+      dw *= hdpi_scaleD.x / dw;
+      dh *= hdpi_scaleD.y / dh;
     }
     display_rectD.w = dw;
     display_rectD.h = dh;
@@ -1562,21 +1550,20 @@ SDL_Event event;
       scale = (dh - fheight - 10) / (float)map_rectD.h;
     }
     Log("Scale %.3f", scale);
-    scale_rectD =
+    gameplay_rectD =
         (SDL_Rect){.w = map_rectD.w * scale, .h = map_rectD.h * scale};
 
     // Column
     float c0, c1, c2, c3;
-    c0 = 0.0f;
-    c1 = (26 + 2) * cfD;
-    c2 = c1 + ((float)scale_rectD.w / dw);
-    c3 = c2 + (1.0 - c2) * .5;
     if (dw > 2 * 1024) {
-      c1 = .5 - (float)scale_rectD.w / dw / 2;
-      c2 = .5 + (float)scale_rectD.w / dw / 2;
-      c3 = c2 + (1.0 - c2) * .5;
-      c0 = c1 - (26 + 2) * cfD;
+      c1 = .5 - (float)gameplay_rectD.w / dw * .5f;
+      c2 = .5 + (float)gameplay_rectD.w / dw * .5f;
+    } else {
+      c1 = (26 + 2) * cfD;
+      c2 = c1 + ((float)gameplay_rectD.w / dw);
     }
+    c3 = c2 + (1.0 - c2) * .5;
+    c0 = c1 - (26 + 2) * cfD;
     columnD[0] = c0;
     columnD[1] = c1;
     columnD[2] = c2;
@@ -1584,20 +1571,24 @@ SDL_Event event;
     Log("Column %.03f %.03f %.03f %.03f", c0, c1, c2, c3);
 
     // Map position
-    scale_rectD.x = columnD[1] * dw;
-    scale_rectD.y = fheight + (dh - scale_rectD.h - fheight) / 2;
+    gameplay_rectD.x = columnD[1] * dw;
+    gameplay_rectD.y = fheight + (dh - gameplay_rectD.h - fheight) / 2;
 
     // Right hand controls
     float lift = dh > 720 ? .1f : 0.f;
-    float c3w, c3h;
-    float c3o = c1 + AL(overlayD[0]) * cfD;
+    float c3w, c3h, c3o, c3button;
+    c3o = c1 + AL(overlayD[0]) * cfD;
     c3w = CLAMP(1.0 - c3o, 8 * cfD, 16 * cfD);
     c3h = c3w * aspectD;
+    float bmin, bmax;
+    bmin = MIN(1.0 - c3w, c3);
+    bmax = MAX(1.0 - c3w, c3);
+    c3button = CLAMP(c3o, bmin, bmax);
     textdst_rectD = (SDL_Rect){
-        scale_rectD.x,
-        scale_rectD.y,
-        (c3 - c1) * dw,
-        dh - scale_rectD.y - (c3h + lift) * dh,
+        gameplay_rectD.x + 6,
+        gameplay_rectD.y + 6,
+        (c3button - c1) * dw,
+        MIN(AL(overlayD) * rfD * dh, dh - gameplay_rectD.y - (c3h + lift) * dh),
     };
 
     // Input constraints
@@ -1606,7 +1597,7 @@ SDL_Event event;
       padD.x = c0 / 2;
       padD.y = 1.0 - padD.h - lift;
 
-      SDL_FPoint center = {FRC(padD)};
+      SDL_FPoint center = {F4CENTER(padD)};
       int cx = center.x * display_rectD.w;
       int cy = center.y * display_rectD.h;
       ppD[0] = (SDL_Point){cx, cy};
@@ -1627,10 +1618,13 @@ SDL_Event event;
         ppD[1 + it].y = cy + oy;
       }
 
+      int bw = c3w * dw;
+      int bh = c3h * dh;
+      Log("button %dw %dh", bw, bh);
       for (int it = 0; it < AL(buttonD); ++it) {
-        SDL_FRect r = (SDL_FRect){.w = c3w, .h = c3h};
-        r.x = c3 - r.w * (1 - it);
-        r.y = 1.0 - r.h * (1 + it) - lift;
+        SDL_Rect r = {.w = bw, .h = bh};
+        r.x = textdst_rectD.x + textdst_rectD.w + 6 - (1 - it) * r.w;
+        r.y = textdst_rectD.y + textdst_rectD.h + 6 - (it)*r.h;
         buttonD[it] = r;
       }
 
@@ -1699,12 +1693,12 @@ SDL_Event *event;
 
   r = 0;
   SDL_FPoint tp = {event->tfinger.x, event->tfinger.y};
+  SDL_Point tpp = {tp.x * display_rectD.w, tp.y * display_rectD.h};
   for (int it = 0; it < AL(buttonD); ++it) {
-    if (SDL_PointInFRect(&tp, &buttonD[it])) r = 1 + it;
+    if (SDL_PointInRect(&tpp, &buttonD[it])) r = 1 + it;
   }
 
   if (SDL_PointInFRect(&tp, &padD)) {
-    SDL_Point tpp = {tp.x * display_rectD.w, tp.y * display_rectD.h};
     int n = nearest_pp(tpp.y - padD.y, tpp.x - padD.x);
     r = TOUCH_PAD + pp_keyD[n];
   }
@@ -2086,7 +2080,7 @@ platform_pregame()
     sdl_window_event(event);
   }
 
-  while (scale_rectD.x == 0) {
+  while (gameplay_rectD.x == 0) {
     sdl_pump();
   }
 
