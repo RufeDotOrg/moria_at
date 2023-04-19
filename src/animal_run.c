@@ -1252,11 +1252,13 @@ struct objS* copy;
   return id != 0;
 }
 static void
-place_stair_tval_tchar(y, x, tval, tchar)
+place_stair_tval(y, x, tval)
 {
   struct objS* obj;
   struct caveS* cave_ptr;
+  int tchar;
 
+  tchar = tval == TV_UP_STAIR ? '<' : '>';
   cave_ptr = &caveD[y][x];
   if (cave_ptr->oidx != 0) delete_object(y, x);
   obj = obj_use();
@@ -1301,7 +1303,6 @@ place_stairs(tval, num)
   int i, j, flag, tchar;
   int y1, x1, y2, x2;
 
-  tchar = tval == TV_UP_STAIR ? '<' : '>';
   for (i = 0; i < num; i++) {
     flag = FALSE;
     j = 0;
@@ -1320,7 +1321,7 @@ place_stairs(tval, num)
           if (cave_ptr->fval <= MAX_OPEN_SPACE) {
             if (next_to_object(y1, x1) == 0) {
               flag = TRUE;
-              place_stair_tval_tchar(y1, x1, tval, tchar);
+              place_stair_tval(y1, x1, tval);
             }
           }
           x1++;
@@ -3260,7 +3261,7 @@ town_gen()
     c_ptr = &caveD[i][j];
   } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
            (c_ptr->midx != 0));
-  place_stair_tval_tchar(i, j, TV_DOWN_STAIR, '>');
+  place_stair_tval(i, j, TV_DOWN_STAIR);
   caveD[i][j].cflag |= CF_FIELDMARK;
   rnd_seed = seed;
 
