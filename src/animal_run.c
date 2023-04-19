@@ -767,6 +767,50 @@ disturb(search, light)
   if (countD.rest != 0) countD.rest = 0;
   find_flag = FALSE;
 }
+static void build_type1(ychunk, xchunk, ycenter, xcenter) int* ycenter;
+int* xcenter;
+{
+  int x, y;
+  uint8_t floor;
+  struct caveS* c_ptr;
+
+  if (dun_level <= randint(25))
+    floor = FLOOR_LIGHT;
+  else
+    floor = FLOOR_DARK;
+
+  y = ychunk * CHUNK_HEIGHT + CHUNK_HEIGHT / 2;
+  x = xchunk * CHUNK_WIDTH + CHUNK_WIDTH / 2;
+
+  int limit = 3;
+  for (int it = 0; it < limit; it++) {
+    int cxmin, cxmax;
+    int cymin, cymax;
+
+    cymin = y - randint(CHUNK_HEIGHT / 2);
+    cymax = y + randint(CHUNK_HEIGHT / 2 - 1);
+    cxmin = x - randint(CHUNK_WIDTH / 2);
+    cxmax = x + randint(CHUNK_WIDTH / 2 - 1);
+
+    for (int i = cymin; i <= cymax; i++) {
+      for (int j = cxmin; j <= cxmax; j++) {
+        c_ptr = &caveD[i][j];
+        c_ptr->cflag |= CF_ROOM;
+
+        if (i == cymin || i == cymax) {
+          if (c_ptr->fval == 0) c_ptr->fval = GRANITE_WALL;
+        } else if (j == cxmin || j == cxmax) {
+          if (c_ptr->fval == 0) c_ptr->fval = GRANITE_WALL;
+        } else {
+          c_ptr->fval = floor;
+        }
+      }
+    }
+  }
+
+  *ycenter = y;
+  *xcenter = x;
+}
 static void build_room(ychunk, xchunk, ycenter, xcenter) int *ycenter, *xcenter;
 {
   int x, xmax, y, ymax;
@@ -3087,6 +3131,214 @@ void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
     }
   }
 }
+static void
+build_vault(y, x)
+{
+  for (int i = -1; i <= 1; ++i) {
+    for (int j = -1; j <= 1; ++j) {
+      if (i != 0 || j != 0) caveD[y + i][x + j].fval = TMP1_WALL;
+    }
+  }
+}
+static void
+build_pillar(y, x)
+{
+  for (int i = -1; i <= 1; ++i) {
+    for (int j = -1; j <= 1; ++j) {
+      caveD[y + i][x + j].fval = TMP1_WALL;
+    }
+  }
+}
+static void
+build_chamber(y, x, h, w)
+{
+  for (int j = -w; j <= w; ++j) {
+    caveD[y + h][x + j].fval = TMP1_WALL;
+    caveD[y - h][x + j].fval = TMP1_WALL;
+  }
+  caveD[y][x - w].fval = TMP1_WALL;
+  caveD[y][x + w].fval = TMP1_WALL;
+  caveD[y][x].fval = TMP1_WALL;
+}
+static void
+chunk_trap(ychunk, xchunk, num)
+{
+  int ymin, xmin;
+  int y, x;
+  struct caveS* c_ptr;
+
+  xmin = xchunk * CHUNK_WIDTH;
+  ymin = ychunk * CHUNK_HEIGHT;
+
+  do {
+    y = ymin + randint(CHUNK_HEIGHT) - 1;
+    x = xmin + randint(CHUNK_WIDTH) - 1;
+    c_ptr = &caveD[y][x];
+    if (c_ptr->fval != 0 && c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0 &&
+        c_ptr->midx == 0) {
+      place_trap(y, x, randint(MAX_TRAP) - 1);
+      num -= 1;
+    }
+  } while (num);
+}
+static void
+room_object(y, x, chance)
+{
+  for (int i = -1; i <= 1; ++i) {
+    for (int j = -1; j <= 1; ++j) {
+      if (caveD[y + i][x + j].fval <= MAX_OPEN_SPACE && randint(chance) == 1)
+        place_object(y, x, FALSE);
+    }
+  }
+}
+static void
+room_monster(y, x, chance)
+{
+  for (int i = -1; i <= 1; ++i) {
+    for (int j = -1; j <= 1; ++j) {
+      if (caveD[y + i][x + j].fval <= MAX_OPEN_SPACE && randint(chance) == 1)
+        place_monster(y + i, x + j, get_mon_num(dun_level + MON_SUMMON_ADJ),
+                      TRUE);
+    }
+  }
+}
+static void build_type2(ychunk, xchunk, ycenter, xcenter, type1,
+                        type2) int* ycenter;
+int* xcenter;
+{
+  int xmin, xmax, ymin, ymax;
+  int y, x;
+  uint8_t floor;
+  int wroom, hroom;
+  struct caveS* c_ptr;
+
+  if (dun_level <= randint(25))
+    floor = FLOOR_LIGHT;
+  else
+    floor = FLOOR_DARK;
+
+  // -1 on height to obtain odd tile count
+  hroom = CHUNK_HEIGHT - 1 - 1;
+  wroom = CHUNK_WIDTH - 1;
+  ymin = ychunk * CHUNK_HEIGHT;
+  xmin = xchunk * CHUNK_WIDTH;
+  ymax = ymin + hroom;
+  xmax = xmin + wroom;
+
+  y = ymin + hroom / 2;
+  x = xmin + wroom / 2;
+
+  for (int i = ymin; i <= ymax; ++i) {
+    for (int j = xmin; j <= xmax; ++j) {
+      c_ptr = &caveD[i][j];
+      c_ptr->cflag |= CF_ROOM;
+      if (i == ymin || i == ymax)
+        c_ptr->fval = GRANITE_WALL;
+      else if (j == xmin || j == xmax)
+        c_ptr->fval = GRANITE_WALL;
+      else
+        c_ptr->fval = floor;
+    }
+  }
+
+  switch (type1) {
+    case 1:
+      /* The inner room  	*/
+      ymin += 2;
+      ymax -= 2;
+      xmin += 2;
+      xmax -= 2;
+      for (int i = ymin; i <= ymax; i++) {
+        caveD[i][xmin].fval = TMP1_WALL;
+        caveD[i][xmax].fval = TMP1_WALL;
+      }
+      for (int i = xmin; i <= xmax; i++) {
+        caveD[ymin][i].fval = TMP1_WALL;
+        caveD[ymax][i].fval = TMP1_WALL;
+      }
+
+      /* Place a door */
+      switch (type2 % 4) {
+        case 0:
+          place_secret_door(ymin, x);
+          break;
+        case 1:
+          place_secret_door(ymax, x);
+          break;
+        case 2:
+          place_secret_door(y, xmin);
+          break;
+        case 3:
+          place_secret_door(y, xmax);
+          break;
+      }
+      room_monster(y, x, 2);
+      chunk_trap(ychunk, xchunk, 2 + randint(2));
+      break;
+    case 2:
+      x += 4 - (type2 % 8);
+      build_vault(y, x);
+      place_closed_door(randint(10), y - 3 + (randint(2) << 1), x);
+      place_object(y, x, FALSE);
+      room_monster(y, x, 1);
+      break;
+    case 3:
+      if (type2 & 0x1) {
+        build_pillar(y, x - 4);
+      }
+      if (type2 & 0x2) {
+        build_pillar(y, x + 5);
+      }
+      if (type2 & 0x4) {
+        build_chamber(y, x, 1, 3);
+        place_secret_door(y - 3 + (randint(2) << 1), x + randint(2));
+        place_secret_door(y - 3 + (randint(2) << 1), x - randint(2));
+        if (randint(3) == 1) place_object(y, x - 2, FALSE);
+        if (randint(3) == 1) place_object(y, x + 2, FALSE);
+        room_monster(y, x - 1, 2);
+        room_monster(y, x + 1, 2);
+        chunk_trap(ychunk, xchunk, 2 + randint(2));
+      }
+      if (type2 == 8) {
+        build_pillar(y, x);
+      }
+
+      break;
+    case 4:
+      for (int i = ymin + 1; i <= ymax - 1; ++i) {
+        for (int j = xmin + 1; j <= xmax - 1; ++j) {
+          if ((i ^ j) & 0x1)
+            caveD[i][j].fval = TMP1_WALL;
+          else
+            caveD[i][j].fval = floor;
+        }
+      }
+      // Maze
+      chunk_trap(ychunk, xchunk, 2 + randint(2));
+      room_object(y, x - 5, 2);
+      room_object(y, x + 5, 2);
+      room_monster(y, x - 5, 3);
+      room_monster(y, x + 5, 3);
+      break;
+    case 5:
+      for (int it = ymin + 1; it <= ymax - 1; ++it)
+        caveD[it][x].fval = TMP1_WALL;
+      for (int it = xmin + 1; it <= xmax - 1; ++it)
+        caveD[y][it].fval = TMP1_WALL;
+      place_secret_door(ymin + randint(2), x);
+      place_secret_door(y + randint(2), x);
+      place_secret_door(y, xmin + randint(wroom - 1));
+      // Quadrant
+      room_object(y, x, 3);
+      room_monster(y + 1, x - 4, 4);
+      room_monster(y + 1, x + 4, 4);
+      room_monster(y - 1, x - 4, 4);
+      room_monster(y - 1, x + 4, 4);
+      break;
+  }
+  *ycenter = y;
+  *xcenter = x;
+}
 int
 mmove(dir, y, x)
 int *y, *x;
@@ -3149,14 +3401,27 @@ cave_gen()
   alloc_level = CLAMP(dun_level / 2, 2, 15);
   k = randnor(DUN_ROOM_MEAN + alloc_level, 2);
   for (i = 0; i < k; i++)
-    room_map[randint(AL(room_map)) - 1][randint(AL(room_map[0])) - 1] = 1;
+    room_map[randint(AL(room_map)) - 1][randint(AL(room_map[0])) - 1] += 1;
   k = 0;
+  pick1 = pick2 = 0;
   for (i = 0; i < AL(room_map); i++)
     for (j = 0; j < AL(room_map[0]); j++)
       if (room_map[i][j]) {
-        build_room(i, j, &yloc[k], &xloc[k]);
+        if (dun_level > randint(DUN_UNUSUAL)) {
+          pick2 += 1;
+          build_type2(i, j, &yloc[k], &xloc[k], randint(5), randint(8));
+        } else {
+          if (room_map[i][j] == 1) {
+            build_room(i, j, &yloc[k], &xloc[k]);
+          } else {
+            pick1 += 1;
+            build_type1(i, j, &yloc[k], &xloc[k]);
+          }
+        }
         k++;
       }
+  // MSG("feet %d room: %d (type1: %d type2: %d)", dun_level * 50, k, pick1,
+  // pick2);
 
   for (i = 0; i < k; i++) {
     pick1 = randint(k) - 1;
@@ -4887,6 +5152,7 @@ calc_hitpoints()
 
   if (py_affect(MA_HERO)) hitpoints += 10;
   if (py_affect(MA_SUPERHERO)) hitpoints += 20;
+  if (HACK) hitpoints += 1000;
 
   // Scale current hp to the new maximum
   int value = ((uD.chp << 16) + uD.chp_frac) / uD.mhp * hitpoints;
@@ -12271,6 +12537,20 @@ dungeon()
               MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
             case 'M':
+              if (HACK) {
+                map_area();
+                for (int col = 1; col < MAX_HEIGHT; ++col) {
+                  for (int row = 1; row < MAX_WIDTH; ++row) {
+                    struct caveS* c_ptr = &caveD[col][row];
+                    struct objS* obj = &entity_objD[c_ptr->oidx];
+                    if (obj->tval == TV_INVIS_TRAP) {
+                      obj->tval = TV_VIS_TRAP;
+                      obj->tchar = '^';
+                      c_ptr->cflag |= CF_FIELDMARK;
+                    }
+                  }
+                }
+              }
               screen_submodeD = 0;
               screenD[0][0] = ' ';
               screen_usedD[0] = 1;
@@ -12341,7 +12621,6 @@ dungeon()
                 create_food(y, x);
               } break;
               case CTRL('h'):
-                if (uD.mhp < 1000) uD.mhp = 1000;
                 uD.chp = uD.mhp;
                 msg_print("You are healed.");
                 break;
@@ -12367,9 +12646,6 @@ dungeon()
                 } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
                          caveD[y][x].midx != 0);
                 break;
-              case CTRL('m'): {
-                map_area();
-              } break;
               case CTRL('o'): {
                 static int y_obj_teleportD;
                 static int x_obj_teleportD;

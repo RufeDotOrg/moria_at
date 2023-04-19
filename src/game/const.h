@@ -17,7 +17,7 @@
 #define MIN_CLOSED_SPACE 4
 #define FLOOR_OBST 4 /* a corridor space with cl/st/se door or rubble */
 #define MAX_FLOOR 4
-#define TMP1_WALL 8
+#define TMP1_WALL 8 /* Prevents corridor formation; replaced by granite */
 #define TMP2_WALL 9
 #define MIN_WALL 12
 #define GRANITE_WALL 12
@@ -53,6 +53,7 @@
 #define DUN_STR_QUA 2  /* Number of quartz streamers        */
 #define DUN_STR_QC 40  /* 1/x chance of treasure per quartz     */
 #define DUN_ROOM_MEAN 16
+#define DUN_UNUSUAL 300 /* Level/x chance of unusual room	       */
 #define MIN_MALLOC_LEVEL 14
 #define RND_MALLOC_LEVEL 8
 #define TREAS_ROOM_MEAN 7
