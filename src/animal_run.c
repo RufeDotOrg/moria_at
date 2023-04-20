@@ -11404,9 +11404,12 @@ py_menu()
   overlay_submodeD = 'o';
   while (1) {
     line = 0;
-    BufMsg(overlay, "a) Rest until healed, malady expires, or wait for recall");
-    BufMsg(overlay, "b) Restart dungeon level");
-    BufMsg(overlay, "c) Restart game (delete character)");
+    BufMsg(
+        overlay,
+        "a) Await event (health regeneration, malady expiration, or recall)");
+    BufMsg(overlay, "b) Begin dungeon again (reset)");
+    BufMsg(overlay, "--");
+    BufMsg(overlay, "e) Erase character (new game)");
     if (!in_subcommand("Advanced Game Options", &c)) break;
 
     switch (c) {
@@ -11418,7 +11421,7 @@ py_menu()
         cave_reset();
         longjmp(restartD, 1);
 
-      case 'c':
+      case 'e':
         platformD.erase();
         cave_reset();
         longjmp(restartD, 1);
