@@ -1085,7 +1085,6 @@ build_corridor(row1, col1, row2, col2)
   int start_row, start_col;
 
   /* Main procedure for Tunnel  		*/
-  /* Note: 9 is a temporary value  	*/
   stop_flag = FALSE;
   door_flag = FALSE;
   tunindex = 0;
@@ -1139,7 +1138,8 @@ build_corridor(row1, col1, row2, col2)
         for (j = col1 - 1; j <= col1 + 1; j++)
           if (in_bounds(i, j)) {
             d_ptr = &caveD[i][j];
-            if (d_ptr->fval == GRANITE_WALL) d_ptr->fval = TMP2_WALL;
+            if (d_ptr->fval == GRANITE_WALL)
+              d_ptr->fval = (d_ptr->cflag & CF_UNUSUAL) ? TMP3_WALL : TMP2_WALL;
           }
     } else if (c_ptr->fval == FLOOR_CORR || c_ptr->fval == FLOOR_OBST) {
       row1 = tmp_row;
@@ -1176,7 +1176,9 @@ build_corridor(row1, col1, row2, col2)
   }
   for (i = 0; i < wallindex; i++) {
     c_ptr = &caveD[wallstk[i].y][wallstk[i].x];
-    if (c_ptr->fval == TMP2_WALL) {
+    if (c_ptr->fval == TMP3_WALL) {
+      place_door(wallstk[i].y, wallstk[i].x);
+    } else if (c_ptr->fval == TMP2_WALL) {
       if (randint(100) < DUN_TUN_PEN)
         place_door(wallstk[i].y, wallstk[i].x);
       else {
@@ -1198,7 +1200,7 @@ fill_cave(fval)
     c_ptr = &caveD[i][1];
     for (j = MAX_WIDTH - 2; j > 0; j--) {
       if ((c_ptr->fval == FLOOR_NULL) || (c_ptr->fval == TMP1_WALL) ||
-          (c_ptr->fval == TMP2_WALL))
+          (c_ptr->fval == TMP2_WALL) || (c_ptr->fval == TMP3_WALL))
         c_ptr->fval = fval;
       c_ptr++;
     }
@@ -3231,7 +3233,7 @@ int* xcenter;
   for (int i = ymin; i <= ymax; ++i) {
     for (int j = xmin; j <= xmax; ++j) {
       c_ptr = &caveD[i][j];
-      c_ptr->cflag |= CF_ROOM;
+      c_ptr->cflag |= (CF_ROOM | CF_UNUSUAL);
       if (i == ymin || i == ymax)
         c_ptr->fval = GRANITE_WALL;
       else if (j == xmin || j == xmax)

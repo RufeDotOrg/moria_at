@@ -17,8 +17,9 @@
 #define MIN_CLOSED_SPACE 4
 #define FLOOR_OBST 4 /* a corridor space with cl/st/se door or rubble */
 #define MAX_FLOOR 4
-#define TMP1_WALL 8 /* Prevents corridor formation; replaced by granite */
-#define TMP2_WALL 9
+#define TMP1_WALL 8  /* Prevents corridor formation; replaced by granite */
+#define TMP2_WALL 9  /* Corridor+room intersection */
+#define TMP3_WALL 10 /* Corridor+unusual room intersection */
 #define MIN_WALL 12
 #define GRANITE_WALL 12
 #define MAGMA_WALL 13
@@ -31,6 +32,7 @@
 #define CF_PERM_LIGHT 0x4
 #define CF_FIELDMARK 0x8  // Object bypasses normal visibility rules
 #define CF_SEEN 0x10      // Cave revealed by player or light source
+#define CF_UNUSUAL 0x80   // extra information when unusual room is generated
 #define CF_LIT (CF_TEMP_LIGHT | CF_PERM_LIGHT)
 #define CF_LIT_ROOM (CF_ROOM | CF_PERM_LIGHT)
 #define CF_VIZ (CF_TEMP_LIGHT | CF_PERM_LIGHT | CF_FIELDMARK)
