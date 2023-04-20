@@ -1177,7 +1177,11 @@ build_corridor(row1, col1, row2, col2)
   for (i = 0; i < wallindex; i++) {
     c_ptr = &caveD[wallstk[i].y][wallstk[i].x];
     if (c_ptr->fval == TMP3_WALL) {
-      place_door(wallstk[i].y, wallstk[i].x);
+      if (randint(3) == 1) {
+        place_secret_door(wallstk[i].y, wallstk[i].x);
+      } else {
+        place_closed_door(randint(21) - 11, wallstk[i].y, wallstk[i].x);
+      }
     } else if (c_ptr->fval == TMP2_WALL) {
       if (randint(100) < DUN_TUN_PEN)
         place_door(wallstk[i].y, wallstk[i].x);
