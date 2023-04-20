@@ -3212,74 +3212,53 @@ static void build_type2(ychunk, xchunk, ycenter, xcenter, type1,
                         type2) int* ycenter;
 int* xcenter;
 {
+  int rflag, floor;
   int xmin, xmax, ymin, ymax;
   int y, x;
-  uint8_t floor;
-  int wroom, hroom;
   struct caveS* c_ptr;
 
+  rflag = CF_ROOM | CF_UNUSUAL;
   if (dun_level <= randint(25))
     floor = FLOOR_LIGHT;
   else
     floor = FLOOR_DARK;
 
-  // -1 on height to obtain odd tile count
-  hroom = CHUNK_HEIGHT - 1 - 1;
-  wroom = CHUNK_WIDTH - 1;
   ymin = ychunk * CHUNK_HEIGHT;
   xmin = xchunk * CHUNK_WIDTH;
-  ymax = ymin + hroom;
-  xmax = xmin + wroom;
-
-  y = ymin + hroom / 2;
-  x = xmin + wroom / 2;
-
-  for (int i = ymin; i <= ymax; ++i) {
-    for (int j = xmin; j <= xmax; ++j) {
-      c_ptr = &caveD[i][j];
-      c_ptr->cflag |= (CF_ROOM | CF_UNUSUAL);
-      if (i == ymin || i == ymax)
-        c_ptr->fval = GRANITE_WALL;
-      else if (j == xmin || j == xmax)
-        c_ptr->fval = GRANITE_WALL;
-      else
-        c_ptr->fval = floor;
-    }
-  }
+  ymax = ymin + CHUNK_HEIGHT - 1;
+  xmax = xmin + CHUNK_WIDTH - 1;
+  y = (ymin + ymax) / 2;
+  x = (xmin + xmax) / 2;
 
   switch (type1) {
     case 1:
-      /* The inner room  	*/
-      ymin += 2;
-      ymax -= 2;
-      xmin += 2;
-      xmax -= 2;
-      for (int i = ymin; i <= ymax; i++) {
-        caveD[i][xmin].fval = TMP1_WALL;
-        caveD[i][xmax].fval = TMP1_WALL;
-      }
-      for (int i = xmin; i <= xmax; i++) {
-        caveD[ymin][i].fval = TMP1_WALL;
-        caveD[ymax][i].fval = TMP1_WALL;
+      ymax -= 1;
+      for (int i = ymin; i <= ymax; ++i) {
+        for (int j = xmin; j <= xmax; ++j) {
+          c_ptr = &caveD[i][j];
+          c_ptr->cflag |= rflag;
+          if (i == ymin || i == ymax)
+            c_ptr->fval = GRANITE_WALL;
+          else if (j == xmin || j == xmax)
+            c_ptr->fval = GRANITE_WALL;
+          else
+            c_ptr->fval = floor;
+        }
       }
 
-      /* Place a door */
-      switch (type2 % 4) {
-        case 0:
-          place_secret_door(ymin, x);
-          break;
+      build_chamber(y, x, 1, 3);
+      place_secret_door(y - 3 + (randint(2) << 1), x + randint(2));
+      place_secret_door(y - 3 + (randint(2) << 1), x - randint(2));
+      switch (randint(2)) {
         case 1:
-          place_secret_door(ymax, x);
+          place_object(y, x - 2, FALSE);
           break;
         case 2:
-          place_secret_door(y, xmin);
-          break;
-        case 3:
-          place_secret_door(y, xmax);
+          place_object(y, x + 2, FALSE);
           break;
       }
-      room_monster(y, x, 2);
-      chunk_trap(ychunk, xchunk, 2 + randint(2));
+      room_monster(y, x - 1, 2);
+      room_monster(y, x + 1, 2);
       break;
     case 2:
       x += 4 - (type2 % 8);
@@ -3287,59 +3266,173 @@ int* xcenter;
       place_closed_door(randint(10), y - 3 + (randint(2) << 1), x);
       place_object(y, x, FALSE);
       room_monster(y, x, 1);
+
+      ymin = y - 3;
+      ymax = y + 3;
+      xmin = x - 3;
+      xmax = x + 3;
+      for (int i = ymin; i <= ymax; ++i) {
+        for (int j = xmin; j <= xmax; ++j) {
+          c_ptr = &caveD[i][j];
+          c_ptr->cflag |= rflag;
+          if (i == ymin || i == ymax)
+            c_ptr->fval = GRANITE_WALL;
+          else if (j == xmin || j == xmax)
+            c_ptr->fval = GRANITE_WALL;
+          else if (c_ptr->fval == 0)
+            c_ptr->fval = floor;
+        }
+      }
       break;
     case 3:
+      xmax -= 1;
+      ymax -= 1;
+      for (int i = ymin; i <= ymax; ++i) {
+        for (int j = xmin; j <= xmax; ++j) {
+          c_ptr = &caveD[i][j];
+          c_ptr->cflag |= rflag;
+          if (i == ymin || i == ymax)
+            c_ptr->fval = GRANITE_WALL;
+          else if (j == xmin || j == xmax)
+            c_ptr->fval = GRANITE_WALL;
+          else
+            c_ptr->fval = floor;
+        }
+      }
+
       if (type2 & 0x1) {
         build_pillar(y, x - 4);
       }
       if (type2 & 0x2) {
-        build_pillar(y, x + 5);
+        build_pillar(y, x + 4);
       }
       if (type2 & 0x4) {
-        build_chamber(y, x, 1, 3);
-        place_secret_door(y - 3 + (randint(2) << 1), x + randint(2));
-        place_secret_door(y - 3 + (randint(2) << 1), x - randint(2));
-        if (randint(3) == 1) place_object(y, x - 2, FALSE);
-        if (randint(3) == 1) place_object(y, x + 2, FALSE);
-        room_monster(y, x - 1, 2);
-        room_monster(y, x + 1, 2);
-        chunk_trap(ychunk, xchunk, 2 + randint(2));
-      }
-      if (type2 == 8) {
         build_pillar(y, x);
       }
-
+      if (type2 == 8) {
+        build_vault(y, x - 4);
+        build_vault(y, x + 4);
+        build_vault(y, x);
+        switch (randint(3)) {
+          case 1:
+            place_object(y, x - 4, FALSE);
+            break;
+          case 2:
+            place_object(y, x + 4, FALSE);
+            break;
+          case 3:
+            place_object(y, x, FALSE);
+            break;
+        }
+      }
       break;
     case 4:
-      for (int i = ymin + 1; i <= ymax - 1; ++i) {
-        for (int j = xmin + 1; j <= xmax - 1; ++j) {
-          if ((i ^ j) & 0x1)
-            caveD[i][j].fval = TMP1_WALL;
+      for (int i = ymin; i <= ymax; ++i) {
+        for (int j = xmin; j <= xmax; ++j) {
+          c_ptr = &caveD[i][j];
+          c_ptr->cflag |= rflag;
+          if (i == ymin || i == ymax)
+            c_ptr->fval = GRANITE_WALL;
+          else if (j == xmin || j == xmax)
+            c_ptr->fval = GRANITE_WALL;
+          else if ((i ^ j) & 0x1)
+            c_ptr->fval = TMP1_WALL;
           else
-            caveD[i][j].fval = floor;
+            c_ptr->fval = floor;
         }
       }
       // Maze
-      chunk_trap(ychunk, xchunk, 2 + randint(2));
-      room_object(y, x - 5, 2);
-      room_object(y, x + 5, 2);
+      chunk_trap(ychunk, xchunk, 2);
+      switch (randint(2)) {
+        case 1:
+          room_object(y, x - 5, 4);
+          break;
+        case 2:
+          room_object(y, x + 5, 4);
+          break;
+      }
       room_monster(y, x - 5, 3);
       room_monster(y, x + 5, 3);
       break;
     case 5:
-      for (int it = ymin + 1; it <= ymax - 1; ++it)
-        caveD[it][x].fval = TMP1_WALL;
-      for (int it = xmin + 1; it <= xmax - 1; ++it)
-        caveD[y][it].fval = TMP1_WALL;
-      place_secret_door(ymin + randint(2), x);
-      place_secret_door(y + randint(2), x);
-      place_secret_door(y, xmin + randint(wroom - 1));
+      ymax -= 1;
+      for (int i = ymin; i <= ymax; ++i) {
+        for (int j = xmin; j <= xmax; ++j) {
+          c_ptr = &caveD[i][j];
+          c_ptr->cflag |= rflag;
+          if (i == ymin || i == ymax)
+            c_ptr->fval = GRANITE_WALL;
+          else if (j == xmin || j == xmax)
+            c_ptr->fval = GRANITE_WALL;
+          else if (i == y)
+            c_ptr->fval = TMP1_WALL;
+          else if (j == x)
+            c_ptr->fval = TMP1_WALL;
+          else
+            c_ptr->fval = floor;
+        }
+      }
+
+      place_secret_door(ymin + randint(CHUNK_HEIGHT - 1), x);
+      place_secret_door(y, xmin + randint(CHUNK_WIDTH - 2));
       // Quadrant
-      room_object(y, x, 3);
+      room_object(y, x, 4);
       room_monster(y + 1, x - 4, 4);
       room_monster(y + 1, x + 4, 4);
       room_monster(y - 1, x - 4, 4);
       room_monster(y - 1, x + 4, 4);
+      break;
+    case 6:
+      ymin = y - 1;
+      ymax = y + 2;
+      xmin = xchunk * CHUNK_WIDTH;
+      xmax = xmin + CHUNK_WIDTH - 2;
+      for (int i = ymin; i <= ymax; ++i) {
+        for (int j = xmin; j <= xmax; ++j) {
+          c_ptr = &caveD[i][j];
+          c_ptr->cflag |= rflag;
+          if (i == ymin || i == ymax)
+            c_ptr->fval = GRANITE_WALL;
+          else if (j == xmin || j == xmax)
+            c_ptr->fval = GRANITE_WALL;
+          else
+            c_ptr->fval = floor;
+        }
+      }
+
+      ymin = ychunk * CHUNK_HEIGHT;
+      ymax = ymin + CHUNK_HEIGHT - 1;
+      xmin = x - 2;
+      xmax = x + 2;
+      for (int i = ymin; i <= ymax; ++i) {
+        for (int j = xmin; j <= xmax; ++j) {
+          c_ptr = &caveD[i][j];
+          c_ptr->cflag |= rflag;
+          if (i == ymin || i == ymax)
+            c_ptr->fval = (c_ptr->fval == 0) ? GRANITE_WALL : c_ptr->fval;
+          else if (j == xmin || j == xmax)
+            c_ptr->fval = (c_ptr->fval == 0) ? GRANITE_WALL : c_ptr->fval;
+          else
+            c_ptr->fval = floor;
+        }
+      }
+
+      // + shaped rooms fill to y-max
+      // This is a work around for vertical stacking
+      // TBD: all room types may fail to connect when y-adjacent fill to y-max?
+      caveD[ymax][x].fval = 0;
+
+       if (type2 & 0x1) {
+         caveD[y][x].fval = TMP1_WALL;
+         caveD[y + 1][x].fval = TMP1_WALL;
+       }
+       if (type2 > 4) {
+         caveD[y - 1][x - 1].fval = TMP1_WALL;
+         caveD[y - 1][x + 1].fval = TMP1_WALL;
+         caveD[y + 2][x - 1].fval = TMP1_WALL;
+         caveD[y + 2][x + 1].fval = TMP1_WALL;
+       }
+      chunk_trap(ychunk, xchunk, 1 + randint(2));
       break;
   }
   *ycenter = y;
@@ -3415,7 +3508,7 @@ cave_gen()
       if (room_map[i][j]) {
         if (dun_level > randint(DUN_UNUSUAL)) {
           pick2 += 1;
-          build_type2(i, j, &yloc[k], &xloc[k], randint(5), randint(8));
+          build_type2(i, j, &yloc[k], &xloc[k], randint(6), randint(8));
         } else {
           if (room_map[i][j] == 1) {
             build_room(i, j, &yloc[k], &xloc[k]);
