@@ -11775,7 +11775,7 @@ py_menu()
     BufMsg(overlay, "b) Begin dungeon again (reset)");
     BufMsg(overlay, "--");
     BufMsg(overlay, "e) Erase character (new game)");
-    if (!in_subcommand("Advanced Game Options", &c)) break;
+    if (!in_subcommand("Advanced Game Actions", &c)) break;
 
     switch (c) {
       case 'a':
