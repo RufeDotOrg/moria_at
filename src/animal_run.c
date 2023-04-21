@@ -10094,6 +10094,14 @@ py_menu()
 {
   char c;
   int line;
+  char* prompt;
+
+  if (death) {
+    snprintf(descD, AL(descD), " Killed by %s. ", death_descD);
+    prompt = descD;
+  } else {
+    prompt = " Advanced Game Actions ";
+  }
 
   while (1) {
     overlay_submodeD = 'o';
@@ -10105,7 +10113,7 @@ py_menu()
     BufMsg(overlay, "--");
     BufMsg(overlay, "--");
     BufMsg(overlay, "e) Erase character (new game)");
-    if (!in_subcommand("Advanced Game Actions", &c)) break;
+    if (!in_subcommand(prompt, &c)) break;
 
     switch (c) {
       case 'a':
