@@ -11765,8 +11765,8 @@ py_menu()
   char c;
   int line;
 
-  overlay_submodeD = 'o';
   while (1) {
+    overlay_submodeD = 'o';
     line = 0;
     BufMsg(
         overlay,
@@ -11787,6 +11787,13 @@ py_menu()
         longjmp(restartD, 1);
 
       case 'e':
+        overlay_submodeD = 'q';
+        line = 0;
+        BufMsg(overlay, "  This character will be permanently lost!");
+        BufMsg(overlay, " ");
+        BufMsg(overlay, "  Press ESCAPE / RED Button to cancel");
+        if (!in_subcommand("Really commit *Suicide*?", &c)) continue;
+
         platformD.erase();
         cave_reset();
         longjmp(restartD, 1);
