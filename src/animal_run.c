@@ -10077,39 +10077,46 @@ py_grave()
   return inkey();
 }
 static void
+show_all_inven()
+{
+  int iidx;
+  overlay_submodeD = 'e';
+  do {
+    iidx = inven_choice("You are dead.", overlay_submodeD == 'e' ? "/*" : "*/");
+
+    if (iidx >= 0) {
+      obj_study(obj_get(invenD[iidx]), 0);
+    }
+  } while (iidx != -1);
+}
+static void
 py_death()
 {
   msg_pause();
   char c;
 
-  c = 0;
   do {
-    if (c == CTRL('p')) {
-      c = show_history();
-    } else if (c == 'C') {
-      c = show_character();
-    } else if (c == 'o') {
-      // Observe game state at time of death
-      draw();
-      c = inkey();
-    } else if (c == 'v') {
-      c = show_version();
-    } else {
-      c = py_grave();
-    }
+    c = 0;
+    do {
+      if (c == CTRL('p')) {
+        c = show_history();
+      } else if (c == 'C') {
+        c = show_character();
+      } else if (c == 'o') {
+        // Observe game state at time of death
+        draw();
+        c = inkey();
+      } else if (c == 'v') {
+        c = show_version();
+      } else {
+        c = py_grave();
+      }
 
-    if (c == CTRL('c')) return;
-  } while (c != ESCAPE);
+      if (c == CTRL('c')) return;
+    } while (c != ESCAPE);
 
-  //int iidx;
-  //overlay_submodeD = 'e';
-  //do {
-  //  iidx = inven_choice("You are dead.", overlay_submodeD == 'e' ? "/*" : "*/");
-
-  //  if (iidx >= 0) {
-  //    obj_study(obj_get(invenD[iidx]), 0);
-  //  }
-  //} while (iidx != -1);
+    py_menu();
+  } while (1);
 }
 static void
 py_help()
@@ -11766,7 +11773,7 @@ int *uy, *ux;
 
   return FALSE;
 }
-void
+int
 py_menu()
 {
   char c;
@@ -11775,9 +11782,9 @@ py_menu()
   while (1) {
     overlay_submodeD = 'o';
     line = 0;
-    BufMsg(
-        overlay,
-        "a) Await event (health regeneration, malady expiration, or recall)");
+    BufMsg(overlay, death ? "a) All equipment / inventory "
+                          : "a) Await event (health regeneration, malady "
+                            "expiration, or recall)");
     BufMsg(overlay, "b) Begin dungeon again (reset)");
     BufMsg(overlay, "--");
     BufMsg(overlay, "--");
@@ -11786,10 +11793,16 @@ py_menu()
 
     switch (c) {
       case 'a':
-        countD.rest = -9999;
-        return;
+        if (!death) {
+          countD.rest = -9999;
+          return 0;
+        }
+
+        show_all_inven();
+        break;
 
       case 'b':
+        death = 0;
         cave_reset();
         longjmp(restartD, 1);
 
@@ -11802,11 +11815,12 @@ py_menu()
         if (!in_subcommand("Really commit *Suicide*?", &c)) continue;
 
         platformD.erase();
+        death = 0;
         cave_reset();
         longjmp(restartD, 1);
-        break;
     }
   }
+  return 0;
 }
 static void hit_trap(y, x, uy, ux) int *uy, *ux;
 {
