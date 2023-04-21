@@ -1299,7 +1299,7 @@ platform_draw()
     render_font_string(rendererD, &fontD, tmp, len, p);
   }
 
-  if (mode == 0) {
+  if (mode != 1) {
     SDL_Point p = {
         textdst_rectD.x + textdst_rectD.w + width,
         display_rectD.h - height,
@@ -1838,12 +1838,11 @@ SDL_Event event;
   if (mode == 2 && event.type == SDL_FINGERUP) return ' ';
   if (mode == 2 && event.type == SDL_FINGERDOWN) {
     SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-    if (touch == TOUCH_LB) return ESCAPE;
+    if (touch == TOUCH_LB) return 'o';
     if (touch == TOUCH_RB) return ESCAPE;
-    if (tp.x < .85 && tp.y < .09) return CTRL('p');
-    if (tp.x < .25 && tp.y < .5) return 'C';
-    if (tp.x > .85 && tp.y < .09) return 'v';
-    if (tp.x > .85 && tp.y < .23) return 'o';
+    if (tp.y < .09) return CTRL('p');
+    if (tp.x < .23 && tp.y < .5) return 'C';
+    if (tp.x >= .775 && tp.y > .90) return 'v';
   }
   return 0;
 }

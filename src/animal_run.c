@@ -29,7 +29,7 @@ static char quit_stringD[] = "quitting";
     msg_game(vtype, len);                                       \
   }
 // This clobbers unflushed messages, and does not persist to history
-#define MSG_NOHISTORY(x, ...)                                                 \
+#define DRAWMSG(x, ...)                                                       \
   {                                                                           \
     char* msg = AS(msg_cqD, msg_writeD);                                      \
     AS(msglen_cqD, msg_writeD) = snprintf(msg, MAX_MSGLEN, x, ##__VA_ARGS__); \
@@ -424,8 +424,8 @@ static void msg_game(msg, msglen) char* msg;
 #define msg_print(x) msg_game(AP(x))
 #define see_print(x) \
   if (maD[MA_BLIND] == 0) msg_game(AP(x))
-void
-msg_history()
+int
+show_history()
 {
   char* log;
   int log_used, line;
@@ -441,11 +441,8 @@ msg_history()
       line += 1;
     }
   }
-  if (!line) {
-    static char no_historyD[] = "No message history";
-    memcpy(screenD[0], AP(no_historyD));
-    screen_usedD[0] = AL(no_historyD);
-  }
+  DRAWMSG("Message History (%d)", line);
+  return inkey();
 }
 int
 in_subcommand(prompt, command)
@@ -455,7 +452,7 @@ char* command;
   char c;
 
   overlay_actD = 0;
-  MSG_NOHISTORY("%s", prompt ? prompt : "");
+  DRAWMSG("%s", prompt ? prompt : "");
   do {
     c = inkey();
     if (c == ESCAPE) return 0;
@@ -505,7 +502,7 @@ int* dir;
 {
   char c, command;
   if (!prompt) prompt = "Which direction?";
-  MSG_NOHISTORY("%s", prompt);
+  DRAWMSG("%s", prompt);
   c = inkey();
   command = map_roguedir(c);
   if (command >= '1' && command <= '9' && command != '5') {
@@ -8245,7 +8242,7 @@ void obj_study(obj, for_sale) struct objS* obj;
     }
 
     obj_desc(obj, 1);
-    MSG_NOHISTORY("You study %s.", descD);
+    DRAWMSG("You study %s.", descD);
     inkey();
   }
 }
@@ -9873,7 +9870,7 @@ py_offhand()
     turn_flag = TRUE;
   }
 }
-void
+int
 show_version()
 {
   int line;
@@ -9882,7 +9879,6 @@ show_version()
 
   screen_submodeD = 1;
   line = 0;
-  BufMsg(screen, "Version: %s", versionD);
   BufMsg(screen, "Git Hash: %s", git_hashD);
   line += 1;
   BufMsg(screen, "License");
@@ -9899,6 +9895,9 @@ show_version()
   line += 1;
   BufMsg(screen, "Programming: %s", "Alan Newton");
   BufMsg(screen, "Art: %s", "Nathan Miller");
+
+  DRAWMSG("Version %s", versionD);
+  return inkey();
 }
 void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
@@ -9952,8 +9951,8 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
     }
   } while (!turn_flag && iidx >= 0);
 }
-void
-py_character()
+int
+show_character()
 {
   int line;
   int xbth, xbowth;
@@ -10028,9 +10027,9 @@ py_character()
 
   line = 0;
 
-  MSG_NOHISTORY("Name: %-20.020s Race: %-20.020s Class: %-20.020s", "...",
-                raceD[uD.ridx].name, classD[uD.clidx].name);
-  inkey();
+  DRAWMSG("Name: %-20.020s Race: %-20.020s Class: %-20.020s", "...",
+          raceD[uD.ridx].name, classD[uD.clidx].name);
+  return inkey();
 }
 void
 py_takeoff()
@@ -10057,12 +10056,11 @@ py_takeoff()
     }
   }
 }
-static void
+static int
 py_grave()
 {
   screen_submodeD = 0;
   int row, col;
-  MSG("Killed by %s. (CTRL-P log) (C/e/i/o/v/ESC)", death_descD);
   row = col = 0;
   for (int it = 0; it < AL(grave); ++it) {
     if (grave[it] == '\n') {
@@ -10075,34 +10073,43 @@ py_grave()
       col += 1;
     }
   }
+  DRAWMSG("Killed by %s. (CTRL-P log) (C/o/v/ESC)", death_descD);
+  return inkey();
 }
 static void
 py_death()
 {
   msg_pause();
-  char c = 0;
+  char c;
+
+  c = 0;
   do {
-    AS(msglen_cqD, msg_writeD) = 0;
     if (c == CTRL('p')) {
-      msg_history();
+      c = show_history();
     } else if (c == 'C') {
-      py_character();
-    } else if (c == 'e') {
-      int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
-      MSG("You were wearing %d items.", count);
-    } else if (c == 'i') {
-      int count = inven_overlay(0, INVEN_EQUIP);
-      MSG("You were carrying %d %s:", count, count > 1 ? "items" : "item");
+      c = show_character();
     } else if (c == 'o') {
-      // observe game board
+      // Observe game state at time of death
+      draw();
+      c = inkey();
     } else if (c == 'v') {
-      show_version();
+      c = show_version();
     } else {
-      py_grave();
+      c = py_grave();
     }
-    draw();
-    c = inkey();
-  } while (c != ESCAPE && c != CTRL('c'));
+
+    if (c == CTRL('c')) return;
+  } while (c != ESCAPE);
+
+  //int iidx;
+  //overlay_submodeD = 'e';
+  //do {
+  //  iidx = inven_choice("You are dead.", overlay_submodeD == 'e' ? "/*" : "*/");
+
+  //  if (iidx >= 0) {
+  //    obj_study(obj_get(invenD[iidx]), 0);
+  //  }
+  //} while (iidx != -1);
 }
 static void
 py_help()
@@ -12628,7 +12635,7 @@ dungeon()
               py_actuate(&y, &x);
               break;
             case 'C':
-              py_character();
+              show_character();
               break;
             case 'D':
               py_disarm(&y, &x);
@@ -12662,7 +12669,7 @@ dungeon()
               screen_usedD[0] = 1;
               minimap_enlargeD = TRUE;
               platformD.predraw();
-              MSG_NOHISTORY("You study a map of %s.", dun_descD);
+              DRAWMSG("You study a map of %s.", dun_descD);
               inkey();
               break;
             case 'O':
@@ -12696,7 +12703,7 @@ dungeon()
               }
               break;
             case CTRL('p'): {
-              msg_history();
+              show_history();
             } break;
             case CTRL('x'): {
               save_exit_flag = TRUE;
