@@ -1329,6 +1329,7 @@ platform_draw()
     char *msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
     int more_used = 0;
+    int inset = __APPLE__ ? columnD[0]*display_rectD.w : width / 2;
 
     if (more) {
       if (map_rectD.w != gameplay_rectD.w)
@@ -1351,13 +1352,13 @@ platform_draw()
         height,
     };
     SDL_Rect rect2 = {
-        width / 2,
+        inset,
         0,
         more_used * width,
         height,
     };
     SDL_Rect rect3 = {
-        display_rectD.w - more_used * width - width / 2,
+        display_rectD.w - more_used * width - inset,
         0,
         more_used * width,
         height,
