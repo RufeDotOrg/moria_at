@@ -1591,7 +1591,7 @@ SDL_Event event;
       };
     } else {
       affectdst_rectD = (SDL_Rect){
-          c0 * dw + fwidth / 2,
+          0.5f * c0 * dw + fwidth / 2,
           gameplay_rectD.y + (AL(vitalD) + 1) * fheight,
           (26 + 1) * fwidth,
           5 * fheight,
@@ -1618,7 +1618,7 @@ SDL_Event event;
     // Input constraints
     if (TOUCH) {
       padD = (SDL_FRect){.w = c1 - c0, .h = (c1 - c0) * aspectD};
-      padD.x = c0 / 2;
+      padD.x = c0 * 0.5f;
       padD.y = 1.0 - padD.h - lift;
 
       SDL_FPoint center = {F4CENTER(padD)};
@@ -2023,7 +2023,7 @@ platform_erase()
   saveclear();
 
   SDL_RWops *writef = SDL_RWFromFile("savechar", "w+b");
-  SDL_RWclose(writef);
+  if (writef) SDL_RWclose(writef);
 
   return 0;
 }
