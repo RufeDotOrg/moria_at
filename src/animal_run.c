@@ -11580,21 +11580,20 @@ mon_try_spell(midx, cdis)
             ma_duration(MA_SLOW, randint(5) + 3);
           break;
         case 17: /*Drain Mana   */
-          //   if (uD.cmana > 0) {
-          //     disturb(1, 0);
-          //     MSG("%sdraws psychic energy from you!", descD);
-          //     if (mon->mlit) {
-          //       MSG("%sappears healthier.", descD);
-          //     }
-          //     r1 = (randint(cr_ptr->level) >> 1) + 1;
-          //     if (r1 > uD.cmana) {
-          //       r1 = uD.cmana;
-          //       uD.cmana = 0;
-          //       uD.cmana_frac = 0;
-          //     } else
-          //       uD.cmana -= r1;
-          //     mon->hp += 6 * (r1);
-          //   }
+          if (uD.cmana > 0) {
+            MSG("%s draws psychic energy from you!", descD);
+            if (mon->mlit) {
+              MSG("%s appears healthier.", descD);
+            }
+            int r1 = (randint(cr_ptr->level) >> 1) + 1;
+            if (r1 > uD.cmana) {
+              r1 = uD.cmana;
+              uD.cmana = 0;
+              uD.cmana_frac = 0;
+            } else
+              uD.cmana -= r1;
+            mon->hp += 6 * (r1);
+          }
           break;
         case 20: /*Breath Light */
           MSG("[%d] %s breathes lightning.", mon->hp, descD);
