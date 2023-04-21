@@ -7804,6 +7804,25 @@ inven_sort()
   return 1;
 }
 static int
+inven_reveal()
+{
+  int flag = 0;
+  struct objS* obj;
+  struct treasureS* tr_ptr;
+
+  for (int it = 0; it < MAX_INVEN; ++it) {
+    obj = obj_get(invenD[it]);
+    tr_ptr = &treasureD[obj->tidx];
+
+    if (obj->id && (obj->idflag & ID_REVEAL) == 0) {
+      obj->idflag = ID_REVEAL;
+      tr_make_known(tr_ptr);
+      flag = TRUE;
+    }
+  }
+  return flag;
+}
+static int
 inven_overlay(begin, end)
 {
   int line, count;
@@ -12326,22 +12345,10 @@ regenmana(percent)
 void
 player_maint()
 {
-  struct objS* obj;
-  struct treasureS* tr_ptr;
   int flag;
 
   inven_sort();
-  flag = 0;
-  for (int it = 0; it < MAX_INVEN; ++it) {
-    obj = obj_get(invenD[it]);
-    tr_ptr = &treasureD[obj->tidx];
-
-    if (obj->id && (obj->idflag & ID_REVEAL) == 0) {
-      obj->idflag = ID_REVEAL;
-      tr_make_known(tr_ptr);
-      flag = 1;
-    }
-  }
+  flag = inven_reveal();
   if (flag)
     msg_print("Town inhabitants share knowledge of items you gathered.");
 
@@ -13038,7 +13045,10 @@ main(int argc, char** argv)
     }
   }
 
-  if (memcmp(death_descD, AP(quit_stringD)) != 0) py_death();
+  if (memcmp(death_descD, AP(quit_stringD)) != 0) {
+    inven_reveal();
+    py_death();
+  }
 
   platformD.postgame();
   return 0;
