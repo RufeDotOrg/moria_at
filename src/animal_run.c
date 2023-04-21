@@ -441,6 +441,12 @@ show_history()
       line += 1;
     }
   }
+
+  if (!line) {
+    screenD[0][0] = ' ';
+    screen_usedD[0] = 1;
+  }
+
   DRAWMSG("Message History (%d)", line);
   return inkey();
 }
