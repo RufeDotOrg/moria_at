@@ -3422,16 +3422,16 @@ int* xcenter;
       // TBD: all room types may fail to connect when y-adjacent fill to y-max?
       caveD[ymax][x].fval = 0;
 
-       if (type2 & 0x1) {
-         caveD[y][x].fval = TMP1_WALL;
-         caveD[y + 1][x].fval = TMP1_WALL;
-       }
-       if (type2 > 4) {
-         caveD[y - 1][x - 1].fval = TMP1_WALL;
-         caveD[y - 1][x + 1].fval = TMP1_WALL;
-         caveD[y + 2][x - 1].fval = TMP1_WALL;
-         caveD[y + 2][x + 1].fval = TMP1_WALL;
-       }
+      if (type2 & 0x1) {
+        caveD[y][x].fval = TMP1_WALL;
+        caveD[y + 1][x].fval = TMP1_WALL;
+      }
+      if (type2 > 4) {
+        caveD[y - 1][x - 1].fval = TMP1_WALL;
+        caveD[y - 1][x + 1].fval = TMP1_WALL;
+        caveD[y + 2][x - 1].fval = TMP1_WALL;
+        caveD[y + 2][x + 1].fval = TMP1_WALL;
+      }
       chunk_trap(ychunk, xchunk, 1 + randint(2));
       break;
   }
@@ -11772,6 +11772,7 @@ py_menu()
         overlay,
         "a) Await event (health regeneration, malady expiration, or recall)");
     BufMsg(overlay, "b) Begin dungeon again (reset)");
+    BufMsg(overlay, "--");
     BufMsg(overlay, "--");
     BufMsg(overlay, "e) Erase character (new game)");
     if (!in_subcommand("Advanced Game Actions", &c)) break;
