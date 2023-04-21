@@ -10089,6 +10089,55 @@ show_all_inven()
     }
   } while (iidx != -1);
 }
+int
+py_menu()
+{
+  char c;
+  int line;
+
+  while (1) {
+    overlay_submodeD = 'o';
+    line = 0;
+    BufMsg(overlay, death ? "a) All equipment / inventory "
+                          : "a) Await event (health regeneration, malady "
+                            "expiration, or recall)");
+    BufMsg(overlay, "b) Begin dungeon again (reset)");
+    BufMsg(overlay, "--");
+    BufMsg(overlay, "--");
+    BufMsg(overlay, "e) Erase character (new game)");
+    if (!in_subcommand("Advanced Game Actions", &c)) break;
+
+    switch (c) {
+      case 'a':
+        if (!death) {
+          countD.rest = -9999;
+          return 0;
+        }
+
+        show_all_inven();
+        break;
+
+      case 'b':
+        death = 0;
+        cave_reset();
+        longjmp(restartD, 1);
+
+      case 'e':
+        overlay_submodeD = 'q';
+        line = 0;
+        BufMsg(overlay, "  This character will be permanently lost!");
+        BufMsg(overlay, " ");
+        BufMsg(overlay, "  Press ESCAPE / RED Button to cancel");
+        if (!in_subcommand("Really commit *Suicide*?", &c)) continue;
+
+        platformD.erase();
+        death = 0;
+        cave_reset();
+        longjmp(restartD, 1);
+    }
+  }
+  return 0;
+}
 static void
 py_death()
 {
@@ -11772,55 +11821,6 @@ int *uy, *ux;
   }
 
   return FALSE;
-}
-int
-py_menu()
-{
-  char c;
-  int line;
-
-  while (1) {
-    overlay_submodeD = 'o';
-    line = 0;
-    BufMsg(overlay, death ? "a) All equipment / inventory "
-                          : "a) Await event (health regeneration, malady "
-                            "expiration, or recall)");
-    BufMsg(overlay, "b) Begin dungeon again (reset)");
-    BufMsg(overlay, "--");
-    BufMsg(overlay, "--");
-    BufMsg(overlay, "e) Erase character (new game)");
-    if (!in_subcommand("Advanced Game Actions", &c)) break;
-
-    switch (c) {
-      case 'a':
-        if (!death) {
-          countD.rest = -9999;
-          return 0;
-        }
-
-        show_all_inven();
-        break;
-
-      case 'b':
-        death = 0;
-        cave_reset();
-        longjmp(restartD, 1);
-
-      case 'e':
-        overlay_submodeD = 'q';
-        line = 0;
-        BufMsg(overlay, "  This character will be permanently lost!");
-        BufMsg(overlay, " ");
-        BufMsg(overlay, "  Press ESCAPE / RED Button to cancel");
-        if (!in_subcommand("Really commit *Suicide*?", &c)) continue;
-
-        platformD.erase();
-        death = 0;
-        cave_reset();
-        longjmp(restartD, 1);
-    }
-  }
-  return 0;
 }
 static void hit_trap(y, x, uy, ux) int *uy, *ux;
 {
