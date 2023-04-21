@@ -12621,7 +12621,7 @@ dungeon()
               break;
             case 'e': {
               int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
-              MSG("You wear %d items.", count);
+              MSG("You wear %d %s.", count, count > 1 ? "items" : "item");
             } break;
             case 'f':
               py_bash(&y, &x);
