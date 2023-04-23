@@ -82,6 +82,8 @@ DATA int rowD, colD;
 DATA float rfD, cfD;
 DATA float columnD[4];
 
+DATA char savepathD[1024];
+
 static int overlay_copyD[AL(overlay_usedD)];
 static SDL_Color whiteD = {255, 255, 255, 255};
 static SDL_Color font_colorD;
@@ -1329,7 +1331,7 @@ platform_draw()
     char *msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
     int more_used = 0;
-    int inset = __APPLE__ ? columnD[0]*display_rectD.w : width / 2;
+    int inset = __APPLE__ ? columnD[0] * display_rectD.w : width / 2;
 
     if (more) {
       if (map_rectD.w != gameplay_rectD.w)
@@ -1917,7 +1919,7 @@ savesum()
   return sum;
 }
 int
-saveclear()
+clear_savebuf()
 {
   for (int it = 0; it < AL(save_bufD); ++it) {
     struct bufS buf = save_bufD[it];
@@ -1943,8 +1945,9 @@ platform_save()
   int version = AL(savesumD) - 1;
   int sum = savesumD[version];
   int *savefield = savefieldD[version];
+  char *path = __APPLE__ ? savepathD : "savechar";
 
-  SDL_RWops *writef = SDL_RWFromFile("savechar", "wb");
+  SDL_RWops *writef = SDL_RWFromFile(path, "wb");
   if (writef) {
     checksumD = 0;
     SDL_RWwrite(writef, &sum, sizeof(sum), 1);
@@ -1964,7 +1967,8 @@ int
 devsave()
 {
   int sum = savesum();
-  SDL_RWops *writef = SDL_RWFromFile("savechar", "wb");
+  char *path = __APPLE__ ? savepathD : "savechar";
+  SDL_RWops *writef = SDL_RWFromFile(path, "wb");
   if (writef) {
     checksumD = 0;
     SDL_RWwrite(writef, &sum, sizeof(sum), 1);
@@ -1984,9 +1988,10 @@ int
 platform_load()
 {
   int save_size = 0;
-  saveclear();
+  char *path = __APPLE__ ? savepathD : "savechar";
+  clear_savebuf();
 
-  SDL_RWops *readf = SDL_RWFromFile("savechar", "rb");
+  SDL_RWops *readf = SDL_RWFromFile(path, "rb");
   if (readf) {
     checksumD = 0;
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
@@ -2021,9 +2026,10 @@ platform_load()
 int
 platform_erase()
 {
-  saveclear();
+  char *path = __APPLE__ ? savepathD : "savechar";
+  clear_savebuf();
 
-  SDL_RWops *writef = SDL_RWFromFile("savechar", "w+b");
+  SDL_RWops *writef = SDL_RWFromFile(path, "w+b");
   if (writef) SDL_RWclose(writef);
 
   return 0;
@@ -2059,6 +2065,15 @@ platform_pregame()
     SDL_Init(SDL_SCOPE);
 
     if (__APPLE__ || ANDROID) SDL_DisableScreenSaver();
+
+    if (__APPLE__) {
+      char *prefpath = SDL_GetPrefPath("org.rufe", "moria.app");
+      if (prefpath) {
+        int len = snprintf(savepathD, AL(savepathD), "%s/savechar", prefpath);
+        if (len < 0 || len >= AL(savepathD)) savepathD[0] = 0;
+        SDL_free(prefpath);
+      }
+    }
 
     if (!render_init()) return 1;
   }
