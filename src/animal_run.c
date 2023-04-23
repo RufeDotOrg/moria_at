@@ -5271,9 +5271,14 @@ calc_mana()
 
   if (uD.mmana != new_mana) {
     // Scale current mana to the new maximum
-    int value = ((uD.cmana << 16) + uD.cmana_frac) / uD.mmana * new_mana;
-    uD.cmana = value >> 16;
-    uD.cmana_frac = value & 0xFFFF;
+    if (uD.mmana) {
+      int value = ((uD.cmana << 16) + uD.cmana_frac) / uD.mmana * new_mana;
+      uD.cmana = value >> 16;
+      uD.cmana_frac = value & 0xFFFF;
+    } else {
+      uD.cmana = new_mana;
+      uD.cmana_frac = 0;
+    }
     uD.mmana = new_mana;
   }
 
@@ -9083,16 +9088,36 @@ int* x_ptr;
       do {
         line = 0;
         for (int it = 0; it < book_used; ++it) {
+          int spknown, splevel, spmana, spchance;
+
           spidx = book[it];
-          BufMsg(overlay,
-                 "%c) %32.032s %8.08s (level %d) (mana %d) (failure %d%%)",
-                 'a' + it, spell_nameD[spidx],
-                 ((1 << spidx) & spmask) ? "" : "unknown",
-                 spelltable[spidx].splevel, spelltable[spidx].spmana,
-                 spell_chanceD[spidx]);
+          spknown = ((1 << spidx) & spmask);
+          splevel = spelltable[spidx].splevel;
+          spmana = spelltable[spidx].spmana;
+          spchance = spell_chanceD[spidx];
+
+          char field[3][16];
+          snprintf(field[0], AL(field[0]), "level %d", splevel);
+          snprintf(field[1], AL(field[1]), "mana %d", spmana);
+          snprintf(field[2], AL(field[2]), "failure %d%%", spchance);
+
+          if (splevel == 99) {
+            BufMsg(overlay, "%c) ???", 'a' + it);
+          } else {
+            BufMsg(overlay,
+                   "%c) %-40.040s "
+                   "%8.08s "
+                   "%8.08s "
+                   "%16.016s",
+                   'a' + it, spell_nameD[spidx], spknown ? "" : field[0],
+                   !spknown              ? ""
+                   : (uD.cmana < spmana) ? "!low!"
+                                         : field[1],
+                   spknown ? field[2] : "");
+          }
         }
 
-        if (!in_subcommand("Cast which spell?", &c)) break;
+        if (!in_subcommand("Read which spell?", &c)) break;
         uint8_t choice = c - 'a';
 
         if (choice < book_used) {
@@ -9122,11 +9147,12 @@ int* x_ptr;
             turn_flag = TRUE;
           } else {
             turn_flag = TRUE;
-            msg_print("You study the magical runes.");
+            msg_print("You read the magical runes.");
             if (spelltable[spidx].splevel > uD.lev || !gain_spell(spidx)) {
-              msg_print("You are unable to retain the knowledge at this time.");
+              MSG("You are unable to retain the knowledge%s.",
+                  spelltable[spidx].splevel != 99 ? " at this time" : "");
             } else {
-              MSG("You learn %s!", spell_nameD[spidx]);
+              MSG("You learn the spell of %s!", spell_nameD[spidx]);
             }
           }
         }
