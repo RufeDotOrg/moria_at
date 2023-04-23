@@ -10174,7 +10174,7 @@ py_menu()
   }
 
   while (1) {
-    overlay_submodeD = 'o';
+    overlay_submodeD = 0;
     line = 0;
     BufMsg(overlay, death ? "a) All equipment / inventory "
                           : "a) Await event (health regeneration, malady "

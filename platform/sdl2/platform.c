@@ -892,37 +892,33 @@ overlay_autoselect()
 int
 mode_change()
 {
-  int mode;
+  int subprev = submodeD;
+  int subnext = overlay_submodeD;
+  int mprev = modeD;
+  int mnext;
+
   if (screen_usedD[0])
-    mode = 2;
+    mnext = 2;
   else if (overlay_usedD[0])
-    mode = 1;
+    mnext = 1;
   else
-    mode = 0;
+    mnext = 0;
 
-  if (modeD != mode) {
-    modeD = mode;
-    finger_colD = overlay_submodeD != 'e' ? 0 : 1;
+  if (mprev != mnext || subprev != subnext) {
+    if (mprev == 1) row_stateD[subprev] = finger_rowD;
 
-    if (mode == 1) switch (overlay_submodeD) {
-        case 'p':
-          overlay_autoselect();
-          break;
-      }
+    if (mnext == 1) {
+      finger_rowD = (subnext != 0) ? row_stateD[subnext] : 0;
+      finger_colD = (subnext == 'e') ? 1 : 0;
+
+      overlay_autoselect();
+    }
   }
 
-  if (submodeD != overlay_submodeD) {
-    uint8_t prev = submodeD;
-    uint8_t next = overlay_submodeD;
-    submodeD = overlay_submodeD;
+  modeD = mnext;
+  submodeD = subnext;
 
-    row_stateD[prev] = finger_rowD;
-    finger_rowD = row_stateD[next];
-    finger_colD = next == 'e' ? 1 : 0;
-    overlay_autoselect();
-  }
-
-  return mode;
+  return mnext;
 }
 
 void
