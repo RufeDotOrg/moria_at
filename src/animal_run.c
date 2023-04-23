@@ -6647,8 +6647,8 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         m_ptr = &entity_monD[c_ptr->midx];
         cre = &creatureD[m_ptr->cidx];
 
-        // Bolt lit target
-        m_ptr->mlit = TRUE;
+        // Bolt may light target
+        update_mon(c_ptr->midx);
         mon_desc(c_ptr->midx);
         descD[0] = descD[0] | 0x20;
         MSG("The %s strikes %s.", bolt_typ, descD);
