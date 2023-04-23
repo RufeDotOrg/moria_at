@@ -9316,12 +9316,31 @@ int* x_ptr;
         line = 0;
         for (int it = 0; it < book_used; ++it) {
           spidx = book[it];
-          BufMsg(overlay,
-                 "%c) %32.032s %8.08s (level %d) (mana %d) (failure %d%%)",
-                 'a' + it, prayer_nameD[spidx],
-                 ((1 << spidx) & spmask) ? "" : "unknown",
-                 spelltable[spidx].splevel, spelltable[spidx].spmana,
-                 spell_chanceD[spidx]);
+          int spknown, splevel, spmana, spchance;
+          spknown = ((1 << spidx) & spmask);
+          splevel = spelltable[spidx].splevel;
+          spmana = spelltable[spidx].spmana;
+          spchance = spell_chanceD[spidx];
+
+          char field[3][16];
+          snprintf(field[0], AL(field[0]), "level %d", splevel);
+          snprintf(field[1], AL(field[1]), "mana %d", spmana);
+          snprintf(field[2], AL(field[2]), "failure %d%%", spchance);
+
+          if (splevel == 99) {
+            BufMsg(overlay, "%c) ???", 'a' + it);
+          } else {
+            BufMsg(overlay,
+                   "%c) %-40.040s "
+                   "%8.08s "
+                   "%8.08s "
+                   "%16.016s",
+                   'a' + it, prayer_nameD[spidx], spknown ? "" : field[0],
+                   !spknown              ? ""
+                   : (uD.cmana < spmana) ? "!low!"
+                                         : field[1],
+                   spknown ? field[2] : "");
+          }
         }
 
         if (!in_subcommand("Recite which prayer?", &c)) break;
