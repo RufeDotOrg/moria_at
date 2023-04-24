@@ -4118,6 +4118,17 @@ move_rec(y1, x1, y2, x2)
   caveD[y1][x1].midx = 0;
   caveD[y2][x2].midx = tmp;
 }
+static int
+cr_seen(cr_ptr)
+struct creatureS* cr_ptr;
+{
+  if ((CM_INVISIBLE & cr_ptr->cmove) == 0)
+    return TRUE;
+  else if (py_tr(TR_SEE_INVIS))
+    return TRUE;
+  else
+    return FALSE;
+}
 void
 update_mon(midx)
 {
@@ -4143,12 +4154,8 @@ update_mon(midx)
     } else if (maD[MA_BLIND] == 0 && (cdis <= MAX_SIGHT) &&
                los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
-      /* Normal sight.       */
       if (CF_LIT & c_ptr->cflag) {
-        if ((CM_INVISIBLE & cr_ptr->cmove) == 0)
-          flag = TRUE;
-        else if (py_tr(TR_SEE_INVIS))
-          flag = TRUE;
+        flag = cr_seen(cr_ptr);
       } else if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= uD.infra)) {
         flag = TRUE;
       }
@@ -6638,11 +6645,14 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         m_ptr = &entity_monD[c_ptr->midx];
         cre = &creatureD[m_ptr->cidx];
 
-        // Bolt may light target
-        update_mon(c_ptr->midx);
+        // Bolt provides a temporary light
+        if (cr_seen(cre)) m_ptr->mlit = TRUE;
+
         mon_desc(c_ptr->midx);
         descD[0] = descD[0] | 0x20;
         MSG("The %s strikes %s.", bolt_typ, descD);
+
+        // draw with temporary visibility
         msg_pause();
 
         if (harm_type & cre->cdefense) {
