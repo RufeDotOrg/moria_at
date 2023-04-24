@@ -384,11 +384,9 @@ msg_pause()
 {
   char c;
   int log_used;
-  char* log;
 
   log_used = AS(msglen_cqD, msg_writeD);
   if (log_used) {
-    log = AS(msg_cqD, msg_writeD);
     msg_moreD += 1;
 
     // wait for user to acknowledge prior buffer -more-
@@ -1352,7 +1350,7 @@ static void
 place_stairs(tval, num)
 {
   struct caveS* cave_ptr;
-  int i, j, flag, tchar;
+  int i, j, flag;
   int y1, x1, y2, x2;
 
   for (i = 0; i < num; i++) {
@@ -2951,11 +2949,10 @@ place_monster(y, x, z, slp)
 int
 summon_monster(y, x)
 {
-  int i, j, k;
+  int j, k;
   int l, summon;
   struct caveS* cave_ptr;
 
-  i = 0;
   summon = 0;
   l = get_mon_num(dun_level + MON_SUMMON_ADJ);
   for (int it = 0; it < 9; ++it) {
@@ -4178,7 +4175,6 @@ struct monS* mon;
   struct caveS* c_ptr;
   int eats_others;
   int mexp;
-  int count;
 
   eats_others = creatureD[mon->cidx].cmove & CM_EATS_OTHER;
   mexp = creatureD[mon->cidx].mexp;
@@ -4187,7 +4183,6 @@ struct monS* mon;
   fy = mon->fy;
   fx = mon->fx;
   i = 0;
-  count = 0;
   do {
     j = fy - 2 + randint(3);
     k = fx - 2 + randint(3);
@@ -5310,7 +5305,6 @@ calc_bonuses()
   tflag = 0;
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; it++) {
     struct objS* obj = obj_get(invenD[it]);
-    // TBD: Bow damage is skipped
     tohit += obj->tohit;
     todam += obj->todam;
     toac += obj->toac;
@@ -5723,7 +5717,9 @@ equip_remove_curse()
     }
   }
 
-  return FALSE;
+  if (flag) msg_print("You feel as if someone is watching over you.");
+
+  return flag;
 }
 static int
 equip_disenchant()
@@ -6401,14 +6397,13 @@ py_experience()
 int
 restore_level()
 {
-  int restore, lev, exp, expfact;
+  int restore, lev, exp;
 
   restore = FALSE;
   if (uD.max_exp > uD.exp) {
     restore = TRUE;
     msg_print("You feel your life energies returning.");
     exp = uD.max_exp;
-    expfact = uD.mult_exp;
     lev = uD.lev;
     while ((lev < MAX_PLAYER_LEVEL) && lev_exp(lev) <= exp) {
       lev += 1;
@@ -6619,7 +6614,7 @@ light_line(dir, y, x)
 }
 void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
 {
-  int oldy, oldx, dist, flag;
+  int dist, flag;
   uint32_t weapon_type;
   int harm_type;
   int (*dummy)();
@@ -6629,8 +6624,6 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
 
   flag = FALSE;
   get_flags(typ, &weapon_type, &harm_type, &dummy);
-  oldy = y;
-  oldx = x;
   dist = 0;
   do {
     mmove(dir, &y, &x);
@@ -6667,8 +6660,6 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         }
       }
     }
-    oldy = y;
-    oldx = x;
   } while (!flag);
 }
 void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
@@ -6891,8 +6882,6 @@ hp_monster(dir, y, x, dam)
 {
   int flag, dist, monster;
   struct caveS* c_ptr;
-  struct monS* m_ptr;
-  struct creatureS* cr_ptr;
 
   monster = FALSE;
   flag = FALSE;
@@ -6905,8 +6894,6 @@ hp_monster(dir, y, x, dam)
       flag = TRUE;
     else if (c_ptr->midx) {
       flag = TRUE;
-      m_ptr = &entity_monD[c_ptr->midx];
-      cr_ptr = &creatureD[m_ptr->cidx];
       mon_desc(c_ptr->midx);
       monster = TRUE;
       if (mon_take_hit(c_ptr->midx, dam)) {
@@ -8579,10 +8566,7 @@ int *uy, *ux;
             used_up = inven_ident(choice_idx);
             break;
           case 5:
-            if (equip_remove_curse()) {
-              msg_print("You feel as if someone is watching over you.");
-              ident |= TRUE;
-            }
+            ident |= equip_remove_curse();
             break;
           case 6:
             ident |= illuminate(uD.y, uD.x);
@@ -9469,10 +9453,7 @@ int *uy, *ux;
             ident |= mass_poly();
             break;
           case 20:
-            if (equip_remove_curse()) {
-              ident = TRUE;
-              see_print("The staff glows blue for a moment..");
-            }
+            ident |= equip_remove_curse();
             break;
           case 21:
             ident |= detect_mon(crset_evil);
@@ -10408,9 +10389,6 @@ fire_dam(dam)
 int
 acid_dam(dam, verbose)
 {
-  int flag;
-
-  flag = 0;
   if (minus_ac(verbose)) dam = dam / 2;
   if (py_tr(TR_RES_ACID)) dam = dam / 2;
   py_take_hit(dam);
@@ -10802,7 +10780,7 @@ mon_attack(midx)
 static void
 close_object()
 {
-  int y, x, dir, no_object;
+  int y, x, dir;
   struct caveS* c_ptr;
   struct objS* obj;
 
@@ -10812,8 +10790,6 @@ close_object()
     mmove(dir, &y, &x);
     c_ptr = &caveD[y][x];
     obj = &entity_objD[c_ptr->oidx];
-
-    no_object = (obj->id == 0);
 
     if (obj->tval == TV_OPEN_DOOR) {
       turn_flag = TRUE;
@@ -11389,13 +11365,12 @@ py_autotunnel(y, x)
 }
 static void make_move(midx, mm) int* mm;
 {
-  int i, fy, fx, newy, newx, do_turn, do_move;
+  int fy, fx, newy, newx, do_turn, do_move;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
   struct objS* obj;
 
-  i = 0;
   do_turn = FALSE;
   do_move = FALSE;
   m_ptr = &entity_monD[midx];
