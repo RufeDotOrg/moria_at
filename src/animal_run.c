@@ -402,6 +402,12 @@ msg_pause()
   }
 }
 
+static void
+disturb()
+{
+  if (countD.rest != 0) countD.rest = 0;
+  find_flag = FALSE;
+}
 static void msg_game(msg, msglen) char* msg;
 {
   char* log;
@@ -418,8 +424,7 @@ static void msg_game(msg, msglen) char* msg;
 
   if (msg_used > 0) AS(msglen_cqD, msg_writeD) = log_used + msg_used;
 
-  if (countD.rest != 0) countD.rest = 0;
-  find_flag = FALSE;
+  disturb();
 }
 #define msg_print(x) msg_game(AP(x))
 #define see_print(x) \
@@ -763,12 +768,6 @@ struct objS* obj;
     }
   }
   return (tdam);
-}
-void
-disturb(search, light)
-{
-  if (countD.rest != 0) countD.rest = 0;
-  find_flag = FALSE;
 }
 static void build_type1(ychunk, xchunk, ycenter, xcenter) int* ycenter;
 int* xcenter;
@@ -4162,7 +4161,7 @@ update_mon(midx)
   /* Light it up.   */
   if (flag) {
     if (!m_ptr->mlit) {
-      disturb(1, 0);
+      disturb();
       m_ptr->mlit = TRUE;
     }
   }
@@ -4850,7 +4849,6 @@ test_hit(bth, level_adj, pth, ac)
 {
   int i, die;
 
-  disturb(1, 0);
   i = bth + pth * BTH_PLUS_ADJ + level_adj;
 
   // pth could be less than 0 if player wielding weapon too heavy for him
@@ -5367,7 +5365,6 @@ calc_bonuses()
 void
 ma_bonuses(maffect, factor)
 {
-  disturb(0, 0);
   switch (maffect) {
     case MA_BLESS:
       uD.ma_ac += factor * 2;
@@ -5631,17 +5628,18 @@ equip_count()
   }
   return count;
 }
-static void
-equip_act(flag)
+static int
+equip_vibrate(flag)
 {
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
     struct objS* obj = obj_get(invenD[it]);
     if (obj->flags & flag) {
       obj_desc(obj, 1);
       MSG("%s vibrates for a moment.", descD);
-      return;
+      return 1;
     }
   }
+  return 0;
 }
 static int
 equip_random()
@@ -11495,6 +11493,8 @@ static void make_move(midx, mm) int* mm;
       move_rec(fy, fx, newy, newx);
       m_ptr->fy = newy;
       m_ptr->fx = newx;
+      // ensure disturb() occurs for visible creatures
+      m_ptr->mlit = FALSE;
       update_mon(midx);
       do_turn = TRUE;
     }
@@ -12468,13 +12468,13 @@ tick()
 
   tmp = uD.food - uD.food_digest;
   if (tmp < PLAYER_FOOD_ALERT && uD.food >= PLAYER_FOOD_ALERT) {
-    MSG("You are getting hungry.");
+    msg_print("You are getting hungry.");
   } else if (tmp < PLAYER_FOOD_WEAK && uD.food >= PLAYER_FOOD_WEAK) {
-    MSG("You are getting weak from starvation.");
+    msg_print("You are getting weak from starvation.");
   } else if (tmp < 0) {
+    if (turnD % 8 == 1) msg_print("You are starving.");
     strcpy(death_descD, "starvation");
     py_take_hit(-tmp / 16);
-    disturb(1, 0);
   }
   uD.food = tmp;
 
@@ -12492,7 +12492,6 @@ tick()
       py_take_hit(poison_adj());
       if ((turnD % 16) == 0) {
         msg_print("You shiver from illness.");
-        disturb(1, 0);
       }
     }
     countD.poison -= 1;
@@ -12500,10 +12499,7 @@ tick()
 
   if (countD.confusion > 0) {
     countD.confusion -= 1;
-    if (countD.confusion == 0) {
-      disturb(0, 0);
-      msg_print("You feel less confused.");
-    }
+    if (countD.confusion == 0) msg_print("You feel less confused.");
   }
 
   if (countD.rest < 0) {
@@ -12577,9 +12573,7 @@ dungeon()
       y = uD.y;
       x = uD.x;
       if (teleport) {
-        disturb(0, 0);
-        equip_act(TR_TELEPORT);
-        py_teleport(40, &y, &x);
+        if (equip_vibrate(TR_TELEPORT)) py_teleport(40, &y, &x);
       } else if (find_flag) {
         mmove(find_direction, &y, &x);
       } else {
