@@ -10599,6 +10599,7 @@ mon_attack(midx)
   struct creatureS* cre = &creatureD[mon->cidx];
 
   // TBD: perf draw/attack
+  disturb(TRUE);
   draw();
   int adj = cre->level * CRE_LEV_ADJ;
   for (int it = 0; it < AL(cre->attack_list); ++it) {
@@ -11641,6 +11642,7 @@ mon_try_spell(midx, cdis)
       took_turn = FALSE;
     } else {
       took_turn = TRUE;
+      disturb(TRUE);
 
       thrown_spell = spell_choice[randint(k) - 1];
       spell_index = thrown_spell - 4;
