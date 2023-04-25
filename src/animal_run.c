@@ -5961,6 +5961,20 @@ make_special_type(iidx, lev, weapon_enchant)
 
   return FALSE;
 }
+int
+rest_affect()
+{
+  return py_affect(MA_BLIND) + countD.confusion + py_affect(MA_FEAR) +
+         py_affect(MA_RECALL);
+}
+static void
+py_rest()
+{
+  if (uD.chp < uD.mhp || rest_affect())
+    countD.rest = 9999;
+  else
+    countD.rest = -9999;
+}
 static void
 py_take_hit(damage)
 {
@@ -10190,7 +10204,7 @@ py_menu()
     switch (c) {
       case 'a':
         if (!death) {
-          countD.rest = -9999;
+          py_rest();
           return 0;
         }
 
@@ -12466,12 +12480,6 @@ ma_tick()
     calc_bonuses();
   }
 }
-int
-rest_affect()
-{
-  return py_affect(MA_BLIND) + countD.confusion + py_affect(MA_FEAR) +
-         py_affect(MA_RECALL);
-}
 void
 tick()
 {
@@ -12773,10 +12781,7 @@ dungeon()
               py_look_obj();
               break;
             case 'R':
-              if (uD.chp < uD.mhp || rest_affect())
-                countD.rest = 9999;
-              else
-                countD.rest = -9999;
+              py_rest();
               break;
             case 'S':
               iidx = inven_choice("Study which item?", "*/");
