@@ -13087,6 +13087,7 @@ main(int argc, char** argv)
     inven_sort();
     inven_check_weight();
     inven_check_light();
+    platformD.save();
   }
   calc_bonuses();
   calc_hitpoints();
