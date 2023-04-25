@@ -12433,6 +12433,12 @@ ma_tick()
     calc_bonuses();
   }
 }
+int
+rest_affect()
+{
+  return py_affect(MA_BLIND) + countD.confusion + py_affect(MA_FEAR) +
+         py_affect(MA_RECALL);
+}
 void
 tick()
 {
@@ -12489,14 +12495,12 @@ tick()
 
   if (countD.rest < 0) {
     countD.rest += 1;
-    if (uD.chp == uD.mhp) {
-      int aff = py_affect(MA_BLIND) + countD.confusion + py_affect(MA_FEAR) +
-                py_affect(MA_RECALL);
-      if (aff == 0) countD.rest = 0;
-    }
+    if (uD.cmana == uD.mmana) countD.rest = 0;
   } else if (countD.rest > 0) {
     countD.rest -= 1;
+    if (uD.chp == uD.mhp && rest_affect() == 0) countD.rest = 0;
   }
+
   if (countD.paralysis) countD.paralysis -= 1;
   if (countD.protevil > 0) {
     countD.protevil -= 1;
@@ -12735,7 +12739,10 @@ dungeon()
               py_look_obj();
               break;
             case 'R':
-              countD.rest = -9999;
+              if (uD.chp < uD.mhp || rest_affect())
+                countD.rest = 9999;
+              else
+                countD.rest = -9999;
               break;
             case 'S':
               iidx = inven_choice("Study which item?", "*/");
