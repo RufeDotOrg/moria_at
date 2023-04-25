@@ -28,3 +28,8 @@ dir_y(dir)
   }
   return 0;
 }
+static int
+is_ctrl(c)
+{
+  return c <= 0x1f;
+}

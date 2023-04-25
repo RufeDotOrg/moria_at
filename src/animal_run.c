@@ -466,8 +466,7 @@ char* command;
   DRAWMSG("%s", prompt ? prompt : "");
   do {
     c = inkey();
-    if (c == ESCAPE) return 0;
-    if (c == CTRL('c')) return 0;
+    if (is_ctrl(c)) return 0;
   } while (c == ' ');
   *command = c;
   return 1;
