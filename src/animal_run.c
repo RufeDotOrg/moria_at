@@ -17,6 +17,7 @@ static int input_record_writeD;
 static int input_record_readD;
 static int input_actionD[1024];
 static int input_action_usedD;
+static int drop_flag;
 
 static char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
@@ -401,9 +402,10 @@ msg_pause()
 }
 
 static void
-disturb()
+disturb(mon_near)
 {
   if (countD.rest != 0) countD.rest = 0;
+  if (mon_near && drop_flag) drop_flag = FALSE;
   find_flag = FALSE;
 }
 static void msg_game(msg, msglen) char* msg;
@@ -422,7 +424,7 @@ static void msg_game(msg, msglen) char* msg;
 
   if (msg_used > 0) AS(msglen_cqD, msg_writeD) = log_used + msg_used;
 
-  disturb();
+  disturb(FALSE);
 }
 #define msg_print(x) msg_game(AP(x))
 #define see_print(x) \
@@ -4165,7 +4167,7 @@ update_mon(midx)
   /* Light it up.   */
   if (flag) {
     if (!m_ptr->mlit) {
-      disturb();
+      disturb(TRUE);
       m_ptr->mlit = TRUE;
     }
   }
@@ -5587,12 +5589,30 @@ inven_drop(iidx)
 {
   int y, x, ok;
   struct objS* obj;
+  struct caveS* c_ptr;
   obj = obj_get(invenD[iidx]);
 
   if (obj->id) {
     y = uD.y;
     x = uD.x;
-    if (caveD[y][x].oidx == 0) {
+
+    if (caveD[y][x].oidx == 0)
+      c_ptr = &caveD[y][x];
+    else {
+      for (int it = 1; it < 9; ++it) {
+        int dir = it + (it >= 5);
+        int i = dir_y(dir);
+        int j = dir_x(dir);
+        c_ptr = &caveD[y + i][x + j];
+        if (c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) {
+          y += i;
+          x += j;
+          it = 9;
+        }
+      }
+    }
+
+    if (c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) {
       if (iidx >= INVEN_EQUIP) {
         ok = equip_takeoff(iidx, -1);
       } else {
@@ -5603,7 +5623,7 @@ inven_drop(iidx)
       if (ok) {
         obj->fy = y;
         obj->fx = x;
-        caveD[y][x].oidx = obj_index(obj);
+        c_ptr->oidx = obj_index(obj);
 
         obj_desc(obj, obj->number);
         obj_detail(obj);
@@ -5611,7 +5631,7 @@ inven_drop(iidx)
         turn_flag = TRUE;
       }
     } else {
-      msg_print("There is already an object on the ground here.");
+      msg_print("There are too many objects on the ground here.");
     }
   }
 }
@@ -10585,6 +10605,7 @@ mon_attack(midx)
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
+  disturb(TRUE);
   // TBD: perf draw/attack
   draw();
   int adj = cre->level * CRE_LEV_ADJ;
@@ -10985,6 +11006,18 @@ bash(y, x)
   }
 
   return movement;
+}
+static void
+py_drop()
+{
+  int iidx;
+  msg_pause();
+  iidx = inven_choice("Drop which item?", "*/");
+
+  if (iidx < 0)
+    drop_flag = FALSE;
+  else
+    inven_drop(iidx);
 }
 static void py_bash(uy, ux) int *uy, *ux;
 {
@@ -12565,6 +12598,8 @@ dungeon()
         if (equip_vibrate(TR_TELEPORT)) py_teleport(40, &y, &x);
       } else if (find_flag) {
         mmove(find_direction, &y, &x);
+      } else if (drop_flag) {
+        py_drop();
       } else {
         msg_advance();
         AS(input_actionD, input_action_usedD++) = input_record_readD;
@@ -12644,8 +12679,7 @@ dungeon()
               close_object();
               break;
             case 'd':
-              iidx = inven_choice("Drop which item?", "*/");
-              if (iidx >= 0) inven_drop(iidx);
+              drop_flag = TRUE;
               break;
             case 'e': {
               int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
