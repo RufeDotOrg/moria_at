@@ -4163,17 +4163,7 @@ update_mon(midx)
     }
   }
 
-  /* Light it up.   */
-  if (flag) {
-    if (!m_ptr->mlit) {
-      disturb(TRUE);
-      m_ptr->mlit = TRUE;
-    }
-  }
-  /* Turn it off.   */
-  else if (m_ptr->mlit) {
-    m_ptr->mlit = FALSE;
-  }
+  m_ptr->mlit = flag;
 }
 static int
 mon_multiply(mon)
@@ -10604,7 +10594,6 @@ mon_attack(midx)
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
-  disturb(TRUE);
   // TBD: perf draw/attack
   draw();
   int adj = cre->level * CRE_LEV_ADJ;
@@ -11510,8 +11499,6 @@ static void make_move(midx, mm) int* mm;
       move_rec(fy, fx, newy, newx);
       m_ptr->fy = newy;
       m_ptr->fx = newx;
-      // ensure disturb() occurs for visible creatures
-      m_ptr->mlit = FALSE;
       update_mon(midx);
       do_turn = TRUE;
     }
@@ -11854,15 +11841,16 @@ movement_rate(speed)
 
   return speed;
 }
-void
+int
 creatures()
 {
-  int move_count, y, x, cdis;
+  int move_count, y, x, cdis, seen;
 
   FOR_EACH(mon, { update_mon(it_index); });
 
   y = uD.y;
   x = uD.x;
+  seen = 0;
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     move_count = movement_rate(mon_speed(mon));
@@ -11892,10 +11880,15 @@ creatures()
             }
           }
         }
-        if (mon->msleep == 0 && mon->mstunned == 0) mon_move(it_index, cdis);
+        if (mon->msleep == 0) {
+          seen += (mon->mlit);
+          if (mon->mstunned == 0) mon_move(it_index, cdis);
+        }
       }
     }
   });
+
+  return seen;
 }
 BOOL
 py_teleport_near(y, x, uy, ux)
@@ -12974,7 +12967,7 @@ dungeon()
 
     ma_tick();  // rising
     if (!new_level_flag) {
-      creatures();
+      if (creatures()) disturb(TRUE);
       teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
       if (!town && randint(MAX_MALLOC_CHANCE) == 1)
         alloc_mon(1, MAX_SIGHT, FALSE);
