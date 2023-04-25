@@ -367,11 +367,13 @@ affect_update()
 void
 draw()
 {
-  vital_update();
-  platformD.predraw();
-  affect_update();
+  if (input_record_readD == input_record_writeD) {
+    vital_update();
+    platformD.predraw();
+    affect_update();
 
-  platformD.draw();
+    platformD.draw();
+  }
   AC(screen_usedD);
   AC(overlay_usedD);
   minimap_enlargeD = FALSE;
@@ -10179,8 +10181,12 @@ int
 py_menu()
 {
   char c;
-  int line;
+  int line, input_action, memory_ok;
   char* prompt;
+
+  input_action = input_action_usedD;
+  memory_ok = (input_record_writeD <= AL(input_recordD) &&
+               input_action_usedD <= AL(input_actionD));
 
   if (death) {
     snprintf(descD, AL(descD), " Killed by %s. ", death_descD);
@@ -10195,9 +10201,14 @@ py_menu()
     BufMsg(overlay, death ? "a) All equipment / inventory "
                           : "a) Await event (health regeneration, malady "
                             "expiration, or recall)");
-    BufMsg(overlay, "b) Begin dungeon again (reset)");
+    if (input_action) {
+      BufMsg(overlay, "b) Backup / Undo (%d) (%d) (%s)", input_action,
+             input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
+    } else {
+      BufMsg(overlay, "--");
+    }
     BufMsg(overlay, "--");
-    BufMsg(overlay, "--");
+    BufMsg(overlay, "d) Dungeon reset");
     BufMsg(overlay, "e) Erase character (new game)");
     if (!in_subcommand(prompt, &c)) break;
 
@@ -10212,6 +10223,15 @@ py_menu()
         break;
 
       case 'b':
+        if (input_action == 0 || !memory_ok) return 0;
+
+        input_action = MAX(0, input_action - 2 + death);
+        death = 0;
+        cave_reset();
+        input_record_writeD = AS(input_actionD, input_action);
+        longjmp(restartD, 1);
+
+      case 'd':
         death = 0;
         cave_reset();
         longjmp(restartD, 1);
@@ -13087,6 +13107,9 @@ main(int argc, char** argv)
     inven_sort();
     inven_check_weight();
     inven_check_light();
+
+    // Replay state
+    input_record_writeD = input_record_readD = input_action_usedD = 0;
     platformD.save();
   }
   calc_bonuses();
