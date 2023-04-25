@@ -1435,12 +1435,9 @@ sym_shift(char c)
 
   return c;
 }
-char
+static char
 dir_by_scancode(sym)
 {
-  // Disable directional movement during fullscreen
-  if (modeD) return -1;
-
   switch (sym) {
     case SDLK_KP_1 ... SDLK_KP_9:
       return 1 + (sym - SDLK_KP_1);
@@ -1689,7 +1686,7 @@ SDL_Event event;
     } else {
       return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
     }
-  } else {
+  } else if (modeD == 0) {
     int dir = dir_by_scancode(event.key.keysym.sym);
     if (dir > 0) return char_by_dir(dir) ^ shift;
     switch (event.key.keysym.sym) {
