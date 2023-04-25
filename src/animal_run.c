@@ -411,7 +411,7 @@ disturb(mon_near)
 {
   if (countD.rest != 0) countD.rest = 0;
   if (mon_near && drop_flag) drop_flag = FALSE;
-  find_flag = FALSE;
+  if (!mon_near && find_flag) find_flag = FALSE;
 }
 static void msg_game(msg, msglen) char* msg;
 {
