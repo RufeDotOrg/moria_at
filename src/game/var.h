@@ -13,7 +13,6 @@ DATA int screen_submodeD;
 DATA char overlayD[22][80];
 DATA int overlay_usedD[AL(overlayD)];
 DATA int overlay_submodeD;
-DATA int overlay_actD;
 DATA uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
 DATA uint32_t zoom_factorD;

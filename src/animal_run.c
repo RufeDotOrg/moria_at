@@ -80,6 +80,11 @@ inkey()
 
   return c;
 }
+static char
+priorkey()
+{
+  return AS(input_recordD, input_record_writeD - 1);
+}
 void
 vital_update()
 {
@@ -462,7 +467,6 @@ char* command;
 {
   char c;
 
-  overlay_actD = 0;
   DRAWMSG("%s", prompt ? prompt : "");
   do {
     c = inkey();
@@ -5621,6 +5625,7 @@ inven_drop(iidx)
       }
     } else {
       msg_print("There are too many objects on the ground here.");
+      drop_flag = FALSE;
     }
   }
 }
@@ -7882,62 +7887,6 @@ weapon_curse()
 
   return FALSE;
 }
-static int
-inven_choice(char* prompt, char* mode_list)
-{
-  char c;
-  int num, mode;
-  int begin, end;
-  char subprompt[80];
-
-  snprintf(subprompt, AL(subprompt), "%s %s", prompt,
-           mode_list[1] ? "(/ equip, * inven)" : "");
-
-  num = 0;
-  for (int it = 0; it < 2 && num == 0; ++it) {
-    mode = mode_list[it];
-    switch (mode) {
-      case '*':
-        num = inven_count();
-        break;
-      case '/':
-        num = equip_count();
-        break;
-    }
-  }
-
-  if (num) {
-    do {
-      switch (mode) {
-        case '*':
-          begin = 0;
-          end = INVEN_EQUIP;
-          break;
-        case '/':
-          begin = INVEN_WIELD;
-          end = MAX_INVEN;
-          break;
-      }
-      inven_overlay(begin, end);
-
-      if (!in_subcommand(subprompt, &c)) return -1;
-
-      uint8_t iidx = c - 'a';
-      if (iidx < end - begin) {
-        iidx += begin;
-        if (invenD[iidx]) return iidx;
-      } else if (c == 'I') {
-        inven_sort();
-      } else {
-        mode = 0;
-        for (int it = 0; it < 2; ++it) {
-          if (mode_list[it] == c) mode = c;
-        }
-      }
-    } while (mode);
-  }
-  return -1;
-}
 int
 inven_eat(iidx)
 {
@@ -8279,6 +8228,65 @@ void obj_study(obj, for_sale) struct objS* obj;
     DRAWMSG("You study %s.", descD);
     inkey();
   }
+}
+static int
+inven_choice(char* prompt, char* mode_list)
+{
+  char c;
+  int num, mode;
+  int begin, end;
+  char subprompt[80];
+
+  snprintf(subprompt, AL(subprompt), "%s %s", prompt,
+           mode_list[1] ? "(/ equip, * inven, - sort)" : "");
+
+  num = 0;
+  for (int it = 0; it < 2 && num == 0; ++it) {
+    mode = mode_list[it];
+    switch (mode) {
+      case '*':
+        num = inven_count();
+        break;
+      case '/':
+        num = equip_count();
+        break;
+    }
+  }
+
+  if (num) {
+    do {
+      switch (mode) {
+        case '*':
+          begin = 0;
+          end = INVEN_EQUIP;
+          break;
+        case '/':
+          begin = INVEN_WIELD;
+          end = MAX_INVEN;
+          break;
+      }
+      inven_overlay(begin, end);
+
+      if (!in_subcommand(subprompt, &c)) return -1;
+
+      if (is_lower(c)) {
+        uint8_t iidx = c - 'a';
+        iidx += begin;
+        if (iidx < end && invenD[iidx]) return iidx;
+      } else if (is_upper(c)) {
+        uint8_t iidx = c - 'A';
+        if (iidx < end && invenD[iidx]) obj_study(obj_get(invenD[iidx]), FALSE);
+      } else if (c == '-') {
+        inven_sort();
+      } else {
+        mode = 0;
+        for (int it = 0; it < 2; ++it) {
+          if (mode_list[it] == c) mode = c;
+        }
+      }
+    } while (mode);
+  }
+  return -1;
 }
 int
 inven_quaff(iidx)
@@ -9979,43 +9987,39 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
         inven_choice("Use which item?", overlay_submodeD == 'e' ? "/*" : "*/");
 
     if (iidx >= 0) {
-      if (overlay_actD == 'd') {
-        inven_drop(iidx);
-      } else if (overlay_actD == 'S') {
-        obj_study(obj_get(invenD[iidx]), 0);
-      } else {
-        obj = obj_get(invenD[iidx]);
-        if (obj->tval == TV_PROJECTILE) {
-          py_throw(iidx);
-        } else if (obj->tval == TV_FOOD) {
-          inven_eat(iidx);
-        } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-          inven_quaff(iidx);
-        } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-          inven_read(iidx, y_ptr, x_ptr);
-        } else if (obj->tval == TV_STAFF) {
-          inven_try_staff(iidx, x_ptr, x_ptr);
-        } else if (obj->tval == TV_WAND) {
-          py_zap(iidx);
-        } else if (obj->tval == TV_MAGIC_BOOK) {
-          py_magic(iidx, y_ptr, x_ptr);
-        } else if (obj->tval == TV_PRAYER_BOOK) {
-          py_prayer(iidx, y_ptr, x_ptr);
-        } else if (obj->tval == TV_FLASK) {
-          inven_flask(iidx);
-        } else if (iidx < INVEN_EQUIP) {
-          inven_wear(iidx);
-        } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
-          py_offhand();
-        } else if (iidx >= INVEN_EQUIP) {
-          if (invenD[iidx]) {
-            into = inven_slot();
-            if (into >= 0) {
-              equip_takeoff(iidx, into);
-            }
+      obj = obj_get(invenD[iidx]);
+      if (obj->tval == TV_PROJECTILE) {
+        py_throw(iidx);
+      } else if (obj->tval == TV_FOOD) {
+        inven_eat(iidx);
+      } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+        inven_quaff(iidx);
+      } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+        inven_read(iidx, y_ptr, x_ptr);
+      } else if (obj->tval == TV_STAFF) {
+        inven_try_staff(iidx, x_ptr, x_ptr);
+      } else if (obj->tval == TV_WAND) {
+        py_zap(iidx);
+      } else if (obj->tval == TV_MAGIC_BOOK) {
+        py_magic(iidx, y_ptr, x_ptr);
+      } else if (obj->tval == TV_PRAYER_BOOK) {
+        py_prayer(iidx, y_ptr, x_ptr);
+      } else if (obj->tval == TV_FLASK) {
+        inven_flask(iidx);
+      } else if (iidx < INVEN_EQUIP) {
+        inven_wear(iidx);
+      } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
+        py_offhand();
+      } else if (iidx >= INVEN_EQUIP) {
+        if (invenD[iidx]) {
+          into = inven_slot();
+          if (into >= 0) {
+            equip_takeoff(iidx, into);
           }
         }
       }
+    } else if (priorkey() == CTRL('d')) {
+      drop_flag = TRUE;
     }
   } while (!turn_flag && iidx >= 0);
 }
@@ -12327,15 +12331,16 @@ pawn_entrance()
                        &c)) {
       break;
     }
-    uint8_t item = c - 'a';
 
-    if (item < INVEN_EQUIP) {
-      if (overlay_actD == 'S')
-        obj_study(obj_get(invenD[item]), 0);
-      else
-        inven_pawn(item);
+    if (is_lower(c)) {
+      uint8_t item = c - 'a';
+      if (item < INVEN_EQUIP) inven_pawn(item);
+    } else if (is_upper(c)) {
+      uint8_t item = c - 'A';
+      if (item < INVEN_EQUIP) obj_study(obj_get(invenD[item]), 1);
+    } else if (c == '-') {
+      inven_sort();
     }
-    if (c == 'I') inven_sort();
   }
   msg_advance();
 }
@@ -12351,15 +12356,16 @@ store_entrance(sidx)
   while (1) {
     store_display(sidx);
     if (!in_subcommand(tmp_str, &c)) break;
-    uint8_t item = c - 'a';
 
-    if (item < MAX_STORE_INVEN) {
-      if (overlay_actD == 'S')
-        obj_study(&store_objD[sidx][item], 1);
-      else
-        store_item_purchase(sidx, item);
+    if (is_lower(c)) {
+      uint8_t item = c - 'a';
+      if (item < AL(store_objD[0])) store_item_purchase(sidx, item);
+    } else if (is_upper(c)) {
+      uint8_t item = c - 'A';
+      if (item < AL(store_objD[0])) obj_study(&store_objD[sidx][item], 1);
+    } else if (c == '-') {
+      store_sort(sidx);
     }
-    if (c == 'I') inven_sort();
   }
   msg_advance();
 }

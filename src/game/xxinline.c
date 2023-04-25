@@ -33,3 +33,15 @@ is_ctrl(c)
 {
   return c <= 0x1f;
 }
+static int
+is_lower(c)
+{
+  uint8_t iidx = c - 'a';
+  return iidx <= 'z' - 'a';
+}
+static int
+is_upper(c)
+{
+  uint8_t iidx = c - 'A';
+  return iidx <= 'Z' - 'A';
+}

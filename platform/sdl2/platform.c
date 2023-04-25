@@ -1781,7 +1781,7 @@ SDL_Event event;
     } else if (touch) {
       switch (touch) {
         case TOUCH_LB:
-          return 'A';
+          return finger ? 'd' : 'A';
         case TOUCH_RB:
           return '.';
       }
@@ -1802,13 +1802,11 @@ SDL_Event event;
       int dy = dir_y(dir);
 
       if (!dx && !dy) {
-        overlay_actD = 'S';
-        return 'a' + finger_rowD;
+        return 'A' + finger_rowD;
       }
       if (dx && !dy) {
         if (finger) {
-          overlay_actD = 'd';
-          return 'a' + finger_rowD;
+          return CTRL('d');
         } else {
           finger_colD = CLAMP(finger_colD + dx, 0, 1);
         }
@@ -1827,7 +1825,7 @@ SDL_Event event;
     if (touch == TOUCH_RB) {
       return 'a' + finger_rowD;
     }
-    if (tp.x > .23 && tp.x < .775 && tp.y > .90) return 'I';
+    if (tp.x > .23 && tp.x < .775 && tp.y > .90) return '-';
   }
 
   // Screen (mode 2)
