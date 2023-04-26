@@ -1617,11 +1617,11 @@ SDL_Event event;
     textdst_rectD = (SDL_Rect){
         gameplay_rectD.x + 6,
         gameplay_rectD.y + 6,
-        MIN(AL(overlayD[0])*fwidth, (c3button - c1) * dw),
+        MIN(AL(overlayD[0]) * fwidth, (c3button - c1) * dw),
         MIN(AL(overlayD) * fheight, dh - gameplay_rectD.y - c3h * dh),
     };
     Log("textdst %dw %dh", textdst_rectD.w, textdst_rectD.h);
-    Log("wanted %dw %dh", AL(overlayD[0]) * fwidth, AL(overlayD) * fheight);
+    Log("wanted %jdw %jdh", AL(overlayD[0]) * fwidth, AL(overlayD) * fheight);
 
     // Input constraints
     if (TOUCH) {
