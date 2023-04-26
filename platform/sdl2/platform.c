@@ -28,8 +28,8 @@ enum { TOUCH };
 #endif
 
 enum { WINDOW };
-#define WINDOW_X 1920  // 1440
-#define WINDOW_Y 1080  // 720
+#define WINDOW_X 1920  // 1440, 1334
+#define WINDOW_Y 1080  // 720, 750
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
 #define RS(r, scale) \
@@ -1122,6 +1122,31 @@ platform_draw()
     affect_draw(width, height);
   }
 
+  {
+    SDL_Surface *surface = mmsurfaceD;
+    SDL_Texture *texture = mmtextureD;
+    bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
+                           (SDL_Point){0, 0}, surface);
+    SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
+    left = columnD[2] * display_rectD.w;
+    int ax = display_rectD.w - left;
+    int pad = (ax - MMSCALE * MAX_WIDTH) / 2;
+    SDL_Rect r = {
+        left + pad,
+        top + height + height / 2,
+        MMSCALE * MAX_WIDTH,
+        MMSCALE * MAX_HEIGHT,
+    };
+    if (mode == 0) {
+      SDL_RenderCopy(rendererD, texture, NULL, &r);
+      rect_frame(r, 3);
+    }
+
+    if (minimap_enlargeD) {
+      SDL_RenderCopy(rendererD, texture, NULL, &gameplay_rectD);
+    }
+  }
+
   if (show_map) {
     SDL_Rect zoom_rect;
     SDL_Rect sprite_rect;
@@ -1250,31 +1275,6 @@ platform_draw()
       render_font_string(rendererD, &fontD, AP(moreD), p);
 
       font_colorD = whiteD;
-    }
-  }
-
-  {
-    SDL_Surface *surface = mmsurfaceD;
-    SDL_Texture *texture = mmtextureD;
-    bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
-                           (SDL_Point){0, 0}, surface);
-    SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
-    left = columnD[2] * display_rectD.w;
-    int ax = display_rectD.w - left;
-    int pad = (ax - MMSCALE * MAX_WIDTH) / 2;
-    SDL_Rect r = {
-        left + pad,
-        top + height + height / 2,
-        MMSCALE * MAX_WIDTH,
-        MMSCALE * MAX_HEIGHT,
-    };
-    if (mode == 0) {
-      SDL_RenderCopy(rendererD, texture, NULL, &r);
-      rect_frame(r, 3);
-    }
-
-    if (minimap_enlargeD) {
-      SDL_RenderCopy(rendererD, texture, NULL, &gameplay_rectD);
     }
   }
 
@@ -1547,10 +1547,20 @@ SDL_Event event;
 
     // Map scaling due to vertical constraint
     float scale;
-    if (10 + fheight + map_rectD.h <= dh) {
+    int ymin = fheight + 6;                                // text, frame
+    int xmin = fwidth * (26 + 2) + (MMSCALE * MAX_WIDTH);  // touchpad, minimap
+    if (ymin + map_rectD.h <= dh) {
       scale = 1.0f;
     } else {
-      scale = (dh - fheight - 10) / (float)map_rectD.h;
+      float yscale = (dh - ymin) / (float)map_rectD.h;
+      Log("YScale %.3f", yscale);
+      scale = yscale;
+    }
+    // Horizontal constraint
+    if (xmin + map_rectD.w > dw) {
+      float xscale = (dw - xmin) / (float)map_rectD.w;
+      Log("XScale %.3f", xscale);
+      scale = MIN(scale, xscale);
     }
     Log("Scale %.3f", scale);
     gameplay_rectD =
@@ -1575,13 +1585,14 @@ SDL_Event event;
 
     // Map position
     gameplay_rectD.x = columnD[1] * dw;
-    gameplay_rectD.y = fheight + (dh - gameplay_rectD.h - fheight) / 2;
+    gameplay_rectD.y =
+        (scale != 1.0 ? ymin : ymin + (dh - gameplay_rectD.h - ymin) / 2);
 
     // Affect Text
     if (scale != 1.0) {
       affectdst_rectD = (SDL_Rect){
           c2 * dw,
-          .5 * dh - (5 * fheight / 2),
+          gameplay_rectD.y + (MMSCALE * MAX_HEIGHT) + (fheight * 4),
           (1.0 - c2) * dw,
           5 * fheight,
       };
@@ -1595,7 +1606,6 @@ SDL_Event event;
     }
 
     // Right hand controls
-    float lift = dh > 720 ? .1f : 0.f;
     float c3w, c3h, c3o, c3button;
     c3o = c1 + AL(overlayD[0]) * cfD;
     c3w = CLAMP(1.0 - c3o, 8 * cfD, 16 * cfD);
@@ -1608,11 +1618,14 @@ SDL_Event event;
         gameplay_rectD.x + 6,
         gameplay_rectD.y + 6,
         (c3button - c1) * dw,
-        MIN(AL(overlayD) * rfD * dh, dh - gameplay_rectD.y - (c3h + lift) * dh),
+        MIN(AL(overlayD) * fheight, dh - gameplay_rectD.y - c3h * dh),
     };
+    Log("textdst %dw %dh", textdst_rectD.w, textdst_rectD.h);
+    Log("wanted %dw %dh", AL(overlayD[0]) * fwidth, AL(overlayD) * fheight);
 
     // Input constraints
     if (TOUCH) {
+      float lift = (dh <= 768) ? 0.f : .1f;
       padD = (SDL_FRect){.w = c1 - c0, .h = (c1 - c0) * aspectD};
       padD.x = c0 * 0.5f;
       padD.y = 1.0 - padD.h - lift;
