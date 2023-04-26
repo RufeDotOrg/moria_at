@@ -7855,12 +7855,13 @@ inven_reveal()
 static int
 inven_overlay(begin, end)
 {
-  int line, count;
+  int line, count, len;
 
   line = count = 0;
   overlay_submodeD = begin == 0 ? 'i' : 'e';
   for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
+    int sum_weight = 0;
     overlayD[line][0] = ' ';
 
     if (obj_id) {
@@ -7868,14 +7869,21 @@ inven_overlay(begin, end)
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, obj->number);
       obj_detail(obj);
+      if (drop_flag) sum_weight = obj->number * obj->weight;
     } else {
       descD[0] = 0;
       detailD[0] = 0;
     }
 
-    overlay_usedD[line] =
-        snprintf(overlayD[line], AL(overlayD[line]), "%c) %-51.051s%25.025s",
-                 'a' + it - begin, descD, detailD);
+    if (sum_weight == 0) {
+      len = snprintf(overlayD[line], AL(overlayD[line]),
+                     "%c) %-51.051s%25.025s", 'a' + it - begin, descD, detailD);
+    } else {
+      len = snprintf(overlayD[line], AL(overlayD[0]),
+                     "%c) %-50.050s%19.019s %2d.%01dlb", 'a' + it - begin,
+                     descD, detailD, sum_weight / 10, sum_weight % 10);
+    }
+    overlay_usedD[line] = len;
     line += 1;
   }
   return count;
