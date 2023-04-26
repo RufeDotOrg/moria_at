@@ -23,6 +23,7 @@ shift $(($OPTIND - 1))
 
 [ $# -eq 1 ] || exit 1
 
+grep -q XXXX.YYYY.ZZZZ $1 || exit 1
 sed -i "s/\<XXXX.YYYY.ZZZZ\>/$VER/g" $1 || exit 2
 sed -i "s/\<AbCdEfGhIjKlMnO\>/$HASH/g" $1 || exit 3
 echo "Modified binary $1"
