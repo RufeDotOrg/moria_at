@@ -10331,15 +10331,17 @@ py_menu()
         longjmp(restartD, 1);
 
       case 'e':
-        overlay_submodeD = 'q';
         line = 0;
         BufMsg(overlay, "  This character will be permanently lost!");
         BufMsg(overlay, " ");
-        BufMsg(overlay, "  Press ESCAPE / RED Button to cancel");
-        if (!in_subcommand("Really commit *Suicide*?", &c)) continue;
-
-        platformD.erase();
-        longjmp(restartD, 1);
+        BufMsg(overlay, "  Press the GREEN button to confirm");
+        if (in_subcommand("Really commit *Suicide*?", &c)) {
+          if (c >= 'a' && c <= 'z') {
+            platformD.erase();
+            longjmp(restartD, 1);
+          }
+        }
+        continue;
     }
   }
   return 0;
