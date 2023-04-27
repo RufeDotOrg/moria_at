@@ -11517,11 +11517,11 @@ static void
 py_autotunnel(y, x)
 {
   if (py_affect(MA_BLIND) == 0) {
-    if (miningD[0] == y && miningD[1] == x) {
+    if (ymineD == y && xmineD == x) {
       tunnel(y, x);
     } else {
-      miningD[0] = y;
-      miningD[1] = x;
+      ymineD = y;
+      xmineD = x;
     }
   }
 }
@@ -12701,6 +12701,7 @@ dungeon()
     snprintf(dun_descD, AL(dun_descD), "%d feet", dun_level * 50);
   if (town) player_maint();
 
+  ymineD = xmineD = 0;
   new_level_flag = FALSE;
   teleport = FALSE;
   do {
