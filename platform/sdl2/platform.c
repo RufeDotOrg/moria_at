@@ -1108,7 +1108,8 @@ platform_draw()
       SDL_Point p = {left + width / 2, top + it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
-    for (int it = MAX_A; it < AL(vitalD) - 1; ++it) {
+    {
+      int it = MAX_A;
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
       SDL_Point p = {left + width / 2, top + it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
@@ -1838,6 +1839,7 @@ SDL_Event event;
       return 'a' + finger_rowD;
     }
     if (tp.x > .23 && tp.x < .775 && tp.y > .90) return '-';
+    if (tp.x < .23 && tp.y < .5 && submodeD == 'c') return 'C';
   }
 
   // Screen (mode 2)

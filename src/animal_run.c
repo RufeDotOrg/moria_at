@@ -693,6 +693,26 @@ randnor(mean, stand)
 
   return mean + offset;
 }
+void
+seed_init(prng)
+{
+  uint32_t seed;
+
+  seed = 0;
+  seed = prng;
+  if (seed == 0) seed = 5381;
+
+  obj_seed = seed;
+
+  seed += 8762;
+  town_seed = seed;
+
+  seed += 113452;
+  rnd_seed = seed;
+
+  // Burn randomness after seeding
+  for (int it = randint(100); it != 0; --it) rnd();
+}
 int
 damroll(num, sides)
 {
@@ -6008,31 +6028,6 @@ py_take_hit(damage)
     new_level_flag = TRUE;
   }
 }
-int
-py_class_select()
-{
-  char c;
-  int line, clidx;
-
-  clidx = -1;
-  overlay_submodeD = 'c';
-  do {
-    line = 0;
-    for (int it = 0; it < AL(classD); ++it) {
-      overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]),
-                                     "%c) %s", 'a' + it, classD[it].name);
-      line += 1;
-    }
-
-    if (!in_subcommand("Which character class would you like to play?", &c))
-      break;
-    uint8_t iidx = c - 'a';
-
-    if (iidx < AL(classD)) clidx = iidx;
-  } while (clidx < 0);
-
-  return clidx;
-}
 static void py_stats(stats, len) int8_t* stats;
 {
   int i, tot;
@@ -6049,13 +6044,14 @@ static void py_stats(stats, len) int8_t* stats;
   for (i = 0; i < len; i++)
     stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
-void
-py_init(csel)
+int
+py_init(prng, csel)
 {
   int hitdie;
   int rsel;
   int8_t stat[MAX_A];
 
+  seed_init(prng);
   do {
     rsel = randint(AL(raceD)) - 1;
   } while ((raceD[rsel].rtclass & (1 << csel)) == 0);
@@ -6111,11 +6107,6 @@ py_init(csel)
   AC(statD.mod_stat);
   memcpy(statD.use_stat, AP(stat));
 
-  uD.mhp = uD.chp = hitdie + con_adj();
-  uD.chp_frac = 0;
-  uD.cmana = uD.mmana = umana_by_level(1);
-  uD.lev = 1;
-
   int min_value = (MAX_PLAYER_LEVEL * 3 / 8 * (hitdie - 1)) + MAX_PLAYER_LEVEL;
   int max_value = (MAX_PLAYER_LEVEL * 5 / 8 * (hitdie - 1)) + MAX_PLAYER_LEVEL;
   player_hpD[0] = hitdie;
@@ -6127,9 +6118,25 @@ py_init(csel)
   } while ((player_hpD[MAX_PLAYER_LEVEL - 1] < min_value) ||
            (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
 
+  uD.lev = 1;
+  uD.food = 7500;
+  uD.food_digest = 2;
+  uD.gold = 100;
+
+  uD.mhp = uD.chp = hitdie + con_adj();
+  uD.chp_frac = 0;
+  uD.cmana = uD.mmana = umana_by_level(1);
+  uD.cmana_frac = 0;
+  return csel;
+}
+void
+py_inven_init()
+{
   int start_equip[] = {30, 87, 22, 0, 0};
   int class_equip[AL(classD)] = {221, 319, 323, 124, 343, 323};
   int race_equip[AL(raceD)] = {87, 81, 82, 52, 90, 78, 127, 128};
+  int clidx = uD.clidx;
+  int rsel = uD.ridx;
   start_equip[AL(start_equip) - 2] = class_equip[clidx];
   start_equip[AL(start_equip) - 1] = race_equip[rsel];
   int iidx = 0;
@@ -6158,10 +6165,6 @@ py_init(csel)
     else
       invenD[iidx++] = obj->id;
   }
-
-  uD.food = 7500;
-  uD.food_digest = 2;
-  uD.gold = 100;
 
   if (HACK) {
     uD.gold = 100000;
@@ -10143,11 +10146,76 @@ show_character()
 
   BufPad(screen, MAX_A, 35);
 
-  line = 0;
-
   DRAWMSG("Name: %-20.020s Race: %-20.020s Class: %-20.020s", "...",
           raceD[uD.ridx].name, classD[uD.clidx].name);
   return inkey();
+}
+int
+py_class_select()
+{
+  char c;
+  int line, clidx;
+  int srow, scol;
+  uint8_t iidx;
+  fn selection = platformD.selection;
+  int seed[AL(classD)];
+
+  for (int it = 0; it < AL(seed); ++it) {
+    seed[it] = platformD.seed();
+  }
+
+  c = 0;
+  clidx = -1;
+  iidx = 0;
+  overlay_submodeD = 'c';
+  do {
+    if (is_upper(c)) {
+      c = show_character();
+    } else {
+      if (selection) {
+        selection(&scol, &srow);
+        iidx = srow;
+      }
+
+      if (iidx < AL(seed) && iidx != clidx) {
+        if (clidx == -1) seed[iidx] = platformD.seed();
+        clidx = py_init(seed[iidx], iidx);
+      }
+
+      line = 0;
+      for (int it = 0; it < AL(classD); ++it) {
+        if (it == clidx) {
+          overlay_usedD[line] =
+              snprintf(overlayD[line], AL(overlayD[line]), "%c) %s %s",
+                       'a' + it, raceD[uD.ridx].name, classD[it].name);
+        } else {
+          overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]),
+                                         "%c) %s", 'a' + it, classD[it].name);
+        }
+        line += 1;
+      }
+      DRAWMSG("Which character class would you like to play?");
+      c = inkey();
+
+      iidx = c - 'a';
+      if (iidx < AL(classD)) {
+        if (selection)
+          return iidx;
+        else
+          clidx = -1;
+      }
+    }
+    if (c == ESCAPE) {
+      if (selection)
+        clidx = -1;
+      else
+        return clidx;
+    } else if (is_ctrl(c)) {
+      break;
+    }
+  } while (1);
+
+  return -1;
 }
 void
 py_takeoff()
@@ -13070,26 +13138,6 @@ obj_level_init()
     tmp[l]++;
   }
 }
-void
-seed_init()
-{
-  uint32_t seed;
-
-  seed = 0;
-  seed = platformD.seed();
-  if (seed == 0) seed = 5381;
-
-  obj_seed = seed;
-
-  seed += 8762;
-  town_seed = seed;
-
-  seed += 113452;
-  rnd_seed = seed;
-
-  // Burn randomness after seeding
-  for (int it = randint(100); it != 0; --it) rnd();
-}
 
 static int
 platform_init()
@@ -13109,8 +13157,6 @@ platform_init()
 int
 main(int argc, char** argv)
 {
-  int csel;
-
   mon_level_init();
   obj_level_init();
 
@@ -13120,15 +13166,13 @@ main(int argc, char** argv)
   setjmp(restartD);
   hard_reset();
 
-  if (platformD.load && platformD.load()) {
+  if (platformD.load()) {
   } else {
-    csel = py_class_select();
-    if (csel < 0 || csel >= AL(classD)) return 1;
+    if (py_class_select() < 0) return platformD.postgame();
 
-    seed_init();
-    py_init(csel);
     dun_level = 1;
 
+    py_inven_init();
     inven_sort();
     inven_check_weight();
     inven_check_light();
