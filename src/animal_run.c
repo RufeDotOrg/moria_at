@@ -84,7 +84,7 @@ inkey()
 static char
 priorkey()
 {
-  return AS(input_recordD, input_record_writeD - 1);
+  return AS(input_recordD, input_record_readD - 1);
 }
 void
 vital_update()
