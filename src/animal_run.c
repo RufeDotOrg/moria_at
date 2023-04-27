@@ -3689,9 +3689,6 @@ cave_reset()
 void
 hard_reset()
 {
-  // Not dead
-  death = 0;
-
   // Clear the cave
   memset(caveD, 0, sizeof(caveD));
 
@@ -3703,6 +3700,9 @@ hard_reset()
   mon_usedD = 0;
   memset(monD, 0, sizeof(monD));
   memset(entity_monD, 0, sizeof(entity_monD));
+
+  // Message history
+  memset(msglen_cqD, 0, sizeof(msglen_cqD));
 
   // Replay state
   input_record_readD = input_action_usedD = 0;
@@ -12705,6 +12705,9 @@ dungeon()
   teleport = FALSE;
   do {
     turn_flag = FALSE;
+    inven_check_weight();
+    inven_check_light();
+
     do {
       msg_moreD = 0;
       draw();
@@ -13102,8 +13105,6 @@ dungeon()
     turnD += 1;
     tick();
     ma_tick();  // falling
-    inven_check_weight();
-    inven_check_light();
   } while (!new_level_flag);
 }
 void
@@ -13174,17 +13175,19 @@ main(int argc, char** argv)
 
     py_inven_init();
     inven_sort();
-    inven_check_weight();
-    inven_check_light();
 
     // Replay state
     input_record_writeD = input_record_readD = input_action_usedD = 0;
     platformD.save();
   }
+
+  // Per-Player initialization
+  death = 0;
+  total_winner = 0;
+  save_exit_flag = 0;
   calc_bonuses();
   calc_hitpoints();
   calc_mana();
-
   magic_init();
 
   while (!death) {
