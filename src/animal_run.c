@@ -15,6 +15,7 @@ static jmp_buf restartD;
 static char input_recordD[4 * 1024];
 static int input_record_writeD;
 static int input_record_readD;
+static int input_undoD;
 static int input_actionD[1024];
 static int input_action_usedD;
 static int drop_flag;
@@ -3704,7 +3705,9 @@ hard_reset()
   memset(entity_monD, 0, sizeof(entity_monD));
 
   // Replay state
-  input_record_writeD = input_record_readD = input_action_usedD = 0;
+  input_record_readD = input_action_usedD = 0;
+  input_record_writeD = AS(input_actionD, input_undoD);
+  input_undoD = 0;
 }
 BOOL
 panel_contains(panel, y, x)
@@ -10299,12 +10302,8 @@ py_menu()
     BufMsg(overlay, death ? "a) All equipment / inventory "
                           : "a) Await event (health regeneration, malady "
                             "expiration, or recall)");
-    if (input_action) {
-      BufMsg(overlay, "b) Backup / Undo (%d) (%d) (%s)", input_action,
-             input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
-    } else {
-      BufMsg(overlay, "--");
-    }
+    BufMsg(overlay, "b) Backup / Undo (%d) (%d) (%s)", input_action,
+           input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
     BufMsg(overlay, "--");
     BufMsg(overlay, "d) Dungeon reset");
     BufMsg(overlay, "e) Erase character (new game)");
@@ -10321,10 +10320,9 @@ py_menu()
         break;
 
       case 'b':
-        if (input_action == 0 || !memory_ok) return 0;
+        if (!memory_ok) return 0;
 
-        input_action = MAX(0, input_action - 2 + death);
-        input_record_writeD = AS(input_actionD, input_action);
+        input_undoD = MAX(0, input_action - 2 + death);
         longjmp(restartD, 1);
 
       case 'd':
