@@ -281,5 +281,6 @@ struct platformS {
   fn readansi;
   fn predraw;
   fn draw;
+  fn selection;
 };
 DATA struct platformS platformD;

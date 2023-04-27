@@ -2039,6 +2039,14 @@ platform_erase()
   return 0;
 }
 
+int
+platform_selection(int *yptr, int *xptr)
+{
+  *yptr = finger_colD;
+  *xptr = finger_rowD;
+  return modeD == 1;
+}
+
 // Initialization
 #define SDL_SCOPE (SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS)
 int
@@ -2127,6 +2135,7 @@ platform_pregame()
     sdl_pump();
   }
 
+  platformD.selection = platform_selection;
   return 0;
 }
 int
