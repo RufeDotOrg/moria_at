@@ -90,7 +90,6 @@ static SDL_Color font_colorD;
 static int xD;
 static int modeD;
 static int submodeD;
-static uint8_t row_stateD[256];
 static uint8_t finger_rowD;
 static uint8_t finger_colD;
 static uint8_t finger_countD;
@@ -905,10 +904,10 @@ mode_change()
     mnext = 0;
 
   if (mprev != mnext || subprev != subnext) {
-    if (mprev == 1) row_stateD[subprev] = finger_rowD;
+    if (mprev == 1) ui_stateD[subprev] = finger_rowD;
 
     if (mnext == 1) {
-      finger_rowD = (subnext != 0) ? row_stateD[subnext] : 0;
+      finger_rowD = (subnext != 0) ? ui_stateD[subnext] : 0;
       finger_colD = (subnext == 'e') ? 1 : 0;
 
       overlay_autoselect();

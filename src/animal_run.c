@@ -3659,6 +3659,28 @@ cave_reset()
 
   // Release all monsters
   mon_usedD = 0;
+  memset(monD, 0, sizeof(monD));
+  memset(entity_monD, 0, sizeof(entity_monD));
+
+  // Replay state
+  input_record_writeD = input_record_readD = input_action_usedD = 0;
+}
+void
+hard_reset()
+{
+  // Not dead
+  death = 0;
+
+  // Clear the cave
+  memset(caveD, 0, sizeof(caveD));
+
+  // Release all objects
+  obj_usedD = 0;
+  memset(objD, 0, sizeof(objD));
+  memset(entity_objD, 0, sizeof(entity_objD));
+  // Release all monsters
+  mon_usedD = 0;
+  memset(monD, 0, sizeof(monD));
   memset(entity_monD, 0, sizeof(entity_monD));
 
   // Replay state
@@ -10234,14 +10256,10 @@ py_menu()
         if (input_action == 0 || !memory_ok) return 0;
 
         input_action = MAX(0, input_action - 2 + death);
-        death = 0;
-        cave_reset();
         input_record_writeD = AS(input_actionD, input_action);
         longjmp(restartD, 1);
 
       case 'd':
-        death = 0;
-        cave_reset();
         longjmp(restartD, 1);
 
       case 'e':
@@ -10253,8 +10271,6 @@ py_menu()
         if (!in_subcommand("Really commit *Suicide*?", &c)) continue;
 
         platformD.erase();
-        death = 0;
-        cave_reset();
         longjmp(restartD, 1);
     }
   }
@@ -13102,6 +13118,7 @@ main(int argc, char** argv)
   platformD.pregame();
 
   setjmp(restartD);
+  hard_reset();
 
   if (platformD.load && platformD.load()) {
   } else {
