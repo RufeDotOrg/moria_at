@@ -2530,7 +2530,6 @@ struct objS* obj;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
-    case TV_DIGGING:
       return TRUE;
     case TV_GLOVES:
       return (obj->tohit || obj->todam);
@@ -2619,7 +2618,6 @@ may_equip(tval)
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
-    case TV_DIGGING:
       slot = INVEN_WIELD;
       break;
     case TV_LIGHT:
@@ -11391,7 +11389,7 @@ struct objS* obj;
 {
   int tabil, use_str;
   tabil = -1;
-  if (may_equip(obj->tval) == INVEN_WIELD) {
+  if (obj->tval == TV_DIGGING || may_equip(obj->tval) == INVEN_WIELD) {
     use_str = statD.use_stat[A_STR];
 
     tabil = use_str;
@@ -11420,9 +11418,10 @@ struct objS* obj;
 static void
 tunnel(y, x)
 {
-  int tabil, wall_chance, wall_min, turn_count;
+  int max_tabil, wall_chance, wall_min, turn_count;
   struct caveS* c_ptr;
   struct objS* i_ptr;
+  int iidx;
 
   c_ptr = &caveD[y][x];
   if (c_ptr->fval == BOUNDARY_WALL) {
@@ -11430,35 +11429,28 @@ tunnel(y, x)
     return;
   }
 
-  {
-    i_ptr = obj_get(invenD[INVEN_WIELD]);
-    int iidx = INVEN_WIELD;
-    if ((i_ptr->flags & TR_CURSED) == 0) {
-      int max_tabil = -1;
-      for (int it = 0; it < MAX_INVEN; ++it) {
-        i_ptr = obj_get(invenD[it]);
-        if (may_equip(i_ptr->tval) == INVEN_WIELD) {
-          tabil = obj_tabil(i_ptr, FALSE);
-          if (tabil > max_tabil) {
-            max_tabil = tabil;
-            iidx = it;
-          }
+  iidx = INVEN_WIELD;
+  i_ptr = obj_get(invenD[iidx]);
+  max_tabil = obj_tabil(i_ptr, FALSE);
+
+  if ((i_ptr->flags & TR_CURSED) == 0) {
+    for (int it = 0; it < MAX_INVEN; ++it) {
+      i_ptr = obj_get(invenD[it]);
+      if (i_ptr->tval == TV_DIGGING) {
+        int tabil = obj_tabil(i_ptr, FALSE);
+        if (tabil > max_tabil) {
+          max_tabil = tabil;
+          iidx = it;
         }
       }
-      i_ptr = obj_get(invenD[iidx]);
-    }
-
-    if (iidx != INVEN_WIELD) {
-      countD.paralysis = 2;
-      obj_desc(i_ptr, 1);
-      MSG("You begin tunneling with %s.", descD);
-    } else {
-      countD.paralysis = -1;
     }
   }
 
-  if (i_ptr->tval != TV_NOTHING) {
-    tabil = obj_tabil(i_ptr, TRUE);
+  if (max_tabil >= 0) {
+    i_ptr = obj_get(invenD[iidx]);
+    obj_desc(i_ptr, 1);
+    MSG("You begin tunneling with %s.", descD);
+    max_tabil = obj_tabil(i_ptr, TRUE);
 
     wall_chance = 0;
     switch (c_ptr->fval) {
@@ -11485,7 +11477,7 @@ tunnel(y, x)
     if (wall_chance) {
       do {
         turn_count += 1;
-        if (tabil > randint(wall_chance) + wall_min) {
+        if (max_tabil > randint(wall_chance) + wall_min) {
           twall(y, x);
           msg_print("You have finished the tunnel.");
           break;
@@ -11504,7 +11496,7 @@ tunnel(y, x)
       msg_print("You dig in the rubble.");
 
       do {
-        if (tabil > randint(180)) {
+        if (max_tabil > randint(180)) {
           c_ptr->fval = FLOOR_CORR;
           delete_object(y, x);
           if (randint(10) == 1) {
@@ -11521,6 +11513,9 @@ tunnel(y, x)
     }
 
     // TBD: unique counter for mining?
+    if (iidx != INVEN_WIELD) {
+      countD.paralysis = 2;
+    }
     countD.paralysis += MAX(turn_count, 1);
   } else
     msg_print("You dig with your hands, making no progress.");
