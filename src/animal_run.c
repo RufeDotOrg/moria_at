@@ -3997,7 +3997,8 @@ find_event(y, x)
         t = entity_objD[c_ptr->oidx].tval;
         if (t == TV_INVIS_TRAP || t == TV_SECRET_DOOR) {
         } else if (t == TV_OPEN_DOOR && find_ignore_doors) {
-        } else if (t == TV_GOLD && c_ptr->fval >= MIN_CLOSED_SPACE) {
+        } else if (t == TV_GOLD && (c_ptr->fval >= MIN_CLOSED_SPACE &&
+                                    (CF_FIELDMARK & c_ptr->cflag) == 0)) {
         } else {
           find_flag = FALSE;
           return;
@@ -4129,8 +4130,8 @@ detect_obj(int (*valid)())
       if (!seen) {
         obj = &entity_objD[c_ptr->oidx];
         if (valid(obj)) {
-          if (obj->tval > TV_MAX_PICK_UP) {
-            // dungeon fixtures become known
+          if (obj->tval >= TV_MAX_PICK_UP) {
+            // dungeon fixtures & gold become known
             c_ptr->cflag |= CF_FIELDMARK;
             // enables locked/stuck door interaction, trap auto-disarm
             obj->idflag |= ID_REVEAL;
