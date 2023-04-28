@@ -8120,6 +8120,9 @@ void obj_study(obj, for_sale) struct objS* obj;
       BufMsg(screen, "... has unknown effects!");
     }
 
+    if (obj->tval == TV_DIGGING) {
+      BufMsg(screen, "%-17.017s: %+d", "+ To Digging", obj_tabil(obj, reveal));
+    }
     if (reveal) {
       if (oset_tohitdam(obj)) {
         BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
@@ -11383,16 +11386,14 @@ py_look_obj()
       msg_print("You see no objects of interest in that direction.");
   }
 }
-static int
+int
 obj_tabil(obj, truth)
 struct objS* obj;
 {
-  int tabil, use_str;
+  int tabil;
   tabil = -1;
   if (obj->tval == TV_DIGGING || may_equip(obj->tval) == INVEN_WIELD) {
-    use_str = statD.use_stat[A_STR];
-
-    tabil = use_str;
+    tabil = 0;
     if (truth || (obj->idflag & ID_REVEAL)) {
       if (TR_TUNNEL & obj->flags)
         tabil += obj->p1 * 50;
@@ -11408,17 +11409,13 @@ struct objS* obj;
       /* divide by two so that digging without shovel isn't too easy */
       tabil >>= 1;
     }
-
-    /* If this weapon is too heavy for the player to wield properly, then
-       also make it harder to dig with it.  */
-    tabil = MAX(tabil + hitadj_by_weight_str(obj->weight, use_str), 0);
   }
   return tabil;
 }
 static void
 tunnel(y, x)
 {
-  int max_tabil, wall_chance, wall_min, turn_count;
+  int max_tabil, str, wall_chance, wall_min, turn_count;
   struct caveS* c_ptr;
   struct objS* i_ptr;
   int iidx;
@@ -11450,7 +11447,13 @@ tunnel(y, x)
     i_ptr = obj_get(invenD[iidx]);
     obj_desc(i_ptr, 1);
     MSG("You begin tunneling with %s.", descD);
+
+    str = statD.use_stat[A_STR];
     max_tabil = obj_tabil(i_ptr, TRUE);
+    /* If this weapon is too heavy for the player to wield properly, then
+       also make it harder to dig with it.  */
+    max_tabil += hitadj_by_weight_str(i_ptr->weight, str);
+    if (max_tabil < 0) max_tabil = 0;
 
     wall_chance = 0;
     switch (c_ptr->fval) {
