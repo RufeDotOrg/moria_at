@@ -3973,7 +3973,7 @@ see_nothing(dir, y, x)
   else
     return FALSE;
 }
-void
+int
 find_event(y, x)
 {
   int dir, newdir, t, check_dir, row, col;
@@ -4000,16 +4000,14 @@ find_event(y, x)
         } else if (t == TV_GOLD && (c_ptr->fval >= MIN_CLOSED_SPACE &&
                                     (CF_FIELDMARK & c_ptr->cflag) == 0)) {
         } else {
-          find_flag = FALSE;
-          return;
+          return 1;
         }
       }
 
       /* Detect adjacent visible monsters that may not otherwise disturb */
       if (c_ptr->midx != 0) {
         if (entity_monD[c_ptr->midx].mlit) {
-          find_flag = FALSE;
-          return;
+          return 1;
         }
       }
 
@@ -4018,23 +4016,19 @@ find_event(y, x)
           /* Have we found a break? */
           if (i < 0) {
             if (find_breakright) {
-              find_flag = FALSE;
-              return;
+              return 1;
             }
           } else if (i > 0) {
             if (find_breakleft) {
-              find_flag = FALSE;
-              return;
+              return 1;
             }
           }
         } else if (option == 0)
           option = newdir; /* The first new direction. */
         else if (option2 != 0) {
-          find_flag = FALSE; /* Three new directions. STOP. */
-          return;
+          return 1; /* Three new directions. STOP. */
         } else if (option != cycle[chome[dir] + i - 1]) {
-          find_flag = FALSE; /* If not adjacent to prev, STOP */
-          return;
+          return 1; /* If not adjacent to prev, STOP */
         } else {
           /* Two adjacent choices. Make option2 the diagonal,
              and remember the other diagonal adjacent to the first
@@ -4053,14 +4047,12 @@ find_event(y, x)
            previously open. */
         if (i < 0) {
           if (find_breakleft) {
-            find_flag = FALSE;
-            return;
+            return 1;
           }
           find_breakright = TRUE;
         } else if (i > 0) {
           if (find_breakright) {
-            find_flag = FALSE;
-            return;
+            return 1;
           }
           find_breakleft = TRUE;
         }
@@ -4093,9 +4085,10 @@ find_event(y, x)
         {
           find_direction = option;
           find_prevdir = option2;
-        } else
+        } else {
           /* STOP: we are next to an intersection or a room */
-          find_flag = FALSE;
+          return 1;
+        }
       } else if (find_cut) {
         /* This corner is seen to be enclosed; we cut the corner. */
         find_direction = option2;
@@ -4108,6 +4101,8 @@ find_event(y, x)
       }
     }
   }
+
+  return 0;
 }
 int
 detect_obj(int (*valid)())
@@ -11532,18 +11527,6 @@ tunnel(y, x)
 
   turn_flag = TRUE;
 }
-static void
-py_autotunnel(y, x)
-{
-  if (py_affect(MA_BLIND) == 0) {
-    if (ymineD == y && xmineD == x) {
-      tunnel(y, x);
-    } else {
-      ymineD = y;
-      xmineD = x;
-    }
-  }
-}
 static void make_move(midx, mm) int* mm;
 {
   int fy, fx, newy, newx, do_turn, do_move;
@@ -12708,6 +12691,7 @@ void
 dungeon()
 {
   int c, y, x, iidx;
+  int ymine, xmine;
   uint32_t dir, teleport;
   int town;
 
@@ -12720,13 +12704,13 @@ dungeon()
     snprintf(dun_descD, AL(dun_descD), "%d feet", dun_level * 50);
   if (town) player_maint();
 
-  ymineD = xmineD = 0;
   new_level_flag = FALSE;
   teleport = FALSE;
   do {
     turn_flag = FALSE;
     inven_check_weight();
     inven_check_light();
+    ymine = xmine = -1;
 
     do {
       msg_moreD = 0;
@@ -13046,7 +13030,14 @@ dungeon()
           find_flag = FALSE;
         } else if (find_flag && c_ptr->fval > MAX_OPEN_SPACE) {
           find_flag = FALSE;
-          py_autotunnel(y, x);
+          if (py_affect(MA_BLIND) == 0) {
+            if (ymine == y && xmine == x) {
+              tunnel(y, x);
+            } else {
+              ymine = y;
+              xmine = x;
+            }
+          }
         } else {
           // doors known to be jammed are bashed prior to movement
           if (obj->tval == TV_CLOSED_DOOR) {
@@ -13076,7 +13067,9 @@ dungeon()
             uD.y = y;
             uD.x = x;
             if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
-            if (py_affect(MA_BLIND) == 0 && find_flag) find_event(y, x);
+            if (py_affect(MA_BLIND) == 0 && find_flag) {
+              if (find_event(y, x)) find_flag = FALSE;
+            }
 
             if (obj->tval == TV_CHEST && obj->sn != SN_EMPTY) {
               open_object(y, x);

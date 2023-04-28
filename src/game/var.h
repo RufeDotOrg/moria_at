@@ -94,8 +94,6 @@ static int pack_heavy;
 static char descD[98];
 static char detailD[98];
 static char death_descD[98];
-static int xmineD;
-static int ymineD;
 
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
