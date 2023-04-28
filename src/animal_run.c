@@ -8089,6 +8089,32 @@ inven_eat(iidx)
   }
   return FALSE;
 }
+int
+obj_tabil(obj, truth)
+struct objS* obj;
+{
+  int tabil;
+  tabil = -1;
+  if (obj->tval == TV_DIGGING || may_equip(obj->tval) == INVEN_WIELD) {
+    tabil = 0;
+    if (truth || (obj->idflag & ID_REVEAL)) {
+      if (TR_TUNNEL & obj->flags)
+        tabil += obj->p1 * 50;
+      else {
+        tabil += obj->tohit + obj->todam;
+      }
+    }
+
+    if (TR_TUNNEL & obj->flags)
+      tabil += 25;
+    else {
+      tabil += obj->damage[0] * obj->damage[1];
+      /* divide by two so that digging without shovel isn't too easy */
+      tabil >>= 1;
+    }
+  }
+  return tabil;
+}
 void obj_study(obj, for_sale) struct objS* obj;
 {
   struct treasureS* tr_ptr;
@@ -11385,32 +11411,6 @@ py_look_obj()
     else
       msg_print("You see no objects of interest in that direction.");
   }
-}
-int
-obj_tabil(obj, truth)
-struct objS* obj;
-{
-  int tabil;
-  tabil = -1;
-  if (obj->tval == TV_DIGGING || may_equip(obj->tval) == INVEN_WIELD) {
-    tabil = 0;
-    if (truth || (obj->idflag & ID_REVEAL)) {
-      if (TR_TUNNEL & obj->flags)
-        tabil += obj->p1 * 50;
-      else {
-        tabil += obj->tohit + obj->todam;
-      }
-    }
-
-    if (TR_TUNNEL & obj->flags)
-      tabil += 25;
-    else {
-      tabil += obj->damage[0] * obj->damage[1];
-      /* divide by two so that digging without shovel isn't too easy */
-      tabil >>= 1;
-    }
-  }
-  return tabil;
 }
 static void
 tunnel(y, x)
