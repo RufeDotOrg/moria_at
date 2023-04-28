@@ -2497,11 +2497,17 @@ struct objS* obj;
   return (obj->tval == TV_INVIS_TRAP || obj->tval == TV_CHEST);
 }
 int
-oset_sdoor(obj)
+oset_doorstair(obj)
 struct objS* obj;
 {
   return (obj->tval == TV_SECRET_DOOR || obj->tval == TV_UP_STAIR ||
           obj->tval == TV_DOWN_STAIR);
+}
+int
+oset_secret(obj)
+struct objS* obj;
+{
+  return oset_trap(obj) || oset_doorstair(obj);
 }
 int
 oset_zap(obj)
@@ -4105,7 +4111,7 @@ find_event(y, x)
 int
 detect_obj(int (*valid)())
 {
-  int i, j, detect;
+  int i, j, detect, seen;
   struct caveS* c_ptr;
   struct objS* obj;
 
@@ -4118,24 +4124,38 @@ detect_obj(int (*valid)())
   for (i = rmin; i < rmax; i++)
     for (j = cmin; j < cmax; j++) {
       c_ptr = &caveD[i][j];
-      obj = &entity_objD[c_ptr->oidx];
-      if (valid(obj)) {
-        c_ptr->cflag |= CF_TEMP_LIGHT;
-        // dungeon fixtures become known
-        // enables locked/stuck door interaction, trap auto-disarm
-        if (obj->tval > TV_MAX_PICK_UP) {
-          obj->idflag |= ID_REVEAL;
-          if (obj->tval == TV_INVIS_TRAP) {
-            obj->tval = TV_VIS_TRAP;
-            obj->tchar = '^';
-          } else if (obj->tval == TV_SECRET_DOOR) {
-            obj->tval = TV_CLOSED_DOOR;
-            obj->tchar = '+';
+      seen = (CF_VIZ & c_ptr->cflag) != 0;
+
+      if (!seen) {
+        obj = &entity_objD[c_ptr->oidx];
+        if (valid(obj)) {
+          if (obj->tval > TV_MAX_PICK_UP) {
+            // dungeon fixtures become known
+            c_ptr->cflag |= CF_FIELDMARK;
+            // enables locked/stuck door interaction, trap auto-disarm
+            obj->idflag |= ID_REVEAL;
+
+            if (obj->tval == TV_INVIS_TRAP) {
+              obj->tval = TV_VIS_TRAP;
+              obj->tchar = '^';
+            } else if (obj->tval == TV_SECRET_DOOR) {
+              obj->tval = TV_CLOSED_DOOR;
+              obj->tchar = '+';
+            }
+          } else {
+            c_ptr->cflag |= CF_TEMP_LIGHT;
           }
+          detect = TRUE;
         }
-        detect = TRUE;
       }
     }
+
+  if (detect) {
+    msg_print("You sense objects!");
+  } else {
+    msg_print("You detect nothing further.");
+  }
+
   return (detect);
 }
 int
@@ -4148,17 +4168,19 @@ detect_mon(int (*valid)())
   FOR_EACH(mon, {
     if (panel_contains(&panelD, mon->fy, mon->fx)) {
       cr_ptr = &creatureD[mon->cidx];
-      if (valid(cr_ptr)) {
-        mon->mlit = TRUE;
-        flag = TRUE;
+      if (!mon->mlit) {
+        if (valid(cr_ptr)) {
+          mon->mlit = TRUE;
+          flag = TRUE;
+        }
       }
     }
   });
 
   if (flag) {
-    msg_print("You sense a presence!");
+    msg_print("You sense monsters!");
   } else {
-    msg_print("You detect nothing unusual.");
+    msg_print("You detect nothing further.");
   }
 
   return flag;
@@ -5517,9 +5539,6 @@ ma_duration(maidx, nturn)
   } else if (maidx == MA_FEAR && py_tr(TR_HERO)) {
     msg_print("A hero recovers quickly.");
     nturn = 0;
-  } else if (maidx == MA_DETECT_INVIS || maidx == MA_DETECT_EVIL) {
-    // expiration occurs on the rising edge of ma_tick()
-    nturn += 1;
   }
 
   maD[maidx] += 2 * nturn;
@@ -8697,7 +8716,7 @@ int *uy, *ux;
             ident |= detect_obj(oset_trap);
             break;
           case 18:
-            ident |= detect_obj(oset_sdoor);
+            ident |= detect_obj(oset_doorstair);
             break;
           case 19:
             msg_print("This is a mass genocide scroll.");
@@ -9014,8 +9033,7 @@ int* x_ptr;
       py_heal_hit(damroll(4, 4));
       break;
     case 6:
-      detect_obj(oset_sdoor);
-      detect_obj(oset_trap);
+      detect_obj(oset_secret);
       break;
     case 7:
       if (!get_dir(0, &dir)) return 0;
@@ -9248,7 +9266,7 @@ int* x_ptr;
       detect_obj(oset_trap);
       break;
     case 7:
-      detect_obj(oset_sdoor);
+      detect_obj(oset_doorstair);
       break;
     case 8:
       if (countD.poison) countD.poison = MAX(1, countD.poison / 2);
@@ -9471,7 +9489,7 @@ int *uy, *ux;
             ident |= illuminate(uD.y, uD.x);
             break;
           case 2:
-            ident |= detect_obj(oset_sdoor);
+            ident |= detect_obj(oset_doorstair);
             break;
           case 3:
             ident |= detect_obj(oset_trap);
@@ -12941,15 +12959,6 @@ dungeon()
                 for (int it = 0; it < sizeof(countD) / sizeof(int); ++it) {
                   af_ptr[it] = 1;
                 }
-              } break;
-              case CTRL('d'): {
-                detect_obj(oset_gold);
-                detect_obj(oset_pickup);
-                detect_obj(oset_trap);
-                detect_obj(oset_sdoor);
-                ma_duration(MA_DETECT_MON, 1);
-                ma_duration(MA_DETECT_INVIS, 1);
-                ma_duration(MA_DETECT_EVIL, 1);
               } break;
               case CTRL('f'): {
                 create_food(y, x);
