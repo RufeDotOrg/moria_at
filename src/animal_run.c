@@ -2504,10 +2504,11 @@ struct objS* obj;
           obj->tval == TV_DOWN_STAIR);
 }
 int
-oset_secret(obj)
+oset_hidden(obj)
 struct objS* obj;
 {
-  return oset_trap(obj) || oset_doorstair(obj);
+  return (obj->tval == TV_INVIS_TRAP || obj->tval == TV_CHEST ||
+          obj->tval == TV_SECRET_DOOR);
 }
 int
 oset_zap(obj)
@@ -9056,7 +9057,7 @@ int* x_ptr;
       py_heal_hit(damroll(4, 4));
       break;
     case 6:
-      detect_obj(oset_secret);
+      detect_obj(oset_hidden);
       break;
     case 7:
       if (!get_dir(0, &dir)) return 0;
