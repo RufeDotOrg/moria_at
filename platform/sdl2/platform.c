@@ -1672,12 +1672,20 @@ SDL_Event event;
       SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels,
                         tpsurfaceD->pitch);
     }
+    if (mode)
+      return (finger_colD == 0) ? '*' : '/';
+    else
+      platform_draw();
+  } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+    if (display_rectD.w != 0) {
+      // android 11 devices don't render the first frame (e.g. samsung A20)
+      if (ANDROID) render_update();
 
-    if (mode) return ' ';
-    platform_draw();
-  } else if (event.window.event == SDL_WINDOWEVENT_RESTORED) {
-    if (mode) return ' ';
-    platform_draw();
+      if (mode)
+        return (finger_colD == 0) ? '*' : '/';
+      else
+        platform_draw();
+    }
   }
   return 0;
 }
