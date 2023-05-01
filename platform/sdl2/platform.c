@@ -828,11 +828,8 @@ viz_minimap()
       for (int col = 0; col < MAX_WIDTH; ++col) {
         color = cave_color(row, col);
 
-        if (color == 0 &&
-            (row >= rmin && row <= rmax && (col == cmin || col == cmax))) {
-          color = BRIGHT + BLACK;
-        } else if (color == 0 && (col >= cmin && col <= cmax &&
-                                  (row == rmin || row == rmax))) {
+        if ((row >= rmin && row <= rmax) && (col >= cmin && col <= cmax) &&
+            color == 0) {
           color = BRIGHT + BLACK;
         }
 
