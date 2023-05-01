@@ -10344,8 +10344,13 @@ py_menu()
     BufMsg(overlay, death ? "a) All equipment / inventory "
                           : "a) Await event (health regeneration, malady "
                             "expiration, or recall)");
-    BufMsg(overlay, "b) Backup / Undo (%d) (%d) (%s)", input_action,
-           input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
+    if (HACK) {
+      BufMsg(overlay, "b) Backup / Undo (%d) (%d) (%s)", input_action,
+             input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
+    } else {
+      BufMsg(overlay, "b) Backup / Rewind / Undo (%s)",
+             memory_ok ? "memory OK" : "memory FAIL");
+    }
     BufMsg(overlay, "--");
     BufMsg(overlay, "d) Dungeon reset");
     BufMsg(overlay, "e) Erase character (new game)");
