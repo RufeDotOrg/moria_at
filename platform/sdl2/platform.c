@@ -716,10 +716,8 @@ cave_color(row, col)
     color = BRIGHT + MAGENTA;
   } else if (c_ptr->fval == BOUNDARY_WALL) {
     color = BRIGHT + WHITE;
-  } else if (CF_VIZ & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
+  } else if (CF_LIT & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
     color = BRIGHT + WHITE;
-  } else if (CF_TEMP_LIGHT & c_ptr->cflag) {
-    color = BRIGHT + CYAN;
   } else if (CF_LIT & c_ptr->cflag) {
     color = BRIGHT + BLACK;
   }
@@ -731,7 +729,7 @@ cave_color(row, col)
         color = BRIGHT + GREEN;
       } else if (obj->tval == TV_DOWN_STAIR) {
         color = BRIGHT + RED;
-      } else if (obj->tval == TV_VIS_TRAP) {
+      } else if (obj->tval == TV_VIS_TRAP || obj->tval == TV_RUBBLE) {
         color = BRIGHT + YELLOW;
       } else if (obj->tval == TV_SECRET_DOOR) {
         color = BRIGHT + WHITE;
@@ -741,6 +739,10 @@ cave_color(row, col)
         color = BRIGHT + GREEN;
       }
     }
+  }
+
+  if (color <= BRIGHT + BLACK && (CF_TEMP_LIGHT & c_ptr->cflag)) {
+    color = BRIGHT + CYAN;
   }
 
   return color;
