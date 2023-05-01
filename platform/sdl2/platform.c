@@ -1826,11 +1826,7 @@ SDL_Event event;
         return 'A' + finger_rowD;
       }
       if (dx && !dy) {
-        if (finger) {
-          return CTRL('d');
-        } else {
-          finger_colD = CLAMP(finger_colD + dx, 0, 1);
-        }
+        finger_colD = CLAMP(finger_colD + dx, 0, 1);
       }
       if (dy && !dx) {
         if (finger)

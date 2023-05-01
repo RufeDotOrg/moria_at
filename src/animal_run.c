@@ -81,11 +81,6 @@ inkey()
 
   return c;
 }
-static char
-priorkey()
-{
-  return AS(input_recordD, input_record_readD - 1);
-}
 void
 vital_update()
 {
@@ -10112,8 +10107,6 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
           }
         }
       }
-    } else if (priorkey() == CTRL('d')) {
-      drop_flag = TRUE;
     }
   } while (!turn_flag && iidx >= 0);
 }
