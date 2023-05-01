@@ -2503,7 +2503,7 @@ oset_hidden(obj)
 struct objS* obj;
 {
   return (obj->tval == TV_INVIS_TRAP || obj->tval == TV_CHEST ||
-          obj->tval == TV_SECRET_DOOR);
+          obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR);
 }
 int
 oset_zap(obj)
