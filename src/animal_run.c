@@ -4101,7 +4101,7 @@ find_event(y, x)
 int
 detect_obj(int (*valid)())
 {
-  int i, j, detect, seen;
+  int i, j, detect, fm, lit;
   struct caveS* c_ptr;
   struct objS* obj;
 
@@ -4114,34 +4114,37 @@ detect_obj(int (*valid)())
   for (i = rmin; i < rmax; i++)
     for (j = cmin; j < cmax; j++) {
       c_ptr = &caveD[i][j];
-      seen = (CF_VIZ & c_ptr->cflag) != 0;
+      fm = (CF_FIELDMARK & c_ptr->cflag);
+      lit = (CF_LIT & c_ptr->cflag);
+      obj = &entity_objD[c_ptr->oidx];
 
-      if (!seen) {
-        obj = &entity_objD[c_ptr->oidx];
-        if (valid(obj)) {
-          if (obj->tval >= TV_MAX_PICK_UP) {
-            // dungeon fixtures & gold become known
-            c_ptr->cflag |= CF_FIELDMARK;
-            // enables locked/stuck door interaction, trap auto-disarm
-            obj->idflag |= ID_REVEAL;
-
-            if (obj->tval == TV_INVIS_TRAP) {
-              obj->tval = TV_VIS_TRAP;
-              obj->tchar = '^';
-            } else if (obj->tval == TV_SECRET_DOOR) {
-              obj->tval = TV_CLOSED_DOOR;
-              obj->tchar = '+';
-            }
-          } else {
-            c_ptr->cflag |= CF_TEMP_LIGHT;
-          }
+      if (valid(obj)) {
+        // Gold is fieldmarked too, affecting auto-run
+        if (obj->tval >= TV_MAX_PICK_UP && !fm) {
           detect = TRUE;
+          c_ptr->cflag |= CF_FIELDMARK;
+
+          // enables locked/stuck door interaction, trap auto-disarm
+          obj->idflag |= ID_REVEAL;
+
+          if (obj->tval == TV_INVIS_TRAP) {
+            obj->tval = TV_VIS_TRAP;
+            obj->tchar = '^';
+          } else if (obj->tval == TV_SECRET_DOOR) {
+            obj->tval = TV_CLOSED_DOOR;
+            obj->tchar = '+';
+          }
+        }
+
+        if (obj->tval < TV_MAX_PICK_UP && !lit) {
+          detect = TRUE;
+          c_ptr->cflag |= CF_TEMP_LIGHT;
         }
       }
     }
 
   if (detect) {
-    msg_print("You sense objects!");
+    msg_print("Your senses tingle!");
   } else {
     msg_print("You detect nothing further.");
   }
@@ -4168,7 +4171,7 @@ detect_mon(int (*valid)())
   });
 
   if (flag) {
-    msg_print("You sense monsters!");
+    msg_print("Your senses tingle!");
   } else {
     msg_print("You detect nothing further.");
   }
