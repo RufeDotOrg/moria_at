@@ -4109,10 +4109,13 @@ detect_obj(int (*valid)())
 {
   int detect, fm, lit;
   struct caveS* c_ptr;
+  int py, px;
 
+  py = uD.y;
+  px = uD.x;
   detect = FALSE;
   FOR_EACH(obj, {
-    if (valid(obj)) {
+    if (distance(py, px, obj->fy, obj->fx) < 32 && valid(obj)) {
       c_ptr = &caveD[obj->fy][obj->fx];
       fm = (CF_FIELDMARK & c_ptr->cflag);
       lit = (CF_LIT & c_ptr->cflag);
