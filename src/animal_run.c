@@ -2464,7 +2464,7 @@ struct creatureS* cre;
   return (cre->cmove & CM_INVISIBLE);
 }
 static int
-oset_visible(obj)
+oset_sightfm(obj)
 struct objS* obj;
 {
   return (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE);
@@ -2826,7 +2826,7 @@ map_area()
         if (c_ptr->fval == BOUNDARY_WALL || cave_floor_near(row, col)) {
           c_ptr->cflag |= CF_PERM_LIGHT;
         }
-      } else if (c_ptr->oidx && oset_visible(&entity_objD[c_ptr->oidx])) {
+      } else if (c_ptr->oidx && oset_sightfm(&entity_objD[c_ptr->oidx])) {
         c_ptr->cflag |= CF_FIELDMARK;
       }
     }
@@ -4286,7 +4286,7 @@ light_room(y, x)
       if ((c_ptr->cflag & CF_ROOM)) {
         c_ptr->cflag |= CF_PERM_LIGHT | CF_SEEN;
         if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
-        if (c_ptr->oidx && oset_visible(&entity_objD[c_ptr->oidx]))
+        if (c_ptr->oidx && oset_sightfm(&entity_objD[c_ptr->oidx]))
           c_ptr->cflag |= CF_FIELDMARK;
       }
     }
@@ -4369,7 +4369,7 @@ py_move_light(y1, x1, y2, x2)
           cflag |= (CF_PERM_LIGHT);
         else
           cflag |= (CF_TEMP_LIGHT);
-        if (cave->oidx && oset_visible(&entity_objD[cave->oidx]))
+        if (cave->oidx && oset_sightfm(&entity_objD[cave->oidx]))
           cflag |= CF_FIELDMARK;
         cave->cflag = cflag;
       }
