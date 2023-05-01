@@ -2586,6 +2586,12 @@ struct objS* obj;
   return obj->tval == TV_GOLD;
 }
 int
+oset_obj(obj)
+struct objS* obj;
+{
+  return obj->id != 0;
+}
+int
 set_large(item)         /* Items too large to fit in chests   -DJG- */
 struct treasureS* item; /* Use treasure_type since item not yet created */
 {
@@ -4914,7 +4920,7 @@ test_hit(bth, level_adj, pth, ac)
   // bth can be less than 0 for creatures
   // always miss 1 out of 20, always hit 1 out of 20
   die = randint(20);
-  if ((die != 1) && ((die == 20) || ((i > 0) && (randint(i) > ac))))
+  if (HACK || (die != 1) && ((die == 20) || ((i > 0) && (randint(i) > ac))))
     return TRUE;
   else
     return FALSE;
@@ -8095,7 +8101,7 @@ struct objS* obj;
   int tabil;
   tabil = -1;
   if (obj->tval == TV_DIGGING || may_equip(obj->tval) == INVEN_WIELD) {
-    tabil = 0;
+    tabil = HACK ? 9000 : 0;
     if (truth || (obj->idflag & ID_REVEAL)) {
       if (TR_TUNNEL & obj->flags)
         tabil += obj->p1 * 50;
@@ -12944,6 +12950,9 @@ dungeon()
                 for (int it = 0; it < sizeof(countD) / sizeof(int); ++it) {
                   af_ptr[it] = 1;
                 }
+              } break;
+              case CTRL('d'): {
+                detect_obj(oset_obj);
               } break;
               case CTRL('f'): {
                 create_food(y, x);
