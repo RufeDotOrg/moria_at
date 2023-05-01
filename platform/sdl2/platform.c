@@ -2153,7 +2153,8 @@ platform_pregame()
     sdl_pump();
   }
 
-  platformD.selection = platform_selection;
+  if (TOUCH) platformD.selection = platform_selection;
+
   return 0;
 }
 int
