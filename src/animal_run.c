@@ -3226,7 +3226,7 @@ room_object(y, x, chance)
   for (int i = -1; i <= 1; ++i) {
     for (int j = -1; j <= 1; ++j) {
       if (caveD[y + i][x + j].fval <= MAX_OPEN_SPACE && randint(chance) == 1)
-        place_object(y, x, FALSE);
+        place_object(y + i, x + j, FALSE);
     }
   }
 }
