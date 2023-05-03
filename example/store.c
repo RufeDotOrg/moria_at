@@ -19,7 +19,8 @@ main(int argc, char** argv)
   if (sidx < AL(store_choiceD)) {
     for (int it = 0; it < AL(store_choiceD[0]); ++it) {
       int tidx = store_choiceD[sidx][it];
-      printf("(%03d) %s\n", tidx, treasureD[tidx].name);
+      printf("(%03d) [%d] %s\n", tidx, store_stockD[sidx][it],
+             treasureD[tidx].name);
     }
   }
   return 0;

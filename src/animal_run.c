@@ -2206,6 +2206,7 @@ void magic_treasure(obj, level) struct objS* obj;
       }
       break;
 
+    case TV_SPIKE:
     case TV_PROJECTILE:
       tmp = 0;
       for (int i = 0; i < 7; i++) tmp += randint(6);
