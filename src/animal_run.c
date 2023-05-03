@@ -7395,9 +7395,9 @@ mass_genocide(y, x)
   return count > 0;
 }
 int
-inven_recharge(iidx, amount)
+inven_recharge(iidx, rigor)
 {
-  int chance;
+  int chance, amount;
   int res;
   struct objS* i_ptr;
 
@@ -7405,26 +7405,42 @@ inven_recharge(iidx, amount)
   if (iidx >= 0) {
     i_ptr = obj_get(invenD[iidx]);
     if (i_ptr->tval == TV_WAND || i_ptr->tval == TV_STAFF) {
-      res = 1;
-      /* recharge I = recharge(20) = 1/6 failure for empty 10th level wand */
-      /* recharge II = recharge(60) = 1/10 failure for empty 10th level wand*/
-      /* make it harder to recharge high level, and highly charged wands, note
-         that chance can be negative, so check its value before trying to call
-         randint().  */
-      chance = amount + 50 - i_ptr->level - i_ptr->p1;
-      if (chance < 19)
-        chance = 1; /* Automatic failure.  */
-      else
-        chance = randint(chance / 10);
-
-      if (chance == 1) {
-        msg_print("There is a bright flash of light.");
-        obj_unuse(i_ptr);
-        invenD[iidx] = 0;
+      if ((i_ptr->idflag & ID_REVEAL) == 0) {
+        msg_print(
+            "You are uncertain about the magical properties of this device.");
       } else {
-        amount = (amount / (i_ptr->level + 2)) + 1;
-        i_ptr->p1 += 2 + randint(amount);
-        i_ptr->idflag = ID_REVEAL;
+        /* recharge I = recharge(20) = 1/6 failure for empty 10th level wand */
+        /* recharge II = recharge(60) = 1/10 failure for empty 10th level wand*/
+        amount = rigor ? 60 : 20;
+
+        /* make it harder to recharge high level, and highly charged wands, note
+           that chance can be negative, so check its value before trying to call
+           randint().  */
+        chance = amount + 50 - i_ptr->level - i_ptr->p1;
+        if (chance < 19)
+          chance = 1; /* Automatic failure.  */
+        else
+          chance = randint(chance / 10);
+
+        if (chance == 1) {
+          if (rigor == 0) {
+            msg_print("You are blinded by a bright flash of light.");
+            ma_duration(MA_BLIND, 1);
+            obj_unuse(i_ptr);
+            invenD[iidx] = 0;
+          } else {
+            MSG("Energy crackles and discharges into the air.");
+            if (i_ptr->level <= 250) i_ptr->level += 5;
+          }
+        } else {
+          obj_desc(i_ptr, 1);
+          MSG("Energy flows into %s!", descD);
+          amount = (amount / (i_ptr->level + 2)) + 1;
+          i_ptr->p1 += 2 + randint(amount);
+          i_ptr->idflag = ID_REVEAL;
+        }
+
+        res = 1;
       }
     }
   }
@@ -8770,7 +8786,7 @@ int *uy, *ux;
             msg_print("This is a Recharge-Item scroll.");
             ident |= TRUE;
             choice_idx = inven_choice("Recharge which item?", "*");
-            used_up = inven_recharge(choice_idx, 60);
+            used_up = inven_recharge(choice_idx, 0);
             break;
           case 26:
             ident |= extermination();
@@ -9101,7 +9117,7 @@ int* x_ptr;
       create_food(uD.y, uD.x);
       break;
     case 18:
-      inven_recharge(inven_choice("Recharge which item?", "*"), 20);
+      inven_recharge(inven_choice("Recharge which item?", "*"), 0);
       break;
     case 19:
       sleep_monster_aoe(1);
@@ -9129,7 +9145,7 @@ int* x_ptr;
       fire_ball(GF_FROST, dir, uD.y, uD.x, 48, spell_nameD[24]);
       break;
     case 26:
-      inven_recharge(inven_choice("Recharge which item?", "*"), 60);
+      inven_recharge(inven_choice("Recharge which item?", "*"), 1);
       break;
     case 27:
       if (!get_dir(0, &dir)) return 0;
