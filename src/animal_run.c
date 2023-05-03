@@ -12958,10 +12958,8 @@ dungeon()
           if (HACK) {
             switch (c) {
               case CTRL('a'): {
-                int* af_ptr = (void*)&countD;
-                for (int it = 0; it < sizeof(countD) / sizeof(int); ++it) {
-                  af_ptr[it] = 1;
-                }
+                uD.exp += 1000000;
+                py_experience();
               } break;
               case CTRL('d'): {
                 detect_obj(oset_obj);
