@@ -8369,6 +8369,7 @@ inven_choice(char* prompt, char* mode_list)
         if (iidx < end && invenD[iidx]) return iidx;
       } else if (is_upper(c)) {
         uint8_t iidx = c - 'A';
+        iidx += begin;
         if (iidx < end && invenD[iidx]) obj_study(obj_get(invenD[iidx]), FALSE);
       } else if (c == '-') {
         inven_sort();
