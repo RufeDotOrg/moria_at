@@ -735,6 +735,8 @@ cave_color(row, col)
         color = BRIGHT + YELLOW;
       } else if (obj->tval == TV_SECRET_DOOR) {
         color = BRIGHT + WHITE;
+      } else if (obj->tval == TV_CLOSED_DOOR) {
+        color = BRIGHT + BLACK;
       } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
         color = BRIGHT + BLUE;
       } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
