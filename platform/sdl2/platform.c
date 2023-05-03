@@ -30,6 +30,7 @@ enum { TOUCH };
 enum { WINDOW };
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
+enum { PADSIZE = (26 + 2) * 16 };
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
 #define RS(r, scale) \
@@ -257,11 +258,12 @@ color_by_palette(c)
 }
 
 void
-bitmap_yx_into_surface(uint8_t *src, int64_t ph, int64_t pw, SDL_Point into,
+bitmap_yx_into_surface(void *bitmap, int64_t ph, int64_t pw, SDL_Point into,
                        struct SDL_Surface *surface)
 {
   uint8_t bpp = surface->format->BytesPerPixel;
   uint8_t *pixels = surface->pixels;
+  uint8_t *src = bitmap;
   for (int64_t row = 0; row < ph; ++row) {
     uint8_t *dst = pixels + (surface->pitch * (into.y + row)) + (bpp * into.x);
     for (int64_t col = 0; col < pw; ++col) {
@@ -575,7 +577,7 @@ font_texture_alphamod(alpha)
 // Texture
 enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
 DATA SDL_Rect buttonD[2];
-DATA SDL_FRect padD;
+DATA SDL_Rect padD;
 DATA SDL_Point ppD[9];
 DATA SDL_Rect pp_rectD;
 static int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
@@ -1234,21 +1236,18 @@ platform_draw()
   }
 
   if (TOUCH && tpsurfaceD) {
-    {
-      SDL_Rect pr = {RS(padD, display_rectD)};
-      SDL_RenderCopy(rendererD, tptextureD, 0, &pr);
-    }
-    {
-      for (int it = 1; it < AL(ppD); ++it) {
-        if (ppD[it].x || ppD[it].y) {
-          if (pp_keyD[it] + TOUCH_PAD == last_pressD) {
-            pprect_index(it);
-            SDL_SetRenderDrawColor(rendererD, 0x00, 0xd0, 0, 0xff);
-            SDL_RenderFillRect(rendererD, &pp_rectD);
-          }
+    SDL_RenderCopy(rendererD, tptextureD, 0, &padD);
+
+    for (int it = 1; it < AL(ppD); ++it) {
+      if (ppD[it].x || ppD[it].y) {
+        if (pp_keyD[it] + TOUCH_PAD == last_pressD) {
+          pprect_index(it);
+          SDL_SetRenderDrawColor(rendererD, 0x00, 0xd0, 0, 0xff);
+          SDL_RenderFillRect(rendererD, &pp_rectD);
         }
       }
     }
+
     if (more) {
       static int tapD;
       tapD = (tapD + 1) % 4;
@@ -1495,8 +1494,8 @@ static void surface_ppfill(surface) SDL_Surface *surface;
 {
   uint8_t bpp = surface->format->BytesPerPixel;
   uint8_t *pixels = surface->pixels;
-  int oy = padD.y * display_rectD.h;
-  int ox = padD.x * display_rectD.w;
+  int oy = padD.y;
+  int ox = padD.x;
   for (int64_t row = 0; row < surface->h; ++row) {
     uint8_t *dst = pixels + (surface->pitch * row);
     for (int64_t col = 0; col < surface->w; ++col) {
@@ -1546,8 +1545,8 @@ SDL_Event event;
 
     // Map scaling due to vertical constraint
     float scale;
-    int ymin = fheight + 6;                                // text, frame
-    int xmin = fwidth * (26 + 2) + (MMSCALE * MAX_WIDTH);  // touchpad, minimap
+    int ymin = fheight + 6;                      // text, frame
+    int xmin = PADSIZE + (MMSCALE * MAX_WIDTH);  // touchpad, minimap
     if (ymin + map_rectD.h <= dh) {
       scale = 1.0f;
     } else {
@@ -1625,27 +1624,24 @@ SDL_Event event;
     // Input constraints
     if (TOUCH) {
       float lift = (dh <= 768) ? 0.f : .1f;
-      padD = (SDL_FRect){.w = c1 - c0, .h = (c1 - c0) * aspectD};
-      padD.x = c0 * 0.5f;
-      padD.y = 1.0 - padD.h - lift;
+      padD = (SDL_Rect){.w = PADSIZE, .h = PADSIZE};
+      padD.x = c0 * 0.5f * dw;
+      padD.y = (1.0 - lift) * dh - padD.h;
 
-      SDL_FPoint center = {F4CENTER(padD)};
-      int cx = center.x * display_rectD.w;
-      int cy = center.y * display_rectD.h;
+      SDL_Point center = {R4CENTER(padD)};
+      int cx = center.x;
+      int cy = center.y;
       ppD[0] = (SDL_Point){cx, cy};
 
-#define TOUCH_RATIO .375f
-      float dist = padD.w * TOUCH_RATIO;
-      Log("dist %.03f pad %.03fx%.03f", dist, padD.w, padD.h);
-#define TOUCH_VIZ_RATIO .15f
       pp_rectD = (SDL_Rect){
-          .w = display_rectD.w * padD.w * TOUCH_VIZ_RATIO,
-          .h = display_rectD.h * padD.h * TOUCH_VIZ_RATIO,
+          .w = 64,
+          .h = 64,
       };
 
+      int ppdist = 3 * padD.w / 8;
       for (int it = 0; it < 8; ++it) {
-        int ox = cos_lookup(it) * dist * display_rectD.w;
-        int oy = sin_lookup(it) * dist * aspectD * display_rectD.h;
+        int ox = cos_lookup(it) * ppdist;
+        int oy = sin_lookup(it) * ppdist;
         ppD[1 + it].x = cx + ox;
         ppD[1 + it].y = cy + oy;
       }
@@ -1661,11 +1657,11 @@ SDL_Event event;
       }
 
       if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
-      tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(
-          SDL_SWSURFACE, padD.w * dw, padD.h * dh, 0, texture_formatD);
+      tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, padD.w, padD.h,
+                                                  0, texture_formatD);
       if (tptextureD) SDL_DestroyTexture(tptextureD);
       tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
-                                     padD.w * dw, padD.h * dh);
+                                     padD.w, padD.h);
       SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
       surface_ppfill(tpsurfaceD);
       SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels,
@@ -1738,8 +1734,8 @@ SDL_Event *event;
     if (SDL_PointInRect(&tpp, &buttonD[it])) r = 1 + it;
   }
 
-  if (SDL_PointInFRect(&tp, &padD)) {
-    int n = nearest_pp(tpp.y - padD.y, tpp.x - padD.x);
+  if (SDL_PointInRect(&tpp, &padD)) {
+    int n = nearest_pp(tpp.y, tpp.x);
     r = TOUCH_PAD + pp_keyD[n];
   }
   last_pressD = r;
