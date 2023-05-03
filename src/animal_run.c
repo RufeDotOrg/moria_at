@@ -10059,6 +10059,106 @@ py_offhand()
     turn_flag = TRUE;
   }
 }
+static int
+door_try_close(y, x)
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+  int flag;
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
+
+  flag = 0;
+  if (obj->tval == TV_OPEN_DOOR) {
+    if (obj->p1 == 0) {
+      flag = 1;
+      obj->tval = TV_CLOSED_DOOR;
+      obj->tchar = '+';
+      c_ptr->fval = FLOOR_OBST;
+    } else
+      msg_print("The door appears to be broken.");
+  }
+
+  return flag;
+}
+static int
+door_try_jam(y, x)
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+  int flag;
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
+
+  flag = 0;
+  if (obj->tval == TV_CLOSED_DOOR) {
+    flag = 1;
+    /* Negative p1 values are "stuck", positive values are "locked"
+       Successive spikes have a progressively smaller effect.
+       Series is: 0 20 30 37 43 48 52 56 60 64 67 70 ... */
+    obj->p1 = -1 * (1 + 190 / (10 + ABS(obj->p1)));
+    // The player knows the door is stuck
+    obj->idflag = ID_REVEAL;
+  }
+
+  return flag;
+}
+static int
+try_spike_dir(dir)
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+  int y, x, ret;
+
+  y = uD.y;
+  x = uD.x;
+  mmove(dir, &y, &x);
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
+
+  ret = 0;
+  if (obj->tval == TV_OPEN_DOOR || obj->tval == TV_CLOSED_DOOR) {
+    if (c_ptr->midx == 0) {
+      if (door_try_close(y, x)) {
+      }
+
+      if (door_try_jam(y, x)) {
+        ret = 1;
+        msg_print("You jam the door with a spike.");
+      }
+    } else {
+      msg_print("Something is in your way!");
+    }
+
+    // Costs a turn, otherwise can be abused for detecting invis monsters
+    turn_flag = TRUE;
+  } else {
+    msg_print("I do not see anything you can close there.");
+  }
+  return ret;
+}
+void
+py_spike(iidx)
+{
+  struct objS* obj;
+  int dir;
+
+  obj = obj_get(invenD[iidx]);
+  if (obj->tval == TV_SPIKE) {
+    if (get_dir("Jam a door spike in which direction?", &dir)) {
+      if (countD.confusion) {
+        turn_flag = TRUE;
+        msg_print("You are confused.");
+        do {
+          dir = randint(9);
+        } while (dir == 5);
+      }
+      if (try_spike_dir(dir)) {
+        inven_destroy_num(iidx, 1);
+      }
+    }
+  }
+}
 int
 show_version()
 {
@@ -10088,7 +10188,6 @@ show_version()
   DRAWMSG("Version %s", versionD);
   return inkey();
 }
-void py_spike();
 void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
   int iidx, into;
@@ -11056,106 +11155,6 @@ close_object()
       }
     } else {
       msg_print("I do not see anything you can close there.");
-    }
-  }
-}
-static int
-door_try_close(y, x)
-{
-  struct caveS* c_ptr;
-  struct objS* obj;
-  int flag;
-  c_ptr = &caveD[y][x];
-  obj = &entity_objD[c_ptr->oidx];
-
-  flag = 0;
-  if (obj->tval == TV_OPEN_DOOR) {
-    if (obj->p1 == 0) {
-      flag = 1;
-      obj->tval = TV_CLOSED_DOOR;
-      obj->tchar = '+';
-      c_ptr->fval = FLOOR_OBST;
-    } else
-      msg_print("The door appears to be broken.");
-  }
-
-  return flag;
-}
-static int
-door_try_jam(y, x)
-{
-  struct caveS* c_ptr;
-  struct objS* obj;
-  int flag;
-  c_ptr = &caveD[y][x];
-  obj = &entity_objD[c_ptr->oidx];
-
-  flag = 0;
-  if (obj->tval == TV_CLOSED_DOOR) {
-    flag = 1;
-    /* Negative p1 values are "stuck", positive values are "locked"
-       Successive spikes have a progressively smaller effect.
-       Series is: 0 20 30 37 43 48 52 56 60 64 67 70 ... */
-    obj->p1 = -1 * (1 + 190 / (10 + ABS(obj->p1)));
-    // The player knows the door is stuck
-    obj->idflag = ID_REVEAL;
-  }
-
-  return flag;
-}
-static int
-try_spike_dir(dir)
-{
-  struct caveS* c_ptr;
-  struct objS* obj;
-  int y, x, ret;
-
-  y = uD.y;
-  x = uD.x;
-  mmove(dir, &y, &x);
-  c_ptr = &caveD[y][x];
-  obj = &entity_objD[c_ptr->oidx];
-
-  ret = 0;
-  if (obj->tval == TV_OPEN_DOOR || obj->tval == TV_CLOSED_DOOR) {
-    if (c_ptr->midx == 0) {
-      if (door_try_close(y, x)) {
-      }
-
-      if (door_try_jam(y, x)) {
-        ret = 1;
-        msg_print("You jam the door with a spike.");
-      }
-    } else {
-      msg_print("Something is in your way!");
-    }
-
-    // Costs a turn, otherwise can be abused for detecting invis monsters
-    turn_flag = TRUE;
-  } else {
-    msg_print("I do not see anything you can close there.");
-  }
-  return ret;
-}
-void
-py_spike(iidx)
-{
-  struct objS* obj;
-  int dir;
-
-  obj = obj_get(invenD[iidx]);
-  if (obj->tval == TV_SPIKE) {
-    if (get_dir("Jam a door spike in which direction?", &dir)) {
-      if (countD.confusion) {
-        turn_flag = TRUE;
-        msg_print("You are confused.");
-        do {
-          dir = randint(9);
-        } while (dir == 5);
-      }
-      if (try_spike_dir(dir)) {
-        inven_destroy_num(iidx, 1);
-      }
     }
   }
 }
