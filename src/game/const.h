@@ -130,6 +130,7 @@
 #define TV_NOTHING 0
 #define TV_MISC 1
 #define TV_CHEST 2
+#define TV_SPIKE 3
 #define TV_PROJECTILE 5
 #define TV_LIGHT 15
 /* items tested for enchantments, i.e. the MAGIK inscription, see the
