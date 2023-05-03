@@ -8156,6 +8156,7 @@ void obj_study(obj, for_sale) struct objS* obj;
     if (tr_is_known(tr_ptr)) {
       if (obj->tval == TV_WAND || obj->tval == TV_STAFF) {
         int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
+        BufMsg(screen, "%-17.017s: %+d", "Device Level", obj->level);
         BufMsg(screen, "%-17.017s: %+d", "Device Skill", diff);
       }
     } else {
