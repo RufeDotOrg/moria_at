@@ -11344,6 +11344,7 @@ static void py_bash(uy, ux) int *uy, *ux;
   x = uD.x;
   if (get_dir(0, &dir)) {
     if (countD.confusion) {
+      turn_flag = TRUE;
       msg_print("You are confused.");
       do {
         dir = randint(9);
