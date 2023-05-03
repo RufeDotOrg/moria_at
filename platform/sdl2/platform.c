@@ -84,6 +84,7 @@ DATA float rfD, cfD;
 DATA float columnD[4];
 
 DATA char savepathD[1024];
+DATA int savepath_usedD;
 
 static int overlay_copyD[AL(overlay_usedD)];
 static SDL_Color whiteD = {255, 255, 255, 255};
@@ -1958,15 +1959,29 @@ int checksum(blob, len) void *blob;
   }
   return ret;
 }
+SDL_RWops *
+rw_file_access(char *filename, char *access)
+{
+  int wridx = __APPLE__ ? savepath_usedD : 0;
+  char *write = &savepathD[wridx];
+
+  if (wridx) *write++ = '/';
+  for (char *iter = filename; *iter != 0; ++iter) {
+    *write++ = *iter;
+  }
+  *write = 0;
+
+  Log("loading filename: %s", savepathD);
+  return SDL_RWFromFile(savepathD, access);
+}
 int
-platform_save()
+platform_save(char *filename)
 {
   int version = AL(savesumD) - 1;
   int sum = savesumD[version];
   int *savefield = savefieldD[version];
-  char *path = __APPLE__ ? savepathD : "savechar";
 
-  SDL_RWops *writef = SDL_RWFromFile(path, "wb");
+  SDL_RWops *writef = rw_file_access(filename, "wb");
   if (writef) {
     checksumD = 0;
     SDL_RWwrite(writef, &sum, sizeof(sum), 1);
@@ -1983,34 +1998,12 @@ platform_save()
   return 0;
 }
 int
-devsave()
-{
-  int sum = savesum();
-  char *path = __APPLE__ ? savepathD : "savechar";
-  SDL_RWops *writef = SDL_RWFromFile(path, "wb");
-  if (writef) {
-    checksumD = 0;
-    SDL_RWwrite(writef, &sum, sizeof(sum), 1);
-    for (int it = 0; it < AL(save_bufD); ++it) {
-      struct bufS buf = save_bufD[it];
-      SDL_RWwrite(writef, buf.mem, buf.mem_size, 1);
-      int ck = checksum(buf.mem, buf.mem_size);
-      checksumD ^= ck;
-    }
-    SDL_RWclose(writef);
-    Log("save checksum %x", checksumD);
-    return sum;
-  }
-  return 0;
-}
-int
-platform_load()
+platform_load(char *filename)
 {
   int save_size = 0;
-  char *path = __APPLE__ ? savepathD : "savechar";
   clear_savebuf();
 
-  SDL_RWops *readf = SDL_RWFromFile(path, "rb");
+  SDL_RWops *readf = rw_file_access(filename, "rb");
   if (readf) {
     checksumD = 0;
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
@@ -2043,15 +2036,39 @@ platform_load()
   return save_size != 0;
 }
 int
-platform_erase()
+platform_erase(char *filename)
 {
-  char *path = __APPLE__ ? savepathD : "savechar";
   clear_savebuf();
 
-  SDL_RWops *writef = SDL_RWFromFile(path, "w+b");
+  SDL_RWops *writef = rw_file_access(filename, "w+b");
   if (writef) SDL_RWclose(writef);
 
   return 0;
+}
+int
+platform_copy(char *srcfile, char *dstfile)
+{
+  SDL_RWops *readf, *writef;
+
+  readf = rw_file_access(srcfile, "rb");
+  if (readf) {
+    writef = rw_file_access(dstfile, "w+b");
+    if (writef) {
+      char chunk[4 * 1024];
+      int read_count;
+      do {
+        read_count = SDL_RWread(readf, chunk, 1, AL(chunk));
+        if (read_count) {
+          int write_count = SDL_RWwrite(writef, chunk, 1, read_count);
+          if (write_count != read_count) return 1;
+        }
+      } while (read_count);
+      SDL_RWclose(writef);
+    }
+    SDL_RWclose(readf);
+  }
+
+  return readf == 0 || writef == 0;
 }
 
 int
@@ -2096,8 +2113,11 @@ platform_pregame()
     if (__APPLE__) {
       char *prefpath = SDL_GetPrefPath("org.rufe", "moria.app");
       if (prefpath) {
-        int len = snprintf(savepathD, AL(savepathD), "%s/savechar", prefpath);
-        if (len < 0 || len >= AL(savepathD)) savepathD[0] = 0;
+        int len = snprintf(savepathD, AL(savepathD), "%s", prefpath);
+        if (len < 0 || len >= AL(savepathD))
+          savepathD[0] = 0;
+        else
+          savepath_usedD = len;
         SDL_free(prefpath);
       }
     }
@@ -2151,6 +2171,7 @@ platform_pregame()
   }
 
   if (TOUCH) platformD.selection = platform_selection;
+  platformD.copy = platform_copy;
 
   return 0;
 }

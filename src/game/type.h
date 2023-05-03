@@ -277,6 +277,7 @@ struct platformS {
   fn seed;
   fn load;
   fn save;
+  fn copy;
   fn erase;
   fn readansi;
   fn predraw;

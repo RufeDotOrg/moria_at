@@ -10336,6 +10336,19 @@ show_all_inven()
   } while (iidx != -1);
 }
 int
+player_confirm()
+{
+  int line = 0;
+  char c;
+  BufMsg(overlay, "a) Confirm");
+  if (in_subcommand("Your current character will be permanently lost!", &c)) {
+    if (c >= 'a' && c <= 'z') {
+      return 1;
+    }
+  }
+  return 0;
+}
+int
 py_menu()
 {
   char c;
@@ -10360,15 +10373,16 @@ py_menu()
                           : "a) Await event (health regeneration, malady "
                             "expiration, or recall)");
     if (HACK) {
-      BufMsg(overlay, "b) Backup / Undo (%d) (%d) (%s)", input_action,
+      BufMsg(overlay, "b) Undo / Gameplay Rewind (%d) (%d) (%s)", input_action,
              input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
     } else {
-      BufMsg(overlay, "b) Backup / Rewind / Undo (%s)",
+      BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
              memory_ok ? "memory OK" : "memory FAIL");
     }
-    BufMsg(overlay, "--");
+    BufMsg(overlay, "c) Copy last save to backup slot");
     BufMsg(overlay, "d) Dungeon reset");
     BufMsg(overlay, "e) Erase character (new game)");
+    BufMsg(overlay, "f) Fallback to backup slot (reload old game)");
     if (!in_subcommand(prompt, &c)) break;
 
     switch (c) {
@@ -10379,7 +10393,7 @@ py_menu()
         }
 
         show_all_inven();
-        break;
+        continue;
 
       case 'b':
         if (!memory_ok) return 0;
@@ -10387,18 +10401,36 @@ py_menu()
         input_undoD = MAX(0, input_action - 2 + death);
         longjmp(restartD, 1);
 
+      case 'c':
+        if (platformD.copy) {
+          if (platformD.copy("savechar", "savebackup") == 0) {
+            msg_print("Backup complete.");
+          } else {
+            msg_print("Backup failed.");
+          }
+          msg_pause();
+          return 0;
+        }
+        continue;
+
       case 'd':
         longjmp(restartD, 1);
 
       case 'e':
-        line = 0;
-        BufMsg(overlay, "  This character will be permanently lost!");
-        BufMsg(overlay, " ");
-        BufMsg(overlay, "  Press the GREEN button to confirm");
-        if (in_subcommand("Really commit *Suicide*?", &c)) {
-          if (c >= 'a' && c <= 'z') {
-            platformD.erase();
-            longjmp(restartD, 1);
+        if (player_confirm()) {
+          platformD.erase("savechar");
+          longjmp(restartD, 1);
+        }
+        continue;
+
+      case 'f':
+        if (platformD.copy) {
+          if (player_confirm()) {
+            if (platformD.copy("savebackup", "savechar") == 0)
+              longjmp(restartD, 1);
+
+            msg_print("Aborted; No backup found.");
+            msg_pause();
           }
         }
         continue;
@@ -13191,7 +13223,7 @@ main(int argc, char** argv)
   setjmp(restartD);
   hard_reset();
 
-  if (platformD.load()) {
+  if (platformD.load("savechar")) {
   } else {
     if (py_class_select() < 0) return platformD.postgame();
 
@@ -13202,7 +13234,7 @@ main(int argc, char** argv)
 
     // Replay state
     input_record_writeD = input_record_readD = input_action_usedD = 0;
-    platformD.save();
+    platformD.save("savechar");
   }
 
   // Per-Player initialization
@@ -13229,7 +13261,7 @@ main(int argc, char** argv)
 
     if (!death) {
       cave_reset();
-      if (platformD.save()) {
+      if (platformD.save("savechar")) {
         if (save_exit_flag) break;
       }
     }
