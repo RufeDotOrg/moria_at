@@ -79,6 +79,7 @@ DATA SDL_Texture *text_textureD;
 DATA SDL_Rect affectdst_rectD;
 
 DATA SDL_Rect gameplay_rectD;
+DATA float gameplay_scaleD;
 DATA int rowD, colD;
 DATA float rfD, cfD;
 DATA float columnD[4];
@@ -576,7 +577,7 @@ font_texture_alphamod(alpha)
 }
 
 // Texture
-enum { TOUCH_NONE, TOUCH_LB, TOUCH_RB, TOUCH_PAD };
+enum { TOUCH_NONE, TOUCH_GAMEPLAY, TOUCH_LB, TOUCH_RB, TOUCH_PAD };
 DATA SDL_Rect buttonD[2];
 DATA SDL_Rect padD;
 DATA SDL_Point ppD[9];
@@ -1567,6 +1568,7 @@ SDL_Event event;
     Log("Scale %.3f", scale);
     gameplay_rectD =
         (SDL_Rect){.w = map_rectD.w * scale, .h = map_rectD.h * scale};
+    gameplay_scaleD = scale;
 
     // Column
     float c0, c1, c2, c3;
@@ -1734,6 +1736,30 @@ SDL_Event *event;
       event->tfinger.y * display_rectD.h,
   };
   int r = 0;
+  if (SDL_PointInRect(&tpp, &gameplay_rectD)) {
+    SDL_Point rel = {
+        tpp.x - gameplay_rectD.x,
+        tpp.y - gameplay_rectD.y,
+    };
+    float gsy = rel.y / gameplay_scaleD;
+    float gsx = rel.x / gameplay_scaleD;
+
+    if (zoom_factorD) {
+      int zf, zh, zw;
+      zf = zoom_factorD;
+      zh = SYMMAP_HEIGHT >> zf;
+      zw = SYMMAP_WIDTH >> zf;
+
+      gsy *= (1.0 + zh) / SYMMAP_HEIGHT;
+      gsx *= (1.0 + zw) / SYMMAP_WIDTH;
+    }
+
+    int ry = (int)gsy / ART_H;
+    int rx = (int)gsx / ART_W;
+    ylookD = ry;
+    xlookD = rx;
+    r = TOUCH_GAMEPLAY;
+  }
   for (int it = 0; it < AL(buttonD); ++it) {
     if (SDL_PointInRect(&tpp, &buttonD[it])) r = TOUCH_LB + it;
   }
@@ -1800,6 +1826,12 @@ SDL_Event event;
       }
     } else if (touch) {
       switch (touch) {
+        case TOUCH_GAMEPLAY:
+          // shim to support message history
+          if (tp.y < .09) return CTRL('p');
+          // shim to support zoom adjustment
+          if (tp.y > .90) return '-';
+          return 'O';
         case TOUCH_LB:
           return finger ? 'd' : 'A';
         case TOUCH_RB:
@@ -1809,7 +1841,8 @@ SDL_Event event;
       if (tp.y < .09) return CTRL('p');
       if (tp.x < .23 && tp.y < .5) return 'C';
       if (tp.x > .775 && tp.y < .28) return 'M';
-      if (tp.x > .23 && tp.x < .775 && tp.y > .90) return '-';
+      if (tp.x > .23 && tp.x < .775 && tp.y > .90)
+        return '-';  // TODO: move to 2nd finger on gameplay area
       if (tp.x >= .775 && tp.y > .90) return 'v';
     }
   }

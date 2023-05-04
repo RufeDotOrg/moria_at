@@ -11571,6 +11571,29 @@ py_look_obj()
   }
 }
 static void
+py_look(y, x)
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+  struct monS* mon;
+
+  if (distance(uD.y, uD.x, y, x) <= MAX_SIGHT) {
+    c_ptr = &caveD[y][x];
+    mon = &entity_monD[c_ptr->midx];
+
+    if (mon->mlit) {
+      mon_desc(c_ptr->midx);
+      // hack: mon death_descD pronoun is a/an
+      death_descD[0] |= 0x20;
+      MSG("You see %s.", death_descD);
+    } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
+      obj = &entity_objD[c_ptr->oidx];
+      obj_desc(obj, obj->number);
+      MSG("You see %s.", descD);
+    }
+  }
+}
+static void
 tunnel(y, x)
 {
   int max_tabil, str, wall_chance, wall_min, turn_count;
@@ -12999,6 +13022,7 @@ dungeon()
               if (iidx >= 0 && iidx < INVEN_EQUIP) inven_wear(iidx);
               break;
             case 'x':
+              // TODO: merge py_look_obj()?
               py_look_mon();
               break;
             case 'z':
@@ -13030,6 +13054,8 @@ dungeon()
               int count = inven_overlay(0, INVEN_EQUIP);
               MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
               break;
+            case 'L':
+              break;
             case 'M':
               if (HACK) {
                 map_area();
@@ -13053,9 +13079,20 @@ dungeon()
               DRAWMSG("You study a map of %s.", dun_descD);
               inkey();
               break;
-            case 'O':
-              py_look_obj();
-              break;
+            case 'O': {
+              input_record_readD = input_record_writeD =
+                  AS(input_actionD, --input_action_usedD);
+              if (zoom_factorD == 0) {
+                py_look(ylookD + panelD.panel_row_min,
+                        xlookD + panelD.panel_col_min);
+              } else {
+                int ty = uD.y - ((SYMMAP_HEIGHT / 2) >> zoom_factorD);
+                int tx = uD.x - ((SYMMAP_WIDTH / 2) >> zoom_factorD);
+                if (panelD.panel_row_min > ty) ty = panelD.panel_row_min;
+                if (panelD.panel_col_min > tx) tx = panelD.panel_col_min;
+                py_look(ylookD + ty, xlookD + tx);
+              }
+            } break;
             case 'R':
               py_rest();
               break;
