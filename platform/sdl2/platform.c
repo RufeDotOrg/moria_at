@@ -576,7 +576,7 @@ font_texture_alphamod(alpha)
 }
 
 // Texture
-enum { TOUCH_LB = 1, TOUCH_RB, TOUCH_PAD };
+enum { TOUCH_NONE, TOUCH_LB, TOUCH_RB, TOUCH_PAD };
 DATA SDL_Rect buttonD[2];
 DATA SDL_Rect padD;
 DATA SDL_Point ppD[9];
@@ -1729,13 +1729,13 @@ static int
 touch_from_event(event)
 SDL_Event *event;
 {
-  int r;
-
-  r = 0;
-  SDL_FPoint tp = {event->tfinger.x, event->tfinger.y};
-  SDL_Point tpp = {tp.x * display_rectD.w, tp.y * display_rectD.h};
+  SDL_Point tpp = {
+      event->tfinger.x * display_rectD.w,
+      event->tfinger.y * display_rectD.h,
+  };
+  int r = 0;
   for (int it = 0; it < AL(buttonD); ++it) {
-    if (SDL_PointInRect(&tpp, &buttonD[it])) r = 1 + it;
+    if (SDL_PointInRect(&tpp, &buttonD[it])) r = TOUCH_LB + it;
   }
 
   if (SDL_PointInRect(&tpp, &padD)) {
