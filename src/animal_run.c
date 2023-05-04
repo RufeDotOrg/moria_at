@@ -5160,17 +5160,31 @@ void obj_desc(obj, number) struct objS* obj;
       name = gold_nameD[indexx];
       break;
     case TV_OPEN_DOOR:
+      name = "& open door";
+      break;
     case TV_CLOSED_DOOR:
-    case TV_SECRET_DOOR:
+      name = "& closed door";
+      break;
     case TV_RUBBLE:
-    case TV_INVIS_TRAP:
-    case TV_UP_STAIR:
-    case TV_DOWN_STAIR:
+      name = "rubble";
+      break;
+    case TV_SECRET_DOOR:
       descD[0] = 0;
       return;
-    case TV_VIS_TRAP:
+    case TV_UP_STAIR:
+      name = "& staircase up";
       break;
+    case TV_DOWN_STAIR:
+      name = "& staircase down";
+      break;
+    case TV_VIS_TRAP:
     case TV_GLYPH:
+      break;
+    case TV_PAWN_DOOR:
+      name = "& pawn shop";
+      break;
+    case TV_STORE_DOOR:
+      name = "& store entrance";
       break;
     default:
       snprintf(descD, AL(descD), "Error in objdes(): %d", obj->tval);
@@ -11588,8 +11602,10 @@ py_look(y, x)
       MSG("You see %s.", death_descD);
     } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
       obj = &entity_objD[c_ptr->oidx];
-      obj_desc(obj, obj->number);
-      MSG("You see %s.", descD);
+      if (obj->tval != TV_INVIS_TRAP) {
+        obj_desc(obj, obj->number);
+        MSG("You see %s.", descD);
+      }
     }
   }
 }
