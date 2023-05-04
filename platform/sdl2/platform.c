@@ -1215,19 +1215,20 @@ platform_draw()
       }
     }
 
-    int zw, zy, zf;
+    int zf, zh, zw;
     zf = zoom_factorD;
+    zh = SYMMAP_HEIGHT >> zf;
+    zw = SYMMAP_WIDTH >> zf;
+    // give equal vision on each side of the player during zoom
+    int zsymmetry = (zf != 0);
 
-    zw = SYMMAP_WIDTH / 2 >> zf;
-    zy = SYMMAP_HEIGHT / 2 >> zf;
-    if (rp.x + zw >= SYMMAP_WIDTH) rp.x = SYMMAP_WIDTH - zw - 1;
-    if (rp.y + zy >= SYMMAP_HEIGHT) rp.y = SYMMAP_HEIGHT - zy - 1;
-    rp.x = MAX(0, rp.x - zw);
-    rp.y = MAX(0, rp.y - zy);
-    zoom_rect.x = rp.x * ART_W;
-    zoom_rect.y = rp.y * ART_H;
-    zoom_rect.w = (zw * 2 + (zf != 0)) * ART_W;
-    zoom_rect.h = (zy * 2 + (zf != 0)) * ART_H;
+    int zy, zx;
+    zy = CLAMP(rp.y - zh / 2, 0, SYMMAP_HEIGHT - zh - zsymmetry);
+    zx = CLAMP(rp.x - zw / 2, 0, SYMMAP_WIDTH - zw - zsymmetry);
+    zoom_rect.x = zx * ART_W;
+    zoom_rect.y = zy * ART_H;
+    zoom_rect.w = (zw + zsymmetry) * ART_W;
+    zoom_rect.h = (zh + zsymmetry) * ART_H;
 
     SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
     SDL_RenderDrawRect(rendererD, &zoom_rect);
