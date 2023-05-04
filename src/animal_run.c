@@ -95,7 +95,7 @@ vital_update()
   vital_usedD = used;
 
   for (int it = 0; it < MAX_A; ++it) {
-    vital_statD[it] = statD.cur_stat[it];
+    vital_statD[it] = statD.use_stat[it];
   }
 }
 /* A simple, fast, integer-based line-of-sight algorithm.  By Joseph Hall,
