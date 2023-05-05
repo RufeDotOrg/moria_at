@@ -11604,7 +11604,7 @@ py_look(y, x)
       mon_desc(c_ptr->midx);
       // hack: mon death_descD pronoun is a/an
       death_descD[0] |= 0x20;
-      MSG("You see %s.", death_descD);
+      MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
     } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
       obj = &entity_objD[c_ptr->oidx];
       if (obj->tval != TV_INVIS_TRAP) {
