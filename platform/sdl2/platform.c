@@ -1512,6 +1512,151 @@ static void surface_ppfill(surface) SDL_Surface *surface;
   }
 }
 
+static void
+display_resize(int dw, int dh)
+{
+  display_rectD.w = dw;
+  display_rectD.h = dh;
+  aspectD = (float)dw / dh;
+  Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspectD);
+
+  int fwidth, fheight;
+  fwidth = fontD.max_pixel_width;
+  fheight = fontD.max_pixel_height;
+
+  // Console row/col
+  rowD = dh / fheight;
+  colD = dw / fwidth;
+  rfD = 1.0f / rowD;
+  cfD = 1.0f / colD;
+  Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", fwidth,
+      fheight, rowD, colD, rfD, cfD);
+
+  // Map scaling due to vertical constraint
+  float scale;
+  int ymin = fheight + 6;                      // text, frame
+  int xmin = PADSIZE + (MMSCALE * MAX_WIDTH);  // touchpad, minimap
+  if (ymin + map_rectD.h <= dh) {
+    scale = 1.0f;
+  } else {
+    float yscale = (dh - ymin) / (float)map_rectD.h;
+    Log("YScale %.3f", yscale);
+    scale = yscale;
+  }
+  // Horizontal constraint
+  if (xmin + map_rectD.w > dw) {
+    float xscale = (dw - xmin) / (float)map_rectD.w;
+    Log("XScale %.3f", xscale);
+    scale = MIN(scale, xscale);
+  }
+  Log("Scale %.3f", scale);
+  gameplay_rectD =
+      (SDL_Rect){.w = map_rectD.w * scale, .h = map_rectD.h * scale};
+  gameplay_scaleD = scale;
+
+  // Column
+  float c0, c1, c2, c3;
+  if (dw > 2 * 1024) {
+    c1 = .5 - (float)gameplay_rectD.w / dw * .5f;
+    c2 = .5 + (float)gameplay_rectD.w / dw * .5f;
+  } else {
+    c1 = (26 + 2) * cfD;
+    c2 = c1 + ((float)gameplay_rectD.w / dw);
+  }
+  c3 = c2 + (1.0 - c2) * .5;
+  c0 = c1 - (26 + 2) * cfD;
+  columnD[0] = c0;
+  columnD[1] = c1;
+  columnD[2] = c2;
+  columnD[3] = c3;
+  Log("Column %.03f %.03f %.03f %.03f", c0, c1, c2, c3);
+
+  // Map position
+  gameplay_rectD.x = columnD[1] * dw;
+  gameplay_rectD.y =
+      (scale != 1.0 ? ymin : ymin + (dh - gameplay_rectD.h - ymin) / 2);
+
+  // Affect Text
+  if (scale != 1.0) {
+    affectdst_rectD = (SDL_Rect){
+        c2 * dw,
+        gameplay_rectD.y + (MMSCALE * MAX_HEIGHT) + (fheight * 4),
+        (1.0 - c2) * dw,
+        5 * fheight,
+    };
+  } else {
+    affectdst_rectD = (SDL_Rect){
+        0.5f * c0 * dw + fwidth / 2,
+        gameplay_rectD.y + (AL(vitalD) + 1) * fheight,
+        (26 + 1) * fwidth,
+        5 * fheight,
+    };
+  }
+
+  // Right hand controls
+  float c3w, c3h, c3o, c3button;
+  c3o = c1 + AL(overlayD[0]) * cfD;
+  c3w = CLAMP(1.0 - c3o, 8 * cfD, 16 * cfD);
+  c3h = c3w * aspectD;
+  float bmin, bmax;
+  bmin = MIN(1.0 - c3w, c3);
+  bmax = MAX(1.0 - c3w, c3);
+  c3button = CLAMP(c3o, bmin, bmax);
+  textdst_rectD = (SDL_Rect){
+      gameplay_rectD.x + 6,
+      gameplay_rectD.y + 6,
+      MIN(AL(overlayD[0]) * fwidth, (c3button - c1) * dw),
+      MIN(AL(overlayD) * fheight, dh - gameplay_rectD.y - c3h * dh),
+  };
+  Log("textdst %dw %dh", textdst_rectD.w, textdst_rectD.h);
+  Log("wanted %jdw %jdh", AL(overlayD[0]) * fwidth, AL(overlayD) * fheight);
+
+  // Input constraints
+  if (TOUCH) {
+    float lift = (dh <= 768) ? 0.f : .1f;
+    padD = (SDL_Rect){.w = PADSIZE, .h = PADSIZE};
+    padD.x = c0 * 0.5f * dw;
+    padD.y = (1.0 - lift) * dh - padD.h;
+
+    SDL_Point center = {R4CENTER(padD)};
+    int cx = center.x;
+    int cy = center.y;
+    ppD[0] = (SDL_Point){cx, cy};
+
+    pp_rectD = (SDL_Rect){
+        .w = 64,
+        .h = 64,
+    };
+
+    int ppdist = 3 * padD.w / 8;
+    for (int it = 0; it < 8; ++it) {
+      int ox = cos_lookup(it) * ppdist;
+      int oy = sin_lookup(it) * ppdist;
+      ppD[1 + it].x = cx + ox;
+      ppD[1 + it].y = cy + oy;
+    }
+
+    int bw = c3w * dw;
+    int bh = c3h * dh;
+    Log("button %dw %dh", bw, bh);
+    for (int it = 0; it < AL(buttonD); ++it) {
+      SDL_Rect r = {.w = bw, .h = bh};
+      r.x = textdst_rectD.x + textdst_rectD.w + 6 - (1 - it) * r.w;
+      r.y = textdst_rectD.y + textdst_rectD.h + 6 - (it)*r.h;
+      buttonD[it] = r;
+    }
+
+    if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
+    tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, padD.w, padD.h,
+                                                0, texture_formatD);
+    if (tptextureD) SDL_DestroyTexture(tptextureD);
+    tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
+                                   padD.w, padD.h);
+    SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
+    surface_ppfill(tpsurfaceD);
+    SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
+  }
+}
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -1522,10 +1667,8 @@ SDL_Event event;
       "[ data1 %d data2 %d ]"
       "",
       event.window.event, event.window.data1, event.window.data2);
-  if ((event.window.event == SDL_WINDOWEVENT_RESIZED ||
-       event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) &&
-      (display_rectD.w != event.window.data1 ||
-       display_rectD.h != event.window.data2)) {
+  if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
+      event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
     int dw = event.window.data1;
     int dh = event.window.data2;
 
@@ -1533,152 +1676,15 @@ SDL_Event event;
       dw *= hdpi_scaleD.x / dw;
       dh *= hdpi_scaleD.y / dh;
     }
-    display_rectD.w = dw;
-    display_rectD.h = dh;
-    aspectD = (float)dw / dh;
-    Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspectD);
 
-    int fwidth, fheight;
-    fwidth = fontD.max_pixel_width;
-    fheight = fontD.max_pixel_height;
+    if (dw != display_rectD.w || dh != display_rectD.h) {
+      display_resize(dw, dh);
 
-    // Console row/col
-    rowD = dh / fheight;
-    colD = dw / fwidth;
-    rfD = 1.0f / rowD;
-    cfD = 1.0f / colD;
-    Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", fwidth,
-        fheight, rowD, colD, rfD, cfD);
-
-    // Map scaling due to vertical constraint
-    float scale;
-    int ymin = fheight + 6;                      // text, frame
-    int xmin = PADSIZE + (MMSCALE * MAX_WIDTH);  // touchpad, minimap
-    if (ymin + map_rectD.h <= dh) {
-      scale = 1.0f;
-    } else {
-      float yscale = (dh - ymin) / (float)map_rectD.h;
-      Log("YScale %.3f", yscale);
-      scale = yscale;
+      if (mode)
+        return (finger_colD == 0) ? '*' : '/';
+      else
+        platform_draw();
     }
-    // Horizontal constraint
-    if (xmin + map_rectD.w > dw) {
-      float xscale = (dw - xmin) / (float)map_rectD.w;
-      Log("XScale %.3f", xscale);
-      scale = MIN(scale, xscale);
-    }
-    Log("Scale %.3f", scale);
-    gameplay_rectD =
-        (SDL_Rect){.w = map_rectD.w * scale, .h = map_rectD.h * scale};
-    gameplay_scaleD = scale;
-
-    // Column
-    float c0, c1, c2, c3;
-    if (dw > 2 * 1024) {
-      c1 = .5 - (float)gameplay_rectD.w / dw * .5f;
-      c2 = .5 + (float)gameplay_rectD.w / dw * .5f;
-    } else {
-      c1 = (26 + 2) * cfD;
-      c2 = c1 + ((float)gameplay_rectD.w / dw);
-    }
-    c3 = c2 + (1.0 - c2) * .5;
-    c0 = c1 - (26 + 2) * cfD;
-    columnD[0] = c0;
-    columnD[1] = c1;
-    columnD[2] = c2;
-    columnD[3] = c3;
-    Log("Column %.03f %.03f %.03f %.03f", c0, c1, c2, c3);
-
-    // Map position
-    gameplay_rectD.x = columnD[1] * dw;
-    gameplay_rectD.y =
-        (scale != 1.0 ? ymin : ymin + (dh - gameplay_rectD.h - ymin) / 2);
-
-    // Affect Text
-    if (scale != 1.0) {
-      affectdst_rectD = (SDL_Rect){
-          c2 * dw,
-          gameplay_rectD.y + (MMSCALE * MAX_HEIGHT) + (fheight * 4),
-          (1.0 - c2) * dw,
-          5 * fheight,
-      };
-    } else {
-      affectdst_rectD = (SDL_Rect){
-          0.5f * c0 * dw + fwidth / 2,
-          gameplay_rectD.y + (AL(vitalD) + 1) * fheight,
-          (26 + 1) * fwidth,
-          5 * fheight,
-      };
-    }
-
-    // Right hand controls
-    float c3w, c3h, c3o, c3button;
-    c3o = c1 + AL(overlayD[0]) * cfD;
-    c3w = CLAMP(1.0 - c3o, 8 * cfD, 16 * cfD);
-    c3h = c3w * aspectD;
-    float bmin, bmax;
-    bmin = MIN(1.0 - c3w, c3);
-    bmax = MAX(1.0 - c3w, c3);
-    c3button = CLAMP(c3o, bmin, bmax);
-    textdst_rectD = (SDL_Rect){
-        gameplay_rectD.x + 6,
-        gameplay_rectD.y + 6,
-        MIN(AL(overlayD[0]) * fwidth, (c3button - c1) * dw),
-        MIN(AL(overlayD) * fheight, dh - gameplay_rectD.y - c3h * dh),
-    };
-    Log("textdst %dw %dh", textdst_rectD.w, textdst_rectD.h);
-    Log("wanted %jdw %jdh", AL(overlayD[0]) * fwidth, AL(overlayD) * fheight);
-
-    // Input constraints
-    if (TOUCH) {
-      float lift = (dh <= 768) ? 0.f : .1f;
-      padD = (SDL_Rect){.w = PADSIZE, .h = PADSIZE};
-      padD.x = c0 * 0.5f * dw;
-      padD.y = (1.0 - lift) * dh - padD.h;
-
-      SDL_Point center = {R4CENTER(padD)};
-      int cx = center.x;
-      int cy = center.y;
-      ppD[0] = (SDL_Point){cx, cy};
-
-      pp_rectD = (SDL_Rect){
-          .w = 64,
-          .h = 64,
-      };
-
-      int ppdist = 3 * padD.w / 8;
-      for (int it = 0; it < 8; ++it) {
-        int ox = cos_lookup(it) * ppdist;
-        int oy = sin_lookup(it) * ppdist;
-        ppD[1 + it].x = cx + ox;
-        ppD[1 + it].y = cy + oy;
-      }
-
-      int bw = c3w * dw;
-      int bh = c3h * dh;
-      Log("button %dw %dh", bw, bh);
-      for (int it = 0; it < AL(buttonD); ++it) {
-        SDL_Rect r = {.w = bw, .h = bh};
-        r.x = textdst_rectD.x + textdst_rectD.w + 6 - (1 - it) * r.w;
-        r.y = textdst_rectD.y + textdst_rectD.h + 6 - (it)*r.h;
-        buttonD[it] = r;
-      }
-
-      if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
-      tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, padD.w, padD.h,
-                                                  0, texture_formatD);
-      if (tptextureD) SDL_DestroyTexture(tptextureD);
-      tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
-                                     padD.w, padD.h);
-      SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
-      surface_ppfill(tpsurfaceD);
-      SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels,
-                        tpsurfaceD->pitch);
-    }
-    if (mode)
-      return (finger_colD == 0) ? '*' : '/';
-    else
-      platform_draw();
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
     if (display_rectD.w != 0) {
       // android 11 devices don't render the first frame (e.g. samsung A20)
