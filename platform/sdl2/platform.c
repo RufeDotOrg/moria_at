@@ -1837,9 +1837,7 @@ SDL_Event event;
         case TOUCH_GAMEPLAY:
           // shim to support message history
           if (tp.y < .09) return CTRL('p');
-          // shim to support zoom adjustment
-          if (tp.y > .90) return '-';
-          return 'O';
+          return finger ? '-' : 'O';
         case TOUCH_LB:
           return finger ? 'd' : 'A';
         case TOUCH_RB:
@@ -1849,8 +1847,6 @@ SDL_Event event;
       if (tp.y < .09) return CTRL('p');
       if (tp.x < .23 && tp.y < .5) return 'C';
       if (tp.x > .775 && tp.y < .28) return 'M';
-      if (tp.x > .23 && tp.x < .775 && tp.y > .90)
-        return '-';  // TODO: move to 2nd finger on gameplay area
       if (tp.x >= .775 && tp.y > .90) return 'v';
     }
   }
@@ -1876,13 +1872,13 @@ SDL_Event event;
       }
       return (finger_colD == 0) ? '*' : '/';
     }
+    if (touch == TOUCH_GAMEPLAY && finger) return '-';
     if (touch == TOUCH_LB) {
       return ESCAPE;
     }
     if (touch == TOUCH_RB) {
       return 'a' + finger_rowD;
     }
-    if (tp.x > .23 && tp.x < .775 && tp.y > .90) return '-';
     if (tp.x < .23 && tp.y < .5 && submodeD == 'c') return 'C';
   }
 
