@@ -10479,8 +10479,9 @@ py_menu()
   char* prompt;
 
   input_action = input_action_usedD;
-  memory_ok = (input_record_writeD <= AL(input_recordD) &&
-               input_action_usedD <= AL(input_actionD));
+  // One command may be written ahead (e.g. py_look) and is invalid for replay
+  memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
+               input_action_usedD <= AL(input_actionD) - 1);
 
   if (death) {
     snprintf(descD, AL(descD), " Killed by %s. ", death_descD);
