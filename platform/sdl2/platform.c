@@ -1302,11 +1302,13 @@ platform_draw()
 
   if (mode != 1) {
     SDL_Point p = {
-        textdst_rectD.x + textdst_rectD.w + width,
-        display_rectD.h - height,
+        textdst_rectD.x + textdst_rectD.w + width / 2,
+        display_rectD.h - 2 * height,
     };
-    render_font_string(rendererD, &fontD, versionD + 9, sizeof(versionD) - 10,
-                       p);
+    render_font_string(rendererD, &fontD, AP("version"), p);
+    p.y += height;
+    p.x += 2 * width;
+    render_font_string(rendererD, &fontD, versionD + 10, AL(versionD) - 11, p);
   }
 
   if (TOUCH) {
