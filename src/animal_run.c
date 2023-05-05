@@ -8157,6 +8157,7 @@ void obj_study(obj, for_sale) struct objS* obj;
   struct treasureS* tr_ptr;
   int line;
   int reveal, blows, eqidx;
+  int number;
 
   reveal = obj->idflag & ID_REVEAL;
   if (obj->tidx) {
@@ -8164,15 +8165,17 @@ void obj_study(obj, for_sale) struct objS* obj;
     screen_submodeD = 1;
     if (HACK) obj->idflag = ID_REVEAL;
     eqidx = may_equip(obj->tval);
+    number = obj->number;
+    if (for_sale && (STACK_SINGLE & obj->subval)) number = 1;
 
     line = 0;
-    BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (each)", obj->weight / 10,
-           obj->weight % 10);
-    if (!for_sale && (STACK_ANY & obj->subval)) {
+    if (number > 1) {
       int sum_weight = obj->number * obj->weight;
       BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Total Weight", sum_weight / 10,
              sum_weight % 10);
     }
+    BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (each)", obj->weight / 10,
+           obj->weight % 10);
 
     if (tr_is_known(tr_ptr)) {
       if (obj->tval == TV_WAND || obj->tval == TV_STAFF) {
@@ -8186,6 +8189,17 @@ void obj_study(obj, for_sale) struct objS* obj;
 
     if (obj->tval == TV_DIGGING) {
       BufMsg(screen, "%-17.017s: %+d", "+ To Digging", obj_tabil(obj, reveal));
+    }
+    if (obj->tval == TV_LAUNCHER) {
+      if (obj->p1 < AL(projectile_nameD)) {
+        BufMsg(screen, "%-17.017s: %s", "Projectile",
+               projectile_nameD[obj->p1]);
+      }
+    }
+    if (obj->tval == TV_PROJECTILE) {
+      if (obj->p1 < AL(launcher_nameD)) {
+        BufMsg(screen, "%-17.017s: %s", "Launcher", launcher_nameD[obj->p1]);
+      }
     }
     if (reveal) {
       if (oset_tohitdam(obj)) {
@@ -8356,7 +8370,7 @@ void obj_study(obj, for_sale) struct objS* obj;
       }
     }
 
-    obj_desc(obj, 1);
+    obj_desc(obj, number);
     DRAWMSG("You study %s.", descD);
     inkey();
   }

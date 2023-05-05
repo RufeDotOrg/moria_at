@@ -5661,12 +5661,24 @@ static char* special_nameD[] = {
     "(Disarmed)",
     "(Unlocked)",
 };
+static char* launcher_nameD[] = {
+  "",
+  "sling",
+  "bow",
+  "crossbow",
+};
+static char* projectile_nameD[] = {
+    "",
+    "pebble or slag",
+    "arrow",
+    "bolt",
+};
 
 static int sorted_objects[AL(treasureD)];
 static int o_level[MAX_OBJ_LEVEL + 1];
 
 static uint16_t store_choiceD[MAX_STORE][MAX_STORE_CHOICE] = {
-    {269, 87,  86,  86,  336,  87, 124, 269, 87, 350, 349, 348, 347,
+    {269, 87,  86,  86,  336, 87, 124, 269, 87, 350, 349, 348, 347,
      346, 346, 345, 345, 336, 22, 22,  22,  22, 22,  22,  22,  22},
     {95,  96,  97,  110, 104, 105, 106, 107, 111, 112, 113, 115, 117,
      125, 126, 127, 128, 130, 104, 105, 125, 126, 92,  93,  96,  97},
