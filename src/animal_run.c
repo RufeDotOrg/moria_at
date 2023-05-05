@@ -325,6 +325,19 @@ uspelltable()
   }
   return 0;
 }
+static char backupD[16];
+char*
+usavebackup()
+{
+  char* dst;
+  memcpy(backupD, AP("save"));
+  dst = &backupD[4];
+  for (char* src = classD[uD.clidx].name; *src != 0; ++src) {
+    *dst++ = *src | 0x20;
+  }
+  *dst = 0;
+  return backupD;
+}
 void
 affect_update()
 {
@@ -10491,11 +10504,13 @@ py_menu()
   char c;
   int line, input_action, memory_ok;
   char* prompt;
+  char* savename;
 
   input_action = input_action_usedD;
   // One command may be written ahead (e.g. py_look) and is invalid for replay
   memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
                input_action_usedD <= AL(input_actionD) - 1);
+  savename = usavebackup();
 
   if (death) {
     snprintf(descD, AL(descD), " Killed by %s. ", death_descD);
@@ -10517,10 +10532,13 @@ py_menu()
       BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
              memory_ok ? "memory OK" : "memory FAIL");
     }
-    BufMsg(overlay, "c) Copy last save to backup slot");
+    BufMsg(overlay, "c) Copy last save to backup slot (%s)", savename);
     BufMsg(overlay, "d) Dungeon reset");
     BufMsg(overlay, "e) Erase character (new game)");
-    BufMsg(overlay, "f) Fallback to backup slot (reload old game)");
+    BufMsg(overlay, "f) Fallback to backup slot (%s)", savename);
+    BufMsg(overlay,
+           "g) Go to backup (deprecated| to be removed on June 1st 2023)");
+
     if (!in_subcommand(prompt, &c)) break;
 
     switch (c) {
@@ -10541,7 +10559,7 @@ py_menu()
 
       case 'c':
         if (platformD.copy) {
-          if (platformD.copy("savechar", "savebackup") == 0) {
+          if (platformD.copy("savechar", savename) == 0) {
             msg_print("Backup complete.");
           } else {
             msg_print("Backup failed.");
@@ -10562,6 +10580,17 @@ py_menu()
         continue;
 
       case 'f':
+        if (platformD.copy) {
+          if (player_confirm()) {
+            if (platformD.copy(savename, "savechar") == 0) longjmp(restartD, 1);
+
+            msg_print("Aborted; No backup found.");
+            msg_pause();
+          }
+        }
+        continue;
+
+      case 'g':
         if (platformD.copy) {
           if (player_confirm()) {
             if (platformD.copy("savebackup", "savechar") == 0)
