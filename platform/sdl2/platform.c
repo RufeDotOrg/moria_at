@@ -1736,6 +1736,38 @@ SDL_Event event;
 }
 
 static int
+gameplay_touch(event)
+SDL_Event *event;
+{
+  SDL_Point tpp = {
+      event->tfinger.x * display_rectD.w,
+      event->tfinger.y * display_rectD.h,
+  };
+  SDL_Point rel = {
+      tpp.x - gameplay_rectD.x,
+      tpp.y - gameplay_rectD.y,
+  };
+  float gsy = rel.y / gameplay_scaleD;
+  float gsx = rel.x / gameplay_scaleD;
+
+  if (zoom_factorD) {
+    int zf, zh, zw;
+    zf = zoom_factorD;
+    zh = SYMMAP_HEIGHT >> zf;
+    zw = SYMMAP_WIDTH >> zf;
+
+    gsy *= (1.0 + zh) / SYMMAP_HEIGHT;
+    gsx *= (1.0 + zw) / SYMMAP_WIDTH;
+  }
+
+  int ry = (int)gsy / ART_H;
+  int rx = (int)gsx / ART_W;
+  ylookD = ry;
+  xlookD = rx;
+  return 'O';
+}
+
+static int
 touch_from_event(event)
 SDL_Event *event;
 {
@@ -1745,27 +1777,6 @@ SDL_Event *event;
   };
   int r = 0;
   if (SDL_PointInRect(&tpp, &gameplay_rectD)) {
-    SDL_Point rel = {
-        tpp.x - gameplay_rectD.x,
-        tpp.y - gameplay_rectD.y,
-    };
-    float gsy = rel.y / gameplay_scaleD;
-    float gsx = rel.x / gameplay_scaleD;
-
-    if (zoom_factorD) {
-      int zf, zh, zw;
-      zf = zoom_factorD;
-      zh = SYMMAP_HEIGHT >> zf;
-      zw = SYMMAP_WIDTH >> zf;
-
-      gsy *= (1.0 + zh) / SYMMAP_HEIGHT;
-      gsx *= (1.0 + zw) / SYMMAP_WIDTH;
-    }
-
-    int ry = (int)gsy / ART_H;
-    int rx = (int)gsx / ART_W;
-    ylookD = ry;
-    xlookD = rx;
     r = TOUCH_GAMEPLAY;
   }
   for (int it = 0; it < AL(buttonD); ++it) {
@@ -1837,7 +1848,7 @@ SDL_Event event;
         case TOUCH_GAMEPLAY:
           // shim to support message history
           if (tp.y < .09) return CTRL('p');
-          return finger ? '-' : 'O';
+          return finger ? '-' : gameplay_touch(&event);
         case TOUCH_LB:
           return finger ? 'd' : 'A';
         case TOUCH_RB:
