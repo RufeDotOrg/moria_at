@@ -12943,6 +12943,7 @@ dungeon()
   int ymine, xmine;
   uint32_t dir, teleport;
   int town;
+  uint32_t ephemeral;
 
   town = (dun_level == 0);
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
@@ -12978,7 +12979,18 @@ dungeon()
         py_drop();
       } else {
         msg_advance();
-        AS(input_actionD, input_action_usedD++) = input_record_readD;
+        if (ephemeral) {
+          input_record_readD = input_record_writeD =
+              AS(input_actionD, input_action_usedD - 1);
+
+          while (msg_writeD > ephemeral) {
+            msg_writeD -= 1;
+            AS(msglen_cqD, msg_writeD) = 0;
+          }
+          ephemeral = 0;
+        } else {
+          AS(input_actionD, input_action_usedD++) = input_record_readD;
+        }
         c = inkey();
 
         // AWN: Period attempts auto-detection of a situational command
@@ -13144,13 +13156,12 @@ dungeon()
               screenD[0][0] = ' ';
               screen_usedD[0] = 1;
               minimap_enlargeD = TRUE;
-              platformD.predraw();
               DRAWMSG("You study a map of %s.", dun_descD);
               inkey();
               break;
             case 'O': {
-              input_record_readD = input_record_writeD =
-                  AS(input_actionD, --input_action_usedD);
+              ephemeral =
+                  (input_record_readD == input_record_writeD) ? msg_writeD : 0;
               if (zoom_factorD == 0) {
                 py_look(ylookD + panelD.panel_row_min,
                         xlookD + panelD.panel_col_min);
