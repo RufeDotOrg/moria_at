@@ -13155,10 +13155,14 @@ dungeon()
                 py_look(ylookD + panelD.panel_row_min,
                         xlookD + panelD.panel_col_min);
               } else {
-                int ty = uD.y - ((SYMMAP_HEIGHT / 2) >> zoom_factorD);
-                int tx = uD.x - ((SYMMAP_WIDTH / 2) >> zoom_factorD);
-                if (panelD.panel_row_min > ty) ty = panelD.panel_row_min;
-                if (panelD.panel_col_min > tx) tx = panelD.panel_col_min;
+                int zf, zh, zw;
+                zf = zoom_factorD;
+                zh = SYMMAP_HEIGHT >> zf;
+                zw = SYMMAP_WIDTH >> zf;
+                int ty = CLAMP(uD.y - zh / 2, panelD.panel_row_min,
+                               panelD.panel_row_max - zh - 1);
+                int tx = CLAMP(uD.x - zw / 2, panelD.panel_col_min,
+                               panelD.panel_col_max - zw - 1);
                 py_look(ylookD + ty, xlookD + tx);
               }
             } break;
