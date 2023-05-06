@@ -12946,6 +12946,7 @@ dungeon()
   uint32_t ephemeral;
 
   town = (dun_level == 0);
+  ephemeral = 0;
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
 
   if (town)
