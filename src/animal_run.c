@@ -13,9 +13,9 @@ static int find_breakright, find_breakleft;
 static int find_prevdir;
 static jmp_buf restartD;
 static char input_recordD[4 * 1024];
-static int input_record_writeD;
-static int input_record_readD;
-static int input_undoD;
+static uint32_t input_record_writeD;
+static uint32_t input_record_readD;
+static int input_resumeD;
 static int input_actionD[1024];
 static int input_action_usedD;
 static int drop_flag;
@@ -3730,8 +3730,8 @@ hard_reset()
 
   // Replay state
   input_record_readD = input_action_usedD = 0;
-  input_record_writeD = AS(input_actionD, input_undoD);
-  input_undoD = 0;
+  input_record_writeD = AS(input_actionD, input_resumeD);
+  input_resumeD = 0;
 }
 BOOL
 panel_contains(panel, y, x)
@@ -10554,7 +10554,7 @@ py_menu()
       case 'b':
         if (!memory_ok) return 0;
 
-        input_undoD = MAX(0, input_action - 2 + death);
+        input_resumeD = MAX(0, input_action - 2 + death);
         longjmp(restartD, 1);
 
       case 'c':
