@@ -10264,6 +10264,8 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
         inven_flask(iidx);
       } else if (obj->tval == TV_SPIKE) {
         py_spike(iidx);
+      } else if (obj->tval == TV_DIGGING) {
+        py_tunnel(iidx);
       } else if (iidx < INVEN_EQUIP) {
         inven_wear(iidx);
       } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
@@ -11654,19 +11656,108 @@ py_look(y, x)
     }
   }
 }
-static void
+static int
+tunnel_tool(y, x, iidx)
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+  int tabil, str, wall_chance, wall_min, turn_count, flag;
+  c_ptr = &caveD[y][x];
+
+  flag = FALSE;
+  if (c_ptr->fval != BOUNDARY_WALL) {
+    obj = obj_get(invenD[iidx]);
+    if (obj->id) {
+      obj_desc(obj, 1);
+      MSG("You begin tunneling with %s.", descD);
+
+      str = statD.use_stat[A_STR];
+      tabil = obj_tabil(obj, TRUE);
+      /* If this weapon is too heavy for the player to wield properly, then
+         also make it harder to dig with it. tabil may be negative.  */
+      tabil += hitadj_by_weight_str(obj->weight, str);
+
+      wall_chance = 0;
+      switch (c_ptr->fval) {
+        case QUARTZ_WALL:
+          wall_min = 80;
+          wall_chance = 400;
+          msg_print("You tunnel into the quartz vein.");
+          break;
+        case MAGMA_WALL:
+          wall_min = 10;
+          wall_chance = 600;
+          msg_print("You tunnel into the magma intrusion.");
+          break;
+        case GRANITE_WALL:
+          wall_min = 10;
+          wall_chance = 1200;
+          msg_print("You tunnel into the granite wall.");
+          break;
+        default:
+          break;
+      }
+
+      turn_count = 0;
+      if (wall_chance) {
+        do {
+          turn_count += 1;
+          if (tabil > randint(wall_chance) + wall_min) {
+            twall(y, x);
+            msg_print("You have finished the tunnel.");
+            break;
+          }
+        } while (turn_count < 5);
+      }
+      /* Is there an object in the way?  (Rubble and secret doors)*/
+      else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
+        msg_print("You tunnel into the granite wall.");
+        do {
+          turn_count += 1;
+          py_search(uD.y, uD.x);
+          if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
+        } while (turn_count < 5);
+      } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
+        msg_print("You dig in the rubble.");
+
+        do {
+          if (tabil > randint(180)) {
+            c_ptr->fval = FLOOR_CORR;
+            delete_object(y, x);
+            if (randint(10) == 1) {
+              place_object(y, x, FALSE);
+              if (CF_LIT & c_ptr->cflag) {
+                msg_print("You have found something!");
+              }
+            } else {
+              msg_print("You have removed the rubble.");
+            }
+            break;
+          }
+        } while (turn_count < 5);
+      }
+
+      // TBD: unique counter for mining?
+      if (iidx != INVEN_WIELD) {
+        countD.paralysis = 2;
+      }
+      countD.paralysis += MAX(turn_count, 1);
+      flag = TRUE;
+    } else {
+      msg_print("You dig with your hands, making no progress.");
+    }
+  } else {
+    msg_print("You cannot tunnel into permanent rock.");
+  }
+
+  return flag;
+}
+static int
 tunnel(y, x)
 {
-  int max_tabil, str, wall_chance, wall_min, turn_count;
-  struct caveS* c_ptr;
+  int max_tabil;
   struct objS* i_ptr;
   int iidx;
-
-  c_ptr = &caveD[y][x];
-  if (c_ptr->fval == BOUNDARY_WALL) {
-    msg_print("You cannot tunnel into permanent rock.");
-    return;
-  }
 
   iidx = INVEN_WIELD;
   i_ptr = obj_get(invenD[iidx]);
@@ -11685,87 +11776,32 @@ tunnel(y, x)
     }
   }
 
-  if (max_tabil >= 0) {
-    i_ptr = obj_get(invenD[iidx]);
-    obj_desc(i_ptr, 1);
-    MSG("You begin tunneling with %s.", descD);
+  return tunnel_tool(y, x, iidx);
+}
+int
+py_tunnel(iidx)
+{
+  int dir, flag;
+  int y, x;
 
-    str = statD.use_stat[A_STR];
-    max_tabil = obj_tabil(i_ptr, TRUE);
-    /* If this weapon is too heavy for the player to wield properly, then
-       also make it harder to dig with it.  */
-    max_tabil += hitadj_by_weight_str(i_ptr->weight, str);
-    if (max_tabil < 0) max_tabil = 0;
+  flag = FALSE;
+  if (countD.confusion) {
+    msg_print("You are too confused for digging.");
+  } else if (get_dir("Dig a tunnel which direction?", &dir)) {
+    y = uD.y;
+    x = uD.x;
+    mmove(dir, &y, &x);
 
-    wall_chance = 0;
-    switch (c_ptr->fval) {
-      case QUARTZ_WALL:
-        wall_min = 80;
-        wall_chance = 400;
-        msg_print("You tunnel into the quartz vein.");
-        break;
-      case MAGMA_WALL:
-        wall_min = 10;
-        wall_chance = 600;
-        msg_print("You tunnel into the magma intrusion.");
-        break;
-      case GRANITE_WALL:
-        wall_min = 10;
-        wall_chance = 1200;
-        msg_print("You tunnel into the granite wall.");
-        break;
-      default:
-        break;
+    if (caveD[y][x].fval > MAX_OPEN_SPACE) {
+      if (caveD[y][x].midx == 0)
+        flag = tunnel_tool(y, x, iidx);
+      else
+        msg_print("Something is in your way!");
     }
+  }
 
-    turn_count = 0;
-    if (wall_chance) {
-      do {
-        turn_count += 1;
-        if (max_tabil > randint(wall_chance) + wall_min) {
-          twall(y, x);
-          msg_print("You have finished the tunnel.");
-          break;
-        }
-      } while (turn_count < 5);
-    }
-    /* Is there an object in the way?  (Rubble and secret doors)*/
-    else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
-      msg_print("You tunnel into the granite wall.");
-      do {
-        turn_count += 1;
-        py_search(uD.y, uD.x);
-        if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
-      } while (turn_count < 5);
-    } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
-      msg_print("You dig in the rubble.");
-
-      do {
-        if (max_tabil > randint(180)) {
-          c_ptr->fval = FLOOR_CORR;
-          delete_object(y, x);
-          if (randint(10) == 1) {
-            place_object(y, x, FALSE);
-            if (CF_LIT & c_ptr->cflag) {
-              msg_print("You have found something!");
-            }
-          } else {
-            msg_print("You have removed the rubble.");
-          }
-          break;
-        }
-      } while (turn_count < 5);
-    }
-
-    // TBD: unique counter for mining?
-    if (iidx != INVEN_WIELD) {
-      countD.paralysis = 2;
-    }
-    countD.paralysis += MAX(turn_count, 1);
-  } else
-    msg_print("You dig with your hands, making no progress.");
-
-  turn_flag = TRUE;
+  turn_flag = flag;
+  return flag;
 }
 static void make_move(midx, mm) int* mm;
 {
