@@ -18,7 +18,7 @@ static uint32_t input_record_readD;
 static int input_resumeD;
 static int input_actionD[1024];
 static int input_action_usedD;
-static int drop_flag;
+static char* drop_mode;
 
 static char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
@@ -421,7 +421,7 @@ static void
 disturb(mon_near)
 {
   if (countD.rest != 0) countD.rest = 0;
-  if (mon_near && drop_flag) drop_flag = FALSE;
+  if (mon_near && drop_mode) drop_mode = 0;
   if (!mon_near && find_flag) find_flag = FALSE;
 }
 static void msg_game(msg, msglen) char* msg;
@@ -481,10 +481,10 @@ char* command;
   DRAWMSG("%s", prompt ? prompt : "");
   do {
     c = inkey();
-    if (is_ctrl(c)) return 0;
+    if (is_ctrl(c)) break;
   } while (c == ' ');
   *command = c;
-  return 1;
+  return is_ctrl(c) ? 0 : 1;
 }
 static char
 map_roguedir(comval)
@@ -5713,10 +5713,14 @@ inven_drop(iidx)
         obj_detail(obj);
         MSG("You drop %s%s.", descD, detailD);
         turn_flag = TRUE;
+
+        if (drop_mode) {
+          drop_mode = iidx >= INVEN_EQUIP ? "/*" : "*/";
+        }
       }
     } else {
       msg_print("There are too many objects on the ground here.");
-      drop_flag = FALSE;
+      drop_mode = 0;
     }
   }
 }
@@ -7960,7 +7964,7 @@ inven_overlay(begin, end)
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, obj->number);
       obj_detail(obj);
-      if (drop_flag) sum_weight = obj->number * obj->weight;
+      if (drop_mode) sum_weight = obj->number * obj->weight;
     } else {
       descD[0] = 0;
       detailD[0] = 0;
@@ -11366,15 +11370,13 @@ bash(y, x)
 
   return movement;
 }
-static void
-py_drop()
+static void py_drop(mode) char* mode;
 {
   int iidx;
-  msg_pause();
-  iidx = inven_choice("Drop which item?", "*/");
+  iidx = inven_choice("Drop which item?", mode);
 
   if (iidx < 0)
-    drop_flag = FALSE;
+    drop_mode = 0;
   else
     inven_drop(iidx);
 }
@@ -13040,8 +13042,9 @@ dungeon()
         if (equip_vibrate(TR_TELEPORT)) py_teleport(40, &y, &x);
       } else if (find_flag) {
         mmove(find_direction, &y, &x);
-      } else if (drop_flag) {
-        py_drop();
+      } else if (drop_mode) {
+        msg_advance();
+        py_drop(drop_mode);
       } else {
         msg_advance();
         if (ephemeral) {
@@ -13132,7 +13135,7 @@ dungeon()
               close_object();
               break;
             case 'd':
-              drop_flag = TRUE;
+              drop_mode = "*/";
               break;
             case 'e': {
               int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
