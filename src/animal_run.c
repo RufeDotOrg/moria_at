@@ -6181,7 +6181,7 @@ py_inven_init()
 {
   int start_equip[] = {30, 87, 22, 0, 0};
   int class_equip[AL(classD)] = {221, 319, 323, 124, 343, 323};
-  int race_equip[AL(raceD)] = {87, 81, 82, 52, 90, 78, 127, 128};
+  int race_equip[AL(raceD)] = {336, 81, 82, 52, 90, 78, 127, 128};
   int clidx = uD.clidx;
   int rsel = uD.ridx;
   start_equip[AL(start_equip) - 2] = class_equip[clidx];
@@ -6203,6 +6203,9 @@ py_inven_init()
         break;
       case 343:
         obj->number = 24 + randint(7);
+        break;
+      case 336:
+        obj->number = 5 + randint(3);
         break;
     }
 
