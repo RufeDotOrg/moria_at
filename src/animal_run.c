@@ -4125,7 +4125,7 @@ find_event(y, x)
 int
 detect_obj(int (*valid)())
 {
-  int detect, fm, lit;
+  int detect;
   struct caveS* c_ptr;
   int py, px;
 
@@ -4135,29 +4135,26 @@ detect_obj(int (*valid)())
   FOR_EACH(obj, {
     if (distance(py, px, obj->fy, obj->fx) < 32 && valid(obj)) {
       c_ptr = &caveD[obj->fy][obj->fx];
-      fm = (CF_FIELDMARK & c_ptr->cflag);
-      lit = (CF_LIT & c_ptr->cflag);
 
       // Gold is fieldmarked too, affecting auto-run
-      if (obj->tval >= TV_MAX_PICK_UP && !fm) {
-        detect = TRUE;
-        c_ptr->cflag |= CF_FIELDMARK;
-
-        // enables locked/stuck door interaction, trap auto-disarm
-        obj->idflag |= ID_REVEAL;
-
-        if (obj->tval == TV_INVIS_TRAP) {
-          obj->tval = TV_VIS_TRAP;
-          obj->tchar = '^';
-        } else if (obj->tval == TV_SECRET_DOOR) {
-          obj->tval = TV_CLOSED_DOOR;
-          obj->tchar = '+';
+      if (obj->tval >= TV_MAX_PICK_UP) {
+        if ((obj->idflag & ID_REVEAL) == 0) {
+          detect = TRUE;
+          obj->idflag |= ID_REVEAL;
+          if (obj->tval == TV_INVIS_TRAP) {
+            obj->tval = TV_VIS_TRAP;
+            obj->tchar = '^';
+          } else if (obj->tval == TV_SECRET_DOOR) {
+            obj->tval = TV_CLOSED_DOOR;
+            obj->tchar = '+';
+          }
+          c_ptr->cflag |= CF_FIELDMARK;
         }
-      }
-
-      if (obj->tval < TV_MAX_PICK_UP && !lit) {
-        detect = TRUE;
-        c_ptr->cflag |= CF_TEMP_LIGHT;
+      } else if (obj->tval < TV_MAX_PICK_UP) {
+        if ((CF_LIT & c_ptr->cflag) == 0) {
+          detect = TRUE;
+          c_ptr->cflag |= CF_TEMP_LIGHT;
+        }
       }
     }
   });
