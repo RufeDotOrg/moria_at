@@ -13135,7 +13135,7 @@ dungeon()
               close_object();
               break;
             case 'd':
-              drop_mode = "*/";
+              py_drop("*/");
               break;
             case 'e': {
               int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
