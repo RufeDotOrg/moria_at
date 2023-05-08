@@ -9094,14 +9094,37 @@ gain_spell(spidx)
   return 0;
 }
 int
-try_spell(spidx, y_ptr, x_ptr)
-int* y_ptr;
-int* x_ptr;
+dir_of_spell(spidx)
 {
   int dir;
+
   switch (spidx + 1) {
     case 1:
-      if (!get_dir(0, &dir)) return 0;
+    case 7:
+    case 8:
+    case 9:
+    case 11:
+    case 15:
+    case 16:
+    case 20:
+    case 23:
+    case 24:
+    case 25:
+    case 27:
+    case 29:
+      if (!get_dir(0, &dir)) dir = -1;
+      break;
+    default:
+      dir = 0;
+  }
+
+  return dir;
+}
+void spell_dir(spidx, y_ptr, x_ptr, dir) int* y_ptr;
+int* x_ptr;
+{
+  switch (spidx + 1) {
+    case 1:
       magic_bolt(GF_MAGIC_MISSILE, dir, uD.y, uD.x, damroll(2, 6),
                  spell_nameD[0]);
       break;
@@ -9122,22 +9145,18 @@ int* x_ptr;
       detect_obj(oset_hidden);
       break;
     case 7:
-      if (!get_dir(0, &dir)) return 0;
       fire_ball(GF_POISON_GAS, dir, uD.y, uD.x, 12, spell_nameD[6]);
       break;
     case 8:
-      if (!get_dir(0, &dir)) return 0;
       confuse_monster(dir, uD.y, uD.x);
       break;
     case 9:
-      if (!get_dir(0, &dir)) return 0;
       magic_bolt(GF_LIGHTNING, dir, uD.y, uD.x, damroll(4, 8), spell_nameD[8]);
       break;
     case 10:
       td_destroy(uD.y, uD.x);
       break;
     case 11:
-      if (!get_dir(0, &dir)) return 0;
       sleep_monster(dir, uD.y, uD.x);
       break;
     case 12:
@@ -9152,24 +9171,22 @@ int* x_ptr;
       equip_remove_curse();
       break;
     case 15:
-      if (!get_dir(0, &dir)) return 0;
       magic_bolt(GF_FROST, dir, uD.y, uD.x, damroll(6, 8), spell_nameD[14]);
       break;
     case 16:
-      if (!get_dir(0, &dir)) return 0;
       wall_to_mud(dir, uD.y, uD.x);
       break;
     case 17:
       create_food(uD.y, uD.x);
       break;
     case 18:
+      // TBD: allow to fail without mana cost?
       inven_recharge(inven_choice("Recharge which item?", "*"), 0);
       break;
     case 19:
       sleep_monster_aoe(1);
       break;
     case 20:
-      if (!get_dir(0, &dir)) return 0;
       poly_monster(dir, uD.y, uD.x);
       break;
     case 21:
@@ -9179,30 +9196,24 @@ int* x_ptr;
       sleep_monster_aoe(MAX_SIGHT);
       break;
     case 23:
-      if (!get_dir(0, &dir)) return 0;
       magic_bolt(GF_FIRE, dir, uD.y, uD.x, damroll(9, 8), spell_nameD[22]);
       break;
     case 24:
-      if (!get_dir(0, &dir)) return 0;
       speed_monster(dir, uD.y, uD.x, -1);
       break;
     case 25:
-      if (!get_dir(0, &dir)) return 0;
       fire_ball(GF_FROST, dir, uD.y, uD.x, 48, spell_nameD[24]);
       break;
     case 26:
       inven_recharge(inven_choice("Recharge which item?", "*"), 1);
       break;
     case 27:
-      if (!get_dir(0, &dir)) return 0;
       teleport_monster(dir, uD.y, uD.x);
       break;
     case 28:
       ma_duration(MA_FAST, randint(20) + uD.lev);
       break;
     case 29:
-      if (!get_dir(0, &dir)) return 0;
-
       fire_ball(GF_FIRE, dir, uD.y, uD.x, 72, spell_nameD[28]);
       break;
     case 30:
@@ -9215,7 +9226,6 @@ int* x_ptr;
     default:
       break;
   }
-  return 1;
 }
 void py_magic(iidx, y_ptr, x_ptr) int* y_ptr;
 int* x_ptr;
@@ -9224,7 +9234,7 @@ int* x_ptr;
   struct objS* obj;
   uint32_t flags, first_spell;
   int book[32], book_used, line;
-  int sptype, spmask, spidx;
+  int sptype, spmask, spidx, dir;
   struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
@@ -9289,10 +9299,13 @@ int* x_ptr;
           spidx = book[choice];
 
           if ((1 << spidx) & spmask) {
+            dir = dir_of_spell(spidx);
+            if (dir < 0) continue;
+
             if (randint(100) < spell_chanceD[spidx]) {
               msg_print("You failed to get the spell off!");
             } else {
-              if (!try_spell(spidx, y_ptr, x_ptr)) continue;
+              spell_dir(spidx, y_ptr, x_ptr, dir);
 
               if ((uD.spell_worked & (1 << spidx)) == 0) {
                 uD.spell_worked |= (1 << spidx);
@@ -9326,11 +9339,26 @@ int* x_ptr;
   }
 }
 int
-try_prayer(pridx, y_ptr, x_ptr)
+dir_of_prayer(pridx)
+{
+  int dir;
+
+  switch (pridx + 1) {
+    case 9:
+    case 18:
+      if (!get_dir(0, &dir)) dir = -1;
+      break;
+    default:
+      dir = 0;
+      break;
+  }
+  return dir;
+}
+int
+prayer_dir(pridx, y_ptr, x_ptr, dir)
 int* y_ptr;
 int* x_ptr;
 {
-  int dir;
   switch (pridx + 1) {
     case 1:
       detect_mon(crset_evil);
@@ -9358,7 +9386,6 @@ int* x_ptr;
       if (countD.poison) countD.poison = MAX(1, countD.poison / 2);
       break;
     case 9:
-      if (!get_dir(0, &dir)) return 0;
       confuse_monster(dir, uD.y, uD.x);
       break;
     case 10:
@@ -9387,8 +9414,6 @@ int* x_ptr;
       if (countD.poison > 0) countD.poison = 1;
       break;
     case 18:
-      if (!get_dir(0, &dir)) return 0;
-
       fire_ball(GF_HOLY_ORB, dir, uD.y, uD.x, (damroll(3, 6) + uD.lev),
                 "Black Sphere");
       break;
@@ -9451,7 +9476,7 @@ int* x_ptr;
   struct objS* obj;
   uint32_t flags, first_spell;
   int book[32], book_used, line;
-  int sptype, spmask, spidx;
+  int sptype, spmask, spidx, dir;
   struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
@@ -9515,10 +9540,13 @@ int* x_ptr;
           spidx = book[choice];
 
           if ((1 << spidx) & spmask) {
+            dir = dir_of_prayer(spidx);
+            if (dir < 0) continue;
+
             if (randint(100) < spell_chanceD[spidx]) {
               msg_print("You lost your concentration!");
             } else {
-              if (!try_prayer(spidx, y_ptr, x_ptr)) continue;
+              prayer_dir(spidx, y_ptr, x_ptr, dir);
 
               if ((uD.spell_worked & (1 << spidx)) == 0) {
                 uD.spell_worked |= (1 << spidx);
