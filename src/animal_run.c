@@ -7890,7 +7890,7 @@ static int
 obj_cmp(a, b)
 struct objS *a, *b;
 {
-  int astack, bstack, ar, br, at, bt, ak, bk;
+  int astack, bstack, ar, br, at, bt, ak, bk, known;
 
   astack = a->subval & STACK_ANY;
   bstack = b->subval & STACK_ANY;
@@ -7900,15 +7900,19 @@ struct objS *a, *b;
     ak = tr_is_known(&treasureD[a->tidx]);
     bk = tr_is_known(&treasureD[b->tidx]);
     if (ak != bk) return ak - bk;
+    known = ak;
   } else {
     ar = a->idflag & ID_REVEAL;
     br = b->idflag & ID_REVEAL;
     if (ar != br) return ar - br;
+    known = ar;
   }
 
   at = a->tval;
   bt = b->tval;
-  return at - bt;
+  if (at != bt) return at - bt;
+
+  return known ? mask_subval(b->subval) - mask_subval(a->subval) : 0;
 }
 static int
 inven_sort()
