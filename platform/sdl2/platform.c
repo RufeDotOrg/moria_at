@@ -789,7 +789,12 @@ viz_update()
         viz.fade = fade_by_distance(py, px, row, col) - 1;
         if (mon->mlit) {
           viz.cr = mon->cidx;
-        } else if (!blind && (CF_VIZ & c_ptr->cflag)) {
+        } else if (blind) {
+          // May have MA_DETECT resulting in lit monsters above
+          // No walls, objects, or lighting
+          viz.light = 0;
+          viz.fade = 3;
+        } else if (CF_VIZ & c_ptr->cflag) {
           switch (c_ptr->fval) {
             case GRANITE_WALL:
             case BOUNDARY_WALL:
