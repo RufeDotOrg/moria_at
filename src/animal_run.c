@@ -3,7 +3,6 @@
 enum { HACK = 0 };
 static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
-static int find_cut = 1;
 static int find_examine;
 static int find_ignore_doors;
 static int find_direction;
@@ -4089,7 +4088,7 @@ find_event(y, x)
   }
 
   if (find_openarea == FALSE) { /* choose a direction. */
-    if (option2 == 0 || (find_examine && !find_cut)) {
+    if (option2 == 0) {
       /* There is only one option, or if two, then we always examine
          potential corners and never cur known corners, so you step
          into the straight option. */
@@ -4117,14 +4116,9 @@ find_event(y, x)
           /* STOP: we are next to an intersection or a room */
           return 1;
         }
-      } else if (find_cut) {
+      } else {
         /* This corner is seen to be enclosed; we cut the corner. */
         find_direction = option2;
-        find_prevdir = option2;
-      } else {
-        /* This corner is seen to be enclosed, and we deliberately
-           go the long way. */
-        find_direction = option;
         find_prevdir = option2;
       }
     }
