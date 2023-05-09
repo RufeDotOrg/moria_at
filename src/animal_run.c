@@ -6152,6 +6152,9 @@ py_init(prng, csel)
   for (int it = 0; it < MAX_A; ++it) {
     stat[it] += cl_ptr->mattr[it];
   }
+  for (int it = 0; it < MAX_A; ++it) {
+    stat[it] = MAX(3, stat[it]);
+  }
 
   memcpy(statD.max_stat, AP(stat));
   memcpy(statD.cur_stat, AP(stat));
