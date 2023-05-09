@@ -4,7 +4,7 @@ enum { HACK = 0 };
 static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
 static int find_cut = 1;
-static int find_examine = 1;
+static int find_examine;
 static int find_ignore_doors;
 static int find_direction;
 static int find_flag;
@@ -3990,6 +3990,16 @@ see_nothing(dir, y, x)
     return TRUE;
   else
     return FALSE;
+}
+int
+find_warn(y, x)
+{
+  for (int i = -1; i <= 1; ++i) {
+    for (int j = -1; j <= 1; ++j) {
+      if (entity_monD[caveD[y + i][x + j].midx].mlit) return 1;
+    }
+  }
+  return 0;
 }
 int
 find_event(y, x)
@@ -13049,6 +13059,7 @@ dungeon()
       if (teleport) {
         if (equip_vibrate(TR_TELEPORT)) py_teleport(40, &y, &x);
       } else if (find_flag) {
+        find_examine = find_warn(y, x) ? 0 : 1;
         mmove(find_direction, &y, &x);
       } else if (drop_mode) {
         msg_advance();
