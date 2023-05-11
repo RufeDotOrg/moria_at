@@ -12291,8 +12291,8 @@ creatures()
           }
         }
         if (mon->msleep == 0) {
-          seen += (mon->mlit);
           if (mon->mstunned == 0) mon_move(it_index, cdis);
+          seen += (mon->mlit);
         }
       }
     }
