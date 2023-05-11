@@ -2144,7 +2144,7 @@ platform_pregame()
   if (init) {
     // SDL config
     SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
-    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
+    if (!ANDROID) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 
     // __APPLE__/Android orientation
     SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
