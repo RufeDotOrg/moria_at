@@ -9277,7 +9277,7 @@ int* x_ptr;
         book[book_used] = bit_pos(&flags);
         book_used += 1;
       }
-      overlay_submodeD = 'C' + mask_subval(obj->subval);
+      overlay_submodeD = 0;
 
       do {
         line = 0;
@@ -9519,7 +9519,7 @@ int* x_ptr;
         book[book_used] = bit_pos(&flags);
         book_used += 1;
       }
-      overlay_submodeD = 'P' + mask_subval(obj->subval);
+      overlay_submodeD = 0;
 
       do {
         line = 0;
