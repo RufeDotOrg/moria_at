@@ -3,7 +3,7 @@
 enum { HACK = 0 };
 static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
-static int find_examine;
+static int find_threat;
 static int find_ignore_doors;
 static int find_direction;
 static int find_flag;
@@ -17,7 +17,7 @@ static uint32_t input_record_readD;
 static int input_resumeD;
 static int input_actionD[1024];
 static int input_action_usedD;
-static char* drop_mode;
+static int drop_modeD;
 
 static char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
@@ -416,13 +416,6 @@ msg_pause()
   }
 }
 
-static void
-disturb(mon_near)
-{
-  if (countD.rest != 0) countD.rest = 0;
-  if (mon_near && drop_mode) drop_mode = 0;
-  if (!mon_near && find_flag) find_flag = FALSE;
-}
 static void msg_game(msg, msglen) char* msg;
 {
   char* log;
@@ -439,7 +432,8 @@ static void msg_game(msg, msglen) char* msg;
 
   if (msg_used > 0) AS(msglen_cqD, msg_writeD) = log_used + msg_used;
 
-  disturb(FALSE);
+  if (countD.rest) countD.rest = 0;
+  if (find_flag) find_flag = 0;
 }
 #define msg_print(x) msg_game(AP(x))
 #define see_print(x) \
@@ -3991,16 +3985,6 @@ see_nothing(dir, y, x)
     return FALSE;
 }
 int
-find_warn(y, x)
-{
-  for (int i = -1; i <= 1; ++i) {
-    for (int j = -1; j <= 1; ++j) {
-      if (entity_monD[caveD[y + i][x + j].midx].mlit) return 1;
-    }
-  }
-  return 0;
-}
-int
 find_event(y, x)
 {
   int dir, newdir, t, check_dir, row, col;
@@ -4103,18 +4087,22 @@ find_event(y, x)
       col = x;
       mmove(option, &row, &col);
       if (!see_wall(option, row, col) || !see_wall(check_dir, row, col)) {
-        /* Don't see that it is closed off.  This could be a
-           potential corner or an intersection. */
-        if (find_examine && see_nothing(option, row, col) &&
-            see_nothing(option2, row, col))
-        /* Can not see anything ahead and in the direction we are
-           turning, assume that it is a potential corner. */
-        {
-          find_direction = option;
-          find_prevdir = option2;
-        } else {
-          /* STOP: we are next to an intersection or a room */
+        if (find_threat) {
+          /* STOP: the player can make a choice */
           return 1;
+        } else {
+          /* Don't see that it is closed off.  This could be a
+             potential corner or an intersection. */
+          if (see_nothing(option, row, col) && see_nothing(option2, row, col))
+          /* Can not see anything ahead and in the direction we are
+             turning, assume that it is a potential corner. */
+          {
+            find_direction = option;
+            find_prevdir = option2;
+          } else {
+            /* STOP: we are next to an intersection or a room */
+            return 1;
+          }
         }
       } else {
         /* This corner is seen to be enclosed; we cut the corner. */
@@ -5717,14 +5705,9 @@ inven_drop(iidx)
         obj_detail(obj);
         MSG("You drop %s%s.", descD, detailD);
         turn_flag = TRUE;
-
-        if (drop_mode) {
-          drop_mode = iidx >= INVEN_EQUIP ? "/*" : "*/";
-        }
       }
     } else {
       msg_print("There are too many objects on the ground here.");
-      drop_mode = 0;
     }
   }
 }
@@ -7976,7 +7959,7 @@ inven_overlay(begin, end)
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, obj->number);
       obj_detail(obj);
-      if (drop_mode) sum_weight = obj->number * obj->weight;
+      if (drop_modeD) sum_weight = obj->number * obj->weight;
     } else {
       descD[0] = 0;
       detailD[0] = 0;
@@ -10982,7 +10965,6 @@ mon_attack(midx)
   struct creatureS* cre = &creatureD[mon->cidx];
 
   // TBD: perf draw/attack
-  disturb(TRUE);
   draw();
   int adj = cre->level * CRE_LEV_ADJ;
   for (int it = 0; it < AL(cre->attack_list); ++it) {
@@ -11382,15 +11364,15 @@ bash(y, x)
 
   return movement;
 }
-static void py_drop(mode) char* mode;
+static void
+py_drop()
 {
   int iidx;
-  iidx = inven_choice("Drop which item?", mode);
+  drop_modeD = 1;
+  iidx = inven_choice("Drop which item?", "*/");
 
-  if (iidx < 0)
-    drop_mode = 0;
-  else
-    inven_drop(iidx);
+  if (iidx >= 0) inven_drop(iidx);
+  drop_modeD = 0;
 }
 static void py_bash(uy, ux) int *uy, *ux;
 {
@@ -12046,7 +12028,6 @@ mon_try_spell(midx, cdis)
       took_turn = FALSE;
     } else {
       took_turn = TRUE;
-      disturb(TRUE);
 
       thrown_spell = spell_choice[randint(k) - 1];
       spell_index = thrown_spell - 4;
@@ -12254,13 +12235,13 @@ movement_rate(speed)
 int
 creatures()
 {
-  int move_count, y, x, cdis, seen;
+  int move_count, y, x, cdis, seen_act;
 
   FOR_EACH(mon, { update_mon(it_index); });
 
   y = uD.y;
   x = uD.x;
-  seen = 0;
+  seen_act = 0;
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     move_count = movement_rate(mon_speed(mon));
@@ -12292,13 +12273,18 @@ creatures()
         }
         if (mon->msleep == 0) {
           if (mon->mstunned == 0) mon_move(it_index, cdis);
-          seen += (mon->mlit);
+          seen_act += (mon->mlit);
         }
       }
     }
   });
 
-  return seen;
+  find_threat = (seen_act != 0);
+  if (seen_act) {
+    countD.rest = 0;
+  }
+
+  return seen_act;
 }
 BOOL
 py_teleport_near(y, x, uy, ux)
@@ -13053,11 +13039,7 @@ dungeon()
       if (teleport) {
         if (equip_vibrate(TR_TELEPORT)) py_teleport(40, &y, &x);
       } else if (find_flag) {
-        find_examine = find_warn(y, x) ? 0 : 1;
         mmove(find_direction, &y, &x);
-      } else if (drop_mode) {
-        msg_advance();
-        py_drop(drop_mode);
       } else {
         msg_advance();
         if (ephemeral) {
@@ -13148,7 +13130,7 @@ dungeon()
               close_object();
               break;
             case 'd':
-              py_drop("*/");
+              py_drop();
               break;
             case 'e': {
               int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
@@ -13459,7 +13441,7 @@ dungeon()
 
     ma_tick();  // rising
     if (!new_level_flag) {
-      if (creatures()) disturb(TRUE);
+      creatures();
       teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
       if (!town && randint(MAX_MALLOC_CHANCE) == 1)
         alloc_mon(1, MAX_SIGHT, FALSE);
