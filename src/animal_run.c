@@ -7870,7 +7870,6 @@ earthquake()
 
         if ((c_ptr->fval >= MIN_WALL) && (c_ptr->fval != BOUNDARY_WALL)) {
           c_ptr->fval = FLOOR_CORR;
-          c_ptr->cflag = 0;
         } else if (c_ptr->fval <= MAX_FLOOR) {
           tmp = randint(10);
           if (tmp < 6)
@@ -7879,8 +7878,8 @@ earthquake()
             c_ptr->fval = MAGMA_WALL;
           else
             c_ptr->fval = GRANITE_WALL;
-          c_ptr->cflag = 0;
         }
+        c_ptr->cflag &= ~(CF_PERM_LIGHT | CF_FIELDMARK);
       }
 }
 void
@@ -13327,6 +13326,9 @@ dungeon()
               } break;
               case CTRL('d'): {
                 detect_obj(oset_obj, TRUE);
+              } break;
+              case CTRL('e'): {
+                earthquake();
               } break;
               case CTRL('f'): {
                 create_food(y, x);
