@@ -2529,6 +2529,7 @@ int
 oset_hidden(obj)
 struct objS* obj;
 {
+  // TBD: currently excludes pit; this may be a fun gotcha for mages
   return (obj->tval == TV_INVIS_TRAP || obj->tval == TV_CHEST ||
           obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR);
 }
