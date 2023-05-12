@@ -8005,12 +8005,14 @@ int
 inven_eat(iidx)
 {
   uint32_t i;
-  int j, ident;
+  int j, ident, known;
   struct objS* obj = obj_get(invenD[iidx]);
   struct treasureS* tr_ptr = &treasureD[obj->tidx];
+  known = tr_is_known(tr_ptr);
 
   if (obj->tval == TV_FOOD) {
     i = obj->flags;
+    ident = FALSE;
     while (i != 0) {
       j = bit_pos(&i) + 1;
       /* Foods  				*/
@@ -8118,7 +8120,7 @@ inven_eat(iidx)
       }
       /* End of food actions.  			*/
     }
-    if (!tr_is_known(tr_ptr)) {
+    if (!known) {
       if (ident) {
         tr_make_known(tr_ptr);
         tr_discovery(tr_ptr);
