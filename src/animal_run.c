@@ -4115,7 +4115,7 @@ find_event(y, x)
   return 0;
 }
 int
-detect_obj(int (*valid)())
+detect_obj(int (*valid)(), int known)
 {
   int detect;
   struct caveS* c_ptr;
@@ -4151,10 +4151,12 @@ detect_obj(int (*valid)())
     }
   });
 
-  if (detect) {
-    msg_print("Your senses tingle!");
-  } else {
-    msg_print("You detect nothing further.");
+  if (known) {
+    if (detect) {
+      msg_print("Your senses tingle!");
+    } else {
+      msg_print("You detect nothing further.");
+    }
   }
 
   return (detect);
@@ -8706,7 +8708,7 @@ int *uy, *ux;
 {
   uint32_t i;
   int j, k;
-  int ident, used_up, choice_idx;
+  int ident, used_up, choice_idx, known;
   struct objS* i_ptr;
   struct treasureS* tr_ptr;
 
@@ -8717,6 +8719,7 @@ int *uy, *ux;
   } else {
     i_ptr = obj_get(invenD[iidx]);
     tr_ptr = &treasureD[i_ptr->tidx];
+    known = tr_is_known(tr_ptr);
     if (i_ptr->tval == TV_SCROLL1 || i_ptr->tval == TV_SCROLL2) {
       ident = FALSE;
       used_up = TRUE;
@@ -8797,16 +8800,16 @@ int *uy, *ux;
             warding_glyph(uD.y, uD.x);
             break;
           case 15:
-            ident |= detect_obj(oset_gold);
+            ident |= detect_obj(oset_gold, known);
             break;
           case 16:
-            ident |= detect_obj(oset_pickup);
+            ident |= detect_obj(oset_pickup, known);
             break;
           case 17:
-            ident |= detect_obj(oset_trap);
+            ident |= detect_obj(oset_trap, known);
             break;
           case 18:
-            ident |= detect_obj(oset_doorstair);
+            ident |= detect_obj(oset_doorstair, known);
             break;
           case 19:
             msg_print("This is a mass genocide scroll.");
@@ -8909,7 +8912,7 @@ int *uy, *ux;
         }
         /* End of Scrolls.  		       */
       }
-      if (!tr_is_known(tr_ptr)) {
+      if (!known) {
         if (ident) {
           tr_make_known(tr_ptr);
           tr_discovery(tr_ptr);
@@ -9146,7 +9149,7 @@ int* x_ptr;
       py_heal_hit(damroll(4, 4));
       break;
     case 6:
-      detect_obj(oset_hidden);
+      detect_obj(oset_hidden, TRUE);
       break;
     case 7:
       fire_ball(GF_POISON_GAS, dir, uD.y, uD.x, 12, spell_nameD[6]);
@@ -9381,10 +9384,10 @@ int* x_ptr;
       illuminate(uD.y, uD.x);
       break;
     case 6:
-      detect_obj(oset_trap);
+      detect_obj(oset_trap, TRUE);
       break;
     case 7:
-      detect_obj(oset_doorstair);
+      detect_obj(oset_doorstair, TRUE);
       break;
     case 8:
       if (countD.poison) countD.poison = MAX(1, countD.poison / 2);
@@ -9582,13 +9585,13 @@ inven_try_staff(iidx, uy, ux)
 int *uy, *ux;
 {
   uint32_t flags, j;
-  int k, chance;
-  int ident;
+  int k, chance, ident, known;
   struct objS* i_ptr;
   struct treasureS* tr_ptr;
 
   i_ptr = obj_get(invenD[iidx]);
   tr_ptr = &treasureD[i_ptr->tidx];
+  known = tr_is_known(tr_ptr);
   if (i_ptr->tval == TV_STAFF) {
     chance = udevice() - i_ptr->level - 5;
     if ((chance < USE_DEVICE) && (randint(USE_DEVICE - chance + 1) == 1))
@@ -9607,16 +9610,16 @@ int *uy, *ux;
             ident |= illuminate(uD.y, uD.x);
             break;
           case 2:
-            ident |= detect_obj(oset_doorstair);
+            ident |= detect_obj(oset_doorstair, known);
             break;
           case 3:
-            ident |= detect_obj(oset_trap);
+            ident |= detect_obj(oset_trap, known);
             break;
           case 4:
-            ident |= detect_obj(oset_gold);
+            ident |= detect_obj(oset_gold, known);
             break;
           case 5:
-            ident |= detect_obj(oset_pickup);
+            ident |= detect_obj(oset_pickup, known);
             break;
           case 6:
             py_teleport(100, uy, ux);
@@ -9696,7 +9699,7 @@ int *uy, *ux;
             break;
         }
       }
-      if (!tr_is_known(tr_ptr)) {
+      if (!known) {
         if (ident) {
           tr_make_known(tr_ptr);
           tr_discovery(tr_ptr);
@@ -13287,7 +13290,7 @@ dungeon()
                 py_experience();
               } break;
               case CTRL('d'): {
-                detect_obj(oset_obj);
+                detect_obj(oset_obj, TRUE);
               } break;
               case CTRL('f'): {
                 create_food(y, x);
