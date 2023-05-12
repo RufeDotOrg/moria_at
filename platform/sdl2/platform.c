@@ -334,8 +334,8 @@ art_init()
 }
 
 // treasure
-#define MAX_TART 32
-DATA uint8_t tartD[8 * 1024];
+#define MAX_TART 49
+DATA uint8_t tartD[16 * 1024];
 DATA uint64_t tart_usedD;
 DATA struct SDL_Texture *tart_textureD[MAX_TART];
 int
@@ -623,23 +623,23 @@ struct vizS *viz;
   switch (obj->tval) {
       // Misc
     case TV_MISC:
-      if (obj->tchar == 's')
-        return 25;
-      else if (obj->tchar == '!')
-        return 4;
-      else  // '~'
-        return 23;
+      return 25;
     case TV_CHEST:
+      if (obj->idflag & ID_REVEAL && obj->flags & CH_TRAPPED) return 33;
+      if (obj->flags & CH_LOCKED) return 34;
+      // TBD: obj->sn == SN_EMPTY
       return 32;
+    case TV_SPIKE:
+      return 49;
     case TV_PROJECTILE:
       return 13;
-    case TV_LAUNCHER:
-      return 15;
     case TV_LIGHT:
       return 21;
+    case TV_LAUNCHER:
+      return 15;
       // Worn
     case TV_HAFTED:
-      return 10;
+      return 24;
     case TV_POLEARM:
       return 6;
     case TV_SWORD:
@@ -647,10 +647,16 @@ struct vizS *viz;
     case TV_DIGGING:
       return 10;
     case TV_BOOTS:
+      return 22;
     case TV_GLOVES:
+      return 23;
     case TV_CLOAK:
+      return 20;
     case TV_HELM:
-      return 11;
+      if (obj->subval <= 5)
+        return 11;  // helm
+      else
+        return 38;  // crown
     case TV_SHIELD:
       return 2;
     case TV_HARD_ARMOR:
@@ -674,7 +680,10 @@ struct vizS *viz;
     case TV_FLASK:
       return 4;
     case TV_FOOD:
-      return 19;
+      if ((obj->subval & 0x3f) <= 20)
+        return 39;  // mushroom/mold
+      else
+        return 19;  // food
     case TV_MAGIC_BOOK:
       return 18;
     case TV_PRAYER_BOOK:
@@ -695,7 +704,12 @@ struct vizS *viz;
     case TV_OPEN_DOOR:
       return 28;
     case TV_CLOSED_DOOR:
-      return 29;
+      if (obj->p1 == 0 || (obj->idflag & ID_REVEAL) == 0)
+        return 29;
+      else if (obj->p1 > 0)
+        return 35;  // locked
+      else if (obj->p1 < 0)
+        return 36;  // stuck
     case TV_UP_STAIR:
       return 30;
     case TV_DOWN_STAIR:
@@ -703,6 +717,8 @@ struct vizS *viz;
     case TV_SECRET_DOOR:
       viz->floor = 2;
       break;
+    case TV_GLYPH:
+      return 37;
   }
   return 0;
 }
