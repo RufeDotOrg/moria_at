@@ -2336,6 +2336,7 @@ struct objS* obj;
       else
         return TRUE;
 
+    case TV_LAUNCHER:
     case TV_STAFF:
     case TV_SCROLL1:
     case TV_SCROLL2:
@@ -2361,6 +2362,7 @@ struct objS* obj;
         return FALSE;
       else
         return TRUE;
+    case TV_LAUNCHER:
     case TV_STAFF:
     case TV_SCROLL1:
     case TV_SCROLL2:
@@ -2382,6 +2384,7 @@ struct objS* obj;
     // Arrows, Bolts
     case TV_PROJECTILE:
       return obj->p1 > 1;
+    case TV_LAUNCHER:
     case TV_MISC:
     case TV_CHEST:
       return TRUE;
@@ -2419,6 +2422,7 @@ struct objS* obj;
         return FALSE;
       else
         return TRUE;
+    case TV_LAUNCHER:
     case TV_STAFF:
     case TV_SCROLL1:
     case TV_SCROLL2:
