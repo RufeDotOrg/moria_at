@@ -7198,14 +7198,15 @@ drain_life(dir, y, x)
   return (drain);
 }
 int
-td_destroy2(dir, y, x)
+td_destroy_bolt(dir, y, x)
 {
-  int destroy2, dist;
+  int destroy2, dist, exp;
   struct caveS* c_ptr;
   struct objS* obj;
 
   destroy2 = FALSE;
   dist = 0;
+  exp = 0;
   do {
     mmove(dir, &y, &x);
     dist++;
@@ -7216,11 +7217,14 @@ td_destroy2(dir, y, x)
       if ((obj->tval == TV_INVIS_TRAP) || (obj->tval == TV_CLOSED_DOOR) ||
           (obj->tval == TV_VIS_TRAP) || (obj->tval == TV_OPEN_DOOR) ||
           (obj->tval == TV_SECRET_DOOR)) {
+        exp += (obj->tval == TV_CLOSED_DOOR && obj->p1 > 0);
+        exp += (obj->tval == TV_VIS_TRAP) * obj->p1;
         delete_object(y, x);
         if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
         msg_print("There is a bright flash of light!");
         destroy2 = TRUE;
       } else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
+        exp += obj->level;
         msg_print("Click!");
         obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
         destroy2 = TRUE;
@@ -7229,6 +7233,12 @@ td_destroy2(dir, y, x)
       }
     }
   } while ((dist <= OBJ_BOLT_RANGE) || c_ptr->fval <= MAX_OPEN_SPACE);
+
+  if (exp) {
+    uD.exp += exp;
+    py_experience();
+  }
+
   return (destroy2);
 }
 int
@@ -7610,11 +7620,12 @@ trap_creation(y, x)
 int
 td_destroy(y, x)
 {
-  int i, j, destroy;
+  int i, j, destroy, exp;
   struct caveS* c_ptr;
   struct objS* obj;
 
   destroy = FALSE;
+  exp = 0;
   for (i = y - 1; i <= y + 1; i++)
     for (j = x - 1; j <= x + 1; j++) {
       c_ptr = &caveD[i][j];
@@ -7622,11 +7633,14 @@ td_destroy(y, x)
       if ((obj->tval == TV_INVIS_TRAP) || (obj->tval == TV_CLOSED_DOOR) ||
           (obj->tval == TV_VIS_TRAP) || (obj->tval == TV_OPEN_DOOR) ||
           (obj->tval == TV_SECRET_DOOR)) {
+        exp += (obj->tval == TV_CLOSED_DOOR && obj->p1 > 0);
+        exp += (obj->tval == TV_VIS_TRAP) * obj->p1;
         delete_object(i, j);
         if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
         msg_print("There is a bright flash of light!");
         destroy = TRUE;
       } else if ((obj->tval == TV_CHEST) && (obj->flags != 0)) {
+        exp += obj->level;
         msg_print("Click!");
         obj->flags &= ~(CH_TRAPPED | CH_LOCKED);
         destroy = TRUE;
@@ -7634,6 +7648,12 @@ td_destroy(y, x)
         obj->idflag = ID_REVEAL;
       }
     }
+
+  if (exp) {
+    uD.exp += exp;
+    py_experience();
+  }
+
   return (destroy);
 }
 int
@@ -9003,7 +9023,7 @@ inven_try_wand_dir(iidx, dir)
             ident |= drain_life(dir, y, x);
             break;
           case 13:
-            ident |= td_destroy2(dir, y, x);
+            ident |= td_destroy_bolt(dir, y, x);
             break;
           case 14:
             magic_bolt(GF_MAGIC_MISSILE, dir, y, x, damroll(2, 6),
