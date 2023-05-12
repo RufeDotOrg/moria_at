@@ -4179,7 +4179,7 @@ detect_obj(int (*valid)(), int known)
   return (detect);
 }
 int
-detect_mon(int (*valid)())
+detect_mon(int (*valid)(), int known)
 {
   struct creatureS* cr_ptr;
   int flag;
@@ -4197,10 +4197,12 @@ detect_mon(int (*valid)())
     }
   });
 
-  if (flag) {
-    msg_print("Your senses tingle!");
-  } else {
-    msg_print("You detect nothing further.");
+  if (known) {
+    if (flag) {
+      msg_print("Your senses tingle!");
+    } else {
+      msg_print("You detect nothing further.");
+    }
   }
 
   return flag;
@@ -8853,7 +8855,7 @@ int *uy, *ux;
             ident |= TRUE;
             break;
           case 20:
-            ident |= detect_mon(crset_invisible);
+            ident |= detect_mon(crset_invisible, known);
             ma_duration(MA_DETECT_INVIS, 1);
             break;
           case 21:
@@ -9172,7 +9174,7 @@ int* x_ptr;
                  spell_nameD[0]);
       break;
     case 2:
-      detect_mon(crset_visible);
+      detect_mon(crset_visible, TRUE);
       ma_duration(MA_DETECT_MON, 1);
       break;
     case 3:
@@ -9404,7 +9406,7 @@ int* x_ptr;
 {
   switch (pridx + 1) {
     case 1:
-      detect_mon(crset_evil);
+      detect_mon(crset_evil, TRUE);
       ma_duration(MA_DETECT_EVIL, 1);
       break;
     case 2:
@@ -9464,7 +9466,7 @@ int* x_ptr;
       py_heal_hit(damroll(8, 4));
       break;
     case 20:
-      detect_mon(crset_invisible);
+      detect_mon(crset_invisible, TRUE);
       ma_duration(MA_DETECT_INVIS, randint(24) + 24);
       break;
     case 21:
@@ -9692,7 +9694,7 @@ int *uy, *ux;
             ident |= py_heal_hit(randint(8));
             break;
           case 16:
-            ident |= detect_mon(crset_invisible);
+            ident |= detect_mon(crset_invisible, known);
             ma_duration(MA_DETECT_INVIS, 1);
             break;
           case 17:
@@ -9710,7 +9712,7 @@ int *uy, *ux;
             ident |= equip_remove_curse();
             break;
           case 21:
-            ident |= detect_mon(crset_evil);
+            ident |= detect_mon(crset_evil, known);
             ma_duration(MA_DETECT_EVIL, 1);
             break;
           case 22:
