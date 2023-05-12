@@ -2321,6 +2321,9 @@ vuln_fire(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
+    // Arrows, Bolts
+    case TV_PROJECTILE:
+      return obj->p1 > 1;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_BOOTS:
@@ -2345,6 +2348,9 @@ vuln_fire_breath(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
+    // Arrows, Bolts
+    case TV_PROJECTILE:
+      return obj->p1 > 1;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_BOOTS:
@@ -2373,6 +2379,9 @@ vuln_acid(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
+    // Arrows, Bolts
+    case TV_PROJECTILE:
+      return obj->p1 > 1;
     case TV_MISC:
     case TV_CHEST:
       return TRUE;
@@ -2394,6 +2403,9 @@ vuln_acid_breath(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
+    // Arrows, Bolts
+    case TV_PROJECTILE:
+      return obj->p1 > 1;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_BOOTS:
