@@ -2502,7 +2502,7 @@ struct objS* obj;
 {
   // Underflow to exclude 0
   uint8_t tval = obj->tval - 1;
-  return (tval < TV_MAX_PICK_UP);
+  return (tval < (TV_MAX_PICK_UP - 1));
 }
 static int
 obj_mon_pickup(obj)
