@@ -8072,8 +8072,8 @@ inven_eat(iidx)
           ident |= TRUE;
           break;
         case 3:
-          ma_duration(MA_FEAR, randint(10) + obj->level);
           msg_print("You feel terrified!");
+          ma_duration(MA_FEAR, randint(10) + obj->level);
           ident |= TRUE;
           break;
         case 4:
