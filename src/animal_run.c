@@ -11815,11 +11815,16 @@ py_tunnel(iidx)
     x = uD.x;
     mmove(dir, &y, &x);
 
-    if (caveD[y][x].fval > MAX_OPEN_SPACE) {
-      if (caveD[y][x].midx == 0)
-        flag = tunnel_tool(y, x, iidx);
-      else
-        msg_print("Something is in your way!");
+    if (entity_objD[caveD[y][x].oidx].tval == TV_CLOSED_DOOR) {
+      msg_print("You can't tunnel through a door!");
+    } else if (caveD[y][x].midx) {
+      msg_print("Something is in your way!");
+      // Prevent the player from abusing digging for invis detection
+      flag = TRUE;
+    } else if (caveD[y][x].fval <= MAX_OPEN_SPACE) {
+      msg_print("Tunnel through what?  Empty air?!?");
+    } else if (caveD[y][x].fval > MAX_OPEN_SPACE) {
+      flag = tunnel_tool(y, x, iidx);
     }
   }
 
