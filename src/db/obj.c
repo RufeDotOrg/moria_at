@@ -56,7 +56,7 @@ static struct treasureS treasureD[] = {
     {"Poison",
      0x00000001L,
      TV_FOOD,
-     ',', /*  0*/
+     ',', /*  1*/
      500,
      0,
      64,
@@ -71,7 +71,7 @@ static struct treasureS treasureD[] = {
     {"Blindness",
      0x00000002L,
      TV_FOOD,
-     ',', /*  1*/
+     ',', /*  2*/
      500,
      0,
      65,
@@ -86,7 +86,7 @@ static struct treasureS treasureD[] = {
     {"Paranoia",
      0x00000004L,
      TV_FOOD,
-     ',', /*  2*/
+     ',', /*  3*/
      500,
      0,
      66,
@@ -101,7 +101,7 @@ static struct treasureS treasureD[] = {
     {"Confusion",
      0x00000008L,
      TV_FOOD,
-     ',', /*  3*/
+     ',', /*  4*/
      500,
      0,
      67,
@@ -116,7 +116,7 @@ static struct treasureS treasureD[] = {
     {"Hallucination",
      0x00000010L,
      TV_FOOD,
-     ',', /*  4*/
+     ',', /*  5*/
      500,
      0,
      68,
@@ -131,7 +131,7 @@ static struct treasureS treasureD[] = {
     {"Cure Poison",
      0x00000020L,
      TV_FOOD,
-     ',', /*  5*/
+     ',', /*  6*/
      500,
      60,
      69,
@@ -146,7 +146,7 @@ static struct treasureS treasureD[] = {
     {"Cure Blindness",
      0x00000040L,
      TV_FOOD,
-     ',', /*  6*/
+     ',', /*  7*/
      500,
      50,
      70,
@@ -161,7 +161,7 @@ static struct treasureS treasureD[] = {
     {"Cure Paranoia",
      0x00000080L,
      TV_FOOD,
-     ',', /*  7*/
+     ',', /*  8*/
      500,
      25,
      71,
@@ -176,7 +176,7 @@ static struct treasureS treasureD[] = {
     {"Cure Confusion",
      0x00000100L,
      TV_FOOD,
-     ',', /*  8*/
+     ',', /*  9*/
      500,
      50,
      72,
@@ -191,7 +191,7 @@ static struct treasureS treasureD[] = {
     {"Weakness",
      0x04000200L,
      TV_FOOD,
-     ',', /*  9*/
+     ',', /*  10*/
      500,
      0,
      73,
@@ -206,7 +206,7 @@ static struct treasureS treasureD[] = {
     {"Unhealth",
      0x04000400L,
      TV_FOOD,
-     ',', /* 10*/
+     ',', /*  11*/
      500,
      50,
      74,
@@ -221,7 +221,7 @@ static struct treasureS treasureD[] = {
     {"Restore Constitution",
      0x00010000L,
      TV_FOOD,
-     ',', /* 11*/
+     ',', /*  12*/
      500,
      350,
      75,
@@ -236,7 +236,7 @@ static struct treasureS treasureD[] = {
     {"First-Aid",
      0x00200000L,
      TV_FOOD,
-     ',', /* 12*/
+     ',', /*  13*/
      500,
      5,
      76,
@@ -251,7 +251,7 @@ static struct treasureS treasureD[] = {
     {"Minor Cures",
      0x00400000L,
      TV_FOOD,
-     ',', /* 13*/
+     ',', /*  14*/
      500,
      20,
      77,
@@ -266,7 +266,7 @@ static struct treasureS treasureD[] = {
     {"Light Cures",
      0x00800000L,
      TV_FOOD,
-     ',', /* 14*/
+     ',', /*  15*/
      500,
      30,
      78,
@@ -281,7 +281,7 @@ static struct treasureS treasureD[] = {
     {"Restoration",
      0x001F8000L,
      TV_FOOD,
-     ',', /* 15*/
+     ',', /*  16*/
      500,
      1000,
      79,
@@ -296,7 +296,7 @@ static struct treasureS treasureD[] = {
     {"Poison",
      0x00000001L,
      TV_FOOD,
-     ',', /* 16*/
+     ',', /*  17*/
      1200,
      0,
      80,
@@ -311,7 +311,7 @@ static struct treasureS treasureD[] = {
     {"Hallucination",
      0x00000010L,
      TV_FOOD,
-     ',', /* 17*/
+     ',', /*  18*/
      1200,
      0,
      81,
@@ -326,7 +326,7 @@ static struct treasureS treasureD[] = {
     {"Cure Poison",
      0x00000020L,
      TV_FOOD,
-     ',', /* 18*/
+     ',', /*  19*/
      1200,
      75,
      82,
@@ -341,7 +341,7 @@ static struct treasureS treasureD[] = {
     {"Unhealth",
      0x04000400L,
      TV_FOOD,
-     ',', /* 19*/
+     ',', /*  20*/
      1200,
      75,
      83,
@@ -356,7 +356,7 @@ static struct treasureS treasureD[] = {
     {"Major Cures",
      0x02000000L,
      TV_FOOD,
-     ',', /* 20*/
+     ',', /*  21*/
      1200,
      75,
      84,
@@ -371,7 +371,7 @@ static struct treasureS treasureD[] = {
     {"& Ration~ of Food",
      0x00000000L,
      TV_FOOD,
-     ',', /* 21*/
+     ',', /*  22*/
      5000,
      3,
      90,
@@ -386,7 +386,7 @@ static struct treasureS treasureD[] = {
     {"& Ration~ of Food",
      0x00000000L,
      TV_FOOD,
-     ',', /* 22*/
+     ',', /*  23*/
      5000,
      3,
      90,
@@ -401,7 +401,7 @@ static struct treasureS treasureD[] = {
     {"& Ration~ of Food",
      0x00000000L,
      TV_FOOD,
-     ',', /* 23*/
+     ',', /*  24*/
      5000,
      3,
      90,
@@ -416,7 +416,7 @@ static struct treasureS treasureD[] = {
     {"& Slime Mold~",
      0x00000000L,
      TV_FOOD,
-     ',', /* 24*/
+     ',', /*  25*/
      3000,
      2,
      91,
@@ -431,7 +431,7 @@ static struct treasureS treasureD[] = {
     {"& Piece~ of Elvish Waybread",
      0x02000020L,
      TV_FOOD,
-     ',', /* 25*/
+     ',', /*  26*/
      7500,
      25,
      92,
@@ -446,7 +446,7 @@ static struct treasureS treasureD[] = {
     {"& Piece~ of Elvish Waybread",
      0x02000020L,
      TV_FOOD,
-     ',', /* 26*/
+     ',', /*  27*/
      7500,
      25,
      92,
@@ -461,7 +461,7 @@ static struct treasureS treasureD[] = {
     {"& Piece~ of Elvish Waybread",
      0x02000020L,
      TV_FOOD,
-     ',', /* 27*/
+     ',', /*  28*/
      7500,
      25,
      92,
@@ -476,7 +476,7 @@ static struct treasureS treasureD[] = {
     {"& Dagger (Main Gauche)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 28*/
+     '|', /*  29*/
      0,
      25,
      1,
@@ -491,7 +491,7 @@ static struct treasureS treasureD[] = {
     {"& Dagger (Misericorde)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 29*/
+     '|', /*  30*/
      0,
      10,
      2,
@@ -506,7 +506,7 @@ static struct treasureS treasureD[] = {
     {"& Dagger (Stiletto)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 30*/
+     '|', /*  31*/
      0,
      10,
      3,
@@ -521,7 +521,7 @@ static struct treasureS treasureD[] = {
     {"& Dagger (Bodkin)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 31*/
+     '|', /*  32*/
      0,
      10,
      4,
@@ -536,7 +536,7 @@ static struct treasureS treasureD[] = {
     {"& Bowl~ of Oatmeal",
      0x00000000L,
      TV_FOOD,
-     ',', /*32*/
+     ',', /*  33*/
      400,
      2,
      96,
@@ -551,7 +551,7 @@ static struct treasureS treasureD[] = {
     {"& Backsword",
      0x00000000L,
      TV_SWORD,
-     '|', /* 33*/
+     '|', /*  34*/
      0,
      150,
      6,
@@ -566,7 +566,7 @@ static struct treasureS treasureD[] = {
     {"& Bastard Sword",
      0x00000000L,
      TV_SWORD,
-     '|', /* 34*/
+     '|', /*  35*/
      0,
      350,
      7,
@@ -581,7 +581,7 @@ static struct treasureS treasureD[] = {
     {"& Thrusting Sword (Bilbo)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 35*/
+     '|', /*  36*/
      0,
      60,
      8,
@@ -596,7 +596,7 @@ static struct treasureS treasureD[] = {
     {"& Thrusting Sword (Baselard)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 36*/
+     '|', /*  37*/
      0,
      80,
      9,
@@ -611,7 +611,7 @@ static struct treasureS treasureD[] = {
     {"& Broadsword",
      0x00000000L,
      TV_SWORD,
-     '|', /* 37*/
+     '|', /*  38*/
      0,
      255,
      10,
@@ -626,7 +626,7 @@ static struct treasureS treasureD[] = {
     {"& Two-Handed Sword (Claymore)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 38*/
+     '|', /*  39*/
      0,
      775,
      11,
@@ -641,7 +641,7 @@ static struct treasureS treasureD[] = {
     {"& Cutlass",
      0x00000000L,
      TV_SWORD,
-     '|', /* 39*/
+     '|', /*  40*/
      0,
      85,
      12,
@@ -656,7 +656,7 @@ static struct treasureS treasureD[] = {
     {"& Two-Handed Sword (Espadon)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 40*/
+     '|', /*  41*/
      0,
      655,
      13,
@@ -671,7 +671,7 @@ static struct treasureS treasureD[] = {
     {"& Executioner's Sword",
      0x00000000L,
      TV_SWORD,
-     '|', /* 41*/
+     '|', /*  42*/
      0,
      850,
      14,
@@ -686,7 +686,7 @@ static struct treasureS treasureD[] = {
     {"& Two-Handed Sword (Flamberge)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 42*/
+     '|', /*  43*/
      0,
      1000,
      15,
@@ -701,7 +701,7 @@ static struct treasureS treasureD[] = {
     {"& Foil",
      0x00000000L,
      TV_SWORD,
-     '|', /* 43*/
+     '|', /*  44*/
      0,
      35,
      16,
@@ -716,7 +716,7 @@ static struct treasureS treasureD[] = {
     {"& Katana",
      0x00000000L,
      TV_SWORD,
-     '|', /* 44*/
+     '|', /*  45*/
      0,
      400,
      17,
@@ -731,7 +731,7 @@ static struct treasureS treasureD[] = {
     {"& Longsword",
      0x00000000L,
      TV_SWORD,
-     '|', /* 45*/
+     '|', /*  46*/
      0,
      200,
      18,
@@ -746,7 +746,7 @@ static struct treasureS treasureD[] = {
     {"& Two-Handed Sword (No-Dachi)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 46*/
+     '|', /*  47*/
      0,
      675,
      19,
@@ -761,7 +761,7 @@ static struct treasureS treasureD[] = {
     {"& Rapier",
      0x00000000L,
      TV_SWORD,
-     '|', /* 47*/
+     '|', /*  48*/
      0,
      42,
      20,
@@ -776,7 +776,7 @@ static struct treasureS treasureD[] = {
     {"& Sabre",
      0x00000000L,
      TV_SWORD,
-     '|', /* 48*/
+     '|', /*  49*/
      0,
      50,
      21,
@@ -791,7 +791,7 @@ static struct treasureS treasureD[] = {
     {"& Small Sword",
      0x00000000L,
      TV_SWORD,
-     '|', /* 49*/
+     '|', /*  50*/
      0,
      48,
      22,
@@ -806,7 +806,7 @@ static struct treasureS treasureD[] = {
     {"& Two-Handed Sword (Zweihander)",
      0x00000000L,
      TV_SWORD,
-     '|', /* 50*/
+     '|', /*  51*/
      0,
      1500,
      23,
@@ -821,7 +821,7 @@ static struct treasureS treasureD[] = {
     {"& Sling",
      0x00000000L,
      TV_LAUNCHER,
-     '}', /* 51*/
+     '}', /*  52*/
      1,
      5,
      1,
@@ -836,7 +836,7 @@ static struct treasureS treasureD[] = {
     {"& Ball and Chain",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 52*/
+     '\\', /*  53*/
      0,
      200,
      1,
@@ -851,7 +851,7 @@ static struct treasureS treasureD[] = {
     {"& Cat-o'-Nine-Tails",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 53*/
+     '\\', /*  54*/
      0,
      14,
      2,
@@ -866,7 +866,7 @@ static struct treasureS treasureD[] = {
     {"& Wooden Club",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 54*/
+     '\\', /*  55*/
      0,
      10,
      3,
@@ -881,7 +881,7 @@ static struct treasureS treasureD[] = {
     {"& Flail",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 55*/
+     '\\', /*  56*/
      0,
      353,
      4,
@@ -896,7 +896,7 @@ static struct treasureS treasureD[] = {
     {"& Two-Handed Great Flail",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 56*/
+     '\\', /*  57*/
      0,
      590,
      5,
@@ -911,7 +911,7 @@ static struct treasureS treasureD[] = {
     {"& Morningstar",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 57*/
+     '\\', /*  58*/
      0,
      396,
      6,
@@ -926,7 +926,7 @@ static struct treasureS treasureD[] = {
     {"& Mace",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 58*/
+     '\\', /*  59*/
      0,
      130,
      7,
@@ -941,7 +941,7 @@ static struct treasureS treasureD[] = {
     {"& War Hammer",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 59*/
+     '\\', /*  60*/
      0,
      225,
      8,
@@ -956,7 +956,7 @@ static struct treasureS treasureD[] = {
     {"& Lead-Filled Mace",
      0x00000000L,
      TV_HAFTED,
-     '\\', /* 60*/
+     '\\', /*  61*/
      0,
      502,
      9,
@@ -971,7 +971,7 @@ static struct treasureS treasureD[] = {
     {"& Awl-Pike",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 61*/
+     '/', /*  62*/
      0,
      200,
      1,
@@ -986,7 +986,7 @@ static struct treasureS treasureD[] = {
     {"& Beaked Axe",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 62*/
+     '/', /*  63*/
      0,
      408,
      2,
@@ -1001,7 +1001,7 @@ static struct treasureS treasureD[] = {
     {"& Fauchard",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 63*/
+     '/', /*  64*/
      0,
      326,
      3,
@@ -1016,7 +1016,7 @@ static struct treasureS treasureD[] = {
     {"& Glaive",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 64*/
+     '/', /*  65*/
      0,
      363,
      4,
@@ -1031,7 +1031,7 @@ static struct treasureS treasureD[] = {
     {"& Halberd",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 65*/
+     '/', /*  66*/
      0,
      430,
      5,
@@ -1046,7 +1046,7 @@ static struct treasureS treasureD[] = {
     {"& Lucerne Hammer",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 66*/
+     '/', /*  67*/
      0,
      376,
      6,
@@ -1061,7 +1061,7 @@ static struct treasureS treasureD[] = {
     {"& Pike",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 67*/
+     '/', /*  68*/
      0,
      358,
      7,
@@ -1076,7 +1076,7 @@ static struct treasureS treasureD[] = {
     {"& Spear",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 68*/
+     '/', /*  69*/
      0,
      36,
      8,
@@ -1091,7 +1091,7 @@ static struct treasureS treasureD[] = {
     {"& Lance",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 69*/
+     '/', /*  70*/
      0,
      230,
      9,
@@ -1106,7 +1106,7 @@ static struct treasureS treasureD[] = {
     {"& Javelin",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 70*/
+     '/', /*  71*/
      0,
      18,
      10,
@@ -1121,7 +1121,7 @@ static struct treasureS treasureD[] = {
     {"& Battle Axe (Balestarius)",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 71*/
+     '/', /*  72*/
      0,
      500,
      11,
@@ -1136,7 +1136,7 @@ static struct treasureS treasureD[] = {
     {"& Battle Axe (European)",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 72*/
+     '/', /*  73*/
      0,
      334,
      12,
@@ -1151,7 +1151,7 @@ static struct treasureS treasureD[] = {
     {"& Broad Axe",
      0x00000000L,
      TV_POLEARM,
-     '/', /* 73*/
+     '/', /*  74*/
      0,
      304,
      13,
@@ -1166,7 +1166,7 @@ static struct treasureS treasureD[] = {
     {"& Pair of Soft Leather Shoes",
      0x00000000L,
      TV_BOOTS,
-     ']', /* 74*/
+     ']', /*  75*/
      0,
      4,
      1,
@@ -1181,7 +1181,7 @@ static struct treasureS treasureD[] = {
     {"& Pair of Soft Leather Boots",
      0x00000000L,
      TV_BOOTS,
-     ']', /* 75*/
+     ']', /*  76*/
      0,
      7,
      2,
@@ -1196,7 +1196,7 @@ static struct treasureS treasureD[] = {
     {"& Pair of Hard Leather Boots",
      0x00000000L,
      TV_BOOTS,
-     ']', /* 76*/
+     ']', /*  77*/
      0,
      12,
      3,
@@ -1211,7 +1211,7 @@ static struct treasureS treasureD[] = {
     {"& Pick",
      0x20000000L,
      TV_DIGGING,
-     '\\', /*77*/
+     '\\', /*  78*/
      1,
      50,
      1,
@@ -1226,7 +1226,7 @@ static struct treasureS treasureD[] = {
     {"& Set of Gauntlets",
      0x00000000L,
      TV_GLOVES,
-     ']', /*78*/
+     ']', /*  79*/
      0,
      35,
      2,
@@ -1241,7 +1241,7 @@ static struct treasureS treasureD[] = {
     {"& Shovel",
      0x20000000L,
      TV_DIGGING,
-     '\\', /*79*/
+     '\\', /*  80*/
      0,
      15,
      4,
@@ -1256,7 +1256,7 @@ static struct treasureS treasureD[] = {
     {"& Short Bow",
      0x00000000L,
      TV_LAUNCHER,
-     '}', /* 80*/
+     '}', /*  81*/
      2,
      50,
      2,
@@ -1271,7 +1271,7 @@ static struct treasureS treasureD[] = {
     {"& Long Bow",
      0x00000000L,
      TV_LAUNCHER,
-     '}', /* 81*/
+     '}', /*  82*/
      2,
      120,
      3,
@@ -1286,7 +1286,7 @@ static struct treasureS treasureD[] = {
     {"& Composite Bow",
      0x00000000L,
      TV_LAUNCHER,
-     '}', /* 82*/
+     '}', /*  83*/
      2,
      240,
      4,
@@ -1301,7 +1301,7 @@ static struct treasureS treasureD[] = {
     {"& Light Crossbow",
      0x00000000L,
      TV_LAUNCHER,
-     '}', /* 83*/
+     '}', /*  84*/
      3,
      140,
      5,
@@ -1316,7 +1316,7 @@ static struct treasureS treasureD[] = {
     {"& Heavy Crossbow",
      0x00000000L,
      TV_LAUNCHER,
-     '}', /* 84*/
+     '}', /*  85*/
      3,
      300,
      6,
@@ -1331,7 +1331,7 @@ static struct treasureS treasureD[] = {
     {"& Brass Lantern",
      0x00000000L,
      TV_LIGHT,
-     '~', /* 85*/
+     '~', /*  86*/
      7500,
      35,
      1,
@@ -1346,7 +1346,7 @@ static struct treasureS treasureD[] = {
     {"& Wooden Torch",
      0x00000000L,
      TV_LIGHT,
-     '~', /* 86*/
+     '~', /*  87*/
      4000,
      2,
      2,
@@ -1361,7 +1361,7 @@ static struct treasureS treasureD[] = {
     {"& Orcish Pick",
      0x20000000L,
      TV_DIGGING,
-     '\\', /* 87*/
+     '\\', /*  88*/
      2,
      500,
      2,
@@ -1376,7 +1376,7 @@ static struct treasureS treasureD[] = {
     {"& Dwarven Pick",
      0x20000000L,
      TV_DIGGING,
-     '\\', /* 88*/
+     '\\', /*  89*/
      3,
      1200,
      3,
@@ -1391,7 +1391,7 @@ static struct treasureS treasureD[] = {
     {"& Gnomish Shovel",
      0x20000000L,
      TV_DIGGING,
-     '\\', /* 89*/
+     '\\', /*  90*/
      1,
      100,
      5,
@@ -1406,7 +1406,7 @@ static struct treasureS treasureD[] = {
     {"& Dwarven Shovel",
      0x20000000L,
      TV_DIGGING,
-     '\\', /* 90*/
+     '\\', /*  91*/
      2,
      250,
      6,
@@ -1421,7 +1421,7 @@ static struct treasureS treasureD[] = {
     {"& Pair of Soft Leather Shoes",
      0x00000000L,
      TV_BOOTS,
-     ']', /* 91*/
+     ']', /*  92*/
      0,
      4,
      1,
@@ -1436,7 +1436,7 @@ static struct treasureS treasureD[] = {
     {"& Pair of Soft Leather Boots",
      0x00000000L,
      TV_BOOTS,
-     ']', /* 92*/
+     ']', /*  93*/
      0,
      7,
      2,
@@ -1451,7 +1451,7 @@ static struct treasureS treasureD[] = {
     {"& Pair of Hard Leather Boots",
      0x00000000L,
      TV_BOOTS,
-     ']', /* 93*/
+     ']', /*  94*/
      0,
      12,
      3,
@@ -1466,7 +1466,7 @@ static struct treasureS treasureD[] = {
     {"& Soft Leather Cap",
      0x00000000L,
      TV_HELM,
-     ']', /* 94*/
+     ']', /*  95*/
      0,
      4,
      1,
@@ -1481,7 +1481,7 @@ static struct treasureS treasureD[] = {
     {"& Hard Leather Cap",
      0x00000000L,
      TV_HELM,
-     ']', /* 95*/
+     ']', /*  96*/
      0,
      12,
      2,
@@ -1496,7 +1496,7 @@ static struct treasureS treasureD[] = {
     {"& Metal Cap",
      0x00000000L,
      TV_HELM,
-     ']', /* 96*/
+     ']', /*  97*/
      0,
      30,
      3,
@@ -1511,7 +1511,7 @@ static struct treasureS treasureD[] = {
     {"& Iron Helm",
      0x00000000L,
      TV_HELM,
-     ']', /* 97*/
+     ']', /*  98*/
      0,
      75,
      4,
@@ -1526,7 +1526,7 @@ static struct treasureS treasureD[] = {
     {"& Steel Helm",
      0x00000000L,
      TV_HELM,
-     ']', /* 98*/
+     ']', /*  99*/
      0,
      200,
      5,
@@ -1541,7 +1541,7 @@ static struct treasureS treasureD[] = {
     {"& Silver Crown",
      0x00000000L,
      TV_HELM,
-     ']', /* 99*/
+     ']', /*  100*/
      0,
      500,
      6,
@@ -1556,7 +1556,7 @@ static struct treasureS treasureD[] = {
     {"& Golden Crown",
      0x00000000L,
      TV_HELM,
-     ']', /*100*/
+     ']', /*  101*/
      0,
      1000,
      7,
@@ -1571,7 +1571,7 @@ static struct treasureS treasureD[] = {
     {"& Jewel-Encrusted Crown",
      0x00000000L,
      TV_HELM,
-     ']', /*101*/
+     ']', /*  102*/
      0,
      2000,
      8,
@@ -1586,7 +1586,7 @@ static struct treasureS treasureD[] = {
     {"& Robe",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*102*/
+     '(', /*  103*/
      0,
      4,
      1,
@@ -1601,7 +1601,7 @@ static struct treasureS treasureD[] = {
     {"Soft Leather Armor",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*103*/
+     '(', /*  104*/
      0,
      18,
      2,
@@ -1616,7 +1616,7 @@ static struct treasureS treasureD[] = {
     {"Soft Studded Leather",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*104*/
+     '(', /*  105*/
      0,
      35,
      3,
@@ -1631,7 +1631,7 @@ static struct treasureS treasureD[] = {
     {"Hard Leather Armor",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*105*/
+     '(', /*  106*/
      0,
      55,
      4,
@@ -1646,7 +1646,7 @@ static struct treasureS treasureD[] = {
     {"Hard Studded Leather",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*106*/
+     '(', /*  107*/
      0,
      100,
      5,
@@ -1661,7 +1661,7 @@ static struct treasureS treasureD[] = {
     {"Woven Cord Armor",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*107*/
+     '(', /*  108*/
      0,
      45,
      6,
@@ -1676,7 +1676,7 @@ static struct treasureS treasureD[] = {
     {"Soft Leather Ring Mail",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*108*/
+     '(', /*  109*/
      0,
      160,
      7,
@@ -1691,7 +1691,7 @@ static struct treasureS treasureD[] = {
     {"Hard Leather Ring Mail",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*109*/
+     '(', /*  110*/
      0,
      230,
      8,
@@ -1706,7 +1706,7 @@ static struct treasureS treasureD[] = {
     {"Leather Scale Mail",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '(', /*110*/
+     '(', /*  111*/
      0,
      330,
      9,
@@ -1721,7 +1721,7 @@ static struct treasureS treasureD[] = {
     {"Metal Scale Mail",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*111*/
+     '[', /*  112*/
      0,
      430,
      1,
@@ -1736,7 +1736,7 @@ static struct treasureS treasureD[] = {
     {"Chain Mail",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*112*/
+     '[', /*  113*/
      0,
      530,
      2,
@@ -1751,7 +1751,7 @@ static struct treasureS treasureD[] = {
     {"Rusty Chain Mail",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*113*/
+     '[', /*  114*/
      0,
      0,
      3,
@@ -1766,7 +1766,7 @@ static struct treasureS treasureD[] = {
     {"Double Chain Mail",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*114*/
+     '[', /*  115*/
      0,
      630,
      4,
@@ -1781,7 +1781,7 @@ static struct treasureS treasureD[] = {
     {"Augmented Chain Mail",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*115*/
+     '[', /*  116*/
      0,
      675,
      5,
@@ -1796,7 +1796,7 @@ static struct treasureS treasureD[] = {
     {"Bar Chain Mail",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*116*/
+     '[', /*  117*/
      0,
      720,
      6,
@@ -1811,7 +1811,7 @@ static struct treasureS treasureD[] = {
     {"Metal Brigandine Armor",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*117*/
+     '[', /*  118*/
      0,
      775,
      7,
@@ -1826,7 +1826,7 @@ static struct treasureS treasureD[] = {
     {"Laminated Armor",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*118*/
+     '[', /*  119*/
      0,
      825,
      8,
@@ -1841,7 +1841,7 @@ static struct treasureS treasureD[] = {
     {"Partial Plate Armor",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*119*/
+     '[', /*  120*/
      0,
      900,
      9,
@@ -1856,7 +1856,7 @@ static struct treasureS treasureD[] = {
     {"Metal Lamellar Armor",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*120*/
+     '[', /*  121*/
      0,
      950,
      10,
@@ -1871,7 +1871,7 @@ static struct treasureS treasureD[] = {
     {"Full Plate Armor",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*121*/
+     '[', /*  122*/
      0,
      1050,
      11,
@@ -1886,7 +1886,7 @@ static struct treasureS treasureD[] = {
     {"Ribbed Plate Armor",
      0x00000000L,
      TV_HARD_ARMOR,
-     '[', /*122*/
+     '[', /*  123*/
      0,
      1200,
      12,
@@ -1901,7 +1901,7 @@ static struct treasureS treasureD[] = {
     {"& Cloak",
      0x00000000L,
      TV_CLOAK,
-     '(', /*123*/
+     '(', /*  124*/
      0,
      3,
      1,
@@ -1916,7 +1916,7 @@ static struct treasureS treasureD[] = {
     {"& Set of Leather Gloves",
      0x00000000L,
      TV_GLOVES,
-     ']', /*124*/
+     ']', /*  125*/
      0,
      3,
      1,
@@ -1931,7 +1931,7 @@ static struct treasureS treasureD[] = {
     {"& Set of Gauntlets",
      0x00000000L,
      TV_GLOVES,
-     ']', /*125*/
+     ']', /*  126*/
      0,
      35,
      2,
@@ -1946,7 +1946,7 @@ static struct treasureS treasureD[] = {
     {"& Small Leather Shield",
      0x00000000L,
      TV_SHIELD,
-     ')', /*126*/
+     ')', /*  127*/
      0,
      30,
      1,
@@ -1961,7 +1961,7 @@ static struct treasureS treasureD[] = {
     {"& Medium Leather Shield",
      0x00000000L,
      TV_SHIELD,
-     ')', /*127*/
+     ')', /*  128*/
      0,
      60,
      2,
@@ -1976,7 +1976,7 @@ static struct treasureS treasureD[] = {
     {"& Large Leather Shield",
      0x00000000L,
      TV_SHIELD,
-     ')', /*128*/
+     ')', /*  129*/
      0,
      120,
      3,
@@ -1991,7 +1991,7 @@ static struct treasureS treasureD[] = {
     {"& Small Metal Shield",
      0x00000000L,
      TV_SHIELD,
-     ')', /*129*/
+     ')', /*  130*/
      0,
      50,
      4,
@@ -2006,7 +2006,7 @@ static struct treasureS treasureD[] = {
     {"& Medium Metal Shield",
      0x00000000L,
      TV_SHIELD,
-     ')', /*130*/
+     ')', /*  131*/
      0,
      125,
      5,
@@ -2021,7 +2021,7 @@ static struct treasureS treasureD[] = {
     {"& Large Metal Shield",
      0x00000000L,
      TV_SHIELD,
-     ')', /*131*/
+     ')', /*  132*/
      0,
      200,
      6,
@@ -2036,7 +2036,7 @@ static struct treasureS treasureD[] = {
     {"Strength",
      0x00000001L,
      TV_RING,
-     '=', /*132*/
+     '=', /*  133*/
      0,
      400,
      0,
@@ -2051,7 +2051,7 @@ static struct treasureS treasureD[] = {
     {"Dexterity",
      0x00000008L,
      TV_RING,
-     '=', /*133*/
+     '=', /*  134*/
      0,
      400,
      1,
@@ -2066,7 +2066,7 @@ static struct treasureS treasureD[] = {
     {"Constitution",
      0x00000010L,
      TV_RING,
-     '=', /*134*/
+     '=', /*  135*/
      0,
      400,
      2,
@@ -2081,7 +2081,7 @@ static struct treasureS treasureD[] = {
     {"Intelligence",
      0x00000002L,
      TV_RING,
-     '=', /*135*/
+     '=', /*  136*/
      0,
      400,
      3,
@@ -2096,7 +2096,7 @@ static struct treasureS treasureD[] = {
     {"Speed",
      0x00000000L,
      TV_RING,
-     '=', /*136*/
+     '=', /*  137*/
      0,
      3000,
      4,
@@ -2111,7 +2111,7 @@ static struct treasureS treasureD[] = {
     {"Searching",
      0x00000040L,
      TV_RING,
-     '=', /*137*/
+     '=', /*  138*/
      0,
      250,
      5,
@@ -2126,7 +2126,7 @@ static struct treasureS treasureD[] = {
     {"Teleportation",
      0x80000400L,
      TV_RING,
-     '=', /*138*/
+     '=', /*  139*/
      0,
      0,
      6,
@@ -2141,7 +2141,7 @@ static struct treasureS treasureD[] = {
     {"Slow Digestion",
      0x00000080L,
      TV_RING,
-     '=', /*139*/
+     '=', /*  140*/
      0,
      200,
      7,
@@ -2156,7 +2156,7 @@ static struct treasureS treasureD[] = {
     {"Resist Fire",
      0x00080000L,
      TV_RING,
-     '=', /*140*/
+     '=', /*  141*/
      0,
      250,
      8,
@@ -2171,7 +2171,7 @@ static struct treasureS treasureD[] = {
     {"Resist Cold",
      0x00200000L,
      TV_RING,
-     '=', /*141*/
+     '=', /*  142*/
      0,
      250,
      9,
@@ -2186,7 +2186,7 @@ static struct treasureS treasureD[] = {
     {"Feather Falling",
      0x04000000L,
      TV_RING,
-     '=', /*142*/
+     '=', /*  143*/
      0,
      200,
      10,
@@ -2201,7 +2201,7 @@ static struct treasureS treasureD[] = {
     {"Adornment",
      0x00000000L,
      TV_RING,
-     '=', /*143*/
+     '=', /*  144*/
      0,
      20,
      11,
@@ -2216,7 +2216,7 @@ static struct treasureS treasureD[] = {
     {"Adornment",
      0x00000000L,
      TV_RING,
-     '=', /*144*/
+     '=', /*  145*/
      0,
      20,
      12,
@@ -2231,7 +2231,7 @@ static struct treasureS treasureD[] = {
     {"Weakness",
      0x80000001L,
      TV_RING,
-     '=', /*145*/
+     '=', /*  146*/
      -5,
      0,
      13,
@@ -2246,7 +2246,7 @@ static struct treasureS treasureD[] = {
     {"Lordly Protection (FIRE)",
      0x00080000L,
      TV_RING,
-     '=', /*146*/
+     '=', /*  147*/
      0,
      1200,
      14,
@@ -2261,7 +2261,7 @@ static struct treasureS treasureD[] = {
     {"Lordly Protection (ACID)",
      0x00100000L,
      TV_RING,
-     '=', /*147*/
+     '=', /*  148*/
      0,
      1200,
      15,
@@ -2276,7 +2276,7 @@ static struct treasureS treasureD[] = {
     {"Lordly Protection (COLD)",
      0x00200000L,
      TV_RING,
-     '=', /*148*/
+     '=', /*  149*/
      0,
      1200,
      16,
@@ -2291,7 +2291,7 @@ static struct treasureS treasureD[] = {
     {"WOE",
      0x80000644L,
      TV_RING,
-     '=', /*149*/
+     '=', /*  150*/
      -5,
      0,
      17,
@@ -2306,7 +2306,7 @@ static struct treasureS treasureD[] = {
     {"Stupidity",
      0x80000002L,
      TV_RING,
-     '=', /*150*/
+     '=', /*  151*/
      -5,
      0,
      18,
@@ -2321,7 +2321,7 @@ static struct treasureS treasureD[] = {
     {"Increase Damage",
      0x00000000L,
      TV_RING,
-     '=', /*151*/
+     '=', /*  152*/
      0,
      100,
      19,
@@ -2336,7 +2336,7 @@ static struct treasureS treasureD[] = {
     {"Increase To-Hit",
      0x00000000L,
      TV_RING,
-     '=', /*152*/
+     '=', /*  153*/
      0,
      100,
      20,
@@ -2351,7 +2351,7 @@ static struct treasureS treasureD[] = {
     {"Protection",
      0x00000000L,
      TV_RING,
-     '=', /*153*/
+     '=', /*  154*/
      0,
      100,
      21,
@@ -2366,7 +2366,7 @@ static struct treasureS treasureD[] = {
     {"Aggravate Monster",
      0x80000200L,
      TV_RING,
-     '=', /*154*/
+     '=', /*  155*/
      0,
      0,
      22,
@@ -2381,7 +2381,7 @@ static struct treasureS treasureD[] = {
     {"See Invisible",
      0x01000000L,
      TV_RING,
-     '=', /*155*/
+     '=', /*  156*/
      0,
      500,
      23,
@@ -2396,7 +2396,7 @@ static struct treasureS treasureD[] = {
     {"Sustain Strength",
      0x00400001L,
      TV_RING,
-     '=', /*156*/
+     '=', /*  157*/
      0,
      750,
      24,
@@ -2411,7 +2411,7 @@ static struct treasureS treasureD[] = {
     {"Sustain Intelligence",
      0x00400002L,
      TV_RING,
-     '=', /*157*/
+     '=', /*  158*/
      0,
      600,
      25,
@@ -2426,7 +2426,7 @@ static struct treasureS treasureD[] = {
     {"Sustain Wisdom",
      0x00400004L,
      TV_RING,
-     '=', /*158*/
+     '=', /*  159*/
      0,
      600,
      26,
@@ -2441,7 +2441,7 @@ static struct treasureS treasureD[] = {
     {"Sustain Dexterity",
      0x00400008L,
      TV_RING,
-     '=', /*159*/
+     '=', /*  160*/
      0,
      750,
      27,
@@ -2456,7 +2456,7 @@ static struct treasureS treasureD[] = {
     {"Sustain Constitution",
      0x00400010L,
      TV_RING,
-     '=', /*160*/
+     '=', /*  161*/
      0,
      750,
      28,
@@ -2471,7 +2471,7 @@ static struct treasureS treasureD[] = {
     {"Sustain Charisma",
      0x00400020L,
      TV_RING,
-     '=', /*161*/
+     '=', /*  162*/
      0,
      500,
      29,
@@ -2486,7 +2486,7 @@ static struct treasureS treasureD[] = {
     {"Slaying",
      0x00000000L,
      TV_RING,
-     '=', /*162*/
+     '=', /*  163*/
      0,
      1000,
      30,
@@ -2501,7 +2501,7 @@ static struct treasureS treasureD[] = {
     {"Wisdom",
      0x00000004L,
      TV_AMULET,
-     '"', /*163*/
+     '"', /*  164*/
      0,
      300,
      0,
@@ -2516,7 +2516,7 @@ static struct treasureS treasureD[] = {
     {"Charisma",
      0x00000020L,
      TV_AMULET,
-     '"', /*164*/
+     '"', /*  165*/
      0,
      250,
      1,
@@ -2531,7 +2531,7 @@ static struct treasureS treasureD[] = {
     {"Searching",
      0x00000040L,
      TV_AMULET,
-     '"', /*165*/
+     '"', /*  166*/
      0,
      250,
      2,
@@ -2546,7 +2546,7 @@ static struct treasureS treasureD[] = {
     {"Teleportation",
      0x80000400L,
      TV_AMULET,
-     '"', /*166*/
+     '"', /*  167*/
      0,
      0,
      3,
@@ -2561,7 +2561,7 @@ static struct treasureS treasureD[] = {
     {"Slow Digestion",
      0x00000080L,
      TV_AMULET,
-     '"', /*167*/
+     '"', /*  168*/
      0,
      200,
      4,
@@ -2576,7 +2576,7 @@ static struct treasureS treasureD[] = {
     {"Resist Acid",
      0x00100000L,
      TV_AMULET,
-     '"', /*168*/
+     '"', /*  169*/
      0,
      250,
      5,
@@ -2591,7 +2591,7 @@ static struct treasureS treasureD[] = {
     {"Adornment",
      0x00000000L,
      TV_AMULET,
-     '"', /*169*/
+     '"', /*  170*/
      0,
      20,
      6,
@@ -2606,7 +2606,7 @@ static struct treasureS treasureD[] = {
     {"Adornment",
      0x00000000L,
      TV_AMULET,
-     '"', /*170*/
+     '"', /*  171*/
      0,
      20,
      7,
@@ -2621,7 +2621,7 @@ static struct treasureS treasureD[] = {
     {"the Magi",
      0x01800040L,
      TV_AMULET,
-     '"', /*171*/
+     '"', /*  172*/
      0,
      5000,
      8,
@@ -2636,7 +2636,7 @@ static struct treasureS treasureD[] = {
     {"DOOM",
      0x8000007FL,
      TV_AMULET,
-     '"', /*172*/
+     '"', /*  173*/
      -5,
      0,
      9,
@@ -2651,7 +2651,7 @@ static struct treasureS treasureD[] = {
     {"Enchant Weapon To-Hit",
      0x00000001L,
      TV_SCROLL1,
-     '?', /*173*/
+     '?', /*  174*/
      0,
      125,
      64,
@@ -2666,7 +2666,7 @@ static struct treasureS treasureD[] = {
     {"Enchant Weapon To-Dam",
      0x00000002L,
      TV_SCROLL1,
-     '?', /*174*/
+     '?', /*  175*/
      0,
      125,
      65,
@@ -2681,7 +2681,7 @@ static struct treasureS treasureD[] = {
     {"Enchant Armor",
      0x00000004L,
      TV_SCROLL1,
-     '?', /*175*/
+     '?', /*  176*/
      0,
      125,
      66,
@@ -2696,7 +2696,7 @@ static struct treasureS treasureD[] = {
     {"Identify",
      0x00000008L,
      TV_SCROLL1,
-     '?', /*176*/
+     '?', /*  177*/
      0,
      50,
      67,
@@ -2711,7 +2711,7 @@ static struct treasureS treasureD[] = {
     {"Identify",
      0x00000008L,
      TV_SCROLL1,
-     '?', /*177*/
+     '?', /*  178*/
      0,
      50,
      67,
@@ -2726,7 +2726,7 @@ static struct treasureS treasureD[] = {
     {"Identify",
      0x00000008L,
      TV_SCROLL1,
-     '?', /*178*/
+     '?', /*  179*/
      0,
      50,
      67,
@@ -2741,7 +2741,7 @@ static struct treasureS treasureD[] = {
     {"Identify",
      0x00000008L,
      TV_SCROLL1,
-     '?', /*179*/
+     '?', /*  180*/
      0,
      50,
      67,
@@ -2756,7 +2756,7 @@ static struct treasureS treasureD[] = {
     {"Remove Curse",
      0x00000010L,
      TV_SCROLL1,
-     '?', /*180*/
+     '?', /*  181*/
      0,
      100,
      68,
@@ -2771,7 +2771,7 @@ static struct treasureS treasureD[] = {
     {"Light",
      0x00000020L,
      TV_SCROLL1,
-     '?', /*181*/
+     '?', /*  182*/
      0,
      15,
      69,
@@ -2786,7 +2786,7 @@ static struct treasureS treasureD[] = {
     {"Light",
      0x00000020L,
      TV_SCROLL1,
-     '?', /*182*/
+     '?', /*  183*/
      0,
      15,
      69,
@@ -2801,7 +2801,7 @@ static struct treasureS treasureD[] = {
     {"Light",
      0x00000020L,
      TV_SCROLL1,
-     '?', /*183*/
+     '?', /*  184*/
      0,
      15,
      69,
@@ -2816,7 +2816,7 @@ static struct treasureS treasureD[] = {
     {"Summon Monster",
      0x00000040L,
      TV_SCROLL1,
-     '?', /*184*/
+     '?', /*  185*/
      0,
      0,
      70,
@@ -2831,7 +2831,7 @@ static struct treasureS treasureD[] = {
     {"Phase Door",
      0x00000080L,
      TV_SCROLL1,
-     '?', /*185*/
+     '?', /*  186*/
      0,
      15,
      71,
@@ -2846,7 +2846,7 @@ static struct treasureS treasureD[] = {
     {"Teleport",
      0x00000100L,
      TV_SCROLL1,
-     '?', /*186*/
+     '?', /*  187*/
      0,
      40,
      72,
@@ -2861,7 +2861,7 @@ static struct treasureS treasureD[] = {
     {"Teleport Level",
      0x00000200L,
      TV_SCROLL1,
-     '?', /*187*/
+     '?', /*  188*/
      0,
      50,
      73,
@@ -2876,7 +2876,7 @@ static struct treasureS treasureD[] = {
     {"Monster Confusion",
      0x00000400L,
      TV_SCROLL1,
-     '?', /*188*/
+     '?', /*  189*/
      0,
      30,
      74,
@@ -2891,7 +2891,7 @@ static struct treasureS treasureD[] = {
     {"Magic Mapping",
      0x00000800L,
      TV_SCROLL1,
-     '?', /*189*/
+     '?', /*  190*/
      0,
      40,
      75,
@@ -2906,7 +2906,7 @@ static struct treasureS treasureD[] = {
     {"Sleep Monster",
      0x00001000L,
      TV_SCROLL1,
-     '?', /*190*/
+     '?', /*  191*/
      0,
      35,
      76,
@@ -2921,7 +2921,7 @@ static struct treasureS treasureD[] = {
     {"Rune of Protection",
      0x00002000L,
      TV_SCROLL1,
-     '?', /*191*/
+     '?', /*  192*/
      0,
      500,
      77,
@@ -2936,7 +2936,7 @@ static struct treasureS treasureD[] = {
     {"Treasure Detection",
      0x00004000L,
      TV_SCROLL1,
-     '?', /*192*/
+     '?', /*  193*/
      0,
      15,
      78,
@@ -2951,7 +2951,7 @@ static struct treasureS treasureD[] = {
     {"Object Detection",
      0x00008000L,
      TV_SCROLL1,
-     '?', /*193*/
+     '?', /*  194*/
      0,
      15,
      79,
@@ -2966,7 +2966,7 @@ static struct treasureS treasureD[] = {
     {"Trap Detection",
      0x00010000L,
      TV_SCROLL1,
-     '?', /*194*/
+     '?', /*  195*/
      0,
      35,
      80,
@@ -2981,7 +2981,7 @@ static struct treasureS treasureD[] = {
     {"Trap Detection",
      0x00010000L,
      TV_SCROLL1,
-     '?', /*195*/
+     '?', /*  196*/
      0,
      35,
      80,
@@ -2996,7 +2996,7 @@ static struct treasureS treasureD[] = {
     {"Trap Detection",
      0x00010000L,
      TV_SCROLL1,
-     '?', /*196*/
+     '?', /*  197*/
      0,
      35,
      80,
@@ -3011,7 +3011,7 @@ static struct treasureS treasureD[] = {
     {"Door/Stair Location",
      0x00020000L,
      TV_SCROLL1,
-     '?', /*197*/
+     '?', /*  198*/
      0,
      35,
      81,
@@ -3026,7 +3026,7 @@ static struct treasureS treasureD[] = {
     {"Door/Stair Location",
      0x00020000L,
      TV_SCROLL1,
-     '?', /*198*/
+     '?', /*  199*/
      0,
      35,
      81,
@@ -3041,7 +3041,7 @@ static struct treasureS treasureD[] = {
     {"Door/Stair Location",
      0x00020000L,
      TV_SCROLL1,
-     '?', /*199*/
+     '?', /*  200*/
      0,
      35,
      81,
@@ -3056,7 +3056,7 @@ static struct treasureS treasureD[] = {
     {"Mass Genocide",
      0x00040000L,
      TV_SCROLL1,
-     '?', /*200*/
+     '?', /*  201*/
      0,
      1000,
      82,
@@ -3071,7 +3071,7 @@ static struct treasureS treasureD[] = {
     {"Detect Invisible",
      0x00080000L,
      TV_SCROLL1,
-     '?', /*201*/
+     '?', /*  202*/
      0,
      15,
      83,
@@ -3086,7 +3086,7 @@ static struct treasureS treasureD[] = {
     {"Aggravate Monster",
      0x00100000L,
      TV_SCROLL1,
-     '?', /*202*/
+     '?', /*  203*/
      0,
      0,
      84,
@@ -3101,7 +3101,7 @@ static struct treasureS treasureD[] = {
     {"Trap Creation",
      0x00200000L,
      TV_SCROLL1,
-     '?', /*203*/
+     '?', /*  204*/
      0,
      0,
      85,
@@ -3116,7 +3116,7 @@ static struct treasureS treasureD[] = {
     {"Trap/Door/Lock Destruction",
      0x00400000L,
      TV_SCROLL1,
-     '?', /*204*/
+     '?', /*  205*/
      0,
      50,
      86,
@@ -3131,7 +3131,7 @@ static struct treasureS treasureD[] = {
     {"Door Creation",
      0x00800000L,
      TV_SCROLL1,
-     '?', /*205*/
+     '?', /*  206*/
      0,
      100,
      87,
@@ -3146,7 +3146,7 @@ static struct treasureS treasureD[] = {
     {"Recharging",
      0x01000000L,
      TV_SCROLL1,
-     '?', /*206*/
+     '?', /*  207*/
      0,
      200,
      88,
@@ -3161,7 +3161,7 @@ static struct treasureS treasureD[] = {
     {"Extermination",
      0x02000000L,
      TV_SCROLL1,
-     '?', /*207*/
+     '?', /*  208*/
      0,
      750,
      89,
@@ -3176,7 +3176,7 @@ static struct treasureS treasureD[] = {
     {"Darkness",
      0x04000000L,
      TV_SCROLL1,
-     '?', /*208*/
+     '?', /*  209*/
      0,
      0,
      90,
@@ -3191,7 +3191,7 @@ static struct treasureS treasureD[] = {
     {"Protection from Evil",
      0x08000000L,
      TV_SCROLL1,
-     '?', /*209*/
+     '?', /*  210*/
      0,
      100,
      91,
@@ -3206,7 +3206,7 @@ static struct treasureS treasureD[] = {
     {"Create Food",
      0x10000000L,
      TV_SCROLL1,
-     '?', /*210*/
+     '?', /*  211*/
      0,
      10,
      92,
@@ -3221,7 +3221,7 @@ static struct treasureS treasureD[] = {
     {"Dispel Undead",
      0x20000000L,
      TV_SCROLL1,
-     '?', /*211*/
+     '?', /*  212*/
      0,
      200,
      93,
@@ -3236,7 +3236,7 @@ static struct treasureS treasureD[] = {
     {"*Enchant Weapon*",
      0x00000001L,
      TV_SCROLL2,
-     '?', /*212*/
+     '?', /*  213*/
      0,
      500,
      94,
@@ -3251,7 +3251,7 @@ static struct treasureS treasureD[] = {
     {"Curse Weapon",
      0x00000002L,
      TV_SCROLL2,
-     '?', /*213*/
+     '?', /*  214*/
      0,
      0,
      95,
@@ -3266,7 +3266,7 @@ static struct treasureS treasureD[] = {
     {"*Enchant Armor*",
      0x00000004L,
      TV_SCROLL2,
-     '?', /*214*/
+     '?', /*  215*/
      0,
      500,
      96,
@@ -3281,7 +3281,7 @@ static struct treasureS treasureD[] = {
     {"Curse Armor",
      0x00000008L,
      TV_SCROLL2,
-     '?', /*215*/
+     '?', /*  216*/
      0,
      0,
      97,
@@ -3296,7 +3296,7 @@ static struct treasureS treasureD[] = {
     {"Summon Undead",
      0x00000010L,
      TV_SCROLL2,
-     '?', /*216*/
+     '?', /*  217*/
      0,
      0,
      98,
@@ -3311,7 +3311,7 @@ static struct treasureS treasureD[] = {
     {"Blessing",
      0x00000020L,
      TV_SCROLL2,
-     '?', /*217*/
+     '?', /*  218*/
      0,
      15,
      99,
@@ -3326,7 +3326,7 @@ static struct treasureS treasureD[] = {
     {"Holy Chant",
      0x00000040L,
      TV_SCROLL2,
-     '?', /*218*/
+     '?', /*  219*/
      0,
      40,
      100,
@@ -3341,7 +3341,7 @@ static struct treasureS treasureD[] = {
     {"Holy Prayer",
      0x00000080L,
      TV_SCROLL2,
-     '?', /*219*/
+     '?', /*  220*/
      0,
      80,
      101,
@@ -3356,7 +3356,7 @@ static struct treasureS treasureD[] = {
     {"Word-of-Recall",
      0x00000100L,
      TV_SCROLL2,
-     '?', /*220*/
+     '?', /*  221*/
      0,
      150,
      102,
@@ -3371,7 +3371,7 @@ static struct treasureS treasureD[] = {
     {"*Destruction*",
      0x00000200L,
      TV_SCROLL2,
-     '?', /*221*/
+     '?', /*  222*/
      0,
      750,
      103,
@@ -3383,11 +3383,10 @@ static struct treasureS treasureD[] = {
      0,
      {0, 0},
      40},
-    /* SMJ, AJ, Water must be subval 64-66 resp. for objdes to work */
     {"Slime Mold Juice",
      0x30000000L,
      TV_POTION1,
-     '!', /*222*/
+     '!', /*  223*/
      400,
      2,
      64,
@@ -3402,7 +3401,7 @@ static struct treasureS treasureD[] = {
     {"Apple Juice",
      0x00000000L,
      TV_POTION1,
-     '!', /*223*/
+     '!', /*  224*/
      250,
      1,
      65,
@@ -3417,7 +3416,7 @@ static struct treasureS treasureD[] = {
     {"Water",
      0x00000000L,
      TV_POTION1,
-     '!', /*224*/
+     '!', /*  225*/
      200,
      0,
      66,
@@ -3432,7 +3431,7 @@ static struct treasureS treasureD[] = {
     {"Strength",
      0x00000001L,
      TV_POTION1,
-     '!', /*225*/
+     '!', /*  226*/
      50,
      300,
      67,
@@ -3447,7 +3446,7 @@ static struct treasureS treasureD[] = {
     {"Weakness",
      0x00000002L,
      TV_POTION1,
-     '!', /*226*/
+     '!', /*  227*/
      0,
      0,
      68,
@@ -3462,7 +3461,7 @@ static struct treasureS treasureD[] = {
     {"Enhance Strength",
      0x00000004L,
      TV_POTION1,
-     '!', /*227*/
+     '!', /*  228*/
      0,
      300,
      69,
@@ -3477,7 +3476,7 @@ static struct treasureS treasureD[] = {
     {"Intelligence",
      0x00000008L,
      TV_POTION1,
-     '!', /*228*/
+     '!', /*  229*/
      0,
      300,
      70,
@@ -3492,7 +3491,7 @@ static struct treasureS treasureD[] = {
     {"Lose Intelligence",
      0x00000010L,
      TV_POTION1,
-     '!', /*229*/
+     '!', /*  230*/
      0,
      0,
      71,
@@ -3507,7 +3506,7 @@ static struct treasureS treasureD[] = {
     {"Enhance Intelligence",
      0x00000020L,
      TV_POTION1,
-     '!', /*230*/
+     '!', /*  231*/
      0,
      300,
      72,
@@ -3522,7 +3521,7 @@ static struct treasureS treasureD[] = {
     {"Wisdom",
      0x00000040L,
      TV_POTION1,
-     '!', /*231*/
+     '!', /*  232*/
      0,
      300,
      73,
@@ -3537,7 +3536,7 @@ static struct treasureS treasureD[] = {
     {"Lose Wisdom",
      0x00000080L,
      TV_POTION1,
-     '!', /*232*/
+     '!', /*  233*/
      0,
      0,
      74,
@@ -3552,7 +3551,7 @@ static struct treasureS treasureD[] = {
     {"Enhance Wisdom",
      0x00000100L,
      TV_POTION1,
-     '!', /*233*/
+     '!', /*  234*/
      0,
      300,
      75,
@@ -3567,7 +3566,7 @@ static struct treasureS treasureD[] = {
     {"Charisma",
      0x00000200L,
      TV_POTION1,
-     '!', /*234*/
+     '!', /*  235*/
      0,
      300,
      76,
@@ -3582,7 +3581,7 @@ static struct treasureS treasureD[] = {
     {"Ugliness",
      0x00000400L,
      TV_POTION1,
-     '!', /*235*/
+     '!', /*  236*/
      0,
      0,
      77,
@@ -3597,7 +3596,7 @@ static struct treasureS treasureD[] = {
     {"Enhance Charisma",
      0x00000800L,
      TV_POTION1,
-     '!', /*236*/
+     '!', /*  237*/
      0,
      300,
      78,
@@ -3612,7 +3611,7 @@ static struct treasureS treasureD[] = {
     {"Cure Light Wounds",
      0x10001000L,
      TV_POTION1,
-     '!', /*237*/
+     '!', /*  238*/
      50,
      15,
      79,
@@ -3627,7 +3626,7 @@ static struct treasureS treasureD[] = {
     {"Cure Light Wounds",
      0x10001000L,
      TV_POTION1,
-     '!', /*238*/
+     '!', /*  239*/
      50,
      15,
      79,
@@ -3642,7 +3641,7 @@ static struct treasureS treasureD[] = {
     {"Cure Light Wounds",
      0x10001000L,
      TV_POTION1,
-     '!', /*239*/
+     '!', /*  240*/
      50,
      15,
      79,
@@ -3657,7 +3656,7 @@ static struct treasureS treasureD[] = {
     {"Cure Serious Wounds",
      0x30002000L,
      TV_POTION1,
-     '!', /*240*/
+     '!', /*  241*/
      100,
      40,
      80,
@@ -3672,7 +3671,7 @@ static struct treasureS treasureD[] = {
     {"Cure Critical Wounds",
      0x70004000L,
      TV_POTION1,
-     '!', /*241*/
+     '!', /*  242*/
      100,
      100,
      81,
@@ -3687,7 +3686,7 @@ static struct treasureS treasureD[] = {
     {"Healing",
      0x70008000L,
      TV_POTION1,
-     '!', /*242*/
+     '!', /*  243*/
      200,
      200,
      82,
@@ -3702,7 +3701,7 @@ static struct treasureS treasureD[] = {
     {"Constitution",
      0x00010000L,
      TV_POTION1,
-     '!', /*243*/
+     '!', /*  244*/
      50,
      300,
      83,
@@ -3717,7 +3716,7 @@ static struct treasureS treasureD[] = {
     {"Gain Experience",
      0x00020000L,
      TV_POTION1,
-     '!', /*244*/
+     '!', /*  245*/
      0,
      2500,
      84,
@@ -3732,7 +3731,7 @@ static struct treasureS treasureD[] = {
     {"Sleep",
      0x00040000L,
      TV_POTION1,
-     '!', /*245*/
+     '!', /*  246*/
      100,
      0,
      85,
@@ -3747,7 +3746,7 @@ static struct treasureS treasureD[] = {
     {"Blindness",
      0x00080000L,
      TV_POTION1,
-     '!', /*246*/
+     '!', /*  247*/
      0,
      0,
      86,
@@ -3762,7 +3761,7 @@ static struct treasureS treasureD[] = {
     {"Confusion",
      0x00100000L,
      TV_POTION1,
-     '!', /*247*/
+     '!', /*  248*/
      50,
      0,
      87,
@@ -3777,7 +3776,7 @@ static struct treasureS treasureD[] = {
     {"Poison",
      0x00200000L,
      TV_POTION1,
-     '!', /*248*/
+     '!', /*  249*/
      0,
      0,
      88,
@@ -3792,7 +3791,7 @@ static struct treasureS treasureD[] = {
     {"Haste Self",
      0x00400000L,
      TV_POTION1,
-     '!', /*249*/
+     '!', /*  250*/
      0,
      75,
      89,
@@ -3807,7 +3806,7 @@ static struct treasureS treasureD[] = {
     {"Slowness",
      0x00800000L,
      TV_POTION1,
-     '!', /*250*/
+     '!', /*  251*/
      50,
      0,
      90,
@@ -3822,7 +3821,7 @@ static struct treasureS treasureD[] = {
     {"Dexterity",
      0x02000000L,
      TV_POTION1,
-     '!', /*251*/
+     '!', /*  252*/
      0,
      300,
      91,
@@ -3837,7 +3836,7 @@ static struct treasureS treasureD[] = {
     {"Enhance Dexterity",
      0x04000000L,
      TV_POTION1,
-     '!', /*252*/
+     '!', /*  253*/
      0,
      300,
      92,
@@ -3852,7 +3851,7 @@ static struct treasureS treasureD[] = {
     {"Enhance Constitution",
      0x68000000L,
      TV_POTION1,
-     '!', /*253*/
+     '!', /*  254*/
      0,
      300,
      93,
@@ -3867,7 +3866,7 @@ static struct treasureS treasureD[] = {
     {"Lose Experience",
      0x00000002L,
      TV_POTION2,
-     '!', /*254*/
+     '!', /*  255*/
      0,
      0,
      95,
@@ -3882,7 +3881,7 @@ static struct treasureS treasureD[] = {
     {"Salt Water",
      0x00000004L,
      TV_POTION2,
-     '!', /*255*/
+     '!', /*  256*/
      0,
      0,
      96,
@@ -3897,7 +3896,7 @@ static struct treasureS treasureD[] = {
     {"Invulnerability",
      0x00000008L,
      TV_POTION2,
-     '!', /*256*/
+     '!', /*  257*/
      0,
      1000,
      97,
@@ -3912,7 +3911,7 @@ static struct treasureS treasureD[] = {
     {"Heroism",
      0x00000010L,
      TV_POTION2,
-     '!', /*257*/
+     '!', /*  258*/
      0,
      35,
      98,
@@ -3927,7 +3926,7 @@ static struct treasureS treasureD[] = {
     {"Super Heroism",
      0x00000020L,
      TV_POTION2,
-     '!', /*258*/
+     '!', /*  259*/
      0,
      100,
      99,
@@ -3942,7 +3941,7 @@ static struct treasureS treasureD[] = {
     {"Boldness",
      0x00000040L,
      TV_POTION2,
-     '!', /*259*/
+     '!', /*  260*/
      0,
      10,
      100,
@@ -3957,7 +3956,7 @@ static struct treasureS treasureD[] = {
     {"Restore Experience",
      0x00000080L,
      TV_POTION2,
-     '!', /*260*/
+     '!', /*  261*/
      0,
      400,
      101,
@@ -3972,7 +3971,7 @@ static struct treasureS treasureD[] = {
     {"Fire Absorbtion",
      0x00000100L,
      TV_POTION2,
-     '!', /*261*/
+     '!', /*  262*/
      0,
      30,
      102,
@@ -3987,7 +3986,7 @@ static struct treasureS treasureD[] = {
     {"Frost Absorbtion",
      0x00000200L,
      TV_POTION2,
-     '!', /*262*/
+     '!', /*  263*/
      0,
      30,
      103,
@@ -4002,7 +4001,7 @@ static struct treasureS treasureD[] = {
     {"See Invisible",
      0x00000400L,
      TV_POTION2,
-     '!', /*263*/
+     '!', /*  264*/
      0,
      50,
      104,
@@ -4017,7 +4016,7 @@ static struct treasureS treasureD[] = {
     {"Slow Poison",
      0x00000800L,
      TV_POTION2,
-     '!', /*264*/
+     '!', /*  265*/
      0,
      25,
      105,
@@ -4032,7 +4031,7 @@ static struct treasureS treasureD[] = {
     {"Neutralize Poison",
      0x00001000L,
      TV_POTION2,
-     '!', /*265*/
+     '!', /*  266*/
      0,
      75,
      106,
@@ -4047,7 +4046,7 @@ static struct treasureS treasureD[] = {
     {"Restore Mana",
      0x00002000L,
      TV_POTION2,
-     '!', /*266*/
+     '!', /*  267*/
      0,
      350,
      107,
@@ -4062,7 +4061,7 @@ static struct treasureS treasureD[] = {
     {"Infra-Vision",
      0x00004000L,
      TV_POTION2,
-     '!', /*267*/
+     '!', /*  268*/
      0,
      20,
      108,
@@ -4077,7 +4076,7 @@ static struct treasureS treasureD[] = {
     {"& Flask~ of Oil",
      0x00040000L,
      TV_FLASK,
-     '!', /*268*/
+     '!', /*  269*/
      7500,
      3,
      64,
@@ -4092,7 +4091,7 @@ static struct treasureS treasureD[] = {
     {"Light",
      0x00000001L,
      TV_WAND,
-     '-', /*269*/
+     '-', /*  270*/
      0,
      200,
      0,
@@ -4107,7 +4106,7 @@ static struct treasureS treasureD[] = {
     {"Lightning Bolts",
      0x00000002L,
      TV_WAND,
-     '-', /*270*/
+     '-', /*  271*/
      0,
      600,
      1,
@@ -4122,7 +4121,7 @@ static struct treasureS treasureD[] = {
     {"Frost Bolts",
      0x00000004L,
      TV_WAND,
-     '-', /*271*/
+     '-', /*  272*/
      0,
      800,
      2,
@@ -4137,7 +4136,7 @@ static struct treasureS treasureD[] = {
     {"Fire Bolts",
      0x00000008L,
      TV_WAND,
-     '-', /*272*/
+     '-', /*  273*/
      0,
      1000,
      3,
@@ -4152,7 +4151,7 @@ static struct treasureS treasureD[] = {
     {"Stone-to-Mud",
      0x00000010L,
      TV_WAND,
-     '-', /*273*/
+     '-', /*  274*/
      0,
      300,
      4,
@@ -4167,7 +4166,7 @@ static struct treasureS treasureD[] = {
     {"Polymorph",
      0x00000020L,
      TV_WAND,
-     '-', /*274*/
+     '-', /*  275*/
      0,
      400,
      5,
@@ -4182,7 +4181,7 @@ static struct treasureS treasureD[] = {
     {"Heal Monster",
      0x00000040L,
      TV_WAND,
-     '-', /*275*/
+     '-', /*  276*/
      0,
      0,
      6,
@@ -4197,7 +4196,7 @@ static struct treasureS treasureD[] = {
     {"Haste Monster",
      0x00000080L,
      TV_WAND,
-     '-', /*276*/
+     '-', /*  277*/
      0,
      0,
      7,
@@ -4212,7 +4211,7 @@ static struct treasureS treasureD[] = {
     {"Slow Monster",
      0x00000100L,
      TV_WAND,
-     '-', /*277*/
+     '-', /*  278*/
      0,
      500,
      8,
@@ -4227,7 +4226,7 @@ static struct treasureS treasureD[] = {
     {"Confuse Monster",
      0x00000200L,
      TV_WAND,
-     '-', /*278*/
+     '-', /*  279*/
      0,
      400,
      9,
@@ -4242,7 +4241,7 @@ static struct treasureS treasureD[] = {
     {"Sleep Monster",
      0x00000400L,
      TV_WAND,
-     '-', /*279*/
+     '-', /*  280*/
      0,
      500,
      10,
@@ -4257,7 +4256,7 @@ static struct treasureS treasureD[] = {
     {"Drain Life",
      0x00000800L,
      TV_WAND,
-     '-', /*280*/
+     '-', /*  281*/
      0,
      1200,
      11,
@@ -4272,7 +4271,7 @@ static struct treasureS treasureD[] = {
     {"Trap/Door/Lock Destruction",
      0x00001000L,
      TV_WAND,
-     '-', /*281*/
+     '-', /*  282*/
      0,
      500,
      12,
@@ -4287,7 +4286,7 @@ static struct treasureS treasureD[] = {
     {"Magic Missile",
      0x00002000L,
      TV_WAND,
-     '-', /*282*/
+     '-', /*  283*/
      0,
      200,
      13,
@@ -4302,7 +4301,7 @@ static struct treasureS treasureD[] = {
     {"Wall Building",
      0x00004000L,
      TV_WAND,
-     '-', /*283*/
+     '-', /*  284*/
      0,
      400,
      14,
@@ -4317,7 +4316,7 @@ static struct treasureS treasureD[] = {
     {"Clone Monster",
      0x00008000L,
      TV_WAND,
-     '-', /*284*/
+     '-', /*  285*/
      0,
      0,
      15,
@@ -4332,7 +4331,7 @@ static struct treasureS treasureD[] = {
     {"Teleport Away",
      0x00010000L,
      TV_WAND,
-     '-', /*285*/
+     '-', /*  286*/
      0,
      350,
      16,
@@ -4347,7 +4346,7 @@ static struct treasureS treasureD[] = {
     {"Disarming",
      0x00020000L,
      TV_WAND,
-     '-', /*286*/
+     '-', /*  287*/
      0,
      500,
      17,
@@ -4362,7 +4361,7 @@ static struct treasureS treasureD[] = {
     {"Lightning Balls",
      0x00040000L,
      TV_WAND,
-     '-', /*287*/
+     '-', /*  288*/
      0,
      1200,
      18,
@@ -4377,7 +4376,7 @@ static struct treasureS treasureD[] = {
     {"Cold Balls",
      0x00080000L,
      TV_WAND,
-     '-', /*288*/
+     '-', /*  289*/
      0,
      1500,
      19,
@@ -4392,7 +4391,7 @@ static struct treasureS treasureD[] = {
     {"Fire Balls",
      0x00100000L,
      TV_WAND,
-     '-', /*289*/
+     '-', /*  290*/
      0,
      1800,
      20,
@@ -4407,7 +4406,7 @@ static struct treasureS treasureD[] = {
     {"Stinking Cloud",
      0x00200000L,
      TV_WAND,
-     '-', /*290*/
+     '-', /*  291*/
      0,
      400,
      21,
@@ -4422,7 +4421,7 @@ static struct treasureS treasureD[] = {
     {"Acid Balls",
      0x00400000L,
      TV_WAND,
-     '-', /*291*/
+     '-', /*  292*/
      0,
      1650,
      22,
@@ -4437,7 +4436,7 @@ static struct treasureS treasureD[] = {
     {"Wonder",
      0x00800000L,
      TV_WAND,
-     '-', /*292*/
+     '-', /*  293*/
      0,
      250,
      23,
@@ -4452,7 +4451,7 @@ static struct treasureS treasureD[] = {
     {"Light",
      0x00000001L,
      TV_STAFF,
-     '_', /*293*/
+     '_', /*  294*/
      0,
      250,
      0,
@@ -4467,7 +4466,7 @@ static struct treasureS treasureD[] = {
     {"Door/Stair Location",
      0x00000002L,
      TV_STAFF,
-     '_', /*294*/
+     '_', /*  295*/
      0,
      350,
      1,
@@ -4482,7 +4481,7 @@ static struct treasureS treasureD[] = {
     {"Trap Location",
      0x00000004L,
      TV_STAFF,
-     '_', /*295*/
+     '_', /*  296*/
      0,
      350,
      2,
@@ -4497,7 +4496,7 @@ static struct treasureS treasureD[] = {
     {"Treasure Location",
      0x00000008L,
      TV_STAFF,
-     '_', /*296*/
+     '_', /*  297*/
      0,
      200,
      3,
@@ -4512,7 +4511,7 @@ static struct treasureS treasureD[] = {
     {"Object Location",
      0x00000010L,
      TV_STAFF,
-     '_', /*297*/
+     '_', /*  298*/
      0,
      200,
      4,
@@ -4527,7 +4526,7 @@ static struct treasureS treasureD[] = {
     {"Teleportation",
      0x00000020L,
      TV_STAFF,
-     '_', /*298*/
+     '_', /*  299*/
      0,
      800,
      5,
@@ -4542,7 +4541,7 @@ static struct treasureS treasureD[] = {
     {"Earthquakes",
      0x00000040L,
      TV_STAFF,
-     '_', /*299*/
+     '_', /*  300*/
      0,
      350,
      6,
@@ -4557,7 +4556,7 @@ static struct treasureS treasureD[] = {
     {"Summoning",
      0x00000080L,
      TV_STAFF,
-     '_', /*300*/
+     '_', /*  301*/
      0,
      0,
      7,
@@ -4572,7 +4571,7 @@ static struct treasureS treasureD[] = {
     {"Summoning",
      0x00000080L,
      TV_STAFF,
-     '_', /*301*/
+     '_', /*  302*/
      0,
      0,
      7,
@@ -4587,7 +4586,7 @@ static struct treasureS treasureD[] = {
     {"*Destruction*",
      0x00000200L,
      TV_STAFF,
-     '_', /*302*/
+     '_', /*  303*/
      0,
      2500,
      8,
@@ -4602,7 +4601,7 @@ static struct treasureS treasureD[] = {
     {"Starlight",
      0x00000400L,
      TV_STAFF,
-     '_', /*303*/
+     '_', /*  304*/
      0,
      400,
      9,
@@ -4617,7 +4616,7 @@ static struct treasureS treasureD[] = {
     {"Haste Monsters",
      0x00000800L,
      TV_STAFF,
-     '_', /*304*/
+     '_', /*  305*/
      0,
      0,
      10,
@@ -4632,7 +4631,7 @@ static struct treasureS treasureD[] = {
     {"Slow Monsters",
      0x00001000L,
      TV_STAFF,
-     '_', /*305*/
+     '_', /*  306*/
      0,
      800,
      11,
@@ -4647,7 +4646,7 @@ static struct treasureS treasureD[] = {
     {"Sleep Monsters",
      0x00002000L,
      TV_STAFF,
-     '_', /*306*/
+     '_', /*  307*/
      0,
      700,
      12,
@@ -4662,7 +4661,7 @@ static struct treasureS treasureD[] = {
     {"Cure Light Wounds",
      0x00004000L,
      TV_STAFF,
-     '_', /*307*/
+     '_', /*  308*/
      0,
      200,
      13,
@@ -4677,7 +4676,7 @@ static struct treasureS treasureD[] = {
     {"Detect Invisible",
      0x00008000L,
      TV_STAFF,
-     '_', /*308*/
+     '_', /*  309*/
      0,
      200,
      14,
@@ -4692,7 +4691,7 @@ static struct treasureS treasureD[] = {
     {"Speed",
      0x00010000L,
      TV_STAFF,
-     '_', /*309*/
+     '_', /*  310*/
      0,
      1000,
      15,
@@ -4707,7 +4706,7 @@ static struct treasureS treasureD[] = {
     {"Slowness",
      0x00020000L,
      TV_STAFF,
-     '_', /*310*/
+     '_', /*  311*/
      0,
      0,
      16,
@@ -4722,7 +4721,7 @@ static struct treasureS treasureD[] = {
     {"Mass Polymorph",
      0x00040000L,
      TV_STAFF,
-     '_', /*311*/
+     '_', /*  312*/
      0,
      750,
      17,
@@ -4737,7 +4736,7 @@ static struct treasureS treasureD[] = {
     {"Remove Curse",
      0x00080000L,
      TV_STAFF,
-     '_', /*312*/
+     '_', /*  313*/
      0,
      500,
      18,
@@ -4752,7 +4751,7 @@ static struct treasureS treasureD[] = {
     {"Detect Evil",
      0x00100000L,
      TV_STAFF,
-     '_', /*313*/
+     '_', /*  314*/
      0,
      350,
      19,
@@ -4767,7 +4766,7 @@ static struct treasureS treasureD[] = {
     {"Curing",
      0x00200000L,
      TV_STAFF,
-     '_', /*314*/
+     '_', /*  315*/
      0,
      1000,
      20,
@@ -4782,7 +4781,7 @@ static struct treasureS treasureD[] = {
     {"Dispel Evil",
      0x00400000L,
      TV_STAFF,
-     '_', /*315*/
+     '_', /*  316*/
      0,
      1200,
      21,
@@ -4797,7 +4796,7 @@ static struct treasureS treasureD[] = {
     {"Darkness",
      0x01000000L,
      TV_STAFF,
-     '_', /*316*/
+     '_', /*  317*/
      0,
      0,
      22,
@@ -4812,7 +4811,7 @@ static struct treasureS treasureD[] = {
     {"Darkness",
      0x01000000L,
      TV_STAFF,
-     '_', /*317*/
+     '_', /*  318*/
      0,
      0,
      22,
@@ -4827,7 +4826,7 @@ static struct treasureS treasureD[] = {
     {"Beginners-Magick",
      0x0000007FL,
      TV_MAGIC_BOOK,
-     '?', /*318*/
+     '?', /*  319*/
      0,
      25,
      64,
@@ -4842,7 +4841,7 @@ static struct treasureS treasureD[] = {
     {"Magick I",
      0x0000FF80L,
      TV_MAGIC_BOOK,
-     '?', /*319*/
+     '?', /*  320*/
      0,
      100,
      65,
@@ -4857,7 +4856,7 @@ static struct treasureS treasureD[] = {
     {"Magick II",
      0x00FF0000L,
      TV_MAGIC_BOOK,
-     '?', /*320*/
+     '?', /*  321*/
      0,
      400,
      66,
@@ -4872,7 +4871,7 @@ static struct treasureS treasureD[] = {
     {"The Mages' Guide to Power",
      0x7F000000L,
      TV_MAGIC_BOOK,
-     '?', /*321*/
+     '?', /*  322*/
      0,
      800,
      67,
@@ -4887,7 +4886,7 @@ static struct treasureS treasureD[] = {
     {"Beginners Handbook",
      0x000000FFL,
      TV_PRAYER_BOOK,
-     '?', /*322*/
+     '?', /*  323*/
      0,
      25,
      64,
@@ -4902,7 +4901,7 @@ static struct treasureS treasureD[] = {
     {"Words of Wisdom",
      0x0000FF00L,
      TV_PRAYER_BOOK,
-     '?', /*323*/
+     '?', /*  324*/
      0,
      100,
      65,
@@ -4917,7 +4916,7 @@ static struct treasureS treasureD[] = {
     {"Chants and Blessings",
      0x01FF0000L,
      TV_PRAYER_BOOK,
-     '?', /*324*/
+     '?', /*  325*/
      0,
      400,
      66,
@@ -4932,7 +4931,7 @@ static struct treasureS treasureD[] = {
     {"Exorcisms and Dispellings",
      0x7E000000L,
      TV_PRAYER_BOOK,
-     '?', /*325*/
+     '?', /*  326*/
      0,
      800,
      67,
@@ -4947,7 +4946,7 @@ static struct treasureS treasureD[] = {
     {"& Small Wooden Chest",
      0x13800000L,
      TV_CHEST,
-     '&', /*326*/
+     '&', /*  327*/
      0,
      20,
      1,
@@ -4962,7 +4961,7 @@ static struct treasureS treasureD[] = {
     {"& Large Wooden Chest",
      0x17800000L,
      TV_CHEST,
-     '&', /*327*/
+     '&', /*  328*/
      0,
      60,
      4,
@@ -4977,7 +4976,7 @@ static struct treasureS treasureD[] = {
     {"& Small Iron Chest",
      0x17800000L,
      TV_CHEST,
-     '&', /*328*/
+     '&', /*  329*/
      0,
      100,
      7,
@@ -4992,7 +4991,7 @@ static struct treasureS treasureD[] = {
     {"& Large Iron Chest",
      0x23800000L,
      TV_CHEST,
-     '&', /*329*/
+     '&', /*  330*/
      0,
      150,
      10,
@@ -5007,7 +5006,7 @@ static struct treasureS treasureD[] = {
     {"& Small Steel Chest",
      0x1B800000L,
      TV_CHEST,
-     '&', /*330*/
+     '&', /*  331*/
      0,
      200,
      13,
@@ -5022,7 +5021,7 @@ static struct treasureS treasureD[] = {
     {"& Large Steel Chest",
      0x33800000L,
      TV_CHEST,
-     '&', /*331*/
+     '&', /*  332*/
      0,
      250,
      16,
@@ -5037,7 +5036,7 @@ static struct treasureS treasureD[] = {
     {"& Rat Skeleton",
      0x00000000L,
      TV_MISC,
-     's', /*332*/
+     's', /*  333*/
      0,
      0,
      1,
@@ -5052,7 +5051,7 @@ static struct treasureS treasureD[] = {
     {"& Giant Centipede Skeleton",
      0x00000000L,
      TV_MISC,
-     's', /*333*/
+     's', /*  334*/
      0,
      0,
      2,
@@ -5067,7 +5066,7 @@ static struct treasureS treasureD[] = {
     {"Filthy Rags",
      0x00000000L,
      TV_SOFT_ARMOR,
-     '~', /*334*/
+     '~', /*  335*/
      0,
      0,
      63,
@@ -5082,7 +5081,7 @@ static struct treasureS treasureD[] = {
     {"& Door Spike~",
      0x00000000L,
      TV_SPIKE,
-     '~', /*335*/
+     '~', /*  336*/
      0,
      1,
      193,
@@ -5097,7 +5096,7 @@ static struct treasureS treasureD[] = {
     {"& Human Skeleton",
      0x00000000L,
      TV_MISC,
-     's', /*336*/
+     's', /*  337*/
      0,
      0,
      7,
@@ -5112,7 +5111,7 @@ static struct treasureS treasureD[] = {
     {"& Dwarf Skeleton",
      0x00000000L,
      TV_MISC,
-     's', /*337*/
+     's', /*  338*/
      0,
      0,
      8,
@@ -5127,7 +5126,7 @@ static struct treasureS treasureD[] = {
     {"& Elf Skeleton",
      0x00000000L,
      TV_MISC,
-     's', /*338*/
+     's', /*  339*/
      0,
      0,
      9,
@@ -5142,7 +5141,7 @@ static struct treasureS treasureD[] = {
     {"& Gnome Skeleton",
      0x00000000L,
      TV_MISC,
-     's', /*339*/
+     's', /*  340*/
      0,
      0,
      10,
@@ -5157,7 +5156,7 @@ static struct treasureS treasureD[] = {
     {"& Rounded Pebble~",
      0x00000000L,
      TV_PROJECTILE,
-     '{', /* 340*/
+     '{', /*  341*/
      1,
      1,
      129,
@@ -5172,7 +5171,7 @@ static struct treasureS treasureD[] = {
     {"& Iron Slag~",
      0x00000000L,
      TV_PROJECTILE,
-     '{', /* 341*/
+     '{', /*  342*/
      1,
      2,
      130,
@@ -5187,7 +5186,7 @@ static struct treasureS treasureD[] = {
     {"& Arrow~",
      0x00000000L,
      TV_PROJECTILE,
-     '{', /* 342*/
+     '{', /*  343*/
      2,
      1,
      131,
@@ -5202,7 +5201,7 @@ static struct treasureS treasureD[] = {
     {"& Bolt~",
      0x00000000L,
      TV_PROJECTILE,
-     '{', /* 343*/
+     '{', /*  344*/
      3,
      2,
      132,
@@ -5218,7 +5217,7 @@ static struct treasureS treasureD[] = {
     {"& Hard Biscuit~",
      0x00000000L,
      TV_FOOD,
-     ',', /*344*/
+     ',', /*  345*/
      500,
      1,
      93,
@@ -5233,7 +5232,7 @@ static struct treasureS treasureD[] = {
     {"& Strip~ of Beef Jerky",
      0x00000000L,
      TV_FOOD,
-     ',', /*345*/
+     ',', /*  346*/
      1750,
      2,
      94,
@@ -5248,7 +5247,7 @@ static struct treasureS treasureD[] = {
     {"& Piece~ of Sourdough Bread",
      0x00000000L,
      TV_FOOD,
-     ',', /*346*/
+     ',', /*  347*/
      500,
      1,
      95,
@@ -5263,7 +5262,7 @@ static struct treasureS treasureD[] = {
     {"& Bowl~ of Oatmeal",
      0x00000000L,
      TV_FOOD,
-     ',', /*347*/
+     ',', /*  348*/
      400,
      2,
      96,
@@ -5278,7 +5277,7 @@ static struct treasureS treasureD[] = {
     {"& Shovel",
      0x20000000L,
      TV_DIGGING,
-     '\\', /*348*/
+     '\\', /*  349*/
      0,
      15,
      4,
@@ -5293,7 +5292,7 @@ static struct treasureS treasureD[] = {
     {"& Pick",
      0x20000000L,
      TV_DIGGING,
-     '\\', /*349*/
+     '\\', /*  350*/
      1,
      50,
      1,
@@ -5308,7 +5307,7 @@ static struct treasureS treasureD[] = {
     {"a glyph of protection",
      0x00000000L,
      TV_GLYPH,
-     '^', /* 350 */
+     '^', /*  351*/
      3000,
      0,
      1,
@@ -5323,7 +5322,7 @@ static struct treasureS treasureD[] = {
     {"& Pint~ of Fine Grade Mush",
      0x00000000L,
      TV_FOOD,
-     ',', /* 351 */
+     ',', /*  352*/
      1500,
      1,
      97,
@@ -5338,7 +5337,7 @@ static struct treasureS treasureD[] = {
     {"an open pit",
      0x00000000L,
      TV_VIS_TRAP,
-     ' ', /* 352 */
+     ' ', /*  353*/
      1,
      0,
      1,
@@ -5353,7 +5352,7 @@ static struct treasureS treasureD[] = {
     {"an arrow trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  354*/
      3,
      0,
      2,
@@ -5368,7 +5367,7 @@ static struct treasureS treasureD[] = {
     {"a covered pit",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  355*/
      2,
      0,
      3,
@@ -5383,7 +5382,7 @@ static struct treasureS treasureD[] = {
     {"a trap door",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  356*/
      5,
      0,
      4,
@@ -5398,7 +5397,7 @@ static struct treasureS treasureD[] = {
     {"a gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  357*/
      3,
      0,
      5,
@@ -5413,7 +5412,7 @@ static struct treasureS treasureD[] = {
     {"a loose rock",
      0x00000000L,
      TV_INVIS_TRAP,
-     ';',
+     ';', /*  358*/
      0,
      0,
      6,
@@ -5428,7 +5427,7 @@ static struct treasureS treasureD[] = {
     {"a dart trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  359*/
      5,
      0,
      7,
@@ -5443,7 +5442,7 @@ static struct treasureS treasureD[] = {
     {"a strange rune",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  360*/
      5,
      0,
      8,
@@ -5458,7 +5457,7 @@ static struct treasureS treasureD[] = {
     {"some loose rock",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  361*/
      5,
      0,
      9,
@@ -5473,7 +5472,7 @@ static struct treasureS treasureD[] = {
     {"a gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  362*/
      10,
      0,
      10,
@@ -5488,7 +5487,7 @@ static struct treasureS treasureD[] = {
     {"a strange rune",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  363*/
      5,
      0,
      11,
@@ -5503,7 +5502,7 @@ static struct treasureS treasureD[] = {
     {"a blackened spot",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  364*/
      10,
      0,
      12,
@@ -5518,7 +5517,7 @@ static struct treasureS treasureD[] = {
     {"some corroded rock",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  365*/
      10,
      0,
      13,
@@ -5533,7 +5532,7 @@ static struct treasureS treasureD[] = {
     {"a gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  366*/
      5,
      0,
      14,
@@ -5548,7 +5547,7 @@ static struct treasureS treasureD[] = {
     {"a gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  367*/
      5,
      0,
      15,
@@ -5563,7 +5562,7 @@ static struct treasureS treasureD[] = {
     {"a gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  368*/
      5,
      0,
      16,
@@ -5578,7 +5577,7 @@ static struct treasureS treasureD[] = {
     {"a dart trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^',
+     '^', /*  369*/
      5,
      0,
      17,
@@ -5593,7 +5592,7 @@ static struct treasureS treasureD[] = {
     {"a dart trap",
      0x00000000L,
      TV_INVIS_TRAP,
-     '^', /* 370 */
+     '^', /*  370*/
      5,
      0,
      18,
@@ -5662,10 +5661,10 @@ static char* special_nameD[] = {
     "(Unlocked)",
 };
 static char* launcher_nameD[] = {
-  "",
-  "sling",
-  "bow",
-  "crossbow",
+    "",
+    "sling",
+    "bow",
+    "crossbow",
 };
 static char* projectile_nameD[] = {
     "",
