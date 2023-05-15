@@ -190,21 +190,6 @@ struct glyphS {
   uint32_t bitmap_offset;
 };
 
-static void
-glyph_debug(struct glyphS *g)
-{
-  Log("glyph "
-      "[ offset_x %d ] "
-      "[ offset_y %d ] "
-      "[ advance_x %d ] "
-      "[ pixel_width %d ] "
-      "[ pixel_height %d ] "
-      "[ bitmap_offset %u ] "
-      "\n",
-      g->offset_x, g->offset_y, g->advance_x, g->pixel_width, g->pixel_height,
-      g->bitmap_offset);
-}
-
 struct fontS {
   struct glyphS glyph[MAX_GLYPH];
   uint8_t bitmap[MAX_BITMAP];
@@ -216,27 +201,6 @@ struct fontS {
 };
 DATA struct fontS fontD;
 DATA struct SDL_Texture *font_textureD[MAX_GLYPH];
-
-static void
-font_debug(struct fontS *font)
-{
-  Log("font "
-      "[ max_pixel_width %u ] "
-      "[ max_pixel_height %u ] "
-      "[ font_size %u "
-      "[ left_adjustment %u ] "
-      "[ bitmap_used %ju ] "
-      "\n",
-      font->max_pixel_width, font->max_pixel_height, font->font_size,
-      font->left_adjustment, font->bitmap_used);
-  Log("  [ sizeof(struct fontS) %ju ] "
-      "[ MAX_BITMAP %jd ] "
-      "[ GLYPH_BYTE_COUNT %ju ] "
-      "[ other_byte_count %ju ] "
-      "\n",
-      sizeof(struct fontS), MAX_BITMAP, GLYPH_BYTE_COUNT,
-      MAX_FOOTPRINT - MAX_BITMAP - GLYPH_BYTE_COUNT);
-}
 
 // hex RGBA to little endian
 #define CHEX(x) __builtin_bswap32(x)
@@ -328,7 +292,7 @@ art_init()
   for (int it = 0; it < AL(art_textureD); ++it) {
     if (!art_textureD[it]) return 0;
   }
-  Log("Art textures available %ju", AL(art_textureD));
+  Log("Art textures available %d", MAX_ART);
 
   return 1;
 }
@@ -373,7 +337,7 @@ tart_init()
   for (int it = 0; it < AL(tart_textureD); ++it) {
     if (!tart_textureD[it]) return 0;
   }
-  Log("Treasure Art textures available %ju", AL(tart_textureD));
+  Log("Treasure Art textures available %d", MAX_TART);
 
   return 1;
 }
@@ -417,7 +381,7 @@ wart_init()
   for (int it = 0; it < AL(wart_textureD); ++it) {
     if (!wart_textureD[it]) return 0;
   }
-  Log("Wall Art textures available %ju", AL(wart_textureD));
+  Log("Wall Art textures available %d", MAX_WART);
 
   return 1;
 }
@@ -461,7 +425,7 @@ part_init()
   for (int it = 0; it < AL(part_textureD); ++it) {
     if (!part_textureD[it]) return 0;
   }
-  Log("Player Art textures available %ju", AL(part_textureD));
+  Log("Player Art textures available %d", MAX_PART);
 
   return 1;
 }
@@ -1630,7 +1594,6 @@ display_resize(int dw, int dh)
       MIN(AL(overlayD) * fheight, dh - gameplay_rectD.y - c3h * dh),
   };
   Log("textdst %dw %dh", textdst_rectD.w, textdst_rectD.h);
-  Log("wanted %jdw %jdh", AL(overlayD[0]) * fwidth, AL(overlayD) * fheight);
 
   // Input constraints
   if (TOUCH) {
