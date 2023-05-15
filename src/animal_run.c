@@ -11663,21 +11663,19 @@ py_look(y, x)
   struct objS* obj;
   struct monS* mon;
 
-  if (distance(uD.y, uD.x, y, x) <= MAX_SIGHT) {
-    c_ptr = &caveD[y][x];
-    mon = &entity_monD[c_ptr->midx];
+  c_ptr = &caveD[y][x];
+  mon = &entity_monD[c_ptr->midx];
 
-    if (mon->mlit) {
-      mon_desc(c_ptr->midx);
-      // hack: mon death_descD pronoun is a/an
-      death_descD[0] |= 0x20;
-      MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
-    } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
-      obj = &entity_objD[c_ptr->oidx];
-      if (obj->tval != TV_INVIS_TRAP) {
-        obj_desc(obj, obj->number);
-        MSG("You see %s.", descD);
-      }
+  if (mon->mlit) {
+    mon_desc(c_ptr->midx);
+    // hack: mon death_descD pronoun is a/an
+    death_descD[0] |= 0x20;
+    MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
+  } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
+    obj = &entity_objD[c_ptr->oidx];
+    if (obj->tval != TV_INVIS_TRAP) {
+      obj_desc(obj, obj->number);
+      MSG("You see %s.", descD);
     }
   }
 }
