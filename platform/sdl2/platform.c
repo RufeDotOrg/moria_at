@@ -261,9 +261,12 @@ DATA struct SDL_Texture *art_textureD[MAX_ART];
 int
 art_io()
 {
-  int rc = -1;
-  art_usedD = AL(artD);
-  rc = puff((void *)&artD, &art_usedD, artZ, &(uint64_t){sizeof(artZ)});
+  int rc;
+  void *bytes = &artD;
+  unsigned long size = AL(artD);
+  unsigned long zsize = sizeof(artZ);
+  rc = puff(bytes, &size, artZ, &zsize);
+  art_usedD = size;
   Log("art_io() [ rc %d ] [ art_usedD %ju ]\n", rc, art_usedD);
   return rc == 0;
 }
@@ -305,10 +308,12 @@ DATA struct SDL_Texture *tart_textureD[MAX_TART];
 int
 tart_io()
 {
-  int rc = -1;
-  tart_usedD = AL(tartD);
-  rc = puff((void *)&tartD, &tart_usedD, treasureZ,
-            &(uint64_t){sizeof(treasureZ)});
+  int rc;
+  void *bytes = &tartD;
+  unsigned long size = AL(tartD);
+  unsigned long zsize = sizeof(treasureZ);
+  rc = puff(bytes, &size, treasureZ, &zsize);
+  tart_usedD = size;
   Log("tart_io() [ rc %d ] [ tart_usedD %ju ]\n", rc, tart_usedD);
   return rc == 0;
 }
@@ -350,9 +355,12 @@ DATA struct SDL_Texture *wart_textureD[MAX_WART];
 int
 wart_io()
 {
-  int rc = -1;
-  wart_usedD = AL(wartD);
-  rc = puff((void *)&wartD, &wart_usedD, wallZ, &(uint64_t){sizeof(wallZ)});
+  int rc;
+  void *bytes = &wartD;
+  unsigned long size = AL(wartD);
+  unsigned long zsize = sizeof(wallZ);
+  rc = puff(bytes, &size, wallZ, &zsize);
+  wart_usedD = size;
   Log("wart_io() [ rc %d ] [ wart_usedD %ju ]\n", rc, wart_usedD);
   return rc == 0;
 }
@@ -394,9 +402,12 @@ DATA struct SDL_Texture *part_textureD[MAX_PART];
 int
 part_io()
 {
-  int rc = -1;
-  part_usedD = AL(partD);
-  rc = puff((void *)&partD, &part_usedD, playerZ, &(uint64_t){sizeof(playerZ)});
+  int rc;
+  void *bytes = &partD;
+  unsigned long size = AL(partD);
+  unsigned long zsize = sizeof(playerZ);
+  rc = puff(bytes, &size, playerZ, &zsize);
+  part_usedD = size;
   Log("part_io() [ rc %d ] [ part_usedD %ju ]\n", rc, part_usedD);
   return rc == 0;
 }
@@ -433,8 +444,12 @@ part_init()
 int
 font_load()
 {
-  return puff((void *)&fontD, &(uint64_t){sizeof(fontD)}, font_zip,
-              &(uint64_t){sizeof(font_zip)}) == 0;
+  int rc;
+  void *bytes = &fontD;
+  unsigned long size = sizeof(fontD);
+  unsigned long zsize = sizeof(font_zip);
+  rc = puff(bytes, &size, font_zip, &zsize);
+  return rc == 0;
 }
 
 int
