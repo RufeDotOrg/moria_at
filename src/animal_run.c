@@ -8000,19 +8000,24 @@ inven_overlay(begin, end)
       obj_desc(obj, obj->number);
       obj_detail(obj);
       if (drop_modeD) sum_weight = obj->number * obj->weight;
+
+      if (sum_weight == 0) {
+        len =
+            snprintf(overlayD[line], AL(overlayD[line]),
+                     "%c) %-51.051s%25.025s", 'a' + it - begin, descD, detailD);
+      } else {
+        len = snprintf(overlayD[line], AL(overlayD[0]),
+                       "%c) %-50.050s%19.019s %2d.%01dlb", 'a' + it - begin,
+                       descD, detailD, sum_weight / 10, sum_weight % 10);
+      }
     } else {
       descD[0] = 0;
       detailD[0] = 0;
+      len = 0;
+      overlayD[line][len++] = 'a' + it - begin;
+      overlayD[line][len++] = ')';
     }
 
-    if (sum_weight == 0) {
-      len = snprintf(overlayD[line], AL(overlayD[line]),
-                     "%c) %-51.051s%25.025s", 'a' + it - begin, descD, detailD);
-    } else {
-      len = snprintf(overlayD[line], AL(overlayD[0]),
-                     "%c) %-50.050s%19.019s %2d.%01dlb", 'a' + it - begin,
-                     descD, detailD, sum_weight / 10, sum_weight % 10);
-    }
     overlay_usedD[line] = len;
     line += 1;
   }

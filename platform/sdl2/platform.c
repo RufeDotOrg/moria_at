@@ -1792,15 +1792,24 @@ SDL_Event *event;
 }
 
 int
+overlay_end()
+{
+  for (int it = AL(overlay_copyD) - 1; it > 0; --it) {
+    if (overlay_copyD[it] > 2) return it;
+  }
+  return AL(overlay_copyD) - 1;
+}
+int
 overlay_bisect(dir)
 {
   int sample[AL(overlay_copyD)];
-  int sample_used, row;
+  int sample_used;
+  int row = finger_rowD;
 
+  sample[0] = CLAMP(row + dir, 0, AL(overlay_copyD) - 1);
   sample_used = 0;
-  row = finger_rowD;
   for (int it = row; it >= 0 && it < AL(overlay_copyD); it += dir) {
-    if (overlay_copyD[it] > 1) {
+    if (overlay_copyD[it] > 2) {
       sample[sample_used] = it;
       sample_used += 1;
     }
@@ -1872,7 +1881,10 @@ SDL_Event event;
         return 'A' + finger_rowD;
       }
       if (dx && !dy) {
-        finger_colD = CLAMP(finger_colD + dx, 0, 1);
+        if (finger)
+          finger_rowD = dx > 0 ? overlay_end() : 0;
+        else
+          finger_colD = CLAMP(finger_colD + dx, 0, 1);
       }
       if (dy && !dx) {
         if (finger)
