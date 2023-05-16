@@ -24,7 +24,7 @@ DATA uint32_t msg_writeD;
 DATA uint32_t msg_moreD;
 
 // Magic affect counters & names
-static int maD[MA_COUNT];
+static int32_t maD[MA_COUNT];
 static uint8_t spell_orderD[32];
 static uint8_t spell_chanceD[32];
 

@@ -276,7 +276,7 @@
 #define MA_AFIRE 5
 #define MA_AFROST 6
 #define MA_INVULN 7
-#define MA_SEE_INVIS 8  // TBD: move to immediate (breaks save format)
+#define MA_SEE_INVIS 8
 #define MA_SEE_INFRA 9
 #define MA_BLIND 10
 #define MA_FEAR 11
@@ -287,6 +287,10 @@
 #define MA_COUNT 19
 // Magic affects less than this value are persistent in the save file
 #define MA_SAVE 14
+
+#define MA_VIEW                                                      \
+  (1 << MA_SEE_INVIS) | (1 << MA_SEE_INFRA) | (1 << MA_DETECT_MON) | \
+      (1 << MA_DETECT_EVIL) | (1 << MA_DETECT_INVIS) | (1 << MA_BLIND)
 
 #define OBJ_BOLT_RANGE 18 /* Maximum range of bolts and balls      */
 

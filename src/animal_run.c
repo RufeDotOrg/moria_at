@@ -4381,39 +4381,46 @@ unlight_area(y, x)
 
   return known;
 }
-void
-py_move_light(y1, x1, y2, x2)
+static void
+py_light_off(y, x)
 {
   int row, col;
-  for (row = y1 - 1; row <= y1 + 1; ++row) {
-    for (col = x1 - 1; col <= x1 + 1; ++col) {
+  for (row = y - 1; row <= y + 1; ++row) {
+    for (col = x - 1; col <= x + 1; ++col) {
       caveD[row][col].cflag &= ~CF_TEMP_LIGHT;
     }
   }
+}
+static void
+py_light_on(y, x)
+{
+  int row, col;
+  for (row = y - 1; row <= y + 1; ++row) {
+    for (col = x - 1; col <= x + 1; ++col) {
+      struct caveS* cave = &caveD[row][col];
+      uint32_t cflag = cave->cflag | CF_SEEN;
 
-  if (maD[MA_BLIND] == 0) {
-    for (row = y2 - 1; row <= y2 + 1; ++row) {
-      for (col = x2 - 1; col <= x2 + 1; ++col) {
-        struct caveS* cave = &caveD[row][col];
-        uint32_t cflag = cave->cflag | CF_SEEN;
-
-        if (cave->fval >= MIN_WALL)
-          cflag |= (CF_PERM_LIGHT);
-        else
-          cflag |= (CF_TEMP_LIGHT);
-        if (cave->oidx && oset_sightfm(&entity_objD[cave->oidx]))
-          cflag |= CF_FIELDMARK;
-        cave->cflag = cflag;
-      }
+      if (cave->fval >= MIN_WALL)
+        cflag |= (CF_PERM_LIGHT);
+      else
+        cflag |= (CF_TEMP_LIGHT);
+      if (cave->oidx && oset_sightfm(&entity_objD[cave->oidx]))
+        cflag |= CF_FIELDMARK;
+      cave->cflag = cflag;
     }
-
-    if (near_light(y2, x2)) light_room(y2, x2);
   }
+
+  if (near_light(y, x)) light_room(y, x);
 }
 void
-py_check_view(y, x)
+py_check_view()
 {
-  py_move_light(y, x, y, x);
+  if (py_affect(MA_BLIND)) {
+    py_light_off(uD.y, uD.x);
+  } else {
+    py_light_on(uD.y, uD.x);
+  }
+
   FOR_EACH(mon, { update_mon(it_index); });
 }
 int
@@ -5463,42 +5470,39 @@ calc_bonuses()
   }
   cbD.prev_weapon = invenD[INVEN_WIELD];
 }
-// Combat bonuses are applied in calc_bonuses
-// Hp bonuses are reapplied in calc_hitpoints
+// uD.mflags && maD are NOT up-to-date at the time of this call
 void
 ma_bonuses(maffect, factor)
 {
   switch (maffect) {
     case MA_BLESS:
-      uD.ma_ac += factor * 2;
-      uD.bth += factor * 5;
-      uD.bowth += factor * 5;
       if (factor > 0)
         msg_print("You feel righteous!");
       else if (factor < 0)
         msg_print("The prayer has expired.");
+      uD.ma_ac += factor * 2;
+      uD.bth += factor * 5;
+      uD.bowth += factor * 5;
       break;
     case MA_HERO:
-      uD.chp += (factor > 0) * 10;
-      uD.mhp += factor * 10;
-      uD.bth += factor * 12;
-      uD.bowth += factor * 12;
       if (factor > 0)
         msg_print("You feel like a HERO!");
       else if (factor < 0)
         msg_print("The heroism wears off.");
-      maD[MA_FEAR] = 0;
+      uD.chp += (factor > 0) * 10;
+      uD.mhp += factor * 10;
+      uD.bth += factor * 12;
+      uD.bowth += factor * 12;
       break;
     case MA_SUPERHERO:
-      uD.chp += (factor > 0) * 20;
-      uD.mhp += factor * 20;
-      uD.bth += factor * 24;
-      uD.bowth += factor * 24;
       if (factor > 0)
         msg_print("You feel like a SUPER-HERO!");
       else if (factor < 0)
         msg_print("The super heroism wears off.");
-      maD[MA_FEAR] = 0;
+      uD.chp += (factor > 0) * 20;
+      uD.mhp += factor * 20;
+      uD.bth += factor * 24;
+      uD.bowth += factor * 24;
       break;
     case MA_FAST:
       if (factor > 0)
@@ -5525,11 +5529,11 @@ ma_bonuses(maffect, factor)
         msg_print("You no longer feel safe from frost.");
       break;
     case MA_INVULN:
-      uD.ma_ac += factor * 100;
       if (factor > 0)
         msg_print("Your skin turns into steel!");
       else if (factor < 0)
         msg_print("Your skin returns to normal.");
+      uD.ma_ac += factor * 100;
       break;
     case MA_SEE_INVIS:
       break;
@@ -5538,7 +5542,6 @@ ma_bonuses(maffect, factor)
       break;
     case MA_BLIND:
       if (factor < 0) msg_print("The veil of darkness lifts.");
-      py_check_view(uD.y, uD.x);
       break;
     case MA_FEAR:
       if (factor < 0) msg_print("You feel bolder now.");
@@ -5551,15 +5554,15 @@ ma_bonuses(maffect, factor)
       break;
     case MA_RECALL:
       if (factor < 0) {
+        if (dun_level) {
+          msg_print("You feel yourself yanked upwards!");
+          dun_level = 0;
+        } else {
+          msg_print("You feel yourself yanked downwards!");
+          dun_level = uD.max_dlv;
+        }
         new_level_flag = 1;
         countD.paralysis += 1;
-        if (dun_level) {
-          dun_level = 0;
-          msg_print("You feel yourself yanked upwards!");
-        } else {
-          dun_level = uD.max_dlv;
-          msg_print("You feel yourself yanked downwards!");
-        }
       }
       break;
     default:
@@ -5577,6 +5580,8 @@ ma_duration(maidx, nturn)
   } else if (maidx == MA_FEAR && py_tr(TR_HERO)) {
     msg_print("A hero recovers quickly.");
     nturn = 0;
+  } else if (maidx == MA_HERO || maidx == MA_SUPERHERO) {
+    maD[MA_FEAR] = 0;
   }
 
   maD[maidx] += 2 * nturn;
@@ -6577,11 +6582,7 @@ teleport_to(ny, nx)
 
   y = uD.y;
   x = uD.x;
-  for (i = y - 1; i <= y + 1; i++)
-    for (j = x - 1; j <= x + 1; j++) {
-      c_ptr = &caveD[i][j];
-      c_ptr->cflag &= ~CF_TEMP_LIGHT;
-    }
+  py_light_off(y, x);
 
   dis = 1;
   ctr = 0;
@@ -6599,7 +6600,7 @@ teleport_to(ny, nx)
   uD.y = y;
   uD.x = x;
   panel_update(&panelD, y, x, FALSE);
-  py_check_view(y, x);
+  py_check_view();
 }
 // TBD: We may loop infinitely with the added restriction of oidx != 0
 // Phase door (short range) teleport runs a higher risk
@@ -7905,7 +7906,7 @@ destroy_area(y, x)
   }
   msg_print("There is a searing blast of light!");
   ma_duration(MA_BLIND, 10 + randint(10));
-  py_move_light(y, x, y, x);
+  py_light_off(uD.y, uD.x);
 }
 void
 starlite(y, x)
@@ -12929,17 +12930,19 @@ player_maint()
   }
 }
 void
-ma_tick()
+ma_tick(check_view)
 {
   uint32_t active, delta;
+  int32_t tick[AL(maD)];
 
   active = 0;
   for (int it = 0; it < AL(maD); ++it) {
     int val = maD[it];
-    if (val) {
-      val -= 1;
-      maD[it] = val;
+    if (val > 1) {
+      tick[it] = val - 1;
       active |= (1 << it);
+    } else {
+      tick[it] = 0;
     }
   }
 
@@ -12953,9 +12956,13 @@ ma_tick()
       }
     }
   }
+  // ma_bonuses() is processed before applying count/flag changes
+  memcpy(maD, tick, sizeof(maD));
   uD.mflag = active;
+  // calculations are called after count/flag changes
   if (delta) {
     calc_bonuses();
+    if (check_view && (MA_VIEW & delta)) py_check_view();
   }
 }
 void
@@ -13456,12 +13463,13 @@ dungeon()
               hit_trap(y, x, &y, &x);
             }
 
-            py_move_light(uD.y, uD.x, y, x);
-
-            // Perception check on movement
+            py_light_off(uD.y, uD.x);
+            py_light_on(y, x);
             turn_flag = TRUE;
             uD.y = y;
             uD.x = x;
+
+            // Perception check on movement
             if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
             if (py_affect(MA_BLIND) == 0 && find_flag) {
               if (find_event(y, x)) find_flag = FALSE;
@@ -13493,7 +13501,7 @@ dungeon()
       }
     } while (!turn_flag);
 
-    ma_tick();  // rising
+    ma_tick(0);  // rising
     if (!new_level_flag) {
       creatures();
       teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
@@ -13504,7 +13512,7 @@ dungeon()
     if (!town && (turnD & ~-1024) == 0) store_maint();
     turnD += 1;
     tick();
-    ma_tick();  // falling
+    ma_tick(!new_level_flag);  // falling
   } while (!new_level_flag);
 }
 void
@@ -13600,7 +13608,7 @@ main(int argc, char** argv)
     }
 
     panel_update(&panelD, uD.y, uD.x, TRUE);
-    py_check_view(uD.y, uD.x);
+    py_check_view();
     dungeon();
 
     if (!death) {
