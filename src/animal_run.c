@@ -5572,19 +5572,33 @@ ma_bonuses(maffect, factor)
 }
 // Effects are ticked twice per turn (rising/falling edge)
 static void
-ma_duration(maidx, nturn)
+ma_ticks(maidx, tick_count)
 {
   if (maidx == MA_BLIND && py_tr(TR_SEEING)) {
     msg_print("Your sight is no worse.");
-    nturn = 0;
+    tick_count = 0;
   } else if (maidx == MA_FEAR && py_tr(TR_HERO)) {
     msg_print("A hero recovers quickly.");
-    nturn = 0;
+    tick_count = 0;
   } else if (maidx == MA_HERO || maidx == MA_SUPERHERO) {
     maD[MA_FEAR] = 0;
   }
 
-  maD[maidx] += 2 * nturn;
+  maD[maidx] += tick_count;
+}
+static void
+ma_duration(maidx, nturn)
+{
+  ma_ticks(maidx, nturn * 2);
+}
+// Combat affects result in an odd tick count
+// Such that the player recovers from an affect before their turn
+static void
+ma_combat(maidx, nturn)
+{
+  int tick_count;
+  tick_count = maD[maidx];
+  ma_ticks(maidx, nturn * 2 + (tick_count % 2 == 0));
 }
 static int
 ma_clear(maidx)
@@ -11061,9 +11075,9 @@ mon_attack(midx)
             if (maD[MA_FEAR] == 0) msg_print("You remain bold.");
           } else if (maD[MA_FEAR] == 0) {
             msg_print("You are suddenly afraid!");
-            ma_duration(MA_FEAR, 3 + randint(cre->level));
+            ma_combat(MA_FEAR, 3 + randint(cre->level));
           } else {
-            ma_duration(MA_FEAR, 3);
+            ma_combat(MA_FEAR, 3);
           }
           break;
         case 5: /*Fire attack  */
@@ -11090,10 +11104,10 @@ mon_attack(midx)
         case 10: /*Blindness attack*/
           py_take_hit(damage);
           if (maD[MA_BLIND]) {
-            ma_duration(MA_BLIND, 5);
+            ma_combat(MA_BLIND, 5);
           } else {
             msg_print("Your eyes begin to sting.");
-            ma_duration(MA_BLIND, 10 + randint(cre->level));
+            ma_combat(MA_BLIND, 10 + randint(cre->level));
           }
           break;
         case 11: /*Paralysis attack*/
@@ -12126,9 +12140,9 @@ mon_try_spell(midx, cdis)
           if (player_saves())
             msg_print("You resist!");
           else if (maD[MA_BLIND])
-            ma_duration(MA_BLIND, 6);
+            ma_combat(MA_BLIND, 6);
           else {
-            ma_duration(MA_BLIND, 12 + randint(3));
+            ma_combat(MA_BLIND, 12 + randint(3));
           }
           break;
         case 12: /*Cause Confuse */
@@ -12143,9 +12157,9 @@ mon_try_spell(midx, cdis)
           if (player_saves())
             msg_print("You resist!");
           else if (maD[MA_FEAR])
-            ma_duration(MA_FEAR, 2);
+            ma_combat(MA_FEAR, 2);
           else
-            ma_duration(MA_FEAR, randint(5) + 3);
+            ma_combat(MA_FEAR, randint(5) + 3);
           break;
         case 14: /*Summon Monster*/
         {
@@ -12163,9 +12177,9 @@ mon_try_spell(midx, cdis)
           else if (player_saves())
             msg_print("You resist!");
           else if (py_affect(MA_SLOW))
-            ma_duration(MA_SLOW, 2);
+            ma_combat(MA_SLOW, 2);
           else
-            ma_duration(MA_SLOW, randint(5) + 3);
+            ma_combat(MA_SLOW, randint(5) + 3);
           break;
         case 17: /*Drain Mana   */
           if (uD.cmana > 0) {
