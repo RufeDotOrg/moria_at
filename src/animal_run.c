@@ -2497,12 +2497,20 @@ struct objS* obj;
   return (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE);
 }
 static int
+oset_mon_pickup(obj)
+struct objS* obj;
+{
+  // Underflow to exclude 0
+  uint8_t tval = obj->tval - 1;
+  return (tval < TV_MON_PICK_UP);
+}
+static int
 oset_pickup(obj)
 struct objS* obj;
 {
   // Underflow to exclude 0
   uint8_t tval = obj->tval - 1;
-  return (tval < (TV_MAX_PICK_UP - 1));
+  return (tval < TV_MAX_PICK_UP);
 }
 static int
 obj_mon_pickup(obj)
@@ -8861,7 +8869,7 @@ int *uy, *ux;
             ident |= detect_obj(oset_gold, known);
             break;
           case 16:
-            ident |= detect_obj(oset_pickup, known);
+            ident |= detect_obj(oset_mon_pickup, known);
             break;
           case 17:
             ident |= detect_obj(oset_trap, known);
@@ -9677,7 +9685,7 @@ int *uy, *ux;
             ident |= detect_obj(oset_gold, known);
             break;
           case 5:
-            ident |= detect_obj(oset_pickup, known);
+            ident |= detect_obj(oset_mon_pickup, known);
             break;
           case 6:
             py_teleport(100, uy, ux);
