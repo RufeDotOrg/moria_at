@@ -17,6 +17,15 @@ struct bufS {
     x, sizeof(x) \
   }
 
+// Summary of savechar
+struct summaryS
+{
+  int slevel;
+  int sclass;
+  int srace;
+  int sdepth;
+};
+
 // Platform visualization info
 struct vizS {
   char sym;

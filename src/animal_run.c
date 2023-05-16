@@ -326,12 +326,12 @@ uspelltable()
 }
 static char backupD[16];
 char*
-usavebackup()
+savename_by_class(clidx)
 {
   char* dst;
   memcpy(backupD, AP("save"));
   dst = &backupD[4];
-  for (char* src = classD[uD.clidx].name; *src != 0; ++src) {
+  for (char* src = classD[clidx].name; *src != 0; ++src) {
     *dst++ = *src | 0x20;
   }
   *dst = 0;
@@ -3748,7 +3748,7 @@ hard_reset()
 
   // Replay state
   input_record_readD = input_action_usedD = 0;
-  input_record_writeD = AS(input_actionD, input_resumeD);
+  input_record_writeD = input_resumeD ? AS(input_actionD, input_resumeD) : 0;
   input_resumeD = 0;
 }
 BOOL
@@ -10411,6 +10411,51 @@ show_character()
   return inkey();
 }
 int
+py_archive_select()
+{
+  struct summaryS summary[AL(classD)] = {0};
+  overlay_submodeD = 0;
+  int line;
+  char c;
+  int save_count;
+  uint8_t iidx;
+
+  save_count = 0;
+  iidx = -1;
+  for (int it = 0; it < AL(classD); ++it) {
+    if (platformD.load(savename_by_class(it))) {
+      save_count += 1;
+      summary[it].slevel = uD.lev;
+      summary[it].sclass = uD.clidx;
+      summary[it].srace = uD.ridx;
+      summary[it].sdepth = dun_level * 50;
+    }
+  }
+
+  if (save_count) {
+    do {
+      line = 0;
+      for (int it = 0; it < AL(classD); ++it) {
+        if (summary[it].slevel) {
+          BufMsg(overlay, "%c) Level %d %s %s (%d feet)", 'a' + it,
+                 summary[it].slevel, raceD[summary[it].srace].name,
+                 classD[it].name, summary[it].sdepth);
+        } else {
+          BufMsg(overlay, " ");
+        }
+      }
+      BufMsg(overlay, "g) Goto Character Creation");
+      DRAWMSG("Which class archive would you like to restore?");
+      c = inkey();
+      if (is_ctrl(c) || c == 'g') return -1;
+      iidx = c - 'a';
+    } while (iidx >= AL(summary));
+    if (!platformD.load(savename_by_class(iidx))) iidx = -1;
+  }
+
+  return iidx;
+}
+int
 py_class_select()
 {
   char c;
@@ -10549,18 +10594,52 @@ player_confirm()
   return 0;
 }
 int
+py_reset()
+{
+  char c;
+  uint8_t iidx;
+  int line;
+  char* savename;
+
+  savename = savename_by_class(uD.clidx);
+  overlay_submodeD = 0;
+  do {
+    line = 0;
+    BufMsg(overlay, "a) Archive this %s for future play",
+           classD[uD.clidx].name);
+    BufMsg(overlay, "-");
+    BufMsg(overlay, "-");
+    BufMsg(overlay, "d) Delete this character");
+    DRAWMSG("Game Reset");
+    c = inkey();
+    switch (c) {
+      case 'a':
+        if (platformD.copy("savechar", savename) != 0) {
+          msg_print("Backup failed.");
+          msg_pause();
+          c = ESCAPE;
+          break;
+        }
+
+        // fallthrough
+      case 'd':
+        platformD.erase("savechar");
+        longjmp(restartD, 1);
+    }
+  } while (!is_ctrl(c));
+  return -1;
+}
+int
 py_menu()
 {
   char c;
   int line, input_action, memory_ok;
   char* prompt;
-  char* savename;
 
   input_action = input_action_usedD;
   // One command may be written ahead (e.g. py_look) and is invalid for replay
   memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
                input_action_usedD <= AL(input_actionD) - 1);
-  savename = usavebackup();
 
   if (death) {
     snprintf(descD, AL(descD), " Killed by %s. ", death_descD);
@@ -10582,12 +10661,11 @@ py_menu()
       BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
              memory_ok ? "memory OK" : "memory FAIL");
     }
-    BufMsg(overlay, "c) Copy last save to backup slot (%s)", savename);
+    BufMsg(overlay, "-");
     BufMsg(overlay, "d) Dungeon reset");
-    BufMsg(overlay, "e) Erase character (new game)");
-    BufMsg(overlay, "f) Fallback to backup slot (%s)", savename);
-    BufMsg(overlay,
-           "g) Go to backup (deprecated| to be removed on June 1st 2023)");
+    BufMsg(overlay, "-");
+    BufMsg(overlay, "-");
+    BufMsg(overlay, "g) Game reset");
 
     if (!in_subcommand(prompt, &c)) break;
 
@@ -10607,50 +10685,12 @@ py_menu()
         input_resumeD = MAX(0, input_action - 2 + death);
         longjmp(restartD, 1);
 
-      case 'c':
-        if (platformD.copy) {
-          if (platformD.copy("savechar", savename) == 0) {
-            msg_print("Backup complete.");
-          } else {
-            msg_print("Backup failed.");
-          }
-          msg_pause();
-          return 0;
-        }
-        continue;
-
       case 'd':
         longjmp(restartD, 1);
 
-      case 'e':
-        if (player_confirm()) {
-          platformD.erase("savechar");
-          longjmp(restartD, 1);
-        }
-        continue;
-
-      case 'f':
-        if (platformD.copy) {
-          if (player_confirm()) {
-            if (platformD.copy(savename, "savechar") == 0) longjmp(restartD, 1);
-
-            msg_print("Aborted; No backup found.");
-            msg_pause();
-          }
-        }
-        continue;
-
       case 'g':
-        if (platformD.copy) {
-          if (player_confirm()) {
-            if (platformD.copy("savebackup", "savechar") == 0)
-              longjmp(restartD, 1);
-
-            msg_print("Aborted; No backup found.");
-            msg_pause();
-          }
-        }
-        continue;
+        py_reset();
+        return 0;
     }
   }
   return 0;
@@ -13598,6 +13638,8 @@ main(int argc, char** argv)
   hard_reset();
 
   if (platformD.load("savechar")) {
+  } else if (py_archive_select() < AL(classD)) {
+    platformD.save("savechar");
   } else {
     if (py_class_select() < 0) return platformD.postgame();
 
