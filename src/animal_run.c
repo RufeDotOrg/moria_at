@@ -10481,6 +10481,7 @@ py_class_select()
       if (preview < AL(classD) && preview != clidx) {
         clidx = preview;
         py_init(seed[clidx], clidx);
+        calc_bonuses();
       }
 
       line = 0;
