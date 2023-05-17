@@ -912,7 +912,7 @@ mode_change()
     if (mprev == 1) ui_stateD[subprev] = finger_rowD;
 
     if (mnext == 1) {
-      finger_rowD = (subnext != 0) ? ui_stateD[subnext] : 0;
+      finger_rowD = (subnext > 0) ? ui_stateD[subnext] : 0;
       finger_colD = (subnext == 'e') ? 1 : 0;
 
       overlay_autoselect();

@@ -10602,7 +10602,7 @@ py_reset()
   char* savename;
 
   savename = savename_by_class(uD.clidx);
-  overlay_submodeD = 0;
+  overlay_submodeD = -1;
   do {
     line = 0;
     BufMsg(overlay, "a) Archive this %s for future play",
