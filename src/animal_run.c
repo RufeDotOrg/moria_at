@@ -5032,8 +5032,6 @@ void obj_detail(obj) struct objS* obj;
       snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
       strcat(detailD, tmp_str);
     }
-
-    if (obj->flags & TR_CURSED) strcat(detailD, " {cursed}");
   } else {
     if (obj->idflag & ID_MAGIK) strcat(detailD, " {magik}");
     if (obj->idflag & ID_DAMD) strcat(detailD, " {damned}");
