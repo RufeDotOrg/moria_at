@@ -1127,7 +1127,7 @@ platform_draw()
     affect_draw(width, height);
   }
 
-  {
+  if (maD[MA_BLIND] == 0) {
     SDL_Surface *surface = mmsurfaceD;
     SDL_Texture *texture = mmtextureD;
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
