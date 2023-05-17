@@ -10388,8 +10388,10 @@ show_character()
   BufMsg(screen, "%-13.013s: %6d", "Bows", xbowth);
   BufMsg(screen, "%-13.013s: %6d", "Saving Throw", usave());
   sptype = classD[uD.clidx].spell;
-  BufMsg(screen, "%-13.013s: %6d",
-         sptype == SP_MAGE ? "Spell Memory" : "Prayer Memory", uspellcount());
+  if (sptype) {
+    BufMsg(screen, "%-13.013s: %6d",
+           sptype == SP_MAGE ? "Spell Memory" : "Prayer Memory", uspellcount());
+  }
   BufPad(screen, MAX_A * 3, 23);
 
   line = 2 * MAX_A + 1;
@@ -10515,7 +10517,6 @@ py_class_select()
       } else if (is_ctrl(c)) {
         break;
       }
-
     }
   } while (1);
 
