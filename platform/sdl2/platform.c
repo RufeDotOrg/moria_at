@@ -301,7 +301,7 @@ art_init()
 }
 
 // treasure
-#define MAX_TART 49
+#define MAX_TART 53
 DATA uint8_t tartD[16 * 1024];
 DATA uint64_t tart_usedD;
 DATA struct SDL_Texture *tart_textureD[MAX_TART];
@@ -606,7 +606,7 @@ struct vizS *viz;
     case TV_CHEST:
       if (obj->idflag & ID_REVEAL && obj->flags & CH_TRAPPED) return 33;
       if (obj->flags & CH_LOCKED) return 34;
-      // TBD: obj->sn == SN_EMPTY
+      if (obj->sn == SN_EMPTY) return 35;
       return 32;
     case TV_SPIKE:
       return 49;
@@ -686,9 +686,9 @@ struct vizS *viz;
       if (obj->p1 == 0 || (obj->idflag & ID_REVEAL) == 0)
         return 29;
       else if (obj->p1 > 0)
-        return 35;  // locked
+        return 36;  // locked
       else if (obj->p1 < 0)
-        return 36;  // stuck
+        return 37;  // stuck
     case TV_UP_STAIR:
       return 30;
     case TV_DOWN_STAIR:
@@ -697,7 +697,7 @@ struct vizS *viz;
       viz->floor = 2;
       break;
     case TV_GLYPH:
-      return 37;
+      return 38;
   }
   return 0;
 }
