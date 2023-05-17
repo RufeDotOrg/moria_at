@@ -6130,7 +6130,7 @@ static void py_stats(stats, len) int8_t* stats;
   for (i = 0; i < len; i++)
     stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
-int
+void
 py_init(prng, csel)
 {
   int hitdie;
@@ -6216,7 +6216,6 @@ py_init(prng, csel)
   uD.chp_frac = 0;
   uD.cmana = uD.mmana = umana_by_level(1);
   uD.cmana_frac = 0;
-  return csel;
 }
 void
 py_inven_init()
@@ -10414,12 +10413,12 @@ int
 py_archive_select()
 {
   struct summaryS summary[AL(classD)] = {0};
-  overlay_submodeD = 0;
   int line;
   char c;
   int save_count;
   uint8_t iidx;
 
+  overlay_submodeD = 0;
   save_count = 0;
   iidx = -1;
   for (int it = 0; it < AL(classD); ++it) {
@@ -10461,7 +10460,7 @@ py_class_select()
   char c;
   int line, clidx;
   int srow, scol;
-  uint8_t iidx;
+  uint8_t preview, iidx;
   fn selection = platformD.selection;
   int seed[AL(classD)];
 
@@ -10471,20 +10470,17 @@ py_class_select()
 
   c = 0;
   clidx = -1;
-  iidx = 0;
+  preview = 0;
+  // Keep ui state; may tranisiton to mode 2 for show_character()
   overlay_submodeD = 'c';
+  ui_stateD['c'] = 0;
   do {
     if (is_upper(c)) {
       c = show_character();
     } else {
-      if (selection) {
-        selection(&scol, &srow);
-        iidx = srow;
-      }
-
-      if (iidx < AL(seed) && iidx != clidx) {
-        if (clidx == -1) seed[iidx] = platformD.seed();
-        clidx = py_init(seed[iidx], iidx);
+      if (preview < AL(classD) && preview != clidx) {
+        clidx = preview;
+        py_init(seed[clidx], clidx);
       }
 
       line = 0;
@@ -10501,22 +10497,24 @@ py_class_select()
       }
       DRAWMSG("Which character class would you like to play?");
       c = inkey();
-
       iidx = c - 'a';
-      if (iidx < AL(classD)) {
-        if (selection)
-          return iidx;
-        else
-          clidx = -1;
+
+      if (selection) {
+        selection(&scol, &srow);
+        preview = srow;
       }
-    }
-    if (c == ESCAPE) {
-      if (selection)
+      if (iidx < AL(classD)) {
+        if (preview == iidx) return iidx;
+        preview = iidx;
+      }
+
+      if (c == ' ' || c == ESCAPE) {
+        seed[preview] = platformD.seed();
         clidx = -1;
-      else
-        return clidx;
-    } else if (is_ctrl(c)) {
-      break;
+      } else if (is_ctrl(c)) {
+        break;
+      }
+
     }
   } while (1);
 
