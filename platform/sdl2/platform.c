@@ -609,7 +609,7 @@ struct vizS *viz;
       if (obj->sn == SN_EMPTY) return 35;
       return 32;
     case TV_SPIKE:
-      return 49;
+      return 50;
     case TV_PROJECTILE:
       return 13;
     case TV_LIGHT:
@@ -635,7 +635,7 @@ struct vizS *viz;
       if (obj->subval <= 5)
         return 11;  // helm
       else
-        return 38;  // crown
+        return 39;  // crown
     case TV_SHIELD:
       return 2;
     case TV_HARD_ARMOR:
@@ -660,7 +660,7 @@ struct vizS *viz;
       return 4;
     case TV_FOOD:
       if ((obj->subval & 0x3f) <= 20)
-        return 39;  // mushroom/mold
+        return 40;  // mushroom/mold
       else
         return 19;  // food
     case TV_MAGIC_BOOK:
