@@ -1498,7 +1498,7 @@ void tr_obj_copy(tidx, obj) struct objS* obj;
   obj->p1 = tr_ptr->p1;
   obj->cost = tr_ptr->cost;
   obj->subval = tr_ptr->subval;
-  obj->number = tr_ptr->number;
+  obj->number = 1;
   obj->weight = tr_ptr->weight;
   obj->tohit = tr_ptr->tohit;
   obj->todam = tr_ptr->todam;
@@ -2224,7 +2224,7 @@ void magic_treasure(obj, level) struct objS* obj;
       break;
 
     case TV_FOOD:
-      if (obj->number > 1) obj->number = randint(obj->number);
+      if (obj->flags == 0) obj->number = randint(5);
       break;
 
     default:

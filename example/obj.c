@@ -88,20 +88,18 @@ main()
         "%d,"
         "%d,"
         "%u,"
+        "%d,"
+        "%d,"
+        "%d,"
+        "%d,"
         "%u,"
-        "%u,"
-        "%d,"
-        "%d,"
-        "%d,"
-        "%d,"
         "{%u, %u},"
         "%u"
         "},\n",
         tr_ptr->name, tr_ptr->flags, tval_name(tr_ptr->tval),
-        tchar_name(tr_ptr->tchar), it, tr_ptr->p1, tr_ptr->cost, tr_ptr->subval,
-        tr_ptr->number, tr_ptr->weight, tr_ptr->tohit, tr_ptr->todam,
-        tr_ptr->ac, tr_ptr->toac, tr_ptr->damage[0], tr_ptr->damage[1],
-        tr_ptr->level);
+        tchar_name(tr_ptr->tchar), it, tr_ptr->p1, tr_ptr->cost, tr_ptr->weight,
+        tr_ptr->tohit, tr_ptr->todam, tr_ptr->ac, tr_ptr->toac, tr_ptr->subval,
+        tr_ptr->damage[0], tr_ptr->damage[1], tr_ptr->level);
   }
   printf("};\n");
 
