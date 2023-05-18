@@ -2765,17 +2765,6 @@ store_tr_stack(sidx, tr_index, stack)
     }
   }
 
-  if (tr_ptr->subval & STACK_PROJECTILE) {
-    for (int it = 0; it < AL(store_objD[0]); ++it) {
-      obj = &store_objD[sidx][it];
-      if (obj->tidx == tr_index) {
-        stack = MIN(255, randint(stack) + obj->number);
-        obj->number = stack;
-        return FALSE;
-      }
-    }
-  }
-
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     obj = &store_objD[sidx][it];
     if (obj->tidx == 0) {
@@ -2783,7 +2772,7 @@ store_tr_stack(sidx, tr_index, stack)
         tr_obj_copy(tr_index, obj);
         magic_treasure(obj, OBJ_TOWN_LEVEL);
       } while (obj->cost <= 0 || obj->cost >= ownerD[storeD[sidx]].max_cost);
-      obj->number = stack;
+      if ((obj->subval & STACK_ANY) == 0) obj->number = stack;
       obj->idflag = ID_REVEAL;
       return TRUE;
     }
@@ -2825,7 +2814,10 @@ store_maint()
         k = randint(MAX_STORE_INVEN) - 1;
         obj = &store_objD[i][k];
         if (obj->number) {
-          store_ctr -= store_item_destroy(i, k, randint(obj->number));
+          store_ctr -= store_item_destroy(i, k,
+                                          (obj->subval & STACK_PROJECTILE)
+                                              ? obj->number
+                                              : randint(obj->number));
           j -= 1;
         }
       } while (j > 0);
@@ -2836,22 +2828,11 @@ store_maint()
       if (store_ctr < MIN_STORE_INVEN) j = MIN_STORE_INVEN - store_ctr;
       j += randint(STORE_TURN_AROUND);
 
-      if (0) {
-        do {
-          k = randint(MAX_DUNGEON_OBJ - 1);
-          if (treasureD[k].cost > 0) {
-            store_ctr += store_tr_stack(i, k, 1);
-            j -= 1;
-          }
-        } while (j > 0);
-      } else {
-        do {
-          k = randint(MAX_STORE_CHOICE) - 1;
-          store_ctr +=
-              store_tr_stack(i, store_choiceD[i][k], store_stockD[i][k]);
-          j -= 1;
-        } while (j > 0);
-      }
+      do {
+        k = randint(MAX_STORE_CHOICE) - 1;
+        store_ctr += store_tr_stack(i, store_choiceD[i][k], store_stockD[i][k]);
+        j -= 1;
+      } while (j > 0);
     }
     store_sort(i);
   }
