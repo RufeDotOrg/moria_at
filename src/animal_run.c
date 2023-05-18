@@ -2311,12 +2311,6 @@ void tr_sample(tr_ptr) struct treasureS* tr_ptr;
   if (k) knownD[k - 1][subval] = TRK_SAMPLE;
 }
 BOOL
-obj_reveal(obj)
-struct objS* obj;
-{
-  return ((obj->idflag & ID_REVEAL) != 0);
-}
-BOOL
 vuln_fire(obj)
 struct objS* obj;
 {
@@ -4845,6 +4839,11 @@ todam_adj()
   else
     return (6);
 }
+static int
+ustackweight()
+{
+  return 10 * statD.use_stat[A_STR];
+}
 int
 umana_by_level(level)
 {
@@ -5957,19 +5956,32 @@ static void inven_used_obj(obj) struct objS* obj;
   }
 }
 static int
+stacklimit_by_max_weight(max, weight)
+{
+  int stacklimit = 1;
+  while (2 * stacklimit * weight <= max) {
+    stacklimit *= 2;
+  }
+  return MIN(stacklimit, 255);
+}
+static int
 inven_obj_mergecount(obj, number)
 struct objS* obj;
 {
   int tval, subval;
+  int stackweight, stacklimit;
 
+  stackweight = ustackweight();
   tval = obj->tval;
   subval = obj->subval;
   if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
-      if (tval == i_ptr->tval && subval == i_ptr->subval &&
-          number + i_ptr->number < 256) {
-        return it;
+      if (tval == i_ptr->tval && subval == i_ptr->subval) {
+        stacklimit = stacklimit_by_max_weight(stackweight, i_ptr->weight);
+        if (number + i_ptr->number <= stacklimit) {
+          return it;
+        }
       }
     }
   }
@@ -9800,22 +9812,26 @@ inven_merge(obj_id, locn)
 int* locn;
 {
   int tval, subval, number;
+  int stackweight, stacklimit;
   struct objS* obj = obj_get(obj_id);
 
+  stackweight = ustackweight();
   tval = obj->tval;
   subval = obj->subval;
   number = obj->number;
   if (subval & STACK_ANY) {
     for (int it = 0; it < INVEN_EQUIP; ++it) {
       struct objS* i_ptr = obj_get(invenD[it]);
-      if (tval == i_ptr->tval && subval == i_ptr->subval &&
-          number + i_ptr->number < 256) {
-        MSG("Merging %d items.", obj->number);
-        obj->number += i_ptr->number;
-        obj_unuse(i_ptr);
-        invenD[it] = obj_id;
-        *locn = it;
-        return TRUE;
+      if (tval == i_ptr->tval && subval == i_ptr->subval) {
+        stacklimit = stacklimit_by_max_weight(stackweight, obj->weight);
+        if (number + i_ptr->number <= stacklimit) {
+          MSG("Merging %d items.", obj->number);
+          obj->number += i_ptr->number;
+          obj_unuse(i_ptr);
+          invenD[it] = obj_id;
+          *locn = it;
+          return TRUE;
+        }
       }
     }
   }
