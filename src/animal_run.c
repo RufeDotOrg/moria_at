@@ -5023,6 +5023,9 @@ void obj_detail(obj) struct objS* obj;
   detailD[0] = 0;
 
   if (reveal) {
+    if (eqidx > INVEN_WIELD && TR_CURSED & obj->flags)
+      strcat(detailD, " {cursed}");
+
     if ((obj->tval == TV_STAFF || obj->tval == TV_WAND)) {
       snprintf(tmp_str, AL(tmp_str), " (%d charges)", obj->p1);
       strcat(detailD, tmp_str);
@@ -5034,7 +5037,7 @@ void obj_detail(obj) struct objS* obj;
     }
   } else {
     if (obj->idflag & ID_MAGIK) strcat(detailD, " {magik}");
-    if (obj->idflag & ID_DAMD) strcat(detailD, " {damned}");
+    if (obj->idflag & ID_DAMD) strcat(detailD, " {cursed}");
     if (obj->idflag & ID_EMPTY) strcat(detailD, " {empty}");
     if (obj->idflag & ID_CORRODED) strcat(detailD, " {corroded}");
     if (obj->idflag & ID_PLAIN) strcat(detailD, " {plain}");
@@ -11655,7 +11658,7 @@ py_look_mon()
   int y, x, ly, lx, oy, ox;
   int dir;
 
-  if (py_affect(MA_BLIND)) msg_print("You can't see a damn thing!");
+  if (py_affect(MA_BLIND)) msg_print("You can't see a thing!");
   // else if (py.flags.image > 0)
   //   msg_print("You can't believe what you are seeing! It's like a dream!");
   else if (get_dir("Look which direction?", &dir)) {
@@ -11689,7 +11692,7 @@ py_look_obj()
   int y, x, ly, lx, oy, ox;
   int dir;
 
-  if (py_affect(MA_BLIND)) msg_print("You can't see a damn thing!");
+  if (py_affect(MA_BLIND)) msg_print("You can't see a thing!");
   // else if (py.flags.image > 0)
   //   msg_print("You can't believe what you are seeing! It's like a dream!");
   else if (get_dir("Look which direction?", &dir)) {
