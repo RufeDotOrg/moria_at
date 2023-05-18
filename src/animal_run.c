@@ -10118,6 +10118,11 @@ inven_throw_dir(iidx, dir)
         tbth = tbth - cdis;
 
         if (test_hit(tbth, adj, tpth, cr_ptr->ac)) {
+          strcpy(tname, descD);
+          mon_desc(c_ptr->midx);
+          descD[0] |= 0x20;
+          MSG("You hear a cry as the %s strikes %s.", tname, descD);
+
           tdam = pdamroll(obj->damage) + obj->todam + wtodam;
           if (bowid) tdam *= obj_get(bowid)->damage[1];
 
@@ -10125,11 +10130,6 @@ inven_throw_dir(iidx, dir)
           // tdam = tot_dam(obj, tdam, i);
           tdam = critical_blow(obj->weight, tpth, adj, tdam);
           if (tdam < 0) tdam = 0;
-
-          strcpy(tname, descD);
-          mon_desc(c_ptr->midx);
-          descD[0] |= 0x20;
-          MSG("You hear a cry as the %s strikes %s.", tname, descD);
 
           if (mon_take_hit(c_ptr->midx, tdam)) {
             MSG("You have killed %s.", descD);
