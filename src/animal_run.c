@@ -12349,13 +12349,19 @@ movement_rate(speed)
 int
 creatures()
 {
-  int move_count, y, x, cdis, seen_act;
-
-  FOR_EACH(mon, { update_mon(it_index); });
+  int move_count, y, x, cdis, seen_act, seen_lit;
+  uint8_t waslit[AL(entity_monD)];
 
   y = uD.y;
   x = uD.x;
   seen_act = 0;
+  seen_lit = 0;
+  for (int it = 0; it < AL(entity_monD); ++it) {
+    struct monS* mon = &entity_monD[it];
+    waslit[it] = mon->mlit;
+    if (mon->id) update_mon(it);
+  }
+
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     move_count = movement_rate(mon_speed(mon));
@@ -12391,11 +12397,16 @@ creatures()
         }
       }
     }
+    if (mon->mlit && !waslit[it_index]) seen_lit += 1;
   });
 
   find_threat = (seen_act != 0);
   if (seen_act) {
     countD.rest = 0;
+  }
+
+  if (seen_lit) {
+    find_flag = FALSE;
   }
 
   return seen_act;
