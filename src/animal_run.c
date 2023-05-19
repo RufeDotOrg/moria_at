@@ -4151,12 +4151,10 @@ detect_obj(int (*valid)(), int known)
     }
   });
 
-  if (known) {
-    if (detect) {
-      msg_print("Your senses tingle!");
-    } else {
-      msg_print("You detect nothing further.");
-    }
+  if (detect) {
+    msg_print("Your senses tingle!");
+  } else if (known) {
+    msg_print("You detect nothing further.");
   }
 
   return (detect);
@@ -4180,12 +4178,10 @@ detect_mon(int (*valid)(), int known)
     }
   });
 
-  if (known) {
-    if (flag) {
-      msg_print("Your senses tingle!");
-    } else {
-      msg_print("You detect nothing further.");
-    }
+  if (flag) {
+    msg_print("Your senses tingle!");
+  } else if (known) {
+    msg_print("You detect nothing further.");
   }
 
   return flag;
