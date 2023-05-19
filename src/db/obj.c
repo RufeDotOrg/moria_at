@@ -4754,7 +4754,7 @@ static struct treasureS treasureD[] = {
      0,
      0,
      0,
-     193,
+     129,
      {1, 1},
      1},
     {"& Human Skeleton",

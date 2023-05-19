@@ -7934,8 +7934,8 @@ struct objS *a, *b;
 {
   int astack, bstack, ar, br, at, bt, ak, bk, known;
 
-  astack = a->subval & STACK_ANY;
-  bstack = b->subval & STACK_ANY;
+  astack = a->subval & STACK_SINGLE;
+  bstack = b->subval & STACK_SINGLE;
   if (astack != bstack) return astack - bstack;
 
   if (astack) {
