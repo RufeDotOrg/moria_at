@@ -8230,7 +8230,7 @@ void obj_study(obj, for_sale) struct objS* obj;
   struct treasureS* tr_ptr;
   int line;
   int reveal, blows, eqidx;
-  int number;
+  int number, stackweight, stacklimit;
 
   reveal = obj->idflag & ID_REVEAL;
   if (obj->tidx) {
@@ -8242,13 +8242,16 @@ void obj_study(obj, for_sale) struct objS* obj;
     if (for_sale && (STACK_SINGLE & obj->subval)) number = 1;
 
     line = 0;
+    BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (each)", obj->weight / 10,
+           obj->weight % 10);
     if (number > 1) {
       int sum_weight = obj->number * obj->weight;
       BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Total Weight", sum_weight / 10,
              sum_weight % 10);
+      stackweight = ustackweight();
+      stacklimit = stacklimit_by_max_weight(stackweight, obj->weight);
+      BufMsg(screen, "%-17.017s: %d", "Stack Limit (STR)", stacklimit);
     }
-    BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (each)", obj->weight / 10,
-           obj->weight % 10);
 
     if (tr_is_known(tr_ptr)) {
       if (obj->tval == TV_WAND || obj->tval == TV_STAFF) {
