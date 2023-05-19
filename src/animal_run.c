@@ -10432,7 +10432,7 @@ py_archive_select()
       summary[it].slevel = uD.lev;
       summary[it].sclass = uD.clidx;
       summary[it].srace = uD.ridx;
-      summary[it].sdepth = uD.max_dlv * 50;
+      summary[it].sdepth = MAX(uD.max_dlv, dun_level) * 50;
     }
   }
 
