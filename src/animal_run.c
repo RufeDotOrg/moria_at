@@ -8231,6 +8231,7 @@ void obj_study(obj, for_sale) struct objS* obj;
   int line;
   int reveal, blows, eqidx;
   int number, stackweight, stacklimit;
+  int wtohit;
 
   reveal = obj->idflag & ID_REVEAL;
   if (obj->tidx) {
@@ -8286,6 +8287,9 @@ void obj_study(obj, for_sale) struct objS* obj;
       }
     }
     if (eqidx == INVEN_WIELD) {
+      wtohit = weight_tohit_adj();
+      if (wtohit) BufMsg(screen, "%-17.017s: %+d", "Heavy Penalty", wtohit);
+
       BufMsg(screen, "%-17.017s: (%dd%d)", "Damage Dice", obj->damage[0],
              obj->damage[1]);
 
