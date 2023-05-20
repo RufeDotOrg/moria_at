@@ -4928,7 +4928,7 @@ gain_prayer()
       idx = randint(gain_count) - 1;
       open_count -= 1;
       spell_orderD[open[open_count]] = 1 + gain[idx];
-      MSG("You believe in the prayer to %s.", prayer_nameD[gain[idx]]);
+      MSG("You believe in the prayer %s.", prayer_nameD[gain[idx]]);
       gain[idx] = gain[gain_count - 1];
       gain_count -= 1;
     }
