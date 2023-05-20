@@ -1541,6 +1541,34 @@ light_adj(p1)
   }
   return bonus;
 }
+static int
+ustackweight()
+{
+  return 10 * statD.use_stat[A_STR];
+}
+static int
+stacklimit_by_max_weight(max, weight)
+{
+  int stacklimit = 1;
+  while (2 * stacklimit * weight <= max) {
+    stacklimit *= 2;
+  }
+  return MIN(stacklimit, 255);
+}
+int
+number_by_weight_roll(weight, num, sides)
+{
+  int k, tmp;
+  int stackweight, limit;
+  stackweight = ustackweight();
+  limit = stacklimit_by_max_weight(stackweight, weight);
+  tmp = 0;
+  for (int i = 0; i < num; i++) {
+    k = randint(sides);
+    if (tmp + k < limit) tmp += k;
+  }
+  return MAX(1, tmp);
+}
 void magic_treasure(obj, level) struct objS* obj;
 {
   int chance, special, cursed;
@@ -2213,18 +2241,15 @@ void magic_treasure(obj, level) struct objS* obj;
       break;
 
     case TV_SPIKE:
-      tmp = 0;
-      for (int i = 0; i < 3; i++) tmp += randint(3);
-      obj->number = tmp;
+      obj->number = number_by_weight_roll(obj->weight, 3, 3);
       break;
     case TV_PROJECTILE:
-      tmp = 0;
-      for (int i = 0; i < 7; i++) tmp += randint(6);
-      obj->number = tmp;
+      obj->number = number_by_weight_roll(obj->weight, 9, 6);
       break;
 
     case TV_FOOD:
-      if (obj->flags == 0) obj->number = randint(5);
+      if (obj->flags == 0)
+        obj->number = number_by_weight_roll(obj->weight, 1, 5);
       break;
 
     default:
@@ -4826,11 +4851,6 @@ todam_adj()
   else
     return (6);
 }
-static int
-ustackweight()
-{
-  return 10 * statD.use_stat[A_STR];
-}
 int
 umana_by_level(level)
 {
@@ -5943,15 +5963,6 @@ static void inven_used_obj(obj) struct objS* obj;
     }
     obj_unuse(obj);
   }
-}
-static int
-stacklimit_by_max_weight(max, weight)
-{
-  int stacklimit = 1;
-  while (2 * stacklimit * weight <= max) {
-    stacklimit *= 2;
-  }
-  return MIN(stacklimit, 255);
 }
 static int
 inven_obj_mergecount(obj, number)
