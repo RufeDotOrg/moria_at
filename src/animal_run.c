@@ -7927,11 +7927,17 @@ struct objS *a, *b;
 {
   int astack, bstack, ar, br, at, bt, ak, bk, known;
 
+  // Stackable first
   astack = a->subval & STACK_SINGLE;
   bstack = b->subval & STACK_SINGLE;
   if (astack != bstack) return astack - bstack;
 
-  if (astack) {
+  // Projectile last
+  astack = a->subval & STACK_PROJECTILE;
+  bstack = b->subval & STACK_PROJECTILE;
+  if (astack != bstack) return bstack - astack;
+
+  if (a->subval & STACK_SINGLE) {
     ak = tr_is_known(&treasureD[a->tidx]);
     bk = tr_is_known(&treasureD[b->tidx]);
     if (ak != bk) return ak - bk;
