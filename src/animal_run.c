@@ -4423,20 +4423,11 @@ enchant(int16_t* bonus, int16_t limit)
   return (res);
 }
 int
-weight_tohit_adj()
+tohit_by_weight(weight)
 {
-  struct objS* obj;
   int use_weight = statD.use_stat[A_STR] * 15;
 
-  obj = obj_get(invenD[INVEN_WIELD]);
-  if (use_weight < obj->weight) return use_weight - obj->weight;
-  return 0;
-}
-int
-hitadj_by_weight_str(weight, str)
-{
-  int use = str * 15;
-  if (use < weight) return use - weight;
+  if (use_weight < weight) return use_weight - weight;
   return 0;
 }
 int
@@ -5399,8 +5390,10 @@ calc_bonuses()
   int wtohit, tohit, todam;
   int hide_tohit, hide_todam, hide_toac;
 
-  wtohit = weight_tohit_adj();
-  tohit = wtohit + tohit_adj();
+  wtohit = invenD[INVEN_WIELD]
+               ? tohit_by_weight(obj_get(invenD[INVEN_WIELD])->weight)
+               : 0;
+  tohit = tohit_adj() + wtohit;
   todam = todam_adj();
   toac = toac_adj();
   ac = 0;
@@ -8287,7 +8280,7 @@ void obj_study(obj, for_sale) struct objS* obj;
       }
     }
     if (eqidx == INVEN_WIELD) {
-      wtohit = weight_tohit_adj();
+      wtohit = tohit_by_weight(obj->weight);
       if (wtohit) BufMsg(screen, "%-17.017s: %+d", "Heavy Penalty", wtohit);
 
       BufMsg(screen, "%-17.017s: (%dd%d)", "Damage Dice", obj->damage[0],
@@ -11750,7 +11743,8 @@ tunnel_tool(y, x, iidx)
 {
   struct caveS* c_ptr;
   struct objS* obj;
-  int tabil, str, wall_chance, wall_min, turn_count, flag;
+  int tabil, wall_chance, wall_min, turn_count, flag;
+  int wtohit;
   c_ptr = &caveD[y][x];
 
   flag = FALSE;
@@ -11758,13 +11752,17 @@ tunnel_tool(y, x, iidx)
     obj = obj_get(invenD[iidx]);
     if (obj->id) {
       obj_desc(obj, 1);
-      MSG("You begin tunneling with %s.", descD);
+      wtohit = tohit_by_weight(obj->weight);
 
-      str = statD.use_stat[A_STR];
-      tabil = obj_tabil(obj, TRUE);
+      if (wtohit) {
+        MSG("You have trouble digging with %s, it is very heavy.", descD);
+      } else {
+        MSG("You begin tunneling with %s.", descD);
+      }
+
       /* If this weapon is too heavy for the player to wield properly, then
          also make it harder to dig with it. tabil may be negative.  */
-      tabil += hitadj_by_weight_str(obj->weight, str);
+      tabil = obj_tabil(obj, TRUE) + wtohit;
 
       wall_chance = 0;
       switch (c_ptr->fval) {
