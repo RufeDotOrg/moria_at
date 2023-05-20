@@ -5573,24 +5573,27 @@ ma_bonuses(maffect, factor)
 }
 // Effects are ticked twice per turn (rising/falling edge)
 static void
-ma_ticks(maidx, tick_count)
+add_ma_count(maidx, count)
 {
   if (maidx == MA_BLIND && py_tr(TR_SEEING)) {
     msg_print("Your sight is no worse.");
-    tick_count = 0;
+    count = 0;
   } else if (maidx == MA_FEAR && py_tr(TR_HERO)) {
     msg_print("A hero recovers quickly.");
-    tick_count = 0;
+    count = 0;
   } else if (maidx == MA_HERO || maidx == MA_SUPERHERO) {
     maD[MA_FEAR] = 0;
+  } else if (maidx == MA_DETECT_EVIL || maidx == MA_DETECT_INVIS) {
+    // Falling edge expiration to allow the player one action with detection
+    count += (maD[maidx] % 2 == 0);
   }
 
-  maD[maidx] += tick_count;
+  maD[maidx] += count;
 }
 static void
 ma_duration(maidx, nturn)
 {
-  ma_ticks(maidx, nturn * 2);
+  add_ma_count(maidx, nturn * 2);
 }
 // Combat affects result in an odd tick count
 // Such that the player recovers from an affect before their turn
@@ -5599,7 +5602,7 @@ ma_combat(maidx, nturn)
 {
   int tick_count;
   tick_count = maD[maidx];
-  ma_ticks(maidx, nturn * 2 + (tick_count % 2 == 0));
+  add_ma_count(maidx, nturn * 2 + (tick_count % 2 == 0));
 }
 static int
 ma_clear(maidx)
