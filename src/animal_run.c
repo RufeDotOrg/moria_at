@@ -4,7 +4,6 @@ enum { HACK = 0 };
 static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
 static int find_threat;
-static int find_ignore_doors;
 static int find_direction;
 static int find_flag;
 static int find_openarea;
@@ -4029,11 +4028,10 @@ find_event(y, x)
     if (mmove(newdir, &row, &col)) {
       c_ptr = &caveD[row][col];
 
-      /* Objects player can see (Including doors?) cause a stop. */
+      /* Objects player can see an object causing a stop */
       if (c_ptr->oidx != 0) {
         t = entity_objD[c_ptr->oidx].tval;
-        if (t == TV_INVIS_TRAP || t == TV_SECRET_DOOR) {
-        } else if (t == TV_OPEN_DOOR && find_ignore_doors) {
+        if (t == TV_INVIS_TRAP || t == TV_SECRET_DOOR || t == TV_OPEN_DOOR) {
         } else if (t == TV_GOLD && (c_ptr->fval >= MIN_CLOSED_SPACE &&
                                     (CF_FIELDMARK & c_ptr->cflag) == 0)) {
         } else {
