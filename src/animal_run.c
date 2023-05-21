@@ -5089,7 +5089,7 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_SWORD:
       break;
     case TV_DIGGING:
-      suffix = "digging";
+      if (!unknown) suffix = "digging";
       break;
     case TV_BOOTS:
     case TV_GLOVES:
