@@ -4233,7 +4233,7 @@ struct creatureS* cr_ptr;
 void
 update_mon(midx)
 {
-  int flag, fy, fx, cdis;
+  int flag, fy, fx, cdis, infra;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -4243,22 +4243,22 @@ update_mon(midx)
   flag = FALSE;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
-  cdis = distance(uD.y, uD.x, fy, fx);
-  if ((panel_contains(&panelD, fy, fx))) {
-    if (py_affect(MA_DETECT_EVIL) && (CD_EVIL & cr_ptr->cdefense)) {
-      flag = TRUE;
-    } else if (py_affect(MA_DETECT_MON) &&
-               ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
-      flag = TRUE;
-    } else if (py_affect(MA_DETECT_INVIS) && (CM_INVISIBLE & cr_ptr->cmove)) {
-      flag = TRUE;
-    } else if (maD[MA_BLIND] == 0 && (cdis <= MAX_SIGHT) &&
-               los(uD.y, uD.x, fy, fx)) {
+  if (py_affect(MA_DETECT_EVIL) && (CD_EVIL & cr_ptr->cdefense)) {
+    flag = TRUE;
+  } else if (py_affect(MA_DETECT_MON) &&
+             ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
+    flag = TRUE;
+  } else if (py_affect(MA_DETECT_INVIS) && (CM_INVISIBLE & cr_ptr->cmove)) {
+    flag = TRUE;
+  } else if (maD[MA_BLIND] == 0) {
+    infra = (CD_INFRA & cr_ptr->cdefense);
+    cdis = distance(uD.y, uD.x, fy, fx);
+    if (cdis <= MAX_SIGHT && los(uD.y, uD.x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
-      if (CF_LIT & c_ptr->cflag) {
-        flag = cr_seen(cr_ptr);
-      } else if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= uD.infra)) {
+      if (infra && (cdis <= uD.infra)) {
         flag = TRUE;
+      } else if (CF_LIT & c_ptr->cflag) {
+        flag = cr_seen(cr_ptr);
       }
     }
   }
