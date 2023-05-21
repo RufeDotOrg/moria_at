@@ -5583,7 +5583,8 @@ add_ma_count(maidx, count)
     count = 0;
   } else if (maidx == MA_HERO || maidx == MA_SUPERHERO) {
     maD[MA_FEAR] = 0;
-  } else if (maidx == MA_DETECT_EVIL || maidx == MA_DETECT_INVIS) {
+  } else if (maidx == MA_DETECT_MON || maidx == MA_DETECT_EVIL ||
+             maidx == MA_DETECT_INVIS) {
     // Falling edge expiration to allow the player one action with detection
     count += (maD[maidx] % 2 == 0);
   }
@@ -8895,8 +8896,10 @@ int *uy, *ux;
             ident |= TRUE;
             break;
           case 20:
-            ident |= detect_mon(crset_invisible, known);
-            ma_duration(MA_DETECT_INVIS, 1);
+            if (detect_mon(crset_invisible, known)) {
+              ma_duration(MA_DETECT_INVIS, 1);
+              ident |= TRUE;
+            }
             break;
           case 21:
             if (aggravate_monster(20)) {
@@ -9733,8 +9736,10 @@ int *uy, *ux;
             ident |= py_heal_hit(randint(8));
             break;
           case 16:
-            ident |= detect_mon(crset_invisible, known);
-            ma_duration(MA_DETECT_INVIS, 1);
+            if (detect_mon(crset_invisible, known)) {
+              ma_duration(MA_DETECT_INVIS, 1);
+              ident |= TRUE;
+            }
             break;
           case 17:
             ident |= py_affect(MA_FAST) == 0;
@@ -9751,8 +9756,10 @@ int *uy, *ux;
             ident |= equip_remove_curse();
             break;
           case 21:
-            ident |= detect_mon(crset_evil, known);
-            ma_duration(MA_DETECT_EVIL, 1);
+            if (detect_mon(crset_evil, known)) {
+              ma_duration(MA_DETECT_EVIL, 1);
+              ident |= TRUE;
+            }
             break;
           case 22:
             if (countD.poison > 0) {
