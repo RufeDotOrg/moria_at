@@ -8292,17 +8292,11 @@ void obj_study(obj, for_sale) struct objS* obj;
         BufMsg(screen, "%-17.017s: %s", "Launcher", launcher_nameD[obj->p1]);
       }
     }
-    if (reveal) {
-      if (oset_tohitdam(obj)) {
-        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-        BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
-      } else if (eqidx == INVEN_BODY) {
-        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-      }
-    }
     if (eqidx == INVEN_WIELD) {
       wtohit = tohit_by_weight(obj->weight);
       if (wtohit) BufMsg(screen, "%-17.017s: %+d", "Heavy Penalty", wtohit);
+      BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
+      BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
 
       BufMsg(screen, "%-17.017s: (%dd%d)", "Damage Dice", obj->damage[0],
              obj->damage[1]);
@@ -8333,6 +8327,12 @@ void obj_study(obj, for_sale) struct objS* obj;
       }
     }
     if (eqidx >= INVEN_WIELD) {
+      if (eqidx == INVEN_BODY) {
+        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
+      } else if (reveal && oset_tohitdam(obj)) {
+        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
+        BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
+      }
       if (reveal && (obj->ac || obj->toac)) {
         line += 1;
         if (obj->ac) BufMsg(screen, "%-17.017s: %d", "Base Armor", obj->ac);
