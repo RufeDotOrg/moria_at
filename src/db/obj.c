@@ -3105,7 +3105,7 @@ static struct treasureS treasureD[] = {
      99,
      {0, 0},
      1},
-    {"Holy Chant",
+    {"Enduring Blessing",
      0x00000040L,
      TV_SCROLL2,
      '?', /*  219*/
@@ -3119,7 +3119,7 @@ static struct treasureS treasureD[] = {
      100,
      {0, 0},
      12},
-    {"Holy Prayer",
+    {"Divine Blessing",
      0x00000080L,
      TV_SCROLL2,
      '?', /*  220*/
