@@ -9506,8 +9506,7 @@ int* x_ptr;
       py_heal_hit(damroll(8, 4));
       break;
     case 20:
-      detect_mon(crset_invisible, TRUE);
-      ma_duration(MA_DETECT_INVIS, randint(24) + 24);
+      ma_duration(MA_SEE_INVIS, randint(24) + 24);
       break;
     case 21:
       countD.protevil += randint(25) + 3 * uD.lev;
