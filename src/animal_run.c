@@ -5517,13 +5517,13 @@ ma_bonuses(maffect, factor)
       break;
     case MA_AFIRE:
       if (factor > 0)
-        msg_print("You feel safe from flame.");
+        msg_print("You are safe from flame.");
       else if (factor < 0)
         msg_print("You no longer feel safe from flame.");
       break;
     case MA_AFROST:
       if (factor > 0)
-        msg_print("You feel safe from frost.");
+        msg_print("You are safe from frost.");
       else if (factor < 0)
         msg_print("You no longer feel safe from frost.");
       break;
@@ -12581,7 +12581,7 @@ static void hit_trap(y, x, uy, ux) int *uy, *ux;
       break;
     case 12: /* Fire trap*/
       if (py_affect(MA_AFIRE)) {
-        msg_print("You feel safe from flame.");
+        msg_print("You are safe from flame.");
       } else {
         msg_print("You are enveloped in flame!");
         fire_dam(dam);
