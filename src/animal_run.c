@@ -8263,6 +8263,8 @@ void obj_study(obj, for_sale) struct objS* obj;
       int sum_weight = obj->number * obj->weight;
       BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Total Weight", sum_weight / 10,
              sum_weight % 10);
+    }
+    if (STACK_ANY & obj->subval) {
       stackweight = ustackweight();
       stacklimit = stacklimit_by_max_weight(stackweight, obj->weight);
       BufMsg(screen, "%-17.017s: %d", "Stack Limit (STR)", stacklimit);
