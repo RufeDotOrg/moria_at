@@ -12303,7 +12303,8 @@ mon_try_spell(midx, cdis)
   }
   return took_turn;
 }
-static void
+// Returns true if make_move() is attempted
+static int
 mon_move(midx, cdis)
 {
   struct monS* m_ptr;
@@ -12360,8 +12361,10 @@ mon_move(midx, cdis)
 
     if (mm[0]) {
       make_move(midx, mm);
+      return 1;
     }
   }
+  return 0;
 }
 static int
 movement_rate(speed)
@@ -12418,8 +12421,9 @@ creatures()
           }
         }
         if (mon->msleep == 0) {
-          if (mon->mstunned == 0) mon_move(it_index, cdis);
-          seen_act += (mon->mlit);
+          if (mon->mstunned == 0) {
+            if (mon_move(it_index, cdis)) seen_act += mon->mlit;
+          }
         }
       }
     }
@@ -12427,13 +12431,8 @@ creatures()
   });
 
   find_threat = (seen_act != 0);
-  if (seen_act) {
-    countD.rest = 0;
-  }
-
-  if (seen_lit) {
-    find_flag = FALSE;
-  }
+  if (seen_act) countD.rest = 0;
+  if (seen_lit) find_flag = FALSE;
 
   return seen_act;
 }
