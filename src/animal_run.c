@@ -13614,8 +13614,8 @@ dungeon()
 
     if (!town && (turnD & ~-1024) == 0) store_maint();
     turnD += 1;
-    tick();
     ma_tick(!new_level_flag);  // falling
+    tick();  // new_level_flag may change (player dies from poison)
   } while (!new_level_flag);
 }
 void
