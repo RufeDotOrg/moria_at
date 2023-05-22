@@ -9323,7 +9323,7 @@ int* x_ptr;
   struct objS* obj;
   uint32_t flags, first_spell;
   int book[32], book_used, line;
-  int sptype, spmask, spidx, dir;
+  int cmana, sptype, spmask, spidx, dir;
   struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
@@ -9340,6 +9340,7 @@ int* x_ptr;
     else if (first_spell >= uD.lev)
       msg_print("You yearn to understand the magical runes filling this book.");
     else {
+      cmana = uD.cmana;
       spmask = uspellmask();
       spelltable = uspelltable();
       book_used = 0;
@@ -9360,25 +9361,27 @@ int* x_ptr;
           spmana = spelltable[spidx].spmana;
           spchance = spell_chanceD[spidx];
 
-          char field[3][16];
-          snprintf(field[0], AL(field[0]), "level %d", splevel);
-          snprintf(field[1], AL(field[1]), "mana %d", spmana);
-          snprintf(field[2], AL(field[2]), "failure %d%%", spchance);
-
-          if (splevel == 99) {
-            BufMsg(overlay, "%c) ???", 'a' + it);
+          char field[2][16];
+          if (spknown) {
+            snprintf(field[0], AL(field[0]), "%d%% failure", spchance);
+            if (cmana < spmana)
+              snprintf(field[1], AL(field[1]), "-low mana-");
+            else
+              snprintf(field[1], AL(field[1]), "mana %d", spmana);
+          } else if (splevel == 99) {
+            field[0][0] = 0;
+            field[1][0] = 0;
           } else {
-            BufMsg(overlay,
-                   "%c) %-40.040s "
-                   "%8.08s "
-                   "%8.08s "
-                   "%16.016s",
-                   'a' + it, spell_nameD[spidx], spknown ? "" : field[0],
-                   !spknown              ? ""
-                   : (uD.cmana < spmana) ? "!low!"
-                                         : field[1],
-                   spknown ? field[2] : "");
+            snprintf(field[0], AL(field[0]), "level %d", splevel);
+            field[1][0] = 0;
           }
+
+          BufMsg(overlay,
+                 "%c) %-40.040s "
+                 "%16.016s "
+                 "%16.016s",
+                 'a' + it, splevel < 99 ? spell_nameD[spidx] : "???", field[0],
+                 field[1]);
         }
 
         if (!in_subcommand("Read which spell?", &c)) break;
@@ -9564,7 +9567,7 @@ int* x_ptr;
   struct objS* obj;
   uint32_t flags, first_spell;
   int book[32], book_used, line;
-  int sptype, spmask, spidx, dir;
+  int cmana, sptype, spmask, spidx, dir;
   struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
@@ -9581,6 +9584,7 @@ int* x_ptr;
     else if (first_spell >= uD.lev)
       msg_print("You read of lineages and legends; what meaning do they hold?");
     else {
+      cmana = uD.cmana;
       spmask = uspellmask();
       spelltable = uspelltable();
       book_used = 0;
@@ -9600,25 +9604,27 @@ int* x_ptr;
           spmana = spelltable[spidx].spmana;
           spchance = spell_chanceD[spidx];
 
-          char field[3][16];
-          snprintf(field[0], AL(field[0]), "level %d", splevel);
-          snprintf(field[1], AL(field[1]), "mana %d", spmana);
-          snprintf(field[2], AL(field[2]), "failure %d%%", spchance);
-
-          if (splevel == 99) {
-            BufMsg(overlay, "%c) ???", 'a' + it);
+          char field[2][16];
+          if (spknown) {
+            snprintf(field[0], AL(field[0]), "%d%% failure", spchance);
+            if (cmana < spmana)
+              snprintf(field[1], AL(field[1]), "-low mana-");
+            else
+              snprintf(field[1], AL(field[1]), "mana %d", spmana);
+          } else if (splevel == 99) {
+            field[0][0] = 0;
+            field[1][0] = 0;
           } else {
-            BufMsg(overlay,
-                   "%c) %-40.040s "
-                   "%8.08s "
-                   "%8.08s "
-                   "%16.016s",
-                   'a' + it, prayer_nameD[spidx], spknown ? "" : field[0],
-                   !spknown              ? ""
-                   : (uD.cmana < spmana) ? "!low!"
-                                         : field[1],
-                   spknown ? field[2] : "");
+            snprintf(field[0], AL(field[0]), "level %d", splevel);
+            field[1][0] = 0;
           }
+
+          BufMsg(overlay,
+                 "%c) %-40.040s "
+                 "%16.016s "
+                 "%16.016s",
+                 'a' + it, splevel < 99 ? prayer_nameD[spidx] : "???", field[0],
+                 field[1]);
         }
 
         if (!in_subcommand("Recite which prayer?", &c)) break;
