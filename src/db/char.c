@@ -343,6 +343,6 @@ static char* affectD[][3] = {
     {"Paralyse"},
     {"Poison"},
     {"+Spell"},
-    {""},
+    {"Imagine"},
     {""},
 };

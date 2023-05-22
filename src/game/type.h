@@ -107,7 +107,7 @@ struct countS {
   int32_t poison;
   int32_t unused_count1;
   int32_t confusion;
-  int32_t unused_count2;
+  int32_t imagine;
   int32_t rest;
   int32_t paralysis;
   // Player protection counters

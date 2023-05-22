@@ -763,7 +763,7 @@ fade_by_distance(y1, x1, y2, x2)
 static void
 viz_update()
 {
-  int blind, py, px;
+  int blind, imagine, py, px;
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
@@ -771,6 +771,7 @@ viz_update()
 
   struct vizS *vptr = &vizD[0][0];
   blind = maD[MA_BLIND];
+  imagine = countD.imagine;
   py = uD.y;
   px = uD.x;
   for (int row = rmin; row < rmax; ++row) {
@@ -783,32 +784,44 @@ viz_update()
         viz.light = (c_ptr->cflag & CF_SEEN) != 0;
         viz.fade = fade_by_distance(py, px, row, col) - 1;
         if (mon->mlit) {
-          viz.cr = mon->cidx;
+          if (!imagine)
+            viz.cr = mon->cidx;
+          else
+            viz.cr = (mon->id * imagine) % MAX_ART + 1;
         } else if (blind) {
           // May have MA_DETECT resulting in lit monsters above
           // No walls, objects, or lighting
           viz.light = 0;
           viz.fade = 3;
         } else if (CF_VIZ & c_ptr->cflag) {
-          switch (c_ptr->fval) {
-            case GRANITE_WALL:
-            case BOUNDARY_WALL:
-              viz.floor = 1;
-              break;
-            case QUARTZ_WALL:
-              viz.floor = 3 + (c_ptr->oidx != 0);
-              break;
-            case MAGMA_WALL:
-              viz.floor = 5 + (c_ptr->oidx != 0);
-              break;
-            case FLOOR_OBST:
+          if (imagine) {
+            if (obj->tval == TV_OPEN_DOOR || obj->tval == TV_CLOSED_DOOR)
               viz.tr = obj_viz(obj, &viz);
-              break;
-            default:
-              viz.light += ((CF_LIT & c_ptr->cflag) != 0);
-              viz.dim = obj->tval && los(py, px, row, col) == 0;
-              viz.tr = obj_viz(obj, &viz);
-              break;
+            else if (c_ptr->fval > MAX_OPEN_SPACE)
+              viz.floor = (col + row + imagine) % MAX_WART + 1;
+            else if (obj->id)
+              viz.tr = (obj->id * imagine) % MAX_TART + 1;
+          } else {
+            switch (c_ptr->fval) {
+              case GRANITE_WALL:
+              case BOUNDARY_WALL:
+                viz.floor = 1;
+                break;
+              case QUARTZ_WALL:
+                viz.floor = 3 + (c_ptr->oidx != 0);
+                break;
+              case MAGMA_WALL:
+                viz.floor = 5 + (c_ptr->oidx != 0);
+                break;
+              case FLOOR_OBST:
+                viz.tr = obj_viz(obj, &viz);
+                break;
+              default:
+                viz.light += ((CF_LIT & c_ptr->cflag) != 0);
+                viz.dim = obj->tval && los(py, px, row, col) == 0;
+                viz.tr = obj_viz(obj, &viz);
+                break;
+            }
           }
         }
       } else {

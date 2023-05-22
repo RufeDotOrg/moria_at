@@ -368,8 +368,9 @@ affect_update()
   active_affectD[idx++] = (countD.paralysis != 0);
   active_affectD[idx++] = (countD.poison != 0);
 
-  // Gain spells, ...
+  // Gain spells, imagine, ...
   active_affectD[idx++] = (spcount && spell_orderD[spcount - 1] == 0);
+  active_affectD[idx++] = (countD.imagine != 0);
 }
 void
 draw()
@@ -4883,7 +4884,9 @@ udisarm()
 {
   int xdis = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
              level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
+  if (py_affect(MA_BLIND)) xdis /= 8;
   if (countD.confusion) xdis /= 8;
+  if (countD.imagine) xdis /= 8;
   return xdis;
 }
 int
@@ -6090,7 +6093,7 @@ int
 rest_affect()
 {
   return py_affect(MA_BLIND) + countD.confusion + py_affect(MA_FEAR) +
-         py_affect(MA_RECALL);
+         py_affect(MA_RECALL) + countD.imagine;
 }
 static void
 py_rest()
@@ -8105,11 +8108,11 @@ inven_eat(iidx)
           msg_print("You feel drugged.");
           ident |= TRUE;
           break;
-        // case 5:
-        //  f_ptr->image += randint(200) + 25 * obj->level + 200;
-        //  msg_print("You feel drugged.");
-        //  ident |= TRUE;
-        //  break;
+        case 5:
+          countD.imagine += 2 * (randint(200) + 25 * obj->level + 200);
+          msg_print("You feel drugged.");
+          ident |= TRUE;
+          break;
         case 6:
           if (countD.poison > 0) {
             countD.poison = 1;
@@ -11641,10 +11644,9 @@ py_search(y, x)
   struct objS* obj;
 
   chance = uD.search;
-  // TBD: tuning; used to divide by 10
   if (countD.confusion) chance /= 8;
   if (py_affect(MA_BLIND)) chance /= 8;
-  // if (p_ptr->image > 0) chance = chance / 10;
+  if (countD.imagine > 0) chance /= 8;
   for (i = (y - 1); i <= (y + 1); i++)
     for (j = (x - 1); j <= (x + 1); j++)
       if (randint(100) < chance) /* always in_bounds here */
@@ -11681,9 +11683,10 @@ py_look_mon()
   int y, x, ly, lx, oy, ox;
   int dir;
 
-  if (py_affect(MA_BLIND)) msg_print("You can't see a thing!");
-  // else if (py.flags.image > 0)
-  //   msg_print("You can't believe what you are seeing! It's like a dream!");
+  if (py_affect(MA_BLIND))
+    msg_print("You can't see a thing!");
+  else if (countD.imagine > 0)
+    msg_print("You can't believe what you are seeing! It's like a dream!");
   else if (get_dir("Look which direction?", &dir)) {
     y = uD.y;
     x = uD.x;
@@ -11715,9 +11718,10 @@ py_look_obj()
   int y, x, ly, lx, oy, ox;
   int dir;
 
-  if (py_affect(MA_BLIND)) msg_print("You can't see a thing!");
-  // else if (py.flags.image > 0)
-  //   msg_print("You can't believe what you are seeing! It's like a dream!");
+  if (py_affect(MA_BLIND))
+    msg_print("You can't see a thing!");
+  else if (countD.imagine > 0)
+    msg_print("You can't believe what you are seeing! It's like a dream!");
   else if (get_dir("Look which direction?", &dir)) {
     y = uD.y;
     x = uD.x;
@@ -11752,19 +11756,25 @@ py_look(y, x)
   struct objS* obj;
   struct monS* mon;
 
-  c_ptr = &caveD[y][x];
-  mon = &entity_monD[c_ptr->midx];
+  if (py_affect(MA_BLIND))
+    msg_print("You can't see a thing!");
+  else if (countD.imagine > 0)
+    msg_print("You can't believe what you are seeing! It's like a dream!");
+  else {
+    c_ptr = &caveD[y][x];
+    mon = &entity_monD[c_ptr->midx];
 
-  if (mon->mlit) {
-    mon_desc(c_ptr->midx);
-    // hack: mon death_descD pronoun is a/an
-    death_descD[0] |= 0x20;
-    MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
-  } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
-    obj = &entity_objD[c_ptr->oidx];
-    if (obj->tval != TV_INVIS_TRAP) {
-      obj_desc(obj, obj->number);
-      MSG("You see %s.", descD);
+    if (mon->mlit) {
+      mon_desc(c_ptr->midx);
+      // hack: mon death_descD pronoun is a/an
+      death_descD[0] |= 0x20;
+      MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
+    } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
+      obj = &entity_objD[c_ptr->oidx];
+      if (obj->tval != TV_INVIS_TRAP) {
+        obj_desc(obj, obj->number);
+        MSG("You see %s.", descD);
+      }
     }
   }
 }
@@ -13134,6 +13144,11 @@ tick()
   if (countD.protevil > 0) {
     countD.protevil -= 1;
     if (countD.protevil == 0) msg_print("You no longer feel safe from evil.");
+  }
+
+  if (countD.imagine > 0) {
+    // random decay introduces randomness in rendering
+    countD.imagine = MAX(countD.imagine - randint(4), 0);
   }
 }
 int
