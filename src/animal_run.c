@@ -7082,12 +7082,13 @@ confuse_monster(dir, y, x)
       cr_ptr = &creatureD[m_ptr->cidx];
       mon_desc(c_ptr->midx);
       flag = TRUE;
-      if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
-          (CD_NO_SLEEP & cr_ptr->cdefense)) {
-        /* Monsters which resisted the attack should wake up.
-           Monsters with innate resistence ignore the attack.  */
-        if (!(CD_NO_SLEEP & cr_ptr->cdefense)) m_ptr->msleep = 0;
+      /* Monsters with innate resistence ignore the attack.
+         Monsters which resisted the attack should wake up.  */
+      if (CD_NO_SLEEP & cr_ptr->cdefense) {
         MSG("%s is unaffected.", descD);
+      } else if (randint(MAX_MON_LEVEL) < cr_ptr->level) {
+        MSG("%s sounds disoriented, only for a moment.", descD);
+        m_ptr->msleep = 0;
       } else {
         if (m_ptr->mconfused)
           m_ptr->mconfused += 3;
@@ -7095,7 +7096,7 @@ confuse_monster(dir, y, x)
           m_ptr->mconfused = 2 + randint(16);
         confuse = TRUE;
         m_ptr->msleep = 0;
-        MSG("%s appears confused.", descD);
+        MSG("%s sounds confused.", descD);
       }
     }
   } while (!flag);
