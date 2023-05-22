@@ -2339,7 +2339,6 @@ vuln_fire(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    // Arrows, Bolts
     case TV_PROJECTILE:
       return obj->p1 > 1;
     case TV_HAFTED:
@@ -2367,7 +2366,6 @@ vuln_fire_breath(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    // Arrows, Bolts
     case TV_PROJECTILE:
       return obj->p1 > 1;
     case TV_HAFTED:
@@ -2399,7 +2397,6 @@ vuln_acid(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    // Arrows, Bolts
     case TV_PROJECTILE:
       return obj->p1 > 1;
     case TV_LAUNCHER:
@@ -2424,7 +2421,6 @@ vuln_acid_breath(obj)
 struct objS* obj;
 {
   switch (obj->tval) {
-    // Arrows, Bolts
     case TV_PROJECTILE:
       return obj->p1 > 1;
     case TV_HAFTED:
@@ -8743,11 +8739,11 @@ inven_quaff(iidx)
           countD.poison = MIN(countD.poison, 1);
           break;
         case 46:
-          //   if (m_ptr->cmana < m_ptr->mana) {
-          //     m_ptr->cmana = m_ptr->mana;
-          //     ident |= TRUE;
-          msg_print("Your feel your head clear.");
-          //   }
+          if (uD.cmana < uD.mmana) {
+            msg_print("Your feel your head clear.");
+            uD.cmana = uD.mmana;
+            ident |= TRUE;
+          }
           break;
         case 47:
           if (py_affect(MA_SEE_INFRA)) {
@@ -10503,7 +10499,7 @@ py_class_select()
   c = 0;
   clidx = -1;
   preview = 0;
-  // Keep ui state; may tranisiton to mode 2 for show_character()
+  // Keep ui state; may transition to mode 2 for show_character()
   overlay_submodeD = 'c';
   ui_stateD['c'] = 0;
   do {
