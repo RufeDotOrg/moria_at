@@ -8256,8 +8256,8 @@ void obj_study(obj, for_sale) struct objS* obj;
     if (for_sale && (STACK_SINGLE & obj->subval)) number = 1;
 
     line = 0;
-    BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (each)", obj->weight / 10,
-           obj->weight % 10);
+    BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (single)",
+           obj->weight / 10, obj->weight % 10);
     if (number > 1) {
       int sum_weight = obj->number * obj->weight;
       BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Total Weight", sum_weight / 10,
@@ -8326,14 +8326,16 @@ void obj_study(obj, for_sale) struct objS* obj;
                blows * MAX(obj->damage[0], 1),
                blows * MAX((obj->damage[0] * obj->damage[1]), 1));
       }
-    }
-    if (eqidx >= INVEN_WIELD) {
+    } else if (eqidx > INVEN_WIELD) {
       if (eqidx == INVEN_BODY) {
         BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
       } else if (reveal && oset_tohitdam(obj)) {
         BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
         BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
       }
+    }
+
+    if (eqidx >= INVEN_EQUIP) {
       if (reveal && (obj->ac || obj->toac)) {
         line += 1;
         if (obj->ac) BufMsg(screen, "%-17.017s: %d", "Base Armor", obj->ac);
