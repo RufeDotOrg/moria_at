@@ -5579,7 +5579,7 @@ add_ma_count(maidx, count)
   if (maidx == MA_BLIND && py_tr(TR_SEEING)) {
     msg_print("Your sight is no worse.");
     count = 0;
-  } else if (maidx == MA_FEAR && py_tr(TR_HERO)) {
+  } else if (maidx == MA_FEAR && (py_tr(TR_HERO) || HACK)) {
     msg_print("A hero recovers quickly.");
     count = 0;
   } else if (maidx == MA_HERO || maidx == MA_SUPERHERO) {
