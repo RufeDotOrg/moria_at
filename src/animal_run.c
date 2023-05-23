@@ -7528,23 +7528,6 @@ inven_recharge(iidx, rigor)
   return res;
 }
 int
-extermination()
-{
-  struct creatureS* cr_ptr;
-  int count;
-
-  count = 0;
-  FOR_EACH(mon, {
-    cr_ptr = &creatureD[mon->cidx];
-    if (cr_ptr->cmove & CM_MULTIPLY) {
-      caveD[mon->fy][mon->fx].midx = 0;
-      mon_unuse(mon);
-      count += 1;
-    }
-  });
-  return count;
-}
-int
 sleep_adjacent(y, x)
 {
   int i, j;
