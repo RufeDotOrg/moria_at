@@ -801,7 +801,7 @@ static struct treasureS treasureD[] = {
      '\\', /*  54*/
      0,
      14,
-     40,
+     10,
      0,
      0,
      0,
