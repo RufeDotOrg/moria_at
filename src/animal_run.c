@@ -1154,7 +1154,7 @@ build_corridor(row1, col1, row2, col2)
         tunindex++;
       }
       door_flag = FALSE;
-    } else if (c_ptr->fval == TMP2_WALL) {
+    } else if (c_ptr->fval == TMP2_WALL || c_ptr->fval == TMP3_WALL) {
     } else if (c_ptr->fval == GRANITE_WALL) {
       row1 = tmp_row;
       col1 = tmp_col;
@@ -1190,7 +1190,7 @@ build_corridor(row1, col1, row2, col2)
         if (tmp_col < 0) tmp_col = -tmp_col;
         if (tmp_row > 10 || tmp_col > 10) stop_flag = TRUE;
       }
-    } else /* c_ptr->fval != NULL, TMP2, GRANITE, CORR */
+    } else /* c_ptr->fval != NULL, TMP2, TMP3, GRANITE, CORR */
     {
       row1 = tmp_row;
       col1 = tmp_col;
