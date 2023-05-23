@@ -7939,7 +7939,11 @@ static int
 obj_cmp(a, b)
 struct objS *a, *b;
 {
-  int astack, bstack, ar, br, at, bt, ak, bk, known;
+  int aid, bid, astack, bstack, ar, br, at, bt, ak, bk, known;
+
+  aid = (a->id != 0);
+  bid = (b->id != 0);
+  if (aid != bid) return aid - bid;
 
   // Stackable first
   astack = a->subval & STACK_SINGLE;
