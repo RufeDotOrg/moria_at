@@ -3278,7 +3278,7 @@ static void build_type2(ychunk, xchunk, ycenter, xcenter, type1,
                         type2) int* ycenter;
 int* xcenter;
 {
-  int rflag, floor;
+  int rflag, floor, ydoor;
   int xmin, xmax, ymin, ymax;
   int y, x;
   struct caveS* c_ptr;
@@ -3439,8 +3439,12 @@ int* xcenter;
         }
       }
 
-      place_secret_door(ymin + randint(CHUNK_HEIGHT - 1), x);
-      place_secret_door(y, xmin + randint(CHUNK_WIDTH - 2));
+      ydoor = ymin + randint(CHUNK_HEIGHT - 1);
+      place_secret_door(ydoor, x);
+      if (ydoor != y) {
+        place_secret_door(y, xmin + randint(CHUNK_WIDTH / 2 - 2));
+        place_secret_door(y, x + randint(CHUNK_WIDTH / 2 - 2));
+      }
       // Quadrant
       room_object(y, x, 4);
       room_monster(y + 1, x - 4, 4);
