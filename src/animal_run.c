@@ -8929,11 +8929,9 @@ int *uy, *ux;
             used_up = inven_recharge(choice_idx, 0);
             break;
           case 26:
-            ident |= extermination();
-            if (ident) {
-              msg_print("This is an extermination scroll.");
-              ident |= TRUE;
-            }
+            msg_print("Your hands begin to glow black.");
+            uD.melee_genocide = 1;
+            ident |= TRUE;
             break;
           case 27:
             ident |= unlight_area(uD.y, uD.x);

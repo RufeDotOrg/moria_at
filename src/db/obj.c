@@ -2951,7 +2951,7 @@ static struct treasureS treasureD[] = {
      88,
      {0, 0},
      40},
-    {"Extermination",
+    {"Genocide",
      0x02000000L,
      TV_SCROLL1,
      '?', /*  208*/
