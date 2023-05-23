@@ -821,7 +821,7 @@ static struct treasureS treasureD[] = {
      0,
      0,
      3,
-     {1, 3},
+     {2, 2},
      0},
     {"& Flail",
      0x00000000L,
