@@ -852,8 +852,16 @@ static void build_room(ychunk, xchunk, ycenter, xcenter) int *ycenter, *xcenter;
   else
     floor = FLOOR_DARK;
 
-  hroom = CHUNK_HEIGHT - randint(CHUNK_HEIGHT - 4);
-  wroom = CHUNK_WIDTH - randint(CHUNK_WIDTH - 4);
+  if (ychunk + 1 == MAX_HEIGHT / CHUNK_HEIGHT) {
+    hroom = CHUNK_HEIGHT - 1;
+  } else {
+    hroom = CHUNK_HEIGHT - randint(CHUNK_HEIGHT - 4);
+  }
+  if (xchunk + 1 == MAX_WIDTH / CHUNK_WIDTH) {
+    wroom = CHUNK_WIDTH - 1;
+  } else {
+    wroom = CHUNK_WIDTH - randint(CHUNK_WIDTH - 4);
+  }
   y = ychunk * CHUNK_HEIGHT;
   x = xchunk * CHUNK_WIDTH;
   ymax = y + hroom;
