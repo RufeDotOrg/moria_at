@@ -13199,6 +13199,7 @@ dungeon()
     snprintf(dun_descD, AL(dun_descD), "%d feet", dun_level * 50);
   if (town) player_maint();
 
+  find_threat = 0;
   new_level_flag = FALSE;
   teleport = FALSE;
   do {
