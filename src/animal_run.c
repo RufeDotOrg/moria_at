@@ -431,9 +431,6 @@ static void msg_game(msg, msglen) char* msg;
   msg_used = snprintf(log + log_used, MAX_MSGLEN - log_used, " %s", msg);
 
   if (msg_used > 0) AS(msglen_cqD, msg_writeD) = log_used + msg_used;
-
-  if (countD.rest) countD.rest = 0;
-  if (find_flag) find_flag = 0;
 }
 #define msg_print(x) msg_game(AP(x))
 #define see_print(x) \
@@ -3754,6 +3751,7 @@ hard_reset()
 
   // Message history
   memset(msglen_cqD, 0, sizeof(msglen_cqD));
+  msg_writeD = msg_prevD = 0;
 
   // Replay state
   input_record_readD = input_action_usedD = 0;
@@ -13076,7 +13074,7 @@ ma_tick(check_view)
 void
 tick()
 {
-  int regen_amount, tmp;
+  int rest, poison, regen_amount, tmp;
 
   if (uD.food < 0)
     regen_amount = 0;
@@ -13086,6 +13084,8 @@ tick()
     regen_amount = PLAYER_REGEN_WEAK;
   else
     regen_amount = PLAYER_REGEN_NORMAL;
+  if (py_tr(TR_REGEN)) regen_amount = regen_amount * 3 / 2;
+
   if (uD.food < PLAYER_FOOD_FAINT && randint(8) == 1) {
     if (countD.paralysis == 0) MSG("You faint from lack of food.");
     countD.paralysis += randint(5);
@@ -13103,14 +13103,9 @@ tick()
   }
   uD.food = tmp;
 
-  if (py_tr(TR_REGEN)) regen_amount = regen_amount * 3 / 2;
-  if (countD.rest != 0) regen_amount = regen_amount * 2;
-  if (uD.cmana < uD.mmana) regenmana(regen_amount);
-
-  if (countD.poison == 0) {
-    regenhp(regen_amount);
-  } else if (countD.poison > 0) {
-    if (countD.poison == 1) {
+  poison = countD.poison;
+  if (poison > 0) {
+    if (poison == 1) {
       msg_print("You feel less ill.");
     } else {
       strcpy(death_descD, "poison");
@@ -13119,20 +13114,13 @@ tick()
         msg_print("You shiver from illness.");
       }
     }
-    countD.poison -= 1;
+    poison -= 1;
+    countD.poison = poison;
   }
 
   if (countD.confusion > 0) {
     countD.confusion -= 1;
     if (countD.confusion == 0) msg_print("You feel less confused.");
-  }
-
-  if (countD.rest < 0) {
-    countD.rest += 1;
-    if (uD.cmana == uD.mmana) countD.rest = 0;
-  } else if (countD.rest > 0) {
-    countD.rest -= 1;
-    if (uD.chp == uD.mhp && rest_affect() == 0) countD.rest = 0;
   }
 
   if (countD.paralysis) countD.paralysis -= 1;
@@ -13145,6 +13133,27 @@ tick()
     // random decay introduces randomness in rendering
     countD.imagine = MAX(countD.imagine - randint(4), 0);
   }
+
+  // Any message interrupts player rest
+  if (msg_prevD == msg_writeD)
+    rest = countD.rest;
+  else {
+    msg_prevD = msg_writeD;
+    rest = 0;
+    if (find_flag) find_flag = 0;
+  }
+  if (rest < 0) {
+    rest += 1;
+    if (uD.cmana == uD.mmana) rest = 0;
+  } else if (rest > 0) {
+    rest -= 1;
+    if (uD.chp == uD.mhp && rest_affect() == 0) rest = 0;
+  }
+  countD.rest = rest;
+
+  if (rest != 0) regen_amount = regen_amount * 2;
+  if (poison == 0) regenhp(regen_amount);
+  regenmana(regen_amount);
 }
 int
 dir_by_confusion()
