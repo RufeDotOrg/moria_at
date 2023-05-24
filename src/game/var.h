@@ -22,7 +22,6 @@ DATA char msg_cqD[MAX_MSG][98];
 DATA char msglen_cqD[MAX_MSG];
 DATA uint32_t msg_writeD;
 DATA uint32_t msg_moreD;
-DATA uint32_t msg_prevD;
 
 // Magic affect counters & names
 static int32_t maD[MA_COUNT];
