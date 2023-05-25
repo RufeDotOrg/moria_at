@@ -13141,9 +13141,11 @@ tick()
     if (countD.protevil == 0) msg_print("You no longer feel safe from evil.");
   }
 
-  if (countD.imagine > 0) {
+  if (countD.imagine) {
     // random decay introduces randomness in rendering
-    countD.imagine = MAX(countD.imagine - randint(4), 0);
+    tmp = countD.imagine - randint(4);
+    if (tmp < 0) tmp = 0;
+    countD.imagine = tmp;
   }
 }
 int
