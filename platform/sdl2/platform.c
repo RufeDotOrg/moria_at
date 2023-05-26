@@ -869,21 +869,6 @@ viz_minimap()
     }
   }
 }
-int
-platform_predraw()
-{
-  viz_update();
-  viz_minimap();
-  return 1;
-}
-
-static void
-pprect_index(idx)
-{
-  pp_rectD.x = ppD[idx].x - pp_rectD.w / 2;
-  pp_rectD.y = ppD[idx].y - pp_rectD.h / 2;
-}
-
 static void
 overlay_autoselect()
 {
@@ -906,7 +891,8 @@ overlay_autoselect()
     finger_rowD = 0;
   }
 }
-int
+
+static int
 mode_change()
 {
   int subprev = submodeD;
@@ -934,8 +920,24 @@ mode_change()
 
   modeD = mnext;
   submodeD = subnext;
+  memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
 
   return mnext;
+}
+int
+platform_predraw()
+{
+  mode_change();
+  viz_update();
+  viz_minimap();
+  return 1;
+}
+
+static void
+pprect_index(idx)
+{
+  pp_rectD.x = ppD[idx].x - pp_rectD.w / 2;
+  pp_rectD.y = ppD[idx].y - pp_rectD.h / 2;
 }
 
 void
@@ -993,18 +995,22 @@ overlay_draw(width, height)
   SDL_RenderFillRect(rendererD, &src_rect);
 
   alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
-  memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
   for (int row = 0; row < AL(overlayD); ++row) {
     font_colorD = whiteD;
     SDL_Point p = {
         left,
         top + row * height,
     };
+    char *text = overlayD[row];
+    int tlen = overlay_usedD[row];
     if (TOUCH && row == finger_rowD) {
       font_colorD = (SDL_Color){255, 0, 0, 255};
-      if (overlay_usedD[row] <= 1) overlayD[row][0] = '-';
+      if (tlen <= 1) {
+        text = "-";
+        tlen = 1;
+      }
     }
-    render_font_string(rendererD, &fontD, overlayD[row], overlay_usedD[row], p);
+    render_font_string(rendererD, &fontD, text, tlen, p);
   }
   font_colorD = whiteD;
 
@@ -1095,7 +1101,7 @@ platform_draw()
   int show_map, mode, more, height, width, left, top, len;
   char tmp[80];
 
-  mode = mode_change();
+  mode = modeD;
   switch (mode) {
     case 0:
       show_map = 1;
@@ -2044,7 +2050,7 @@ rw_file_access(char *filename, char *access)
   }
   *write = 0;
 
-  Log("loading filename: %s", savepathD);
+  Log("filename: %s", savepathD);
   return SDL_RWFromFile(savepathD, access);
 }
 int

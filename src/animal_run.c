@@ -3753,12 +3753,18 @@ hard_reset()
   memset(entity_monD, 0, sizeof(entity_monD));
 
   // Message history
-  memset(msglen_cqD, 0, sizeof(msglen_cqD));
+  AC(msglen_cqD);
+  AC(msg_cqD);
+  msg_writeD = 0;
 
   // Replay state
   input_record_readD = input_action_usedD = 0;
   input_record_writeD = input_resumeD ? AS(input_actionD, input_resumeD) : 0;
   input_resumeD = 0;
+
+  // Reset overlay modes
+  overlay_submodeD = 0;
+  screen_submodeD = 0;
 }
 BOOL
 panel_contains(panel, y, x)
@@ -10665,9 +10671,6 @@ py_menu()
   char* prompt;
 
   input_action = input_action_usedD;
-  // One command may be written ahead (e.g. py_look) and is invalid for replay
-  memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
-               input_action_usedD <= AL(input_actionD) - 1);
 
   if (death) {
     snprintf(descD, AL(descD), " Killed by %s. ", death_descD);
@@ -10677,6 +10680,10 @@ py_menu()
   }
 
   while (1) {
+    // One command may be written ahead (e.g. py_look) and is invalid for replay
+    memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
+                 input_action_usedD <= AL(input_actionD) - 1);
+
     overlay_submodeD = 0;
     line = 0;
     BufMsg(overlay, death ? "a) All equipment / inventory "
@@ -13626,9 +13633,9 @@ dungeon()
     }
 
     if (!town && (turnD & ~-1024) == 0) store_maint();
-    turnD += 1;
     ma_tick(!new_level_flag);  // falling
     tick();  // new_level_flag may change (player dies from poison)
+    turnD += 1;
   } while (!new_level_flag);
 }
 void
