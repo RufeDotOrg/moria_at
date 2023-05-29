@@ -17,7 +17,6 @@ static int input_resumeD;
 static int input_actionD[1024];
 static int input_action_usedD;
 static int drop_modeD;
-
 static char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
 #define MSG(x, ...)                                             \
@@ -13187,10 +13186,9 @@ dungeon()
   int ymine, xmine;
   uint32_t dir, teleport;
   int town;
-  uint32_t ephemeral;
+  int omit_replay;
 
   town = (dun_level == 0);
-  ephemeral = 0;
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
 
   if (town)
@@ -13209,6 +13207,7 @@ dungeon()
     ymine = xmine = -1;
 
     do {
+      omit_replay = 0;
       msg_moreD = 0;
       draw();
       if (new_level_flag) break;
@@ -13223,18 +13222,7 @@ dungeon()
         mmove(find_direction, &y, &x);
       } else {
         msg_advance();
-        if (ephemeral) {
-          input_record_readD = input_record_writeD =
-              AS(input_actionD, input_action_usedD - 1);
-
-          while (msg_writeD > ephemeral) {
-            msg_writeD -= 1;
-            AS(msglen_cqD, msg_writeD) = 0;
-          }
-          ephemeral = 0;
-        } else {
-          AS(input_actionD, input_action_usedD++) = input_record_readD;
-        }
+        AS(input_actionD, input_action_usedD++) = input_record_readD;
         c = inkey();
 
         // AWN: Period attempts auto-detection of a situational command
@@ -13294,9 +13282,11 @@ dungeon()
               msg_advance();
               break;
             case '-':
+              omit_replay = 1;
               zoom_factorD = (zoom_factorD - 1) % MAX_ZOOM;
               break;
             case '+':
+              omit_replay = 1;
               zoom_factorD = (zoom_factorD + 1) % MAX_ZOOM;
               break;
             case ' ':
@@ -13404,8 +13394,7 @@ dungeon()
               inkey();
               break;
             case 'O': {
-              ephemeral =
-                  (input_record_readD == input_record_writeD) ? msg_writeD : 0;
+              omit_replay = 1;
               if (zoom_factorD == 0) {
                 py_look(ylookD + panelD.panel_row_min,
                         xlookD + panelD.panel_col_min);
@@ -13621,6 +13610,10 @@ dungeon()
           }
         }
         panel_update(&panelD, uD.y, uD.x, FALSE);
+      }
+      if (omit_replay) {
+        input_record_readD = input_record_writeD =
+            AS(input_actionD, --input_action_usedD);
       }
     } while (!turn_flag);
 
