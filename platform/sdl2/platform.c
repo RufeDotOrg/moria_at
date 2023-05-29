@@ -1979,8 +1979,10 @@ platform_random()
 {
   int ret = -1;
   SDL_RWops *readf = SDL_RWFromFile("/dev/urandom", "rb");
-  if (readf) SDL_RWread(readf, &ret, sizeof(ret), 1);
-  SDL_RWclose(readf);
+  if (readf) {
+    SDL_RWread(readf, &ret, sizeof(ret), 1);
+    SDL_RWclose(readf);
+  }
   Log("seed %d", ret);
   return ret;
 }
