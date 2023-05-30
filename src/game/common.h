@@ -61,9 +61,15 @@ typedef int (*fn)();
 #define DATA
 #endif
 // group game data for determinism verification
+#ifdef __APPLE__
+#define GAME DATA __attribute__((section("__DATA,game")))
+int __start_game __asm("section$start$__DATA$game");
+int __stop_game __asm("section$end$__DATA$game");
+#else
 #define GAME DATA __attribute__((section("game")))
 extern void __start_game;
 extern void __stop_game;
+#endif
 
 // Game build variants
 #ifdef RELEASE
