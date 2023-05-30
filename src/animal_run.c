@@ -3739,17 +3739,8 @@ cave_reset()
 void
 hard_reset()
 {
-  // Clear the cave
-  memset(caveD, 0, sizeof(caveD));
-
-  // Release all objects
-  obj_usedD = 0;
-  memset(objD, 0, sizeof(objD));
-  memset(entity_objD, 0, sizeof(entity_objD));
-  // Release all monsters
-  mon_usedD = 0;
-  memset(monD, 0, sizeof(monD));
-  memset(entity_monD, 0, sizeof(entity_monD));
+  // Clear game state
+  memset(&__start_game, 0, &__stop_game - &__start_game);
 
   // Message history
   AC(msglen_cqD);
@@ -13708,9 +13699,6 @@ main(int argc, char** argv)
   }
 
   // Per-Player initialization
-  death = 0;
-  total_winner = 0;
-  save_exit_flag = 0;
   calc_bonuses();
   calc_hitpoints();
   calc_mana();

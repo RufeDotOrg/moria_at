@@ -2014,19 +2014,6 @@ clear_savebuf()
     struct bufS buf = save_bufD[it];
     memset(buf.mem, 0, buf.mem_size);
   }
-  memset(msglen_cqD, 0, sizeof(msglen_cqD));
-
-  // Also some UI state
-  AC(overlay_copyD);
-  modeD = 0;
-  submodeD = 0;
-  finger_rowD = 0;
-  finger_colD = 0;
-  AC(screen_usedD);
-  AC(overlay_usedD);
-  screen_submodeD = 0;
-  overlay_submodeD = 0;
-  minimap_enlargeD = FALSE;
 
   return 0;
 }
