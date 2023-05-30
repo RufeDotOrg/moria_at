@@ -10663,7 +10663,7 @@ py_menu()
   input_action = input_action_usedD;
 
   if (death) {
-    snprintf(descD, AL(descD), " Killed by %s. ", death_descD);
+    snprintf(descD, AL(descD), " Killed by %.72s. ", death_descD);
     prompt = descD;
   } else {
     prompt = " Advanced Game Actions ";
