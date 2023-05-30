@@ -13346,6 +13346,7 @@ dungeon()
               py_actuate(&y, &x);
               break;
             case 'C':
+              omit_replay = 1;
               show_character();
               break;
             case 'D':
@@ -13376,6 +13377,8 @@ dungeon()
                     }
                   }
                 }
+              } else {
+                omit_replay = 1;
               }
               screen_submodeD = 0;
               screenD[0][0] = ' ';
