@@ -87,18 +87,18 @@ DATA float columnD[4];
 DATA char savepathD[1024];
 DATA int savepath_usedD;
 
-static int overlay_copyD[AL(overlay_usedD)];
-static SDL_Color whiteD = {255, 255, 255, 255};
-static SDL_Color font_colorD;
-static int xD;
-static int modeD;
-static int submodeD;
-static uint8_t finger_rowD;
-static uint8_t finger_colD;
-static uint8_t finger_countD;
-static int quitD;
-static int last_pressD;
-static SDL_Point hdpi_scaleD;
+DATA int overlay_copyD[AL(overlay_usedD)];
+DATA SDL_Color whiteD = {255, 255, 255, 255};
+DATA SDL_Color font_colorD;
+DATA int xD;
+DATA int modeD;
+DATA int submodeD;
+DATA uint8_t finger_rowD;
+DATA uint8_t finger_colD;
+DATA uint8_t finger_countD;
+DATA int quitD;
+DATA int last_pressD;
+DATA SDL_Point hdpi_scaleD;
 
 #define MMSCALE 2
 
@@ -204,14 +204,14 @@ DATA struct SDL_Texture *font_textureD[MAX_GLYPH];
 
 // hex RGBA to little endian
 #define CHEX(x) __builtin_bswap32(x)
-static uint32_t paletteD[] = {
+DATA uint32_t paletteD[] = {
     CHEX(0x00000000), CHEX(0xcc0000ff), CHEX(0x4e9a06ff), CHEX(0xc4a000ff),
     CHEX(0x3465a4ff), CHEX(0x75507bff), CHEX(0x06989aff), CHEX(0xd3d7cfff),
     CHEX(0x555753ff), CHEX(0xef2929ff), CHEX(0x8ae234ff), CHEX(0xfce94fff),
     CHEX(0x729fcfff), CHEX(0xad7fa8ff), CHEX(0x34e2e2ff), CHEX(0xeeeeecff),
 };
-static uint32_t rgbaD[AL(paletteD)];
-static uint32_t lightingD[] = {
+DATA uint32_t rgbaD[AL(paletteD)];
+DATA uint32_t lightingD[] = {
     CHEX(0x161616ff),
     CHEX(0x282828ff),
     CHEX(0x3c3c3cff),
@@ -561,7 +561,7 @@ DATA SDL_Rect buttonD[2];
 DATA SDL_Rect padD;
 DATA SDL_Point ppD[9];
 DATA SDL_Rect pp_rectD;
-static int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
+DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 
 SDL_Texture *
 texture_by_sym(char c)
@@ -577,8 +577,8 @@ texture_by_sym(char c)
 }
 
 //  cos of (it * M_PI / 4);
-static float cos_table[] = {1.000,  0.707,  0.000,  -0.707,
-                            -1.000, -0.707, -0.000, 0.707};
+DATA float cos_table[] = {1.000,  0.707,  0.000,  -0.707,
+                          -1.000, -0.707, -0.000, 0.707};
 static float
 cos_lookup(idx)
 {

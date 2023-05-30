@@ -1,8 +1,8 @@
 
-#define GAME static __attribute__((section("game")))
+#define GAME __attribute__((section("game")))
 
 static char global_nameD[16] = "fredrick";
-GAME char py_nameD[16] = {0};
+GAME char py_nameD[16];
 
 extern char __start_game;
 extern char __stop_game;

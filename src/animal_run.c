@@ -1,23 +1,23 @@
 #include "game.c"
 
 enum { HACK = 0 };
-static int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
-static int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
-static int find_threat;
-static int find_direction;
-static int find_flag;
-static int find_openarea;
-static int find_breakright, find_breakleft;
-static int find_prevdir;
-static jmp_buf restartD;
-static char input_recordD[4 * 1024];
-static uint32_t input_record_writeD;
-static uint32_t input_record_readD;
-static int input_resumeD;
-static int input_actionD[1024];
-static int input_action_usedD;
-static int drop_modeD;
-static char quit_stringD[] = "quitting";
+DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
+DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
+DATA int find_threat;
+DATA int find_direction;
+DATA int find_flag;
+DATA int find_openarea;
+DATA int find_breakright, find_breakleft;
+DATA int find_prevdir;
+DATA jmp_buf restartD;
+DATA char input_recordD[4 * 1024];
+DATA uint32_t input_record_writeD;
+DATA uint32_t input_record_readD;
+DATA int input_resumeD;
+DATA int input_actionD[1024];
+DATA int input_action_usedD;
+DATA int drop_modeD;
+DATA char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
 #define MSG(x, ...)                                             \
   {                                                             \
@@ -322,7 +322,7 @@ uspelltable()
   }
   return 0;
 }
-static char backupD[16];
+DATA char backupD[16];
 char*
 savename_by_class(clidx)
 {
@@ -1106,8 +1106,8 @@ place_door(y, x)
   } else
     place_secret_door(y, x);
 }
-static coords doorstk[100];
-static int doorindex;
+DATA coords doorstk[100];
+DATA int doorindex;
 static void
 build_corridor(row1, col1, row2, col2)
 {
@@ -3114,10 +3114,10 @@ place_rubble(y, x)
 }
 
 #define MAX_GOLD 18
-static int goldD[MAX_GOLD] = {
+DATA int goldD[MAX_GOLD] = {
     3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 80,
 };
-static char* gold_nameD[MAX_GOLD] = {
+DATA char* gold_nameD[MAX_GOLD] = {
     "copper",    "copper",  "copper", "silver",   "silver",   "silver",
     "garnets",   "garnets", "gold",   "gold",     "gold",     "opals",
     "sapphires", "gold",    "rubies", "diamonds", "emeralds", "mithril",
@@ -12141,7 +12141,7 @@ static void mon_try_multiply(mon) struct monS* mon;
 
   if ((k < 4) && (randint((k + 1) * MON_MULT_ADJ) == 1)) mon_multiply(mon);
 }
-static char* mon_spell_nameD[] = {
+DATA char* mon_spell_nameD[] = {
     "phase door",     "teleport",       "summon",        "wounds",
     "serious wounds", "paralysis",      "blindness",     "confusion",
     "fear",           "summon monster", "summon undead", "slow",

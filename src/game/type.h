@@ -18,8 +18,7 @@ struct bufS {
   }
 
 // Summary of savechar
-struct summaryS
-{
+struct summaryS {
   int slevel;
   int sclass;
   int srace;
@@ -83,7 +82,7 @@ struct uS {
   int32_t unused1;
   int32_t unused2;
 };
-static struct uS uD;
+GAME struct uS uD;
 
 // Calculated bonus; see calc_bonuses()
 struct cbS {
@@ -100,7 +99,7 @@ struct cbS {
   // Other flags
   uint8_t weapon_heavy;
 };
-static struct cbS cbD;
+GAME struct cbS cbD;
 
 struct countS {
   // Player ailment counters
@@ -113,7 +112,7 @@ struct countS {
   // Player protection counters
   int32_t protevil;
 };
-static struct countS countD;
+GAME struct countS countD;
 
 struct raceS {
   char *name;          /* Type of race			*/
@@ -164,7 +163,7 @@ struct statS {
   int8_t mod_stat[MAX_A]; /* Boosted artificially (by wearing something) */
   int8_t use_stat[MAX_A]; /* Play value, see set_use_stat() */
 };
-static struct statS statD;
+GAME struct statS statD;
 
 // Player spell
 struct spellS {
@@ -182,7 +181,7 @@ struct panelS {
   int32_t panel_col_min;
   int32_t panel_col_max;
 };
-static struct panelS panelD;
+DATA struct panelS panelD;
 
 struct caveS {
   uint8_t midx;   // monster
@@ -190,7 +189,7 @@ struct caveS {
   uint8_t fval;   // floor
   uint8_t cflag;  // cave flag (CF_)
 };
-static struct caveS caveD[MAX_HEIGHT][MAX_WIDTH];
+GAME struct caveS caveD[MAX_HEIGHT][MAX_WIDTH];
 
 struct treasureS {
   char *name;        /* Object name		*/

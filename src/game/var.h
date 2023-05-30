@@ -24,11 +24,11 @@ DATA uint32_t msg_writeD;
 DATA uint32_t msg_moreD;
 
 // Magic affect counters & names
-static int32_t maD[MA_COUNT];
-static uint8_t spell_orderD[32];
-static uint8_t spell_chanceD[32];
+DATA int32_t maD[MA_COUNT];
+DATA uint8_t spell_orderD[32];
+DATA uint8_t spell_chanceD[32];
 
-uint32_t player_exp[MAX_PLAYER_LEVEL] = {
+DATA uint32_t player_exp[MAX_PLAYER_LEVEL] = {
     10,      25,       45,       70,       100,      140,     200,
     280,     380,      500,      650,      850,      1100,    1400,
     1800,    2300,     2900,     3600,     4400,     5400,    6800,
@@ -39,7 +39,7 @@ uint32_t player_exp[MAX_PLAYER_LEVEL] = {
 /* this table is used to generate a psuedo-normal distribution.   See the
    function randnor() in misc1.c, this is much faster than calling
    transcendental function to calculate a true normal distribution */
-int16_t normal_table[] = {
+DATA int16_t normal_table[] = {
     206,   613,   1022,  1430,  1838,  2245,  2652,  3058,  3463,  3867,  4271,
     4673,  5075,  5475,  5874,  6271,  6667,  7061,  7454,  7845,  8234,  8621,
     9006,  9389,  9770,  10148, 10524, 10898, 11269, 11638, 12004, 12367, 12727,
@@ -66,7 +66,7 @@ int16_t normal_table[] = {
     32766, 32766, 32766,
 };
 
-uint8_t blows_table[][6] = {
+DATA uint8_t blows_table[][6] = {
     /* STR/W: 9 18 67 107 117 118   : DEX */
     /* <2 */ {1, 1, 1, 1, 1, 1},
     /* <3 */ {1, 1, 1, 1, 2, 2},
@@ -78,42 +78,42 @@ uint8_t blows_table[][6] = {
 };
 
 // Game
-static uint32_t rnd_seed;
-static uint32_t obj_seed;
-static uint32_t town_seed;
+DATA uint32_t rnd_seed;
+DATA uint32_t obj_seed;
+DATA uint32_t town_seed;
 DATA int turnD;
-static int player_hpD[AL(player_exp)];
-static int death;
-static int total_winner;
-static int save_exit_flag;
-static int dun_level;
+DATA int player_hpD[AL(player_exp)];
+DATA int death;
+DATA int total_winner;
+DATA int save_exit_flag;
+DATA int dun_level;
 DATA char dun_descD[16];
-static int turn_flag;
-static int new_level_flag;
-static int pack_heavy;
-static char descD[98];
-static char detailD[98];
-static char death_descD[98];
-static int ylookD;
-static int xlookD;
+DATA int turn_flag;
+DATA int new_level_flag;
+DATA int pack_heavy;
+DATA char descD[98];
+DATA char detailD[98];
+DATA char death_descD[98];
+DATA int ylookD;
+DATA int xlookD;
 
 ARR_REUSE(obj, 256);
 ARR_REUSE(mon, 256);
 
 // Known refers to stackable treasures that are instanced
 // Distinct from identification which is PER object
-static uint8_t knownD[7][MAX_SUBVAL];
+DATA uint8_t knownD[7][MAX_SUBVAL];
 // Inventory of object IDs; obj_get(id)
 // Zero is an available or empty slot
 // [INVEN_WIELD, INVEN_AUX] are equipment
-static int invenD[MAX_INVEN];
-static int storeD[MAX_STORE];
-static struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
-static char versionD[] = "XXXX.YYYY.ZZZZ";
-static char git_hashD[] = "AbCdEfGhIjKlMnO";
+DATA int invenD[MAX_INVEN];
+DATA int storeD[MAX_STORE];
+DATA struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
+DATA char versionD[] = "XXXX.YYYY.ZZZZ";
+DATA char git_hashD[] = "AbCdEfGhIjKlMnO";
 
 // Optional UI state
-static uint8_t ui_stateD[256];
+DATA uint8_t ui_stateD[256];
 
 // load/save
 DATA struct bufS save_bufD[] = {
@@ -127,15 +127,15 @@ DATA int savechar_v000[AL(save_bufD)] = {
     28, 4, 10240, 136, 448, 56, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 100, 0, 0,
 };
 #define SAVESUM000 16080
-static int savechar_v001[] = {
+DATA int savechar_v001[] = {
     28, 4, 10240, 136, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 116, 32, 0,
 };
 #define SAVESUM001 16148
-static int savechar_v002[] = {
+DATA int savechar_v002[] = {
     28, 4, 10240, 140, 448, 76, 1024, 4, 160, 4, 4, 4, 24, 3840, 4, 128, 32, 0,
 };
 #define SAVESUM002 16164
-static int savechar_v003[] = {
+DATA int savechar_v003[] = {
     28, 4, 10240, 140, 448,  76, 1024, 4,  160,
     4,  4, 4,     24,  3840, 4,  128,  32, 256,
 };

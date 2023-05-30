@@ -46,7 +46,7 @@ typedef int (*fn)();
 // Array Slot
 #define AS(arr, id) arr[(id) % AL(arr)]
 // Array End
-#define AE(arr) (arr+sizeof(arr))
+#define AE(arr) (arr + sizeof(arr))
 
 #define ABS(x) (x >= 0 ? x : -x)
 #define CLAMP(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))
@@ -56,10 +56,12 @@ typedef int (*fn)();
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
 
-// tagged global data for modular builds (memory is application global)
+// tag data, optionally global
 #ifndef DATA
 #define DATA
 #endif
+// group game data for determinism verification
+#define GAME DATA __attribute__((section("game")))
 
 // Game build variants
 #ifdef RELEASE
@@ -74,9 +76,9 @@ enum { RELEASE = 0 };
 // eid is a stable, generational modulus index into entity array
 #define ARR_REUSE(type, max)                                                 \
   _Static_assert(OF2(max), "ARR_USE requires a power of 2");                 \
-  static int type##D[max];                                                   \
-  static int type##_usedD;                                                   \
-  static struct type##S entity_##type##D[max];                               \
+  GAME int type##D[max];                                                     \
+  GAME int type##_usedD;                                                     \
+  GAME struct type##S entity_##type##D[max];                                 \
   static struct type##S* type##_use()                                        \
   {                                                                          \
     int it = type##_usedD;                                                   \
