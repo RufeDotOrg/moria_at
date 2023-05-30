@@ -8,11 +8,11 @@ DATA int active_affectD[15];
 
 // Full-screen & overlay (choice)
 DATA char screenD[22][98];
-DATA int screen_usedD[AL(screenD)];
-DATA int screen_submodeD;
+GAME int screen_usedD[AL(screenD)];
+GAME int screen_submodeD;
 DATA char overlayD[22][80];
-DATA int overlay_usedD[AL(overlayD)];
-DATA int overlay_submodeD;
+GAME int overlay_usedD[AL(overlayD)];
+GAME int overlay_submodeD;
 DATA uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
 DATA uint32_t zoom_factorD;
@@ -24,9 +24,9 @@ DATA uint32_t msg_writeD;
 DATA uint32_t msg_moreD;
 
 // Magic affect counters & names
-DATA int32_t maD[MA_COUNT];
-DATA uint8_t spell_orderD[32];
-DATA uint8_t spell_chanceD[32];
+GAME int32_t maD[MA_COUNT];
+GAME uint8_t spell_orderD[32];
+GAME uint8_t spell_chanceD[32];
 
 DATA uint32_t player_exp[MAX_PLAYER_LEVEL] = {
     10,      25,       45,       70,       100,      140,     200,
@@ -78,22 +78,23 @@ DATA uint8_t blows_table[][6] = {
 };
 
 // Game
-DATA uint32_t rnd_seed;
-DATA uint32_t obj_seed;
-DATA uint32_t town_seed;
-DATA int turnD;
-DATA int player_hpD[AL(player_exp)];
-DATA int death;
-DATA int total_winner;
-DATA int save_exit_flag;
-DATA int dun_level;
-DATA char dun_descD[16];
-DATA int turn_flag;
-DATA int new_level_flag;
-DATA int pack_heavy;
+GAME uint32_t rnd_seed;
+GAME uint32_t obj_seed;
+GAME uint32_t town_seed;
+GAME int turnD;
+GAME int player_hpD[AL(player_exp)];
+GAME int death;
+GAME int total_winner;
+GAME int save_exit_flag;
+GAME int dun_level;
+GAME int turn_flag;
+GAME int new_level_flag;
+GAME int pack_heavy;
+
 DATA char descD[98];
 DATA char detailD[98];
 DATA char death_descD[98];
+DATA char dun_descD[16];
 DATA int ylookD;
 DATA int xlookD;
 
@@ -102,18 +103,19 @@ ARR_REUSE(mon, 256);
 
 // Known refers to stackable treasures that are instanced
 // Distinct from identification which is PER object
-DATA uint8_t knownD[7][MAX_SUBVAL];
+GAME uint8_t knownD[7][MAX_SUBVAL];
 // Inventory of object IDs; obj_get(id)
 // Zero is an available or empty slot
 // [INVEN_WIELD, INVEN_AUX] are equipment
-DATA int invenD[MAX_INVEN];
-DATA int storeD[MAX_STORE];
-DATA struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
+GAME int invenD[MAX_INVEN];
+GAME int storeD[MAX_STORE];
+GAME struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
+
 DATA char versionD[] = "XXXX.YYYY.ZZZZ";
 DATA char git_hashD[] = "AbCdEfGhIjKlMnO";
 
 // Optional UI state
-DATA uint8_t ui_stateD[256];
+GAME uint8_t ui_stateD[256];
 
 // load/save
 DATA struct bufS save_bufD[] = {

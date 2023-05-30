@@ -87,14 +87,15 @@ DATA float columnD[4];
 DATA char savepathD[1024];
 DATA int savepath_usedD;
 
-DATA int overlay_copyD[AL(overlay_usedD)];
+GAME int overlay_copyD[AL(overlay_usedD)];
+GAME int modeD;
+GAME int submodeD;
+GAME uint8_t finger_rowD;
+GAME uint8_t finger_colD;
+
 DATA SDL_Color whiteD = {255, 255, 255, 255};
 DATA SDL_Color font_colorD;
 DATA int xD;
-DATA int modeD;
-DATA int submodeD;
-DATA uint8_t finger_rowD;
-DATA uint8_t finger_colD;
 DATA uint8_t finger_countD;
 DATA int quitD;
 DATA int last_pressD;

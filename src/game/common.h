@@ -62,6 +62,8 @@ typedef int (*fn)();
 #endif
 // group game data for determinism verification
 #define GAME DATA __attribute__((section("game")))
+extern char __start_game;
+extern char __stop_game;
 
 // Game build variants
 #ifdef RELEASE
