@@ -13160,7 +13160,7 @@ dir_by_confusion()
     nx = uD.x;
     if (it != 5 && mmove(it, &ny, &nx)) {
       c_ptr = &caveD[ny][nx];
-      if (c_ptr->midx || c_ptr->fval <= MAX_FLOOR) {
+      if (c_ptr->midx || c_ptr->fval <= MAX_OPEN_SPACE) {
         mm[valid] = it;
         valid += 1;
       }
