@@ -3740,7 +3740,7 @@ void
 hard_reset()
 {
   // Clear game state
-  memset(&__start_game, 0, &__stop_game - &__start_game);
+  memset(&__start_game, 0, __stop_game - __start_game);
 
   // Message history
   AC(msglen_cqD);
