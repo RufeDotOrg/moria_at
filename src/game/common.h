@@ -56,11 +56,13 @@ typedef int (*fn)();
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
 
-// tag data, optionally global
+// (optionally defined)
+// global declaration
 #ifndef DATA
 #define DATA
 #endif
-// group game data for determinism verification
+
+// game data section for determinism verification
 #ifdef __APPLE__
 #define GAME DATA __attribute__((section("__DATA,game")))
 int __start_game __asm("section$start$__DATA$game");
@@ -72,7 +74,7 @@ extern unsigned char __stop_game[] __attribute__((__weak__));
 #endif
 
 // Game build variants
-#ifdef RELEASE
+#if defined(NDEBUG) || defined(RELEASE)
 #undef RELEASE
 enum { RELEASE = 1 };
 #else

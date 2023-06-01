@@ -2157,6 +2157,7 @@ platform_pregame()
 
   init = !SDL_WasInit(SDL_SCOPE);
   if (init) {
+    if (!RELEASE) Log("Initializing development build");
     // SDL config
     SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
     if (!ANDROID) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
