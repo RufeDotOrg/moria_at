@@ -58,7 +58,7 @@ struct uS {
   // Status
   int32_t food;
   int32_t food_digest;
-  uint8_t char_unused1;
+  uint8_t new_level_flag;
   uint8_t clidx;  // class
   uint8_t ridx;   // race
   uint8_t male;

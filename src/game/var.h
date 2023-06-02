@@ -88,7 +88,6 @@ GAME int total_winner;
 GAME int save_exit_flag;
 GAME int dun_level;
 GAME int turn_flag;
-GAME int new_level_flag;
 GAME int pack_heavy;
 
 DATA char descD[98];

@@ -559,9 +559,7 @@ go_up()
     if (entity_objD[c_ptr->oidx].tval == TV_UP_STAIR) {
       turn_flag = TRUE;
       dun_level -= 1;
-      new_level_flag = TRUE;
-      msg_print("You enter a maze of up staircases.");
-      msg_print("You pass through a one-way door.");
+      uD.new_level_flag = NL_UP_STAIR;
     } else
       no_stairs = TRUE;
   else
@@ -582,9 +580,7 @@ go_down()
     if (entity_objD[c_ptr->oidx].tval == TV_DOWN_STAIR) {
       turn_flag = TRUE;
       dun_level += 1;
-      new_level_flag = TRUE;
-      msg_print("You enter a maze of down staircases.");
-      msg_print("You pass through a one-way door.");
+      uD.new_level_flag = NL_DOWN_STAIR;
     } else
       no_stairs = TRUE;
   else
@@ -5543,13 +5539,11 @@ ma_bonuses(maffect, factor)
     case MA_RECALL:
       if (factor < 0) {
         if (dun_level) {
-          msg_print("You feel yourself yanked upwards!");
           dun_level = 0;
         } else {
-          msg_print("You feel yourself yanked downwards!");
           dun_level = uD.max_dlv;
         }
-        new_level_flag = 1;
+        uD.new_level_flag = NL_RECALL;
         countD.paralysis += 1;
       }
       break;
@@ -6099,7 +6093,7 @@ py_take_hit(damage)
   uD.chp -= damage;
   if (uD.chp < 0) {
     death = TRUE;
-    new_level_flag = TRUE;
+    uD.new_level_flag = NL_DEATH;
   }
 }
 static void py_stats(stats, len) int8_t* stats;
@@ -8836,7 +8830,7 @@ int *uy, *ux;
           case 10:
             dun_level += (-3) + 2 * randint(2);
             if (dun_level < 1) dun_level = 1;
-            new_level_flag = TRUE;
+            uD.new_level_flag = NL_TELEPORT;
             ident |= TRUE;
             break;
           case 11:
@@ -12496,17 +12490,17 @@ static void hit_trap(y, x, uy, ux) int *uy, *ux;
       obj->subval = 1;
       break;
     case 4: /* Trap door*/
+      msg_print("A trap door opens.");
       if (py_tr(TR_FFALL)) {
-        MSG("A trap door opens; falling slowly, you catch the ledge.");
+        msg_print("You fall slowly, catching the ledge.");
       } else {
-        new_level_flag = TRUE;
+        uD.new_level_flag = NL_TRAP;
         dun_level++;
-        msg_print("You fell through a trap door!");
         py_take_hit(dam);
+        /* Force the messages to display before starting to generate the
+           next level.  */
+        msg_pause();
       }
-      /* Force the messages to display before starting to generate the
-         next level.  */
-      msg_pause();
       break;
     case 5: /* Sleep gas*/
       if (countD.paralysis == 0) {
@@ -13168,9 +13162,30 @@ dungeon()
     snprintf(dun_descD, AL(dun_descD), "%s", "town square");
   else
     snprintf(dun_descD, AL(dun_descD), "%d feet", dun_level * 50);
+
+  switch (uD.new_level_flag) {
+    case NL_DOWN_STAIR:
+      msg_print("You enter a maze of down staircases.");
+      msg_print("You pass through a one-way door.");
+      break;
+    case NL_UP_STAIR:
+      msg_print("You enter a maze of up staircases.");
+      msg_print("You pass through a one-way door.");
+      break;
+    case NL_RECALL:
+      if (town) {
+        msg_print("You feel yourself yanked upwards!");
+      } else {
+        msg_print("You feel yourself yanked downwards!");
+      }
+      break;
+    case NL_TRAP:
+      msg_print("You fell through a trap door!");
+      break;
+  }
+  uD.new_level_flag = 0;
   if (town) player_maint();
 
-  new_level_flag = FALSE;
   teleport = FALSE;
   do {
     turn_flag = FALSE;
@@ -13182,7 +13197,6 @@ dungeon()
       omit_replay = 0;
       msg_moreD = 0;
       draw();
-      if (new_level_flag) break;
       if (!teleport && countD.rest != 0) break;
       if (!teleport && countD.paralysis != 0) break;
 
@@ -13417,7 +13431,7 @@ dungeon()
             } break;
             case CTRL('x'): {
               save_exit_flag = TRUE;
-              new_level_flag = TRUE;
+              uD.new_level_flag = NL_DEATH;
               memcpy(death_descD, AP(quit_stringD));
             } break;
             default:
@@ -13503,7 +13517,7 @@ dungeon()
               } break;
               case CTRL('z'): {
                 dun_level += 1;
-                new_level_flag = TRUE;
+                uD.new_level_flag = NL_DOWN_STAIR;
               } break;
             }
           }
@@ -13593,7 +13607,7 @@ dungeon()
     } while (!turn_flag);
 
     ma_tick(0);  // rising
-    if (!new_level_flag) {
+    if (!uD.new_level_flag) {
       creatures();
       teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
       if (!town && randint(MAX_MALLOC_CHANCE) == 1)
@@ -13601,10 +13615,10 @@ dungeon()
     }
 
     if (!town && (turnD & ~-1024) == 0) store_maint();
-    ma_tick(!new_level_flag);  // falling
-    tick();  // new_level_flag may change (player dies from poison)
+    ma_tick(!uD.new_level_flag);  // falling
+    tick();  // uD.new_level_flag may change (player dies from poison)
     turnD += 1;
-  } while (!new_level_flag);
+  } while (!uD.new_level_flag);
 }
 void
 mon_level_init()

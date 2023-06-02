@@ -456,6 +456,13 @@
 #define A_CHR 5
 #define MAX_A 6
 
+#define NL_DOWN_STAIR 1
+#define NL_UP_STAIR 2
+#define NL_RECALL 3
+#define NL_DEATH 4
+#define NL_TELEPORT 5
+#define NL_TRAP 6
+
 // Input
 #define ESCAPE '\033'
 #define CTRL(x) (x & 0x1f)
