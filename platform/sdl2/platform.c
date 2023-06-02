@@ -67,6 +67,9 @@ DATA struct SDL_Renderer *rendererD;
 DATA uint32_t texture_formatD;
 DATA SDL_PixelFormat *pixel_formatD;
 
+DATA uint32_t sprite_idD;
+DATA SDL_Surface *spriteD;
+DATA SDL_Texture *sprite_textureD;
 DATA SDL_Surface *mmsurfaceD;
 DATA SDL_Texture *mmtextureD;
 DATA SDL_Surface *tpsurfaceD;
@@ -102,6 +105,7 @@ DATA int last_pressD;
 DATA SDL_Point hdpi_scaleD;
 
 #define MMSCALE 2
+#define SPRITE_SQ 32
 
 int
 render_init()
@@ -230,9 +234,10 @@ bitmap_yx_into_surface(void *bitmap, int64_t ph, int64_t pw, SDL_Point into,
 {
   uint8_t bpp = surface->format->BytesPerPixel;
   uint8_t *pixels = surface->pixels;
+  int64_t pitch = surface->pitch;
   uint8_t *src = bitmap;
   for (int64_t row = 0; row < ph; ++row) {
-    uint8_t *dst = pixels + (surface->pitch * (into.y + row)) + (bpp * into.x);
+    uint8_t *dst = pixels + (pitch * (into.y + row)) + (bpp * into.x);
     for (int64_t col = 0; col < pw; ++col) {
       memcpy(dst, &rgbaD[*src & 0xff], bpp);
       src += 1;
@@ -258,7 +263,7 @@ bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
 #define MAX_ART 279
 DATA uint8_t artD[96 * 1024];
 DATA uint64_t art_usedD;
-DATA struct SDL_Texture *art_textureD[MAX_ART];
+DATA uint32_t art_textureD[MAX_ART];
 int
 art_io()
 {
@@ -272,40 +277,45 @@ art_io()
   return rc == 0;
 }
 
+static SDL_Point
+point_by_spriteid(sprite_idD)
+{
+  int col = sprite_idD % SPRITE_SQ;
+  int row = sprite_idD / SPRITE_SQ;
+  return (SDL_Point){
+      col * ART_W,
+      row * ART_H,
+  };
+}
+
 int
 art_init()
 {
-  struct SDL_Renderer *renderer = rendererD;
-  int byte_count = art_usedD;
   uint8_t bitmap[ART_H][ART_W];
-
-  struct SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
-      SDL_SWSURFACE, ART_W, ART_H, 0, texture_formatD);
+  uint64_t art_size = (ART_W * ART_H / 8);
+  int byte_count = art_usedD;
   uint64_t byte_used = 0;
-  for (int it = 0; it < AL(art_textureD);
-       ++it, byte_used += (ART_W * ART_H / 8)) {
-    if (byte_used >= byte_count) break;
-    bitfield_to_bitmap(&artD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
-                           surface);
-    art_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_SetTextureBlendMode(art_textureD[it], SDL_BLENDMODE_BLEND);
-  }
-  SDL_FreeSurface(surface);
-
   for (int it = 0; it < AL(art_textureD); ++it) {
-    if (!art_textureD[it]) return 0;
-  }
-  Log("Art textures available %d", MAX_ART);
+    int offset = byte_used;
+    byte_used += art_size;
+    if (byte_used > byte_count) break;
 
-  return 1;
+    bitfield_to_bitmap(&artD[offset], &bitmap[0][0], ART_W * ART_H);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
+                           point_by_spriteid(sprite_idD), spriteD);
+    art_textureD[it] = sprite_idD++;
+  }
+
+  Log("art_init result %d", byte_used <= byte_count);
+
+  return byte_used <= byte_count;
 }
 
 // treasure
 #define MAX_TART 53
 DATA uint8_t tartD[16 * 1024];
 DATA uint64_t tart_usedD;
-DATA struct SDL_Texture *tart_textureD[MAX_TART];
+DATA uint32_t tart_textureD[MAX_TART];
 int
 tart_io()
 {
@@ -322,37 +332,31 @@ tart_io()
 int
 tart_init()
 {
-  struct SDL_Renderer *renderer = rendererD;
-  int byte_count = tart_usedD;
   uint8_t bitmap[ART_H][ART_W];
-
-  struct SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
-      SDL_SWSURFACE, ART_W, ART_H, 0, texture_formatD);
+  uint64_t art_size = (ART_W * ART_H / 8);
+  int byte_count = tart_usedD;
   uint64_t byte_used = 0;
-  for (int it = 0; it < AL(tart_textureD);
-       ++it, byte_used += (ART_W * ART_H / 8)) {
-    if (byte_used >= byte_count) break;
-    bitfield_to_bitmap(&tartD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
-                           surface);
-    tart_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_SetTextureBlendMode(tart_textureD[it], SDL_BLENDMODE_BLEND);
-  }
-  SDL_FreeSurface(surface);
-
   for (int it = 0; it < AL(tart_textureD); ++it) {
-    if (!tart_textureD[it]) return 0;
-  }
-  Log("Treasure Art textures available %d", MAX_TART);
+    int offset = byte_used;
+    byte_used += art_size;
+    if (byte_used > byte_count) break;
 
-  return 1;
+    bitfield_to_bitmap(&tartD[offset], &bitmap[0][0], ART_W * ART_H);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
+                           point_by_spriteid(sprite_idD), spriteD);
+    tart_textureD[it] = sprite_idD++;
+  }
+
+  Log("tart_init result %d", byte_used <= byte_count);
+
+  return byte_used <= byte_count;
 }
 
 // wall
 #define MAX_WART 6
 DATA uint8_t wartD[4 * 1024];
 DATA uint64_t wart_usedD;
-DATA struct SDL_Texture *wart_textureD[MAX_WART];
+DATA uint32_t wart_textureD[MAX_WART];
 int
 wart_io()
 {
@@ -369,37 +373,31 @@ wart_io()
 int
 wart_init()
 {
-  struct SDL_Renderer *renderer = rendererD;
-  int byte_count = wart_usedD;
   uint8_t bitmap[ART_H][ART_W];
-
-  struct SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
-      SDL_SWSURFACE, ART_W, ART_H, 0, texture_formatD);
+  uint64_t art_size = (ART_W * ART_H / 8);
+  int byte_count = wart_usedD;
   uint64_t byte_used = 0;
-  for (int it = 0; it < AL(wart_textureD);
-       ++it, byte_used += (ART_W * ART_H / 8)) {
-    if (byte_used >= byte_count) break;
-    bitfield_to_bitmap(&wartD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
-                           surface);
-    wart_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_SetTextureBlendMode(wart_textureD[it], SDL_BLENDMODE_BLEND);
-  }
-  SDL_FreeSurface(surface);
-
   for (int it = 0; it < AL(wart_textureD); ++it) {
-    if (!wart_textureD[it]) return 0;
-  }
-  Log("Wall Art textures available %d", MAX_WART);
+    int offset = byte_used;
+    byte_used += art_size;
+    if (byte_used > byte_count) break;
 
-  return 1;
+    bitfield_to_bitmap(&wartD[offset], &bitmap[0][0], ART_W * ART_H);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
+                           point_by_spriteid(sprite_idD), spriteD);
+    wart_textureD[it] = sprite_idD++;
+  }
+
+  Log("wart_init result %d", byte_used <= byte_count);
+
+  return byte_used <= byte_count;
 }
 
 // player
 #define MAX_PART 13
 DATA uint8_t partD[4 * 1024];
 DATA uint64_t part_usedD;
-DATA struct SDL_Texture *part_textureD[MAX_PART];
+DATA uint32_t part_textureD[MAX_PART];
 int
 part_io()
 {
@@ -416,30 +414,24 @@ part_io()
 int
 part_init()
 {
-  struct SDL_Renderer *renderer = rendererD;
-  int byte_count = part_usedD;
   uint8_t bitmap[ART_H][ART_W];
-
-  struct SDL_Surface *surface = SDL_CreateRGBSurfaceWithFormat(
-      SDL_SWSURFACE, ART_W, ART_H, 0, texture_formatD);
+  uint64_t art_size = (ART_W * ART_H / 8);
+  int byte_count = part_usedD;
   uint64_t byte_used = 0;
-  for (int it = 0; it < AL(part_textureD);
-       ++it, byte_used += (ART_W * ART_H / 8)) {
-    if (byte_used >= byte_count) break;
-    bitfield_to_bitmap(&partD[byte_used], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W, (SDL_Point){0, 0},
-                           surface);
-    part_textureD[it] = SDL_CreateTextureFromSurface(renderer, surface);
-    SDL_SetTextureBlendMode(part_textureD[it], SDL_BLENDMODE_BLEND);
-  }
-  SDL_FreeSurface(surface);
-
   for (int it = 0; it < AL(part_textureD); ++it) {
-    if (!part_textureD[it]) return 0;
-  }
-  Log("Player Art textures available %d", MAX_PART);
+    int offset = byte_used;
+    byte_used += art_size;
+    if (byte_used > byte_count) break;
 
-  return 1;
+    bitfield_to_bitmap(&partD[offset], &bitmap[0][0], ART_W * ART_H);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
+                           point_by_spriteid(sprite_idD), spriteD);
+    part_textureD[it] = sprite_idD++;
+  }
+
+  Log("part_init result %d", byte_used <= byte_count);
+
+  return byte_used <= byte_count;
 }
 
 int
@@ -568,7 +560,6 @@ SDL_Texture *
 texture_by_sym(char c)
 {
   SDL_Texture *t = 0;
-  if (c == '@') return part_textureD[0 + 4];
   if (c == '.') return 0;
   if (char_visible(c)) {
     uint64_t glyph_index = c - START_GLYPH;
@@ -1174,18 +1165,19 @@ platform_draw()
 
   if (show_map) {
     SDL_Rect zoom_rect;
-    SDL_Rect sprite_rect;
+    SDL_Rect dest_rect;
+    SDL_Rect sprite_src;
     SDL_Point rp;
-    sprite_rect.w = ART_W;
-    sprite_rect.h = ART_H;
+    dest_rect.w = ART_W;
+    dest_rect.h = ART_H;
     SDL_SetRenderTarget(rendererD, map_textureD);
     SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
     SDL_RenderFillRect(rendererD, &map_rectD);
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
     for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
-      sprite_rect.y = row * ART_H;
+      dest_rect.y = row * ART_H;
       for (int col = 0; col < SYMMAP_WIDTH; ++col) {
-        sprite_rect.x = col * ART_W;
+        dest_rect.x = col * ART_W;
 
         struct vizS *viz = &vizD[row][col];
         char sym = viz->sym;
@@ -1197,40 +1189,67 @@ platform_draw()
 
         // Art priority creature, wall, treasure, fallback to symmap ASCII
         SDL_Texture *srct = 0;
+        SDL_Rect *srcr = 0;
+
         if (cridx && cridx <= AL(art_textureD)) {
-          srct = art_textureD[cridx - 1];
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(art_textureD[cridx - 1])),
+              ART_W,
+              ART_H,
+          };
+          srct = sprite_textureD;
         } else if (fidx && fidx <= AL(wart_textureD)) {
-          srct = wart_textureD[fidx - 1];
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(wart_textureD[fidx - 1])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
         } else if (tridx && tridx <= AL(tart_textureD)) {
-          srct = tart_textureD[tridx - 1];
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(tart_textureD[tridx - 1])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
+        } else if (sym == '@') {
+          zoom_rect = dest_rect;
+          rp = (SDL_Point){col, row};
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(part_textureD[0 + 4])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
         }
 
-        if (!srct) {
+        if (srct) {
+          srcr = &sprite_src;
+        } else {
           srct = texture_by_sym(sym);
-          if (sym == '@') {
-            zoom_rect = sprite_rect;
-            rp = (SDL_Point){col, row};
-          }
         }
 
         SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));
-        SDL_RenderFillRect(rendererD, &sprite_rect);
+        SDL_RenderFillRect(rendererD, &dest_rect);
 
         if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
-        SDL_RenderCopy(rendererD, srct, NULL, &sprite_rect);
+        SDL_RenderCopy(rendererD, srct, srcr, &dest_rect);
         if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
         switch (viz->fade) {
           case 1:
             SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);
-            SDL_RenderFillRect(rendererD, &sprite_rect);
+            SDL_RenderFillRect(rendererD, &dest_rect);
             break;
           case 2:
             SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 64);
-            SDL_RenderFillRect(rendererD, &sprite_rect);
+            SDL_RenderFillRect(rendererD, &dest_rect);
             break;
           case 3:
             SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 98);
-            SDL_RenderFillRect(rendererD, &sprite_rect);
+            SDL_RenderFillRect(rendererD, &dest_rect);
             break;
         }
       }
@@ -2202,10 +2221,22 @@ platform_pregame()
   if (init) {
     if (!font_load() || !font_init(&fontD)) return 2;
 
+    spriteD =
+        SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ART_W * SPRITE_SQ,
+                                       ART_H * SPRITE_SQ, 0, texture_formatD);
     if (!art_io() || !art_init()) return 3;
     if (!tart_io() || !tart_init()) return 3;
     if (!wart_io() || !wart_init()) return 3;
     if (!part_io() || !part_init()) return 3;
+
+    if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
+      sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
+      SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
+    } else {
+      Log("WARNING: Assets exceed available sprite memory");
+    }
+    SDL_FreeSurface(spriteD);
+    spriteD = 0;
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                                 MAX_HEIGHT, 0, texture_formatD);
