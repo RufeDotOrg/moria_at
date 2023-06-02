@@ -2231,8 +2231,8 @@ platform_pregame()
   if (init) {
     if (!font_load() || !font_init(&fontD)) return 2;
 
-    if (max_texture_heightD <= ART_H * SPRITE_SQ &&
-        max_texture_widthD <= ART_W * SPRITE_SQ) {
+    if (ART_H * SPRITE_SQ <= max_texture_heightD &&
+        ART_W * SPRITE_SQ <= max_texture_widthD) {
       spriteD =
           SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ART_W * SPRITE_SQ,
                                          ART_H * SPRITE_SQ, 0, texture_formatD);
