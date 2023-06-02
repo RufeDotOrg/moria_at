@@ -80,6 +80,8 @@ DATA SDL_Rect text_rectD;
 DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
 DATA SDL_Rect affectdst_rectD;
+DATA uint32_t max_texture_widthD;
+DATA uint32_t max_texture_heightD;
 
 DATA SDL_Rect gameplay_rectD;
 DATA float gameplay_scaleD;
@@ -147,6 +149,9 @@ render_init()
       "\n",
       rinfo.name, rinfo.flags, rinfo.max_texture_width,
       rinfo.max_texture_height);
+
+  max_texture_widthD = rinfo.max_texture_width;
+  max_texture_heightD = rinfo.max_texture_height;
   texture_formatD = rinfo.texture_formats[0];
   pixel_formatD = SDL_AllocFormat(rinfo.texture_formats[0]);
 
@@ -2226,24 +2231,27 @@ platform_pregame()
   if (init) {
     if (!font_load() || !font_init(&fontD)) return 2;
 
-    spriteD =
-        SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ART_W * SPRITE_SQ,
-                                       ART_H * SPRITE_SQ, 0, texture_formatD);
-    if (spriteD) {
-      if (!art_io() || !art_init()) return 3;
-      if (!tart_io() || !tart_init()) return 3;
-      if (!wart_io() || !wart_init()) return 3;
-      if (!part_io() || !part_init()) return 3;
+    if (max_texture_heightD <= ART_H * SPRITE_SQ &&
+        max_texture_widthD <= ART_W * SPRITE_SQ) {
+      spriteD =
+          SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ART_W * SPRITE_SQ,
+                                         ART_H * SPRITE_SQ, 0, texture_formatD);
+      if (spriteD) {
+        if (!art_io() || !art_init()) return 3;
+        if (!tart_io() || !tart_init()) return 3;
+        if (!wart_io() || !wart_init()) return 3;
+        if (!part_io() || !part_init()) return 3;
 
-      if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
-        sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
-        if (sprite_textureD)
-          SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
-      } else {
-        Log("WARNING: Assets exceed available sprite memory");
+        if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
+          sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
+          if (sprite_textureD)
+            SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
+        } else {
+          Log("WARNING: Assets exceed available sprite memory");
+        }
+        SDL_FreeSurface(spriteD);
+        spriteD = 0;
       }
-      SDL_FreeSurface(spriteD);
-      spriteD = 0;
     }
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
