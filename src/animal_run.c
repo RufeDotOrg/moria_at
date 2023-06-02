@@ -6087,14 +6087,16 @@ py_rest()
   else
     countD.rest = -9999;
 }
-static void
+static int
 py_take_hit(damage)
 {
+  int death_blow;
+
+  death_blow = (uD.chp - damage < 0);
   uD.chp -= damage;
-  if (uD.chp < 0) {
-    death = TRUE;
-    uD.new_level_flag = NL_DEATH;
-  }
+
+  if (death_blow) uD.new_level_flag = NL_DEATH;
+  return death_blow;
 }
 static void py_stats(stats, len) int8_t* stats;
 {
@@ -12495,11 +12497,14 @@ static void hit_trap(y, x, uy, ux) int *uy, *ux;
         msg_print("You fall slowly, catching the ledge.");
       } else {
         uD.new_level_flag = NL_TRAP;
-        dun_level++;
-        py_take_hit(dam);
-        /* Force the messages to display before starting to generate the
-           next level.  */
-        msg_pause();
+        if (py_take_hit(dam)) {
+          msg_print("You fall to your death.");
+        } else {
+          dun_level++;
+          /* Force the messages to display before starting to generate the
+             next level.  */
+          msg_pause();
+        }
       }
       break;
     case 5: /* Sleep gas*/
@@ -13180,7 +13185,7 @@ dungeon()
       }
       break;
     case NL_TRAP:
-      msg_print("You fell through a trap door!");
+      msg_print("You land hard on the ground!");
       break;
   }
   uD.new_level_flag = 0;
