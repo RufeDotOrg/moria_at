@@ -3,7 +3,7 @@
 enum { HACK = 0 };
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
-DATA int find_threat;
+GAME int find_threat;
 DATA int find_direction;
 DATA int find_flag;
 DATA int find_openarea;
@@ -3717,31 +3717,10 @@ town_gen()
   uD.x = j;
 }
 void
-cave_reset()
-{
-  // Clear the cave
-  memset(caveD, 0, sizeof(caveD));
-
-  // Release objects in the cave
-  FOR_EACH(obj, {
-    if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
-      obj_unuse(obj);
-    }
-  });
-
-  // Release all monsters
-  mon_usedD = 0;
-  memset(monD, 0, sizeof(monD));
-  memset(entity_monD, 0, sizeof(entity_monD));
-
-  // Replay state
-  input_record_writeD = input_record_readD = input_action_usedD = 0;
-}
-void
 hard_reset()
 {
   // Clear game state
-  memset(&__start_game, 0, __stop_game - __start_game);
+  memset(__start_game, 0, __stop_game - __start_game);
 
   // Message history
   AC(msglen_cqD);
@@ -13189,7 +13168,6 @@ dungeon()
     snprintf(dun_descD, AL(dun_descD), "%d feet", dun_level * 50);
   if (town) player_maint();
 
-  find_threat = 0;
   new_level_flag = FALSE;
   teleport = FALSE;
   do {
@@ -13708,24 +13686,31 @@ main(int argc, char** argv)
   calc_mana();
   magic_init();
 
-  while (!death) {
-    // a fresh cave!
-    if (dun_level != 0) {
-      cave_gen();
-    } else {
-      town_gen();
-      store_maint();
-    }
+  // a fresh cave!
+  if (dun_level != 0) {
+    cave_gen();
+  } else {
+    town_gen();
+    store_maint();
+  }
 
-    panel_update(&panelD, uD.y, uD.x, TRUE);
-    py_check_view();
-    dungeon();
+  panel_update(&panelD, uD.y, uD.x, TRUE);
+  py_check_view();
+  dungeon();
 
-    if (!death) {
-      cave_reset();
-      if (platformD.save("savechar")) {
-        if (save_exit_flag) break;
+  if (!death) {
+    // Release objects in the cave
+    FOR_EACH(obj, {
+      if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
+        obj_unuse(obj);
       }
+    });
+
+    if (platformD.save("savechar")) {
+      if (!save_exit_flag) longjmp(restartD, 1);
+    } else {
+      strcpy(death_descD, "Device I/O Error");
+      death = 1;
     }
   }
 
