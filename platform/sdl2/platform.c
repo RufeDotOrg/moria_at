@@ -776,10 +776,12 @@ viz_update()
         viz.light = (c_ptr->cflag & CF_SEEN) != 0;
         viz.fade = fade_by_distance(py, px, row, col) - 1;
         if (mon->mlit) {
-          if (!imagine)
+          if (!imagine) {
             viz.cr = mon->cidx;
-          else
+            viz.sym = creatureD[mon->cidx].cchar;
+          } else {
             viz.cr = (mon->id * imagine) % MAX_ART + 1;
+          }
         } else if (blind) {
           // May have MA_DETECT resulting in lit monsters above
           // No walls, objects, or lighting
@@ -797,12 +799,15 @@ viz_update()
             switch (c_ptr->fval) {
               case GRANITE_WALL:
               case BOUNDARY_WALL:
+                viz.sym = '#';
                 viz.floor = 1;
                 break;
               case QUARTZ_WALL:
+                viz.sym = '#';
                 viz.floor = 3 + (c_ptr->oidx != 0);
                 break;
               case MAGMA_WALL:
+                viz.sym = '#';
                 viz.floor = 5 + (c_ptr->oidx != 0);
                 break;
               case FLOOR_OBST:
@@ -2224,19 +2229,22 @@ platform_pregame()
     spriteD =
         SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ART_W * SPRITE_SQ,
                                        ART_H * SPRITE_SQ, 0, texture_formatD);
-    if (!art_io() || !art_init()) return 3;
-    if (!tart_io() || !tart_init()) return 3;
-    if (!wart_io() || !wart_init()) return 3;
-    if (!part_io() || !part_init()) return 3;
+    if (spriteD) {
+      if (!art_io() || !art_init()) return 3;
+      if (!tart_io() || !tart_init()) return 3;
+      if (!wart_io() || !wart_init()) return 3;
+      if (!part_io() || !part_init()) return 3;
 
-    if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
-      sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
-      SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
-    } else {
-      Log("WARNING: Assets exceed available sprite memory");
+      if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
+        sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
+        if (sprite_textureD)
+          SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
+      } else {
+        Log("WARNING: Assets exceed available sprite memory");
+      }
+      SDL_FreeSurface(spriteD);
+      spriteD = 0;
     }
-    SDL_FreeSurface(spriteD);
-    spriteD = 0;
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                                 MAX_HEIGHT, 0, texture_formatD);
