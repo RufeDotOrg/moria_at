@@ -557,6 +557,7 @@ go_up()
   c_ptr = &caveD[uD.y][uD.x];
   if (c_ptr->oidx != 0)
     if (entity_objD[c_ptr->oidx].tval == TV_UP_STAIR) {
+      turn_flag = TRUE;
       dun_level -= 1;
       new_level_flag = TRUE;
       msg_print("You enter a maze of up staircases.");
@@ -579,6 +580,7 @@ go_down()
   c_ptr = &caveD[uD.y][uD.x];
   if (c_ptr->oidx != 0)
     if (entity_objD[c_ptr->oidx].tval == TV_DOWN_STAIR) {
+      turn_flag = TRUE;
       dun_level += 1;
       new_level_flag = TRUE;
       msg_print("You enter a maze of down staircases.");
