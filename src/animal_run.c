@@ -6095,7 +6095,10 @@ py_take_hit(damage)
   death_blow = (uD.chp - damage < 0);
   uD.chp -= damage;
 
-  if (death_blow) uD.new_level_flag = NL_DEATH;
+  if (death_blow) {
+    death = 1;
+    uD.new_level_flag = NL_DEATH;
+  }
   return death_blow;
 }
 static void py_stats(stats, len) int8_t* stats;
