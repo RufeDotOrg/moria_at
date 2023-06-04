@@ -8970,23 +8970,25 @@ int *uy, *ux;
         }
         /* End of Scrolls.  		       */
       }
-      if (!known) {
-        if (ident) {
-          tr_make_known(tr_ptr);
-          tr_discovery(tr_ptr);
-          py_experience();
-        } else {
-          tr_sample(tr_ptr);
-        }
-      }
+
       if (used_up) {
+        if (!known) {
+          if (ident) {
+            tr_make_known(tr_ptr);
+            tr_discovery(tr_ptr);
+            py_experience();
+          } else {
+            tr_sample(tr_ptr);
+          }
+        }
+
         obj_desc(i_ptr, i_ptr->number - 1);
         MSG("You have %s.", descD);
         // Choice menu allows for sort above, iidx may be invalid
         inven_used_obj(i_ptr);
+        turn_flag = TRUE;
+        return TRUE;
       }
-      turn_flag = TRUE;
-      return TRUE;
     }
   }
 
