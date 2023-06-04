@@ -83,7 +83,6 @@ GAME uint32_t obj_seed;
 GAME uint32_t town_seed;
 GAME int turnD;
 GAME int player_hpD[AL(player_exp)];
-GAME int death;
 GAME int total_winner;
 GAME int save_exit_flag;
 GAME int dun_level;

@@ -5305,12 +5305,13 @@ mon_death(y, x, flags)
   if (flags & CM_4D2_OBJ) number += damroll(4, 2);
   if (number > 0) summon_object(y, x, number, i);
 
-  if (flags & CM_WIN)
-    if (!death) /* maybe the player died in mid-turn */
+  if (flags & CM_WIN) {
+    if (uD.new_level_flag == 0) /* maybe the player died in mid-turn */
     {
       total_winner = TRUE;
       msg_print("*** CONGRATULATIONS *** You have won the game.");
     }
+  }
 }
 static int
 mon_take_hit(midx, dam)
@@ -6098,10 +6099,7 @@ py_take_hit(damage)
   death_blow = (uD.chp - damage < 0);
   uD.chp -= damage;
 
-  if (death_blow) {
-    death = 1;
-    uD.new_level_flag = NL_DEATH;
-  }
+  if (death_blow) uD.new_level_flag = NL_DEATH;
   return death_blow;
 }
 static void py_stats(stats, len) int8_t* stats;
@@ -10645,7 +10643,9 @@ py_menu()
   char c;
   int line, input_action, memory_ok;
   char* prompt;
+  int death;
 
+  death = (uD.new_level_flag == NL_DEATH);
   input_action = input_action_usedD;
 
   if (death) {
@@ -11090,7 +11090,7 @@ mon_attack(midx)
   draw();
   int adj = cre->level * CRE_LEV_ADJ;
   for (int it = 0; it < AL(cre->attack_list); ++it) {
-    if (death) break;
+    if (uD.new_level_flag) break;
     if (!cre->attack_list[it]) break;
     mon_desc(midx);
     struct attackS* attack = &attackD[cre->attack_list[it]];
@@ -13435,7 +13435,7 @@ dungeon()
             case CTRL('c'):
               if (!RELEASE) {
                 memcpy(death_descD, AP(quit_stringD));
-                death = 1;
+                uD.new_level_flag = NL_DEATH;
                 return;  // Interrupt game
               }
               break;
@@ -13727,7 +13727,7 @@ main(int argc, char** argv)
   py_check_view();
   dungeon();
 
-  if (!death) {
+  if (uD.new_level_flag != NL_DEATH) {
     // Release objects in the cave
     FOR_EACH(obj, {
       if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
@@ -13739,7 +13739,6 @@ main(int argc, char** argv)
       if (!save_exit_flag) longjmp(restartD, 1);
     } else {
       strcpy(death_descD, "Device I/O Error");
-      death = 1;
     }
   }
 
