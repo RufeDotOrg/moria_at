@@ -11086,8 +11086,6 @@ mon_attack(midx)
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
-  // TBD: perf draw/attack
-  draw();
   int adj = cre->level * CRE_LEV_ADJ;
   for (int it = 0; it < AL(cre->attack_list); ++it) {
     if (uD.new_level_flag) break;
