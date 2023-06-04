@@ -5758,6 +5758,7 @@ equip_vibrate(flag)
     struct objS* obj = obj_get(invenD[it]);
     if (obj->flags & flag) {
       obj_desc(obj, 1);
+      descD[0] &= ~0x20;
       MSG("%s vibrates for a moment.", descD);
       return 1;
     }
