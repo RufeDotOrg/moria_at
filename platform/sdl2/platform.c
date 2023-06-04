@@ -760,7 +760,7 @@ fade_by_distance(y1, x1, y2, x2)
 static void
 viz_update()
 {
-  int blind, imagine, py, px;
+  int blind, py, px;
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
   int cmin = panelD.panel_col_min;
@@ -768,7 +768,6 @@ viz_update()
 
   struct vizS *vptr = &vizD[0][0];
   blind = maD[MA_BLIND];
-  imagine = countD.imagine;
   py = uD.y;
   px = uD.x;
   for (int row = rmin; row < rmax; ++row) {
@@ -781,49 +780,36 @@ viz_update()
         viz.light = (c_ptr->cflag & CF_SEEN) != 0;
         viz.fade = fade_by_distance(py, px, row, col) - 1;
         if (mon->mlit) {
-          if (!imagine) {
-            viz.cr = mon->cidx;
-            viz.sym = creatureD[mon->cidx].cchar;
-          } else {
-            viz.cr = (mon->id * imagine) % MAX_ART + 1;
-          }
+          viz.cr = mon->cidx;
+          viz.sym = creatureD[mon->cidx].cchar;
         } else if (blind) {
           // May have MA_DETECT resulting in lit monsters above
           // No walls, objects, or lighting
           viz.light = 0;
           viz.fade = 3;
         } else if (CF_VIZ & c_ptr->cflag) {
-          if (imagine) {
-            if (obj->tval == TV_OPEN_DOOR || obj->tval == TV_CLOSED_DOOR)
+          switch (c_ptr->fval) {
+            case GRANITE_WALL:
+            case BOUNDARY_WALL:
+              viz.sym = '#';
+              viz.floor = 1;
+              break;
+            case QUARTZ_WALL:
+              viz.sym = '#';
+              viz.floor = 3 + (c_ptr->oidx != 0);
+              break;
+            case MAGMA_WALL:
+              viz.sym = '#';
+              viz.floor = 5 + (c_ptr->oidx != 0);
+              break;
+            case FLOOR_OBST:
               viz.tr = obj_viz(obj, &viz);
-            else if (c_ptr->fval > MAX_OPEN_SPACE)
-              viz.floor = (col + row + imagine) % MAX_WART + 1;
-            else if (obj->id)
-              viz.tr = (obj->id * imagine) % MAX_TART + 1;
-          } else {
-            switch (c_ptr->fval) {
-              case GRANITE_WALL:
-              case BOUNDARY_WALL:
-                viz.sym = '#';
-                viz.floor = 1;
-                break;
-              case QUARTZ_WALL:
-                viz.sym = '#';
-                viz.floor = 3 + (c_ptr->oidx != 0);
-                break;
-              case MAGMA_WALL:
-                viz.sym = '#';
-                viz.floor = 5 + (c_ptr->oidx != 0);
-                break;
-              case FLOOR_OBST:
-                viz.tr = obj_viz(obj, &viz);
-                break;
-              default:
-                viz.light += ((CF_LIT & c_ptr->cflag) != 0);
-                viz.dim = obj->tval && los(py, px, row, col) == 0;
-                viz.tr = obj_viz(obj, &viz);
-                break;
-            }
+              break;
+            default:
+              viz.light += ((CF_LIT & c_ptr->cflag) != 0);
+              viz.dim = obj->tval && los(py, px, row, col) == 0;
+              viz.tr = obj_viz(obj, &viz);
+              break;
           }
         }
       } else {
@@ -1184,6 +1170,7 @@ platform_draw()
     SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
     SDL_RenderFillRect(rendererD, &map_rectD);
     SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
+    int imagine = countD.imagine;
     for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
       dest_rect.y = row * ART_H;
       for (int col = 0; col < SYMMAP_WIDTH; ++col) {
@@ -1201,39 +1188,41 @@ platform_draw()
         SDL_Texture *srct = 0;
         SDL_Rect *srcr = 0;
 
-        if (cridx && cridx <= AL(art_textureD)) {
-          sprite_src = (SDL_Rect){
-              P(point_by_spriteid(art_textureD[cridx - 1])),
-              ART_W,
-              ART_H,
-          };
-          srct = sprite_textureD;
-        } else if (fidx && fidx <= AL(wart_textureD)) {
-          sprite_src = (SDL_Rect){
-              P(point_by_spriteid(wart_textureD[fidx - 1])),
-              ART_W,
-              ART_H,
-          };
+        if (!imagine) {
+          if (cridx && cridx <= AL(art_textureD)) {
+            sprite_src = (SDL_Rect){
+                P(point_by_spriteid(art_textureD[cridx - 1])),
+                ART_W,
+                ART_H,
+            };
+            srct = sprite_textureD;
+          } else if (fidx && fidx <= AL(wart_textureD)) {
+            sprite_src = (SDL_Rect){
+                P(point_by_spriteid(wart_textureD[fidx - 1])),
+                ART_W,
+                ART_H,
+            };
 
-          srct = sprite_textureD;
-        } else if (tridx && tridx <= AL(tart_textureD)) {
-          sprite_src = (SDL_Rect){
-              P(point_by_spriteid(tart_textureD[tridx - 1])),
-              ART_W,
-              ART_H,
-          };
+            srct = sprite_textureD;
+          } else if (tridx && tridx <= AL(tart_textureD)) {
+            sprite_src = (SDL_Rect){
+                P(point_by_spriteid(tart_textureD[tridx - 1])),
+                ART_W,
+                ART_H,
+            };
 
-          srct = sprite_textureD;
-        } else if (sym == '@') {
-          zoom_rect = dest_rect;
-          rp = (SDL_Point){col, row};
-          sprite_src = (SDL_Rect){
-              P(point_by_spriteid(part_textureD[0 + 4])),
-              ART_W,
-              ART_H,
-          };
+            srct = sprite_textureD;
+          } else if (sym == '@') {
+            zoom_rect = dest_rect;
+            rp = (SDL_Point){col, row};
+            sprite_src = (SDL_Rect){
+                P(point_by_spriteid(part_textureD[0 + 4])),
+                ART_W,
+                ART_H,
+            };
 
-          srct = sprite_textureD;
+            srct = sprite_textureD;
+          }
         }
 
         if (srct) {
