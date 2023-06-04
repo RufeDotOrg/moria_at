@@ -3251,8 +3251,7 @@ chunk_trap(ychunk, xchunk, num)
     y = ymin + randint(CHUNK_HEIGHT) - 1;
     x = xmin + randint(CHUNK_WIDTH) - 1;
     c_ptr = &caveD[y][x];
-    if (c_ptr->fval != 0 && c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0 &&
-        c_ptr->midx == 0) {
+    if (c_ptr->fval != 0 && c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) {
       place_trap(y, x, randint(MAX_TRAP) - 1);
       num -= 1;
     }
@@ -3261,10 +3260,13 @@ chunk_trap(ychunk, xchunk, num)
 static void
 room_object(y, x, chance)
 {
+  struct caveS* c_ptr;
   for (int i = -1; i <= 1; ++i) {
     for (int j = -1; j <= 1; ++j) {
-      if (caveD[y + i][x + j].fval <= MAX_OPEN_SPACE && randint(chance) == 1)
-        place_object(y + i, x + j, FALSE);
+      c_ptr = &caveD[y + i][x + j];
+      if (c_ptr->fval && c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) {
+        if (randint(chance) == 1) place_object(y + i, x + j, FALSE);
+      }
     }
   }
 }
