@@ -84,7 +84,6 @@ GAME uint32_t town_seed;
 GAME int turnD;
 GAME int player_hpD[AL(player_exp)];
 GAME int total_winner;
-GAME int save_exit_flag;
 GAME int dun_level;
 GAME int turn_flag;
 GAME int pack_heavy;
@@ -115,6 +114,18 @@ DATA char git_hashD[] = "AbCdEfGhIjKlMnO";
 // Optional UI state
 GAME uint8_t ui_stateD[256];
 
+// Replay
+DATA char input_recordD[4 * 1024];
+DATA uint32_t input_record_writeD;
+DATA uint32_t input_record_readD;
+DATA int input_resumeD;
+DATA int16_t input_actionD[2 * 1024];
+DATA int input_action_usedD;
+DATA struct bufS midpoint_bufD[] = {
+    ABUF(input_recordD),
+    ABUF(input_actionD),
+    BUF(input_action_usedD),
+};
 // load/save
 DATA struct bufS save_bufD[] = {
     BUF(countD),        BUF(dun_level),   ABUF(entity_objD), ABUF(invenD),

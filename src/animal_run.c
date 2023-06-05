@@ -10,12 +10,6 @@ DATA int find_openarea;
 DATA int find_breakright, find_breakleft;
 DATA int find_prevdir;
 DATA jmp_buf restartD;
-DATA char input_recordD[4 * 1024];
-DATA uint32_t input_record_writeD;
-DATA uint32_t input_record_readD;
-DATA int input_resumeD;
-DATA int16_t input_actionD[2 * 1024];
-DATA int input_action_usedD;
 DATA int drop_modeD;
 DATA char quit_stringD[] = "quitting";
 #define MAX_MSGLEN AL(msg_cqD[0])
@@ -10696,6 +10690,7 @@ py_menu()
         longjmp(restartD, 1);
 
       case 'd':
+        if (platformD.savemidpoint) platformD.savemidpoint("savechar", FALSE);
         longjmp(restartD, 1);
 
       case 'g':
@@ -13186,6 +13181,9 @@ dungeon()
     case NL_TRAP:
       msg_print("You land hard on the ground!");
       break;
+    case NL_MIDPOINT:
+      msg_print("Game Version match; midpoint save OK.");
+      break;
   }
   uD.new_level_flag = 0;
   if (town) player_maint();
@@ -13433,11 +13431,16 @@ dungeon()
             case CTRL('p'): {
               show_history();
             } break;
-            case CTRL('x'): {
-              save_exit_flag = TRUE;
-              uD.new_level_flag = NL_DEATH;
-              memcpy(death_descD, AP(quit_stringD));
-            } break;
+            case CTRL('x'):
+              if (!RELEASE) {
+                if (platformD.savemidpoint &&
+                    platformD.savemidpoint("savechar", TRUE)) {
+                  memcpy(death_descD, AP(quit_stringD));
+                  uD.new_level_flag = NL_DEATH;
+                  return;  // Interrupt game
+                }
+              }
+              break;
             default:
               break;
           }
@@ -13707,13 +13710,14 @@ main(int argc, char** argv)
   magic_init();
 
   // a fresh cave!
-  if (dun_level != 0) {
-    cave_gen();
-  } else {
-    town_gen();
-    store_maint();
+  if (mon_usedD == 0) {
+    if (dun_level != 0) {
+      cave_gen();
+    } else {
+      town_gen();
+      store_maint();
+    }
   }
-
   panel_update(&panelD, uD.y, uD.x, TRUE);
   py_check_view();
   dungeon();
@@ -13727,7 +13731,7 @@ main(int argc, char** argv)
     });
 
     if (platformD.save("savechar")) {
-      if (!save_exit_flag) longjmp(restartD, 1);
+      longjmp(restartD, 1);
     } else {
       strcpy(death_descD, "Device I/O Error");
     }

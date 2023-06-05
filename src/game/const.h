@@ -462,6 +462,7 @@
 #define NL_DEATH 4
 #define NL_TELEPORT 5
 #define NL_TRAP 6
+#define NL_MIDPOINT 7
 
 // Input
 #define ESCAPE '\033'
