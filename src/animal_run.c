@@ -4874,7 +4874,6 @@ udisarm()
              level_adj[uD.clidx][LA_DISARM] * uD.lev / 3;
   if (py_affect(MA_BLIND)) xdis /= 8;
   if (countD.confusion) xdis /= 8;
-  if (countD.imagine) xdis /= 8;
   return xdis;
 }
 int
@@ -6081,7 +6080,7 @@ int
 rest_affect()
 {
   return py_affect(MA_BLIND) + countD.confusion + py_affect(MA_FEAR) +
-         py_affect(MA_RECALL) + countD.imagine;
+         py_affect(MA_RECALL);
 }
 static void
 py_rest()
@@ -8086,7 +8085,7 @@ inven_eat(iidx)
           ident |= TRUE;
           break;
         case 5:
-          countD.imagine += 2 * (randint(200) + 25 * obj->level + 200);
+          countD.imagine += randint(200) + 25 * obj->level + 200;
           msg_print("You feel drugged.");
           ident |= TRUE;
           break;
@@ -11626,7 +11625,6 @@ py_search(y, x)
   chance = uD.search;
   if (countD.confusion) chance /= 8;
   if (py_affect(MA_BLIND)) chance /= 8;
-  if (countD.imagine > 0) chance /= 8;
   for (i = (y - 1); i <= (y + 1); i++)
     for (j = (x - 1); j <= (x + 1); j++)
       if (randint(100) < chance) /* always in_bounds here */
@@ -13125,12 +13123,7 @@ tick()
     if (countD.protevil == 0) msg_print("You no longer feel safe from evil.");
   }
 
-  if (countD.imagine) {
-    // random decay introduces randomness in rendering
-    tmp = countD.imagine - randint(4);
-    if (tmp < 0) tmp = 0;
-    countD.imagine = tmp;
-  }
+  if (countD.imagine) countD.imagine -= 1;
 }
 int
 dir_by_confusion()
