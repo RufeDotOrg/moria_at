@@ -3722,9 +3722,7 @@ hard_reset()
   msg_writeD = 0;
 
   // Replay state
-  input_record_readD = input_action_usedD = 0;
-  input_record_writeD = input_resumeD ? AS(input_actionD, input_resumeD) : 0;
-  input_resumeD = 0;
+  input_record_writeD = input_record_readD = input_action_usedD = 0;
 
   // Reset overlay modes
   overlay_submodeD = 0;
@@ -10686,11 +10684,12 @@ py_menu()
       case 'b':
         if (!memory_ok) return 0;
 
-        input_resumeD = MAX(0, input_action - 2 + death);
+        input_resumeD = (input_action - 2 + death);
+        if (input_resumeD == 0) input_resumeD = -1;
         longjmp(restartD, 1);
 
       case 'd':
-        if (platformD.savemidpoint) platformD.savemidpoint("savechar", FALSE);
+        input_resumeD = -1;
         longjmp(restartD, 1);
 
       case 'g':
@@ -13182,7 +13181,7 @@ dungeon()
       msg_print("You land hard on the ground!");
       break;
     case NL_MIDPOINT:
-      msg_print("Game Version match; midpoint save OK.");
+      msg_print("Game Version match; midpoint resume.");
       break;
   }
   uD.new_level_flag = 0;
@@ -13699,7 +13698,6 @@ main(int argc, char** argv)
     inven_sort();
 
     // Replay state
-    input_record_writeD = input_record_readD = input_action_usedD = 0;
     platformD.save("savechar");
   }
 
@@ -13709,15 +13707,20 @@ main(int argc, char** argv)
   calc_mana();
   magic_init();
 
+  // Replay state reset
+  input_record_writeD =
+      input_resumeD > 0 ? AS(input_actionD, input_resumeD) : 0;
+  input_resumeD = 0;
+  input_record_readD = input_action_usedD = 0;
+
   // a fresh cave!
-  if (mon_usedD == 0) {
-    if (dun_level != 0) {
-      cave_gen();
-    } else {
-      town_gen();
-      store_maint();
-    }
+  if (dun_level != 0) {
+    cave_gen();
+  } else {
+    town_gen();
+    store_maint();
   }
+
   panel_update(&panelD, uD.y, uD.x, TRUE);
   py_check_view();
   dungeon();

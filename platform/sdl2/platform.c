@@ -1694,6 +1694,7 @@ display_resize(int dw, int dh)
     SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
   }
 }
+int platform_savemidpoint(char *filename, int valid);
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -1731,6 +1732,11 @@ SDL_Event event;
         return (finger_colD == 0) ? '*' : '/';
       else
         platform_draw();
+    }
+  } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+    if (ANDROID || __APPLE__) {
+      platform_savemidpoint("savechar", TRUE);
+      Log("midpoint save on focus lost");
     }
   }
   return 0;
@@ -1956,7 +1962,6 @@ SDL_Event event;
 }
 
 // Game interface
-int platform_savemidpoint(char *filename, int valid);
 char
 sdl_pump()
 {
@@ -1971,9 +1976,6 @@ sdl_pump()
     } else if (!TOUCH && (event.type == SDL_KEYDOWN)) {
       ret = sdl_kb_event(event);
     } else if (event.type == SDL_QUIT) {
-      uD.new_level_flag = NL_MIDPOINT;
-      platform_savemidpoint("savechar", TRUE);
-      Log("save midpoint complete");
       quitD = TRUE;
     } else if (event.type == SDL_WINDOWEVENT) {
       ret = sdl_window_event(event);
@@ -2153,29 +2155,31 @@ platform_load(char *filename)
       save_size = 0;
     }
 
-    if (save_size) {
-      char gh[AL(git_hashD)];
-      if (SDL_RWread(readf, gh, sizeof(gh), 1)) {
-        Log("midpoint save exists");
-        if (memcmp(gh, git_hashD, sizeof(gh)) == 0) {
-          int sum = 0;
-          for (int it = 0; it < AL(midpoint_bufD); ++it) {
-            sum += midpoint_bufD[it].mem_size;
-          }
-          int64_t offset = SDL_RWseek(readf, 0, RW_SEEK_CUR);
-          int64_t end = SDL_RWseek(readf, sum, RW_SEEK_CUR);
-          if (end > 0) {
-            SDL_RWseek(readf, offset, RW_SEEK_SET);
+    if (input_resumeD == 0) {
+      if (save_size) {
+        char gh[AL(git_hashD)];
+        if (SDL_RWread(readf, gh, sizeof(gh), 1)) {
+          Log("midpoint save exists");
+          if (memcmp(gh, git_hashD, sizeof(gh)) == 0) {
+            int sum = 0;
             for (int it = 0; it < AL(midpoint_bufD); ++it) {
-              struct bufS buf = midpoint_bufD[it];
-              if (!SDL_RWread(readf, buf.mem, buf.mem_size, 1)) sum = 0;
+              sum += midpoint_bufD[it].mem_size;
             }
-            if (sum) {
-              Log("valid midpoint save");
-              input_record_writeD = AS(input_actionD, input_action_usedD - 1);
-              uD.new_level_flag = NL_MIDPOINT;
-            } else {
-              input_action_usedD = 0;
+            int64_t offset = SDL_RWseek(readf, 0, RW_SEEK_CUR);
+            int64_t end = SDL_RWseek(readf, sum, RW_SEEK_CUR);
+            if (end > 0) {
+              SDL_RWseek(readf, offset, RW_SEEK_SET);
+              for (int it = 0; it < AL(midpoint_bufD); ++it) {
+                struct bufS buf = midpoint_bufD[it];
+                if (!SDL_RWread(readf, buf.mem, buf.mem_size, 1)) sum = 0;
+              }
+              if (sum) {
+                Log("valid midpoint save");
+                input_resumeD = (input_action_usedD - 1);
+                uD.new_level_flag = NL_MIDPOINT;
+              } else {
+                input_action_usedD = 0;
+              }
             }
           }
         }
