@@ -1694,7 +1694,46 @@ display_resize(int dw, int dh)
     SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
   }
 }
-int platform_savemidpoint(char *filename, int valid);
+SDL_RWops *
+rw_file_access(char *filename, char *access)
+{
+  int wridx = __APPLE__ ? savepath_usedD : 0;
+  char *write = &savepathD[wridx];
+
+  if (wridx) *write++ = '/';
+  for (char *iter = filename; *iter != 0; ++iter) {
+    *write++ = *iter;
+  }
+  *write = 0;
+
+  Log("filename: %s", savepathD);
+  return SDL_RWFromFile(savepathD, access);
+}
+int
+platform_savemidpoint(char *filename)
+{
+  int save_size = 0;
+  int sum = 0;
+
+  SDL_RWops *rwfile = rw_file_access(filename, "r+");
+  if (rwfile) {
+    SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
+
+    int64_t offset = SDL_RWseek(rwfile, save_size, RW_SEEK_CUR);
+    if (offset > 0) {
+      SDL_RWwrite(rwfile, &git_hashD, sizeof(git_hashD), 1);
+      for (int it = 0; it < AL(midpoint_bufD); ++it) {
+        struct bufS buf = midpoint_bufD[it];
+        if (SDL_RWwrite(rwfile, buf.mem, buf.mem_size, 1)) {
+          sum += buf.mem_size;
+        }
+      }
+    }
+
+    SDL_RWclose(rwfile);
+  }
+  return sum;
+}
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -1735,7 +1774,7 @@ SDL_Event event;
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
     if (ANDROID || __APPLE__) {
-      platform_savemidpoint("savechar", TRUE);
+      platform_savemidpoint("savechar");
       Log("midpoint save on focus lost");
     }
   }
@@ -2052,21 +2091,6 @@ int checksum(blob, len) void *blob;
   }
   return ret;
 }
-SDL_RWops *
-rw_file_access(char *filename, char *access)
-{
-  int wridx = __APPLE__ ? savepath_usedD : 0;
-  char *write = &savepathD[wridx];
-
-  if (wridx) *write++ = '/';
-  for (char *iter = filename; *iter != 0; ++iter) {
-    *write++ = *iter;
-  }
-  *write = 0;
-
-  Log("filename: %s", savepathD);
-  return SDL_RWFromFile(savepathD, access);
-}
 int
 platform_save(char *filename)
 {
@@ -2089,38 +2113,6 @@ platform_save(char *filename)
     return sum;
   }
   return 0;
-}
-int
-platform_savemidpoint(char *filename, int valid)
-{
-  int save_size = 0;
-  int sum = 0;
-
-  SDL_RWops *rwfile = rw_file_access(filename, "r+");
-  if (rwfile) {
-    checksumD = 0;
-    SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
-
-    int64_t offset = SDL_RWseek(rwfile, save_size, RW_SEEK_CUR);
-    if (offset > 0) {
-      if (valid) {
-        SDL_RWwrite(rwfile, &git_hashD, sizeof(git_hashD), 1);
-        for (int it = 0; it < AL(midpoint_bufD); ++it) {
-          struct bufS buf = midpoint_bufD[it];
-          if (SDL_RWwrite(rwfile, buf.mem, buf.mem_size, 1)) {
-            sum += buf.mem_size;
-          }
-        }
-      } else {
-        int invalid = -1;
-        SDL_RWwrite(rwfile, &invalid, sizeof(invalid), 1);
-        sum = sizeof(invalid);
-      }
-    }
-
-    SDL_RWclose(rwfile);
-  }
-  return sum;
 }
 int
 platform_load(char *filename)

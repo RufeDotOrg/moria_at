@@ -13433,7 +13433,7 @@ dungeon()
             case CTRL('x'):
               if (!RELEASE) {
                 if (platformD.savemidpoint &&
-                    platformD.savemidpoint("savechar", TRUE)) {
+                    platformD.savemidpoint("savechar")) {
                   memcpy(death_descD, AP(quit_stringD));
                   uD.new_level_flag = NL_DEATH;
                   return;  // Interrupt game
