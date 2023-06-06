@@ -13708,8 +13708,11 @@ main(int argc, char** argv)
   magic_init();
 
   // Replay state reset
-  input_record_writeD =
-      input_resumeD > 0 ? AS(input_actionD, input_resumeD) : 0;
+  if (input_resumeD > 0 && input_resumeD < input_action_usedD) {
+    input_record_writeD = AS(input_actionD, input_resumeD);
+  } else {
+    input_record_writeD = 0;
+  }
   input_resumeD = 0;
   input_record_readD = input_action_usedD = 0;
 

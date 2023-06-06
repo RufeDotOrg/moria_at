@@ -1713,26 +1713,30 @@ int
 platform_savemidpoint(char *filename)
 {
   int save_size = 0;
-  int sum = 0;
+  int write_ok = 0;
+  int memory_ok;
 
-  SDL_RWops *rwfile = rw_file_access(filename, "r+");
-  if (rwfile) {
-    SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
+  memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
+               input_action_usedD <= AL(input_actionD) - 1);
 
-    int64_t offset = SDL_RWseek(rwfile, save_size, RW_SEEK_CUR);
-    if (offset > 0) {
-      SDL_RWwrite(rwfile, &git_hashD, sizeof(git_hashD), 1);
-      for (int it = 0; it < AL(midpoint_bufD); ++it) {
-        struct bufS buf = midpoint_bufD[it];
-        if (SDL_RWwrite(rwfile, buf.mem, buf.mem_size, 1)) {
-          sum += buf.mem_size;
+  if (memory_ok) {
+    SDL_RWops *rwfile = rw_file_access(filename, "r+");
+    if (rwfile) {
+      SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
+
+      int64_t offset = SDL_RWseek(rwfile, save_size, RW_SEEK_CUR);
+      if (offset > 0) {
+        write_ok = SDL_RWwrite(rwfile, &git_hashD, sizeof(git_hashD), 1);
+        for (int it = 0; it < AL(midpoint_bufD); ++it) {
+          struct bufS buf = midpoint_bufD[it];
+          if (!SDL_RWwrite(rwfile, buf.mem, buf.mem_size, 1)) write_ok = 0;
         }
       }
-    }
 
-    SDL_RWclose(rwfile);
+      SDL_RWclose(rwfile);
+    }
   }
-  return sum;
+  return write_ok;
 }
 int
 sdl_window_event(event)
