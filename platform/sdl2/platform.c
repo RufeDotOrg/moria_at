@@ -1188,6 +1188,11 @@ platform_draw()
         SDL_Texture *srct = 0;
         SDL_Rect *srcr = 0;
 
+        if (sym == '@') {
+          zoom_rect = dest_rect;
+          rp = (SDL_Point){col, row};
+        }
+
         if (!imagine) {
           if (cridx && cridx <= AL(art_textureD)) {
             sprite_src = (SDL_Rect){
@@ -1213,8 +1218,6 @@ platform_draw()
 
             srct = sprite_textureD;
           } else if (sym == '@') {
-            zoom_rect = dest_rect;
-            rp = (SDL_Point){col, row};
             sprite_src = (SDL_Rect){
                 P(point_by_spriteid(part_textureD[0 + 4])),
                 ART_W,
