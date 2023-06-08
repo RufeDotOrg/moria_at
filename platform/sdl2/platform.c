@@ -1160,7 +1160,6 @@ platform_draw()
   }
 
   if (show_map) {
-    SDL_Rect zoom_rect;
     SDL_Rect dest_rect;
     SDL_Rect sprite_src;
     SDL_Point rp;
@@ -1189,7 +1188,6 @@ platform_draw()
         SDL_Rect *srcr = 0;
 
         if (sym == '@') {
-          zoom_rect = dest_rect;
           rp = (SDL_Point){col, row};
         }
 
@@ -1267,6 +1265,7 @@ platform_draw()
     int zy, zx;
     zy = CLAMP(rp.y - zh / 2, 0, SYMMAP_HEIGHT - zh - zsymmetry);
     zx = CLAMP(rp.x - zw / 2, 0, SYMMAP_WIDTH - zw - zsymmetry);
+    SDL_Rect zoom_rect;
     zoom_rect.x = zx * ART_W;
     zoom_rect.y = zy * ART_H;
     zoom_rect.w = (zw + zsymmetry) * ART_W;
