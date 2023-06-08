@@ -3722,7 +3722,7 @@ hard_reset()
   msg_writeD = 0;
 
   // Replay state
-  input_record_writeD = input_record_readD = input_action_usedD = 0;
+  input_record_writeD = input_record_readD = 0;
 
   // Reset overlay modes
   overlay_submodeD = 0;
@@ -10685,6 +10685,7 @@ py_menu()
         if (!memory_ok) return 0;
 
         input_resumeD = (input_action - 2 + death);
+        // Disable midpoint resume explicitly
         if (input_resumeD == 0) input_resumeD = -1;
         longjmp(restartD, 1);
 
@@ -13180,8 +13181,8 @@ dungeon()
     case NL_TRAP:
       msg_print("You land hard on the ground!");
       break;
-    case NL_MIDPOINT:
-      msg_print("Game Version match; midpoint resume.");
+    case NL_MIDPOINT_LOST:
+      msg_print("Game version updated, dungeon reset.");
       break;
   }
   uD.new_level_flag = 0;

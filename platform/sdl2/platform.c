@@ -1782,7 +1782,6 @@ SDL_Event event;
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
     if (ANDROID || __APPLE__) {
       platform_savemidpoint("savechar");
-      Log("midpoint save on focus lost");
     }
   }
   return 0;
@@ -2158,7 +2157,6 @@ platform_load(char *filename)
       if (save_size) {
         char gh[AL(git_hashD)];
         if (SDL_RWread(readf, gh, sizeof(gh), 1)) {
-          Log("midpoint save exists");
           if (memcmp(gh, git_hashD, sizeof(gh)) == 0) {
             int sum = 0;
             for (int it = 0; it < AL(midpoint_bufD); ++it) {
@@ -2173,11 +2171,11 @@ platform_load(char *filename)
                 if (!SDL_RWread(readf, buf.mem, buf.mem_size, 1)) sum = 0;
               }
               if (sum) {
-                Log("valid midpoint save");
                 input_resumeD = (input_action_usedD - 1);
-                uD.new_level_flag = NL_MIDPOINT;
+                Log("  midpoint (%d input_resumeD)", input_resumeD);
               } else {
-                input_action_usedD = 0;
+                input_resumeD = 0;
+                uD.new_level_flag = NL_MIDPOINT_LOST;
               }
             }
           }
@@ -2353,7 +2351,6 @@ platform_pregame()
 int
 platform_postgame()
 {
-  Log("postgame");
   // Exit terminates the android activity
   // otherwise main() may resume with stale memory
   if (ANDROID) exit(0);
