@@ -2157,8 +2157,8 @@ platform_load(char *filename)
       if (save_size) {
         char gh[AL(git_hashD)];
         if (SDL_RWread(readf, gh, sizeof(gh), 1)) {
+          int sum = 0;
           if (memcmp(gh, git_hashD, sizeof(gh)) == 0) {
-            int sum = 0;
             for (int it = 0; it < AL(midpoint_bufD); ++it) {
               sum += midpoint_bufD[it].mem_size;
             }
@@ -2170,14 +2170,15 @@ platform_load(char *filename)
                 struct bufS buf = midpoint_bufD[it];
                 if (!SDL_RWread(readf, buf.mem, buf.mem_size, 1)) sum = 0;
               }
-              if (sum) {
-                input_resumeD = (input_action_usedD - 1);
-                Log("  midpoint (%d input_resumeD)", input_resumeD);
-              } else {
-                input_resumeD = 0;
-                uD.new_level_flag = NL_MIDPOINT_LOST;
-              }
             }
+          }
+
+          if (sum) {
+            input_resumeD = (input_action_usedD - 1);
+            Log("  midpoint (%d input_resumeD)", input_resumeD);
+          } else {
+            input_resumeD = 0;
+            uD.new_level_flag = NL_MIDPOINT_LOST;
           }
         }
       }
