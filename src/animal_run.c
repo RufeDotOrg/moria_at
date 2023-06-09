@@ -3284,7 +3284,7 @@ int* xcenter;
   int y, x;
   struct caveS* c_ptr;
 
-  rflag = CF_ROOM | CF_UNUSUAL;
+  rflag = CF_ROOM;
   if (dun_level <= randint(25))
     floor = FLOOR_LIGHT;
   else
@@ -3394,6 +3394,7 @@ int* xcenter;
       }
       break;
     case 4:
+      rflag |= CF_UNUSUAL;
       for (int i = ymin; i <= ymax; ++i) {
         for (int j = xmin; j <= xmax; ++j) {
           c_ptr = &caveD[i][j];
@@ -3422,6 +3423,7 @@ int* xcenter;
       room_monster(y, x + 5, 3);
       break;
     case 5:
+      rflag |= CF_UNUSUAL;
       ymax -= 1;
       for (int i = ymin; i <= ymax; ++i) {
         for (int j = xmin; j <= xmax; ++j) {
