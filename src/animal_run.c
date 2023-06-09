@@ -5588,13 +5588,11 @@ ma_clear(maidx)
   maD[maidx] = 0;
   return turn != 0;
 }
-int8_t
-modify_stat(stat, amount)
+static int8_t
+modify_stat(tmp_stat, amount)
 {
   int loop, i;
-  int8_t tmp_stat;
 
-  tmp_stat = statD.cur_stat[stat];
   loop = (amount < 0 ? -amount : amount);
   for (i = 0; i < loop; i++) {
     if (amount > 0) {
@@ -5618,7 +5616,8 @@ modify_stat(stat, amount)
 void
 set_use_stat(stat)
 {
-  statD.use_stat[stat] = modify_stat(stat, statD.mod_stat[stat]);
+  statD.use_stat[stat] =
+      modify_stat(statD.cur_stat[stat], statD.mod_stat[stat]);
 
   if (stat == A_STR) {
     calc_bonuses();
@@ -10352,7 +10351,8 @@ show_character()
     BufMsg(screen, "%c%-12.012s:%5d", stat_nameD[it][0] & ~0x20,
            &stat_nameD[it][1], statD.use_stat[it]);
     if (statD.max_stat[it] > statD.cur_stat[it]) {
-      BufLineAppend(screen, line - 1, "  %d", statD.max_stat[it]);
+      BufLineAppend(screen, line - 1, "  %d",
+                    modify_stat(statD.max_stat[it], statD.mod_stat[it]));
     }
   }
 
