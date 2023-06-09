@@ -364,6 +364,7 @@ affect_update()
   // Gain spells, imagine, ...
   active_affectD[idx++] = (spcount && spell_orderD[spcount - 1] == 0);
   active_affectD[idx++] = (countD.imagine != 0);
+  active_affectD[idx++] = (countD.undead_prot != 0);
 }
 void
 draw()
