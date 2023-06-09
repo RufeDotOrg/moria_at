@@ -1677,10 +1677,13 @@ display_resize(int dw, int dh)
 
     int bw = c3w * dw;
     int bh = c3h * dh;
+    int left = textdst_rectD.x + textdst_rectD.w + 6;  // c2 * dw;
+    int ax = dw - left;
+    int pad = MAX(0, (ax - bw * 2) / 2);
     Log("button %dw %dh", bw, bh);
     for (int it = 0; it < AL(buttonD); ++it) {
       SDL_Rect r = {.w = bw, .h = bh};
-      r.x = textdst_rectD.x + textdst_rectD.w + 6 - (1 - it) * r.w;
+      r.x = left + pad - (1 - it) * r.w;
       r.y = textdst_rectD.y + textdst_rectD.h + 6 - (it)*r.h;
       buttonD[it] = r;
     }
