@@ -369,11 +369,11 @@ affect_update()
 void
 draw()
 {
-  if (input_record_readD == input_record_writeD) {
+  if (!replay_flag) {
     vital_update();
-    platformD.predraw();
     affect_update();
 
+    platformD.predraw();
     platformD.draw();
   }
   AC(screen_usedD);
@@ -400,12 +400,18 @@ msg_pause()
     msg_moreD += 1;
 
     // wait for user to acknowledge prior buffer -more-
-    do {
+    if (replay_flag) {
       draw();
-      c = inkey();
-      if (c == ESCAPE) break;
-      if (c == CTRL('c')) break;
-    } while (c != ' ');
+    } else {
+      do {
+        draw();
+        do {
+          c = platformD.readansi();
+        } while (c == 0);
+        if (c == ESCAPE) break;
+        if (c == CTRL('c')) break;
+      } while (c != ' ');
+    }
     msg_advance();
   }
 }
@@ -13202,6 +13208,7 @@ dungeon()
     do {
       omit_replay = 0;
       msg_moreD = 0;
+      replay_flag = (input_record_readD < input_record_writeD);
       c = 0;
       draw();
       if (!teleport && countD.rest != 0) break;
@@ -13712,19 +13719,23 @@ main(int argc, char** argv)
   }
 
   // Per-Player initialization
-  calc_bonuses();
-  calc_hitpoints();
-  calc_mana();
   magic_init();
 
   // Replay state reset
   if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
+    replay_flag = TRUE;
     input_record_writeD = AS(input_actionD, input_resumeD - 1);
   } else {
+    replay_flag = FALSE;
     input_record_writeD = 0;
   }
   input_resumeD = 0;
   input_record_readD = input_action_usedD = 0;
+
+  // Perform calculations
+  calc_bonuses();
+  calc_hitpoints();
+  calc_mana();  // may generate messages in gain_prayer()
 
   // a fresh cave!
   if (dun_level != 0) {
