@@ -10687,7 +10687,7 @@ py_menu()
       case 'b':
         if (!memory_ok) return 0;
 
-        input_resumeD = (input_action - 2 + death);
+        input_resumeD = (input_action - 1);
         // Disable midpoint resume explicitly
         if (input_resumeD == 0) input_resumeD = -1;
         longjmp(restartD, 1);
@@ -13202,6 +13202,7 @@ dungeon()
     do {
       omit_replay = 0;
       msg_moreD = 0;
+      c = 0;
       draw();
       if (!teleport && countD.rest != 0) break;
       if (!teleport && countD.paralysis != 0) break;
@@ -13214,7 +13215,6 @@ dungeon()
         mmove(find_direction, &y, &x);
       } else {
         msg_advance();
-        AS(input_actionD, input_action_usedD++) = input_record_readD;
         c = inkey();
 
         // AWN: Period attempts auto-detection of a situational command
@@ -13611,9 +13611,14 @@ dungeon()
         }
         panel_update(&panelD, uD.y, uD.x, FALSE);
       }
-      if (omit_replay) {
-        input_record_readD = input_record_writeD =
-            AS(input_actionD, --input_action_usedD);
+
+      if (c) {
+        if (omit_replay) {
+          input_record_readD = input_record_writeD =
+              AS(input_actionD, input_action_usedD - 1);
+        } else if (turn_flag) {
+          AS(input_actionD, input_action_usedD++) = input_record_readD;
+        }
       }
     } while (!turn_flag);
 
@@ -13713,8 +13718,8 @@ main(int argc, char** argv)
   magic_init();
 
   // Replay state reset
-  if (input_resumeD > 0 && input_resumeD < input_action_usedD) {
-    input_record_writeD = AS(input_actionD, input_resumeD);
+  if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
+    input_record_writeD = AS(input_actionD, input_resumeD - 1);
   } else {
     input_record_writeD = 0;
   }

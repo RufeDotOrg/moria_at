@@ -2176,7 +2176,7 @@ platform_load(char *filename)
           }
 
           if (sum) {
-            input_resumeD = (input_action_usedD - 1);
+            input_resumeD = input_action_usedD;
             Log("  midpoint (%d input_resumeD)", input_resumeD);
           } else {
             input_resumeD = 0;
