@@ -4402,7 +4402,7 @@ py_light_on(y, x)
   if (near_light(y, x)) light_room(y, x);
 }
 void
-py_check_view()
+py_check_view(full)
 {
   if (py_affect(MA_BLIND)) {
     py_light_off(uD.y, uD.x);
@@ -4410,7 +4410,7 @@ py_check_view()
     py_light_on(uD.y, uD.x);
   }
 
-  FOR_EACH(mon, { update_mon(it_index); });
+  if (full) FOR_EACH(mon, { update_mon(it_index); });
 }
 int
 enchant(int16_t* bonus, int16_t limit)
@@ -6608,7 +6608,7 @@ teleport_to(ny, nx)
   uD.y = y;
   uD.x = x;
   panel_update(&panelD, y, x, FALSE);
-  py_check_view();
+  py_check_view(TRUE);
 }
 // TBD: We may loop infinitely with the added restriction of oidx != 0
 // Phase door (short range) teleport runs a higher risk
@@ -13056,7 +13056,7 @@ ma_tick(check_view)
   // calculations are called after count/flag changes
   if (delta) {
     calc_bonuses();
-    if (check_view && (MA_VIEW & delta)) py_check_view();
+    if (MA_VIEW & delta) py_check_view(check_view);
   }
 }
 void
@@ -13746,7 +13746,7 @@ main(int argc, char** argv)
   }
 
   panel_update(&panelD, uD.y, uD.x, TRUE);
-  py_check_view();
+  py_check_view(TRUE);
   dungeon();
 
   if (uD.new_level_flag != NL_DEATH) {
