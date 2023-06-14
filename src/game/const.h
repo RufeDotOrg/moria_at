@@ -19,7 +19,6 @@
 #define MAX_FLOOR 4
 #define TMP1_WALL 8  /* Prevents corridor formation; replaced by granite */
 #define TMP2_WALL 9  /* Corridor+room intersection */
-#define TMP3_WALL 10 /* Corridor+unusual room intersection */
 #define MIN_WALL 12
 #define GRANITE_WALL 12
 #define MAGMA_WALL 13

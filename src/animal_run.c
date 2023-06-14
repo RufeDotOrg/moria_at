@@ -990,6 +990,13 @@ in_bounds(int row, int col)
   BOOL cc = (col > 0 && col < MAX_WIDTH - 1);
   return cc && rc;
 }
+static int
+in_playarea(int row, int col)
+{
+  BOOL rc = (row > 1 && row < MAX_HEIGHT - 2);
+  BOOL cc = (col > 1 && col < MAX_WIDTH - 2);
+  return cc && rc;
+}
 static void rand_dir(rdir, cdir) int *rdir, *cdir;
 {
   int tmp;
@@ -1117,12 +1124,13 @@ build_corridor(row1, col1, row2, col2)
   coords tunstk[1000], wallstk[1000];
   coords* tun_ptr;
   int row_dir, col_dir, tunindex, wallindex;
-  int stop_flag, door_flag, main_loop_count;
+  int stop_flag, door_flag, wall_flag, main_loop_count;
   int start_row, start_col;
 
   /* Main procedure for Tunnel  		*/
   stop_flag = FALSE;
   door_flag = FALSE;
+  wall_flag = FALSE;
   tunindex = 0;
   wallindex = 0;
   main_loop_count = 0;
@@ -1143,7 +1151,7 @@ build_corridor(row1, col1, row2, col2)
     }
     tmp_row = row1 + row_dir;
     tmp_col = col1 + col_dir;
-    while (!in_bounds(tmp_row, tmp_col)) {
+    while (!in_playarea(tmp_row, tmp_col)) {
       if (randint(DUN_TUN_RND) == 1)
         rand_dir(&row_dir, &col_dir);
       else
@@ -1152,34 +1160,51 @@ build_corridor(row1, col1, row2, col2)
       tmp_col = col1 + col_dir;
     }
     c_ptr = &caveD[tmp_row][tmp_col];
+    if (c_ptr->fval == TMP2_WALL) continue;
+
+    // Room pass-through
+    if (wall_flag && c_ptr->fval == FLOOR_NULL) {
+      if (caveD[row1][col1].fval == GRANITE_WALL) {
+        if (wallindex < 1000) {
+          wallstk[wallindex].y = row1;
+          wallstk[wallindex].x = col1;
+          wallindex++;
+        }
+      }
+      wall_flag = FALSE;
+    }
+
+    row1 = tmp_row;
+    col1 = tmp_col;
     if (c_ptr->fval == FLOOR_NULL) {
-      row1 = tmp_row;
-      col1 = tmp_col;
       if (tunindex < 1000) {
         tunstk[tunindex].y = row1;
         tunstk[tunindex].x = col1;
         tunindex++;
       }
       door_flag = FALSE;
-    } else if (c_ptr->fval == TMP2_WALL || c_ptr->fval == TMP3_WALL) {
-    } else if (c_ptr->fval == GRANITE_WALL) {
-      row1 = tmp_row;
-      col1 = tmp_col;
+    } else if (!wall_flag && c_ptr->fval == GRANITE_WALL) {
       if (wallindex < 1000) {
-        wallstk[wallindex].y = row1;
-        wallstk[wallindex].x = col1;
+        wallstk[wallindex].y = tmp_row;
+        wallstk[wallindex].x = tmp_col;
         wallindex++;
       }
-      for (i = row1 - 1; i <= row1 + 1; i++)
-        for (j = col1 - 1; j <= col1 + 1; j++)
-          if (in_bounds(i, j)) {
-            d_ptr = &caveD[i][j];
-            if (d_ptr->fval == GRANITE_WALL)
-              d_ptr->fval = (d_ptr->cflag & CF_UNUSUAL) ? TMP3_WALL : TMP2_WALL;
+      for (i = tmp_row - 1; i <= tmp_row + 1; i++)
+        for (j = tmp_col - 1; j <= tmp_col + 1; j++) {
+          d_ptr = &caveD[i][j];
+          if (d_ptr->fval == GRANITE_WALL) {
+            d_ptr->fval = TMP2_WALL;
           }
+        }
+      // Puncture through the wall this iteration
+      tmp_row += row_dir;
+      tmp_col += col_dir;
+      if (caveD[tmp_row][tmp_col].fval > MAX_FLOOR) {
+        caveD[tmp_row][tmp_col].fval = FLOOR_DARK;  // floor_corr?
+      }
+      wall_flag = TRUE;
+
     } else if (c_ptr->fval == FLOOR_CORR || c_ptr->fval == FLOOR_OBST) {
-      row1 = tmp_row;
-      col1 = tmp_col;
       if (!door_flag) {
         if (doorindex < AL(doorstk)) {
           doorstk[doorindex].y = row1;
@@ -1189,18 +1214,11 @@ build_corridor(row1, col1, row2, col2)
         door_flag = TRUE;
       }
       if (randint(100) > DUN_TUN_CON) {
-        /* make sure that tunnel has gone a reasonable distance
-           before stopping it, this helps prevent isolated rooms */
-        tmp_row = row1 - start_row;
-        if (tmp_row < 0) tmp_row = -tmp_row;
-        tmp_col = col1 - start_col;
-        if (tmp_col < 0) tmp_col = -tmp_col;
-        if (tmp_row > 10 || tmp_col > 10) stop_flag = TRUE;
+        int cdis = distance(start_row, start_col, tmp_row, tmp_col);
+        if (cdis > 10) {
+          stop_flag = TRUE;
+        }
       }
-    } else /* c_ptr->fval != NULL, TMP2, TMP3, GRANITE, CORR */
-    {
-      row1 = tmp_row;
-      col1 = tmp_col;
     }
   } while (((row1 != row2) || (col1 != col2)) && (!stop_flag));
 
@@ -1211,14 +1229,16 @@ build_corridor(row1, col1, row2, col2)
     tun_ptr++;
   }
   for (i = 0; i < wallindex; i++) {
-    c_ptr = &caveD[wallstk[i].y][wallstk[i].x];
-    if (c_ptr->fval == TMP3_WALL) {
+    tmp_row = wallstk[i].y;
+    tmp_col = wallstk[i].x;
+    c_ptr = &caveD[tmp_row][tmp_col];
+    if (c_ptr->cflag & CF_UNUSUAL) {
       if (randint(3) == 1) {
         place_secret_door(wallstk[i].y, wallstk[i].x);
       } else {
         place_closed_door(randint(21) - 11, wallstk[i].y, wallstk[i].x);
       }
-    } else if (c_ptr->fval == TMP2_WALL) {
+    } else {
       if (randint(100) < DUN_TUN_PEN)
         place_door(wallstk[i].y, wallstk[i].x);
       else {
@@ -1240,7 +1260,7 @@ fill_cave(fval)
     c_ptr = &caveD[i][1];
     for (j = MAX_WIDTH - 2; j > 0; j--) {
       if ((c_ptr->fval == FLOOR_NULL) || (c_ptr->fval == TMP1_WALL) ||
-          (c_ptr->fval == TMP2_WALL) || (c_ptr->fval == TMP3_WALL))
+          (c_ptr->fval == TMP2_WALL))
         c_ptr->fval = fval;
       c_ptr++;
     }
@@ -3642,6 +3662,7 @@ cave_gen()
    */
   new_spot(&uD.y, &uD.x);
 
+  // infinite loop on small map?
   if (dun_level >= 7) alloc_obj(set_corr, 3, randint(alloc_level));
   alloc_obj(set_room, 5, randnor(TREAS_ROOM_MEAN, 3));
   alloc_obj(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
