@@ -997,6 +997,18 @@ in_playarea(int row, int col)
   BOOL cc = (col > 1 && col < MAX_WIDTH - 2);
   return cc && rc;
 }
+int
+distance(y1, x1, y2, x2)
+{
+  int dy, dx;
+
+  dy = y1 - y2;
+  if (dy < 0) dy = -dy;
+  dx = x1 - x2;
+  if (dx < 0) dx = -dx;
+
+  return ((((dy + dx) << 1) - (dy > dx ? dx : dy)) >> 1);
+}
 static void rand_dir(rdir, cdir) int *rdir, *cdir;
 {
   int tmp;
@@ -1473,18 +1485,6 @@ next_to(y, x)
   else
     next = FALSE;
   return (next);
-}
-int
-distance(y1, x1, y2, x2)
-{
-  int dy, dx;
-
-  dy = y1 - y2;
-  if (dy < 0) dy = -dy;
-  dx = x1 - x2;
-  if (dx < 0) dx = -dx;
-
-  return ((((dy + dx) << 1) - (dy > dx ? dx : dy)) >> 1);
 }
 static void
 try_door(y, x)
