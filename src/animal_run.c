@@ -428,17 +428,17 @@ static void msg_game(msg, msglen) char* msg;
   }
 
   log = AS(msg_cqD, msg_writeD);
-  if (log_used) log[log_used++] = ' ';
-  msg_used = snprintf(log + log_used, console_width - log_used, "%s", msg);
+  msg_used = snprintf(log + log_used, console_width - log_used, "%s ", msg);
 
-  if (msg_used > 0) AS(msglen_cqD, msg_writeD) = log_used + msg_used;
+  if (msg_used > 0)
+    AS(msglen_cqD, msg_writeD) = MIN(log_used + msg_used, console_width);
 
   if (countD.rest) countD.rest = 0;
   if (find_flag) find_flag = 0;
 }
-#define msg_print(x) msg_game(AP(x))
+#define msg_print(x) msg_game(x, AL(x) - 1)
 #define see_print(x) \
-  if (maD[MA_BLIND] == 0) msg_game(AP(x))
+  if (maD[MA_BLIND] == 0) msg_print(x)
 int
 show_history()
 {

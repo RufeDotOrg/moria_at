@@ -470,4 +470,4 @@
 // Output
 enum { BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BRIGHT };
 // Longest single message (may be concatenated with other messages)
-#define STRLEN_MSG 80
+#define STRLEN_MSG 79

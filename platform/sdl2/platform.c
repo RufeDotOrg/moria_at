@@ -1371,60 +1371,58 @@ platform_draw()
   {
     char *msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
-    int more_used = 0;
-    int inset = __APPLE__ ? columnD[0] * display_rectD.w : width / 2;
-
-    if (more) {
-      if (map_rectD.w != gameplay_rectD.w)
-        more_used = snprintf(tmp, AL(tmp), "-");
-      else
-        more_used = snprintf(tmp, AL(tmp), "-more %d-", more);
-    }
+    int alpha = 255;
 
     // Gameplay shows previous message to help the player out
     if (!msg_used && show_map) {
       msg = AS(msg_cqD, msg_writeD - 1);
       msg_used = AS(msglen_cqD, msg_writeD - 1);
-      font_texture_alphamod(128);  // faded
+      alpha = 128;
     }
 
+    SDL_Point p = {display_rectD.w / 2 - msg_used * width / 2, 0};
     SDL_Rect rect = {
-        display_rectD.w / 2 - msg_used * width / 2,
+        p.x - width,
         0,
-        msg_used * width,
+        (1 + msg_used) * width,
         height,
     };
-    SDL_Rect rect2 = {
-        inset,
-        0,
-        more_used * width,
-        height,
-    };
-    SDL_Rect rect3 = {
-        display_rectD.w - more_used * width - inset,
-        0,
-        more_used * width,
-        height,
-    };
-    SDL_Point p = {rect.x, 0};
-    SDL_Point p2 = {rect2.x, 0};
-    SDL_Point p3 = {rect3.x, 0};
 
     if (msg_used) {
+      font_texture_alphamod(alpha);
+      render_font_string(rendererD, &fontD, msg, msg_used, p);
+      font_texture_alphamod(255);
+
       SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
       rect_frame(rect, 1);
-      if (more_used) {
-        rect_frame(rect2, 1);
-        rect_frame(rect3, 1);
-      }
-
-      render_font_string(rendererD, &fontD, msg, msg_used, p);
-      if (more_used) {
-        render_font_string(rendererD, &fontD, tmp, more_used, p2);
-        render_font_string(rendererD, &fontD, tmp, more_used, p3);
-      }
     }
-    font_texture_alphamod(255);
+  }
+
+  if (more && map_rectD.w == gameplay_rectD.w) {
+    int inset = __APPLE__ ? columnD[0] * display_rectD.w : width / 2;
+    int more_used = snprintf(tmp, AL(tmp), "-more %d-", more);
+
+    if (more_used) {
+      SDL_Rect rect2 = {
+          inset,
+          0,
+          more_used * width,
+          height,
+      };
+      SDL_Rect rect3 = {
+          display_rectD.w - more_used * width - inset,
+          0,
+          more_used * width,
+          height,
+      };
+      SDL_Point p2 = {rect2.x, 0};
+      SDL_Point p3 = {rect3.x, 0};
+
+      render_font_string(rendererD, &fontD, tmp, more_used, p2);
+      render_font_string(rendererD, &fontD, tmp, more_used, p3);
+      rect_frame(rect2, 1);
+      rect_frame(rect3, 1);
+    }
   }
 
   render_update();
