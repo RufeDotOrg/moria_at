@@ -13558,6 +13558,7 @@ dungeon()
               case CTRL('z'): {
                 dun_level += 1;
                 uD.new_level_flag = NL_DOWN_STAIR;
+                turn_flag = TRUE;
               } break;
             }
           }
