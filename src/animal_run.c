@@ -10416,7 +10416,7 @@ show_character()
 
   BufPad(screen, MAX_A, 35);
 
-  DRAWMSG("Name: %-20.020s Race: %-20.020s Class: %-20.020s", "...",
+  DRAWMSG("Name: %-19.019s Race: %-19.019s Class: %-19.019s", "...",
           raceD[uD.ridx].name, classD[uD.clidx].name);
   return inkey();
 }
