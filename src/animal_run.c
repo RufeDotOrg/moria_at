@@ -12,22 +12,21 @@ DATA int find_prevdir;
 DATA jmp_buf restartD;
 DATA int drop_modeD;
 DATA char quit_stringD[] = "quitting";
-#define MAX_MSGLEN AL(msg_cqD[0])
 #define MSG(x, ...)                                             \
   {                                                             \
-    char vtype[MAX_MSGLEN];                                     \
+    char vtype[STRLEN_MSG + 1];                                 \
     int len = snprintf(vtype, sizeof(vtype), x, ##__VA_ARGS__); \
     len = CLAMP(len, 0, sizeof(vtype) - 1);                     \
-    vtype[len] = 0;                                             \
     msg_game(vtype, len);                                       \
   }
 // This clobbers unflushed messages, and does not persist to history
-#define DRAWMSG(x, ...)                                                       \
-  {                                                                           \
-    char* msg = AS(msg_cqD, msg_writeD);                                      \
-    AS(msglen_cqD, msg_writeD) = snprintf(msg, MAX_MSGLEN, x, ##__VA_ARGS__); \
-    draw();                                                                   \
-    AS(msglen_cqD, msg_writeD) = 0;                                           \
+#define DRAWMSG(x, ...)                                        \
+  {                                                            \
+    char* msg = AS(msg_cqD, msg_writeD);                       \
+    int len = snprintf(msg, STRLEN_MSG + 1, x, ##__VA_ARGS__); \
+    AS(msglen_cqD, msg_writeD) = CLAMP(len, 0, STRLEN_MSG);    \
+    draw();                                                    \
+    AS(msglen_cqD, msg_writeD) = 0;                            \
   }
 
 #define BufMsg(name, text, ...)                                     \
@@ -420,15 +419,17 @@ static void msg_game(msg, msglen) char* msg;
 {
   char* log;
   int log_used, msg_used;
+  int console_width = console_widthD;
 
   log_used = AS(msglen_cqD, msg_writeD);
-  if (log_used + msglen >= MAX_MSGLEN) {
+  if (log_used + msglen >= console_width) {
     msg_pause();
     log_used = 0;
   }
 
   log = AS(msg_cqD, msg_writeD);
-  msg_used = snprintf(log + log_used, MAX_MSGLEN - log_used, " %s", msg);
+  if (log_used) log[log_used++] = ' ';
+  msg_used = snprintf(log + log_used, console_width - log_used, "%s", msg);
 
   if (msg_used > 0) AS(msglen_cqD, msg_writeD) = log_used + msg_used;
 
@@ -13688,6 +13689,7 @@ platform_init()
   platformD.readansi = platform_readansi;
   platformD.predraw = platform_predraw;
   platformD.draw = platform_draw;
+  console_widthD = 80;
 
   return 0;
 }

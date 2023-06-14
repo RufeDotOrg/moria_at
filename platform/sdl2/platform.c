@@ -1569,6 +1569,7 @@ display_resize(int dw, int dh)
   colD = dw / fwidth;
   rfD = 1.0f / rowD;
   cfD = 1.0f / colD;
+  if (colD >= 120) console_widthD = 98;
   Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", fwidth,
       fheight, rowD, colD, rfD, cfD);
 

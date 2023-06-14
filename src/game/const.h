@@ -469,3 +469,5 @@
 #define CTRL(x) (x & 0x1f)
 // Output
 enum { BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BRIGHT };
+// Longest single message (may be concatenated with other messages)
+#define STRLEN_MSG 80
