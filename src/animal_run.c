@@ -991,6 +991,12 @@ in_bounds(row, col)
   return urow < (MAX_HEIGHT - 2) && ucol < (MAX_WIDTH - 2);
 }
 int
+diff_chunk(y1, x1, y2, x2)
+{
+  return (y1 / CHUNK_HEIGHT != y2 / CHUNK_HEIGHT ||
+          x1 / CHUNK_WIDTH != x2 / CHUNK_WIDTH);
+}
+int
 distance(y1, x1, y2, x2)
 {
   int dy, dx;
@@ -1194,6 +1200,17 @@ build_corridor(row1, col1, row2, col2)
         wallstk[wallindex].x = tmp_col;
         wallindex++;
       }
+
+      // Puncture through wall in this direction
+      if (diff_chunk(tmp_row, tmp_col, tmp_row + row_dir, tmp_col + col_dir)) {
+        if (wallindex < 1000) {
+          wallstk[wallindex].y = tmp_row + row_dir;
+          wallstk[wallindex].x = tmp_col + col_dir;
+          wallindex++;
+        }
+      }
+
+      // Protect adjacent remaining wall
       for (i = tmp_row - 1; i <= tmp_row + 1; i++)
         for (j = tmp_col - 1; j <= tmp_col + 1; j++) {
           d_ptr = &caveD[i][j];
@@ -1201,12 +1218,7 @@ build_corridor(row1, col1, row2, col2)
             d_ptr->fval = TMP2_WALL;
           }
         }
-      // Puncture through the wall this iteration
-      tmp_row += row_dir;
-      tmp_col += col_dir;
-      if (caveD[tmp_row][tmp_col].fval > MAX_FLOOR) {
-        caveD[tmp_row][tmp_col].fval = FLOOR_CORR;
-      }
+
       wall_flag = TRUE;
 
     } else if (c_ptr->fval == FLOOR_CORR || c_ptr->fval == FLOOR_OBST) {
@@ -1237,8 +1249,8 @@ build_corridor(row1, col1, row2, col2)
     tmp_row = wallstk[i].y;
     tmp_col = wallstk[i].x;
     c_ptr = &caveD[tmp_row][tmp_col];
-    // Filter duplicates in wallstk
-    if (c_ptr->fval > MAX_FLOOR) {
+    // Filter duplicates in wallstk; protects TMP1_WALL
+    if (c_ptr->fval > TMP1_WALL) {
       if (c_ptr->cflag & CF_UNUSUAL) {
         if (randint(3) == 1) {
           place_secret_door(wallstk[i].y, wallstk[i].x);
