@@ -10347,7 +10347,7 @@ show_character()
            &stat_nameD[it][1], statD.use_stat[it]);
     if (statD.max_stat[it] > statD.cur_stat[it]) {
       BufLineAppend(screen, line - 1, "  %d",
-                    modify_stat(statD.max_stat[it], statD.mod_stat[it]));
+                    statD.cur_stat[it] - statD.max_stat[it]);
     }
   }
 
