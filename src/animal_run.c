@@ -1237,18 +1237,21 @@ build_corridor(row1, col1, row2, col2)
     tmp_row = wallstk[i].y;
     tmp_col = wallstk[i].x;
     c_ptr = &caveD[tmp_row][tmp_col];
-    if (c_ptr->cflag & CF_UNUSUAL) {
-      if (randint(3) == 1) {
-        place_secret_door(wallstk[i].y, wallstk[i].x);
+    // Filter duplicates in wallstk
+    if (c_ptr->fval > MAX_FLOOR) {
+      if (c_ptr->cflag & CF_UNUSUAL) {
+        if (randint(3) == 1) {
+          place_secret_door(wallstk[i].y, wallstk[i].x);
+        } else {
+          place_closed_door(randint(21) - 11, wallstk[i].y, wallstk[i].x);
+        }
       } else {
-        place_closed_door(randint(21) - 11, wallstk[i].y, wallstk[i].x);
-      }
-    } else {
-      if (randint(100) < DUN_TUN_PEN)
-        place_door(wallstk[i].y, wallstk[i].x);
-      else {
-        /* these have to be doorways to rooms */
-        c_ptr->fval = FLOOR_CORR;
+        if (randint(100) < DUN_TUN_PEN)
+          place_door(wallstk[i].y, wallstk[i].x);
+        else {
+          /* these have to be doorways to rooms */
+          c_ptr->fval = FLOOR_CORR;
+        }
       }
     }
   }
