@@ -3466,7 +3466,7 @@ int* xcenter;
         }
       }
 
-      ydoor = ymin + randint(CHUNK_HEIGHT - 1);
+      ydoor = ymin + randint(CHUNK_HEIGHT - 1) - 1;
       place_secret_door(ydoor, x);
       if (ydoor != y) {
         place_secret_door(y, xmin + randint(CHUNK_WIDTH / 2 - 2));
