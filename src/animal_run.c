@@ -11089,7 +11089,10 @@ mon_attack(midx)
     int attack_desc = attack->attack_desc;
     bth = bth_adj(attack_type);
     flag = test_hit(bth, adj, 0, cbD.pac);
-    if (countD.life_prot && attack_type == 19) attack_type = 99;
+    if (countD.life_prot && attack_type == 19) {
+      attack_type = 99;
+      attack_desc = 99;
+    }
     if (flag) {
       int damage = damroll(attack->attack_dice, attack->attack_sides);
       MSG("%s%s", descD, attack_string(attack_desc));
