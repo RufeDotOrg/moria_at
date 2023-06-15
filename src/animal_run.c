@@ -983,19 +983,13 @@ typedef struct {
   int y;
   int x;
 } coords;
-BOOL
-in_bounds(int row, int col)
+int
+in_bounds(row, col)
 {
-  BOOL rc = (row > 0 && row < MAX_HEIGHT - 1);
-  BOOL cc = (col > 0 && col < MAX_WIDTH - 1);
-  return cc && rc;
-}
-static int
-in_playarea(int row, int col)
-{
-  BOOL rc = (row > 1 && row < MAX_HEIGHT - 2);
-  BOOL cc = (col > 1 && col < MAX_WIDTH - 2);
-  return cc && rc;
+  uint32_t urow = row - 1;
+  uint32_t ucol = col - 1;
+
+  return urow < (MAX_HEIGHT - 2) && ucol < (MAX_WIDTH - 2);
 }
 int
 distance(y1, x1, y2, x2)
@@ -1163,7 +1157,7 @@ build_corridor(row1, col1, row2, col2)
     }
     tmp_row = row1 + row_dir;
     tmp_col = col1 + col_dir;
-    while (!in_playarea(tmp_row, tmp_col)) {
+    while (!in_bounds(tmp_row, tmp_col)) {
       if (randint(DUN_TUN_RND) == 1)
         rand_dir(&row_dir, &col_dir);
       else
