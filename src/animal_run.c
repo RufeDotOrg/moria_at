@@ -363,7 +363,6 @@ affect_update()
   // Gain spells, imagine, ...
   active_affectD[idx++] = (spcount && spell_orderD[spcount - 1] == 0);
   active_affectD[idx++] = (countD.imagine != 0);
-  active_affectD[idx++] = (countD.undead_prot != 0);
 }
 void
 draw()
@@ -8924,8 +8923,8 @@ int *uy, *ux;
             ident |= unlight_area(uD.y, uD.x);
             break;
           case 28:
-            ident |= (countD.undead_prot == 0);
-            countD.undead_prot += randint(25) + uD.lev;
+            ident |= (countD.life_prot == 0);
+            countD.life_prot += randint(25) + uD.lev;
             break;
           case 29:
             ident |= TRUE;
@@ -9508,7 +9507,7 @@ int* x_ptr;
       ma_duration(MA_SEE_INVIS, randint(24) + 24);
       break;
     case 21:
-      countD.undead_prot += randint(25) + uD.lev;
+      countD.life_prot += randint(25) + uD.lev;
       break;
     case 22:
       earthquake();
@@ -11115,9 +11114,8 @@ mon_attack(midx)
     int attack_desc = attack->attack_desc;
     bth = bth_adj(attack_type);
     flag = test_hit(bth, adj, 0, cbD.pac);
-    if ((cre->cdefense & CD_UNDEAD) && countD.undead_prot && attack_type != 1) {
-      MSG("%s%s", descD, attack_string(99));
-    } else if (flag) {
+    if (countD.life_prot && attack_type == 19) attack_type = 99;
+    if (flag) {
       int damage = damroll(attack->attack_dice, attack->attack_sides);
       MSG("%s%s", descD, attack_string(attack_desc));
       switch (attack_type) {
@@ -11284,6 +11282,8 @@ mon_attack(midx)
               msg_print("Energy drains from your pack!");
             }
           }
+        } break;
+        case 99: {
         } break;
       }
 
@@ -13137,10 +13137,10 @@ tick()
   }
 
   if (countD.paralysis) countD.paralysis -= 1;
-  if (countD.undead_prot > 0) {
-    countD.undead_prot -= 1;
-    if (countD.undead_prot == 0)
-      msg_print("You no longer feel safe from undead.");
+  if (countD.life_prot > 0) {
+    countD.life_prot -= 1;
+    if (countD.life_prot == 0)
+      msg_print("You no longer feel safe from life drain.");
   }
 
   if (countD.imagine) countD.imagine -= 1;

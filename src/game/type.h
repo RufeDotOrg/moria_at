@@ -110,7 +110,7 @@ struct countS {
   int32_t rest;
   int32_t paralysis;
   // Player protection counters
-  int32_t undead_prot;
+  int32_t life_prot;
 };
 GAME struct countS countD;
 

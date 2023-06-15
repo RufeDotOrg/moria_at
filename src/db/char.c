@@ -247,7 +247,7 @@ static char* prayer_nameD[] = {
     "Orb of Draining",
     "Cure Serious Wounds",
     "Sense Invisible",
-    "Protection from Undead",
+    "Protection from Life Drain",
     "Earthquake",
     "Magic Mapping",
     "Cure Critical Wounds",
@@ -344,5 +344,5 @@ static char* affectD[][3] = {
     {"Poison"},
     {"+Spell"},
     {"Imagine"},
-    {"Protect"},
+    {""},
 };
