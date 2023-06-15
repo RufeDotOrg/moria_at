@@ -6258,34 +6258,6 @@ py_inven_init()
     else
       invenD[iidx++] = obj->id;
   }
-
-  if (HACK) {
-    uD.gold = 100000;
-
-    int inven_test[] = {};  // scrolls: 174 222
-    for (int it = 0; it < AL(inven_test); ++it) {
-      int iidx = inven_slot();
-      if (iidx == -1) break;
-
-      struct objS* obj = obj_use();
-      tr_obj_copy(inven_test[it], obj);
-      magic_treasure(obj, dun_level);
-      tr_make_known(&treasureD[obj->tidx]);
-      invenD[iidx] = obj->id;
-    }
-    int magik_test[] = {};
-    for (int it = 0; it < AL(magik_test); ++it) {
-      int iidx = inven_slot();
-      if (iidx == -1) break;
-
-      struct objS* obj = obj_use();
-      do {
-        tr_obj_copy(magik_test[it], obj);
-        magic_treasure(obj, dun_level);
-      } while (0);  // obj->sn == SN_EMPTY;
-      invenD[iidx] = obj->id;
-    }
-  }
 }
 static void*
 ptr_xor(void* a, void* b)
@@ -12065,7 +12037,7 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   reduce = 0;
   while (cdis) reduce = bit_pos(&cdis);
   reduce += 1;
-  MSG("[%d/%d@%d", dam_hp + 1, reduce, distance(y, x, fy, fx));
+  if (HACK) MSG("[%d/%d@%d", dam_hp + 1, reduce, distance(y, x, fy, fx));
   /* at least one damage, prevents randint(0) with poison_gas() */
   dam_hp = dam_hp / reduce + 1;
   get_flags(breath, &weapon_type, &harm_type, &destroy);
@@ -12120,7 +12092,11 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
       dam = fire_dam(dam_hp);
       break;
   }
-  MSG("-%d]", dam);
+  if (HACK) {
+    MSG("-%d]", dam);
+  } else {
+    MSG("[-%d hp]", dam);
+  }
 }
 static void mon_try_multiply(mon) struct monS* mon;
 {
@@ -12284,27 +12260,32 @@ mon_try_spell(midx, cdis)
           }
           break;
         case 20: /*Breath Light */
-          MSG("[%d] %s breathes lightning.", mon->hp, descD);
+          if (HACK) MSG("[%d]", mon->hp);
+          MSG("%s breathes lightning.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_LIGHTNING,
                          (mon->hp >> (1 + maxlev)));
           break;
         case 21: /*Breath Gas   */
-          MSG("[%d] %s breathes gas.", mon->hp, descD);
+          if (HACK) MSG("[%d]", mon->hp);
+          MSG("%s breathes gas.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS,
                          (mon->hp >> (1 + maxlev)));
           break;
         case 22: /*Breath Acid   */
-          MSG("[%d] %s breathes acid.", mon->hp, descD);
+          if (HACK) MSG("[%d]", mon->hp);
+          MSG("%s breathes acid.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID,
                          (mon->hp >> (1 + maxlev)));
           break;
         case 23: /*Breath Frost */
-          MSG("[%d] %s breathes frost.", mon->hp, descD);
+          if (HACK) MSG("[%d]", mon->hp);
+          MSG("%s breathes frost.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST,
                          (mon->hp >> (1 + maxlev)));
           break;
         case 24: /*Breath Fire   */
-          MSG("[%d] %s breathes fire.", mon->hp, descD);
+          if (HACK) MSG("[%d]", mon->hp);
+          MSG("%s breathes fire.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE,
                          (mon->hp >> (1 + maxlev)));
           break;
@@ -13475,6 +13456,10 @@ dungeon()
               case CTRL('a'): {
                 uD.exp += 1000000;
                 py_experience();
+                dun_level = 0;
+                uD.new_level_flag = NL_DOWN_STAIR;
+                uD.gold = 10000;
+                turn_flag = TRUE;
               } break;
               case CTRL('d'): {
                 detect_obj(oset_obj, TRUE);
@@ -13542,6 +13527,7 @@ dungeon()
                 }
               } break;
               case CTRL('s'): {
+                msg_print("Store maintenance.");
                 store_maint();
               } break;
               case CTRL('w'): {
