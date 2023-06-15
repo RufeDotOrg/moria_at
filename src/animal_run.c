@@ -1206,7 +1206,7 @@ build_corridor(row1, col1, row2, col2)
       tmp_row += row_dir;
       tmp_col += col_dir;
       if (caveD[tmp_row][tmp_col].fval > MAX_FLOOR) {
-        caveD[tmp_row][tmp_col].fval = FLOOR_DARK;  // floor_corr?
+        caveD[tmp_row][tmp_col].fval = FLOOR_CORR;
       }
       wall_flag = TRUE;
 
@@ -3656,7 +3656,6 @@ cave_gen()
    */
   new_spot(&uD.y, &uD.x);
 
-  // infinite loop on small map?
   if (dun_level >= 7) alloc_obj(set_corr, 3, randint(alloc_level));
   alloc_obj(set_room, 5, randnor(TREAS_ROOM_MEAN, 3));
   alloc_obj(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
