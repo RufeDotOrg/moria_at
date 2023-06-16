@@ -11770,11 +11770,12 @@ tunnel_tool(y, x, iidx)
 {
   struct caveS* c_ptr;
   struct objS* obj;
-  int tabil, wall_chance, wall_min, turn_count, flag;
+  int tabil, wall_chance, wall_min, turn_count;
   int wtohit;
+
   c_ptr = &caveD[y][x];
 
-  flag = FALSE;
+  turn_count = 0;
   if (c_ptr->fval != BOUNDARY_WALL) {
     obj = obj_get(invenD[iidx]);
     if (obj->id) {
@@ -11812,7 +11813,6 @@ tunnel_tool(y, x, iidx)
           break;
       }
 
-      turn_count = 0;
       if (wall_chance) {
         do {
           turn_count += 1;
@@ -11822,9 +11822,7 @@ tunnel_tool(y, x, iidx)
             break;
           }
         } while (turn_count < 5);
-      }
-      /* Is there an object in the way?  (Rubble and secret doors)*/
-      else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
+      } else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
         msg_print("You tunnel into the granite wall.");
         do {
           turn_count += 1;
@@ -11835,6 +11833,7 @@ tunnel_tool(y, x, iidx)
         msg_print("You dig in the rubble.");
 
         do {
+          turn_count += 1;
           if (tabil > randint(180)) {
             c_ptr->fval = FLOOR_CORR;
             delete_object(y, x);
@@ -11851,12 +11850,11 @@ tunnel_tool(y, x, iidx)
         } while (turn_count < 5);
       }
 
+      // Extra turns for weapon swap
+      if (iidx != INVEN_WIELD) turn_count += 2;
+
       // TBD: unique counter for mining?
-      if (iidx != INVEN_WIELD) {
-        countD.paralysis = 2;
-      }
-      countD.paralysis += MAX(turn_count, 1);
-      flag = TRUE;
+      countD.paralysis = turn_count;
     } else {
       msg_print("You dig with your hands, making no progress.");
     }
@@ -11864,7 +11862,7 @@ tunnel_tool(y, x, iidx)
     msg_print("You cannot tunnel into permanent rock.");
   }
 
-  return flag;
+  return turn_count;
 }
 static int
 tunnel(y, x)
