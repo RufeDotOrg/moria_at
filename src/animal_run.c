@@ -13561,72 +13561,66 @@ dungeon()
         struct monS* mon = &entity_monD[c_ptr->midx];
         struct objS* obj = &entity_objD[c_ptr->oidx];
 
-        if (find_flag && mon->mlit) {
-          // Run/Mine is non-combat movement
-          find_flag = FALSE;
-        } else if (find_flag && c_ptr->fval > MAX_OPEN_SPACE) {
+        // doors known to be jammed are bashed prior to movement
+        if (obj->tval == TV_CLOSED_DOOR) {
+          if (mon->id == 0) {
+            if (obj->p1 < 0 && (obj->idflag & ID_REVEAL)) {
+              bash(y, x);
+            }
+          }
+        }
+
+        if (mon->id) {
+          py_attack(y, x);
+        } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
+          if (obj->tval == TV_CHEST) {
+            if (obj->idflag & ID_REVEAL) try_disarm_chest(y, x);
+          } else if (obj->tval == TV_VIS_TRAP) {
+            if (obj->idflag & ID_REVEAL) try_disarm_trap(y, x);
+          }
+          if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
+            hit_trap(y, x, &y, &x);
+          }
+
+          py_light_off(uD.y, uD.x);
+          py_light_on(y, x);
+          turn_flag = TRUE;
+          uD.y = y;
+          uD.x = x;
+
+          // Perception check on movement
+          if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
+          if (py_affect(MA_BLIND) == 0 && find_flag) {
+            if (find_event(y, x)) find_flag = FALSE;
+          }
+
+          if (obj->tval == TV_CHEST && obj->sn != SN_EMPTY) {
+            open_object(y, x);
+          } else if (obj->tval == TV_STORE_DOOR) {
+            store_entrance(obj->tchar - '1');
+          } else if (obj->tval == TV_PAWN_DOOR) {
+            pawn_entrance();
+          } else if (oset_pickup(obj)) {
+            py_pickup(y, x, FALSE);
+          }
+        } else if (obj->tval == TV_CLOSED_DOOR) {
+          open_object(y, x);
+        } else {
           find_flag = FALSE;
           if (py_affect(MA_BLIND) == 0) {
             if (ymine == y && xmine == x) {
-              tunnel(y, x);
+              if (obj->tval == TV_GOLD || obj->tval == TV_RUBBLE) tunnel(y, x);
             } else {
+              if (obj->tval == TV_GOLD) {
+                obj_desc(obj, obj->number);
+                MSG("You see %s glimmering in the %s.", descD,
+                    c_ptr->fval == QUARTZ_WALL ? "quartz vein"
+                                               : "magma intrusion");
+              } else if (obj->tval == TV_RUBBLE) {
+                msg_print("You see rubble.");
+              }
               ymine = y;
               xmine = x;
-            }
-          }
-        } else {
-          // doors known to be jammed are bashed prior to movement
-          if (obj->tval == TV_CLOSED_DOOR) {
-            if (mon->id == 0) {
-              if (obj->p1 < 0 && (obj->idflag & ID_REVEAL)) {
-                bash(y, x);
-              }
-            }
-          }
-
-          if (mon->id) {
-            py_attack(y, x);
-          } else if (c_ptr->fval <= MAX_OPEN_SPACE) {
-            if (obj->tval == TV_CHEST) {
-              if (obj->idflag & ID_REVEAL) try_disarm_chest(y, x);
-            } else if (obj->tval == TV_VIS_TRAP) {
-              if (obj->idflag & ID_REVEAL) try_disarm_trap(y, x);
-            }
-            if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_VIS_TRAP) {
-              hit_trap(y, x, &y, &x);
-            }
-
-            py_light_off(uD.y, uD.x);
-            py_light_on(y, x);
-            turn_flag = TRUE;
-            uD.y = y;
-            uD.x = x;
-
-            // Perception check on movement
-            if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
-            if (py_affect(MA_BLIND) == 0 && find_flag) {
-              if (find_event(y, x)) find_flag = FALSE;
-            }
-
-            if (obj->tval == TV_CHEST && obj->sn != SN_EMPTY) {
-              open_object(y, x);
-            } else if (obj->tval == TV_STORE_DOOR) {
-              store_entrance(obj->tchar - '1');
-            } else if (obj->tval == TV_PAWN_DOOR) {
-              pawn_entrance();
-            } else if (oset_pickup(obj)) {
-              py_pickup(y, x, FALSE);
-            }
-          } else if (obj->tval == TV_CLOSED_DOOR) {
-            open_object(y, x);
-          } else if (py_affect(MA_BLIND) == 0) {
-            if (obj->tval == TV_GOLD) {
-              obj_desc(obj, obj->number);
-              MSG("You see %s glimmering in the %s.", descD,
-                  c_ptr->fval == QUARTZ_WALL ? "quartz vein"
-                                             : "magma intrusion");
-            } else if (obj->tval == TV_RUBBLE) {
-              msg_print("You see rubble.");
             }
           }
         }
