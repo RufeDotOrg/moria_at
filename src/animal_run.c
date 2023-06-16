@@ -11774,92 +11774,101 @@ tunnel_tool(y, x, iidx)
   int wtohit;
 
   c_ptr = &caveD[y][x];
+  obj = obj_get(invenD[iidx]);
 
   turn_count = 0;
-  if (c_ptr->fval != BOUNDARY_WALL) {
-    obj = obj_get(invenD[iidx]);
-    if (obj->id) {
-      obj_desc(obj, 1);
-      wtohit = tohit_by_weight(obj->weight);
 
-      if (wtohit) {
-        MSG("You have trouble digging with %s, it is very heavy.", descD);
-      } else {
-        MSG("You begin tunneling with %s.", descD);
-      }
-
-      /* If this weapon is too heavy for the player to wield properly, then
-         also make it harder to dig with it. tabil may be negative.  */
-      tabil = obj_tabil(obj, TRUE) + wtohit;
-
-      wall_chance = 0;
-      switch (c_ptr->fval) {
-        case QUARTZ_WALL:
-          wall_min = 80;
-          wall_chance = 400;
-          msg_print("You tunnel into the quartz vein.");
-          break;
-        case MAGMA_WALL:
-          wall_min = 10;
-          wall_chance = 600;
-          msg_print("You tunnel into the magma intrusion.");
-          break;
-        case GRANITE_WALL:
-          wall_min = 10;
-          wall_chance = 1200;
-          msg_print("You tunnel into the granite wall.");
-          break;
-        default:
-          break;
-      }
-
-      if (wall_chance) {
-        do {
-          turn_count += 1;
-          if (tabil > randint(wall_chance) + wall_min) {
-            twall(y, x);
-            msg_print("You have finished the tunnel.");
-            break;
-          }
-        } while (turn_count < 5);
-      } else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
-        msg_print("You tunnel into the granite wall.");
-        do {
-          turn_count += 1;
-          py_search(uD.y, uD.x);
-          if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
-        } while (turn_count < 5);
-      } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
-        msg_print("You dig in the rubble.");
-
-        do {
-          turn_count += 1;
-          if (tabil > randint(180)) {
-            c_ptr->fval = FLOOR_CORR;
-            delete_object(y, x);
-            if (randint(10) == 1) {
-              place_object(y, x, FALSE);
-              if (CF_LIT & c_ptr->cflag) {
-                msg_print("You have found something!");
-              }
-            } else {
-              msg_print("You have removed the rubble.");
-            }
-            break;
-          }
-        } while (turn_count < 5);
-      }
-
-      // Extra turns for weapon swap
-      if (iidx != INVEN_WIELD) turn_count += 2;
-
-      // TBD: unique counter for mining?
-      countD.paralysis = turn_count;
-    } else {
-      msg_print("You dig with your hands, making no progress.");
-    }
-  } else {
+  if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) {
+    msg_print("You can't tunnel through a door!");
+  } else if (c_ptr->midx) {
+    msg_print("Something is in your way!");
+    // Prevent the player from abusing digging for invis detection
+    turn_count = 1;
+  } else if (c_ptr->fval < MIN_CLOSED_SPACE) {
+    msg_print("Tunnel through what?  Empty air?!?");
+  } else if (c_ptr->fval == BOUNDARY_WALL) {
     msg_print("You cannot tunnel into permanent rock.");
+  } else if (!obj->id) {
+    msg_print("You dig with your hands, making no progress.");
+  } else {
+    obj_desc(obj, 1);
+    wtohit = tohit_by_weight(obj->weight);
+
+    if (wtohit) {
+      MSG("You have trouble digging with %s, it is very heavy.", descD);
+    } else {
+      MSG("You begin tunneling with %s.", descD);
+    }
+
+    /* If this weapon is too heavy for the player to wield properly, then
+       also make it harder to dig with it. tabil may be negative.  */
+    tabil = obj_tabil(obj, TRUE) + wtohit;
+
+    wall_chance = 0;
+    switch (c_ptr->fval) {
+      case QUARTZ_WALL:
+        wall_min = 80;
+        wall_chance = 400;
+        msg_print("You tunnel into the quartz vein.");
+        break;
+      case MAGMA_WALL:
+        wall_min = 10;
+        wall_chance = 600;
+        msg_print("You tunnel into the magma intrusion.");
+        break;
+      case GRANITE_WALL:
+        wall_min = 10;
+        wall_chance = 1200;
+        msg_print("You tunnel into the granite wall.");
+        break;
+      default:
+        break;
+    }
+
+    if (wall_chance) {
+      do {
+        turn_count += 1;
+        if (tabil > randint(wall_chance) + wall_min) {
+          twall(y, x);
+          msg_print("You have finished the tunnel.");
+          break;
+        }
+      } while (turn_count < 5);
+    } else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
+      msg_print("You tunnel into the granite wall.");
+      do {
+        turn_count += 1;
+        py_search(uD.y, uD.x);
+        if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
+      } while (turn_count < 5);
+    } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
+      msg_print("You dig in the rubble.");
+
+      do {
+        turn_count += 1;
+        if (tabil > randint(180)) {
+          c_ptr->fval = FLOOR_CORR;
+          delete_object(y, x);
+          if (randint(10) == 1) {
+            place_object(y, x, FALSE);
+            if (CF_LIT & c_ptr->cflag) {
+              msg_print("You have found something!");
+            }
+          } else {
+            msg_print("You have removed the rubble.");
+          }
+          break;
+        }
+      } while (turn_count < 5);
+    }
+
+    // Extra turns for weapon swap
+    if (iidx != INVEN_WIELD) turn_count += 2;
+  }
+
+  if (turn_count) {
+    // TBD: unique counter for mining?
+    countD.paralysis = turn_count;
   }
 
   return turn_count;
@@ -11890,13 +11899,12 @@ tunnel(y, x)
 
   return tunnel_tool(y, x, iidx);
 }
-int
+void
 py_tunnel(iidx)
 {
-  int dir, flag;
+  int dir;
   int y, x;
 
-  flag = FALSE;
   if (countD.confusion) {
     msg_print("You are too confused for digging.");
   } else if (get_dir("Dig a tunnel which direction?", &dir)) {
@@ -11904,21 +11912,8 @@ py_tunnel(iidx)
     x = uD.x;
     mmove(dir, &y, &x);
 
-    if (entity_objD[caveD[y][x].oidx].tval == TV_CLOSED_DOOR) {
-      msg_print("You can't tunnel through a door!");
-    } else if (caveD[y][x].midx) {
-      msg_print("Something is in your way!");
-      // Prevent the player from abusing digging for invis detection
-      flag = TRUE;
-    } else if (caveD[y][x].fval <= MAX_OPEN_SPACE) {
-      msg_print("Tunnel through what?  Empty air?!?");
-    } else if (caveD[y][x].fval > MAX_OPEN_SPACE) {
-      flag = tunnel_tool(y, x, iidx);
-    }
+    turn_flag = tunnel_tool(y, x, iidx);
   }
-
-  turn_flag = flag;
-  return flag;
 }
 static void make_move(midx, mm) int* mm;
 {
@@ -12955,6 +12950,7 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
         py_spike(iidx);
       } else if (obj->tval == TV_DIGGING) {
         py_tunnel(iidx);
+        iidx = -1;
       } else if (iidx < INVEN_EQUIP) {
         inven_wear(iidx);
       } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
