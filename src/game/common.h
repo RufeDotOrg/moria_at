@@ -65,8 +65,8 @@ typedef int (*fn)();
 // game data section for determinism verification
 #ifdef __APPLE__
 #define GAME DATA __attribute__((section("__DATA,game")))
-int __start_game __asm("section$start$__DATA$game");
-int __stop_game __asm("section$end$__DATA$game");
+extern unsigned char __start_game[] __asm("section$start$__DATA$game");
+extern unsigned char __stop_game[] __asm("section$end$__DATA$game");
 #else
 #define GAME DATA __attribute__((section("game")))
 extern unsigned char __start_game[] __attribute__((__weak__));
