@@ -10799,57 +10799,6 @@ py_help()
     BufMsg(screen, "CTRL('o'): teleport-to-object");
   }
 }
-static void
-py_pickup(y, x, pickup)
-{
-  struct caveS* c_ptr;
-  struct objS* obj;
-  int locn, merge;
-
-  c_ptr = &caveD[y][x];
-  obj = &entity_objD[c_ptr->oidx];
-
-  if (obj->tval == 0) {
-    msg_print("You see nothing here.");
-  }
-  /* Yarr! */
-  else if (obj->tval == TV_CHEST) {
-    if (obj->sn != SN_EMPTY) {
-      if (obj->idflag & ID_REVEAL) try_disarm_chest(y, x);
-      open_object(y, x);
-      turn_flag = TRUE;
-    } else {
-      msg_print("The chest is empty.");
-    }
-  }
-  /* There's GOLD in them thar hills!      */
-  else if (obj->tval == TV_GOLD) {
-    uD.gold += obj->cost;
-    MSG("You found %d gold pieces worth of %s.", obj->cost,
-        gold_nameD[obj->subval]);
-    delete_object(y, x);
-    turn_flag = TRUE;
-  } else if (obj->tval <= TV_MAX_PICK_UP) {
-    locn = -1;
-    merge = inven_merge(obj->id, &locn);
-    if (!merge && pickup) locn = inven_carry(obj->id);
-
-    obj_desc(obj, obj->number);
-    obj_detail(obj);
-    if (locn >= 0) {
-      obj->fy = 0;
-      obj->fx = 0;
-      caveD[y][x].oidx = 0;
-
-      MSG("You have %s%s (%c).", descD, detailD, locn + 'a');
-      turn_flag = TRUE;
-    } else if (!pickup) {
-      MSG("You see %s%s here.", descD, detailD);
-    } else {
-      MSG("You can't carry %s%s.", descD, detailD);
-    }
-  }
-}
 int inven_damage(typ, perc) int (*typ)();
 {
   int it, j;
@@ -11677,6 +11626,57 @@ py_search(y, x)
         }
       }
   turn_flag = TRUE;
+}
+static void
+py_pickup(y, x, pickup)
+{
+  struct caveS* c_ptr;
+  struct objS* obj;
+  int locn, merge;
+
+  c_ptr = &caveD[y][x];
+  obj = &entity_objD[c_ptr->oidx];
+
+  if (obj->tval == 0) {
+    msg_print("You see nothing here.");
+  }
+  /* Yarr! */
+  else if (obj->tval == TV_CHEST) {
+    if (obj->sn != SN_EMPTY) {
+      if (obj->idflag & ID_REVEAL) try_disarm_chest(y, x);
+      open_object(y, x);
+      turn_flag = TRUE;
+    } else {
+      msg_print("The chest is empty.");
+    }
+  }
+  /* There's GOLD in them thar hills!      */
+  else if (obj->tval == TV_GOLD) {
+    uD.gold += obj->cost;
+    MSG("You found %d gold pieces worth of %s.", obj->cost,
+        gold_nameD[obj->subval]);
+    delete_object(y, x);
+    turn_flag = TRUE;
+  } else if (obj->tval <= TV_MAX_PICK_UP) {
+    locn = -1;
+    merge = inven_merge(obj->id, &locn);
+    if (!merge && pickup) locn = inven_carry(obj->id);
+
+    obj_desc(obj, obj->number);
+    obj_detail(obj);
+    if (locn >= 0) {
+      obj->fy = 0;
+      obj->fx = 0;
+      caveD[y][x].oidx = 0;
+
+      MSG("You have %s%s (%c).", descD, detailD, locn + 'a');
+      turn_flag = TRUE;
+    } else if (!pickup) {
+      MSG("You see %s%s here.", descD, detailD);
+    } else {
+      MSG("You can't carry %s%s.", descD, detailD);
+    }
+  }
 }
 static void
 py_look_mon()
