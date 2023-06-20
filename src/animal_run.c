@@ -11867,6 +11867,7 @@ tunnel_tool(y, x, iidx)
   }
 
   if (turn_count) {
+    turn_flag = TRUE;
     // TBD: unique counter for mining?
     countD.paralysis = turn_count;
   }
@@ -11912,7 +11913,7 @@ py_tunnel(iidx)
     x = uD.x;
     mmove(dir, &y, &x);
 
-    turn_flag = tunnel_tool(y, x, iidx);
+    tunnel_tool(y, x, iidx);
   }
 }
 static void make_move(midx, mm) int* mm;
