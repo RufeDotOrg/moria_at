@@ -1217,7 +1217,7 @@ platform_draw()
             srct = sprite_textureD;
           } else if (sym == '@') {
             sprite_src = (SDL_Rect){
-                P(point_by_spriteid(part_textureD[0 + 4])),
+                P(point_by_spriteid(part_textureD[0 + (turnD) % 2])),
                 ART_W,
                 ART_H,
             };
@@ -1252,6 +1252,101 @@ platform_draw()
             SDL_RenderFillRect(rendererD, &dest_rect);
             break;
         }
+      }
+    }
+
+    if (sprite_textureD) {
+      uint32_t oidx = caveD[uD.y][uD.x].oidx;
+      struct objS *obj = &entity_objD[oidx];
+      uint32_t tval = obj->tval;
+      dest_rect.y = rp.y * ART_H;
+      dest_rect.x = rp.x * ART_W;
+
+      if (tval - 1 < TV_MAX_PICK_UP) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[2])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      } else if (tval == TV_GLYPH) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[3])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      } else if (tval == TV_VIS_TRAP) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[4])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      }
+
+      if (countD.paralysis) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[5])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      }
+      if (countD.poison) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[6])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      }
+      if (maD[MA_SLOW]) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[7])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      }
+      if (maD[MA_BLIND]) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[8])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      }
+      if (countD.confusion) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[9])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      }
+      if (maD[MA_FEAR]) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[10])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      }
+      if (uD.food < PLAYER_FOOD_FAINT) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[12])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      } else if (uD.food <= PLAYER_FOOD_ALERT) {
+        sprite_src = (SDL_Rect){
+            P(point_by_spriteid(part_textureD[11])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
       }
     }
 
