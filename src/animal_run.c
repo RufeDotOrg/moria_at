@@ -10812,6 +10812,16 @@ py_pickup(y, x, pickup)
   if (obj->tval == 0) {
     msg_print("You see nothing here.");
   }
+  /* Yarr! */
+  else if (obj->tval == TV_CHEST) {
+    if (obj->sn != SN_EMPTY) {
+      if (obj->idflag & ID_REVEAL) try_disarm_chest(y, x);
+      open_object(y, x);
+      turn_flag = TRUE;
+    } else {
+      msg_print("The chest is empty.");
+    }
+  }
   /* There's GOLD in them thar hills!      */
   else if (obj->tval == TV_GOLD) {
     uD.gold += obj->cost;
@@ -13249,6 +13259,7 @@ dungeon()
               c = '>';
               break;
             case 1 ... TV_MAX_PICK_UP:
+            case TV_CHEST:
               c = ',';
               break;
             case TV_STORE_DOOR:
