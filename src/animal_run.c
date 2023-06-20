@@ -8086,7 +8086,7 @@ inven_eat(iidx)
           break;
         case 4:
           countD.confusion += randint(10) + obj->level;
-          msg_print("You feel drugged.");
+          msg_print("You feel confused.");
           ident |= TRUE;
           break;
         case 5:
