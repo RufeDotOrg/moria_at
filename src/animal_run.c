@@ -1301,6 +1301,7 @@ describe_use(iidx)
   char* p;
 
   switch (iidx) {
+    case INVEN_LAUNCHER:
     case INVEN_WIELD:
       p = "wielding";
       break;
@@ -5871,7 +5872,7 @@ equip_remove_curse()
   struct objS* obj;
 
   flag = FALSE;
-  for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
+  for (int it = INVEN_EQUIP; it < MAX_INVEN; ++it) {
     obj = obj_get(invenD[it]);
     if (obj->flags & TR_CURSED) {
       flag = TRUE;
