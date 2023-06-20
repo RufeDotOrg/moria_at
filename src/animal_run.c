@@ -10829,7 +10829,7 @@ minus_ac(verbose)
     obj = obj_get(invenD[j]);
     obj_desc(obj, 1);
     if (obj->flags & TR_RES_ACID) {
-      MSG("Your %s resists damage.", descD);
+      MSG("Your %s is unaffected.", descD);
       minus = TRUE;
     } else if ((obj->ac + obj->toac) > 0) {
       MSG("Your %s is damaged.", descD);
