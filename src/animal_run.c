@@ -11810,6 +11810,7 @@ tunnel_tool(y, x, iidx)
   } else {
     obj_desc(obj, 1);
     wtohit = tohit_by_weight(obj->weight);
+    countD.paralysis = 1;
 
     if (wtohit) {
       MSG("You have trouble digging with %s, it is very heavy.", descD);
@@ -11877,15 +11878,13 @@ tunnel_tool(y, x, iidx)
           break;
         }
       } while (turn_count < MAX_TUNNEL_TURN);
-
-      turn_count += 1;
     }
   }
 
   if (turn_count) {
     turn_flag = TRUE;
     // TBD: unique counter for mining?
-    countD.paralysis = turn_count;
+    countD.paralysis += turn_count;
   }
 
   return turn_count;
