@@ -822,6 +822,18 @@ viz_update()
   }
 }
 void
+viz_minimap_stair(row, col, color)
+{
+  row = CLAMP(row, 2, MAX_HEIGHT - 1);
+  col = CLAMP(col, 1, MAX_WIDTH - 2 - 1);
+  minimapD[row][col] = color;
+  minimapD[row][col - 1] = color;
+  minimapD[row - 1][col] = color;
+  minimapD[row - 1][col + 1] = color;
+  minimapD[row - 2][col + 1] = color;
+  minimapD[row - 2][col + 2] = color;
+}
+void
 viz_minimap()
 {
   int rmin = panelD.panel_row_min;
@@ -841,6 +853,8 @@ viz_minimap()
         }
 
         minimapD[row][col] = color;
+        if (color == BRIGHT + GREEN || color == BRIGHT + RED)
+          viz_minimap_stair(row, col, color);
       }
     }
   } else {
@@ -848,8 +862,8 @@ viz_minimap()
     for (int row = 0; row < MAX_HEIGHT / RATIO; ++row) {
       for (int col = 0; col < MAX_WIDTH / RATIO; ++col) {
         color = cave_color(row + rmin, col + cmin);
-        for (int i = 0; i < 4; ++i) {
-          for (int j = 0; j < 4; ++j) {
+        for (int i = 0; i < RATIO; ++i) {
+          for (int j = 0; j < RATIO; ++j) {
             minimapD[row * RATIO + i][col * RATIO + j] = color;
           }
         }

@@ -1,6 +1,6 @@
 
-#define MAX_WIDTH 128
 #define MAX_HEIGHT 64
+#define MAX_WIDTH 128
 #define SYMMAP_HEIGHT 16
 #define SYMMAP_WIDTH 32
 #define MAX_COL (MAX_WIDTH / SYMMAP_WIDTH * 2)
