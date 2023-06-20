@@ -17,8 +17,8 @@
 #define MIN_CLOSED_SPACE 4
 #define FLOOR_OBST 4 /* a corridor space with cl/st/se door or rubble */
 #define MAX_FLOOR 4
-#define TMP1_WALL 8  /* Prevents corridor formation; replaced by granite */
-#define TMP2_WALL 9  /* Corridor+room intersection */
+#define TMP1_WALL 8 /* Prevents corridor formation; replaced by granite */
+#define TMP2_WALL 9 /* Corridor+room intersection */
 #define MIN_WALL 12
 #define GRANITE_WALL 12
 #define MAGMA_WALL 13
@@ -394,6 +394,7 @@
 #define PLAYER_REGEN_NORMAL 197  /* Regen factor>>16 when full  */
 #define PLAYER_REGEN_HPBASE 1442 /* Min amount hp regen>>16   */
 #define PLAYER_REGEN_MNBASE 524  /* Min amount mana regen>>16  */
+#define MAX_TUNNEL_TURN 5 /* maximum number of turns tunneling into a wall */
 
 /* Class spell types */
 #define SP_MAGE 1

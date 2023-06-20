@@ -11837,14 +11837,14 @@ tunnel_tool(y, x, iidx)
           msg_print("You have finished the tunnel.");
           break;
         }
-      } while (turn_count < 5);
+      } while (turn_count < MAX_TUNNEL_TURN);
     } else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
       msg_print("You tunnel into the granite wall.");
       do {
         turn_count += 1;
         py_search(uD.y, uD.x);
         if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
-      } while (turn_count < 5);
+      } while (turn_count < MAX_TUNNEL_TURN);
     } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
       msg_print("You dig in the rubble.");
 
@@ -11863,11 +11863,10 @@ tunnel_tool(y, x, iidx)
           }
           break;
         }
-      } while (turn_count < 5);
-    }
+      } while (turn_count < MAX_TUNNEL_TURN);
 
-    // Extra turns for weapon swap
-    if (iidx != INVEN_WIELD) turn_count += 2;
+      turn_count += 1;
+    }
   }
 
   if (turn_count) {
