@@ -7580,14 +7580,17 @@ turn_undead()
     cdis = distance(py, px, mon->fy, mon->fx);
     if ((cdis <= MAX_SIGHT) && (CD_UNDEAD & cr_ptr->cdefense) &&
         los(py, px, mon->fy, mon->fx)) {
-      if (((uD.lev + 1) > cr_ptr->level) || (randint(5) == 1)) {
-        turn_und = TRUE;
+      int success = ((uD.lev + 1) > cr_ptr->level) || (randint(5) == 1);
+
+      if (success) {
+        turn_und += 1;
         mon->mconfused = uD.lev;
+        mon->msleep = 0;
       }
 
       if (mon->mlit) {
         mon_desc(it_index);
-        if (turn_und) {
+        if (success) {
           MSG("%s runs frantically!", descD);
         } else {
           MSG("%s is unaffected.", descD);
