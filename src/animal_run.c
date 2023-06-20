@@ -4179,7 +4179,8 @@ detect_obj(int (*valid)(), int known)
             obj->tval = TV_CLOSED_DOOR;
             obj->tchar = '+';
           }
-          c_ptr->cflag |= CF_FIELDMARK;
+          if (obj->tval != TV_CHEST || obj->flags & CH_TRAPPED)
+            c_ptr->cflag |= CF_FIELDMARK;
         }
       } else if (obj->tval < TV_MAX_PICK_UP) {
         if ((CF_LIT & c_ptr->cflag) == 0) {

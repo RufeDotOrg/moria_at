@@ -128,7 +128,6 @@
 /* Treasure constants */
 #define TV_NOTHING 0
 #define TV_MISC 1
-#define TV_CHEST 2
 #define TV_SPIKE 3
 #define TV_PROJECTILE 5
 #define TV_LIGHT 15
@@ -181,7 +180,8 @@
 #define TV_STORE_DOOR 110
 #define TV_GLYPH 111
 #define TV_PAWN_DOOR 112
-#define TV_MAX_VISIBLE 112
+#define TV_CHEST 113
+#define TV_MAX_VISIBLE 113
 
 #define MAX_OBJ_LEVEL 50
 #define MAX_DUNGEON_OBJ 345
