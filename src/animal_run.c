@@ -10433,6 +10433,9 @@ py_archive_select()
   int save_count;
   uint8_t iidx;
 
+  // Disable midpoint resume explicitly
+  input_resumeD = -1;
+
   overlay_submodeD = 0;
   save_count = 0;
   iidx = -1;
