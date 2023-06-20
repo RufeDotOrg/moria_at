@@ -1262,7 +1262,7 @@ platform_draw()
       dest_rect.y = rp.y * ART_H;
       dest_rect.x = rp.x * ART_W;
 
-      if (tval - 1 < TV_MAX_PICK_UP) {
+      if (tval - 1 < TV_MAX_PICK_UP || tval == TV_CHEST) {
         sprite_src = (SDL_Rect){
             P(point_by_spriteid(part_textureD[2])),
             ART_W,
