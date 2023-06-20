@@ -2105,7 +2105,7 @@ platform_save(char *filename)
   int sum = savesumD[version];
   int *savefield = savefieldD[version];
 
-  SDL_RWops *writef = rw_file_access(filename, "wb");
+  SDL_RWops *writef = rw_file_access(filename, "w+b");
   if (writef) {
     checksumD = 0;
     SDL_RWwrite(writef, &sum, sizeof(sum), 1);
