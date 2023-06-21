@@ -2059,7 +2059,7 @@ SDL_Event event;
         case TOUCH_LB:
           return finger ? 'd' : 'A';
         case TOUCH_RB:
-          return '.';
+          return finger ? CTRL('a') : '.';
       }
     } else {
       if (tp.y < .09) return CTRL('p');

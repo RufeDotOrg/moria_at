@@ -88,6 +88,7 @@ GAME int total_winner;
 GAME int dun_level;
 GAME int turn_flag;
 GAME int pack_heavy;
+GAME int last_actuateD;
 
 DATA char descD[98];
 DATA char detailD[98];

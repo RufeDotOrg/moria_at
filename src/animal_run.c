@@ -12932,9 +12932,60 @@ store_entrance(sidx)
   }
   msg_advance();
 }
+void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
+{
+  struct objS* obj = obj_get(invenD[iidx]);
+  if (obj->tval == TV_PROJECTILE) {
+    py_throw(iidx);
+  } else if (obj->tval == TV_FOOD) {
+    inven_eat(iidx);
+  } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
+    inven_quaff(iidx);
+  } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
+    inven_read(iidx, y_ptr, x_ptr);
+  } else if (obj->tval == TV_STAFF) {
+    inven_try_staff(iidx, x_ptr, x_ptr);
+  } else if (obj->tval == TV_WAND) {
+    py_zap(iidx);
+  } else if (obj->tval == TV_MAGIC_BOOK) {
+    py_magic(iidx, y_ptr, x_ptr);
+  } else if (obj->tval == TV_PRAYER_BOOK) {
+    py_prayer(iidx, y_ptr, x_ptr);
+  } else if (obj->tval == TV_FLASK) {
+    inven_flask(iidx);
+  } else if (obj->tval == TV_SPIKE) {
+    py_spike(iidx);
+  } else if (obj->tval == TV_DIGGING) {
+    py_tunnel(iidx);
+    iidx = -1;
+  } else if (iidx < INVEN_EQUIP) {
+    inven_wear(iidx);
+  } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
+    py_offhand();
+  } else if (iidx >= INVEN_EQUIP) {
+    if (invenD[iidx]) {
+      int into = inven_slot();
+      if (into >= 0) {
+        equip_takeoff(iidx, into);
+      }
+    }
+  }
+}
+void py_reactuate(y_ptr, x_ptr, obj_id) int *y_ptr, *x_ptr;
+{
+  if (obj_id) {
+    for (int it = 0; it < MAX_INVEN; ++it) {
+      if (invenD[it] == obj_id) {
+        yx_autoinven(y_ptr, x_ptr, it);
+        return;
+      }
+    }
+  }
+  msg_print("Unable to repeat; object not found.");
+}
 void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
-  int iidx, into;
+  int iidx;
   struct objS* obj;
 
   overlay_submodeD = 'i';
@@ -12944,42 +12995,8 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
         inven_choice("Use which item?", overlay_submodeD == 'e' ? "/*" : "*/");
 
     if (iidx >= 0) {
-      obj = obj_get(invenD[iidx]);
-      if (obj->tval == TV_PROJECTILE) {
-        py_throw(iidx);
-      } else if (obj->tval == TV_FOOD) {
-        inven_eat(iidx);
-      } else if (obj->tval == TV_POTION1 || obj->tval == TV_POTION2) {
-        inven_quaff(iidx);
-      } else if (obj->tval == TV_SCROLL1 || obj->tval == TV_SCROLL2) {
-        inven_read(iidx, y_ptr, x_ptr);
-      } else if (obj->tval == TV_STAFF) {
-        inven_try_staff(iidx, x_ptr, x_ptr);
-      } else if (obj->tval == TV_WAND) {
-        py_zap(iidx);
-      } else if (obj->tval == TV_MAGIC_BOOK) {
-        py_magic(iidx, y_ptr, x_ptr);
-      } else if (obj->tval == TV_PRAYER_BOOK) {
-        py_prayer(iidx, y_ptr, x_ptr);
-      } else if (obj->tval == TV_FLASK) {
-        inven_flask(iidx);
-      } else if (obj->tval == TV_SPIKE) {
-        py_spike(iidx);
-      } else if (obj->tval == TV_DIGGING) {
-        py_tunnel(iidx);
-        iidx = -1;
-      } else if (iidx < INVEN_EQUIP) {
-        inven_wear(iidx);
-      } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
-        py_offhand();
-      } else if (iidx >= INVEN_EQUIP) {
-        if (invenD[iidx]) {
-          into = inven_slot();
-          if (into >= 0) {
-            equip_takeoff(iidx, into);
-          }
-        }
-      }
+      last_actuateD = invenD[iidx];
+      yx_autoinven(y_ptr, x_ptr, iidx);
     }
   } while (!turn_flag && iidx >= 0);
 }
@@ -13313,6 +13330,9 @@ dungeon()
             case '+':
               omit_replay = 1;
               zoom_factorD = (zoom_factorD + 1) % MAX_ZOOM;
+              break;
+            case CTRL('a'):
+              py_reactuate(&y, &x, last_actuateD);
               break;
             case ' ':
               break;
