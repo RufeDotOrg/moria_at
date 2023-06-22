@@ -9180,9 +9180,10 @@ gain_spell(spidx)
   return 0;
 }
 int
-dir_of_spell(spidx)
+spelldir_prompt(spidx)
 {
   int dir;
+  char tmp[STRLEN_MSG + 1];
 
   switch (spidx + 1) {
     case 1:
@@ -9197,9 +9198,10 @@ dir_of_spell(spidx)
     case 24:
     case 25:
     case 27:
-    case 29:
-      if (!get_dir(0, &dir)) dir = -1;
-      break;
+    case 29: {
+      snprintf(tmp, AL(tmp), "Cast %s which direction?", spell_nameD[spidx]);
+      if (!get_dir(tmp, &dir)) dir = -1;
+    } break;
     default:
       dir = 0;
   }
@@ -9313,13 +9315,68 @@ int* x_ptr;
       break;
   }
 }
+int
+book_prompt(names, spelltable, spmask, bookflags)
+char** names;
+struct spellS* spelltable;
+uint32_t bookflags;
+{
+  char c;
+  int cmana;
+  int book[32], book_used, line;
+  int spidx, spknown, splevel, spmana, spchance;
+
+  cmana = uD.cmana;
+  book_used = 0;
+  while (bookflags) {
+    book[book_used] = bit_pos(&bookflags);
+    book_used += 1;
+  }
+  overlay_submodeD = 0;
+  do {
+    line = 0;
+    for (int it = 0; it < book_used; ++it) {
+      spidx = book[it];
+      spknown = ((1 << spidx) & spmask);
+      splevel = spelltable[spidx].splevel;
+      spmana = spelltable[spidx].spmana;
+      spchance = spell_chanceD[spidx];
+
+      char field[2][16];
+      if (spknown) {
+        snprintf(field[0], AL(field[0]), "%d%% failure", spchance);
+        if (cmana < spmana)
+          snprintf(field[1], AL(field[1]), "-low mana-");
+        else
+          snprintf(field[1], AL(field[1]), "mana %d", spmana);
+      } else if (splevel == 99) {
+        field[0][0] = 0;
+        field[1][0] = 0;
+      } else {
+        snprintf(field[0], AL(field[0]), "level %d", splevel);
+        field[1][0] = 0;
+      }
+
+      BufMsg(overlay,
+             "%c) %-40.040s "
+             "%16.016s "
+             "%16.016s",
+             'a' + it, splevel < 99 ? names[spidx] : "???", field[0], field[1]);
+    }
+
+    if (!in_subcommand("Read which spell?", &c)) break;
+    uint8_t choice = c - 'a';
+    if (choice < book_used) {
+      return book[choice];
+    }
+  } while (!turn_flag);
+  return -1;
+}
 void py_magic(iidx, y_ptr, x_ptr) int* y_ptr;
 int* x_ptr;
 {
-  char c;
   struct objS* obj;
   uint32_t flags, first_spell;
-  int book[32], book_used, line;
   int cmana, sptype, spmask, spidx, dir;
   struct spellS* spelltable;
 
@@ -9340,102 +9397,63 @@ int* x_ptr;
       cmana = uD.cmana;
       spmask = uspellmask();
       spelltable = uspelltable();
-      book_used = 0;
-      while (flags) {
-        book[book_used] = bit_pos(&flags);
-        book_used += 1;
+
+      if (last_castD == 0) {
+        spidx = book_prompt(spell_nameD, spelltable, spmask, flags);
+        last_castD = spidx + 1;
+      } else {
+        spidx = last_castD - 1;
       }
-      overlay_submodeD = 0;
 
-      do {
-        line = 0;
-        for (int it = 0; it < book_used; ++it) {
-          int spknown, splevel, spmana, spchance;
+      if ((1 << spidx) & spmask) {
+        dir = spelldir_prompt(spidx);
+        if (dir < 0) return;
 
-          spidx = book[it];
-          spknown = ((1 << spidx) & spmask);
-          splevel = spelltable[spidx].splevel;
-          spmana = spelltable[spidx].spmana;
-          spchance = spell_chanceD[spidx];
+        if (randint(100) < spell_chanceD[spidx]) {
+          msg_print("You failed to get the spell off!");
+        } else {
+          spell_dir(spidx, y_ptr, x_ptr, dir);
 
-          char field[2][16];
-          if (spknown) {
-            snprintf(field[0], AL(field[0]), "%d%% failure", spchance);
-            if (cmana < spmana)
-              snprintf(field[1], AL(field[1]), "-low mana-");
-            else
-              snprintf(field[1], AL(field[1]), "mana %d", spmana);
-          } else if (splevel == 99) {
-            field[0][0] = 0;
-            field[1][0] = 0;
-          } else {
-            snprintf(field[0], AL(field[0]), "level %d", splevel);
-            field[1][0] = 0;
-          }
-
-          BufMsg(overlay,
-                 "%c) %-40.040s "
-                 "%16.016s "
-                 "%16.016s",
-                 'a' + it, splevel < 99 ? spell_nameD[spidx] : "???", field[0],
-                 field[1]);
-        }
-
-        if (!in_subcommand("Read which spell?", &c)) break;
-        uint8_t choice = c - 'a';
-
-        if (choice < book_used) {
-          spidx = book[choice];
-
-          if ((1 << spidx) & spmask) {
-            dir = dir_of_spell(spidx);
-            if (dir < 0) continue;
-
-            if (randint(100) < spell_chanceD[spidx]) {
-              msg_print("You failed to get the spell off!");
-            } else {
-              spell_dir(spidx, y_ptr, x_ptr, dir);
-
-              if ((uD.spell_worked & (1 << spidx)) == 0) {
-                uD.spell_worked |= (1 << spidx);
-                uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
-                py_experience();
-              }
-            }
-
-            if (uD.cmana < spelltable[spidx].spmana) {
-              uD.cmana = 0;
-              uD.cmana_frac = 0;
-              msg_print("Your low mana has damaged your health!");
-              dec_stat(A_CON);
-            } else {
-              uD.cmana -= spelltable[spidx].spmana;
-            }
-            turn_flag = TRUE;
-          } else {
-            turn_flag = TRUE;
-            msg_print("You read the magical runes.");
-            if (spelltable[spidx].splevel > uD.lev || !gain_spell(spidx)) {
-              MSG("You are unable to retain the knowledge%s.",
-                  spelltable[spidx].splevel != 99 ? " at this time" : "");
-            } else {
-              MSG("You learn the spell of %s!", spell_nameD[spidx]);
-            }
+          if ((uD.spell_worked & (1 << spidx)) == 0) {
+            uD.spell_worked |= (1 << spidx);
+            uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
+            py_experience();
           }
         }
-      } while (!turn_flag);
+
+        if (uD.cmana < spelltable[spidx].spmana) {
+          uD.cmana = 0;
+          uD.cmana_frac = 0;
+          msg_print("Your low mana has damaged your health!");
+          dec_stat(A_CON);
+        } else {
+          uD.cmana -= spelltable[spidx].spmana;
+        }
+      } else {
+        msg_print("You read the magical runes.");
+        if (spelltable[spidx].splevel > uD.lev || !gain_spell(spidx)) {
+          MSG("You are unable to retain the knowledge%s.",
+              spelltable[spidx].splevel != 99 ? " at this time" : "");
+        } else {
+          MSG("You learn the spell of %s!", spell_nameD[spidx]);
+        }
+      }
+      turn_flag = TRUE;
     }
   }
 }
 int
-dir_of_prayer(pridx)
+prayerdir_prompt(pridx)
 {
   int dir;
+  char tmp[STRLEN_MSG + 1];
 
   switch (pridx + 1) {
     case 9:
     case 18:
-      if (!get_dir(0, &dir)) dir = -1;
+      snprintf(tmp, AL(tmp), "Incant %s in which direction?",
+               prayer_nameD[pridx]);
+      if (!get_dir(tmp, &dir)) dir = -1;
       break;
     default:
       dir = 0;
@@ -9560,10 +9578,8 @@ int* x_ptr;
 void py_prayer(iidx, y_ptr, x_ptr) int* y_ptr;
 int* x_ptr;
 {
-  char c;
   struct objS* obj;
   uint32_t flags, first_spell;
-  int book[32], book_used, line;
   int cmana, sptype, spmask, spidx, dir;
   struct spellS* spelltable;
 
@@ -9584,83 +9600,42 @@ int* x_ptr;
       cmana = uD.cmana;
       spmask = uspellmask();
       spelltable = uspelltable();
-      book_used = 0;
-      while (flags) {
-        book[book_used] = bit_pos(&flags);
-        book_used += 1;
+
+      if (last_castD == 0) {
+        spidx = book_prompt(prayer_nameD, spelltable, spmask, flags);
+        last_castD = spidx + 1;
+      } else {
+        spidx = last_castD - 1;
       }
-      overlay_submodeD = 0;
 
-      do {
-        line = 0;
-        for (int it = 0; it < book_used; ++it) {
-          spidx = book[it];
-          int spknown, splevel, spmana, spchance;
-          spknown = ((1 << spidx) & spmask);
-          splevel = spelltable[spidx].splevel;
-          spmana = spelltable[spidx].spmana;
-          spchance = spell_chanceD[spidx];
+      if ((1 << spidx) & spmask) {
+        dir = prayerdir_prompt(spidx);
+        if (dir < 0) return;
 
-          char field[2][16];
-          if (spknown) {
-            snprintf(field[0], AL(field[0]), "%d%% failure", spchance);
-            if (cmana < spmana)
-              snprintf(field[1], AL(field[1]), "-low mana-");
-            else
-              snprintf(field[1], AL(field[1]), "mana %d", spmana);
-          } else if (splevel == 99) {
-            field[0][0] = 0;
-            field[1][0] = 0;
-          } else {
-            snprintf(field[0], AL(field[0]), "level %d", splevel);
-            field[1][0] = 0;
-          }
+        if (randint(100) < spell_chanceD[spidx]) {
+          msg_print("You lost your concentration!");
+        } else {
+          prayer_dir(spidx, y_ptr, x_ptr, dir);
 
-          BufMsg(overlay,
-                 "%c) %-40.040s "
-                 "%16.016s "
-                 "%16.016s",
-                 'a' + it, splevel < 99 ? prayer_nameD[spidx] : "???", field[0],
-                 field[1]);
-        }
-
-        if (!in_subcommand("Recite which prayer?", &c)) break;
-        uint8_t choice = c - 'a';
-
-        if (choice < book_used) {
-          spidx = book[choice];
-
-          if ((1 << spidx) & spmask) {
-            dir = dir_of_prayer(spidx);
-            if (dir < 0) continue;
-
-            if (randint(100) < spell_chanceD[spidx]) {
-              msg_print("You lost your concentration!");
-            } else {
-              prayer_dir(spidx, y_ptr, x_ptr, dir);
-
-              if ((uD.spell_worked & (1 << spidx)) == 0) {
-                uD.spell_worked |= (1 << spidx);
-                uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
-                py_experience();
-              }
-            }
-
-            if (uD.cmana < spelltable[spidx].spmana) {
-              uD.cmana = 0;
-              uD.cmana_frac = 0;
-              msg_print("Your low mana has damaged your health!");
-              dec_stat(A_CON);
-            } else {
-              uD.cmana -= spelltable[spidx].spmana;
-            }
-            turn_flag = TRUE;
-          } else {
-            turn_flag = TRUE;
-            MSG("You have no belief in the prayer of %s.", prayer_nameD[spidx]);
+          if ((uD.spell_worked & (1 << spidx)) == 0) {
+            uD.spell_worked |= (1 << spidx);
+            uD.exp += spelltable[spidx].spexp * SP_EXP_MULT;
+            py_experience();
           }
         }
-      } while (!turn_flag);
+
+        if (uD.cmana < spelltable[spidx].spmana) {
+          uD.cmana = 0;
+          uD.cmana_frac = 0;
+          msg_print("Your low mana has damaged your health!");
+          dec_stat(A_CON);
+        } else {
+          uD.cmana -= spelltable[spidx].spmana;
+        }
+      } else {
+        MSG("You have no belief in the prayer of %s.", prayer_nameD[spidx]);
+      }
+      turn_flag = TRUE;
     }
   }
 }
@@ -12995,7 +12970,7 @@ void py_reactuate(y_ptr, x_ptr, obj_id) int *y_ptr, *x_ptr;
       }
     }
   }
-  msg_print("Unable to repeat; object not found.");
+  msg_print("Unable to repeat command.");
 }
 void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
@@ -13010,6 +12985,7 @@ void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
 
     if (iidx >= 0) {
       last_actuateD = invenD[iidx];
+      last_castD = 0;
       yx_autoinven(y_ptr, x_ptr, iidx);
     }
   } while (!turn_flag && iidx >= 0);

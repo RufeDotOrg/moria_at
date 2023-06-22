@@ -89,6 +89,7 @@ GAME int dun_level;
 GAME int turn_flag;
 GAME int pack_heavy;
 GAME int last_actuateD;
+GAME int last_castD;
 
 DATA char descD[98];
 DATA char detailD[98];
