@@ -9401,6 +9401,7 @@ int* x_ptr;
       if (last_castD == 0) {
         spidx = book_prompt(spell_nameD, spelltable, spmask, flags);
         last_castD = spidx + 1;
+        if (spidx < 0) return;
       } else {
         spidx = last_castD - 1;
       }
@@ -9608,6 +9609,7 @@ int* x_ptr;
       if (last_castD == 0) {
         spidx = book_prompt(prayer_nameD, spelltable, spmask, flags);
         last_castD = spidx + 1;
+        if (spidx < 0) return;
       } else {
         spidx = last_castD - 1;
       }
