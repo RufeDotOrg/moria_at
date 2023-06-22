@@ -9957,10 +9957,13 @@ inven_wear(iidx)
   if (eqidx == INVEN_RING) eqidx = ring_slot();
 
   if (eqidx >= INVEN_EQUIP) {
-    if (invenD[eqidx])
-      equip_takeoff(eqidx, iidx);
-    else
+    if (invenD[eqidx]) {
+      if (equip_takeoff(eqidx, iidx)) {
+        last_actuateD = invenD[eqidx];
+      }
+    } else {
       invenD[iidx] = 0;
+    }
 
     if (invenD[eqidx] == 0) {
       invenD[eqidx] = obj->id;
