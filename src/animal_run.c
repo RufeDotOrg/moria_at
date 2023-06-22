@@ -5695,7 +5695,7 @@ void py_bonuses(obj, factor) struct objS* obj;
   if (obj->sn == SN_LORDLINESS) uD.save += (amount * 10);
 }
 int
-equip_takeoff(iidx, into_slot)
+equip_swap_into(iidx, into_slot)
 {
   struct objS* obj;
   obj = obj_get(invenD[iidx]);
@@ -5749,7 +5749,7 @@ inven_drop(iidx)
 
     if (c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) {
       if (iidx >= INVEN_EQUIP) {
-        ok = equip_takeoff(iidx, -1);
+        ok = equip_swap_into(iidx, -1);
       } else {
         ok = TRUE;
         invenD[iidx] = 0;
@@ -9958,6 +9958,7 @@ void
 inven_wear(iidx)
 {
   int eqidx;
+  int swap_id;
   struct objS* obj;
 
   obj = obj_get(invenD[iidx]);
@@ -9968,8 +9969,9 @@ inven_wear(iidx)
 
   if (eqidx >= INVEN_EQUIP) {
     if (invenD[eqidx]) {
-      if (equip_takeoff(eqidx, iidx)) {
-        last_actuateD = invenD[eqidx];
+      swap_id = invenD[eqidx];
+      if (equip_swap_into(eqidx, iidx)) {
+        last_actuateD = swap_id;
       }
     } else {
       invenD[iidx] = 0;
@@ -10559,7 +10561,7 @@ py_takeoff()
         if (invenD[iidx]) {
           into = inven_slot();
           if (into >= 0) {
-            equip_takeoff(iidx, into);
+            equip_swap_into(iidx, into);
           }
         }
       }
@@ -12968,7 +12970,7 @@ void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
     if (invenD[iidx]) {
       int into = inven_slot();
       if (into >= 0) {
-        equip_takeoff(iidx, into);
+        equip_swap_into(iidx, into);
       }
     }
   }
