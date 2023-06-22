@@ -9422,10 +9422,14 @@ int* x_ptr;
         }
 
         if (uD.cmana < spelltable[spidx].spmana) {
-          uD.cmana = 0;
-          uD.cmana_frac = 0;
-          msg_print("Your low mana has damaged your health!");
-          dec_stat(A_CON);
+          if (statD.cur_stat[A_CON] > 3) {
+            uD.cmana = 0;
+            uD.cmana_frac = 0;
+            msg_print("Your low mana has damaged your health!");
+            dec_stat(A_CON);
+          } else {
+            msg_print("You are out of mana and your body is weak.");
+          }
         } else {
           uD.cmana -= spelltable[spidx].spmana;
         }
@@ -9625,10 +9629,14 @@ int* x_ptr;
         }
 
         if (uD.cmana < spelltable[spidx].spmana) {
-          uD.cmana = 0;
-          uD.cmana_frac = 0;
-          msg_print("Your low mana has damaged your health!");
-          dec_stat(A_CON);
+          if (statD.cur_stat[A_CON] > 3) {
+            uD.cmana = 0;
+            uD.cmana_frac = 0;
+            msg_print("Your low mana has damaged your health!");
+            dec_stat(A_CON);
+          } else {
+            msg_print("You are out of mana and your body is weak.");
+          }
         } else {
           uD.cmana -= spelltable[spidx].spmana;
         }
