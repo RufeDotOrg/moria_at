@@ -6262,10 +6262,8 @@ py_inven_init()
         break;
       case 341:
       case 343:
-        obj->number = 24 + randint(7);
-        break;
       case 336:
-        obj->number = 5 + randint(3);
+        magic_treasure(obj, 1);
         break;
     }
 
