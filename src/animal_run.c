@@ -8220,7 +8220,9 @@ struct objS* obj;
   }
   return tabil;
 }
-void obj_study(obj, for_sale) struct objS* obj;
+int
+obj_study(obj, for_sale)
+struct objS* obj;
 {
   struct treasureS* tr_ptr;
   int line;
@@ -8451,8 +8453,10 @@ void obj_study(obj, for_sale) struct objS* obj;
 
     obj_desc(obj, number);
     DRAWMSG("You study %s.", descD);
-    inkey();
+    return inkey();
   }
+
+  return 0;
 }
 static int
 inven_choice(char* prompt, char* mode_list)
@@ -8501,7 +8505,19 @@ inven_choice(char* prompt, char* mode_list)
       } else if (is_upper(c)) {
         uint8_t iidx = c - 'A';
         iidx += begin;
-        if (iidx < end && invenD[iidx]) obj_study(obj_get(invenD[iidx]), FALSE);
+        if (iidx < end && invenD[iidx]) {
+          c = obj_study(obj_get(invenD[iidx]), FALSE);
+          // Prohibited on the death screen
+          if (platformD.selection && uD.new_level_flag == 0) {
+            switch (c) {
+              case 'o':
+                inven_drop(iidx);
+                return -1;
+              case ESCAPE:
+                return iidx;
+            }
+          }
+        }
       } else if (c == '-') {
         inven_sort();
       } else {
