@@ -6438,7 +6438,7 @@ static void
 py_where()
 {
   int dir;
-  while (get_dir("Map: Look which direction?", &dir)) {
+  while (get_dir("Map: Which direction?", &dir)) {
     mmove(dir, &panelD.panel_row, &panelD.panel_col);
     if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
     if (panelD.panel_col > MAX_COL - 2) panelD.panel_col = MAX_COL - 2;
@@ -9157,7 +9157,7 @@ py_zap(iidx)
 {
   int dir;
 
-  if (get_dir("Zap wand which direction?", &dir)) {
+  if (get_dir("Which direction will you zap?", &dir)) {
     if (countD.confusion) {
       msg_print("You are confused.");
       do {
@@ -9199,7 +9199,8 @@ spelldir_prompt(spidx)
     case 25:
     case 27:
     case 29: {
-      snprintf(tmp, AL(tmp), "Cast %s which direction?", spell_nameD[spidx]);
+      snprintf(tmp, AL(tmp), "Which direction will you cast %s?",
+               spell_nameD[spidx]);
       if (!get_dir(tmp, &dir)) dir = -1;
     } break;
     default:
@@ -9456,7 +9457,7 @@ prayerdir_prompt(pridx)
   switch (pridx + 1) {
     case 9:
     case 18:
-      snprintf(tmp, AL(tmp), "Incant %s in which direction?",
+      snprintf(tmp, AL(tmp), "Which direction will you incant %s?",
                prayer_nameD[pridx]);
       if (!get_dir(tmp, &dir)) dir = -1;
       break;
@@ -10176,7 +10177,7 @@ void
 py_throw(iidx)
 {
   int dir;
-  if (get_dir(0, &dir)) {
+  if (get_dir("Which direction will you launch a projectile?", &dir)) {
     if (countD.confusion) {
       msg_print("You are confused.");
       do {
@@ -10305,7 +10306,7 @@ py_spike(iidx)
 
   obj = obj_get(invenD[iidx]);
   if (obj->tval == TV_SPIKE) {
-    if (get_dir("Jam a door spike in which direction?", &dir)) {
+    if (get_dir("Which direction will you jam a door spike?", &dir)) {
       if (countD.confusion) {
         turn_flag = TRUE;
         msg_print("You are confused.");
@@ -11696,7 +11697,7 @@ py_look_mon()
     msg_print("You can't see a thing!");
   else if (countD.imagine > 0)
     msg_print("You can't believe what you are seeing! It's like a dream!");
-  else if (get_dir("Look which direction?", &dir)) {
+  else if (get_dir("Which direction will you look?", &dir)) {
     y = uD.y;
     x = uD.x;
     ly = dir_y(dir);
@@ -11731,7 +11732,7 @@ py_look_obj()
     msg_print("You can't see a thing!");
   else if (countD.imagine > 0)
     msg_print("You can't believe what you are seeing! It's like a dream!");
-  else if (get_dir("Look which direction?", &dir)) {
+  else if (get_dir("Which direction will you look?", &dir)) {
     y = uD.y;
     x = uD.x;
     ly = dir_y(dir);
@@ -11928,7 +11929,7 @@ py_tunnel(iidx)
 
   if (countD.confusion) {
     msg_print("You are too confused for digging.");
-  } else if (get_dir("Dig a tunnel which direction?", &dir)) {
+  } else if (get_dir("Which direction will you dig?", &dir)) {
     y = uD.y;
     x = uD.x;
     mmove(dir, &y, &x);
