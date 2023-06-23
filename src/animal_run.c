@@ -7262,7 +7262,7 @@ td_destroy_bolt(dir, y, x)
         obj->idflag = ID_REVEAL;
       }
     }
-  } while ((dist <= OBJ_BOLT_RANGE) || c_ptr->fval <= MAX_OPEN_SPACE);
+  } while (dist <= OBJ_BOLT_RANGE && c_ptr->fval <= MAX_OPEN_SPACE);
 
   if (exp) {
     uD.exp += exp;
