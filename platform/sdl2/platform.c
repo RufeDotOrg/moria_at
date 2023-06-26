@@ -2449,7 +2449,7 @@ platform_pregame()
     sdl_window_event(event);
   }
 
-  while (gameplay_rectD.x == 0) {
+  while (display_rectD.w == 0) {
     sdl_pump();
   }
 
