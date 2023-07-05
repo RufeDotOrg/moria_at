@@ -1,5 +1,12 @@
 readlink src/platform | grep 'sdl2'
 if [ $? -eq 0 ]; then
-  CFLAGS+=" -Isdl2/include "
-  LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
+  if [ -d sdl2 ]; then
+    CFLAGS+=" -Isdl2/include "
+    LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
+  elif hash sdl2-config; then
+    SDL2_FLAGS=`sdl2-config --cflags`
+    SDL2_LIBS=`sdl2-config --libs`
+    CFLAGS+=" $SDL2_FLAGS "
+    LFLAGS+=" $SDL2_LIBS "
+  fi
 fi
