@@ -1,6 +1,6 @@
 
 #define main _main
-#include "src/animal_run.c"
+#include "src/moria_at.c"
 #undef main
 
 int
