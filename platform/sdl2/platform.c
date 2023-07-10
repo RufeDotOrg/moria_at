@@ -278,7 +278,6 @@ art_io()
   unsigned long zsize = sizeof(artZ);
   rc = puff(bytes, &size, artZ, &zsize);
   art_usedD = size;
-  Log("art_io() [ rc %d ] [ art_usedD %ju ]\n", rc, art_usedD);
   return rc == 0;
 }
 
@@ -330,7 +329,6 @@ tart_io()
   unsigned long zsize = sizeof(treasureZ);
   rc = puff(bytes, &size, treasureZ, &zsize);
   tart_usedD = size;
-  Log("tart_io() [ rc %d ] [ tart_usedD %ju ]\n", rc, tart_usedD);
   return rc == 0;
 }
 
@@ -371,7 +369,6 @@ wart_io()
   unsigned long zsize = sizeof(wallZ);
   rc = puff(bytes, &size, wallZ, &zsize);
   wart_usedD = size;
-  Log("wart_io() [ rc %d ] [ wart_usedD %ju ]\n", rc, wart_usedD);
   return rc == 0;
 }
 
@@ -412,7 +409,6 @@ part_io()
   unsigned long zsize = sizeof(playerZ);
   rc = puff(bytes, &size, playerZ, &zsize);
   part_usedD = size;
-  Log("part_io() [ rc %d ] [ part_usedD %ju ]\n", rc, part_usedD);
   return rc == 0;
 }
 
