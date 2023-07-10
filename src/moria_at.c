@@ -6586,8 +6586,6 @@ void
 teleport_to(ny, nx)
 {
   int dis, ctr, y, x;
-  int i, j;
-  struct caveS* c_ptr;
 
   y = uD.y;
   x = uD.x;
@@ -10619,7 +10617,6 @@ int
 py_reset()
 {
   char c;
-  uint8_t iidx;
   int line;
   char* savename;
 
@@ -12991,7 +12988,6 @@ void py_reactuate(y_ptr, x_ptr, obj_id) int *y_ptr, *x_ptr;
 void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
   int iidx;
-  struct objS* obj;
 
   overlay_submodeD = 'i';
   do {
