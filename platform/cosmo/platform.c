@@ -97,5 +97,12 @@ platform_pregame()
     write(1, tc_hide_cursorD, sizeof(tc_hide_cursorD));
   }
 
+  struct winsize wsize;
+  _getttysize(1, &wsize);
+  if (wsize.ws_col < 80) {
+    printf("Terminal width is less than 80 characters: ws_row %d ws_col %d\n",
+           wsize.ws_row, wsize.ws_col);
+  }
+
   return 0;
 }

@@ -3,6 +3,8 @@
 DATA char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 DATA char save_termD[128];
 
+#define TC(x) x, AL(x)-1
+
 static char
 get_sym(int row, int col)
 {
@@ -143,17 +145,21 @@ static int buffer_usedD;
 int
 buffer_append(char* str, int str_len)
 {
-  if (buffer_usedD + str_len > sizeof(bufferD)) return 0;
-  memcpy(&bufferD[buffer_usedD], str, str_len);
-  buffer_usedD += str_len;
+  int used = buffer_usedD;
+  if (used + str_len > sizeof(bufferD)) return 0;
+  for (int it = 0; it < str_len; ++it) {
+    char c = str[it];
+    bufferD[used + it] = c ? c : ' ';
+  }
+  buffer_usedD = used + str_len;
   return 1;
 }
 int
 platform_draw()
 {
   buffer_usedD = 0;
-  buffer_append(AP(tc_clearD));
-  buffer_append(AP(tc_move_cursorD));
+  buffer_append(TC(tc_clearD));
+  buffer_append(TC(tc_move_cursorD));
   char* msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
   if (msg_used) {
@@ -162,18 +168,18 @@ platform_draw()
   if (msg_moreD) {
     buffer_append(AP(" -more-"));
   }
-  buffer_append(AP(tc_crlfD));
+  buffer_append(TC(tc_crlfD));
   if (screen_usedD[0]) {
     for (int row = 0; row < AL(screenD); ++row) {
-      buffer_append(AP(tc_clear_lineD));
+      buffer_append(TC(tc_clear_lineD));
       buffer_append(screenD[row], screen_usedD[row]);
-      buffer_append(AP(tc_crlfD));
+      buffer_append(TC(tc_crlfD));
     }
   } else if (overlay_usedD[0]) {
     for (int row = 0; row < AL(overlayD); ++row) {
-      buffer_append(AP(tc_clear_lineD));
+      buffer_append(TC(tc_clear_lineD));
       buffer_append(overlayD[row], overlay_usedD[row]);
-      buffer_append(AP(tc_crlfD));
+      buffer_append(TC(tc_crlfD));
     }
   } else {
     char vital[SYMMAP_HEIGHT][13];
@@ -196,8 +202,8 @@ platform_draw()
     snprintf(vital[row++], AL(vital[0]), "GOLD: %6d", vital_statD[it++]);
 
     for (it = 0; it < SYMMAP_HEIGHT; ++it) {
-      buffer_append(AP(tc_clear_lineD));
-      buffer_append(vital[it], AL(vital[0]) - 1);
+      buffer_append(TC(tc_clear_lineD));
+      buffer_append(vital[it], AL(vital[0]));
       buffer_append(AP(symmapD[it]));
       if (it < AL(active_affectD)) {
         if (active_affectD[it]) {
@@ -205,10 +211,10 @@ platform_draw()
           buffer_append(aff, strlen(aff));
         }
       }
-      buffer_append(AP(tc_crlfD));
+      buffer_append(TC(tc_crlfD));
     }
   }
-  buffer_append(AP(tc_move_cursorD));
+  buffer_append(TC(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
   return 1;
 }
