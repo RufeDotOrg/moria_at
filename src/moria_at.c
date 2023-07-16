@@ -10767,7 +10767,7 @@ py_help()
   BufMsg(screen, "s: search for traps/doors");
   BufMsg(screen, "v: version info");
   BufMsg(screen, "w: wear object");
-  BufMsg(screen, "x: examine monsters");
+  BufMsg(screen, "x: examine objects/monsters");
   BufMsg(screen, "z: zap wand");
   BufMsg(screen, "<: up stairs");
   BufMsg(screen, ">: down stairs");
@@ -11684,76 +11684,77 @@ py_pickup(y, x, pickup)
     }
   }
 }
-static void
-py_look_mon()
+int
+py_monlook_dir(dir)
 {
-  int y, x, ly, lx, oy, ox;
-  int dir;
-
-  if (py_affect(MA_BLIND))
-    msg_print("You can't see a thing!");
-  else if (countD.imagine > 0)
-    msg_print("You can't believe what you are seeing! It's like a dream!");
-  else if (get_dir("Which direction will you look?", &dir)) {
-    y = uD.y;
-    x = uD.x;
-    ly = dir_y(dir);
-    lx = dir_x(dir);
-    int seen = 0;
-    FOR_EACH(mon, {
-      if (mon->mlit && distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) {
-        oy = (ly != 0) * (-((mon->fy - y) < 0) + ((mon->fy - y) > 0));
-        ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
-        if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
-          seen += 1;
-          mon_desc(it_index);
-          // hack: mon death_descD pronoun is a/an
-          MSG("You see %s [%d].", death_descD, mon->hp);
-          msg_pause();
-        }
+  int y, x, oy, ox, ly, lx, seen;
+  seen = 0;
+  y = uD.y;
+  x = uD.x;
+  ly = dir_y(dir);
+  lx = dir_x(dir);
+  FOR_EACH(mon, {
+    if (mon->mlit && distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) {
+      oy = (ly != 0) * (-((mon->fy - y) < 0) + ((mon->fy - y) > 0));
+      ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
+      if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
+        seen += 1;
+        mon_desc(it_index);
+        // hack: mon death_descD pronoun is a/an
+        MSG("You see %s.", death_descD);
+        msg_pause();
       }
-    });
-    if (seen > 0)
-      msg_print("That's all you see in that direction");
-    else
-      msg_print("You see no monsters of interest in that direction.");
-  }
+    }
+  });
+  return seen;
+}
+int
+py_objlook_dir(dir)
+{
+  int y, x, oy, ox, ly, lx, seen;
+
+  y = uD.y;
+  x = uD.x;
+  ly = dir_y(dir);
+  lx = dir_x(dir);
+  FOR_EACH(obj, {
+    if (obj->fy == 0 || obj->fx == 0) continue;
+    if (obj->tval == TV_INVIS_TRAP) continue;
+    if (distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
+      oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
+      ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
+      if (oy == ly && ox == lx && (CF_VIZ & caveD[obj->fy][obj->fx].cflag) &&
+          los(y, x, obj->fy, obj->fx)) {
+        seen += 1;
+        obj_desc(obj, obj->number);
+        MSG("You see %s.", descD);
+        msg_pause();
+      }
+    }
+  });
+
+  return seen;
 }
 static void
-py_look_obj()
+py_examine()
 {
-  int y, x, ly, lx, oy, ox;
   int dir;
+  char* type;
 
+  type = 0;
   if (py_affect(MA_BLIND))
     msg_print("You can't see a thing!");
-  else if (countD.imagine > 0)
-    msg_print("You can't believe what you are seeing! It's like a dream!");
-  else if (get_dir("Which direction will you look?", &dir)) {
-    y = uD.y;
-    x = uD.x;
-    ly = dir_y(dir);
-    lx = dir_x(dir);
-    int seen = 0;
-    FOR_EACH(obj, {
-      if (obj->fy == 0 || obj->fx == 0) continue;
-      if (obj->tval > TV_MAX_PICK_UP && obj->tval != TV_VIS_TRAP) continue;
-      if (distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
-        oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
-        ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
-        if (oy == ly && ox == lx && (CF_VIZ & caveD[obj->fy][obj->fx].cflag) &&
-            los(y, x, obj->fy, obj->fx)) {
-          seen += 1;
-          obj_desc(obj, obj->number);
-          MSG("You see %s.", descD);
-          msg_pause();
-        }
-      }
-    });
-    if (seen > 0)
-      msg_print("That's all you see in that direction");
-    else
-      msg_print("You see no objects of interest in that direction.");
+  else {
+    if (get_dir("Which direction will you look?", &dir)) {
+      if (py_monlook_dir(dir))
+        type = "monsters";
+      else if (py_objlook_dir(dir))
+        type = "objects";
+      else
+        msg_print("You see nothing in that direction.");
+
+      if (type) MSG("That's all the %s you see in that direction", type);
+    }
   }
 }
 static void
@@ -13384,8 +13385,7 @@ dungeon()
               if (iidx >= 0 && iidx < INVEN_EQUIP) inven_wear(iidx);
               break;
             case 'x':
-              // TODO: merge py_look_obj()?
-              py_look_mon();
+              py_examine();
               break;
             case 'z':
               iidx = inven_choice("Aim which wand?", "*");
