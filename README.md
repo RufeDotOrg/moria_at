@@ -8,3 +8,9 @@ Building on Linux
 
 Running on Linux
 ```./moria_at```
+
+Building for ANSI (no sdl2 dependency)
+```
+rm src/platform
+ln -s `realpath platform/linux` src/platform
+```
