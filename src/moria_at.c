@@ -10755,8 +10755,7 @@ py_help()
   int line = 0;
 
   screen_submodeD = 1;
-  BufMsg(screen, ",: pickup object");
-  BufMsg(screen, "c: close object");
+  BufMsg(screen, "c: close door/chest");
   BufMsg(screen, "d: drop object");
   BufMsg(screen, "e: equipment");
   BufMsg(screen, "f: force/bash chest/door/monster");
@@ -10771,24 +10770,28 @@ py_help()
   BufMsg(screen, "z: zap wand");
   BufMsg(screen, "<: up stairs");
   BufMsg(screen, ">: down stairs");
+  BufMsg(screen, "=: Advanced Game Actions");
+  BufMsg(screen, "+/-: Zoom in/out");
 
   BufPad(screen, AL(screenD), 34);
 
   line = 0;
+  BufMsg(screen, "A: actuate inventory item");
   BufMsg(screen, "C: character screen");
   BufMsg(screen, "D: disarm trap");
   BufMsg(screen, "E: eat object");
   BufMsg(screen, "I: inventory sort");
   BufMsg(screen, "M: map dungeon");
-  BufMsg(screen, "O: object examination");
   BufMsg(screen, "R: rest until healed");
   BufMsg(screen, "S: study an object");
   BufMsg(screen, "T: take off equipment");
   BufMsg(screen, "W: where about the dungeon");
   BufMsg(screen, "X: exchange primary weapon to offhand");
   BufMsg(screen, "Z: staff invocation");
+  BufMsg(screen, ",: pickup object");
   BufMsg(screen, ".: automatic dungeon interaction");
   line += 1;
+  BufMsg(screen, "CTRL-a: repeat last actuate");
   BufMsg(screen, "CTRL-p: message history");
   BufMsg(screen, "CTRL-x: save and exit (test)");
   msg_print("? - help");
