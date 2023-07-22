@@ -2978,47 +2978,6 @@ get_mon_num(level)
   }
   return i;
 }
-void
-place_win_monster()
-{
-  int cidx, fy, fx, y, x, k;
-  struct monS* mon;
-  struct creatureS* cr_ptr;
-
-  k = randint(MAX_WIN_MON);
-  if (k == MAX_WIN_MON)
-    msg_print("You hear a low rumble echo through the caverns.");
-  cidx = k + m_level[MAX_MON_LEVEL];
-  cr_ptr = &creatureD[cidx];
-  y = uD.y;
-  x = uD.x;
-
-  if (!total_winner) {
-    mon = mon_use();
-    if (mon->id) {
-      do {
-        fy = randint(MAX_HEIGHT - 2);
-        fx = randint(MAX_WIDTH - 2);
-      } while ((caveD[fy][fx].fval >= MIN_CLOSED_SPACE) ||
-               (caveD[fy][fx].midx) || (caveD[fy][fx].oidx) ||
-               (distance(fy, fx, y, x) <= MAX_SIGHT));
-      mon->cidx = cidx;
-      if (!cr_ptr->sleep)
-        mon->msleep = 0;
-      else
-        mon->msleep = (cr_ptr->sleep * 2) + randint(cr_ptr->sleep * 10);
-      if (cr_ptr->cdefense & CD_MAX_HP)
-        mon->hp = cr_ptr->hd[0] * cr_ptr->hd[1];
-      else
-        mon->hp = pdamroll(cr_ptr->hd);
-      mon->fy = fy;
-      mon->fx = fx;
-      mon->mlit = FALSE;
-
-      caveD[fy][fx].midx = mon_index(mon);
-    }
-  }
-}
 int
 place_monster(y, x, z, slp)
 {
@@ -3047,7 +3006,34 @@ place_monster(y, x, z, slp)
     return midx;
   }
 
-  return FALSE;
+  return 0;
+}
+int
+place_win_monster()
+{
+  int cidx, fy, fx, y, x, k;
+  struct monS* mon;
+  struct creatureS* cr_ptr;
+
+  k = randint(MAX_WIN_MON);
+  if (k == MAX_WIN_MON)
+    msg_print("You hear a low rumble echo through the caverns.");
+  cidx = k + m_level[MAX_MON_LEVEL];
+  cr_ptr = &creatureD[cidx];
+  y = uD.y;
+  x = uD.x;
+
+  if (!total_winner) {
+    do {
+      fy = randint(MAX_HEIGHT - 2);
+      fx = randint(MAX_WIDTH - 2);
+    } while ((caveD[fy][fx].fval >= MIN_CLOSED_SPACE) || (caveD[fy][fx].midx) ||
+             (caveD[fy][fx].oidx) || (distance(fy, fx, y, x) <= MAX_SIGHT));
+
+    return place_monster(fy, fx, cidx, 1);
+  }
+
+  return 0;
 }
 int
 summon_monster(y, x)
