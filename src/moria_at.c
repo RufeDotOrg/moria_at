@@ -2998,6 +2998,7 @@ place_monster(y, x, z, slp)
       mon->hp = cre->hd[0] * cre->hd[1];
     else
       mon->hp = pdamroll(cre->hd);
+    mon->mspeed = cre->speed - 10;
     mon->fy = y;
     mon->fx = x;
 
@@ -7657,15 +7658,6 @@ td_destroy(y, x)
   return (destroy);
 }
 int
-mon_speed(mon)
-struct monS* mon;
-{
-  struct creatureS* cr_ptr;
-
-  cr_ptr = &creatureD[mon->cidx];
-  return mon->mspeed + cr_ptr->speed - 10 + py_speed() + pack_heavy;
-}
-int
 aggravate_monster(dis_affect)
 {
   int y, x, count;
@@ -7677,7 +7669,7 @@ aggravate_monster(dis_affect)
     mon->msleep = 0;
     if (distance(mon->fy, mon->fx, y, x) <= dis_affect) {
       count += 1;
-      if (mon_speed(mon) < 2) mon->mspeed += 1;
+      if (mon->mspeed < 2) mon->mspeed += 1;
     }
   });
   if (count) msg_print("You hear a sudden stirring in the distance!");
@@ -12393,7 +12385,9 @@ creatures()
 {
   int move_count, y, x, cdis, seen_act, seen_lit;
   uint8_t waslit[AL(entity_monD)];
+  int adj_speed;
 
+  adj_speed = py_speed() + pack_heavy;
   y = uD.y;
   x = uD.x;
   seen_act = 0;
@@ -12406,7 +12400,7 @@ creatures()
 
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
-    move_count = movement_rate(mon_speed(mon));
+    move_count = movement_rate(mon->mspeed + adj_speed);
     for (; move_count > 0; --move_count) {
       cdis = distance(y, x, mon->fy, mon->fx);
       if (mon->mlit || cdis <= cr_ptr->aaf) {
