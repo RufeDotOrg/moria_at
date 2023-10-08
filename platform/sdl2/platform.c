@@ -1120,7 +1120,8 @@ platform_draw()
   height = fontD.max_pixel_height;
   width = fontD.max_pixel_width;
   top = gameplay_rectD.y + 6;
-  left = columnD[0] * display_rectD.w / 2;
+  left = columnD[0] * display_rectD.w;
+  if (gameplay_scaleD == 1.0f) left /= 2;
 
   {
     alt_fill(AL(vitalD), 26 + 2, left, top, width, height);
@@ -1448,7 +1449,7 @@ platform_draw()
   if (mode != 1) {
     SDL_Point p = {
         textdst_rectD.x + textdst_rectD.w + width / 2,
-        display_rectD.h - 2 * height,
+        display_rectD.h - 3 * height,
     };
     render_font_string(rendererD, &fontD, AP("version"), p);
     p.y += height;
@@ -1704,7 +1705,8 @@ display_resize(int dw, int dh)
     c1 = .5 - (float)gameplay_rectD.w / dw * .5f;
     c2 = .5 + (float)gameplay_rectD.w / dw * .5f;
   } else {
-    c1 = (26 + 2) * cfD;
+    int margin = dw <= 768 ? 0 : 4;
+    c1 = (26 + 2 + margin) * cfD;
     c2 = c1 + ((float)gameplay_rectD.w / dw);
   }
   c3 = c2 + (1.0 - c2) * .5;
@@ -1758,7 +1760,8 @@ display_resize(int dw, int dh)
   if (TOUCH) {
     float lift = (dh <= 768) ? 0.f : .1f;
     padD = (SDL_Rect){.w = PADSIZE, .h = PADSIZE};
-    padD.x = c0 * 0.5f * dw;
+    padD.x = c0 * dw;
+    if (scale == 1.0f) padD.x *= .5f;
     padD.y = (1.0 - lift) * dh - padD.h;
 
     SDL_Point center = {R4CENTER(padD)};
