@@ -31,6 +31,8 @@ enum { WINDOW };
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
 enum { PADSIZE = (26 + 2) * 16 };
+enum { AFF_X = 3 };
+enum { AFF_Y = AL(active_affectD) / AFF_X };
 #define P(p) p.x, p.y
 #define R(r) r.x, r.y, r.w, r.h
 #define RS(r, scale) \
@@ -1056,8 +1058,7 @@ affect_draw(width, height)
 {
   char tmp[80];
   int len;
-  char *affstr[3];
-  enum { AFF_Y = AL(active_affectD) / AL(affstr) };
+  char *affstr[AFF_X];
   SDL_Rect src_rect = {
       0,
       0,
@@ -1758,11 +1759,16 @@ display_resize(int dw, int dh)
 
   // Input constraints
   if (TOUCH) {
-    float lift = (dh <= 768) ? 0.f : .1f;
+    int used_y = (gameplay_rectD.y + 12 + AL(vitalD) * fheight + PADSIZE);
+    if (scale == 1.0f) used_y += (1 + AFF_Y) * fheight + 6;
+
+    float used_fy = used_y / (float)dh;
+    float safe_fy = CLAMP(used_fy, 0.8f, 1.f);
+    float lift2 = 1.0f - safe_fy;
     padD = (SDL_Rect){.w = PADSIZE, .h = PADSIZE};
     padD.x = c0 * dw;
     if (scale == 1.0f) padD.x *= .5f;
-    padD.y = (1.0 - lift) * dh - padD.h;
+    padD.y = (1.0 - (lift2 * .5)) * dh - padD.h;
 
     SDL_Point center = {R4CENTER(padD)};
     int cx = center.x;
