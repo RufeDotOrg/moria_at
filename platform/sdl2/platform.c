@@ -106,7 +106,7 @@ DATA int xD;
 DATA uint8_t finger_countD;
 DATA int quitD;
 DATA int last_pressD;
-DATA SDL_Point hdpi_scaleD;
+DATA float retina_scaleD;
 
 #define MMSCALE 2
 #define SPRITE_SQ 32
@@ -158,10 +158,13 @@ render_init()
   pixel_formatD = SDL_AllocFormat(rinfo.texture_formats[0]);
 
   {
-    int w, h;
-    if (SDL_GetRendererOutputSize(rendererD, &w, &h) != 0) return 1;
-    Log("Renderer output size %d %d\n", w, h);
-    hdpi_scaleD = (SDL_Point){w, h};
+    int rw, rh;
+    if (SDL_GetRendererOutputSize(rendererD, &rw, &rh) != 0) return 1;
+    Log("Renderer output size %d %d\n", rw, rh);
+
+    int ww, wh;
+    SDL_GetWindowSize(windowD, &ww, &wh);
+    retina_scaleD = MAX((float)rw/ww, (float)rh/wh);
   }
 
   return 1;
@@ -1872,8 +1875,8 @@ SDL_Event event;
     int dh = event.window.data2;
 
     if (__APPLE__) {
-      dw *= hdpi_scaleD.x / dw;
-      dh *= hdpi_scaleD.y / dh;
+      dw *= retina_scaleD;
+      dh *= retina_scaleD;
     }
 
     if (dw != display_rectD.w || dh != display_rectD.h) {
