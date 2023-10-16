@@ -24,7 +24,7 @@ enum { ANDROID };
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
 #else
-enum { TOUCH = 1 };
+enum { TOUCH = 0 };
 #endif
 
 enum { WINDOW };
@@ -1336,7 +1336,7 @@ platform_p2()
   int width = fontD.max_pixel_width;
   int left = 0;
   int top = 0;
-  SDL_Rect target = {0, 2 * height, 1080, 1920 - PADSIZE - 2 * height};
+  SDL_Rect target = {0, 0, 1080, 1920 - PADSIZE};
 
   switch (mode) {
     case 1: {
@@ -1406,21 +1406,15 @@ platform_p2()
     } break;
   }
 
-  render_update();
-
   return 0;
 }
 
 int
-platform_portrait()
+platform_p0()
 {
   char tmp[80];
   USE(renderer);
   USE(msg_more);
-  SDL_SetRenderTarget(renderer, layoutD);
-  SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
-  SDL_Rect layout_rect = {0, 0, 1080, 1920};
-  SDL_RenderFillRect(renderer, &layout_rect);
 
   int height = fontD.max_pixel_height;
   int width = fontD.max_pixel_width;
@@ -1455,7 +1449,7 @@ platform_portrait()
         AFF_Y * height,
     };
     SDL_Rect target = {
-        left, top + AL(vitalD) * height + height,
+        left, top + AL(vitalD) * height,
         src_rect.w,  // TBD: affect scaling?
         src_rect.h,  // TBD
     };
@@ -1568,7 +1562,39 @@ platform_portrait()
     }
   }
 
-  render_update();
+  {
+    char *msg = AS(msg_cqD, msg_writeD);
+    int msg_used = AS(msglen_cqD, msg_writeD);
+    int alpha = 255;
+
+    // Gameplay shows previous message to help the player out
+    if (!msg_used) {
+      msg = AS(msg_cqD, msg_writeD - 1);
+      msg_used = AS(msglen_cqD, msg_writeD - 1);
+      alpha = 128;
+    }
+
+    // TBD: layout sizing
+    SDL_Point p = {
+        1080 / 2 - msg_used * width / 2,
+        1920 - PADSIZE - gameplay_rectD.h - height,
+    };
+
+    if (msg_used) {
+      SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+      font_texture_alphamod(alpha);
+      render_font_string_scale(renderer, &fontD, msg, msg_used, p, 1);
+      font_texture_alphamod(255);
+
+      // SDL_Rect rect = {
+      //     p.x - width,
+      //     0,
+      //     (1 + msg_used) * width,
+      //     height,
+      // };
+      // rect_frame(rect, 1);
+    }
+  }
 
   return 1;
 }
@@ -1807,11 +1833,34 @@ platform_landscape()
 }
 
 int
+platform_portrait()
+{
+  USE(mode);
+  USE(renderer);
+  int ret;
+  int height = fontD.max_pixel_height;
+  int width = fontD.max_pixel_width;
+
+  SDL_SetRenderTarget(renderer, layoutD);
+  SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+  SDL_Rect layout_rect = {0, 0, 1080, 1920};
+  SDL_RenderFillRect(renderer, &layout_rect);
+
+  if (mode == 0)
+    ret = platform_p0();
+  else
+    ret = platform_p2();
+
+  render_update();
+
+  return ret;
+}
+
+int
 platform_draw()
 {
   // return platform_landscape();
-  if (modeD == 0) return platform_portrait();
-  return platform_p2();
+  return platform_portrait();
 }
 
 char
@@ -2745,6 +2794,8 @@ platform_pregame()
   if (TOUCH) platformD.selection = platform_selection;
   platformD.copy = platform_copy;
   platformD.savemidpoint = platform_savemidpoint;
+  // TBD: console width sizing
+  if (PORTRAIT) console_widthD = 67;
 
   return 0;
 }
