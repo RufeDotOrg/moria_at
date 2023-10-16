@@ -24,11 +24,11 @@ enum { ANDROID };
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
 #else
-enum { TOUCH };
+enum { TOUCH = 1 };
 #endif
 
 enum { WINDOW };
-enum { PORTRAIT };
+enum { PORTRAIT = 1 };
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
 enum { PADSIZE = (26 + 2) * 16 };
@@ -1329,6 +1329,89 @@ SDL_Rect *zoom_prect;
 }
 
 int
+platform_p2()
+{
+  USE(mode);
+  int height = fontD.max_pixel_height;
+  int width = fontD.max_pixel_width;
+  int left = 0;
+  int top = 0;
+  SDL_Rect target = {0, 2 * height, 1080, 1920 - PADSIZE - 2 * height};
+
+  switch (mode) {
+    case 1: {
+      SDL_Rect src_rect = {
+          0,
+          0,
+          AL(overlayD[0]) * width + left * 2,
+          AL(overlayD) * height + top * 2,
+      };
+
+      SDL_SetRenderTarget(rendererD, text_textureD);
+      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+      SDL_RenderFillRect(rendererD, &src_rect);
+
+      alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
+      for (int row = 0; row < AL(overlayD); ++row) {
+        font_colorD = whiteD;
+        SDL_Point p = {
+            left,
+            top + row * height,
+        };
+        char *text = overlayD[row];
+        int tlen = overlay_usedD[row];
+        if (TOUCH && row == finger_rowD) {
+          font_colorD = (SDL_Color){255, 0, 0, 255};
+          if (tlen <= 1) {
+            text = "-";
+            tlen = 1;
+          }
+        }
+        render_font_string(rendererD, &fontD, text, tlen, p);
+      }
+      font_colorD = whiteD;
+
+      SDL_SetRenderTarget(rendererD, layoutD);
+      SDL_RenderCopy(rendererD, text_textureD, &src_rect, &target);
+    } break;
+    case 2: {
+      int max_len = 80;
+      int is_text = (screen_submodeD != 0);
+
+      for (int it = 0; it < AL(screenD); ++it) {
+        max_len = MAX(max_len, screen_usedD[it]);
+      }
+
+      SDL_Rect src_rect = {
+          0,
+          0,
+          max_len * width + left * 2,
+          AL(screenD) * height + top * 2,
+      };
+
+      SDL_SetRenderTarget(rendererD, text_textureD);
+      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+      SDL_RenderFillRect(rendererD, &src_rect);
+
+      if (is_text) alt_fill(AL(screenD), max_len, left, top, width, height);
+      for (int row = 0; row < AL(screenD); ++row) {
+        SDL_Point p = {left, top + row * height};
+        render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row],
+                           p);
+      }
+
+      SDL_SetRenderTarget(rendererD, layoutD);
+      SDL_RenderCopy(rendererD, text_textureD, &src_rect, &target);
+      // if (is_text) rect_frame(textdst_rectD, 1);
+    } break;
+  }
+
+  render_update();
+
+  return 0;
+}
+
+int
 platform_portrait()
 {
   char tmp[80];
@@ -1441,7 +1524,7 @@ platform_portrait()
       map_draw(&zoom_rect);
       SDL_Rect game_target = {
           (1080 - 1024) / 2,
-          top + AL(vitalD) * height + AFF_Y * height + 2 * height,
+          1920 - PADSIZE - gameplay_rectD.h,
           1024,
           1024,
       };
@@ -1726,8 +1809,9 @@ platform_landscape()
 int
 platform_draw()
 {
-  return platform_landscape();
-  // return platform_portrait();
+  // return platform_landscape();
+  if (modeD == 0) return platform_portrait();
+  return platform_p2();
 }
 
 char
