@@ -28,6 +28,7 @@ enum { TOUCH };
 #endif
 
 enum { WINDOW };
+enum { PORTRAIT };
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
 enum { PADSIZE = (26 + 2) * 16 };
@@ -81,6 +82,7 @@ DATA SDL_Texture *map_textureD;
 DATA SDL_Rect text_rectD;
 DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
+DATA SDL_Texture *layoutD;
 DATA SDL_Rect affectdst_rectD;
 DATA uint32_t max_texture_widthD;
 DATA uint32_t max_texture_heightD;
@@ -164,7 +166,7 @@ render_init()
 
     int ww, wh;
     SDL_GetWindowSize(windowD, &ww, &wh);
-    retina_scaleD = MAX((float)rw/ww, (float)rh/wh);
+    retina_scaleD = MAX((float)rw / ww, (float)rh / wh);
   }
 
   return 1;
@@ -173,10 +175,22 @@ render_init()
 void
 render_update()
 {
-  SDL_Renderer *r = rendererD;
-  SDL_RenderPresent(r);
-  SDL_SetRenderDrawColor(r, 0, 0, 0, 0);
-  SDL_RenderClear(r);
+  USE(renderer);
+  USE(layout);
+  if (layout) {
+    USE(display_rect);
+    SDL_SetRenderTarget(renderer, 0);
+    SDL_Rect target = {
+        (display_rect.w - 1080) / 2,
+        0,
+        1080,
+        display_rect.h,
+    };
+    SDL_RenderCopy(renderer, layout, NULL, &target);
+  }
+  SDL_RenderPresent(renderer);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
 }
 
 // font.c
@@ -1017,7 +1031,7 @@ overlay_draw(width, height)
   }
   font_colorD = whiteD;
 
-  SDL_SetRenderTarget(rendererD, 0);
+  SDL_SetRenderTarget(rendererD, layoutD);
   SDL_RenderCopy(rendererD, text_textureD, &src_rect, &textdst_rectD);
   rect_frame(textdst_rectD, 1);
 }
@@ -1051,7 +1065,7 @@ screen_draw(width, height)
     render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row], p);
   }
 
-  SDL_SetRenderTarget(rendererD, 0);
+  SDL_SetRenderTarget(rendererD, layoutD);
   SDL_RenderCopy(rendererD, text_textureD, &src_rect, &textdst_rectD);
   if (is_text) rect_frame(textdst_rectD, 1);
 }
@@ -1098,7 +1112,386 @@ affect_draw(width, height)
 }
 
 int
-platform_draw()
+map_draw(zoom_prect)
+SDL_Rect *zoom_prect;
+{
+  SDL_Rect dest_rect;
+  SDL_Rect sprite_src;
+  SDL_Point rp;
+  dest_rect.w = ART_W;
+  dest_rect.h = ART_H;
+  SDL_SetRenderTarget(rendererD, map_textureD);
+  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+  SDL_RenderFillRect(rendererD, &map_rectD);
+  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
+  int imagine = countD.imagine;
+  for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
+    dest_rect.y = row * ART_H;
+    for (int col = 0; col < SYMMAP_WIDTH; ++col) {
+      dest_rect.x = col * ART_W;
+
+      struct vizS *viz = &vizD[row][col];
+      char sym = viz->sym;
+      uint64_t fidx = viz->floor;
+      uint64_t light = viz->light;
+      uint64_t dim = viz->dim;
+      uint64_t cridx = viz->cr;
+      uint64_t tridx = viz->tr;
+
+      // Art priority creature, wall, treasure, fallback to symmap ASCII
+      SDL_Texture *srct = 0;
+      SDL_Rect *srcr = 0;
+
+      if (sym == '@') {
+        rp = (SDL_Point){col, row};
+      }
+
+      if (!imagine) {
+        if (cridx && cridx <= AL(art_textureD)) {
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(art_textureD[cridx - 1])),
+              ART_W,
+              ART_H,
+          };
+          srct = sprite_textureD;
+        } else if (fidx && fidx <= AL(wart_textureD)) {
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(wart_textureD[fidx - 1])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
+        } else if (tridx && tridx <= AL(tart_textureD)) {
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(tart_textureD[tridx - 1])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
+        } else if (sym == '@') {
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(part_textureD[0 + (turnD) % 2])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
+        }
+      }
+
+      if (srct) {
+        srcr = &sprite_src;
+      } else {
+        srct = texture_by_sym(sym);
+      }
+
+      SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));
+      SDL_RenderFillRect(rendererD, &dest_rect);
+
+      if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
+      SDL_RenderCopy(rendererD, srct, srcr, &dest_rect);
+      if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
+      switch (viz->fade) {
+        case 1:
+          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);
+          SDL_RenderFillRect(rendererD, &dest_rect);
+          break;
+        case 2:
+          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 64);
+          SDL_RenderFillRect(rendererD, &dest_rect);
+          break;
+        case 3:
+          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 98);
+          SDL_RenderFillRect(rendererD, &dest_rect);
+          break;
+      }
+    }
+  }
+
+  if (sprite_textureD) {
+    uint32_t oidx = caveD[uD.y][uD.x].oidx;
+    struct objS *obj = &entity_objD[oidx];
+    uint32_t tval = obj->tval;
+    dest_rect.y = rp.y * ART_H;
+    dest_rect.x = rp.x * ART_W;
+
+    if (tval - 1 < TV_MAX_PICK_UP || tval == TV_CHEST) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[2])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    } else if (tval == TV_GLYPH) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[3])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    } else if (tval == TV_VIS_TRAP) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[4])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+
+    if (countD.paralysis) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[5])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (countD.poison) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[6])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (maD[MA_SLOW]) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[7])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (maD[MA_BLIND]) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[8])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (countD.confusion) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[9])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (maD[MA_FEAR]) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[10])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (uD.food < PLAYER_FOOD_FAINT) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[12])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    } else if (uD.food <= PLAYER_FOOD_ALERT) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[11])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+  }
+
+  int zf, zh, zw;
+  zf = zoom_factorD;
+  zh = SYMMAP_HEIGHT >> zf;
+  zw = SYMMAP_WIDTH >> zf;
+  // give equal vision on each side of the player during zoom
+  int zsymmetry = (zf != 0);
+
+  int zy, zx;
+  zy = CLAMP(rp.y - zh / 2, 0, SYMMAP_HEIGHT - zh - zsymmetry);
+  zx = CLAMP(rp.x - zw / 2, 0, SYMMAP_WIDTH - zw - zsymmetry);
+  zoom_prect->x = zx * ART_W;
+  zoom_prect->y = zy * ART_H;
+  zoom_prect->w = (zw + zsymmetry) * ART_W;
+  zoom_prect->h = (zh + zsymmetry) * ART_H;
+
+  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
+  SDL_RenderDrawRect(rendererD, zoom_prect);
+
+  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+  SDL_SetRenderTarget(rendererD, layoutD);
+  return 0;
+}
+
+int
+platform_portrait()
+{
+  char tmp[80];
+  USE(renderer);
+  USE(msg_more);
+  SDL_SetRenderTarget(renderer, layoutD);
+  SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+  SDL_Rect layout_rect = {0, 0, 1080, 1920};
+  SDL_RenderFillRect(renderer, &layout_rect);
+
+  int height = fontD.max_pixel_height;
+  int width = fontD.max_pixel_width;
+  int top = 0;
+  int left = 0;
+  int len = 0;
+  int show_minimap = (maD[MA_BLIND] == 0);
+  int show_game = 1;
+  {
+    alt_fill(AL(vitalD), 26 + 2, left, top, width, height);
+    for (int it = 0; it < MAX_A; ++it) {
+      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
+                     vitalD[it], stat_abbrD[it], vital_statD[it]);
+      SDL_Point p = {left + width / 2, top + it * height};
+      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    }
+    {
+      int it = MAX_A;
+      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
+      SDL_Point p = {left + width / 2, top + it * height};
+      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    }
+    SDL_Rect r = {left + width / 2, top, (26 + 1) * width, AL(vitalD) * height};
+    rect_frame(r, 1);
+  }
+
+  {
+    SDL_Rect src_rect = {
+        0,
+        0,
+        (26 + 2) * width,
+        AFF_Y * height,
+    };
+    SDL_Rect target = {
+        left, top + AL(vitalD) * height + height,
+        src_rect.w,  // TBD: affect scaling?
+        src_rect.h,  // TBD
+    };
+    char *affstr[AFF_X];
+    SDL_SetRenderTarget(rendererD, text_textureD);
+    SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+    SDL_RenderFillRect(rendererD, &src_rect);
+
+    alt_fill(AFF_Y, 26 + 2, left, top, width, height);
+    for (int it = 0; it < AFF_Y; ++it) {
+      for (int jt = 0; jt < AL(affstr); ++jt) {
+        int idx = AL(affstr) * it + jt;
+        if (active_affectD[idx])
+          affstr[jt] = affectD[idx][active_affectD[idx] - 1];
+        else
+          affstr[jt] = "";
+      }
+
+      len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
+                     affstr[1], affstr[2]);
+      SDL_Point p = {
+          width / 2,
+          it * height,
+      };
+      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    }
+    SDL_SetRenderTarget(rendererD, layoutD);
+    SDL_RenderCopy(rendererD, text_textureD, &src_rect, &target);
+
+    // SDL_Rect r = {left + width / 2, top + AL(vitalD) * height + height,
+    //               (26 + 1) * width, AFF_Y * height};
+    SDL_Rect r = {
+        target.x + width / 2,
+        target.y,
+        target.w - width,
+        target.h,
+    };
+    rect_frame(r, 1);
+  }
+
+  {
+    SDL_Rect target = {
+        (26 + 2) * width + width + 180,
+        top + 5 * height,
+        MMSCALE * MAX_WIDTH,
+        MMSCALE * MAX_HEIGHT,
+    };
+    USE(mmtexture);
+
+    if (show_minimap) {
+      USE(mmsurface);
+      bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
+                             (SDL_Point){0, 0}, mmsurface);
+      SDL_UpdateTexture(mmtexture, NULL, mmsurface->pixels, mmsurface->pitch);
+
+      if (minimap_enlargeD) {
+        SDL_RenderCopy(rendererD, mmtexture, NULL, &gameplay_rectD);
+      }
+    }
+
+    if (show_game) {
+      SDL_RenderCopy(rendererD, mmtexture, NULL, &target);
+      rect_frame(target, 3);
+
+      SDL_Rect zoom_rect;
+      map_draw(&zoom_rect);
+      SDL_Rect game_target = {
+          (1080 - 1024) / 2,
+          top + AL(vitalD) * height + AFF_Y * height + 2 * height,
+          1024,
+          1024,
+      };
+      SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &game_target);
+
+      // TBD pad to center
+      {
+        SDL_Point p = {target.x, target.y - height - 24};
+        len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
+        render_font_string(rendererD, &fontD, tmp, len, p);
+      }
+
+      // TBD pad to center
+      {
+        SDL_Point p = {target.x, target.y + target.h + 24};
+        len = snprintf(tmp, AL(tmp), "%s", dun_descD);
+        render_font_string(rendererD, &fontD, tmp, len, p);
+      }
+    }
+  }
+
+  if (TOUCH && tpsurfaceD) {
+    SDL_Rect target = {
+        (1080 - 1024) / 2,
+        1920 - padD.h,
+        padD.w,
+        padD.h,
+    };
+    SDL_RenderCopy(rendererD, tptextureD, 0, &target);
+
+    int bc[] = {RED, GREEN};
+
+    int size = padD.w / 2;
+    SDL_Rect button[2] = {
+        {1080 - size, target.y, size, size},
+        {1080 - 2 * size, target.y + size, size, size},
+    };
+    for (int it = 0; it < AL(buttonD); ++it) {
+      SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
+      SDL_RenderFillRect(rendererD, &button[it]);
+    }
+  }
+
+  render_update();
+
+  return 1;
+}
+
+int
+platform_landscape()
 {
   int show_map, mode, more, height, width, left, top, len;
   char tmp[80];
@@ -1175,218 +1568,8 @@ platform_draw()
   }
 
   if (show_map) {
-    SDL_Rect dest_rect;
-    SDL_Rect sprite_src;
-    SDL_Point rp;
-    dest_rect.w = ART_W;
-    dest_rect.h = ART_H;
-    SDL_SetRenderTarget(rendererD, map_textureD);
-    SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-    SDL_RenderFillRect(rendererD, &map_rectD);
-    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
-    int imagine = countD.imagine;
-    for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
-      dest_rect.y = row * ART_H;
-      for (int col = 0; col < SYMMAP_WIDTH; ++col) {
-        dest_rect.x = col * ART_W;
-
-        struct vizS *viz = &vizD[row][col];
-        char sym = viz->sym;
-        uint64_t fidx = viz->floor;
-        uint64_t light = viz->light;
-        uint64_t dim = viz->dim;
-        uint64_t cridx = viz->cr;
-        uint64_t tridx = viz->tr;
-
-        // Art priority creature, wall, treasure, fallback to symmap ASCII
-        SDL_Texture *srct = 0;
-        SDL_Rect *srcr = 0;
-
-        if (sym == '@') {
-          rp = (SDL_Point){col, row};
-        }
-
-        if (!imagine) {
-          if (cridx && cridx <= AL(art_textureD)) {
-            sprite_src = (SDL_Rect){
-                P(point_by_spriteid(art_textureD[cridx - 1])),
-                ART_W,
-                ART_H,
-            };
-            srct = sprite_textureD;
-          } else if (fidx && fidx <= AL(wart_textureD)) {
-            sprite_src = (SDL_Rect){
-                P(point_by_spriteid(wart_textureD[fidx - 1])),
-                ART_W,
-                ART_H,
-            };
-
-            srct = sprite_textureD;
-          } else if (tridx && tridx <= AL(tart_textureD)) {
-            sprite_src = (SDL_Rect){
-                P(point_by_spriteid(tart_textureD[tridx - 1])),
-                ART_W,
-                ART_H,
-            };
-
-            srct = sprite_textureD;
-          } else if (sym == '@') {
-            sprite_src = (SDL_Rect){
-                P(point_by_spriteid(part_textureD[0 + (turnD) % 2])),
-                ART_W,
-                ART_H,
-            };
-
-            srct = sprite_textureD;
-          }
-        }
-
-        if (srct) {
-          srcr = &sprite_src;
-        } else {
-          srct = texture_by_sym(sym);
-        }
-
-        SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));
-        SDL_RenderFillRect(rendererD, &dest_rect);
-
-        if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
-        SDL_RenderCopy(rendererD, srct, srcr, &dest_rect);
-        if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
-        switch (viz->fade) {
-          case 1:
-            SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);
-            SDL_RenderFillRect(rendererD, &dest_rect);
-            break;
-          case 2:
-            SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 64);
-            SDL_RenderFillRect(rendererD, &dest_rect);
-            break;
-          case 3:
-            SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 98);
-            SDL_RenderFillRect(rendererD, &dest_rect);
-            break;
-        }
-      }
-    }
-
-    if (sprite_textureD) {
-      uint32_t oidx = caveD[uD.y][uD.x].oidx;
-      struct objS *obj = &entity_objD[oidx];
-      uint32_t tval = obj->tval;
-      dest_rect.y = rp.y * ART_H;
-      dest_rect.x = rp.x * ART_W;
-
-      if (tval - 1 < TV_MAX_PICK_UP || tval == TV_CHEST) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[2])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      } else if (tval == TV_GLYPH) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[3])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      } else if (tval == TV_VIS_TRAP) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[4])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      }
-
-      if (countD.paralysis) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[5])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      }
-      if (countD.poison) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[6])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      }
-      if (maD[MA_SLOW]) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[7])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      }
-      if (maD[MA_BLIND]) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[8])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      }
-      if (countD.confusion) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[9])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      }
-      if (maD[MA_FEAR]) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[10])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      }
-      if (uD.food < PLAYER_FOOD_FAINT) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[12])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      } else if (uD.food <= PLAYER_FOOD_ALERT) {
-        sprite_src = (SDL_Rect){
-            P(point_by_spriteid(part_textureD[11])),
-            ART_W,
-            ART_H,
-        };
-        SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-      }
-    }
-
-    int zf, zh, zw;
-    zf = zoom_factorD;
-    zh = SYMMAP_HEIGHT >> zf;
-    zw = SYMMAP_WIDTH >> zf;
-    // give equal vision on each side of the player during zoom
-    int zsymmetry = (zf != 0);
-
-    int zy, zx;
-    zy = CLAMP(rp.y - zh / 2, 0, SYMMAP_HEIGHT - zh - zsymmetry);
-    zx = CLAMP(rp.x - zw / 2, 0, SYMMAP_WIDTH - zw - zsymmetry);
     SDL_Rect zoom_rect;
-    zoom_rect.x = zx * ART_W;
-    zoom_rect.y = zy * ART_H;
-    zoom_rect.w = (zw + zsymmetry) * ART_W;
-    zoom_rect.h = (zh + zsymmetry) * ART_H;
-
-    SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
-    SDL_RenderDrawRect(rendererD, &zoom_rect);
-
-    SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-    SDL_SetRenderTarget(rendererD, 0);
-
+    map_draw(&zoom_rect);
     SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &gameplay_rectD);
   }
 
@@ -1538,6 +1721,13 @@ platform_draw()
   render_update();
 
   return 1;
+}
+
+int
+platform_draw()
+{
+  return platform_landscape();
+  // return platform_portrait();
 }
 
 char
@@ -2366,7 +2556,10 @@ platform_pregame()
     if (!ANDROID) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 
     // __APPLE__/Android orientation
-    SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
+    if (PORTRAIT)
+      SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait");
+    else
+      SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
 
     // Platform Input isolation
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
@@ -2443,6 +2636,10 @@ platform_pregame()
     text_textureD =
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           text_rectD.w, text_rectD.h);
+
+    if (PORTRAIT)
+      layoutD = SDL_CreateTexture(rendererD, texture_formatD,
+                                  SDL_TEXTUREACCESS_TARGET, 1080, 1920);
   }
 
   font_colorD = whiteD;

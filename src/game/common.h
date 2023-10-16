@@ -56,6 +56,9 @@ typedef int (*fn)();
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
 
+#define USE(x) typeof(x##D) x = x##D
+#define AUSE(a, idx) typeof(a##D[0]) a = a##D[idx];
+
 // (optionally defined)
 // global declaration
 #ifndef DATA
