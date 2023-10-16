@@ -1332,31 +1332,61 @@ int
 platform_p2()
 {
   USE(mode);
+  USE(renderer);
   int height = fontD.max_pixel_height;
   int width = fontD.max_pixel_width;
   int left = 0;
   int top = 0;
+  int is_text, col, row;
   SDL_Rect target = {0, 0, 1080, 1920 - PADSIZE};
+
+  if (mode == 1) {
+    is_text = 1;
+    row = 1 + AL(overlayD);
+    col = AL(overlayD[0]);
+  } else {
+    is_text = (screen_submodeD != 0);
+    row = 1 + AL(screenD);
+    col = 80;
+    for (int it = 0; it < AL(screenD); ++it) {
+      col = MAX(col, screen_usedD[it]);
+    }
+  }
+
+  SDL_Rect src_rect = {
+      0,
+      0,
+      col * width + left * 2,
+      row * height + top * 2,
+  };
+  SDL_SetRenderTarget(renderer, text_textureD);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderFillRect(renderer, &src_rect);
+  if (is_text) alt_fill(row, col, left, top, width, height);
+
+  {
+    char *msg = AS(msg_cqD, msg_writeD);
+    int msg_used = AS(msglen_cqD, msg_writeD);
+
+    if (msg_used) {
+      // TBD: layout sizing
+      SDL_Point p = {
+          0,
+          0,
+      };
+
+      SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+      render_font_string(renderer, &fontD, msg, msg_used, p);
+    }
+  }
 
   switch (mode) {
     case 1: {
-      SDL_Rect src_rect = {
-          0,
-          0,
-          AL(overlayD[0]) * width + left * 2,
-          AL(overlayD) * height + top * 2,
-      };
-
-      SDL_SetRenderTarget(rendererD, text_textureD);
-      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-      SDL_RenderFillRect(rendererD, &src_rect);
-
-      alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
       for (int row = 0; row < AL(overlayD); ++row) {
         font_colorD = whiteD;
         SDL_Point p = {
             left,
-            top + row * height,
+            top + row * height + height,
         };
         char *text = overlayD[row];
         int tlen = overlay_usedD[row];
@@ -1367,44 +1397,23 @@ platform_p2()
             tlen = 1;
           }
         }
-        render_font_string(rendererD, &fontD, text, tlen, p);
+        render_font_string(renderer, &fontD, text, tlen, p);
       }
-      font_colorD = whiteD;
-
-      SDL_SetRenderTarget(rendererD, layoutD);
-      SDL_RenderCopy(rendererD, text_textureD, &src_rect, &target);
     } break;
     case 2: {
-      int max_len = 80;
-      int is_text = (screen_submodeD != 0);
-
-      for (int it = 0; it < AL(screenD); ++it) {
-        max_len = MAX(max_len, screen_usedD[it]);
-      }
-
-      SDL_Rect src_rect = {
-          0,
-          0,
-          max_len * width + left * 2,
-          AL(screenD) * height + top * 2,
-      };
-
-      SDL_SetRenderTarget(rendererD, text_textureD);
-      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-      SDL_RenderFillRect(rendererD, &src_rect);
-
-      if (is_text) alt_fill(AL(screenD), max_len, left, top, width, height);
       for (int row = 0; row < AL(screenD); ++row) {
-        SDL_Point p = {left, top + row * height};
-        render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row],
+        SDL_Point p = {left, top + row * height + height};
+        render_font_string(renderer, &fontD, screenD[row], screen_usedD[row],
                            p);
       }
-
-      SDL_SetRenderTarget(rendererD, layoutD);
-      SDL_RenderCopy(rendererD, text_textureD, &src_rect, &target);
-      // if (is_text) rect_frame(textdst_rectD, 1);
     } break;
   }
+
+  font_colorD = whiteD;
+  SDL_SetRenderTarget(renderer, layoutD);
+  SDL_RenderCopy(renderer, text_textureD, &src_rect, &target);
+  // TBD: frame
+  // if (is_text) rect_frame(textdst_rectD, 1);
 
   return 0;
 }
@@ -1583,7 +1592,7 @@ platform_p0()
     if (msg_used) {
       SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
       font_texture_alphamod(alpha);
-      render_font_string_scale(renderer, &fontD, msg, msg_used, p, 1);
+      render_font_string(renderer, &fontD, msg, msg_used, p);
       font_texture_alphamod(255);
 
       // SDL_Rect rect = {
