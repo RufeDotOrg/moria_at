@@ -24,7 +24,7 @@ enum { ANDROID };
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
 #else
-enum { TOUCH = 1 };
+enum { TOUCH = 0 };
 #endif
 
 enum { WINDOW };
@@ -1566,20 +1566,26 @@ platform_p0()
     int msg_used = AS(msglen_cqD, msg_writeD);
     int alpha = 255;
 
+    // TBD: layout sizing
+    SDL_Point p = {
+        // layout_rectD.w / 2 - msg_used * width / 2,
+        (layout_rectD.w - map_rectD.w) / 2 + width / 2,
+        layout_rectD.h - PADSIZE - map_rectD.h + height / 2,
+    };
+
     // Gameplay shows previous message to help the player out
     if (!msg_used) {
       msg = AS(msg_cqD, msg_writeD - 1);
       msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = 128;
+      alpha = 150;
     }
 
-    // TBD: layout sizing
-    SDL_Point p = {
-        1080 / 2 - msg_used * width / 2,
-        1920 - PADSIZE - map_rectD.h - height,
-    };
-
     if (msg_used) {
+      SDL_Rect fill = {p.x, p.y, msg_used * width,
+                       height + height / 8};  // map_rectD.w - width, height};
+      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+      SDL_RenderFillRect(renderer, &fill);
+
       SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
       font_texture_alphamod(alpha);
       render_font_string(renderer, &fontD, msg, msg_used, p);
@@ -2942,7 +2948,7 @@ platform_pregame()
   platformD.savemidpoint = platform_savemidpoint;
 
   // TBD: console width sizing
-  if (PORTRAIT) console_widthD = 67;
+  if (PORTRAIT) console_widthD = 64;
   if (PORTRAIT) {
     layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
     float xuse = CLAMP((float)layout_rectD.w / display_rectD.w, 0.f, 1.f);
