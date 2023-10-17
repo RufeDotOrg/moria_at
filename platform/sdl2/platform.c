@@ -582,6 +582,7 @@ enum {
   TOUCH_NONE,
   TOUCH_STAT,
   TOUCH_MAP,
+  TOUCH_VERSION,
   TOUCH_GAMEPLAY,
   TOUCH_LB,
   TOUCH_RB,
@@ -1609,6 +1610,15 @@ platform_p0()
     }
   }
 
+  {
+    SDL_Point p = {layout_rectD.w - 8 * FWIDTH, 0};
+    render_font_string(rendererD, &fontD, "moria", AL("moria"), p);
+    p.y += FHEIGHT;
+    render_font_string(rendererD, &fontD, "version", AL("version"), p);
+    p.y += FHEIGHT;
+    render_font_string(rendererD, &fontD, versionD + 10, AL(versionD) - 11, p);
+  }
+
   return 1;
 }
 
@@ -2431,6 +2441,9 @@ touch_by_xy(x, y)
   if (SDL_PointInRect(&tpp, &map_target)) {
     return TOUCH_MAP;
   }
+  if (y < stat_target.h && x > map_target.x + map_target.w) {
+    return TOUCH_VERSION;
+  }
 
   SDL_Rect game_target = {
       (layout_rectD.w - map_rectD.w) / 2,
@@ -2499,6 +2512,8 @@ portrait_event_xy(eventtype, x, y)
             return 'C';
           case TOUCH_MAP:
             return 'M';
+          case TOUCH_VERSION:
+            return 'v';
           case TOUCH_GAMEPLAY:
             // TBD: shim to support message history
             // if (tp.y < .09) return CTRL('p');
