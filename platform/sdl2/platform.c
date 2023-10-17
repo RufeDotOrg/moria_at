@@ -24,7 +24,7 @@ enum { ANDROID };
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
 #else
-enum { TOUCH = 0 };
+enum { TOUCH = 1 };
 #endif
 
 enum { WINDOW };
@@ -1333,6 +1333,8 @@ platform_p2()
 {
   USE(mode);
   USE(renderer);
+  char *msg = AS(msg_cqD, msg_writeD);
+  int msg_used = AS(msglen_cqD, msg_writeD);
   int height = fontD.max_pixel_height;
   int width = fontD.max_pixel_width;
   int left = 0;
@@ -1344,14 +1346,20 @@ platform_p2()
     is_text = 1;
     row = 1 + AL(overlayD);
     col = AL(overlayD[0]);
+    col = msg_used;  // TBD
+    for (int it = 0; it < AL(overlayD); ++it) {
+      col = MAX(col, overlay_usedD[it]);
+    }
   } else {
     is_text = (screen_submodeD != 0);
     row = 1 + AL(screenD);
     col = 80;
+    col = msg_used;  // TBD
     for (int it = 0; it < AL(screenD); ++it) {
       col = MAX(col, screen_usedD[it]);
     }
   }
+  col += 6;
 
   SDL_Rect src_rect = {
       0,
@@ -1364,20 +1372,18 @@ platform_p2()
   SDL_RenderFillRect(renderer, &src_rect);
   if (is_text) alt_fill(row, col, left, top, width, height);
 
-  {
-    char *msg = AS(msg_cqD, msg_writeD);
-    int msg_used = AS(msglen_cqD, msg_writeD);
+  if (msg_used) {
+    // TBD: layout sizing
+    SDL_Point p = {
+        0,
+        0,
+    };
 
-    if (msg_used) {
-      // TBD: layout sizing
-      SDL_Point p = {
-          0,
-          0,
-      };
-
-      SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-      render_font_string(renderer, &fontD, msg, msg_used, p);
-    }
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+    // TBD: this formatting is temporary (just show the msg)
+    char tmp[120];
+    int len = snprintf(tmp, AL(tmp), "%s (%d)", msg, col);
+    render_font_string(renderer, &fontD, tmp, len, p);
   }
 
   switch (mode) {
@@ -1546,28 +1552,6 @@ platform_p0()
         len = snprintf(tmp, AL(tmp), "%s", dun_descD);
         render_font_string(rendererD, &fontD, tmp, len, p);
       }
-    }
-  }
-
-  if (TOUCH && tpsurfaceD) {
-    SDL_Rect target = {
-        (1080 - 1024) / 2,
-        1920 - padD.h,
-        padD.w,
-        padD.h,
-    };
-    SDL_RenderCopy(rendererD, tptextureD, 0, &target);
-
-    int bc[] = {RED, GREEN};
-
-    int size = padD.w / 2;
-    SDL_Rect button[2] = {
-        {1080 - size, target.y, size, size},
-        {1080 - 2 * size, target.y + size, size, size},
-    };
-    for (int it = 0; it < AL(buttonD); ++it) {
-      SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
-      SDL_RenderFillRect(rendererD, &button[it]);
     }
   }
 
@@ -1854,6 +1838,28 @@ platform_portrait()
   SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
   SDL_Rect layout_rect = {0, 0, 1080, 1920};
   SDL_RenderFillRect(renderer, &layout_rect);
+
+  if (TOUCH && tpsurfaceD) {
+    SDL_Rect target = {
+        (1080 - 1024) / 2,
+        1920 - padD.h,
+        padD.w,
+        padD.h,
+    };
+    SDL_RenderCopy(rendererD, tptextureD, 0, &target);
+
+    int bc[] = {RED, GREEN};
+
+    int size = padD.w / 2;
+    SDL_Rect button[2] = {
+        {1080 - 2 * size, target.y + size, size, size},
+        {1080 - size, target.y, size, size},
+    };
+    for (int it = 0; it < AL(buttonD); ++it) {
+      SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
+      SDL_RenderFillRect(rendererD, &button[it]);
+    }
+  }
 
   if (mode == 0)
     ret = platform_p0();
