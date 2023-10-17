@@ -34,7 +34,9 @@ enum { PORTRAIT = 1 };
 
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
-enum { PADSIZE = (26 + 2) * 16 };
+enum { FHEIGHT = 32 };
+enum { FWIDTH = 16 };
+enum { PADSIZE = (26 + 2) * FWIDTH };
 enum { AFF_X = 3 };
 enum { AFF_Y = AL(active_affectD) / AFF_X };
 #define P(p) p.x, p.y
@@ -1534,7 +1536,7 @@ platform_p0()
     if (show_game) {
       SDL_Rect game_target = {
           (layout_rectD.w - map_rectD.w) / 2,
-          layout_rectD.h - PADSIZE - map_rectD.h,
+          layout_rectD.h - PADSIZE - map_rectD.h - FHEIGHT + 3,
           map_rectD.w,
           map_rectD.h,
       };
@@ -1560,46 +1562,37 @@ platform_p0()
         len = snprintf(tmp, AL(tmp), "%s", dun_descD);
         render_font_string(rendererD, &fontD, tmp, len, p);
       }
-    }
-  }
 
-  {
-    char *msg = AS(msg_cqD, msg_writeD);
-    int msg_used = AS(msglen_cqD, msg_writeD);
-    int alpha = 255;
+      {
+        char *msg = AS(msg_cqD, msg_writeD);
+        int msg_used = AS(msglen_cqD, msg_writeD);
+        int alpha = 255;
 
-    // TBD: layout sizing
-    SDL_Point p = {
-        // layout_rectD.w / 2 - msg_used * width / 2,
-        (layout_rectD.w - map_rectD.w) / 2 + width / 2,
-        layout_rectD.h - PADSIZE - map_rectD.h + height / 2,
-    };
+        SDL_Point p = {
+            game_target.x + width / 2,
+            game_target.y + height / 2,
+        };
 
-    // Gameplay shows previous message to help the player out
-    if (!msg_used) {
-      msg = AS(msg_cqD, msg_writeD - 1);
-      msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = 150;
-    }
+        // Gameplay shows previous message to help the player out
+        if (!msg_used) {
+          msg = AS(msg_cqD, msg_writeD - 1);
+          msg_used = AS(msglen_cqD, msg_writeD - 1);
+          alpha = 150;
+        }
 
-    if (msg_used) {
-      SDL_Rect fill = {p.x, p.y, msg_used * width,
-                       height + height / 8};  // map_rectD.w - width, height};
-      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-      SDL_RenderFillRect(renderer, &fill);
+        if (msg_used) {
+          SDL_Rect fill = {
+              p.x, p.y, msg_used * width,
+              height + height / 8};  // map_rectD.w - width, height};
+          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+          SDL_RenderFillRect(renderer, &fill);
 
-      SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-      font_texture_alphamod(alpha);
-      render_font_string(renderer, &fontD, msg, msg_used, p);
-      font_texture_alphamod(255);
-
-      // SDL_Rect rect = {
-      //     p.x - width,
-      //     0,
-      //     (1 + msg_used) * width,
-      //     height,
-      // };
-      // rect_frame(rect, 1);
+          SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+          font_texture_alphamod(alpha);
+          render_font_string(renderer, &fontD, msg, msg_used, p);
+          font_texture_alphamod(255);
+        }
+      }
     }
   }
 
@@ -2303,6 +2296,29 @@ SDL_Event event;
   return 0;
 }
 
+int
+gameplay_tapxy(relx, rely)
+{
+  float gsy = rely / gameplay_scaleD;
+  float gsx = relx / gameplay_scaleD;
+
+  if (zoom_factorD) {
+    int zf, zh, zw;
+    zf = zoom_factorD;
+    zh = SYMMAP_HEIGHT >> zf;
+    zw = SYMMAP_WIDTH >> zf;
+
+    gsy *= (1.0f + zh) / SYMMAP_HEIGHT;
+    gsx *= (1.0f + zw) / SYMMAP_WIDTH;
+  }
+
+  int ry = (int)gsy / ART_H;
+  int rx = (int)gsx / ART_W;
+  ylookD = ry;
+  xlookD = rx;
+  return 'O';
+}
+
 static int
 gameplay_touch(event)
 SDL_Event *event;
@@ -2315,24 +2331,7 @@ SDL_Event *event;
       tpp.x - gameplay_rectD.x,
       tpp.y - gameplay_rectD.y,
   };
-  float gsy = rel.y / gameplay_scaleD;
-  float gsx = rel.x / gameplay_scaleD;
-
-  if (zoom_factorD) {
-    int zf, zh, zw;
-    zf = zoom_factorD;
-    zh = SYMMAP_HEIGHT >> zf;
-    zw = SYMMAP_WIDTH >> zf;
-
-    gsy *= (1.0 + zh) / SYMMAP_HEIGHT;
-    gsx *= (1.0 + zw) / SYMMAP_WIDTH;
-  }
-
-  int ry = (int)gsy / ART_H;
-  int rx = (int)gsx / ART_W;
-  ylookD = ry;
-  xlookD = rx;
-  return 'O';
+  return gameplay_tapxy(rel.x, rel.y);
 }
 
 static int
@@ -2400,7 +2399,6 @@ static int
 touch_by_xy(x, y)
 {
   SDL_Point tpp = {x, y};
-  int r = 0;
   SDL_Rect map_target = {
       PADSIZE + 196,
       5 * 32,
@@ -2411,9 +2409,16 @@ touch_by_xy(x, y)
     return TOUCH_MAP;
   }
 
-  // if (SDL_PointInRect(&tpp, &gameplay_rectD)) {
-  //   r = TOUCH_GAMEPLAY;
-  // }
+  SDL_Rect game_target = {
+      (layout_rectD.w - map_rectD.w) / 2,
+      layout_rectD.h - PADSIZE - map_rectD.h - FHEIGHT + 3,
+      map_rectD.w,
+      map_rectD.h,
+  };
+  if (SDL_PointInRect(&tpp, &game_target)) {
+    gameplay_tapxy(x - game_target.x, y - game_target.y);
+    return TOUCH_GAMEPLAY;
+  }
 
   int size = PADSIZE / 2;
   SDL_Rect button[2] = {
@@ -2421,7 +2426,7 @@ touch_by_xy(x, y)
       {layout_rectD.w - size, layout_rectD.h - PADSIZE, size, size},
   };
   for (int it = 0; it < AL(button); ++it) {
-    if (SDL_PointInRect(&tpp, &button[it])) r = TOUCH_LB + it;
+    if (SDL_PointInRect(&tpp, &button[it])) return TOUCH_LB + it;
   }
 
   SDL_Rect pad_rect = {
@@ -2430,6 +2435,7 @@ touch_by_xy(x, y)
       PADSIZE,
       PADSIZE,
   };
+  int r = 0;
   if (SDL_PointInRect(&tpp, &pad_rect)) {
     SDL_Point center = {R4CENTER(pad_rect)};
     SDL_Point offset = {ppD[0].x - center.x, ppD[0].y - center.y};
@@ -2469,7 +2475,7 @@ portrait_event_xy(eventtype, x, y)
           case TOUCH_GAMEPLAY:
             // TBD: shim to support message history
             // if (tp.y < .09) return CTRL('p');
-            return 0;  // TBD: finger ? '-' : gameplay_touch(&event);
+            return finger ? '-' : 'O';  // gameplay_touch(&event);
           case TOUCH_LB:
             return finger ? 'd' : 'A';
           case TOUCH_RB:
@@ -2946,7 +2952,8 @@ platform_pregame()
 
   font_colorD = whiteD;
 
-  if (ANDROID || __APPLE__) zoom_factorD = 2;
+  // PC OK? Console check
+  zoom_factorD = 2;
 
   if (WINDOW) {
     SDL_Event event;
@@ -2977,6 +2984,7 @@ platform_pregame()
     SDL_FRect view = {xpad * .5f, ypad * .5f, xuse, yuse};
     view_rectD = view;
   }
+  if (PORTRAIT) gameplay_scaleD = 1.0f;
 
   return 0;
 }
