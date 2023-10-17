@@ -116,6 +116,7 @@ DATA uint8_t finger_countD;
 DATA int quitD;
 DATA int last_pressD;
 DATA float retina_scaleD;
+DATA char moreD[] = "-more-";
 
 #define MMSCALE 2
 #define SPRITE_SQ 32
@@ -1589,9 +1590,7 @@ platform_p0()
         }
 
         if (msg_used) {
-          SDL_Rect fill = {
-              p.x, p.y, msg_used * width,
-              height + height / 8};  // map_rectD.w - width, height};
+          SDL_Rect fill = {p.x, p.y, msg_used * width, height + height / 8};
           SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
           SDL_RenderFillRect(renderer, &fill);
 
@@ -1599,6 +1598,12 @@ platform_p0()
           font_texture_alphamod(alpha);
           render_font_string(renderer, &fontD, msg, msg_used, p);
           font_texture_alphamod(255);
+        }
+
+        if (msg_more) {
+          SDL_Point p = {game_target.x + game_target.w - AL(moreD) * FWIDTH,
+                         game_target.y - FHEIGHT};
+          render_font_string(rendererD, &fontD, AP(moreD), p);
         }
       }
     }
@@ -1855,22 +1860,22 @@ platform_portrait()
   SDL_RenderFillRect(renderer, &layout_rect);
 
   if (TOUCH && tpsurfaceD) {
-    SDL_Rect target = {
-        (1080 - 1024) / 2,
-        1920 - padD.h,
-        padD.w,
-        padD.h,
+    SDL_Rect pad_target = {
+        (layout_rectD.w - map_rectD.w) / 2,
+        layout_rectD.h - PADSIZE,
+        PADSIZE,
+        PADSIZE,
     };
-    SDL_RenderCopy(rendererD, tptextureD, 0, &target);
+    SDL_RenderCopy(rendererD, tptextureD, 0, &pad_target);
 
     int bc[] = {RED, GREEN};
 
     int size = PADSIZE / 2;
     SDL_Rect button[2] = {
-        {1080 - 2 * size, target.y + size, size, size},
-        {1080 - size, target.y, size, size},
+        {layout_rectD.w - 2 * size, pad_target.y + size, size, size},
+        {layout_rectD.w - size, pad_target.y, size, size},
     };
-    for (int it = 0; it < AL(buttonD); ++it) {
+    for (int it = 0; it < AL(button); ++it) {
       SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
       SDL_RenderFillRect(rendererD, &button[it]);
     }
