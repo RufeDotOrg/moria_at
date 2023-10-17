@@ -2486,6 +2486,8 @@ portrait_event_xy(eventtype, x, y)
         char c = char_by_dir(touch - TOUCH_PAD);
         switch (finger) {
           case 0:
+            // Experimental
+            if (c == ' ') return CTRL('p');
             return c;
           case 1:
             if (c == ' ') return '=';
