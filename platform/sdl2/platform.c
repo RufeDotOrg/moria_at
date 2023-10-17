@@ -2538,6 +2538,11 @@ portrait_event_xy(eventtype, x, y)
         return 'a' + finger_rowD;
       }
     }
+    if (mode == 2) {
+      if (touch == TOUCH_LB) return 'o';
+      if (touch == TOUCH_RB) return ESCAPE;
+      if (touch == TOUCH_STAT) return 'C';
+    }
   }
   if (eventtype == SDL_FINGERUP) {
     return ' ';
