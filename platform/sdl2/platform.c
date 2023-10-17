@@ -577,7 +577,15 @@ font_texture_alphamod(alpha)
 }
 
 // Texture
-enum { TOUCH_NONE, TOUCH_MAP, TOUCH_GAMEPLAY, TOUCH_LB, TOUCH_RB, TOUCH_PAD };
+enum {
+  TOUCH_NONE,
+  TOUCH_STAT,
+  TOUCH_MAP,
+  TOUCH_GAMEPLAY,
+  TOUCH_LB,
+  TOUCH_RB,
+  TOUCH_PAD
+};
 DATA SDL_Rect buttonD[2];
 DATA SDL_Rect padD;
 DATA SDL_Point ppD[9];
@@ -2399,6 +2407,16 @@ static int
 touch_by_xy(x, y)
 {
   SDL_Point tpp = {x, y};
+  SDL_Rect stat_target = {
+      0,
+      0,
+      PADSIZE,
+      (8 + 5) * FHEIGHT,
+  };
+  if (SDL_PointInRect(&tpp, &stat_target)) {
+    return TOUCH_STAT;
+  }
+
   SDL_Rect map_target = {
       PADSIZE + 196,
       5 * 32,
@@ -2470,6 +2488,8 @@ portrait_event_xy(eventtype, x, y)
         }
       } else if (touch) {
         switch (touch) {
+          case TOUCH_STAT:
+            return 'C';
           case TOUCH_MAP:
             return 'M';
           case TOUCH_GAMEPLAY:
