@@ -29,6 +29,9 @@ enum { TOUCH = 1 };
 
 enum { WINDOW };
 enum { PORTRAIT = 1 };
+#define PORTRAIT_X 1080
+#define PORTRAIT_Y 1920
+
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
 enum { PADSIZE = (26 + 2) * 16 };
@@ -83,6 +86,8 @@ DATA SDL_Rect text_rectD;
 DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
 DATA SDL_Texture *layoutD;
+DATA SDL_Rect layout_rectD;
+DATA SDL_FRect view_rectD;
 DATA SDL_Rect affectdst_rectD;
 DATA uint32_t max_texture_widthD;
 DATA uint32_t max_texture_heightD;
@@ -179,12 +184,13 @@ render_update()
   USE(layout);
   if (layout) {
     USE(display_rect);
+    USE(view_rect);
     SDL_SetRenderTarget(renderer, 0);
     SDL_Rect target = {
-        (display_rect.w - 1080) / 2,
-        0,
-        1080,
-        display_rect.h,
+        view_rect.x * display_rect.w,
+        view_rect.y * display_rect.h,
+        view_rect.w * display_rect.w,
+        view_rect.h * display_rect.h,
     };
     SDL_RenderCopy(renderer, layout, NULL, &target);
   }
@@ -1532,10 +1538,10 @@ platform_p0()
       SDL_Rect zoom_rect;
       map_draw(&zoom_rect);
       SDL_Rect game_target = {
-          (1080 - 1024) / 2,
-          1920 - PADSIZE - gameplay_rectD.h,
-          1024,
-          1024,
+          (layout_rectD.w - map_rectD.w) / 2,
+          layout_rectD.h - PADSIZE - map_rectD.h,
+          map_rectD.w,
+          map_rectD.h,
       };
       SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &game_target);
 
@@ -1570,7 +1576,7 @@ platform_p0()
     // TBD: layout sizing
     SDL_Point p = {
         1080 / 2 - msg_used * width / 2,
-        1920 - PADSIZE - gameplay_rectD.h - height,
+        1920 - PADSIZE - map_rectD.h - height,
     };
 
     if (msg_used) {
@@ -1850,7 +1856,7 @@ platform_portrait()
 
     int bc[] = {RED, GREEN};
 
-    int size = padD.w / 2;
+    int size = PADSIZE / 2;
     SDL_Rect button[2] = {
         {1080 - 2 * size, target.y + size, size, size},
         {1080 - size, target.y, size, size},
@@ -1998,6 +2004,69 @@ static void surface_ppfill(surface) SDL_Surface *surface;
   }
 }
 
+static int
+input_resize(dw, dh, scale, c0, c3w, c3h)
+{
+  int fwidth, fheight;
+  fwidth = fontD.max_pixel_width;
+  fheight = fontD.max_pixel_height;
+  // Input constraints
+  if (TOUCH) {
+    int used_y = (gameplay_rectD.y + 12 + AL(vitalD) * fheight + PADSIZE);
+    if (scale == 1.0f) used_y += (1 + AFF_Y) * fheight + 6;
+
+    float used_fy = used_y / (float)dh;
+    float safe_fy = CLAMP(used_fy, 0.8f, 1.f);
+    float lift2 = 1.0f - safe_fy;
+    padD = (SDL_Rect){.w = PADSIZE, .h = PADSIZE};
+    padD.x = c0 * dw;
+    if (scale == 1.0f) padD.x *= .5f;
+    padD.y = (1.0 - (lift2 * .5)) * dh - padD.h;
+
+    SDL_Point center = {R4CENTER(padD)};
+    int cx = center.x;
+    int cy = center.y;
+    ppD[0] = (SDL_Point){cx, cy};
+
+    pp_rectD = (SDL_Rect){
+        .w = 64,
+        .h = 64,
+    };
+
+    int ppdist = 3 * padD.w / 8;
+    for (int it = 0; it < 8; ++it) {
+      int ox = cos_lookup(it) * ppdist;
+      int oy = sin_lookup(it) * ppdist;
+      ppD[1 + it].x = cx + ox;
+      ppD[1 + it].y = cy + oy;
+    }
+
+    int bw = c3w * dw;
+    int bh = c3h * dh;
+    int left = textdst_rectD.x + textdst_rectD.w + 6;  // c2 * dw;
+    int ax = dw - left;
+    int pad = MAX(0, (ax - bw * 2) / 2);
+    Log("button %dw %dh", bw, bh);
+    for (int it = 0; it < AL(buttonD); ++it) {
+      SDL_Rect r = {.w = bw, .h = bh};
+      r.x = left + pad - (1 - it) * r.w;
+      r.y = textdst_rectD.y + textdst_rectD.h + 6 - (it)*r.h;
+      buttonD[it] = r;
+    }
+
+    if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
+    tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, padD.w, padD.h,
+                                                0, texture_formatD);
+    if (tptextureD) SDL_DestroyTexture(tptextureD);
+    tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
+                                   padD.w, padD.h);
+    SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
+    surface_ppfill(tpsurfaceD);
+    SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
+  }
+  return 0;
+}
+
 static void
 display_resize(int dw, int dh)
 {
@@ -2098,60 +2167,7 @@ display_resize(int dw, int dh)
   };
   Log("textdst %dw %dh", textdst_rectD.w, textdst_rectD.h);
 
-  // Input constraints
-  if (TOUCH) {
-    int used_y = (gameplay_rectD.y + 12 + AL(vitalD) * fheight + PADSIZE);
-    if (scale == 1.0f) used_y += (1 + AFF_Y) * fheight + 6;
-
-    float used_fy = used_y / (float)dh;
-    float safe_fy = CLAMP(used_fy, 0.8f, 1.f);
-    float lift2 = 1.0f - safe_fy;
-    padD = (SDL_Rect){.w = PADSIZE, .h = PADSIZE};
-    padD.x = c0 * dw;
-    if (scale == 1.0f) padD.x *= .5f;
-    padD.y = (1.0 - (lift2 * .5)) * dh - padD.h;
-
-    SDL_Point center = {R4CENTER(padD)};
-    int cx = center.x;
-    int cy = center.y;
-    ppD[0] = (SDL_Point){cx, cy};
-
-    pp_rectD = (SDL_Rect){
-        .w = 64,
-        .h = 64,
-    };
-
-    int ppdist = 3 * padD.w / 8;
-    for (int it = 0; it < 8; ++it) {
-      int ox = cos_lookup(it) * ppdist;
-      int oy = sin_lookup(it) * ppdist;
-      ppD[1 + it].x = cx + ox;
-      ppD[1 + it].y = cy + oy;
-    }
-
-    int bw = c3w * dw;
-    int bh = c3h * dh;
-    int left = textdst_rectD.x + textdst_rectD.w + 6;  // c2 * dw;
-    int ax = dw - left;
-    int pad = MAX(0, (ax - bw * 2) / 2);
-    Log("button %dw %dh", bw, bh);
-    for (int it = 0; it < AL(buttonD); ++it) {
-      SDL_Rect r = {.w = bw, .h = bh};
-      r.x = left + pad - (1 - it) * r.w;
-      r.y = textdst_rectD.y + textdst_rectD.h + 6 - (it)*r.h;
-      buttonD[it] = r;
-    }
-
-    if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
-    tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, padD.w, padD.h,
-                                                0, texture_formatD);
-    if (tptextureD) SDL_DestroyTexture(tptextureD);
-    tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
-                                   padD.w, padD.h);
-    SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
-    surface_ppfill(tpsurfaceD);
-    SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
-  }
+  input_resize(dw, dh, scale, c0, c3w, c3h);
 }
 SDL_RWops *
 rw_file_access(char *filename, char *access)
@@ -2373,6 +2389,109 @@ overlay_input(input)
 }
 
 static int
+touch_by_xy(x, y)
+{
+  SDL_Point tpp = {x, y};
+  int r = 0;
+  // if (SDL_PointInRect(&tpp, &gameplay_rectD)) {
+  //   r = TOUCH_GAMEPLAY;
+  // }
+
+  int size = PADSIZE / 2;
+  SDL_Rect button[2] = {
+      {layout_rectD.w - 2 * size, layout_rectD.h - PADSIZE + size, size, size},
+      {layout_rectD.w - size, layout_rectD.h - PADSIZE, size, size},
+  };
+  for (int it = 0; it < AL(button); ++it) {
+    if (SDL_PointInRect(&tpp, &button[it])) r = TOUCH_LB + it;
+  }
+
+  SDL_Rect pad_rect = {
+      (layout_rectD.w - map_rectD.w) / 2,
+      layout_rectD.h - PADSIZE,
+      PADSIZE,
+      PADSIZE,
+  };
+  if (SDL_PointInRect(&tpp, &pad_rect)) {
+    SDL_Point center = {R4CENTER(pad_rect)};
+    SDL_Point offset = {ppD[0].x - center.x, ppD[0].y - center.y};
+
+    int n = nearest_pp(tpp.y + offset.y, tpp.x + offset.x);
+    r = TOUCH_PAD + pp_keyD[n];
+  }
+  last_pressD = r;
+
+  return r;
+}
+static int
+portrait_event_xy(eventtype, x, y)
+{
+  USE(mode);
+  int finger = finger_countD - 1;
+  if (TOUCH && !(ANDROID || __APPLE__)) {
+    finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
+  }
+  if (eventtype == SDL_FINGERDOWN) {
+    int touch = touch_by_xy(x, y);
+    Log("eventtyp %d touch %d", eventtype, touch);
+    if (mode == 0) {
+      if (touch > TOUCH_PAD) {
+        char c = char_by_dir(touch - TOUCH_PAD);
+        switch (finger) {
+          case 0:
+            return c;
+          case 1:
+            if (c == ' ') return '=';
+            return c & ~0x20;
+        }
+      } else if (touch) {
+        switch (touch) {
+          case TOUCH_GAMEPLAY:
+            // TBD: shim to support message history
+            // if (tp.y < .09) return CTRL('p');
+            return 0;  // TBD: finger ? '-' : gameplay_touch(&event);
+          case TOUCH_LB:
+            return finger ? 'd' : 'A';
+          case TOUCH_RB:
+            return finger ? CTRL('a') : '.';
+        }
+      }
+    }
+    if (mode == 1) {
+      if (touch > TOUCH_PAD) {
+        int dir = touch - TOUCH_PAD;
+        int dx = dir_x(dir);
+        int dy = dir_y(dir);
+
+        if (!dx && !dy) {
+          return 'A' + finger_rowD;
+        }
+        if (dx && !dy) {
+          if (finger)
+            finger_rowD = dx > 0 ? overlay_end() : 0;
+          else
+            finger_colD = CLAMP(finger_colD + dx, 0, 1);
+        }
+        if (dy && !dx) {
+          if (finger)
+            finger_rowD = overlay_bisect(dy);
+          else
+            finger_rowD = overlay_input(dy);
+        }
+        return (finger_colD == 0) ? '*' : '/';
+      }
+      if (touch == TOUCH_LB) {
+        return ESCAPE;
+      }
+      if (touch == TOUCH_RB) {
+        return 'a' + finger_rowD;
+      }
+    }
+  }
+  return 0;
+}
+
+static int
 sdl_touch_event(event)
 SDL_Event event;
 {
@@ -2466,13 +2585,24 @@ SDL_Event event;
 char
 sdl_pump()
 {
+  USE(view_rect);
+  USE(layout_rect);
   SDL_Event event;
   int ret = 0;
 
   while (ret == 0 && SDL_PollEvent(&event)) {
     if (TOUCH && (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
       finger_countD += (event.type == SDL_FINGERDOWN);
-      ret = sdl_touch_event(event);
+      if (PORTRAIT) {
+        SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+        if (SDL_PointInFRect(&tp, &view_rect)) {
+          int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
+          int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
+          ret = portrait_event_xy(event.type, x, y);
+        }
+      } else {
+        ret = sdl_touch_event(event);
+      }
       finger_countD -= (event.type == SDL_FINGERUP);
     } else if (!TOUCH && (event.type == SDL_KEYDOWN)) {
       ret = sdl_kb_event(event);
@@ -2785,9 +2915,10 @@ platform_pregame()
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           text_rectD.w, text_rectD.h);
 
-    if (PORTRAIT)
+    if (PORTRAIT) {
       layoutD = SDL_CreateTexture(rendererD, texture_formatD,
                                   SDL_TEXTUREACCESS_TARGET, 1080, 1920);
+    }
   }
 
   font_colorD = whiteD;
@@ -2809,8 +2940,20 @@ platform_pregame()
   if (TOUCH) platformD.selection = platform_selection;
   platformD.copy = platform_copy;
   platformD.savemidpoint = platform_savemidpoint;
+
   // TBD: console width sizing
   if (PORTRAIT) console_widthD = 67;
+  if (PORTRAIT) {
+    layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
+    float xuse = CLAMP((float)layout_rectD.w / display_rectD.w, 0.f, 1.f);
+    float yuse = CLAMP((float)layout_rectD.h / display_rectD.h, 0.f, 1.f);
+    float xpad = (1.f - xuse);
+    float ypad = (1.f - yuse);
+    Log("PORTRAIT %.03f %.03f xuse yuse %.03f %.03f xpad ypad", xuse, yuse,
+        xpad, ypad);
+    SDL_FRect view = {xpad * .5f, ypad * .5f, xuse, yuse};
+    view_rectD = view;
+  }
 
   return 0;
 }
