@@ -13419,9 +13419,10 @@ dungeon()
               } else {
                 omit_replay = 1;
               }
-              screen_submodeD = 0;
-              screenD[0][0] = ' ';
-              screen_usedD[0] = 1;
+              // TBD: fix console moria
+              //screen_submodeD = 0;
+              //screenD[0][0] = ' ';
+              //screen_usedD[0] = 1;
               minimap_enlargeD = TRUE;
               DRAWMSG("You study a map of %s.", dun_descD);
               inkey();

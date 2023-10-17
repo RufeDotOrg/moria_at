@@ -575,7 +575,7 @@ font_texture_alphamod(alpha)
 }
 
 // Texture
-enum { TOUCH_NONE, TOUCH_GAMEPLAY, TOUCH_LB, TOUCH_RB, TOUCH_PAD };
+enum { TOUCH_NONE, TOUCH_MAP, TOUCH_GAMEPLAY, TOUCH_LB, TOUCH_RB, TOUCH_PAD };
 DATA SDL_Rect buttonD[2];
 DATA SDL_Rect padD;
 DATA SDL_Point ppD[9];
@@ -1436,6 +1436,7 @@ platform_p0()
   char tmp[80];
   USE(renderer);
   USE(msg_more);
+  USE(minimap_enlarge);
 
   int height = fontD.max_pixel_height;
   int width = fontD.max_pixel_width;
@@ -1512,9 +1513,9 @@ platform_p0()
   }
 
   {
-    SDL_Rect target = {
-        (26 + 2) * width + width + 180,
-        top + 5 * height,
+    SDL_Rect map_target = {
+        PADSIZE + 196,
+        5 * 32,
         MMSCALE * MAX_WIDTH,
         MMSCALE * MAX_HEIGHT,
     };
@@ -1526,35 +1527,36 @@ platform_p0()
                              (SDL_Point){0, 0}, mmsurface);
       SDL_UpdateTexture(mmtexture, NULL, mmsurface->pixels, mmsurface->pitch);
 
-      if (minimap_enlargeD) {
-        SDL_RenderCopy(rendererD, mmtexture, NULL, &gameplay_rectD);
-      }
+      SDL_RenderCopy(rendererD, mmtexture, NULL, &map_target);
+      rect_frame(map_target, 3);
     }
 
     if (show_game) {
-      SDL_RenderCopy(rendererD, mmtexture, NULL, &target);
-      rect_frame(target, 3);
-
-      SDL_Rect zoom_rect;
-      map_draw(&zoom_rect);
       SDL_Rect game_target = {
           (layout_rectD.w - map_rectD.w) / 2,
           layout_rectD.h - PADSIZE - map_rectD.h,
           map_rectD.w,
           map_rectD.h,
       };
-      SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &game_target);
+
+      if (minimap_enlarge) {
+        SDL_RenderCopy(rendererD, mmtexture, NULL, &game_target);
+      } else {
+        SDL_Rect zoom_rect;
+        map_draw(&zoom_rect);
+        SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &game_target);
+      }
 
       // TBD pad to center
       {
-        SDL_Point p = {target.x, target.y - height - 24};
+        SDL_Point p = {map_target.x, map_target.y - height - 24};
         len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
         render_font_string(rendererD, &fontD, tmp, len, p);
       }
 
       // TBD pad to center
       {
-        SDL_Point p = {target.x, target.y + target.h + 24};
+        SDL_Point p = {map_target.x, map_target.y + map_target.h + 24};
         len = snprintf(tmp, AL(tmp), "%s", dun_descD);
         render_font_string(rendererD, &fontD, tmp, len, p);
       }
@@ -2399,6 +2401,16 @@ touch_by_xy(x, y)
 {
   SDL_Point tpp = {x, y};
   int r = 0;
+  SDL_Rect map_target = {
+      PADSIZE + 196,
+      5 * 32,
+      MMSCALE * MAX_WIDTH,
+      MMSCALE * MAX_HEIGHT,
+  };
+  if (SDL_PointInRect(&tpp, &map_target)) {
+    return TOUCH_MAP;
+  }
+
   // if (SDL_PointInRect(&tpp, &gameplay_rectD)) {
   //   r = TOUCH_GAMEPLAY;
   // }
@@ -2452,6 +2464,8 @@ portrait_event_xy(eventtype, x, y)
         }
       } else if (touch) {
         switch (touch) {
+          case TOUCH_MAP:
+            return 'M';
           case TOUCH_GAMEPLAY:
             // TBD: shim to support message history
             // if (tp.y < .09) return CTRL('p');
@@ -2493,6 +2507,9 @@ portrait_event_xy(eventtype, x, y)
         return 'a' + finger_rowD;
       }
     }
+  }
+  if (eventtype == SDL_FINGERUP) {
+    return ' ';
   }
   return 0;
 }
