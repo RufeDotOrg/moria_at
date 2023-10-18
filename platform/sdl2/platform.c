@@ -1358,26 +1358,16 @@ platform_p2()
   int left = 0;
   int top = 0;
   int is_text, col, row;
-  SDL_Rect target = {0, 0, 1080, 1920 - PADSIZE};
+  SDL_Rect target = {0, 0, layout_rectD.w, layout_rectD.h - PADSIZE};
 
   if (mode == 1) {
     is_text = 1;
     row = 1 + AL(overlayD);
-    col = AL(overlayD[0]);
-    col = msg_used;  // TBD
-    for (int it = 0; it < AL(overlayD); ++it) {
-      col = MAX(col, overlay_usedD[it]);
-    }
   } else {
     is_text = (screen_submodeD != 0);
     row = 1 + AL(screenD);
-    col = 80;
-    col = msg_used;  // TBD
-    for (int it = 0; it < AL(screenD); ++it) {
-      col = MAX(col, screen_usedD[it]);
-    }
   }
-  col += 6;
+  col = console_widthD;
 
   SDL_Rect src_rect = {
       0,
@@ -1860,19 +1850,19 @@ platform_portrait()
 {
   USE(mode);
   USE(renderer);
+  USE(layout_rect);
   int ret;
   int height = fontD.max_pixel_height;
   int width = fontD.max_pixel_width;
 
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
-  SDL_Rect layout_rect = {0, 0, 1080, 1920};
   SDL_RenderFillRect(renderer, &layout_rect);
 
   if (TOUCH && tpsurfaceD) {
     SDL_Rect pad_target = {
-        (layout_rectD.w - map_rectD.w) / 2,
-        layout_rectD.h - PADSIZE,
+        (layout_rect.w - map_rectD.w) / 2,
+        layout_rect.h - PADSIZE,
         PADSIZE,
         PADSIZE,
     };
@@ -1882,8 +1872,8 @@ platform_portrait()
 
     int size = PADSIZE / 2;
     SDL_Rect button[2] = {
-        {layout_rectD.w - 2 * size, pad_target.y + size, size, size},
-        {layout_rectD.w - size, pad_target.y, size, size},
+        {layout_rect.w - 2 * size, pad_target.y + size, size, size},
+        {layout_rect.w - size, pad_target.y, size, size},
     };
     for (int it = 0; it < AL(button); ++it) {
       SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));

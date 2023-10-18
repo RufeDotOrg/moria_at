@@ -5008,6 +5008,8 @@ void obj_detail(obj) struct objS* obj;
   char tmp_str[80];
   int eqidx, reveal;
 
+  memset(detailD, 0x20202020, AL(detailD));
+
   eqidx = may_equip(obj->tval);
   reveal = (obj->idflag & ID_REVEAL) != 0;
   tmp_str[0] = 0;
@@ -5063,6 +5065,7 @@ void obj_desc(obj, number) struct objS* obj;
   int indexx, unknown, p1;
   struct treasureS* tr_ptr;
 
+  memset(descD, 0x20202020, AL(descD));
   tr_ptr = &treasureD[obj->tidx];
   name = tr_ptr->name;
 
@@ -7965,10 +7968,14 @@ inven_reveal()
   }
   return flag;
 }
+enum { INVEN_DETAIL = 18 };
 static int
 inven_overlay(begin, end)
 {
+  USE(console_width);
   int line, count, len;
+  int descw = 4;
+  int detailw = console_width - INVEN_DETAIL;
 
   line = count = 0;
   overlay_submodeD = begin == 0 ? 'i' : 'e';
@@ -7984,7 +7991,22 @@ inven_overlay(begin, end)
       obj_detail(obj);
       if (drop_modeD) sum_weight = obj->number * obj->weight;
 
-      if (sum_weight == 0) {
+      overlayD[line][0] = 'a' + it - begin;
+      overlayD[line][1] = ')';
+      overlayD[line][2] = ' ';
+      overlayD[line][3] = ' ';
+      memcpy(overlayD[line] + descw, AP(descD));
+      if (PORTRAIT) {
+        if (descD[detailw - descw - 1] != ' ') {
+          memcpy(overlayD[line] + detailw - 3, AP("..."));
+        }
+
+        {
+          char* detail_nosp = detailD + 1;
+          memcpy(overlayD[line] + detailw, detail_nosp, INVEN_DETAIL);
+          len = console_width;
+        }
+      } else if (sum_weight == 0) {
         len =
             snprintf(overlayD[line], AL(overlayD[line]),
                      "%c) %-51.051s%25.025s", 'a' + it - begin, descD, detailD);
