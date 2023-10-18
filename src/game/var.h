@@ -91,9 +91,9 @@ GAME int pack_heavy;
 GAME int last_actuateD;
 GAME int last_castD;
 
-DATA char descD[98];
-DATA char detailD[98];
-DATA char death_descD[98];
+DATA char descD[80 - 4];
+DATA char detailD[80 - 4];
+DATA char death_descD[80];
 DATA char dun_descD[16];
 DATA int ylookD;
 DATA int xlookD;

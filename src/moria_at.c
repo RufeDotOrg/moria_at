@@ -1295,6 +1295,11 @@ delete_object(y, x)
   cave_ptr->oidx = 0;
   cave_ptr->cflag &= ~CF_FIELDMARK;
 }
+static char*
+detail_nosp()
+{
+  return detailD + 1;
+}
 char*
 describe_use(iidx)
 {
@@ -8003,13 +8008,12 @@ inven_overlay(begin, end)
       obj_detail(obj);
 
       memcpy(overlayD[line] + descw, AP(descD));
-      if (descD[detailw - descw - 1] != ' ') {
-        memcpy(overlayD[line] + detailw - 3, AP("..."));
-      }
+      if (detailD[1] != ' ') {
+        if (descD[detailw - descw - 1] != ' ') {
+          memcpy(overlayD[line] + detailw - 3, AP("..."));
+        }
 
-      {
-        char* detail_nosp = detailD + 1;
-        memcpy(overlayD[line] + detailw, detail_nosp, INVEN_DETAIL);
+        memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
       }
 
       if (drop_mode) {
@@ -12799,12 +12803,18 @@ inven_pawn(iidx)
     msg_pause();
   }
 }
+enum { COST_DETAIL = 8 };
 static void
 pawn_display()
 {
+  USE(console_width);
   int line;
   int cost, sidx;
   struct objS* obj;
+  int limitw = MIN(console_width, 80);
+  int descw = 4;
+  int detailw = limitw - INVEN_DETAIL - COST_DETAIL;
+  int costw = limitw - COST_DETAIL;
 
   line = 0;
   for (int it = 0; it < INVEN_EQUIP; ++it) {
@@ -12813,14 +12823,26 @@ pawn_display()
 
     obj = obj_get(invenD[it]);
     if (obj->id) {
-      obj_desc(obj, obj->number);
-      obj_detail(obj);
       sidx = obj_store_index(obj);
       if (sidx >= 0) {
+        len = limitw;
         cost = store_value(sidx, obj_value(obj), -1);
-        len = snprintf(overlayD[line], AL(overlayD[line]),
-                       "%c) %-51.051s%19.019s %5d", 'a' + it, descD, detailD,
-                       cost);
+        obj_desc(obj, obj->number);
+        obj_detail(obj);
+
+        overlayD[line][0] = '(';
+        overlayD[line][1] = 'a' + it;
+        overlayD[line][2] = ')';
+        overlayD[line][3] = ' ';
+        memcpy(overlayD[line] + descw, AP(descD));
+
+        if (detailD[1] != ' ') {
+          if (descD[detailw - descw - 1] != ' ') {
+            memcpy(overlayD[line] + detailw - 3, AP("..."));
+          }
+          memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
+        }
+        snprintf(overlayD[line] + costw, COST_DETAIL, " %7d", cost);
       }
     }
 
@@ -12831,8 +12853,13 @@ pawn_display()
 static void
 store_display(sidx)
 {
+  USE(console_width);
   int line, cost;
   struct objS* obj;
+  int limitw = MIN(console_width, 80);
+  int descw = 4;
+  int detailw = limitw - INVEN_DETAIL - COST_DETAIL;
+  int costw = limitw - COST_DETAIL;
 
   line = 0;
   for (int it = 0; it < AL(store_objD[0]); ++it) {
@@ -12842,11 +12869,23 @@ store_display(sidx)
     obj = &store_objD[sidx][it];
     cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
+      len = limitw;
       obj_desc(obj, obj->subval & STACK_PROJECTILE ? obj->number : 1);
       obj_detail(obj);
-      len =
-          snprintf(overlayD[line], AL(overlayD[line]),
-                   "%c) %-51.051s%19.019s %5d", 'a' + it, descD, detailD, cost);
+
+      overlayD[line][0] = '(';
+      overlayD[line][1] = 'a' + it;
+      overlayD[line][2] = ')';
+      overlayD[line][3] = ' ';
+      memcpy(overlayD[line] + descw, AP(descD));
+
+      if (detailD[1] != ' ') {
+        if (descD[detailw - descw - 1] != ' ') {
+          memcpy(overlayD[line] + detailw - 3, AP("..."));
+        }
+        memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
+      }
+      snprintf(overlayD[line] + costw, COST_DETAIL, " %7d", cost);
     }
 
     overlay_usedD[line] = len;
