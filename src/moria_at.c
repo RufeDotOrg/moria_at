@@ -7969,58 +7969,58 @@ inven_reveal()
   return flag;
 }
 enum { INVEN_DETAIL = 18 };
+enum { DROP_DETAIL = 8 };
 static int
 inven_overlay(begin, end)
 {
   USE(console_width);
+  USE(drop_mode);
   int line, count, len;
+  int limitw = MIN(console_width, 80);
   int descw = 4;
-  int detailw = console_width - INVEN_DETAIL;
+  int detailw = limitw - INVEN_DETAIL;
+  int dropw = limitw - DROP_DETAIL;
+
+  if (drop_mode) {
+    detailw -= DROP_DETAIL;
+  }
 
   line = count = 0;
   overlay_submodeD = begin == 0 ? 'i' : 'e';
   for (int it = begin; it < end; ++it) {
     int obj_id = invenD[it];
-    int sum_weight = 0;
-    overlayD[line][0] = ' ';
 
+    overlayD[line][0] = '(';
+    overlayD[line][1] = 'a' + it - begin;
+    overlayD[line][2] = ')';
+    overlayD[line][3] = ' ';
     if (obj_id) {
+      len = limitw;
       count += 1;
       struct objS* obj = obj_get(obj_id);
+
       obj_desc(obj, obj->number);
       obj_detail(obj);
-      if (drop_modeD) sum_weight = obj->number * obj->weight;
 
-      overlayD[line][0] = 'a' + it - begin;
-      overlayD[line][1] = ')';
-      overlayD[line][2] = ' ';
-      overlayD[line][3] = ' ';
       memcpy(overlayD[line] + descw, AP(descD));
-      if (PORTRAIT) {
-        if (descD[detailw - descw - 1] != ' ') {
-          memcpy(overlayD[line] + detailw - 3, AP("..."));
-        }
-
-        {
-          char* detail_nosp = detailD + 1;
-          memcpy(overlayD[line] + detailw, detail_nosp, INVEN_DETAIL);
-          len = console_width;
-        }
-      } else if (sum_weight == 0) {
-        len =
-            snprintf(overlayD[line], AL(overlayD[line]),
-                     "%c) %-51.051s%25.025s", 'a' + it - begin, descD, detailD);
-      } else {
-        len = snprintf(overlayD[line], AL(overlayD[0]),
-                       "%c) %-50.050s%19.019s %2d.%01dlb", 'a' + it - begin,
-                       descD, detailD, sum_weight / 10, sum_weight % 10);
+      if (descD[detailw - descw - 1] != ' ') {
+        memcpy(overlayD[line] + detailw - 3, AP("..."));
       }
+
+      {
+        char* detail_nosp = detailD + 1;
+        memcpy(overlayD[line] + detailw, detail_nosp, INVEN_DETAIL);
+      }
+
+      if (drop_mode) {
+        int stack_weight = obj->number * obj->weight;
+        snprintf(overlayD[line] + dropw, DROP_DETAIL, " %2d.%01dlb",
+                 stack_weight / 10, stack_weight % 10);
+      }
+
     } else {
-      descD[0] = 0;
-      detailD[0] = 0;
       len = 0;
-      overlayD[line][len++] = 'a' + it - begin;
-      overlayD[line][len++] = ')';
+      overlayD[line][descw] = 0;
     }
 
     overlay_usedD[line] = len;
