@@ -10509,7 +10509,8 @@ py_class_select()
         preview = iidx;
       }
 
-      if (c == ' ' || c == ESCAPE) {
+      // TBD: Console game may allow ' '
+      if (c == ESCAPE) {
         seed[preview] = platformD.seed();
         clidx = -1;
       } else if (is_ctrl(c)) {
