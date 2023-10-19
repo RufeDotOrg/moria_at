@@ -1449,26 +1449,24 @@ platform_p0()
 
   int height = fontD.max_pixel_height;
   int width = fontD.max_pixel_width;
-  int top = 0;
-  int left = 0;
   int len = 0;
   int show_minimap = (maD[MA_BLIND] == 0);
   int show_game = 1;
   {
-    alt_fill(AL(vitalD), 26 + 2, left, top, width, height);
+    alt_fill(AL(vitalD), 26 + 2, 0, 0, width, height);
     for (int it = 0; it < MAX_A; ++it) {
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                      vitalD[it], stat_abbrD[it], vital_statD[it]);
-      SDL_Point p = {left + width / 2, top + it * height};
+      SDL_Point p = {width / 2, it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
     {
       int it = MAX_A;
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
-      SDL_Point p = {left + width / 2, top + it * height};
+      SDL_Point p = {width / 2, it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
-    SDL_Rect r = {left + width / 2, top, (26 + 1) * width, AL(vitalD) * height};
+    SDL_Rect r = {width / 2, 0, (26 + 1) * width, AL(vitalD) * height};
     rect_frame(r, 1);
   }
 
@@ -1480,7 +1478,7 @@ platform_p0()
         AFF_Y * height,
     };
     SDL_Rect target = {
-        left, top + AL(vitalD) * height,
+        0, AL(vitalD) * height,
         src_rect.w,  // TBD: affect scaling?
         src_rect.h,  // TBD
     };
@@ -1489,7 +1487,7 @@ platform_p0()
     SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
     SDL_RenderFillRect(rendererD, &src_rect);
 
-    alt_fill(AFF_Y, 26 + 2, left, top, width, height);
+    alt_fill(AFF_Y, 26 + 2, 0, 0, width, height);
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
         int idx = AL(affstr) * it + jt;
@@ -1510,8 +1508,6 @@ platform_p0()
     SDL_SetRenderTarget(rendererD, layoutD);
     SDL_RenderCopy(rendererD, text_textureD, &src_rect, &target);
 
-    // SDL_Rect r = {left + width / 2, top + AL(vitalD) * height + height,
-    //               (26 + 1) * width, AFF_Y * height};
     SDL_Rect r = {
         target.x + width / 2,
         target.y,
