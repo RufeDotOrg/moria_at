@@ -27,8 +27,12 @@ enum { TOUCH = 1 };
 enum { TOUCH = 0 };
 #endif
 
+enum { SDL_EVLOG = 0 };
+enum { BATCHING = 1 };
+enum { ORIENTATION = 1 };
+
 enum { WINDOW };
-enum { PORTRAIT = 1 };
+enum { PORTRAIT = 0 };
 #define PORTRAIT_X 1080
 #define PORTRAIT_Y 1920
 
@@ -80,6 +84,7 @@ DATA SDL_Surface *spriteD;
 DATA SDL_Texture *sprite_textureD;
 DATA SDL_Surface *mmsurfaceD;
 DATA SDL_Texture *mmtextureD;
+DATA SDL_Rect mmrectD;
 DATA SDL_Surface *tpsurfaceD;
 DATA SDL_Texture *tptextureD;
 DATA SDL_Rect map_rectD;
@@ -87,6 +92,7 @@ DATA SDL_Texture *map_textureD;
 DATA SDL_Rect text_rectD;
 DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
+DATA SDL_Texture *portrait_layoutD;
 DATA SDL_Texture *layoutD;
 DATA SDL_Rect layout_rectD;
 DATA SDL_FRect view_rectD;
@@ -126,6 +132,7 @@ render_init()
 {
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
   if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
+  if (ORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
   windowD = SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y, winflag);
   if (!windowD) return 0;
 
@@ -1670,29 +1677,21 @@ platform_landscape()
     bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
                            (SDL_Point){0, 0}, surface);
     SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
-    left = columnD[2] * display_rectD.w;
-    int ax = display_rectD.w - left;
-    int pad = (ax - MMSCALE * MAX_WIDTH) / 2;
-    SDL_Rect r = {
-        left + pad,
-        top + height + height / 2,
-        MMSCALE * MAX_WIDTH,
-        MMSCALE * MAX_HEIGHT,
-    };
-    if (mode == 0) {
-      SDL_RenderCopy(rendererD, texture, NULL, &r);
-      rect_frame(r, 3);
-    }
 
-    if (minimap_enlargeD) {
-      SDL_RenderCopy(rendererD, texture, NULL, &gameplay_rectD);
+    if (mode == 0) {
+      SDL_RenderCopy(rendererD, texture, NULL, &mmrectD);
+      rect_frame(mmrectD, 3);
     }
   }
 
   if (show_map) {
-    SDL_Rect zoom_rect;
-    map_draw(&zoom_rect);
-    SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &gameplay_rectD);
+    if (minimap_enlargeD) {
+      SDL_RenderCopy(rendererD, mmtextureD, NULL, &gameplay_rectD);
+    } else {
+      SDL_Rect zoom_rect;
+      map_draw(&zoom_rect);
+      SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &gameplay_rectD);
+    }
   }
 
   if (TOUCH && tpsurfaceD) {
@@ -1894,8 +1893,10 @@ platform_portrait()
 int
 platform_draw()
 {
-  // return platform_landscape();
-  return platform_portrait();
+  if (layoutD)
+    return platform_portrait();
+  else
+    return platform_landscape();
 }
 
 char
@@ -2020,6 +2021,9 @@ static void surface_ppfill(surface) SDL_Surface *surface;
 
 static int
 input_resize(dw, dh, scale, c0, c3w, c3h)
+float c0;
+float c3w;
+float c3h;
 {
   int fwidth, fheight;
   fwidth = fontD.max_pixel_width;
@@ -2088,6 +2092,10 @@ display_resize(int dw, int dh)
   display_rectD.h = dh;
   aspectD = (float)dw / dh;
   Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspectD);
+
+  // TBD: Review game utilization of viewport
+  // Disabled the push event in SDL that occurs on another thread
+  SDL_RenderSetViewport(rendererD, &(SDL_Rect){0, 0, dw, dh});
 
   int fwidth, fheight;
   fwidth = fontD.max_pixel_width;
@@ -2181,7 +2189,52 @@ display_resize(int dw, int dh)
   };
   Log("textdst %dw %dh", textdst_rectD.w, textdst_rectD.h);
 
+  // Minimap
+  {
+    int left = c2 * dw;
+    int ax = dw - left;
+    int pad = (ax - MMSCALE * MAX_WIDTH) / 2;
+    int top = gameplay_rectD.y + 6;
+
+    mmrectD = (SDL_Rect){
+        left + pad,
+        top + fheight + fheight / 2,
+        MMSCALE * MAX_WIDTH,
+        MMSCALE * MAX_HEIGHT,
+    };
+  }
+
   input_resize(dw, dh, scale, c0, c3w, c3h);
+}
+static void
+orientation_update()
+{
+  USE(display_rect);
+  int guess = display_rect.w > display_rect.h ? SDL_ORIENTATION_LANDSCAPE
+                                              : SDL_ORIENTATION_PORTRAIT;
+  // HACK
+  if (PORTRAIT) guess = SDL_ORIENTATION_PORTRAIT;
+
+  if (guess == SDL_ORIENTATION_PORTRAIT) {
+    USE(layout_rect);
+    USE(display_rect);
+    layoutD = portrait_layoutD;
+    float xuse = CLAMP((float)layout_rect.w / display_rect.w, 0.f, 1.f);
+    float yuse = CLAMP((float)layout_rect.h / display_rect.h, 0.f, 1.f);
+    float xpad = (1.f - xuse);
+    float ypad = (1.f - yuse);
+    Log("PORTRAIT %.03f %.03f xuse yuse %.03f %.03f xpad ypad", xuse, yuse,
+        xpad, ypad);
+    SDL_FRect view = {xpad * .5f, ypad * .5f, xuse, yuse};
+    view_rectD = view;
+
+    // Gameplay side effects
+    console_widthD = 64;
+    gameplay_scaleD = 1.0f;
+  } else {
+    layoutD = 0;
+    Log("LANDSCAPE %d console_width", console_widthD);
+  }
 }
 SDL_RWops *
 rw_file_access(char *filename, char *access)
@@ -2249,6 +2302,7 @@ SDL_Event event;
 
     if (dw != display_rectD.w || dh != display_rectD.h) {
       display_resize(dw, dh);
+      orientation_update();
 
       if (mode)
         return (finger_colD == 0) ? '*' : '/';
@@ -2356,6 +2410,9 @@ SDL_Event *event;
       event->tfinger.y * display_rectD.h,
   };
   int r = 0;
+  if (SDL_PointInRect(&tpp, &mmrectD)) {
+    r = TOUCH_MAP;
+  }
   if (SDL_PointInRect(&tpp, &gameplay_rectD)) {
     r = TOUCH_GAMEPLAY;
   }
@@ -2495,6 +2552,8 @@ portrait_event_xy(eventtype, x, y)
           case 1:
             if (c == ' ') return '=';
             return c & ~0x20;
+          default:
+            break;
         }
       } else if (touch) {
         switch (touch) {
@@ -2512,6 +2571,8 @@ portrait_event_xy(eventtype, x, y)
             return finger ? 'd' : 'A';
           case TOUCH_RB:
             return finger ? CTRL('a') : '.';
+          default:
+            break;
         }
       }
     }
@@ -2580,9 +2641,13 @@ SDL_Event event;
         case 1:
           if (c == ' ') return '=';
           return c & ~0x20;
+        default:
+          break;
       }
     } else if (touch) {
       switch (touch) {
+        case TOUCH_MAP:
+          return 'M';
         case TOUCH_GAMEPLAY:
           // shim to support message history
           if (tp.y < .09) return CTRL('p');
@@ -2591,11 +2656,12 @@ SDL_Event event;
           return finger ? 'd' : 'A';
         case TOUCH_RB:
           return finger ? CTRL('a') : '.';
+        default:
+          break;
       }
     } else {
       if (tp.y < .09) return CTRL('p');
       if (tp.x < .23 && tp.y < .5) return 'C';
-      if (tp.x > .775 && tp.y < .28) return 'M';
       if (tp.x >= .775 && tp.y > .90) return 'v';
     }
   }
@@ -2659,7 +2725,8 @@ sdl_pump()
   while (ret == 0 && SDL_PollEvent(&event)) {
     if (TOUCH && (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
       finger_countD += (event.type == SDL_FINGERDOWN);
-      if (PORTRAIT) {
+      // TBD: unify code paths?
+      if (layoutD) {
         SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
         if (SDL_PointInFRect(&tp, &view_rect)) {
           int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
@@ -2896,14 +2963,12 @@ platform_pregame()
   if (init) {
     if (!RELEASE) Log("Initializing development build");
     // SDL config
-    SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
+    if (SDL_EVLOG) SDL_SetHint(SDL_HINT_EVENT_LOGGING, "1");
+    if (BATCHING) SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
     if (!ANDROID) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 
     // __APPLE__/Android orientation
-    if (PORTRAIT)
-      SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait");
-    else
-      SDL_SetHint(SDL_HINT_ORIENTATIONS, "LandscapeRight");
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait LandscapeRight");
 
     // Platform Input isolation
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
@@ -2915,7 +2980,6 @@ platform_pregame()
     // Touch->Mouse
     if (ANDROID) SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
-    SDL_LogSetPriority(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO);
     SDL_Init(SDL_SCOPE);
 
     if (__APPLE__ || ANDROID) SDL_DisableScreenSaver();
@@ -2981,10 +3045,10 @@ platform_pregame()
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           text_rectD.w, text_rectD.h);
 
-    if (PORTRAIT) {
-      layoutD = SDL_CreateTexture(rendererD, texture_formatD,
-                                  SDL_TEXTUREACCESS_TARGET, 1080, 1920);
-    }
+    layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
+    portrait_layoutD =
+        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+                          PORTRAIT_X, PORTRAIT_Y);
   }
 
   font_colorD = whiteD;
@@ -3007,21 +3071,6 @@ platform_pregame()
   if (TOUCH) platformD.selection = platform_selection;
   platformD.copy = platform_copy;
   platformD.savemidpoint = platform_savemidpoint;
-
-  // TBD: console width sizing
-  if (PORTRAIT) console_widthD = 64;
-  if (PORTRAIT) {
-    layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
-    float xuse = CLAMP((float)layout_rectD.w / display_rectD.w, 0.f, 1.f);
-    float yuse = CLAMP((float)layout_rectD.h / display_rectD.h, 0.f, 1.f);
-    float xpad = (1.f - xuse);
-    float ypad = (1.f - yuse);
-    Log("PORTRAIT %.03f %.03f xuse yuse %.03f %.03f xpad ypad", xuse, yuse,
-        xpad, ypad);
-    SDL_FRect view = {xpad * .5f, ypad * .5f, xuse, yuse};
-    view_rectD = view;
-  }
-  if (PORTRAIT) gameplay_scaleD = 1.0f;
 
   return 0;
 }
