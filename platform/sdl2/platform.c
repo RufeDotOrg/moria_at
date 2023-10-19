@@ -1516,8 +1516,8 @@ platform_p0()
 
   {
     SDL_Rect map_target = {
-        PADSIZE + 196,
-        5 * 32,
+        PADSIZE + (layout_rectD.w - PADSIZE - MMSCALE * MAX_WIDTH) / 2,
+        (AL(vitalD) * FHEIGHT - (MMSCALE * MAX_HEIGHT)) / 2,
         MMSCALE * MAX_WIDTH,
         MMSCALE * MAX_HEIGHT,
     };
@@ -2423,8 +2423,8 @@ touch_by_xy(x, y)
   }
 
   SDL_Rect map_target = {
-      PADSIZE + 196,
-      5 * 32,
+      PADSIZE + (layout_rectD.w - PADSIZE - MMSCALE * MAX_WIDTH) / 2,
+      (AL(vitalD) * FHEIGHT - (MMSCALE * MAX_HEIGHT)) / 2,
       MMSCALE * MAX_WIDTH,
       MMSCALE * MAX_HEIGHT,
   };
