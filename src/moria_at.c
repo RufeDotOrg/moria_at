@@ -10351,87 +10351,101 @@ show_version()
   DRAWMSG("Version %s", versionD);
   return inkey();
 }
+
 int
 show_character()
 {
+  USE(console_width);
   int line;
   int xbth, xbowth;
   int sptype;
-
   line = 0;
+  int col[2];
+
+  if (console_width < 80) {
+    col[0] = 20;
+    col[1] = 44;
+  } else {
+    col[0] = 25;
+    col[1] = 53;
+  }
 
   screen_submodeD = 1;
-  BufMsg(screen, "%-13.013s: %d", "Age", 16);
-  BufMsg(screen, "%-13.013s: %d", "Height", 74);
-  BufMsg(screen, "%-13.013s: %d", "Weight", uD.wt);
-  BufMsg(screen, "%-13.013s: %d", "Social Class", 1);
+  BufMsg(screen, "%-13.013s: %3d", "Age", 16);
+  BufMsg(screen, "%-13.013s: %3d", "Height", 74);
+  BufMsg(screen, "%-13.013s: %3d", "Weight", uD.wt);
+  BufMsg(screen, "%-13.013s: %3d", "Social Class", 1);
 
-  BufPad(screen, MAX_A, 48);
+  BufPad(screen, MAX_A, col[0]);
 
   line = 0;
   for (int it = 0; it < MAX_A; ++it) {
-    BufMsg(screen, "%c%-12.012s:%5d", stat_nameD[it][0] & ~0x20,
+    BufMsg(screen, "%c%-12.012s: %3d", stat_nameD[it][0] & ~0x20,
            &stat_nameD[it][1], statD.use_stat[it]);
     if (statD.max_stat[it] > statD.cur_stat[it]) {
-      BufLineAppend(screen, line - 1, "  %d",
+      BufLineAppend(screen, line - 1, " %d",
                     statD.cur_stat[it] - statD.max_stat[it]);
     }
   }
 
-  line = MAX_A + 1;
-  BufMsg(screen, "%-13.013s: %6d", "+ To Hit", cbD.ptohit - cbD.hide_tohit);
-  BufMsg(screen, "%-13.013s: %6d", "+ To Damage", cbD.ptodam - cbD.hide_todam);
-  BufMsg(screen, "%-13.013s: %6d", "+ To Armor", cbD.ptoac - cbD.hide_toac);
-  BufMsg(screen, "%-13.013s: %6d", "Total Armor", cbD.pac - cbD.hide_toac);
-
-  BufPad(screen, MAX_A * 2, 24);
+  // BufPad(screen, MAX_A, col[1]);
+  // line = 0;
+  // for (int it = 0; it < MAX_A; ++it) {
+  //   BufMsg(screen, "|");
+  // }
 
   line = MAX_A + 1;
-  BufMsg(screen, "%-11.011s: %6d", "Level", uD.lev);
-  BufMsg(screen, "%-11.011s: %6d", "Experience", uD.exp);
-  BufMsg(screen, "%-11.011s: %6d", "Max Exp", uD.max_exp);
-  BufMsg(screen, "%-11.011s: %6d", "Exp to Adv", lev_exp(uD.lev));
-  BufMsg(screen, "%-11.011s: %6d", "Gold", uD.gold);
+  BufMsg(screen, "%-13.013s: %3d", "+ To Hit", cbD.ptohit - cbD.hide_tohit);
+  BufMsg(screen, "%-13.013s: %3d", "+ To Damage", cbD.ptodam - cbD.hide_todam);
+  BufMsg(screen, "%-13.013s: %3d", "+ To Armor", cbD.ptoac - cbD.hide_toac);
+  BufMsg(screen, "%-13.013s: %3d", "Total Armor", cbD.pac - cbD.hide_toac);
 
-  BufPad(screen, MAX_A * 2, 46);
+  BufPad(screen, MAX_A * 2, col[0]);
 
   line = MAX_A + 1;
-  BufMsg(screen, "%-15.015s: %6d", "Max Hit Points", uD.mhp);
-  BufMsg(screen, "%-15.015s: %6d", "Cur Hit Points", uD.chp);
-  BufMsg(screen, "%-15.015s: %6d", "Max Mana", uD.mmana);
-  BufMsg(screen, "%-15.015s: %6d", "Cur Mana", uD.cmana);
+  BufMsg(screen, "%-13.013s: %7d", "Level", uD.lev);
+  BufMsg(screen, "%-13.013s: %7d", "Experience", uD.exp);
+  BufMsg(screen, "%-13.013s: %7d", "Max Exp", MAX_EXP);  // uD.max_exp);
+  BufMsg(screen, "%-13.013s: %7d", "Exp to Adv", lev_exp(uD.lev));
+  BufMsg(screen, "%-13.013s: %7d", "Gold", uD.gold);
+
+  BufPad(screen, MAX_A * 2, col[1]);
+
+  line = MAX_A + 1;
+  BufMsg(screen, "%-15.015s: %3d", "Max Hit Points", uD.mhp);
+  BufMsg(screen, "%-15.015s: %3d", "Cur Hit Points", uD.chp);
+  BufMsg(screen, "%-15.015s: %3d", "Max Mana", uD.mmana);
+  BufMsg(screen, "%-15.015s: %3d", "Cur Mana", uD.cmana);
 
   xbth = uD.bth + uD.lev * level_adj[uD.clidx][LA_BTH];
   xbowth = uD.bowth + uD.lev * level_adj[uD.clidx][LA_BTHB];
-
   line = 2 * MAX_A + 1;
-  BufMsg(screen, "%-13.013s: %6d", "Fighting", xbth);
-  BufMsg(screen, "%-13.013s: %6d", "Bows", xbowth);
-  BufMsg(screen, "%-13.013s: %6d", "Saving Throw", usave());
+  BufMsg(screen, "%-13.013s: %3d", "Fighting", xbth);
+  BufMsg(screen, "%-13.013s: %3d", "Bows", xbowth);
+  BufMsg(screen, "%-13.013s: %3d", "Saving Throw", usave());
   sptype = classD[uD.clidx].spell;
   if (sptype) {
-    BufMsg(screen, "%-13.013s: %6d",
+    BufMsg(screen, "%-13.013s: %d",
            sptype == SP_MAGE ? "Spell Memory" : "Prayer Memory", uspellcount());
   }
-  BufPad(screen, MAX_A * 3, 23);
+  BufPad(screen, MAX_A * 3, col[0]);
 
   line = 2 * MAX_A + 1;
-  BufMsg(screen, "%-12.012s: %6d", "Stealth", uD.stealth);
-  BufMsg(screen, "%-12.012s: %6d", "Disarming", udisarm());
-  BufMsg(screen, "%-12.012s: %6d", "Magic Device", udevice());
-  BufPad(screen, MAX_A * 3, 49);
+  BufMsg(screen, "%-13.013s: %3d", "Stealth", uD.stealth);
+  BufMsg(screen, "%-13.013s: %3d", "Disarming", udisarm());
+  BufMsg(screen, "%-13.013s: %3d", "Magic Device", udevice());
+  BufPad(screen, MAX_A * 3, col[1]);
 
   line = 2 * MAX_A + 1;
-  BufMsg(screen, "%-12.012s: %6d", "Perception", MAX(40 - uD.fos, 0));
-  BufMsg(screen, "%-12.012s: %6d", "Searching", uD.search);
-  BufMsg(screen, "%-12.012s: %d feet", "Infra-Vision", uD.infra * 10);
+  BufMsg(screen, "%-15.015s: %3d", "Perception", MAX(40 - uD.fos, 0));
+  BufMsg(screen, "%-15.015s: %3d", "Searching", uD.search);
+  BufMsg(screen, "%-15.015s: %3d", "Infra-Vision", uD.infra);
 
-  BufPad(screen, MAX_A, 35);
-
-  DRAWMSG("Name: %-19.019s Race: %-19.019s Class: %-19.019s", "...",
+  DRAWMSG("Name: %-13.013s Race: %-17.017s Class: %-13.013s", "...",
           raceD[uD.ridx].name, classD[uD.clidx].name);
   return inkey();
 }
+
 int
 py_archive_select()
 {
