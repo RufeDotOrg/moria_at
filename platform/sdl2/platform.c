@@ -1387,19 +1387,8 @@ platform_p2()
   SDL_RenderFillRect(renderer, &src_rect);
   if (is_text) alt_fill(row, col, left, top, width, height);
 
-  if (msg_used) {
-    // TBD: layout sizing
-    SDL_Point p = {
-        0,
-        0,
-    };
-
-    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-    // TBD: this formatting is temporary (just show the msg)
-    char tmp[120];
-    int len = snprintf(tmp, AL(tmp), "%s (%d)", msg, col);
-    render_font_string(renderer, &fontD, tmp, len, p);
-  }
+  if (msg_used)
+    render_font_string(renderer, &fontD, msg, msg_used, (SDL_Point){0, 0});
 
   switch (mode) {
     case 1: {
@@ -1433,8 +1422,6 @@ platform_p2()
   font_colorD = whiteD;
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_RenderCopy(renderer, text_textureD, &src_rect, &target);
-  // TBD: frame
-  // if (is_text) rect_frame(textdst_rectD, 1);
 
   return 0;
 }
@@ -1588,7 +1575,6 @@ platform_p0()
           SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
           SDL_RenderFillRect(renderer, &fill);
 
-          SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
           font_texture_alphamod(alpha);
           render_font_string(renderer, &fontD, msg, msg_used, p);
           font_texture_alphamod(255);
@@ -2560,9 +2546,7 @@ portrait_event_xy(eventtype, x, y)
           case TOUCH_VERSION:
             return 'v';
           case TOUCH_GAMEPLAY:
-            // TBD: shim to support message history
-            // if (tp.y < .09) return CTRL('p');
-            return finger ? '-' : 'O';  // gameplay_touch(&event);
+            return finger ? '-' : 'O';
           case TOUCH_LB:
             return finger ? 'd' : 'A';
           case TOUCH_RB:
