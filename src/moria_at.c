@@ -12856,7 +12856,7 @@ pawn_display()
           }
           memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
         }
-        snprintf(overlayD[line] + costw, COST_DETAIL, " %7d", cost);
+        snprintf(overlayD[line] + costw, COST_DETAIL, " %6d", cost);
       }
     }
 
@@ -12899,7 +12899,7 @@ store_display(sidx)
         }
         memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
       }
-      snprintf(overlayD[line] + costw, COST_DETAIL, " %7d", cost);
+      snprintf(overlayD[line] + costw, COST_DETAIL, " %6d", cost);
     }
 
     overlay_usedD[line] = len;
@@ -13120,8 +13120,8 @@ player_maint()
   for (int sidx = 0; sidx < MAX_STORE; ++sidx) {
     for (int it = 0; it < MAX_STORE_INVEN; ++it) {
       if (store_objD[sidx][it].sn) {
-        MSG("Rumor has it, a rare item being sold by %s (%d).",
-            ownerD[storeD[sidx]].name, sidx + 1);
+        MSG("Rumor has it, a rare item being sold by (%d) %s.", sidx + 1,
+            ownerD[storeD[sidx]].name);
         break;
       }
     }
@@ -13495,14 +13495,18 @@ dungeon()
               } else {
                 omit_replay = 1;
               }
+
               // TBD: fix console moria
               // screen_submodeD = 0;
               // screenD[0][0] = ' ';
               // screen_usedD[0] = 1;
-              minimap_enlargeD = TRUE;
-              // TBD: text only for console mode?
-              DRAWMSG("");
-              inkey();
+
+              if (maD[MA_BLIND] == 0) {
+                minimap_enlargeD = TRUE;
+                // TBD: text only for console mode?
+                DRAWMSG("");
+                inkey();
+              }
               break;
             case 'O': {
               omit_replay = 1;

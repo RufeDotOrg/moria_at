@@ -2585,6 +2585,7 @@ portrait_event_xy(eventtype, x, y)
       if (touch == TOUCH_RB) {
         return 'a' + finger_rowD;
       }
+      if (touch == TOUCH_GAMEPLAY && finger) return '-';
     }
     if (mode == 2) {
       if (touch == TOUCH_LB) return 'o';
