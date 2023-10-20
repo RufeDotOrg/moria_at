@@ -521,7 +521,9 @@ int* dir;
   char c, command;
   if (!prompt) prompt = "Which direction?";
   DRAWMSG("%s", prompt);
-  c = inkey();
+  do {
+    c = inkey();
+  } while (c == ' ');
   command = map_roguedir(c);
   if (command >= '1' && command <= '9' && command != '5') {
     *dir = command - '0';
