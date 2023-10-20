@@ -29,7 +29,9 @@ enum { TOUCH = 0 };
 
 enum { SDL_EVLOG = 0 };
 enum { BATCHING = 1 };
-enum { ORIENTATION = 1 };
+enum { REORIENTATION = 1 };
+#define ORIENTATION_LIST \
+  "Portrait LandscapeRight PortraitUpsideDown LandscapeLeft"
 
 enum { WINDOW };
 enum { PORTRAIT = 0 };
@@ -132,7 +134,7 @@ render_init()
 {
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
   if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
-  if (ORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
+  if (REORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
   windowD = SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y, winflag);
   if (!windowD) return 0;
 
@@ -2945,8 +2947,8 @@ platform_pregame()
     if (BATCHING) SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
     if (!ANDROID) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
 
-    // __APPLE__/Android orientation
-    SDL_SetHint(SDL_HINT_ORIENTATIONS, "Portrait LandscapeRight");
+    // iOS/Android orientation
+    SDL_SetHint(SDL_HINT_ORIENTATIONS, ORIENTATION_LIST);
 
     // Platform Input isolation
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
