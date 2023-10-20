@@ -2522,7 +2522,6 @@ portrait_event_xy(eventtype, x, y)
   }
   if (eventtype == SDL_FINGERDOWN) {
     int touch = touch_by_xy(x, y);
-    Log("eventtyp %d touch %d", eventtype, touch);
     if (mode == 0) {
       if (touch > TOUCH_PAD) {
         char c = char_by_dir(touch - TOUCH_PAD);
@@ -2724,8 +2723,6 @@ sdl_pump()
       quitD = TRUE;
     } else if (event.type == SDL_WINDOWEVENT) {
       ret = sdl_window_event(event);
-    } else if (event.type == SDL_DISPLAYEVENT) {
-      Log("SDL_DisplayEvent [ event %d ]", event.display.event);
     }
   }
 
@@ -3034,7 +3031,6 @@ platform_pregame()
 
   font_colorD = whiteD;
 
-  // PC OK? Console check
   zoom_factorD = 2;
 
   if (WINDOW) {
