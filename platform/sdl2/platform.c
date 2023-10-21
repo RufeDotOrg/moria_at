@@ -162,6 +162,9 @@ render_init()
   }
   rendererD = SDL_CreateRenderer(windowD, -1, 0);
   if (!rendererD) return 0;
+  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+  SDL_RenderClear(rendererD);
+  SDL_RenderPresent(rendererD);
 
   if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return 0;
 
@@ -2330,11 +2333,6 @@ SDL_Event event;
         return (finger_colD == 0) ? '*' : '/';
       } else if (drw) {
         platform_draw();
-      } else {
-        USE(renderer);
-        SDL_SetRenderTarget(renderer, 0);
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-        SDL_RenderClear(renderer);
       }
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
