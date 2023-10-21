@@ -132,6 +132,17 @@ DATA char moreD[] = "-more-";
 #define SPRITE_SQ 32
 
 int
+render_clear()
+{
+  USE(renderer);
+  SDL_SetRenderTarget(renderer, 0);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
+  SDL_RenderPresent(renderer);
+  return 0;
+}
+
+int
 render_init()
 {
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
@@ -162,9 +173,7 @@ render_init()
   }
   rendererD = SDL_CreateRenderer(windowD, -1, 0);
   if (!rendererD) return 0;
-  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-  SDL_RenderClear(rendererD);
-  SDL_RenderPresent(rendererD);
+  render_clear();
 
   if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return 0;
 
@@ -2329,6 +2338,9 @@ SDL_Event event;
       display_resize(dw, dh);
       orientation_update();
 
+      // android 11 devices don't render the first frame (e.g. samsung A20)
+      if (ANDROID) render_clear();
+
       if (mode) {
         return (finger_colD == 0) ? '*' : '/';
       } else if (drw) {
@@ -2338,7 +2350,7 @@ SDL_Event event;
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
     if (display_rectD.w != 0) {
       // android 11 devices don't render the first frame (e.g. samsung A20)
-      if (ANDROID) render_update();
+      if (ANDROID) render_clear();
 
       if (mode)
         return (finger_colD == 0) ? '*' : '/';
