@@ -132,17 +132,6 @@ DATA char moreD[] = "-more-";
 #define SPRITE_SQ 32
 
 int
-render_clear()
-{
-  USE(renderer);
-  SDL_SetRenderTarget(renderer, 0);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderClear(renderer);
-  SDL_RenderPresent(renderer);
-  return 0;
-}
-
-int
 render_init()
 {
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
@@ -173,7 +162,10 @@ render_init()
   }
   rendererD = SDL_CreateRenderer(windowD, -1, 0);
   if (!rendererD) return 0;
-  render_clear();
+  // ANDROID fix for SDL Error: BLASTBufferQueue
+  if (ANDROID) SDL_RenderPresent(rendererD);
+  // APPLE fix for visual artifacts on first frame
+  if (__APPLE__) SDL_RenderClear(rendererD);
 
   if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return 0;
 
@@ -2339,7 +2331,7 @@ SDL_Event event;
       orientation_update();
 
       // android 11 devices don't render the first frame (e.g. samsung A20)
-      if (ANDROID) render_clear();
+      if (ANDROID) SDL_RenderPresent(rendererD);
 
       if (mode) {
         return (finger_colD == 0) ? '*' : '/';
@@ -2350,7 +2342,7 @@ SDL_Event event;
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
     if (display_rectD.w != 0) {
       // android 11 devices don't render the first frame (e.g. samsung A20)
-      if (ANDROID) render_clear();
+      if (ANDROID) SDL_RenderPresent(rendererD);
 
       if (mode)
         return (finger_colD == 0) ? '*' : '/';
