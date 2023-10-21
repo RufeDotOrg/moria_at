@@ -2318,6 +2318,8 @@ SDL_Event event;
       safe_rectD.h *= retina_scaleD;
       dw *= retina_scaleD;
       dh *= retina_scaleD;
+    } else {
+      safe_rectD = (SDL_Rect){0, 0, dw, dh};
     }
 
     if (dw != drw || dh != drh) {
