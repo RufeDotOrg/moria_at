@@ -196,9 +196,6 @@ render_update()
 {
   USE(renderer);
   USE(layout);
-  SDL_SetRenderTarget(renderer, 0);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderClear(renderer);
   if (layout) {
 USE(safe_rect);
   SDL_SetRenderTarget(renderer, 0);
@@ -221,6 +218,8 @@ USE(ar_rect);
     SDL_RenderCopy(renderer, layout, NULL, &target);
   }
   SDL_RenderPresent(renderer);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
 }
 
 // font.c
@@ -2336,10 +2335,16 @@ Log("safe_rect %d %d", safe_rectD.w, safe_rectD.h);
       display_resize(dw, dh);
       orientation_update();
 
-      if (mode)
+      if (mode) {
         return (finger_colD == 0) ? '*' : '/';
-      else if (drw)
+      } else if (drw) {
         platform_draw();
+      } else {
+        USE(renderer);
+        SDL_SetRenderTarget(renderer, 0);
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+        SDL_RenderClear(renderer);
+      }
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
     if (display_rectD.w != 0) {
