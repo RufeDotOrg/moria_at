@@ -2207,7 +2207,6 @@ orientation_update()
   USE(display_rect);
   int guess = display_rect.w > display_rect.h ? SDL_ORIENTATION_LANDSCAPE
                                               : SDL_ORIENTATION_PORTRAIT;
-  // HACK
   if (PORTRAIT) guess = SDL_ORIENTATION_PORTRAIT;
 
   if (guess == SDL_ORIENTATION_PORTRAIT) {
@@ -2215,6 +2214,7 @@ orientation_update()
     USE(display_rect);
     USE(safe_rect);
     float scale = 1.f;
+
     {
       // safe_rect is respected on the orientation axis
       float xscale = (float)display_rect.w / layout_rect.w;
@@ -2227,7 +2227,7 @@ orientation_update()
     //   affects visual aesthetic
     //   affects input positioning for touch
     SDL_Rect ar_rect = {0, 0, layout_rect.w * scale, layout_rect.h * scale};
-    ar_rect.x = (display_rect.w - ar_rect.w);
+    ar_rect.x = (display_rect.w - ar_rect.w) / 2;
     ar_rect.y = MAX(safe_rect.y, (display_rect.h - ar_rect.h) / 2);
 
     float xuse = (float)ar_rect.w / display_rect.w;
