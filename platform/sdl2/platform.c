@@ -76,6 +76,8 @@ char_visible(char c)
 // render.c
 DATA struct SDL_Window *windowD;
 DATA SDL_Rect display_rectD;
+DATA SDL_Rect safe_rectD;
+DATA SDL_Rect ar_rectD;
 DATA float aspectD;
 DATA struct SDL_Renderer *rendererD;
 DATA uint32_t texture_formatD;
@@ -194,21 +196,31 @@ render_update()
 {
   USE(renderer);
   USE(layout);
+  SDL_SetRenderTarget(renderer, 0);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
   if (layout) {
+USE(safe_rect);
+  SDL_SetRenderTarget(renderer, 0);
+  SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+  SDL_RenderFillRect(renderer, &safe_rect);
+USE(ar_rect);
+  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+  SDL_RenderFillRect(renderer, &ar_rect);
+
     USE(display_rect);
     USE(view_rect);
-    SDL_SetRenderTarget(renderer, 0);
     SDL_Rect target = {
         view_rect.x * display_rect.w,
         view_rect.y * display_rect.h,
         view_rect.w * display_rect.w,
         view_rect.h * display_rect.h,
     };
+  SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+  SDL_RenderFillRect(renderer, &target);
     SDL_RenderCopy(renderer, layout, NULL, &target);
   }
   SDL_RenderPresent(renderer);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderClear(renderer);
 }
 
 // font.c
@@ -2202,15 +2214,43 @@ orientation_update()
   if (guess == SDL_ORIENTATION_PORTRAIT) {
     USE(layout_rect);
     USE(display_rect);
-    layoutD = portrait_layoutD;
-    float xuse = CLAMP((float)layout_rect.w / display_rect.w, 0.f, 1.f);
-    float yuse = CLAMP((float)layout_rect.h / display_rect.h, 0.f, 1.f);
-    float xpad = (1.f - xuse);
-    float ypad = (1.f - yuse);
+    USE(safe_rect);
+    float scale = 1.f;
+{
+    float xscale = (float)safe_rect.w/layout_rect.w;
+    float yscale = (float)safe_rect.h/layout_rect.h;
+    scale = MIN(xscale, yscale);
+    Log("safe_scale %.03fx %.03fy %.03f", xscale, yscale,scale);
+}
+{
+    float xscale = (float)display_rect.w/layout_rect.w;
+    float yscale = (float)display_rect.h/layout_rect.h;
+    scale = MIN(xscale, yscale);
+    Log("display_scale %.03fx %.03fy %.03f", xscale, yscale,scale);
+}
+{
+    float xscale = (float)display_rect.w/layout_rect.w;
+    float yscale = (float)safe_rect.h/layout_rect.h;
+    scale = MIN(xscale, yscale);
+    Log("orientation_scale %.03fx %.03fy %.03f", xscale, yscale,scale);
+}
+
+    Log("using scale %.03f", scale);
+    SDL_Rect ar_rect = {0, 0, layout_rect.w*scale, layout_rect.h*scale};
+    ar_rect.x = (display_rect.w-ar_rect.w);
+    ar_rect.y = MAX(safe_rect.y, (display_rect.h-ar_rect.h)/2);
+    ar_rectD = ar_rect;
+
+    float xuse = (float)ar_rect.w/display_rect.w;
+    float yuse = (float)ar_rect.h/display_rect.h;
+    float xpad = (float)ar_rect.x/display_rect.w;
+    float ypad = (float)ar_rect.y/display_rect.h;
+
     Log("PORTRAIT %.03f %.03f xuse yuse %.03f %.03f xpad ypad", xuse, yuse,
         xpad, ypad);
-    SDL_FRect view = {xpad * .5f, ypad * .5f, xuse, yuse};
+    SDL_FRect view = {xpad, ypad, xuse, yuse};
     view_rectD = view;
+    layoutD = portrait_layoutD;
 
     // Gameplay side effects
     console_widthD = 64;
@@ -2276,21 +2316,29 @@ SDL_Event event;
       event.window.event, event.window.data1, event.window.data2);
   if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
       event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+int drw = display_rectD.w;
+int drh = display_rectD.h;
     int dw = event.window.data1;
     int dh = event.window.data2;
 
     if (__APPLE__) {
+      SDL_GetWindowSafeRect(windowD, &safe_rectD);
+      safe_rectD.x *= retina_scaleD;
+      safe_rectD.y *= retina_scaleD;
+      safe_rectD.w *= retina_scaleD;
+      safe_rectD.h *= retina_scaleD;
+Log("safe_rect %d %d", safe_rectD.w, safe_rectD.h);
       dw *= retina_scaleD;
       dh *= retina_scaleD;
     }
 
-    if (dw != display_rectD.w || dh != display_rectD.h) {
+    if (dw != drw || dh != drh) {
       display_resize(dw, dh);
       orientation_update();
 
       if (mode)
         return (finger_colD == 0) ? '*' : '/';
-      else
+      else if (drw)
         platform_draw();
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
