@@ -66,6 +66,7 @@ enum { AFF_Y = AL(active_affectD) / AFF_X };
 
 // TBD: clean-up
 int los();
+int SDL_GetWindowSafeRect();
 
 int
 char_visible(char c)
@@ -195,11 +196,13 @@ render_update()
 {
   USE(renderer);
   USE(layout);
+
+  SDL_SetRenderTarget(renderer, 0);
+
   if (layout) {
-//  USE(safe_rect);
-//  SDL_SetRenderTarget(renderer, 0);
-//  SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
-//  SDL_RenderFillRect(renderer, &safe_rect);
+    // USE(safe_rect);
+    // SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+    // SDL_RenderFillRect(renderer, &safe_rect);
 
     USE(display_rect);
     USE(view_rect);
@@ -209,8 +212,8 @@ render_update()
         view_rect.w * display_rect.w,
         view_rect.h * display_rect.h,
     };
-    //SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-    //SDL_RenderFillRect(renderer, &target);
+    // SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    // SDL_RenderFillRect(renderer, &target);
     SDL_RenderCopy(renderer, layout, NULL, &target);
   }
 
@@ -2212,22 +2215,25 @@ orientation_update()
     USE(display_rect);
     USE(safe_rect);
     float scale = 1.f;
-{
-    // safe_rect is respected on the orientation axis
-    float xscale = (float)display_rect.w/layout_rect.w;
-    float yscale = (float)safe_rect.h/layout_rect.h;
-    scale = MIN(xscale, yscale);
-    Log("orientation_scale %.03fx %.03fy %.03f", xscale, yscale, scale);
-}
+    {
+      // safe_rect is respected on the orientation axis
+      float xscale = (float)display_rect.w / layout_rect.w;
+      float yscale = (float)safe_rect.h / layout_rect.h;
+      scale = MIN(xscale, yscale);
+      Log("orientation_scale %.03fx %.03fy %.03f", xscale, yscale, scale);
+    }
 
-    SDL_Rect ar_rect = {0, 0, layout_rect.w*scale, layout_rect.h*scale};
-    ar_rect.x = (display_rect.w-ar_rect.w);
-    ar_rect.y = MAX(safe_rect.y, (display_rect.h-ar_rect.h)/2);
+    // Note tension: center of display vs. center of safe area
+    //   affects visual aesthetic
+    //   affects input positioning for touch
+    SDL_Rect ar_rect = {0, 0, layout_rect.w * scale, layout_rect.h * scale};
+    ar_rect.x = (display_rect.w - ar_rect.w);
+    ar_rect.y = MAX(safe_rect.y, (display_rect.h - ar_rect.h) / 2);
 
-    float xuse = (float)ar_rect.w/display_rect.w;
-    float yuse = (float)ar_rect.h/display_rect.h;
-    float xpad = (float)ar_rect.x/display_rect.w;
-    float ypad = (float)ar_rect.y/display_rect.h;
+    float xuse = (float)ar_rect.w / display_rect.w;
+    float yuse = (float)ar_rect.h / display_rect.h;
+    float xpad = (float)ar_rect.x / display_rect.w;
+    float ypad = (float)ar_rect.y / display_rect.h;
 
     Log("PORTRAIT %.03f %.03f xuse yuse %.03f %.03f xpad ypad", xuse, yuse,
         xpad, ypad);
@@ -2299,8 +2305,8 @@ SDL_Event event;
       event.window.event, event.window.data1, event.window.data2);
   if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
       event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-int drw = display_rectD.w;
-int drh = display_rectD.h;
+    int drw = display_rectD.w;
+    int drh = display_rectD.h;
     int dw = event.window.data1;
     int dh = event.window.data2;
 
