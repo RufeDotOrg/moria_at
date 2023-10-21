@@ -77,7 +77,6 @@ char_visible(char c)
 DATA struct SDL_Window *windowD;
 DATA SDL_Rect display_rectD;
 DATA SDL_Rect safe_rectD;
-DATA SDL_Rect ar_rectD;
 DATA float aspectD;
 DATA struct SDL_Renderer *rendererD;
 DATA uint32_t texture_formatD;
@@ -197,13 +196,10 @@ render_update()
   USE(renderer);
   USE(layout);
   if (layout) {
-USE(safe_rect);
-  SDL_SetRenderTarget(renderer, 0);
-  SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
-  SDL_RenderFillRect(renderer, &safe_rect);
-USE(ar_rect);
-  SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-  SDL_RenderFillRect(renderer, &ar_rect);
+//  USE(safe_rect);
+//  SDL_SetRenderTarget(renderer, 0);
+//  SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+//  SDL_RenderFillRect(renderer, &safe_rect);
 
     USE(display_rect);
     USE(view_rect);
@@ -213,10 +209,11 @@ USE(ar_rect);
         view_rect.w * display_rect.w,
         view_rect.h * display_rect.h,
     };
-  SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-  SDL_RenderFillRect(renderer, &target);
+    //SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+    //SDL_RenderFillRect(renderer, &target);
     SDL_RenderCopy(renderer, layout, NULL, &target);
   }
+
   SDL_RenderPresent(renderer);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
   SDL_RenderClear(renderer);
@@ -2216,29 +2213,16 @@ orientation_update()
     USE(safe_rect);
     float scale = 1.f;
 {
-    float xscale = (float)safe_rect.w/layout_rect.w;
-    float yscale = (float)safe_rect.h/layout_rect.h;
-    scale = MIN(xscale, yscale);
-    Log("safe_scale %.03fx %.03fy %.03f", xscale, yscale,scale);
-}
-{
-    float xscale = (float)display_rect.w/layout_rect.w;
-    float yscale = (float)display_rect.h/layout_rect.h;
-    scale = MIN(xscale, yscale);
-    Log("display_scale %.03fx %.03fy %.03f", xscale, yscale,scale);
-}
-{
+    // safe_rect is respected on the orientation axis
     float xscale = (float)display_rect.w/layout_rect.w;
     float yscale = (float)safe_rect.h/layout_rect.h;
     scale = MIN(xscale, yscale);
-    Log("orientation_scale %.03fx %.03fy %.03f", xscale, yscale,scale);
+    Log("orientation_scale %.03fx %.03fy %.03f", xscale, yscale, scale);
 }
 
-    Log("using scale %.03f", scale);
     SDL_Rect ar_rect = {0, 0, layout_rect.w*scale, layout_rect.h*scale};
     ar_rect.x = (display_rect.w-ar_rect.w);
     ar_rect.y = MAX(safe_rect.y, (display_rect.h-ar_rect.h)/2);
-    ar_rectD = ar_rect;
 
     float xuse = (float)ar_rect.w/display_rect.w;
     float yuse = (float)ar_rect.h/display_rect.h;
@@ -2249,9 +2233,9 @@ orientation_update()
         xpad, ypad);
     SDL_FRect view = {xpad, ypad, xuse, yuse};
     view_rectD = view;
-    layoutD = portrait_layoutD;
 
     // Gameplay side effects
+    layoutD = portrait_layoutD;
     console_widthD = 64;
     gameplay_scaleD = 1.0f;
   } else {
@@ -2326,7 +2310,6 @@ int drh = display_rectD.h;
       safe_rectD.y *= retina_scaleD;
       safe_rectD.w *= retina_scaleD;
       safe_rectD.h *= retina_scaleD;
-Log("safe_rect %d %d", safe_rectD.w, safe_rectD.h);
       dw *= retina_scaleD;
       dh *= retina_scaleD;
     }
