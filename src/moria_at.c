@@ -10744,7 +10744,6 @@ py_menu()
 static void
 py_death()
 {
-  msg_pause();
   char c;
 
   do {
@@ -13763,6 +13762,7 @@ dungeon()
     tick();  // uD.new_level_flag may change (player dies from poison)
     turnD += 1;
   } while (!uD.new_level_flag);
+  msg_pause();
 }
 void
 mon_level_init()
@@ -13870,6 +13870,7 @@ main(int argc, char** argv)
   panel_update(&panelD, uD.y, uD.x, TRUE);
   py_check_view(TRUE);
   dungeon();
+  replay_flag = 0;
 
   if (uD.new_level_flag != NL_DEATH) {
     // Release objects in the cave
