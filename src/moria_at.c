@@ -10604,7 +10604,8 @@ show_all_inven()
   int iidx;
   overlay_submodeD = 'e';
   do {
-    iidx = inven_choice("You are dead.", overlay_submodeD == 'e' ? "/*" : "*/");
+    int show_equip = overlay_submodeD == 'e';
+    iidx = inven_choice("At death", show_equip ? "/*" : "*/");
 
     if (iidx >= 0) {
       obj_study(obj_get(invenD[iidx]), 0);
@@ -10671,10 +10672,9 @@ py_menu()
   input_action = input_action_usedD;
 
   if (death) {
-    snprintf(descD, AL(descD), " Killed by %.72s. ", death_descD);
-    prompt = descD;
+    prompt = "You are dead.";
   } else {
-    prompt = " Advanced Game Actions ";
+    prompt = "Advanced Game Actions";
   }
 
   while (1) {
