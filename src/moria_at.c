@@ -8463,24 +8463,29 @@ static int
 inven_choice(char* prompt, char* mode_list)
 {
   char c;
-  int num, mode;
+  int mode;
   int begin, end;
   char subprompt[80];
+  char* prefix;
 
   mode = mode_list[0];
-  snprintf(subprompt, AL(subprompt), "%s %s", prompt,
-           mode_list[1] ? "(/ equip, * inven, - sort)" : "");
-  do {
+  while (mode) {
     switch (mode) {
       case '*':
         begin = 0;
         end = INVEN_EQUIP;
+        prefix = "Inventory";
         break;
+      default:
       case '/':
         begin = INVEN_WIELD;
         end = MAX_INVEN;
+        prefix = "Equipment";
         break;
     }
+
+    // TBD: Console Append (mode_list[1] ? "(/ equip, * inven, - sort)" : "")
+    snprintf(subprompt, AL(subprompt), "%s: %s", prefix, prompt);
     inven_overlay(begin, end);
 
     if (!in_subcommand(subprompt, &c)) return -1;
@@ -8513,7 +8518,7 @@ inven_choice(char* prompt, char* mode_list)
         if (mode_list[it] == c) mode = c;
       }
     }
-  } while (mode);
+  }
 
   return -1;
 }
