@@ -7982,7 +7982,7 @@ inven_overlay(begin, end)
 {
   USE(console_width);
   USE(drop_mode);
-  int line, count, len;
+  int line, count;
   int limitw = MIN(console_width, 80);
   int descw = 4;
   int detailw = limitw - INVEN_DETAIL;
@@ -7995,6 +7995,7 @@ inven_overlay(begin, end)
   line = count = 0;
   overlay_submodeD = begin == 0 ? 'i' : 'e';
   for (int it = begin; it < end; ++it) {
+    int len = 1;
     int obj_id = invenD[it];
 
     overlayD[line][0] = '(';
@@ -8002,10 +8003,7 @@ inven_overlay(begin, end)
     overlayD[line][2] = ')';
     overlayD[line][3] = ' ';
     if (obj_id) {
-      len = limitw;
-      count += 1;
       struct objS* obj = obj_get(obj_id);
-
       obj_desc(obj, obj->number);
       obj_detail(obj);
 
@@ -8024,9 +8022,10 @@ inven_overlay(begin, end)
                  stack_weight / 10, stack_weight % 10);
       }
 
+      len = limitw;
+      count += 1;
     } else {
-      len = 0;
-      overlayD[line][descw] = 0;
+      overlayD[line][0] = 0;
     }
 
     overlay_usedD[line] = len;
@@ -8468,68 +8467,54 @@ inven_choice(char* prompt, char* mode_list)
   int begin, end;
   char subprompt[80];
 
+  mode = mode_list[0];
   snprintf(subprompt, AL(subprompt), "%s %s", prompt,
            mode_list[1] ? "(/ equip, * inven, - sort)" : "");
-
-  num = 0;
-  for (int it = 0; it < 2 && num == 0; ++it) {
-    mode = mode_list[it];
+  do {
     switch (mode) {
       case '*':
-        num = inven_count();
+        begin = 0;
+        end = INVEN_EQUIP;
         break;
       case '/':
-        num = equip_count();
+        begin = INVEN_WIELD;
+        end = MAX_INVEN;
         break;
     }
-  }
+    inven_overlay(begin, end);
 
-  if (num) {
-    do {
-      switch (mode) {
-        case '*':
-          begin = 0;
-          end = INVEN_EQUIP;
-          break;
-        case '/':
-          begin = INVEN_WIELD;
-          end = MAX_INVEN;
-          break;
-      }
-      inven_overlay(begin, end);
+    if (!in_subcommand(subprompt, &c)) return -1;
 
-      if (!in_subcommand(subprompt, &c)) return -1;
-
-      if (is_lower(c)) {
-        uint8_t iidx = c - 'a';
-        iidx += begin;
-        if (iidx < end && invenD[iidx]) return iidx;
-      } else if (is_upper(c)) {
-        uint8_t iidx = c - 'A';
-        iidx += begin;
-        if (iidx < end && invenD[iidx]) {
-          c = obj_study(obj_get(invenD[iidx]), FALSE);
-          // Prohibited on the death screen
-          if (platformD.selection && uD.new_level_flag == 0) {
-            switch (c) {
-              case 'o':
-                inven_drop(iidx);
-                return -1;
-              case ESCAPE:
-                return iidx;
-            }
+    if (is_lower(c)) {
+      uint8_t iidx = c - 'a';
+      iidx += begin;
+      if (iidx < end && invenD[iidx]) return iidx;
+    } else if (is_upper(c)) {
+      uint8_t iidx = c - 'A';
+      iidx += begin;
+      if (iidx < end && invenD[iidx]) {
+        c = obj_study(obj_get(invenD[iidx]), FALSE);
+        // Prohibited on the death screen
+        if (platformD.selection && uD.new_level_flag == 0) {
+          switch (c) {
+            case 'o':
+              inven_drop(iidx);
+              return -1;
+            case ESCAPE:
+              return iidx;
           }
         }
-      } else if (c == '-') {
-        inven_sort();
-      } else {
-        mode = 0;
-        for (int it = 0; it < 2; ++it) {
-          if (mode_list[it] == c) mode = c;
-        }
       }
-    } while (mode);
-  }
+    } else if (c == '-') {
+      inven_sort();
+    } else {
+      mode = 0;
+      for (int it = 0; it < 2; ++it) {
+        if (mode_list[it] == c) mode = c;
+      }
+    }
+  } while (mode);
+
   return -1;
 }
 int
