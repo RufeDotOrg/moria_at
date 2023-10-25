@@ -33,7 +33,7 @@ enum { REORIENTATION = 1 };
 #define ORIENTATION_LIST \
   "Portrait LandscapeRight PortraitUpsideDown LandscapeLeft"
 
-enum { WINDOW };
+enum { WINDOW = 0 };
 enum { PORTRAIT = 0 };
 #define PORTRAIT_X 1080
 #define PORTRAIT_Y 1920
@@ -1456,22 +1456,21 @@ platform_p0()
   int len = 0;
   int show_minimap = (maD[MA_BLIND] == 0);
   int show_game = 1;
+  int margin = (layout_rectD.w - map_rectD.w) / 2;
   {
-    alt_fill(AL(vitalD), 26 + 2, 0, 0, width, height);
+    alt_fill(AL(vitalD), 26 + 2, margin, 0, width, height);
     for (int it = 0; it < MAX_A; ++it) {
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                      vitalD[it], stat_abbrD[it], vital_statD[it]);
-      SDL_Point p = {width / 2, it * height};
+      SDL_Point p = {margin + width / 2, it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
     {
       int it = MAX_A;
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
-      SDL_Point p = {width / 2, it * height};
+      SDL_Point p = {margin + width / 2, it * height};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
-    SDL_Rect r = {width / 2, 0, (26 + 1) * width, AL(vitalD) * height};
-    rect_frame(r, 1);
   }
 
   {
@@ -1482,9 +1481,10 @@ platform_p0()
         AFF_Y * height,
     };
     SDL_Rect target = {
-        0, AL(vitalD) * height,
-        src_rect.w,  // TBD: affect scaling?
-        src_rect.h,  // TBD
+        margin,
+        AL(vitalD) * height,
+        src_rect.w,
+        src_rect.h,
     };
     char *affstr[AFF_X];
     SDL_SetRenderTarget(rendererD, text_textureD);
@@ -1509,15 +1509,19 @@ platform_p0()
       };
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
+
     SDL_SetRenderTarget(rendererD, layoutD);
     SDL_RenderCopy(rendererD, text_textureD, &src_rect, &target);
-
+  }
+  {
     SDL_Rect r = {
-        target.x + width / 2,
-        target.y,
-        target.w - width,
-        target.h,
+        margin + 7,
+        0,
+        (26 + 2) * width - 14,
+        AL(vitalD) * height,
     };
+    rect_frame(r, 1);
+    r.h = (AFF_Y + AL(vitalD)) * height;
     rect_frame(r, 1);
   }
 
@@ -1542,7 +1546,7 @@ platform_p0()
 
     if (show_game) {
       SDL_Rect game_target = {
-          (layout_rectD.w - map_rectD.w) / 2,
+          margin,
           layout_rectD.h - PADSIZE - map_rectD.h - FHEIGHT + 3,
           map_rectD.w,
           map_rectD.h,
@@ -1854,12 +1858,13 @@ platform_portrait()
   int width = fontD.max_pixel_width;
 
   SDL_SetRenderTarget(renderer, layoutD);
-  SDL_SetRenderDrawColor(renderer, 128, 128, 128, 255);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
   SDL_RenderFillRect(renderer, &layout_rect);
 
   if (TOUCH && tpsurfaceD) {
+    int margin = (layout_rect.w - map_rectD.w) / 2;
     SDL_Rect pad_target = {
-        (layout_rect.w - map_rectD.w) / 2,
+        margin,
         layout_rect.h - PADSIZE,
         PADSIZE,
         PADSIZE,
@@ -1870,8 +1875,8 @@ platform_portrait()
 
     int size = PADSIZE / 2;
     SDL_Rect button[2] = {
-        {layout_rect.w - 2 * size, pad_target.y + size, size, size},
-        {layout_rect.w - size, pad_target.y, size, size},
+        {layout_rect.w - margin - size * 2, pad_target.y + size, size, size},
+        {layout_rect.w - margin - size, pad_target.y, size, size},
     };
     for (int it = 0; it < AL(button); ++it) {
       SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
@@ -2499,8 +2504,9 @@ static int
 touch_by_xy(x, y)
 {
   SDL_Point tpp = {x, y};
+  int margin = (layout_rectD.w - map_rectD.w) / 2;
   SDL_Rect stat_target = {
-      0,
+      margin,
       0,
       PADSIZE,
       (8 + 5) * FHEIGHT,
@@ -2535,15 +2541,16 @@ touch_by_xy(x, y)
 
   int size = PADSIZE / 2;
   SDL_Rect button[2] = {
-      {layout_rectD.w - 2 * size, layout_rectD.h - PADSIZE + size, size, size},
-      {layout_rectD.w - size, layout_rectD.h - PADSIZE, size, size},
+      {layout_rectD.w - margin - size * 2, layout_rectD.h - PADSIZE + size,
+       size, size},
+      {layout_rectD.w - margin - size, layout_rectD.h - PADSIZE, size, size},
   };
   for (int it = 0; it < AL(button); ++it) {
     if (SDL_PointInRect(&tpp, &button[it])) return TOUCH_LB + it;
   }
 
   SDL_Rect pad_rect = {
-      (layout_rectD.w - map_rectD.w) / 2,
+      margin,
       layout_rectD.h - PADSIZE,
       PADSIZE,
       PADSIZE,
