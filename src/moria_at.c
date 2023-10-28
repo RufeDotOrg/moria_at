@@ -10444,6 +10444,7 @@ struct summaryS* summary;
 fn load;
 {
   int save_count = 0;
+  memset(summary, 0, sizeof(struct summaryS) * AL(classD));
   for (int it = 0; it < AL(classD); ++it) {
     if (load(savename_by_class(it))) {
       save_count += 1;
@@ -10471,7 +10472,7 @@ py_archive_export()
 int
 py_archive_select()
 {
-  struct summaryS summary[AL(classD)] = {0};
+  struct summaryS summary[AL(classD)];
   int line;
   char c;
   int save_count;
