@@ -10509,6 +10509,7 @@ py_archive_select()
       }
       DRAWMSG("Which class archive would you like to restore?");
       c = inkey();
+      if (c == ESCAPE) continue;
       if (is_ctrl(c) || c == 'g') return -1;
       if (c == 'h') py_archive_export();
       if (c == 'i') {
