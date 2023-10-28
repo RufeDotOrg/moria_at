@@ -10439,6 +10439,19 @@ show_character()
 }
 
 int
+py_archive_export()
+{
+  int count = 0;
+  for (int it = 0; it < AL(classD); ++it) {
+    count += (platformD.saveexport(savename_by_class(it)) != 0);
+  }
+  int line = 0;
+  BufMsg(overlay, "%d characters copied", count);
+  DRAWMSG("Export Character Archive");
+  char c = inkey();
+  return count;
+}
+int
 py_archive_select()
 {
   struct summaryS summary[AL(classD)] = {0};
@@ -10464,6 +10477,8 @@ py_archive_select()
   }
 
   if (save_count) {
+    fn saveexport = platformD.saveexport;
+
     do {
       line = 0;
       for (int it = 0; it < AL(classD); ++it) {
@@ -10476,9 +10491,12 @@ py_archive_select()
         }
       }
       BufMsg(overlay, "g) Goto Character Creation");
+      if (saveexport)
+        BufMsg(overlay, "h) Have archive exported to external storage");
       DRAWMSG("Which class archive would you like to restore?");
       c = inkey();
       if (is_ctrl(c) || c == 'g') return -1;
+      if (c == 'h') py_archive_export();
       iidx = c - 'a';
     } while (iidx >= AL(summary));
     if (!platformD.load(savename_by_class(iidx))) iidx = -1;

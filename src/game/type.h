@@ -285,6 +285,7 @@ struct platformS {
   fn load;
   fn save;
   fn savemidpoint;
+  fn saveexport;
   fn copy;
   fn erase;
   fn readansi;

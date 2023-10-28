@@ -13,6 +13,7 @@
 
 #include "third_party/zlib/puff.c"
 
+#define APPNAME "moria.app"
 #ifndef __APPLE__
 enum { __APPLE__ };
 #endif
@@ -2258,10 +2259,10 @@ orientation_update()
     Log("LANDSCAPE %d console_width", console_widthD);
   }
 }
-SDL_RWops *
-rw_file_access(char *filename, char *access)
+char *
+savepath_by_filename(char *filename)
 {
-  int wridx = __APPLE__ ? savepath_usedD : 0;
+  int wridx = savepath_usedD;
   char *write = &savepathD[wridx];
 
   if (wridx) *write++ = '/';
@@ -2271,7 +2272,14 @@ rw_file_access(char *filename, char *access)
   *write = 0;
 
   Log("filename: %s", savepathD);
-  return SDL_RWFromFile(savepathD, access);
+  return savepathD;
+}
+SDL_RWops *
+rw_file_access(char *filename, char *access)
+{
+  if (__APPLE__) filename = savepath_by_filename(filename);
+  Log("rw_file_access %s %s", filename, access);
+  return SDL_RWFromFile(filename, access);
 }
 int
 platform_savemidpoint(char *filename)
@@ -2302,6 +2310,7 @@ platform_savemidpoint(char *filename)
   }
   return write_ok;
 }
+
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -2942,6 +2951,16 @@ platform_load(char *filename)
   return save_size != 0;
 }
 int
+platform_saveexport(char *filename)
+{
+  if (__APPLE__) return 0;  // savepathD is already external
+  char *exportname = savepath_by_filename(filename);
+  if (platform_load(filename)) {
+    return platform_save(exportname);
+  }
+  return 0;
+}
+int
 platform_erase(char *filename)
 {
   clear_savebuf();
@@ -3018,7 +3037,7 @@ platform_pregame()
     if (__APPLE__ || ANDROID) SDL_DisableScreenSaver();
 
     if (__APPLE__) {
-      char *prefpath = SDL_GetPrefPath("org.rufe", "moria.app");
+      char *prefpath = SDL_GetPrefPath("org.rufe", APPNAME);
       if (prefpath) {
         int len = snprintf(savepathD, AL(savepathD), "%s", prefpath);
         if (len < 0 || len >= AL(savepathD))
@@ -3026,6 +3045,23 @@ platform_pregame()
         else
           savepath_usedD = len;
         SDL_free(prefpath);
+      }
+    }
+
+    if (ANDROID) {
+      int state = SDL_AndroidGetExternalStorageState();
+      enum { WRITE_FLAG = 0x02 };
+      if (state & WRITE_FLAG) {
+        char *external = SDL_AndroidGetExternalStoragePath();
+        Log("Storage: [state %d] path: %s", state, external);
+        int len = snprintf(savepathD, AL(savepathD), "%s", external);
+        if (len < 0 || len >= AL(savepathD)) {
+          savepathD[0] = 0;
+        } else {
+          savepath_usedD = len;
+          platformD.saveexport = platform_saveexport;
+        }
+        SDL_free(external);
       }
     }
 
