@@ -2954,11 +2954,19 @@ int
 platform_saveexport(char *filename)
 {
   if (__APPLE__) return 0;  // savepathD is already external
-  char *exportname = savepath_by_filename(filename);
+  char *external_name = savepath_by_filename(filename);
+
   if (platform_load(filename)) {
-    return platform_save(exportname);
+    return platform_save(external_name);
   }
   return 0;
+}
+int
+platform_loadexport(char *filename)
+{
+  if (__APPLE__) return 0;  // savepathD is already external
+  char *external_name = savepath_by_filename(filename);
+  return platform_load(external_name);
 }
 int
 platform_erase(char *filename)
@@ -3050,8 +3058,7 @@ platform_pregame()
 
     if (ANDROID) {
       int state = SDL_AndroidGetExternalStorageState();
-      enum { WRITE_FLAG = 0x02 };
-      if (state & WRITE_FLAG) {
+      if (state & 0x3) {
         char *external = SDL_AndroidGetExternalStoragePath();
         Log("Storage: [state %d] path: %s", state, external);
         int len = snprintf(savepathD, AL(savepathD), "%s", external);
@@ -3060,6 +3067,7 @@ platform_pregame()
         } else {
           savepath_usedD = len;
           platformD.saveexport = platform_saveexport;
+          platformD.loadexport = platform_loadexport;
         }
         SDL_free(external);
       }

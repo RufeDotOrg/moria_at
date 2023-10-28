@@ -10439,6 +10439,23 @@ show_character()
 }
 
 int
+py_archive_read(summary, load)
+struct summaryS* summary;
+fn load;
+{
+  int save_count = 0;
+  for (int it = 0; it < AL(classD); ++it) {
+    if (load(savename_by_class(it))) {
+      save_count += 1;
+      summary[it].slevel = uD.lev;
+      summary[it].sclass = uD.clidx;
+      summary[it].srace = uD.ridx;
+      summary[it].sdepth = MAX(uD.max_dlv, dun_level) * 50;
+    }
+  }
+  return save_count;
+}
+int
 py_archive_export()
 {
   int count = 0;
@@ -10464,20 +10481,13 @@ py_archive_select()
   input_resumeD = -1;
 
   overlay_submodeD = 0;
-  save_count = 0;
   iidx = -1;
-  for (int it = 0; it < AL(classD); ++it) {
-    if (platformD.load(savename_by_class(it))) {
-      save_count += 1;
-      summary[it].slevel = uD.lev;
-      summary[it].sclass = uD.clidx;
-      summary[it].srace = uD.ridx;
-      summary[it].sdepth = MAX(uD.max_dlv, dun_level) * 50;
-    }
-  }
+  save_count = py_archive_read(summary, platformD.load);
 
   if (save_count) {
+    fn load = platformD.load;
     fn saveexport = platformD.saveexport;
+    fn loadexport = platformD.loadexport;
 
     do {
       line = 0;
@@ -10491,15 +10501,24 @@ py_archive_select()
         }
       }
       BufMsg(overlay, "g) Goto Character Creation");
-      if (saveexport)
-        BufMsg(overlay, "h) Have archive exported to external storage");
+      if (saveexport) {
+        if (load != loadexport) {
+          BufMsg(overlay, "h) Have archive exported to external storage");
+          BufMsg(overlay, "i) Import archive for play");
+        }
+      }
       DRAWMSG("Which class archive would you like to restore?");
       c = inkey();
       if (is_ctrl(c) || c == 'g') return -1;
       if (c == 'h') py_archive_export();
+      if (c == 'i') {
+        load = loadexport;
+        py_archive_read(summary, loadexport);
+        overlay_submodeD = 'a';
+      }
       iidx = c - 'a';
     } while (iidx >= AL(summary));
-    if (!platformD.load(savename_by_class(iidx))) iidx = -1;
+    if (!load(savename_by_class(iidx))) iidx = -1;
   }
 
   return iidx;
