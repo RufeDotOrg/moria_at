@@ -10506,19 +10506,33 @@ py_archive_select()
           BufMsg(overlay, " ");
         }
       }
-      BufMsg(overlay, "g) Goto Character Creation");
+
+      if (load != loadexport) BufMsg(overlay, "g) Goto Character Creation");
+
+      char* media = "";
       if (saveexport) {
         if (load != loadexport) {
-          BufMsg(overlay, "h) Have archive exported to external storage");
-          BufMsg(overlay, "i) Import archive for play");
+          line = 's' - 'a';
+          BufMsg(overlay, "s) Store archive to external media");
+
+          line = 'v' - 'a';
+          BufMsg(overlay, "v) View archive on external media");
+        } else {
+          media = "External Media ";
         }
       }
-      DRAWMSG("Which class archive would you like to restore?");
+
+      DRAWMSG("%sArchive: Restore which character?", media);
       c = inkey();
-      if (c == ESCAPE) continue;
+      if (c == ESCAPE) {
+        load = platformD.load;
+        py_archive_read(summary, load);
+        overlay_submodeD = 0;
+        continue;
+      }
       if (is_ctrl(c) || c == 'g') return -1;
-      if (c == 'h') py_archive_export();
-      if (c == 'i') {
+      if (c == 's') py_archive_export();
+      if (c == 'v') {
         load = loadexport;
         py_archive_read(summary, loadexport);
         overlay_submodeD = 'a';
