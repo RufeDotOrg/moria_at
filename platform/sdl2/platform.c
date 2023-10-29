@@ -20,6 +20,7 @@ enum { __APPLE__ };
 
 #ifndef ANDROID
 enum { ANDROID };
+char *SDL_AndroidGetExternalStoragePath();
 #endif
 
 #if defined(ANDROID) || defined(__APPLE__)
@@ -3059,7 +3060,7 @@ platform_pregame()
     if (ANDROID) {
       int state = SDL_AndroidGetExternalStorageState();
       if (state & 0x3) {
-        char *external = SDL_AndroidGetExternalStoragePath();
+        char *external = (char *)SDL_AndroidGetExternalStoragePath();
         Log("Storage: [state %d] path: %s", state, external);
         int len = snprintf(savepathD, AL(savepathD), "%s", external);
         if (len < 0 || len >= AL(savepathD)) {
