@@ -9320,6 +9320,7 @@ uint32_t bookflags;
   int cmana;
   int book[32], book_used, line;
   int spidx, spknown, splevel, spmana, spchance;
+  int lev = uD.lev;
 
   cmana = uD.cmana;
   book_used = 0;
@@ -9348,14 +9349,18 @@ uint32_t bookflags;
         field[0][0] = 0;
         field[1][0] = 0;
       } else {
-        snprintf(field[0], AL(field[0]), "level %d", splevel);
-        field[1][0] = 0;
+        field[0][0] = 0;
+        if (splevel > lev)
+          snprintf(field[1], AL(field[0]), "level %d", splevel);
+        else
+          memcpy(&field[1], AP("unknown"));
       }
 
       BufMsg(overlay,
-             "%c) %-40.040s "
-             "%16.016s "
-             "%16.016s",
+             "(%c) "
+             "%-32.032s "
+             "%13.013s "
+             "%13.013s",
              'a' + it, splevel < 99 ? names[spidx] : "???", field[0], field[1]);
     }
 
