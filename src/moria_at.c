@@ -10469,10 +10469,26 @@ py_archive_export()
     count += (platformD.saveexport(savename_by_class(it)) != 0);
   }
   int line = 0;
-  BufMsg(overlay, "%d characters copied", count);
+  BufMsg(screen, "%d characters copied", count);
   DRAWMSG("Export Character Archive");
   char c = inkey();
   return count;
+}
+int
+py_archive_import()
+{
+  int save_count = 0;
+  for (int it = 0; it < AL(classD); ++it) {
+    char* file = savename_by_class(it);
+    if (platformD.loadexport(file)) {
+      if (platformD.save(file)) save_count += 1;
+    }
+  }
+  int line = 0;
+  BufMsg(screen, "%d characters copied", save_count);
+  DRAWMSG("Import Character Archive");
+  char c = inkey();
+  return save_count;
 }
 int
 py_archive_select()
@@ -10519,11 +10535,20 @@ py_archive_select()
           BufMsg(overlay, "v) View archive on external media");
         } else {
           media = "External Media ";
+
+          line = 'i' - 'a';
+          BufMsg(overlay, "i) Import all");
         }
       }
 
       DRAWMSG("%sArchive: Restore which character?", media);
       c = inkey();
+      if (c == 'i') {
+        py_archive_import();
+
+        // Reload internal media
+        c = ESCAPE;
+      }
       if (c == ESCAPE) {
         load = platformD.load;
         py_archive_read(summary, load);
