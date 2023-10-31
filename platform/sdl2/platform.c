@@ -20,6 +20,7 @@ enum { __APPLE__ };
 
 #ifndef ANDROID
 enum { ANDROID };
+int SDL_AndroidGetExternalStorageState();
 char *SDL_AndroidGetExternalStoragePath();
 #endif
 
