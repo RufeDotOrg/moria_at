@@ -10768,8 +10768,7 @@ py_menu()
     overlay_submodeD = 0;
     line = 0;
     BufMsg(overlay, death ? "a) All equipment / inventory "
-                          : "a) Await event (health regeneration, malady "
-                            "expiration, or recall)");
+                          : "a) Await event (health, malady, or recall)");
     if (HACK) {
       BufMsg(overlay, "b) Undo / Gameplay Rewind (%d) (%d) (%s)", input_action,
              input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
