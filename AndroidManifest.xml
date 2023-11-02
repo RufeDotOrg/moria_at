@@ -3,7 +3,6 @@
      com.gamemaker.game
 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="org.rufe.moria"
     android:versionCode="ZZZZ"
     android:versionName="AbCdEfGhIjKlMnO"
     android:installLocation="auto">
