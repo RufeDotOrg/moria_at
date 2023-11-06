@@ -2145,7 +2145,7 @@ display_resize(int dw, int dh)
     c1 = .5 - (float)gameplay_rectD.w / dw * .5f;
     c2 = .5 + (float)gameplay_rectD.w / dw * .5f;
   } else {
-    int margin = dw <= 768 ? 0 : 4;
+    int margin = dh <= 768 ? 0 : 4;
     c1 = (26 + 2 + margin) * cfD;
     c2 = c1 + ((float)gameplay_rectD.w / dw);
   }
