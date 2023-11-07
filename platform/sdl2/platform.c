@@ -26,8 +26,12 @@ char *SDL_AndroidGetExternalStoragePath();
 
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
+enum { KEYBOARD = 0 };
+enum { MOUSE = 0 };
 #else
 enum { TOUCH = 0 };
+enum { KEYBOARD = 1 };
+enum { MOUSE = TOUCH };
 #endif
 
 enum { SDL_EVLOG = 0 };
@@ -2583,7 +2587,7 @@ portrait_event_xy(eventtype, x, y)
 {
   USE(mode);
   int finger = finger_countD - 1;
-  if (TOUCH && !(ANDROID || __APPLE__)) {
+  if (KEYBOARD) {
     finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
   }
   if (eventtype == SDL_FINGERDOWN) {
@@ -2672,7 +2676,7 @@ SDL_Event event;
   int mode = modeD;
   int touch = touch_from_event(&event);
   int finger = finger_countD - 1;
-  if (TOUCH && !(ANDROID || __APPLE__)) {
+  if (KEYBOARD) {
     finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
   }
   SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
@@ -2769,7 +2773,8 @@ sdl_pump()
   int ret = 0;
 
   while (ret == 0 && SDL_PollEvent(&event)) {
-    if (TOUCH && (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
+    if ((MOUSE || TOUCH) &&
+        (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
       finger_countD += (event.type == SDL_FINGERDOWN);
       // TBD: unify code paths?
       if (layoutD) {
@@ -2783,7 +2788,7 @@ sdl_pump()
         ret = sdl_touch_event(event);
       }
       finger_countD -= (event.type == SDL_FINGERUP);
-    } else if (!TOUCH && (event.type == SDL_KEYDOWN)) {
+    } else if (KEYBOARD && (event.type == SDL_KEYDOWN)) {
       ret = sdl_kb_event(event);
     } else if (event.type == SDL_QUIT) {
       quitD = TRUE;
@@ -3035,12 +3040,9 @@ platform_pregame()
     // Platform Input isolation
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
     // Mouse->Touch
-    if (TOUCH)
-      SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "1");
-    else
-      SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, "0");
+    SDL_SetHint(SDL_HINT_MOUSE_TOUCH_EVENTS, MOUSE ? "1" : "0");
     // Touch->Mouse
-    if (ANDROID) SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
+    SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
     SDL_Init(SDL_SCOPE);
 
