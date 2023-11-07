@@ -29,7 +29,7 @@ enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
 enum { MOUSE = 0 };
 #else
-enum { TOUCH = 0 };
+enum { TOUCH = 1 };
 enum { KEYBOARD = 1 };
 enum { MOUSE = TOUCH };
 #endif
@@ -40,11 +40,14 @@ enum { REORIENTATION = 1 };
 #define ORIENTATION_LIST \
   "Portrait LandscapeRight PortraitUpsideDown LandscapeLeft"
 
-enum { WINDOW = 0 };
 enum { PORTRAIT = 0 };
 #define PORTRAIT_X 1080
 #define PORTRAIT_Y 1920
+enum { LANDSCAPE = 1 };
+#define LANDSCAPE_X 1920
+#define LANDSCAPE_Y 1080
 
+enum { WINDOW = 0 };
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
 enum { FHEIGHT = 32 };
@@ -103,13 +106,26 @@ DATA SDL_Texture *map_textureD;
 DATA SDL_Rect text_rectD;
 DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
-DATA SDL_Texture *portrait_layoutD;
+DATA SDL_Texture *portraitD;
+DATA SDL_Texture *landscapeD;
 DATA SDL_Texture *layoutD;
 DATA SDL_Rect layout_rectD;
 DATA SDL_FRect view_rectD;
 DATA SDL_Rect affectdst_rectD;
 DATA uint32_t max_texture_widthD;
 DATA uint32_t max_texture_heightD;
+
+enum {
+  GR_PAD,
+  GR_BUTTON1,
+  GR_BUTTON2,
+  GR_GAMEPLAY,
+  GR_MINIMAP,
+  GR_STAT,
+  GR_COUNT
+};
+enum { MAX_BUTTON = 2 };
+SDL_Rect grectD[GR_COUNT];
 
 DATA SDL_Rect gameplay_rectD;
 DATA float gameplay_scaleD;
@@ -1007,27 +1023,27 @@ pprect_index(idx)
 }
 
 void
-alt_fill(y, x, left, top, width, height)
+alt_fill(max_row, max_col, left, top, width, height)
 {
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
 
   SDL_SetRenderDrawColor(rendererD, U4(lightingD[1]));
-  for (int row = 0; row < y; row += 2) {
+  for (int row = 0; row < max_row; row += 2) {
     SDL_Rect rect = {
         left,
         top + row * height,
-        x * width,
+        max_col * width,
         height,
     };
     SDL_RenderFillRect(rendererD, &rect);
   }
 
   SDL_SetRenderDrawColor(rendererD, U4(lightingD[2]));
-  for (int row = 1; row < y; row += 2) {
+  for (int row = 1; row < max_row; row += 2) {
     SDL_Rect rect = {
         left,
         top + row * height,
-        x * width,
+        max_col * width,
         height,
     };
     SDL_RenderFillRect(rendererD, &rect);
@@ -1035,6 +1051,39 @@ alt_fill(y, x, left, top, width, height)
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
 }
 
+static int
+rect_altfill(r)
+SDL_Rect r;
+{
+  int rx = r.x;
+  int ry = r.y;
+  int rh = r.h;
+  int rw = r.w;
+  uint32_t rc[] = {
+      lightingD[1],
+      lightingD[2],
+  };
+  for (int row = 0; row * FHEIGHT < rh; ++row) {
+    int color = rc[row % 2];
+    SDL_SetRenderDrawColor(rendererD, U4(color));
+    SDL_Rect target = {
+        rx,
+        ry + row * FHEIGHT,
+        rw,
+        FHEIGHT,
+    };
+    SDL_RenderFillRect(rendererD, &target);
+  }
+
+  return 0;
+}
+void rect_innerframe(r) SDL_Rect r;
+{
+  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
+  SDL_RenderDrawRect(rendererD, &r);
+  SDL_RenderDrawRect(rendererD, &RF(r, -1));
+  SDL_RenderDrawRect(rendererD, &RF(r, -3));
+}
 void rect_frame(r, scale) SDL_Rect r;
 {
   int i = scale * 3;
@@ -1453,56 +1502,39 @@ platform_p2()
 int
 platform_p0()
 {
-  char tmp[80];
   USE(renderer);
   USE(msg_more);
   USE(minimap_enlarge);
 
-  int height = fontD.max_pixel_height;
-  int width = fontD.max_pixel_width;
+  char tmp[80];
   int len = 0;
   int show_minimap = (maD[MA_BLIND] == 0);
   int show_game = 1;
-  int margin = (layout_rectD.w - map_rectD.w) / 2;
   {
-    alt_fill(AL(vitalD), 26 + 2, margin, 0, width, height);
+    AUSE(grect, GR_STAT);
+
+    rect_altfill(grect);
     for (int it = 0; it < MAX_A; ++it) {
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                      vitalD[it], stat_abbrD[it], vital_statD[it]);
-      SDL_Point p = {margin + width / 2, it * height};
+      SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
     {
       int it = MAX_A;
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
-      SDL_Point p = {margin + width / 2, it * height};
+      SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT};
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
-  }
 
-  {
-    SDL_Rect src_rect = {
-        0,
-        0,
-        (26 + 2) * width,
-        AFF_Y * height,
-    };
-    SDL_Rect target = {
-        margin,
-        AL(vitalD) * height,
-        src_rect.w,
-        src_rect.h,
-    };
     char *affstr[AFF_X];
-    SDL_SetRenderTarget(rendererD, text_textureD);
-    SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-    SDL_RenderFillRect(rendererD, &src_rect);
-
-    alt_fill(AFF_Y, 26 + 2, 0, 0, width, height);
+    enum { AFFTEST = 1 };
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
         int idx = AL(affstr) * it + jt;
-        if (active_affectD[idx])
+        if (AFFTEST) {
+          affstr[jt] = affectD[idx][0];
+        } else if (active_affectD[idx])
           affstr[jt] = affectD[idx][active_affectD[idx] - 1];
         else
           affstr[jt] = "";
@@ -1511,34 +1543,17 @@ platform_p0()
       len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
                      affstr[1], affstr[2]);
       SDL_Point p = {
-          width / 2,
-          it * height,
+          grect.x + FWIDTH / 2,
+          grect.y + AL(vital_nameD) * FHEIGHT + it * FHEIGHT,
       };
       if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
     }
 
-    SDL_SetRenderTarget(rendererD, layoutD);
-    SDL_RenderCopy(rendererD, text_textureD, &src_rect, &target);
-  }
-  {
-    SDL_Rect r = {
-        margin + 7,
-        0,
-        (26 + 2) * width - 14,
-        AL(vitalD) * height,
-    };
-    rect_frame(r, 1);
-    r.h = (AFF_Y + AL(vitalD)) * height;
-    rect_frame(r, 1);
+    rect_innerframe(grect);
   }
 
   {
-    SDL_Rect map_target = {
-        PADSIZE + (layout_rectD.w - PADSIZE - MMSCALE * MAX_WIDTH) / 2,
-        (AL(vitalD) * FHEIGHT - (MMSCALE * MAX_HEIGHT)) / 2,
-        MMSCALE * MAX_WIDTH,
-        MMSCALE * MAX_HEIGHT,
-    };
+    AUSE(grect, GR_MINIMAP);
     USE(mmtexture);
 
     if (show_minimap) {
@@ -1547,48 +1562,46 @@ platform_p0()
                              (SDL_Point){0, 0}, mmsurface);
       SDL_UpdateTexture(mmtexture, NULL, mmsurface->pixels, mmsurface->pitch);
 
-      SDL_RenderCopy(rendererD, mmtexture, NULL, &map_target);
-      rect_frame(map_target, 3);
+      SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
+      rect_frame(grect, 3);
     }
 
     if (show_game) {
-      SDL_Rect game_target = {
-          margin,
-          layout_rectD.h - PADSIZE - map_rectD.h - FHEIGHT + 3,
-          map_rectD.w,
-          map_rectD.h,
-      };
+      AUSE(grect, GR_GAMEPLAY);
 
       if (minimap_enlarge) {
-        SDL_RenderCopy(rendererD, mmtexture, NULL, &game_target);
+        SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
       } else {
         SDL_Rect zoom_rect;
         map_draw(&zoom_rect);
-        SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &game_target);
+        SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &grect);
       }
 
       // TBD pad to center
-      {
-        SDL_Point p = {map_target.x, map_target.y - height - 24};
-        len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
-        render_font_string(rendererD, &fontD, tmp, len, p);
-      }
+      // TBD use GR_MINIMAP
+      // {
+      //   SDL_Point p = {grect.x, grect.y - FHEIGHT - 24};
+      //   len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
+      //   render_font_string(rendererD, &fontD, tmp, len, p);
+      // }
 
       // TBD pad to center
-      {
-        SDL_Point p = {map_target.x, map_target.y + map_target.h + 24};
-        len = snprintf(tmp, AL(tmp), "%s", dun_descD);
-        render_font_string(rendererD, &fontD, tmp, len, p);
-      }
+      // TBD use GR_MINIMAP
+      // {
+      //   SDL_Point p = {grect.x, grect.y + grect.h + 24};
+      //   len = snprintf(tmp, AL(tmp), "%s", dun_descD);
+      //   render_font_string(rendererD, &fontD, tmp, len, p);
+      // }
 
       {
+        AUSE(grect, GR_GAMEPLAY);
         char *msg = AS(msg_cqD, msg_writeD);
         int msg_used = AS(msglen_cqD, msg_writeD);
         int alpha = 255;
 
         SDL_Point p = {
-            game_target.x + width / 2,
-            game_target.y + height / 2,
+            grect.x + FWIDTH / 2,
+            grect.y + FHEIGHT / 2,
         };
 
         // Gameplay shows previous message to help the player out
@@ -1599,7 +1612,7 @@ platform_p0()
         }
 
         if (msg_used) {
-          SDL_Rect fill = {p.x, p.y, msg_used * width, height + height / 8};
+          SDL_Rect fill = {p.x, p.y, msg_used * FWIDTH, FHEIGHT + FHEIGHT / 8};
           SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
           SDL_RenderFillRect(renderer, &fill);
 
@@ -1609,8 +1622,8 @@ platform_p0()
         }
 
         if (msg_more) {
-          SDL_Point p = {game_target.x + game_target.w - AL(moreD) * FWIDTH,
-                         game_target.y - FHEIGHT};
+          SDL_Point p = {grect.x + grect.w - AL(moreD) * FWIDTH,
+                         grect.y - FHEIGHT};
           render_font_string(rendererD, &fontD, AP(moreD), p);
         }
       }
@@ -1778,7 +1791,7 @@ platform_landscape()
   if (TOUCH) {
     int bc[] = {RED, GREEN};
 
-    for (int it = 0; it < AL(buttonD); ++it) {
+    for (int it = 0; it < MAX_BUTTON; ++it) {
       SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
       SDL_RenderFillRect(rendererD, &buttonD[it]);
     }
@@ -1855,39 +1868,28 @@ platform_landscape()
 }
 
 int
-platform_portrait()
+platform_draw()
 {
   USE(mode);
   USE(renderer);
   USE(layout_rect);
   int ret;
-  int height = fontD.max_pixel_height;
-  int width = fontD.max_pixel_width;
 
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
   SDL_RenderFillRect(renderer, &layout_rect);
 
   if (TOUCH && tpsurfaceD) {
-    int margin = (layout_rect.w - map_rectD.w) / 2;
-    SDL_Rect pad_target = {
-        margin,
-        layout_rect.h - PADSIZE,
-        PADSIZE,
-        PADSIZE,
-    };
-    SDL_RenderCopy(rendererD, tptextureD, 0, &pad_target);
+    {
+      AUSE(grect, GR_PAD);
+      SDL_RenderCopy(rendererD, tptextureD, 0, &grect);
+    }
 
     int bc[] = {RED, GREEN};
-
-    int size = PADSIZE / 2;
-    SDL_Rect button[2] = {
-        {layout_rect.w - margin - size * 2, pad_target.y + size, size, size},
-        {layout_rect.w - margin - size, pad_target.y, size, size},
-    };
-    for (int it = 0; it < AL(button); ++it) {
+    for (int it = 0; it < MAX_BUTTON; ++it) {
+      AUSE(grect, GR_BUTTON1 + it);
       SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
-      SDL_RenderFillRect(rendererD, &button[it]);
+      SDL_RenderFillRect(rendererD, &grect);
     }
   }
 
@@ -1899,15 +1901,6 @@ platform_portrait()
   render_update();
 
   return ret;
-}
-
-int
-platform_draw()
-{
-  if (layoutD)
-    return platform_portrait();
-  else
-    return platform_landscape();
 }
 
 char
@@ -2076,7 +2069,7 @@ float c3h;
     int ax = dw - left;
     int pad = MAX(0, (ax - bw * 2) / 2);
     Log("button %dw %dh", bw, bh);
-    for (int it = 0; it < AL(buttonD); ++it) {
+    for (int it = 0; it < MAX_BUTTON; ++it) {
       SDL_Rect r = {.w = bw, .h = bh};
       r.x = left + pad - (1 - it) * r.w;
       r.y = textdst_rectD.y + textdst_rectD.h + 6 - (it)*r.h;
@@ -2217,54 +2210,176 @@ display_resize(int dw, int dh)
 
   input_resize(dw, dh, scale, c0, c3w, c3h);
 }
-static void
+
+static int
+portrait_layout()
+{
+  USE(layout_rect);
+  USE(map_rect);
+  int margin = (layout_rect.w - map_rect.w) / 2;
+  grectD[GR_PAD] = (SDL_Rect){
+      margin,
+      layout_rect.h - PADSIZE,
+      PADSIZE,
+      PADSIZE,
+  };
+
+  int size = PADSIZE / 2;
+  grectD[GR_BUTTON1] = (SDL_Rect){layout_rect.w - margin - size * 2,
+                                  grectD[GR_PAD].y + size, size, size};
+  grectD[GR_BUTTON2] =
+      (SDL_Rect){layout_rect.w - margin - size, grectD[GR_PAD].y, size, size};
+
+  grectD[GR_GAMEPLAY] = (SDL_Rect){
+      margin,
+      layout_rect.h - PADSIZE - map_rect.h - FHEIGHT + 3,
+      map_rect.w,
+      map_rect.h,
+  };
+  grectD[GR_MINIMAP] = (SDL_Rect){
+      PADSIZE + (layout_rect.w - PADSIZE - MMSCALE * MAX_WIDTH) / 2,
+      (AL(vitalD) * FHEIGHT - (MMSCALE * MAX_HEIGHT)) / 2,
+      MMSCALE * MAX_WIDTH,
+      MMSCALE * MAX_HEIGHT,
+  };
+
+  grectD[GR_STAT] = (SDL_Rect){
+      margin,
+      0,
+      PADSIZE + 3,
+      (8 + 5) * FHEIGHT,
+  };
+
+  return 0;
+}
+static int
+landscape_layout()
+{
+  USE(layout_rect);
+  USE(map_rect);
+  int xmargin = (layout_rect.w - map_rect.w) / 2;
+  int ymargin = (layout_rect.h - map_rect.h) / 2;
+
+  int lift = (layout_rect.h - (8 + 5) * FHEIGHT - PADSIZE - ymargin) / 2;
+  grectD[GR_PAD] = (SDL_Rect){
+      0,
+      layout_rect.h - PADSIZE - lift,
+      PADSIZE,
+      PADSIZE,
+  };
+
+  int size = PADSIZE / 2;
+  grectD[GR_BUTTON1] = (SDL_Rect){
+      layout_rect.w - size * 2,
+      grectD[GR_PAD].y + size,
+      size,
+      size,
+  };
+  grectD[GR_BUTTON2] = (SDL_Rect){
+      layout_rect.w - size,
+      grectD[GR_PAD].y,
+      size,
+      size,
+  };
+
+  grectD[GR_GAMEPLAY] = (SDL_Rect){
+      xmargin,
+      ymargin,
+      map_rect.w,
+      map_rect.h,
+  };
+  grectD[GR_MINIMAP] = (SDL_Rect){
+      (layout_rect.w - PADSIZE) + (PADSIZE - MMSCALE * MAX_WIDTH) / 2,
+      FHEIGHT * 4,
+      MMSCALE * MAX_WIDTH,
+      MMSCALE * MAX_HEIGHT,
+  };
+
+  grectD[GR_STAT] = (SDL_Rect){
+      0,
+      ymargin,
+      PADSIZE + 3,
+      (8 + 5) * FHEIGHT,
+  };
+
+  return 0;
+}
+static int
 orientation_update()
 {
   USE(display_rect);
-  int guess = display_rect.w > display_rect.h ? SDL_ORIENTATION_LANDSCAPE
-                                              : SDL_ORIENTATION_PORTRAIT;
-  if (PORTRAIT) guess = SDL_ORIENTATION_PORTRAIT;
+  int orientation = display_rect.w > display_rect.h ? SDL_ORIENTATION_LANDSCAPE
+                                                    : SDL_ORIENTATION_PORTRAIT;
+  if (LANDSCAPE) orientation = SDL_ORIENTATION_LANDSCAPE;
+  if (PORTRAIT) orientation = SDL_ORIENTATION_PORTRAIT;
 
-  if (guess == SDL_ORIENTATION_PORTRAIT) {
-    USE(layout_rect);
-    USE(display_rect);
-    USE(safe_rect);
-    float scale = 1.f;
+  USE(layout_rect);
+  USE(safe_rect);
+  float scale = 1.f;
+  if (orientation == SDL_ORIENTATION_LANDSCAPE) {
+    layoutD = landscapeD;
+    layout_rect = (SDL_Rect){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
 
     {
       // safe_rect is respected on the orientation axis
-      float xscale = (float)display_rect.w / layout_rect.w;
-      float yscale = (float)safe_rect.h / layout_rect.h;
+      float fw = safe_rect.w ? safe_rect.w : display_rect.w;
+      float fh = display_rect.h;
+      float xscale = fw / layout_rect.w;
+      float yscale = fh / layout_rect.h;
       scale = MIN(xscale, yscale);
-      Log("orientation_scale %.03fx %.03fy %.03f", xscale, yscale, scale);
+      Log("orientation %d %.03f %.03f %d %d sw dh", orientation, xscale, yscale,
+          safe_rect.w, display_rect.h);
     }
+  } else if (orientation == SDL_ORIENTATION_PORTRAIT) {
+    layoutD = portraitD;
+    layout_rect = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
 
-    // Note tension: center of display vs. center of safe area
-    //   affects visual aesthetic
-    //   affects input positioning for touch
-    SDL_Rect ar_rect = {0, 0, layout_rect.w * scale, layout_rect.h * scale};
-    ar_rect.x = (display_rect.w - ar_rect.w) / 2;
-    ar_rect.y = MAX(safe_rect.y, (display_rect.h - ar_rect.h) / 2);
-
-    float xuse = (float)ar_rect.w / display_rect.w;
-    float yuse = (float)ar_rect.h / display_rect.h;
-    float xpad = (float)ar_rect.x / display_rect.w;
-    float ypad = (float)ar_rect.y / display_rect.h;
-
-    Log("PORTRAIT %.03f %.03f xuse yuse %.03f %.03f xpad ypad", xuse, yuse,
-        xpad, ypad);
-    SDL_FRect view = {xpad, ypad, xuse, yuse};
-    view_rectD = view;
-
-    // Gameplay side effects
-    layoutD = portrait_layoutD;
-    console_widthD = 64;
-    gameplay_scaleD = 1.0f;
+    {
+      // safe_rect is respected on the orientation axis
+      float fw = display_rect.w;
+      float fh = safe_rect.h ? safe_rect.h : display_rect.h;
+      float xscale = fw / layout_rect.w;
+      float yscale = fh / layout_rect.h;
+      scale = MIN(xscale, yscale);
+      Log("orientation %d %.03f %.03f %d %d dw sh", orientation, xscale, yscale,
+          display_rect.w, safe_rect.h);
+    }
   } else {
     layoutD = 0;
-    Log("LANDSCAPE %d console_width", console_widthD);
+    layout_rect = display_rectD;
   }
+  layout_rectD = layout_rect;
+
+  // Note tension: center of display vs. center of safe area
+  //   affects visual aesthetic
+  //   affects input positioning for touch
+  SDL_Rect ar_rect = {0, 0, layout_rect.w * scale, layout_rect.h * scale};
+  ar_rect.x = (display_rect.w - ar_rect.w) / 2;
+  ar_rect.y = MAX(safe_rect.y, (display_rect.h - ar_rect.h) / 2);
+
+  float xuse = (float)ar_rect.w / display_rect.w;
+  float yuse = (float)ar_rect.h / display_rect.h;
+  float xpad = (float)ar_rect.x / display_rect.w;
+  float ypad = (float)ar_rect.y / display_rect.h;
+
+  Log("orientation %d scale %f: %.03f %.03f xuse yuse %.03f %.03f xpad ypad",
+      orientation, scale, xuse, yuse, xpad, ypad);
+  SDL_FRect view = {xpad, ypad, xuse, yuse};
+  view_rectD = view;
+
+  // Gameplay side effects (TBD: revisit console_width for landscape)
+  console_widthD = 64;
+  gameplay_scaleD = 1.0f;
+
+  if (orientation == SDL_ORIENTATION_PORTRAIT) {
+    portrait_layout();
+  } else if (orientation == SDL_ORIENTATION_LANDSCAPE) {
+    landscape_layout();
+  }
+
+  return 0;
 }
+
 char *
 savepath_by_filename(char *filename)
 {
@@ -2466,7 +2581,7 @@ SDL_Event *event;
   if (SDL_PointInRect(&tpp, &gameplay_rectD)) {
     r = TOUCH_GAMEPLAY;
   }
-  for (int it = 0; it < AL(buttonD); ++it) {
+  for (int it = 0; it < MAX_BUTTON; ++it) {
     if (SDL_PointInRect(&tpp, &buttonD[it])) r = TOUCH_LB + it;
   }
 
@@ -2519,68 +2634,52 @@ static int
 touch_by_xy(x, y)
 {
   SDL_Point tpp = {x, y};
-  int margin = (layout_rectD.w - map_rectD.w) / 2;
-  SDL_Rect stat_target = {
-      margin,
-      0,
-      PADSIZE,
-      (8 + 5) * FHEIGHT,
-  };
-  if (SDL_PointInRect(&tpp, &stat_target)) {
-    return TOUCH_STAT;
+  {
+    AUSE(grect, GR_STAT);
+    if (SDL_PointInRect(&tpp, &grect)) {
+      return TOUCH_STAT;
+    }
+  }
+  {
+    AUSE(grect, GR_MINIMAP);
+    if (SDL_PointInRect(&tpp, &grect)) {
+      return TOUCH_MAP;
+    }
   }
 
-  SDL_Rect map_target = {
-      PADSIZE + (layout_rectD.w - PADSIZE - MMSCALE * MAX_WIDTH) / 2,
-      (AL(vitalD) * FHEIGHT - (MMSCALE * MAX_HEIGHT)) / 2,
-      MMSCALE * MAX_WIDTH,
-      MMSCALE * MAX_HEIGHT,
-  };
-  if (SDL_PointInRect(&tpp, &map_target)) {
-    return TOUCH_MAP;
-  }
-  if (y < stat_target.h && x > map_target.x + map_target.w) {
-    return TOUCH_VERSION;
-  }
+  // TBD TOUCH_VERSION
+  // if (y < stat_target.h && x > grect.x + grect.w) {
+  //   return TOUCH_VERSION;
+  // }
 
-  SDL_Rect game_target = {
-      (layout_rectD.w - map_rectD.w) / 2,
-      layout_rectD.h - PADSIZE - map_rectD.h - FHEIGHT + 3,
-      map_rectD.w,
-      map_rectD.h,
-  };
-  if (SDL_PointInRect(&tpp, &game_target)) {
-    gameplay_tapxy(x - game_target.x, y - game_target.y);
-    return TOUCH_GAMEPLAY;
+  {
+    AUSE(grect, GR_GAMEPLAY);
+    if (SDL_PointInRect(&tpp, &grect)) {
+      gameplay_tapxy(x - grect.x, y - grect.y);
+      return TOUCH_GAMEPLAY;
+    }
   }
 
-  int size = PADSIZE / 2;
-  SDL_Rect button[2] = {
-      {layout_rectD.w - margin - size * 2, layout_rectD.h - PADSIZE + size,
-       size, size},
-      {layout_rectD.w - margin - size, layout_rectD.h - PADSIZE, size, size},
-  };
-  for (int it = 0; it < AL(button); ++it) {
-    if (SDL_PointInRect(&tpp, &button[it])) return TOUCH_LB + it;
+  for (int it = 0; it < MAX_BUTTON; ++it) {
+    AUSE(grect, GR_BUTTON1 + it);
+    if (SDL_PointInRect(&tpp, &grect)) return TOUCH_LB + it;
   }
 
-  SDL_Rect pad_rect = {
-      margin,
-      layout_rectD.h - PADSIZE,
-      PADSIZE,
-      PADSIZE,
-  };
-  int r = 0;
-  if (SDL_PointInRect(&tpp, &pad_rect)) {
-    SDL_Point center = {R4CENTER(pad_rect)};
-    SDL_Point offset = {ppD[0].x - center.x, ppD[0].y - center.y};
+  {
+    AUSE(grect, GR_PAD);
+    int r = 0;
+    if (SDL_PointInRect(&tpp, &grect)) {
+      SDL_Point center = {R4CENTER(grect)};
+      SDL_Point offset = {ppD[0].x - center.x, ppD[0].y - center.y};
 
-    int n = nearest_pp(tpp.y + offset.y, tpp.x + offset.x);
-    r = TOUCH_PAD + pp_keyD[n];
+      int n = nearest_pp(tpp.y + offset.y, tpp.x + offset.x);
+      r = TOUCH_PAD + pp_keyD[n];
+    }
+
+    last_pressD = r;
+
+    return r;
   }
-  last_pressD = r;
-
-  return r;
 }
 static int
 portrait_event_xy(eventtype, x, y)
@@ -3127,9 +3226,12 @@ platform_pregame()
                           text_rectD.w, text_rectD.h);
 
     layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
-    portrait_layoutD =
+    portraitD =
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           PORTRAIT_X, PORTRAIT_Y);
+    landscapeD =
+        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+                          LANDSCAPE_X, LANDSCAPE_Y);
   }
 
   font_colorD = whiteD;
