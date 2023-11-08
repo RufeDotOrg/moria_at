@@ -118,6 +118,7 @@ DATA uint32_t max_texture_widthD;
 DATA uint32_t max_texture_heightD;
 
 enum {
+  GR_VERSION,
   GR_PAD,
   GR_BUTTON1,
   GR_BUTTON2,
@@ -1833,12 +1834,13 @@ common_text()
   char tmp[80];
   int len;
   {
-    SDL_Point p = {layout_rect.w - 8 * FWIDTH, layout_rect.h - FHEIGHT};
-    render_font_string(renderer, &fontD, versionD + 10, AL(versionD) - 11, p);
-    p.y -= FHEIGHT;
-    render_font_string(renderer, &fontD, "version", AL("version"), p);
-    p.y -= FHEIGHT;
+    AUSE(grect, GR_VERSION);
+    SDL_Point p = {grect.x, grect.y};
     render_font_string(renderer, &fontD, "moria", AL("moria"), p);
+    p.y += FHEIGHT;
+    render_font_string(renderer, &fontD, "version", AL("version"), p);
+    p.y += FHEIGHT;
+    render_font_string(renderer, &fontD, versionD + 10, AL(versionD) - 11, p);
   }
 
   {
@@ -2368,6 +2370,14 @@ portrait_layout()
 {
   USE(layout_rect);
   USE(map_rect);
+
+  grectD[GR_VERSION] = (SDL_Rect){
+      layout_rect.w - 8 * FWIDTH,
+      layout_rect.h - 3 * FHEIGHT,
+      FWIDTH * 8,
+      FHEIGHT * 3,
+  };
+
   int margin = (layout_rect.w - map_rect.w) / 2;
   grectD[GR_PAD] = (SDL_Rect){
       margin,
@@ -2420,6 +2430,13 @@ landscape_layout()
   USE(map_rect);
   int xmargin = (layout_rect.w - map_rect.w) / 2;
   int ymargin = FHEIGHT + 8;
+
+  grectD[GR_VERSION] = (SDL_Rect){
+      layout_rect.w - 8 * FWIDTH,
+      layout_rect.h - 3 * FHEIGHT,
+      FWIDTH * 8,
+      FHEIGHT * 3,
+  };
 
   int lift = (layout_rect.h - (8 + 5) * FHEIGHT - PADSIZE - ymargin) / 2;
   grectD[GR_PAD] = (SDL_Rect){
@@ -2829,10 +2846,12 @@ touch_by_xy(x, y)
     }
   }
 
-  // TBD TOUCH_VERSION
-  // if (y < stat_target.h && x > grect.x + grect.w) {
-  //   return TOUCH_VERSION;
-  // }
+  {
+    AUSE(grect, GR_VERSION);
+    if (SDL_PointInRect(&tpp, &grect)) {
+      return TOUCH_VERSION;
+    }
+  }
 
   {
     AUSE(grect, GR_GAMEPLAY);
