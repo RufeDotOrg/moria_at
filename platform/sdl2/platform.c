@@ -2758,49 +2758,6 @@ gameplay_tapxy(relx, rely)
   return 'O';
 }
 
-static int
-gameplay_touch(event)
-SDL_Event *event;
-{
-  SDL_Point tpp = {
-      event->tfinger.x * display_rectD.w,
-      event->tfinger.y * display_rectD.h,
-  };
-  SDL_Point rel = {
-      tpp.x - gameplay_rectD.x,
-      tpp.y - gameplay_rectD.y,
-  };
-  return gameplay_tapxy(rel.x, rel.y);
-}
-
-static int
-touch_from_event(event)
-SDL_Event *event;
-{
-  SDL_Point tpp = {
-      event->tfinger.x * display_rectD.w,
-      event->tfinger.y * display_rectD.h,
-  };
-  int r = 0;
-  if (SDL_PointInRect(&tpp, &mmrectD)) {
-    r = TOUCH_MAP;
-  }
-  if (SDL_PointInRect(&tpp, &gameplay_rectD)) {
-    r = TOUCH_GAMEPLAY;
-  }
-  for (int it = 0; it < MAX_BUTTON; ++it) {
-    if (SDL_PointInRect(&tpp, &buttonD[it])) r = TOUCH_LB + it;
-  }
-
-  if (SDL_PointInRect(&tpp, &padD)) {
-    int n = nearest_pp(tpp.y, tpp.x);
-    r = TOUCH_PAD + pp_keyD[n];
-  }
-  last_pressD = r;
-
-  return r;
-}
-
 int
 overlay_end()
 {
@@ -2891,7 +2848,7 @@ touch_by_xy(x, y)
   }
 }
 static int
-portrait_event_xy(eventtype, x, y)
+finger_event_xy(eventtype, x, y)
 {
   USE(mode);
   int finger = finger_countD - 1;
@@ -2976,101 +2933,6 @@ portrait_event_xy(eventtype, x, y)
   return 0;
 }
 
-static int
-sdl_touch_event(event)
-SDL_Event event;
-{
-  // Finger inputs
-  int mode = modeD;
-  int touch = touch_from_event(&event);
-  int finger = finger_countD - 1;
-  if (KEYBOARD) {
-    finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
-  }
-  SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-
-  // Playing (Mode 0)
-  if (mode == 0 && event.type == SDL_FINGERDOWN) {
-    if (touch > TOUCH_PAD) {
-      char c = char_by_dir(touch - TOUCH_PAD);
-      switch (finger) {
-        case 0:
-          return c;
-        case 1:
-          if (c == ' ') return '=';
-          return c & ~0x20;
-        default:
-          break;
-      }
-    } else if (touch) {
-      switch (touch) {
-        case TOUCH_MAP:
-          return 'M';
-        case TOUCH_GAMEPLAY:
-          // shim to support message history
-          if (tp.y < .09) return CTRL('p');
-          return finger ? '-' : gameplay_touch(&event);
-        case TOUCH_LB:
-          return finger ? 'd' : 'A';
-        case TOUCH_RB:
-          return finger ? CTRL('a') : '.';
-        default:
-          break;
-      }
-    } else {
-      if (tp.y < .09) return CTRL('p');
-      if (tp.x < .23 && tp.y < .5) return 'C';
-      if (tp.x >= .775 && tp.y > .90) return 'v';
-    }
-  }
-
-  // Overlay (Mode 1)
-  if (mode == 1 && event.type == SDL_FINGERDOWN) {
-    if (touch > TOUCH_PAD) {
-      int dir = touch - TOUCH_PAD;
-      int dx = dir_x(dir);
-      int dy = dir_y(dir);
-
-      if (!dx && !dy) {
-        return 'A' + finger_rowD;
-      }
-      if (dx && !dy) {
-        if (finger)
-          finger_rowD = dx > 0 ? overlay_end() : 0;
-        else
-          finger_colD = CLAMP(finger_colD + dx, 0, 1);
-      }
-      if (dy && !dx) {
-        if (finger)
-          finger_rowD = overlay_bisect(dy);
-        else
-          finger_rowD = overlay_input(dy);
-      }
-      return (finger_colD == 0) ? '*' : '/';
-    }
-    if (touch == TOUCH_GAMEPLAY && finger) return '-';
-    if (touch == TOUCH_LB) {
-      return ESCAPE;
-    }
-    if (touch == TOUCH_RB) {
-      return 'a' + finger_rowD;
-    }
-    if (tp.x < .23 && tp.y < .5 && submodeD == 'c') return 'C';
-  }
-
-  // Screen (mode 2)
-  if (mode == 2 && event.type == SDL_FINGERUP) return ' ';
-  if (mode == 2 && event.type == SDL_FINGERDOWN) {
-    SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-    if (touch == TOUCH_LB) return 'o';
-    if (touch == TOUCH_RB) return ESCAPE;
-    if (tp.y < .09) return CTRL('p');
-    if (tp.x < .23 && tp.y < .5) return 'C';
-    if (tp.x >= .775 && tp.y > .90) return 'v';
-  }
-  return 0;
-}
-
 // Game interface
 char
 sdl_pump()
@@ -3084,16 +2946,12 @@ sdl_pump()
     if ((MOUSE || TOUCH) &&
         (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
       finger_countD += (event.type == SDL_FINGERDOWN);
-      // TBD: unify code paths?
-      if (layoutD) {
-        SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-        if (SDL_PointInFRect(&tp, &view_rect)) {
-          int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
-          int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
-          ret = portrait_event_xy(event.type, x, y);
-        }
-      } else {
-        ret = sdl_touch_event(event);
+      // TBD: handle touch outside of view?
+      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+      if (SDL_PointInFRect(&tp, &view_rect)) {
+        int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
+        int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
+        ret = finger_event_xy(event.type, x, y);
       }
       finger_countD -= (event.type == SDL_FINGERUP);
     } else if (KEYBOARD && (event.type == SDL_KEYDOWN)) {
