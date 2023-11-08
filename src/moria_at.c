@@ -418,19 +418,19 @@ static void msg_game(msg, msglen) char* msg;
 {
   char* log;
   int log_used, msg_used;
-  int console_width = console_widthD;
+  USE(msg_width);
 
   log_used = AS(msglen_cqD, msg_writeD);
-  if (log_used + msglen >= console_width) {
+  if (log_used + msglen >= msg_width) {
     msg_pause();
     log_used = 0;
   }
 
   log = AS(msg_cqD, msg_writeD);
-  msg_used = snprintf(log + log_used, console_width - log_used, "%s ", msg);
+  msg_used = snprintf(log + log_used, msg_width - log_used, "%s ", msg);
 
   if (msg_used > 0)
-    AS(msglen_cqD, msg_writeD) = MIN(log_used + msg_used, console_width);
+    AS(msglen_cqD, msg_writeD) = MIN(log_used + msg_used, msg_width);
 
   if (countD.rest) countD.rest = 0;
   if (find_flag) find_flag = 0;
@@ -569,7 +569,7 @@ go_up()
     no_stairs = TRUE;
 
   if (no_stairs) {
-    msg_print("I see no up staircase here.");
+    msg_print("You see no up staircase here.");
   }
 }
 static void
@@ -590,7 +590,7 @@ go_down()
     no_stairs = TRUE;
 
   if (no_stairs) {
-    msg_print("I see no down staircase here.");
+    msg_print("You see no down staircase here.");
   }
 }
 int
@@ -7980,10 +7980,10 @@ enum { DROP_DETAIL = 8 };
 static int
 inven_overlay(begin, end)
 {
-  USE(console_width);
+  USE(overlay_width);
   USE(drop_mode);
   int line, count;
-  int limitw = MIN(console_width, 80);
+  int limitw = MIN(overlay_width, 80);
   int descw = 4;
   int detailw = limitw - INVEN_DETAIL;
   int dropw = limitw - DROP_DETAIL;
@@ -10293,7 +10293,7 @@ try_spike_dir(dir)
     // Costs a turn, otherwise can be abused for detecting invis monsters
     turn_flag = TRUE;
   } else {
-    msg_print("I do not see anything you can close there.");
+    msg_print("You do not see anything you can close there.");
   }
   return ret;
 }
@@ -10352,14 +10352,14 @@ show_version()
 int
 show_character()
 {
-  USE(console_width);
+  USE(overlay_width);
   int line;
   int xbth, xbowth;
   int sptype;
   line = 0;
   int col[2];
 
-  if (console_width < 80) {
+  if (overlay_width < 80) {
     col[0] = 20;
     col[1] = 44;
   } else {
@@ -11387,7 +11387,7 @@ close_object()
         msg_print("Something is in your way!");
       }
     } else {
-      msg_print("I do not see anything you can close there.");
+      msg_print("You do not see anything you can close there.");
     }
   }
 }
@@ -11500,7 +11500,7 @@ void py_disarm(uy, ux) int *uy, *ux;
     obj = &entity_objD[c_ptr->oidx];
 
     if (obj->tval != TV_VIS_TRAP && obj->tval != TV_CHEST) {
-      msg_print("I do not see anything to disarm there.");
+      msg_print("You do not see anything to disarm there.");
     }
     if (c_ptr->midx) {
       // Prevent invis-detection via disarm: no free turn
@@ -11673,7 +11673,7 @@ open_object(y, x)
       }
     }
   } else {
-    msg_print("I do not see anything you can open there.");
+    msg_print("You do not see anything you can open there.");
   }
 }
 static void
@@ -12894,11 +12894,11 @@ enum { COST_DETAIL = 8 };
 static void
 pawn_display()
 {
-  USE(console_width);
+  USE(overlay_width);
   int line;
   int cost, sidx;
   struct objS* obj;
-  int limitw = MIN(console_width, 80);
+  int limitw = MIN(overlay_width, 80);
   int descw = 4;
   int detailw = limitw - INVEN_DETAIL - COST_DETAIL;
   int costw = limitw - COST_DETAIL;
@@ -12940,10 +12940,10 @@ pawn_display()
 static void
 store_display(sidx)
 {
-  USE(console_width);
+  USE(overlay_width);
   int line, cost;
   struct objS* obj;
-  int limitw = MIN(console_width, 80);
+  int limitw = MIN(overlay_width, 80);
   int descw = 4;
   int detailw = limitw - INVEN_DETAIL - COST_DETAIL;
   int costw = limitw - COST_DETAIL;
@@ -13881,7 +13881,7 @@ platform_init()
   platformD.readansi = platform_readansi;
   platformD.predraw = platform_predraw;
   platformD.draw = platform_draw;
-  console_widthD = 80;
+  msg_widthD = overlay_widthD = 80;
 
   return 0;
 }

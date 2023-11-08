@@ -22,7 +22,9 @@ DATA char msg_cqD[MAX_MSG][98];
 DATA char msglen_cqD[MAX_MSG];
 DATA uint32_t msg_writeD;
 DATA uint32_t msg_moreD;
-DATA int console_widthD;
+DATA int overlay_widthD;
+DATA int overlay_heightD;
+DATA int msg_widthD;
 
 // Magic affect counters & names
 GAME int32_t maD[MA_COUNT];
