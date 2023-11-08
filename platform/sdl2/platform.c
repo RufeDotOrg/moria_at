@@ -1508,7 +1508,7 @@ platform_p2()
 
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
-  rect_innerframe(grect);
+  if (is_text) rect_innerframe(grect);
 
   return 0;
 }
