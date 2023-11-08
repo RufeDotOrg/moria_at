@@ -31,7 +31,7 @@ enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
 enum { MOUSE = 0 };
 #else
-enum { TOUCH = 1 };
+enum { TOUCH = 0 };
 enum { KEYBOARD = 1 };
 enum { MOUSE = TOUCH };
 #endif
@@ -45,7 +45,7 @@ enum { REORIENTATION = 1 };
 enum { PORTRAIT = 0 };
 #define PORTRAIT_X 1080
 #define PORTRAIT_Y 1920
-enum { LANDSCAPE = 1 };
+enum { LANDSCAPE = 0 };
 #define LANDSCAPE_X 1920
 #define LANDSCAPE_Y 1080
 
