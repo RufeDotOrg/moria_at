@@ -1521,16 +1521,24 @@ vitalstat_text()
   AUSE(grect, GR_STAT);
 
   rect_altfill(grect);
+  if (uD.ridx < AL(raceD) && uD.clidx < AL(classD)) {
+    int it = 0;
+    len = snprintf(tmp, AL(tmp), "%s %s", raceD[uD.ridx].name,
+                   classD[uD.clidx].name);
+    SDL_Point p = {grect.x + grect.w / 2 - (len * FWIDTH) / 2,
+                   grect.y + it * FHEIGHT};
+    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+  }
   for (int it = 0; it < MAX_A; ++it) {
     len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                    vitalD[it], stat_abbrD[it], vital_statD[it]);
-    SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT};
+    SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
     if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
   }
   {
     int it = MAX_A;
     len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
-    SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT};
+    SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
     if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
   }
 

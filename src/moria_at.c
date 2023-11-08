@@ -10440,8 +10440,13 @@ show_character()
   BufMsg(screen, "%-15.015s: %3d", "Searching", uD.search);
   BufMsg(screen, "%-15.015s: %3d", "Infra-Vision", uD.infra);
 
-  DRAWMSG("Name: %-13.013s Race: %-17.017s Class: %-13.013s", "...",
-          raceD[uD.ridx].name, classD[uD.clidx].name);
+  if (msg_width < 80) {
+    DRAWMSG("Name: %-13.013s Race: %-17.017s Class: %-13.013s", "...",
+            raceD[uD.ridx].name, classD[uD.clidx].name);
+  } else {
+    DRAWMSG("Name: %-18.018s Race: %-21.021s Class: %-13.013s", "...",
+            raceD[uD.ridx].name, classD[uD.clidx].name);
+  }
   return inkey();
 }
 
