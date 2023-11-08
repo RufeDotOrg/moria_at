@@ -125,6 +125,7 @@ enum {
   GR_MINIMAP,
   GR_STAT,
   GR_OVERLAY,
+  GR_WIDESCREEN,  // improving show_history() in landscape orientation
   GR_COUNT
 };
 enum { MAX_BUTTON = 2 };
@@ -1452,6 +1453,10 @@ platform_p2()
     is_text = 1;
   } else {
     is_text = (screen_submodeD != 0);
+    if (screen_submodeD == 2) {
+      grect = grectD[GR_WIDESCREEN];
+      overlay_width = msg_widthD;
+    }
   }
 
   SDL_Rect src_rect = {
@@ -2404,6 +2409,7 @@ portrait_layout()
       olimit,
       layout_rect.h - PADSIZE,  // overlay_heightD*FHEIGHT
   };
+  grectD[GR_WIDESCREEN] = grectD[GR_OVERLAY];
 
   return 0;
 }
@@ -2461,6 +2467,12 @@ landscape_layout()
       xmargin,
       0,
       overlay_widthD * FWIDTH,
+      overlay_heightD * FHEIGHT,
+  };
+  grectD[GR_WIDESCREEN] = (SDL_Rect){
+      xmargin,
+      0,
+      layout_rect.w - xmargin,
       overlay_heightD * FHEIGHT,
   };
 

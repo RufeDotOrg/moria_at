@@ -444,7 +444,7 @@ show_history()
   char* log;
   int log_used, line;
 
-  screen_submodeD = 1;
+  screen_submodeD = 2;
   line = 0;
   for (int it = 1; it < MAX_MSG; ++it) {
     log = AS(msg_cqD, msg_writeD + it);
@@ -10352,22 +10352,24 @@ show_version()
 int
 show_character()
 {
-  USE(overlay_width);
+  USE(msg_width);
   int line;
   int xbth, xbowth;
   int sptype;
   line = 0;
   int col[2];
 
-  if (overlay_width < 80) {
+  if (msg_width < 80) {
+    screen_submodeD = 1;
     col[0] = 20;
     col[1] = 44;
   } else {
+    // Widescreen
+    screen_submodeD = 2;
     col[0] = 25;
     col[1] = 53;
   }
 
-  screen_submodeD = 1;
   BufMsg(screen, "%-13.013s: %3d", "Age", 16);
   BufMsg(screen, "%-13.013s: %3d", "Height", 74);
   BufMsg(screen, "%-13.013s: %3d", "Weight", uD.wt);
