@@ -49,6 +49,11 @@ enum { LANDSCAPE = 0 };
 #define LANDSCAPE_X 1920
 #define LANDSCAPE_Y 1080
 
+enum { ART_W = 32 };
+enum { ART_H = 64 };
+enum { MAP_W = SYMMAP_WIDTH * ART_W };
+enum { MAP_H = SYMMAP_HEIGHT * ART_H };
+
 enum { WINDOW = 0 };
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
@@ -101,20 +106,15 @@ DATA SDL_Texture *sprite_textureD;
 DATA SDL_Surface *mmsurfaceD;
 DATA SDL_Texture *mmtextureD;
 DATA SDL_Texture *ui_textureD;
-DATA SDL_Rect mmrectD;
 DATA SDL_Surface *tpsurfaceD;
 DATA SDL_Texture *tptextureD;
-DATA SDL_Rect map_rectD;
 DATA SDL_Texture *map_textureD;
-DATA SDL_Rect text_rectD;
-DATA SDL_Rect textdst_rectD;
 DATA SDL_Texture *text_textureD;
 DATA SDL_Texture *portraitD;
 DATA SDL_Texture *landscapeD;
 DATA SDL_Texture *layoutD;
 DATA SDL_Rect layout_rectD;
 DATA SDL_FRect view_rectD;
-DATA SDL_Rect affectdst_rectD;
 DATA uint32_t max_texture_widthD;
 DATA uint32_t max_texture_heightD;
 
@@ -134,12 +134,6 @@ enum {
 enum { MAX_BUTTON = 2 };
 SDL_Rect grectD[GR_COUNT];
 DATA fn text_fnD;
-
-DATA SDL_Rect gameplay_rectD;
-DATA float gameplay_scaleD;
-DATA int rowD, colD;
-DATA float rfD, cfD;
-DATA float columnD[4];
 
 DATA char savepathD[1024];
 DATA int savepath_usedD;
@@ -346,8 +340,6 @@ bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
 }
 
 // art.c
-#define ART_W 32
-#define ART_H 64
 #define MAX_ART 279
 DATA uint8_t artD[96 * 1024];
 DATA uint64_t art_usedD;
@@ -657,10 +649,7 @@ enum {
   TOUCH_RB,
   TOUCH_PAD
 };
-DATA SDL_Rect buttonD[2];
-DATA SDL_Rect padD;
 DATA SDL_Point ppD[9];
-DATA SDL_Rect pp_rectD;
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 
 SDL_Texture *
@@ -1037,42 +1026,6 @@ platform_predraw()
   return 1;
 }
 
-static void
-pprect_index(idx)
-{
-  pp_rectD.x = ppD[idx].x - pp_rectD.w / 2;
-  pp_rectD.y = ppD[idx].y - pp_rectD.h / 2;
-}
-
-void
-alt_fill(max_row, max_col, left, top, width, height)
-{
-  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
-
-  SDL_SetRenderDrawColor(rendererD, U4(lightingD[1]));
-  for (int row = 0; row < max_row; row += 2) {
-    SDL_Rect rect = {
-        left,
-        top + row * height,
-        max_col * width,
-        height,
-    };
-    SDL_RenderFillRect(rendererD, &rect);
-  }
-
-  SDL_SetRenderDrawColor(rendererD, U4(lightingD[2]));
-  for (int row = 1; row < max_row; row += 2) {
-    SDL_Rect rect = {
-        left,
-        top + row * height,
-        max_col * width,
-        height,
-    };
-    SDL_RenderFillRect(rendererD, &rect);
-  }
-  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-}
-
 static int
 rect_altfill(r)
 SDL_Rect r;
@@ -1115,123 +1068,6 @@ void rect_frame(r, scale) SDL_Rect r;
   SDL_RenderDrawRect(rendererD, &RF(r, i + 3));
 }
 
-static void
-overlay_draw(width, height)
-{
-  int left = 0;
-  int top = 0;
-  SDL_Rect src_rect = {
-      0,
-      0,
-      AL(overlayD[0]) * width + left * 2,
-      AL(overlayD) * height + top * 2,
-  };
-
-  SDL_SetRenderTarget(rendererD, text_textureD);
-  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-  SDL_RenderFillRect(rendererD, &src_rect);
-
-  alt_fill(AL(overlayD), AL(overlayD[0]), left, top, width, height);
-  for (int row = 0; row < AL(overlayD); ++row) {
-    font_colorD = whiteD;
-    SDL_Point p = {
-        left,
-        top + row * height,
-    };
-    char *text = overlayD[row];
-    int tlen = overlay_usedD[row];
-    if (TOUCH && row == finger_rowD) {
-      font_colorD = (SDL_Color){255, 0, 0, 255};
-      if (tlen <= 1) {
-        text = "-";
-        tlen = 1;
-      }
-    }
-    render_monofont_string(rendererD, &fontD, text, tlen, p);
-  }
-  font_colorD = whiteD;
-
-  SDL_SetRenderTarget(rendererD, layoutD);
-  SDL_RenderCopy(rendererD, text_textureD, &src_rect, &textdst_rectD);
-  rect_frame(textdst_rectD, 1);
-}
-
-static void
-screen_draw(width, height)
-{
-  int left = 0;
-  int top = 0;
-  int max_len = 80;
-  int is_text = (screen_submodeD != 0);
-
-  for (int it = 0; it < AL(screenD); ++it) {
-    max_len = MAX(max_len, screen_usedD[it]);
-  }
-
-  SDL_Rect src_rect = {
-      0,
-      0,
-      max_len * width + left * 2,
-      AL(screenD) * height + top * 2,
-  };
-
-  SDL_SetRenderTarget(rendererD, text_textureD);
-  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-  SDL_RenderFillRect(rendererD, &src_rect);
-
-  if (is_text) alt_fill(AL(screenD), max_len, left, top, width, height);
-  for (int row = 0; row < AL(screenD); ++row) {
-    SDL_Point p = {left, top + row * height};
-    render_monofont_string(rendererD, &fontD, screenD[row], screen_usedD[row],
-                           p);
-  }
-
-  SDL_SetRenderTarget(rendererD, layoutD);
-  SDL_RenderCopy(rendererD, text_textureD, &src_rect, &textdst_rectD);
-  if (is_text) rect_frame(textdst_rectD, 1);
-}
-
-static void
-affect_draw(width, height)
-{
-  char tmp[80];
-  int len;
-  char *affstr[AFF_X];
-  SDL_Rect src_rect = {
-      0,
-      0,
-      26 * width,
-      AFF_Y * height,
-  };
-
-  SDL_SetRenderTarget(rendererD, text_textureD);
-  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-  SDL_RenderFillRect(rendererD, &src_rect);
-
-  alt_fill(AFF_Y, 26, 0, 0, width, height);
-  for (int it = 0; it < AFF_Y; ++it) {
-    for (int jt = 0; jt < AL(affstr); ++jt) {
-      int idx = AL(affstr) * it + jt;
-      if (active_affectD[idx])
-        affstr[jt] = affectD[idx][active_affectD[idx] - 1];
-      else
-        affstr[jt] = "";
-    }
-
-    len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
-                   affstr[1], affstr[2]);
-    SDL_Point p = {
-        0,
-        it * height,
-    };
-    if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
-  }
-
-  SDL_SetRenderTarget(rendererD, 0);
-  SDL_RenderCopy(rendererD, text_textureD, &src_rect, &affectdst_rectD);
-  rect_frame(affectdst_rectD, 1);
-}
-
 int
 map_draw(zoom_prect)
 SDL_Rect *zoom_prect;
@@ -1243,7 +1079,6 @@ SDL_Rect *zoom_prect;
   dest_rect.h = ART_H;
   SDL_SetRenderTarget(rendererD, map_textureD);
   SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-  SDL_RenderFillRect(rendererD, &map_rectD);
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
   int imagine = countD.imagine;
   for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
@@ -1478,9 +1313,12 @@ platform_p2()
       overlay_height * FHEIGHT,
   };
   SDL_SetRenderTarget(renderer, text_textureD);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderFillRect(renderer, &src_rect);
-  if (is_text) alt_fill(overlay_height, overlay_width, 0, 0, FWIDTH, FHEIGHT);
+  if (is_text) {
+    rect_altfill(src_rect);
+  } else {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderFillRect(renderer, &src_rect);
+  }
 
   int left = FWIDTH / 2;
   if (msg_used)
@@ -1616,232 +1454,6 @@ platform_p0()
       }
     }
   }
-
-  return 1;
-}
-
-int
-platform_landscape()
-{
-  int show_map, mode, more, height, width, left, top, len;
-  char tmp[80];
-
-  mode = modeD;
-  switch (mode) {
-    case 0:
-      show_map = 1;
-      more = msg_moreD;
-      break;
-    case 1:
-      show_map = 0;
-      more = 0;
-      overlay_draw(fontD.max_pixel_width, fontD.max_pixel_height);
-      break;
-    case 2:
-      show_map = 0;
-      more = 0;
-      screen_draw(fontD.max_pixel_width, fontD.max_pixel_height);
-      break;
-  }
-
-  height = fontD.max_pixel_height;
-  width = fontD.max_pixel_width;
-  top = gameplay_rectD.y + 6;
-  left = columnD[0] * display_rectD.w;
-  if (gameplay_scaleD == 1.0f) left /= 2;
-
-  {
-    alt_fill(AL(vitalD), 26 + 2, left, top, width, height);
-    for (int it = 0; it < MAX_A; ++it) {
-      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
-                     vitalD[it], stat_abbrD[it], vital_statD[it]);
-      SDL_Point p = {left + width / 2, top + it * height};
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
-    }
-    {
-      int it = MAX_A;
-      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
-      SDL_Point p = {left + width / 2, top + it * height};
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
-    }
-    SDL_Rect r = {left + width / 2, top, (26 + 1) * width, AL(vitalD) * height};
-    rect_frame(r, 1);
-  }
-
-  if (mode == 0) {
-    affect_draw(width, height);
-  }
-
-  if (maD[MA_BLIND] == 0) {
-    SDL_Surface *surface = mmsurfaceD;
-    SDL_Texture *texture = mmtextureD;
-    bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
-                           (SDL_Point){0, 0}, surface);
-    SDL_UpdateTexture(texture, NULL, surface->pixels, surface->pitch);
-
-    if (mode == 0) {
-      SDL_RenderCopy(rendererD, texture, NULL, &mmrectD);
-      rect_frame(mmrectD, 3);
-    }
-  }
-
-  if (show_map) {
-    if (minimap_enlargeD) {
-      SDL_RenderCopy(rendererD, mmtextureD, NULL, &gameplay_rectD);
-    } else {
-      SDL_Rect zoom_rect;
-      map_draw(&zoom_rect);
-      SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &gameplay_rectD);
-    }
-  }
-
-  if (TOUCH && tpsurfaceD) {
-    SDL_RenderCopy(rendererD, tptextureD, 0, &padD);
-
-    for (int it = 1; it < AL(ppD); ++it) {
-      if (ppD[it].x || ppD[it].y) {
-        if (pp_keyD[it] + TOUCH_PAD == last_pressD) {
-          pprect_index(it);
-          SDL_SetRenderDrawColor(rendererD, 0x00, 0xd0, 0, 0xff);
-          SDL_RenderFillRect(rendererD, &pp_rectD);
-        }
-      }
-    }
-
-    if (more) {
-      static int tapD;
-      tapD = (tapD + 1) % 4;
-      switch (tapD) {
-        case 0:
-          font_colorD = *color_by_palette(RED);
-          break;
-        case 1:
-          font_colorD = *color_by_palette(GREEN);
-          break;
-        case 2:
-          font_colorD = *color_by_palette(BLUE);
-          break;
-        case 3:
-          font_colorD = *color_by_palette(WHITE);
-          break;
-      }
-
-      static char moreD[] = "-more-";
-      SDL_Point p = ppD[0];
-      p.x -= AL(moreD) / 2 * width;
-      p.y -= height / 2;
-      render_monofont_string(rendererD, &fontD, AP(moreD), p);
-
-      font_colorD = whiteD;
-    }
-  }
-
-  if (mode == 0) {
-    left = columnD[2] * display_rectD.w;
-    int ax = display_rectD.w - left;
-    int pad;
-
-    SDL_Point p = {0, top};
-
-    len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
-    pad = (ax - len * width) / 2;
-    p.x = left + pad;
-    render_monofont_string(rendererD, &fontD, tmp, len, p);
-
-    p.y += 2 * height + MMSCALE * MAX_HEIGHT;
-    len = snprintf(tmp, AL(tmp), "%s", dun_descD);
-    pad = (ax - len * width) / 2;
-    p.x = left + pad;
-    render_monofont_string(rendererD, &fontD, tmp, len, p);
-  }
-
-  if (mode != 1) {
-    SDL_Point p = {
-        textdst_rectD.x + textdst_rectD.w + width / 2,
-        display_rectD.h - 3 * height,
-    };
-    render_monofont_string(rendererD, &fontD, AP("version"), p);
-    p.y += height;
-    p.x += 2 * width;
-    render_monofont_string(rendererD, &fontD, versionD + 10, AL(versionD) - 11,
-                           p);
-  }
-
-  if (TOUCH) {
-    int bc[] = {RED, GREEN};
-
-    for (int it = 0; it < MAX_BUTTON; ++it) {
-      SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
-      SDL_RenderFillRect(rendererD, &buttonD[it]);
-    }
-
-    if (mode == 1) {
-      SDL_Point p = {R4CENTER(buttonD[1])};
-      p.x -= width / 2;
-      p.y -= height / 2;
-      char text = 'a' + finger_rowD;
-      render_monofont_string(rendererD, &fontD, &text, 1, p);
-    }
-  }
-
-  {
-    char *msg = AS(msg_cqD, msg_writeD);
-    int msg_used = AS(msglen_cqD, msg_writeD);
-    int alpha = 255;
-
-    // Gameplay shows previous message to help the player out
-    if (!msg_used && show_map) {
-      msg = AS(msg_cqD, msg_writeD - 1);
-      msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = 128;
-    }
-
-    SDL_Point p = {display_rectD.w / 2 - msg_used * width / 2, 0};
-    SDL_Rect rect = {
-        p.x - width,
-        0,
-        (1 + msg_used) * width,
-        height,
-    };
-
-    if (msg_used) {
-      font_texture_alphamod(alpha);
-      render_monofont_string(rendererD, &fontD, msg, msg_used, p);
-      font_texture_alphamod(255);
-
-      SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-      rect_frame(rect, 1);
-    }
-  }
-
-  if (more && map_rectD.w == gameplay_rectD.w) {
-    int inset = __APPLE__ ? columnD[0] * display_rectD.w : width / 2;
-    int more_used = snprintf(tmp, AL(tmp), "-more %d-", more);
-
-    if (more_used) {
-      SDL_Rect rect2 = {
-          inset,
-          0,
-          more_used * width,
-          height,
-      };
-      SDL_Rect rect3 = {
-          display_rectD.w - more_used * width - inset,
-          0,
-          more_used * width,
-          height,
-      };
-      SDL_Point p2 = {rect2.x, 0};
-      SDL_Point p3 = {rect3.x, 0};
-
-      render_monofont_string(rendererD, &fontD, tmp, more_used, p2);
-      render_monofont_string(rendererD, &fontD, tmp, more_used, p3);
-      rect_frame(rect2, 1);
-      rect_frame(rect3, 1);
-    }
-  }
-
-  render_update();
 
   return 1;
 }
@@ -2193,80 +1805,40 @@ static void surface_ppfill(surface) SDL_Surface *surface;
 {
   uint8_t bpp = surface->format->BytesPerPixel;
   uint8_t *pixels = surface->pixels;
-  int oy = padD.y;
-  int ox = padD.x;
   for (int64_t row = 0; row < surface->h; ++row) {
     uint8_t *dst = pixels + (surface->pitch * row);
     for (int64_t col = 0; col < surface->w; ++col) {
-      memcpy(dst, &rgbaD[nearest_pp(row + oy, col + ox)], bpp);
+      memcpy(dst, &rgbaD[nearest_pp(row, col)], bpp);
       dst += bpp;
     }
   }
 }
 
 static int
-input_resize(dw, dh, scale, c0, c3w, c3h)
-float c0;
-float c3w;
-float c3h;
+input_init()
 {
-  int fwidth, fheight;
-  fwidth = fontD.max_pixel_width;
-  fheight = fontD.max_pixel_height;
-  // Input constraints
-  if (TOUCH) {
-    int used_y = (gameplay_rectD.y + 12 + AL(vitalD) * fheight + PADSIZE);
-    if (scale == 1.0f) used_y += (1 + AFF_Y) * fheight + 6;
+  int cx = PADSIZE / 2;
+  int cy = PADSIZE / 2;
+  ppD[0] = (SDL_Point){cx, cy};
 
-    float used_fy = used_y / (float)dh;
-    float safe_fy = CLAMP(used_fy, 0.8f, 1.f);
-    float lift2 = 1.0f - safe_fy;
-    padD = (SDL_Rect){.w = PADSIZE, .h = PADSIZE};
-    padD.x = c0 * dw;
-    if (scale == 1.0f) padD.x *= .5f;
-    padD.y = (1.0 - (lift2 * .5)) * dh - padD.h;
-
-    SDL_Point center = {R4CENTER(padD)};
-    int cx = center.x;
-    int cy = center.y;
-    ppD[0] = (SDL_Point){cx, cy};
-
-    pp_rectD = (SDL_Rect){
-        .w = 64,
-        .h = 64,
-    };
-
-    int ppdist = 3 * padD.w / 8;
-    for (int it = 0; it < 8; ++it) {
-      int ox = cos_lookup(it) * ppdist;
-      int oy = sin_lookup(it) * ppdist;
-      ppD[1 + it].x = cx + ox;
-      ppD[1 + it].y = cy + oy;
-    }
-
-    int bw = c3w * dw;
-    int bh = c3h * dh;
-    int left = textdst_rectD.x + textdst_rectD.w + 6;  // c2 * dw;
-    int ax = dw - left;
-    int pad = MAX(0, (ax - bw * 2) / 2);
-    Log("button %dw %dh", bw, bh);
-    for (int it = 0; it < MAX_BUTTON; ++it) {
-      SDL_Rect r = {.w = bw, .h = bh};
-      r.x = left + pad - (1 - it) * r.w;
-      r.y = textdst_rectD.y + textdst_rectD.h + 6 - (it)*r.h;
-      buttonD[it] = r;
-    }
-
-    if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
-    tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, padD.w, padD.h,
-                                                0, texture_formatD);
-    if (tptextureD) SDL_DestroyTexture(tptextureD);
-    tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
-                                   padD.w, padD.h);
-    SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
-    surface_ppfill(tpsurfaceD);
-    SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
+  enum { PPDIST = 3 * PADSIZE / 8 };
+  for (int it = 0; it < 8; ++it) {
+    int ox = cos_lookup(it) * PPDIST;
+    int oy = sin_lookup(it) * PPDIST;
+    ppD[1 + it].x = cx + ox;
+    ppD[1 + it].y = cy + oy;
   }
+
+  if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
+  tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, PADSIZE, PADSIZE,
+                                              0, texture_formatD);
+  if (tptextureD) SDL_DestroyTexture(tptextureD);
+  tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
+                                 PADSIZE, PADSIZE);
+  SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
+  surface_ppfill(tpsurfaceD);
+  SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
+
   return 0;
 }
 
@@ -2282,122 +1854,25 @@ display_resize(int dw, int dh)
   // Disabled the push event in SDL that occurs on another thread
   SDL_RenderSetViewport(rendererD, &(SDL_Rect){0, 0, dw, dh});
 
-  int fwidth, fheight;
-  fwidth = fontD.max_pixel_width;
-  fheight = fontD.max_pixel_height;
-
   // Console row/col
-  rowD = dh / fheight;
-  colD = dw / fwidth;
-  rfD = 1.0f / rowD;
-  cfD = 1.0f / colD;
-  if (colD >= 120) overlay_widthD = 98;
-  Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", fwidth,
-      fheight, rowD, colD, rfD, cfD);
+  if (UITEST) {
+    int r, c;
+    float rf, cf;
 
-  // Map scaling due to vertical constraint
-  float scale;
-  int ymin = fheight + 6;                      // text, frame
-  int xmin = PADSIZE + (MMSCALE * MAX_WIDTH);  // touchpad, minimap
-  if (ymin + map_rectD.h <= dh) {
-    scale = 1.0f;
-  } else {
-    float yscale = (dh - ymin) / (float)map_rectD.h;
-    Log("YScale %.3f", yscale);
-    scale = yscale;
+    r = dh / FHEIGHT;
+    c = dw / FWIDTH;
+    rf = 1.0f / r;
+    cf = 1.0f / c;
+    Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", FWIDTH,
+        FHEIGHT, r, c, rf, cf);
   }
-  // Horizontal constraint
-  if (xmin + map_rectD.w > dw) {
-    float xscale = (dw - xmin) / (float)map_rectD.w;
-    Log("XScale %.3f", xscale);
-    scale = MIN(scale, xscale);
-  }
-  Log("Scale %.3f", scale);
-  gameplay_rectD =
-      (SDL_Rect){.w = map_rectD.w * scale, .h = map_rectD.h * scale};
-  gameplay_scaleD = scale;
-
-  // Column
-  float c0, c1, c2, c3;
-  if (dw > 2 * 1024) {
-    c1 = .5 - (float)gameplay_rectD.w / dw * .5f;
-    c2 = .5 + (float)gameplay_rectD.w / dw * .5f;
-  } else {
-    int margin = dh <= 768 ? 0 : 4;
-    c1 = (26 + 2 + margin) * cfD;
-    c2 = c1 + ((float)gameplay_rectD.w / dw);
-  }
-  c3 = c2 + (1.0 - c2) * .5;
-  c0 = c1 - (26 + 2) * cfD;
-  columnD[0] = c0;
-  columnD[1] = c1;
-  columnD[2] = c2;
-  columnD[3] = c3;
-  Log("Column %.03f %.03f %.03f %.03f", c0, c1, c2, c3);
-
-  // Map position
-  gameplay_rectD.x = columnD[1] * dw;
-  gameplay_rectD.y =
-      (scale != 1.0 ? ymin : ymin + (dh - gameplay_rectD.h - ymin) / 2);
-
-  // Affect Text
-  if (scale != 1.0) {
-    affectdst_rectD = (SDL_Rect){
-        c2 * dw,
-        gameplay_rectD.y + (MMSCALE * MAX_HEIGHT) + (fheight * 4),
-        (1.0 - c2) * dw,
-        5 * fheight,
-    };
-  } else {
-    affectdst_rectD = (SDL_Rect){
-        0.5f * c0 * dw + fwidth / 2,
-        gameplay_rectD.y + (AL(vitalD) + 1) * fheight,
-        (26 + 1) * fwidth,
-        5 * fheight,
-    };
-  }
-
-  // Right hand controls
-  float c3w, c3h, c3o, c3button;
-  c3o = c1 + AL(overlayD[0]) * cfD;
-  c3w = CLAMP(1.0 - c3o, 8 * cfD, 16 * cfD);
-  c3h = c3w * aspectD;
-  float bmin, bmax;
-  bmin = MIN(1.0 - c3w, c3);
-  bmax = MAX(1.0 - c3w, c3);
-  c3button = CLAMP(c3o, bmin, bmax);
-  textdst_rectD = (SDL_Rect){
-      gameplay_rectD.x + 6,
-      gameplay_rectD.y + 6,
-      MIN(AL(overlayD[0]) * fwidth, (c3button - c1) * dw),
-      MIN(AL(overlayD) * fheight, dh - gameplay_rectD.y - c3h * dh),
-  };
-  Log("textdst %dw %dh", textdst_rectD.w, textdst_rectD.h);
-
-  // Minimap
-  {
-    int left = c2 * dw;
-    int ax = dw - left;
-    int pad = (ax - MMSCALE * MAX_WIDTH) / 2;
-    int top = gameplay_rectD.y + 6;
-
-    mmrectD = (SDL_Rect){
-        left + pad,
-        top + fheight + fheight / 2,
-        MMSCALE * MAX_WIDTH,
-        MMSCALE * MAX_HEIGHT,
-    };
-  }
-
-  input_resize(dw, dh, scale, c0, c3w, c3h);
 }
 
 static int
 portrait_layout()
 {
   USE(layout_rect);
-  USE(map_rect);
-  int margin = (layout_rect.w - map_rect.w) / 2;
+  int margin = (layout_rect.w - MAP_W) / 2;
 
   grectD[GR_VERSION] = (SDL_Rect){
       layout_rect.w - margin - 8 * FWIDTH,
@@ -2421,9 +1896,9 @@ portrait_layout()
 
   grectD[GR_GAMEPLAY] = (SDL_Rect){
       margin,
-      layout_rect.h - PADSIZE - map_rect.h - FHEIGHT + 3,
-      map_rect.w,
-      map_rect.h,
+      layout_rect.h - PADSIZE - MAP_H - FHEIGHT + 3,
+      MAP_W,
+      MAP_H,
   };
   grectD[GR_MINIMAP] = (SDL_Rect){
       PADSIZE +
@@ -2461,8 +1936,7 @@ static int
 landscape_layout()
 {
   USE(layout_rect);
-  USE(map_rect);
-  int xmargin = (layout_rect.w - map_rect.w) / 2;
+  int xmargin = (layout_rect.w - MAP_W) / 2;
   int ymargin = FHEIGHT + 8;
 
   grectD[GR_VERSION] = (SDL_Rect){
@@ -2497,8 +1971,8 @@ landscape_layout()
   grectD[GR_GAMEPLAY] = (SDL_Rect){
       xmargin,
       ymargin,
-      map_rect.w,
-      map_rect.h,
+      MAP_W,
+      MAP_H,
   };
   grectD[GR_MINIMAP] = (SDL_Rect){
       (layout_rect.w - PADSIZE) + (PADSIZE - MMSCALE * MAX_WIDTH) / 2,
@@ -2600,9 +2074,6 @@ orientation_update()
       orientation, scale, xuse, yuse, xpad, ypad);
   SDL_FRect view = {xpad, ypad, xuse, yuse};
   view_rectD = view;
-
-  // Gameplay side effects (TBD: revisit console_width for landscape)
-  gameplay_scaleD = 1.0f;
 
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
     overlay_widthD = 67;
@@ -2770,8 +2241,8 @@ SDL_Event event;
 int
 gameplay_tapxy(relx, rely)
 {
-  float gsy = rely / gameplay_scaleD;
-  float gsx = relx / gameplay_scaleD;
+  float gsy = rely;
+  float gsx = relx;
 
   if (zoom_factorD) {
     int zf, zh, zw;
@@ -2873,10 +2344,9 @@ touch_by_xy(x, y)
     AUSE(grect, GR_PAD);
     int r = 0;
     if (SDL_PointInRect(&tpp, &grect)) {
-      SDL_Point center = {R4CENTER(grect)};
-      SDL_Point offset = {ppD[0].x - center.x, ppD[0].y - center.y};
+      SDL_Point rel = {tpp.x - grect.x, tpp.y - grect.y};
 
-      int n = nearest_pp(tpp.y + offset.y, tpp.x + offset.x);
+      int n = nearest_pp(rel.y, rel.x);
       r = TOUCH_PAD + pp_keyD[n];
     }
 
@@ -3316,22 +2786,19 @@ platform_pregame()
     }
 
     if (TOUCH) ui_init();
+    if (TOUCH) input_init();
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                                 MAX_HEIGHT, 0, texture_formatD);
     mmtextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
                                    MAX_WIDTH, MAX_HEIGHT);
     SDL_SetTextureBlendMode(mmtextureD, SDL_BLENDMODE_NONE);
-    map_rectD =
-        (SDL_Rect){.w = SYMMAP_WIDTH * ART_W, .h = SYMMAP_HEIGHT * ART_H};
-    map_textureD =
-        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
-                          map_rectD.w, map_rectD.h);
+    map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
+                                     SDL_TEXTUREACCESS_TARGET, MAP_W, MAP_H);
     SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
-    text_rectD = (SDL_Rect){.w = 2 * 1024, .h = 2 * 1024};
     text_textureD =
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
-                          text_rectD.w, text_rectD.h);
+                          2 * 1024, 2 * 1024);
 
     layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
     portraitD =
