@@ -100,6 +100,7 @@ DATA SDL_Surface *spriteD;
 DATA SDL_Texture *sprite_textureD;
 DATA SDL_Surface *mmsurfaceD;
 DATA SDL_Texture *mmtextureD;
+DATA SDL_Texture *ui_textureD;
 DATA SDL_Rect mmrectD;
 DATA SDL_Surface *tpsurfaceD;
 DATA SDL_Texture *tptextureD;
@@ -124,6 +125,7 @@ enum {
   GR_BUTTON2,
   GR_GAMEPLAY,
   GR_MINIMAP,
+  GR_HISTORY,
   GR_STAT,
   GR_OVERLAY,
   GR_WIDESCREEN,  // improving show_history() in landscape orientation
@@ -572,6 +574,39 @@ font_init(struct fontS *font)
   return 1;
 }
 
+int
+ui_init()
+{
+  enum { UI_W = 8 };
+  enum { UI_H = 16 };
+  USE(renderer);
+  uint8_t bitmap[UI_H][UI_W];
+  SDL_Surface *icon;
+
+  icon = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, UI_W, UI_H, 0,
+                                        texture_formatD);
+  if (icon) {
+    for (int row = 0; row < UI_H; ++row) {
+      for (int col = 0; col < UI_W; ++col) {
+        int rmod = row % 4;
+        if (rmod == 3) {
+          bitmap[row][col] = 0;
+        } else {
+          bitmap[row][col] = 15;
+        }
+      }
+    }
+    for (int it = 0; it < 4; ++it) {
+      bitmap[it * 4 + 1][1] = 0;
+    }
+
+    bitmap_yx_into_surface(&bitmap[0][0], UI_H, UI_W, (SDL_Point){0, 0}, icon);
+    ui_textureD = SDL_CreateTextureFromSurface(renderer, icon);
+    SDL_FreeSurface(icon);
+  }
+  return icon != 0;
+}
+
 SDL_Rect
 font_string_rect(struct fontS *font, const char *string)
 {
@@ -639,6 +674,7 @@ font_texture_alphamod(alpha)
 // Texture
 enum {
   TOUCH_NONE,
+  TOUCH_HISTORY,
   TOUCH_STAT,
   TOUCH_MAP,
   TOUCH_VERSION,
@@ -1526,7 +1562,7 @@ vitalstat_text()
     len = snprintf(tmp, AL(tmp), "%s %s", raceD[uD.ridx].name,
                    classD[uD.clidx].name);
     SDL_Point p = {grect.x + grect.w / 2 - (len * FWIDTH) / 2,
-                   grect.y + it * FHEIGHT};
+                   grect.y + it * FHEIGHT + 1};
     if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
   }
   for (int it = 0; it < MAX_A; ++it) {
@@ -1580,10 +1616,10 @@ platform_p0()
   vitalstat_text();
 
   {
-    AUSE(grect, GR_MINIMAP);
     USE(mmtexture);
 
     if (show_minimap) {
+      AUSE(grect, GR_MINIMAP);
       USE(mmsurface);
       bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
                              (SDL_Point){0, 0}, mmsurface);
@@ -1595,7 +1631,6 @@ platform_p0()
 
     if (show_game) {
       AUSE(grect, GR_GAMEPLAY);
-
       if (minimap_enlarge) {
         SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
       } else {
@@ -2051,6 +2086,12 @@ platform_draw()
       SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
       SDL_RenderFillRect(rendererD, &grect);
     }
+
+    if (ui_textureD) {
+      AUSE(grect, GR_HISTORY);
+      SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
+      rect_frame(grect, 1);
+    }
   }
 
   if (mode == 0)
@@ -2412,6 +2453,12 @@ portrait_layout()
       MMSCALE * MAX_WIDTH,
       MMSCALE * MAX_HEIGHT,
   };
+  grectD[GR_HISTORY] = (SDL_Rect){
+      grectD[GR_MINIMAP].x,
+      (8 + 5) * FHEIGHT - 128 - FHEIGHT / 2,
+      64,
+      128,
+  };
 
   grectD[GR_STAT] = (SDL_Rect){
       margin,
@@ -2479,6 +2526,12 @@ landscape_layout()
       FHEIGHT * 5,
       MMSCALE * MAX_WIDTH,
       MMSCALE * MAX_HEIGHT,
+  };
+  grectD[GR_HISTORY] = (SDL_Rect){
+      grectD[GR_MINIMAP].x,
+      layout_rect.h / 2 - 128 - FHEIGHT,
+      64,
+      128,
   };
 
   grectD[GR_STAT] = (SDL_Rect){
@@ -2805,6 +2858,12 @@ touch_by_xy(x, y)
     }
   }
   {
+    AUSE(grect, GR_HISTORY);
+    if (SDL_PointInRect(&tpp, &grect)) {
+      return TOUCH_HISTORY;
+    }
+  }
+  {
     AUSE(grect, GR_MINIMAP);
     if (SDL_PointInRect(&tpp, &grect)) {
       return TOUCH_MAP;
@@ -2862,7 +2921,6 @@ finger_event_xy(eventtype, x, y)
         char c = char_by_dir(touch - TOUCH_PAD);
         switch (finger) {
           case 0:
-            if (c == ' ') return CTRL('p');
             return c;
           case 1:
             if (c == ' ') return '=';
@@ -2872,6 +2930,8 @@ finger_event_xy(eventtype, x, y)
         }
       } else if (touch) {
         switch (touch) {
+          case TOUCH_HISTORY:
+            return CTRL('p');
           case TOUCH_STAT:
             return 'C';
           case TOUCH_MAP:
@@ -2921,7 +2981,6 @@ finger_event_xy(eventtype, x, y)
       if (touch == TOUCH_GAMEPLAY && finger) return '-';
     }
     if (mode == 2) {
-      if (touch > TOUCH_PAD) return CTRL('p');
       if (touch == TOUCH_LB) return 'o';
       if (touch == TOUCH_RB) return ESCAPE;
       if (touch == TOUCH_STAT) return 'C';
@@ -3275,6 +3334,8 @@ platform_pregame()
         spriteD = 0;
       }
     }
+
+    if (TOUCH) ui_init();
 
     mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                                 MAX_HEIGHT, 0, texture_formatD);
