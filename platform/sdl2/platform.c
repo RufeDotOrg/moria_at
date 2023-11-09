@@ -2349,9 +2349,8 @@ touch_by_xy(x, y)
   }
 }
 static int
-finger_event_xy(eventtype, x, y)
+finger_mode_event_xy(mode, eventtype, x, y)
 {
-  USE(mode);
   int finger = finger_countD - 1;
   if (KEYBOARD) {
     finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
@@ -2430,7 +2429,9 @@ finger_event_xy(eventtype, x, y)
     }
   }
   if (eventtype == SDL_FINGERUP) {
-    return ' ';
+    // TBD: fastplay in portrait mode for now
+    int fastplay = (layout_rectD.h > layout_rectD.w);
+    if (fastplay) return ' ';
   }
   return 0;
 }
@@ -2441,6 +2442,7 @@ sdl_pump()
 {
   USE(view_rect);
   USE(layout_rect);
+  USE(mode);
   SDL_Event event;
   int ret = 0;
 
@@ -2453,7 +2455,7 @@ sdl_pump()
       if (SDL_PointInFRect(&tp, &view_rect)) {
         int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
         int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
-        ret = finger_event_xy(event.type, x, y);
+        ret = finger_mode_event_xy(mode, event.type, x, y);
       }
       finger_countD -= (event.type == SDL_FINGERUP);
     } else if (KEYBOARD && (event.type == SDL_KEYDOWN)) {
