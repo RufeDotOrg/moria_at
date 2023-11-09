@@ -607,30 +607,6 @@ ui_init()
   return icon != 0;
 }
 
-SDL_Rect
-font_string_rect(struct fontS *font, const char *string)
-{
-  uint64_t width = 0;
-  uint64_t whitespace = font->max_pixel_width;
-
-  const char *iter = string;
-  while (*iter) {
-    char c = *iter;
-    if (char_visible(c)) {
-      struct glyphS *glyph = &font->glyph[c - START_GLYPH];
-      width += glyph->advance_x;
-    } else {
-      width += whitespace;
-    }
-    iter += 1;
-  }
-
-  return (SDL_Rect){.x = 0,
-                    .y = 0,
-                    .w = width + font->left_adjustment + font->max_pixel_width,
-                    .h = font->max_pixel_height};
-}
-
 static void
 font_color(SDL_Color c)
 {
@@ -640,26 +616,24 @@ font_color(SDL_Color c)
 }
 
 void
-render_font_string(struct SDL_Renderer *renderer, struct fontS *font,
-                   const char *string, int len, SDL_Point origin)
+render_monofont_string(struct SDL_Renderer *renderer, struct fontS *font,
+                       const char *string, int len, SDL_Point origin)
 {
-  SDL_Rect target_rect = {.x = origin.x + font->left_adjustment,
-                          .y = origin.y,
-                          .w = font->max_pixel_width,
-                          .h = font->max_pixel_height};
-  uint64_t whitespace = font->max_pixel_width;
+  SDL_Rect target_rect = {
+      .x = origin.x,
+      .y = origin.y,
+      .w = FWIDTH,
+      .h = FHEIGHT,
+  };
 
   for (int it = 0; it < len; ++it) {
     char c = string[it];
     if (char_visible(c)) {
       uint64_t glyph_index = c - START_GLYPH;
-      struct glyphS *glyph = &font->glyph[glyph_index];
       struct SDL_Texture *texture = font_textureD[glyph_index];
       SDL_RenderCopy(renderer, texture, NULL, &target_rect);
-      target_rect.x += glyph->advance_x;
-    } else {
-      target_rect.x += whitespace;
     }
+    target_rect.x += FWIDTH;
   }
 }
 
@@ -1173,7 +1147,7 @@ overlay_draw(width, height)
         tlen = 1;
       }
     }
-    render_font_string(rendererD, &fontD, text, tlen, p);
+    render_monofont_string(rendererD, &fontD, text, tlen, p);
   }
   font_colorD = whiteD;
 
@@ -1208,7 +1182,8 @@ screen_draw(width, height)
   if (is_text) alt_fill(AL(screenD), max_len, left, top, width, height);
   for (int row = 0; row < AL(screenD); ++row) {
     SDL_Point p = {left, top + row * height};
-    render_font_string(rendererD, &fontD, screenD[row], screen_usedD[row], p);
+    render_monofont_string(rendererD, &fontD, screenD[row], screen_usedD[row],
+                           p);
   }
 
   SDL_SetRenderTarget(rendererD, layoutD);
@@ -1249,7 +1224,7 @@ affect_draw(width, height)
         0,
         it * height,
     };
-    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
   }
 
   SDL_SetRenderTarget(rendererD, 0);
@@ -1509,7 +1484,8 @@ platform_p2()
 
   int left = FWIDTH / 2;
   if (msg_used)
-    render_font_string(renderer, &fontD, msg, msg_used, (SDL_Point){left, 0});
+    render_monofont_string(renderer, &fontD, msg, msg_used,
+                           (SDL_Point){left, 0});
 
   switch (mode) {
     case 1: {
@@ -1527,7 +1503,7 @@ platform_p2()
             tlen = 1;
           }
         }
-        render_font_string(renderer, &fontD, text, tlen, p);
+        render_monofont_string(renderer, &fontD, text, tlen, p);
         if (TOUCH && row == finger_rowD) {
           font_color(whiteD);
         }
@@ -1536,8 +1512,8 @@ platform_p2()
     case 2: {
       for (int row = 0; row < AL(screenD); ++row) {
         SDL_Point p = {left, row * FHEIGHT + FHEIGHT};
-        render_font_string(renderer, &fontD, screenD[row], screen_usedD[row],
-                           p);
+        render_monofont_string(renderer, &fontD, screenD[row],
+                               screen_usedD[row], p);
       }
     } break;
   }
@@ -1563,19 +1539,19 @@ vitalstat_text()
                    classD[uD.clidx].name);
     SDL_Point p = {grect.x + grect.w / 2 - (len * FWIDTH) / 2,
                    grect.y + it * FHEIGHT + 1};
-    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
   }
   for (int it = 0; it < MAX_A; ++it) {
     len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                    vitalD[it], stat_abbrD[it], vital_statD[it]);
     SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
-    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
   }
   {
     int it = MAX_A;
     len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
     SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
-    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
   }
 
   char *affstr[AFF_X];
@@ -1596,7 +1572,7 @@ vitalstat_text()
         grect.x + FWIDTH / 2,
         grect.y + AL(vital_nameD) * FHEIGHT + it * FHEIGHT,
     };
-    if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+    if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
   }
 
   rect_innerframe(grect);
@@ -1680,13 +1656,13 @@ platform_landscape()
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
                      vitalD[it], stat_abbrD[it], vital_statD[it]);
       SDL_Point p = {left + width / 2, top + it * height};
-      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
     }
     {
       int it = MAX_A;
       len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
       SDL_Point p = {left + width / 2, top + it * height};
-      if (len > 0) render_font_string(rendererD, &fontD, tmp, len, p);
+      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
     }
     SDL_Rect r = {left + width / 2, top, (26 + 1) * width, AL(vitalD) * height};
     rect_frame(r, 1);
@@ -1754,7 +1730,7 @@ platform_landscape()
       SDL_Point p = ppD[0];
       p.x -= AL(moreD) / 2 * width;
       p.y -= height / 2;
-      render_font_string(rendererD, &fontD, AP(moreD), p);
+      render_monofont_string(rendererD, &fontD, AP(moreD), p);
 
       font_colorD = whiteD;
     }
@@ -1770,13 +1746,13 @@ platform_landscape()
     len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
     pad = (ax - len * width) / 2;
     p.x = left + pad;
-    render_font_string(rendererD, &fontD, tmp, len, p);
+    render_monofont_string(rendererD, &fontD, tmp, len, p);
 
     p.y += 2 * height + MMSCALE * MAX_HEIGHT;
     len = snprintf(tmp, AL(tmp), "%s", dun_descD);
     pad = (ax - len * width) / 2;
     p.x = left + pad;
-    render_font_string(rendererD, &fontD, tmp, len, p);
+    render_monofont_string(rendererD, &fontD, tmp, len, p);
   }
 
   if (mode != 1) {
@@ -1784,10 +1760,11 @@ platform_landscape()
         textdst_rectD.x + textdst_rectD.w + width / 2,
         display_rectD.h - 3 * height,
     };
-    render_font_string(rendererD, &fontD, AP("version"), p);
+    render_monofont_string(rendererD, &fontD, AP("version"), p);
     p.y += height;
     p.x += 2 * width;
-    render_font_string(rendererD, &fontD, versionD + 10, AL(versionD) - 11, p);
+    render_monofont_string(rendererD, &fontD, versionD + 10, AL(versionD) - 11,
+                           p);
   }
 
   if (TOUCH) {
@@ -1803,7 +1780,7 @@ platform_landscape()
       p.x -= width / 2;
       p.y -= height / 2;
       char text = 'a' + finger_rowD;
-      render_font_string(rendererD, &fontD, &text, 1, p);
+      render_monofont_string(rendererD, &fontD, &text, 1, p);
     }
   }
 
@@ -1829,7 +1806,7 @@ platform_landscape()
 
     if (msg_used) {
       font_texture_alphamod(alpha);
-      render_font_string(rendererD, &fontD, msg, msg_used, p);
+      render_monofont_string(rendererD, &fontD, msg, msg_used, p);
       font_texture_alphamod(255);
 
       SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
@@ -1857,8 +1834,8 @@ platform_landscape()
       SDL_Point p2 = {rect2.x, 0};
       SDL_Point p3 = {rect3.x, 0};
 
-      render_font_string(rendererD, &fontD, tmp, more_used, p2);
-      render_font_string(rendererD, &fontD, tmp, more_used, p3);
+      render_monofont_string(rendererD, &fontD, tmp, more_used, p2);
+      render_monofont_string(rendererD, &fontD, tmp, more_used, p3);
       rect_frame(rect2, 1);
       rect_frame(rect3, 1);
     }
@@ -1879,11 +1856,12 @@ common_text()
   {
     AUSE(grect, GR_VERSION);
     SDL_Point p = {grect.x, grect.y};
-    render_font_string(renderer, &fontD, "moria", AL("moria"), p);
+    render_monofont_string(renderer, &fontD, "moria", AL("moria"), p);
     p.y += FHEIGHT;
-    render_font_string(renderer, &fontD, "version", AL("version"), p);
+    render_monofont_string(renderer, &fontD, "version", AL("version"), p);
     p.y += FHEIGHT;
-    render_font_string(renderer, &fontD, versionD + 10, AL(versionD) - 11, p);
+    render_monofont_string(renderer, &fontD, versionD + 10, AL(versionD) - 11,
+                           p);
   }
 
   {
@@ -1891,13 +1869,13 @@ common_text()
     {
       SDL_Point p = {grect.x, grect.y - FHEIGHT - 24};
       len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
-      render_font_string(renderer, &fontD, tmp, len, p);
+      render_monofont_string(renderer, &fontD, tmp, len, p);
     }
 
     {
       SDL_Point p = {grect.x, grect.y + grect.h + 24};
       len = snprintf(tmp, AL(tmp), "%s", dun_descD);
-      render_font_string(renderer, &fontD, tmp, len, p);
+      render_monofont_string(renderer, &fontD, tmp, len, p);
     }
   }
 
@@ -1923,7 +1901,7 @@ common_text()
     SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h / 2};
     p.x -= AL(moreD) / 2 * FWIDTH;
     p.y -= FHEIGHT / 2;
-    render_font_string(renderer, &fontD, AP(moreD), p);
+    render_monofont_string(renderer, &fontD, AP(moreD), p);
     font_color(whiteD);
   }
   return 0;
@@ -1966,13 +1944,13 @@ portrait_text(mode)
       SDL_RenderFillRect(renderer, &fill);
 
       font_texture_alphamod(alpha);
-      render_font_string(renderer, &fontD, msg, msg_used, p);
+      render_monofont_string(renderer, &fontD, msg, msg_used, p);
       font_texture_alphamod(255);
     }
 
     if (msg_more || UITEST) {
       SDL_Point p = {grect.x + grect.w - AL(moreD) * FWIDTH, grect.y - FHEIGHT};
-      render_font_string(rendererD, &fontD, AP(moreD), p);
+      render_monofont_string(rendererD, &fontD, AP(moreD), p);
     }
 
     common_text();
@@ -2020,7 +1998,7 @@ landscape_text(mode)
 
     if (msg_used) {
       font_texture_alphamod(alpha);
-      render_font_string(renderer, &fontD, msg, msg_used, p);
+      render_monofont_string(renderer, &fontD, msg, msg_used, p);
       font_texture_alphamod(255);
 
       SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
@@ -2047,9 +2025,9 @@ landscape_text(mode)
       };
 
       SDL_Point p2 = {rect2.x, rect2.y};
-      render_font_string(renderer, &fontD, moreD, more_used, p2);
+      render_monofont_string(renderer, &fontD, moreD, more_used, p2);
       SDL_Point p3 = {rect3.x, rect3.y};
-      render_font_string(renderer, &fontD, moreD, more_used, p3);
+      render_monofont_string(renderer, &fontD, moreD, more_used, p3);
       rect_frame(rect2, 1);
       rect_frame(rect3, 1);
     }
