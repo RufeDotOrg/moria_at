@@ -31,7 +31,7 @@ enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
 enum { MOUSE = 0 };
 #else
-enum { TOUCH = 0 };
+enum { TOUCH = 1 };
 enum { KEYBOARD = 1 };
 enum { MOUSE = TOUCH };
 #endif
@@ -577,7 +577,7 @@ font_init(struct fontS *font)
 int
 ui_init()
 {
-  enum { UI_W = 8 };
+  enum { UI_W = 12 };
   enum { UI_H = 16 };
   USE(renderer);
   uint8_t bitmap[UI_H][UI_W];
@@ -2087,7 +2087,7 @@ platform_draw()
       SDL_RenderFillRect(rendererD, &grect);
     }
 
-    if (ui_textureD) {
+    if (ui_textureD && mode != 1) {
       AUSE(grect, GR_HISTORY);
       SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
       rect_frame(grect, 1);
@@ -2454,9 +2454,9 @@ portrait_layout()
       MMSCALE * MAX_HEIGHT,
   };
   grectD[GR_HISTORY] = (SDL_Rect){
-      grectD[GR_MINIMAP].x,
-      (8 + 5) * FHEIGHT - 128 - FHEIGHT / 2,
-      64,
+      layout_rect.w - 96 - margin - FWIDTH,
+      (8 + 5) * FHEIGHT - 128 - FHEIGHT,
+      96,
       128,
   };
 
@@ -2528,9 +2528,9 @@ landscape_layout()
       MMSCALE * MAX_HEIGHT,
   };
   grectD[GR_HISTORY] = (SDL_Rect){
-      grectD[GR_MINIMAP].x,
+      layout_rect.w - size / 2 - 96 / 2,
       layout_rect.h / 2 - 128 - FHEIGHT,
-      64,
+      96,
       128,
   };
 
@@ -2984,6 +2984,7 @@ finger_event_xy(eventtype, x, y)
       if (touch == TOUCH_LB) return 'o';
       if (touch == TOUCH_RB) return ESCAPE;
       if (touch == TOUCH_STAT) return 'C';
+      if (touch == TOUCH_HISTORY) return CTRL('p');
     }
   }
   if (eventtype == SDL_FINGERUP) {
