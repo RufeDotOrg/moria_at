@@ -31,7 +31,7 @@ enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
 enum { MOUSE = 0 };
 #else
-enum { TOUCH = 1 };
+enum { TOUCH = 0 };
 enum { KEYBOARD = 1 };
 enum { MOUSE = TOUCH };
 #endif
@@ -2397,15 +2397,15 @@ portrait_layout()
 {
   USE(layout_rect);
   USE(map_rect);
+  int margin = (layout_rect.w - map_rect.w) / 2;
 
   grectD[GR_VERSION] = (SDL_Rect){
-      layout_rect.w - 8 * FWIDTH,
-      layout_rect.h - 3 * FHEIGHT,
+      layout_rect.w - margin - 8 * FWIDTH,
+      0,
       FWIDTH * 8,
       FHEIGHT * 3,
   };
 
-  int margin = (layout_rect.w - map_rect.w) / 2;
   grectD[GR_PAD] = (SDL_Rect){
       margin,
       layout_rect.h - PADSIZE,
@@ -2426,7 +2426,8 @@ portrait_layout()
       map_rect.h,
   };
   grectD[GR_MINIMAP] = (SDL_Rect){
-      PADSIZE + (layout_rect.w - PADSIZE - MMSCALE * MAX_WIDTH) / 2,
+      PADSIZE +
+          (layout_rect.w - PADSIZE - MMSCALE * MAX_WIDTH - 8 * FWIDTH) / 2,
       (AL(vitalD) * FHEIGHT - (MMSCALE * MAX_HEIGHT)) / 2,
       MMSCALE * MAX_WIDTH,
       MMSCALE * MAX_HEIGHT,
