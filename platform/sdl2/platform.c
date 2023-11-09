@@ -51,8 +51,10 @@ enum { LANDSCAPE = 0 };
 
 enum { ART_W = 32 };
 enum { ART_H = 64 };
+enum { SPRITE_SQ = 32 };
 enum { MAP_W = SYMMAP_WIDTH * ART_W };
 enum { MAP_H = SYMMAP_HEIGHT * ART_H };
+enum { MMSCALE = 2 };
 
 enum { WINDOW = 0 };
 #define WINDOW_X 1920  // 1440, 1334
@@ -63,18 +65,12 @@ enum { PADSIZE = (26 + 2) * FWIDTH };
 enum { AFF_X = 3 };
 enum { AFF_Y = AL(active_affectD) / AFF_X };
 #define P(p) p.x, p.y
-#define R(r) r.x, r.y, r.w, r.h
-#define RS(r, scale) \
-  (r.x * scale.w), (r.y * scale.h), (r.w * scale.w), (r.h * scale.h)
 #define RF(r, framing)                                                    \
   (SDL_Rect)                                                              \
   {                                                                       \
     .x = r.x - (framing), .y = r.y - (framing), .w = r.w + 2 * (framing), \
     .h = r.h + 2 * (framing),                                             \
   }
-// FRect center
-#define F4CENTER(r) r.x + r.w * .5f, r.y + r.h * .5f
-#define R4CENTER(r) r.x + r.w / 2, r.y + r.h / 2
 // Color
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
@@ -95,7 +91,6 @@ char_visible(char c)
 DATA struct SDL_Window *windowD;
 DATA SDL_Rect display_rectD;
 DATA SDL_Rect safe_rectD;
-DATA float aspectD;
 DATA struct SDL_Renderer *rendererD;
 DATA uint32_t texture_formatD;
 DATA SDL_PixelFormat *pixel_formatD;
@@ -145,16 +140,12 @@ GAME uint8_t finger_rowD;
 GAME uint8_t finger_colD;
 
 DATA SDL_Color whiteD = {255, 255, 255, 255};
-DATA SDL_Color font_colorD;
 DATA int xD;
 DATA uint8_t finger_countD;
 DATA int quitD;
 DATA int last_pressD;
 DATA float retina_scaleD;
 DATA char moreD[] = "-more-";
-
-#define MMSCALE 2
-#define SPRITE_SQ 32
 
 int
 render_init()
@@ -1845,10 +1836,9 @@ input_init()
 static void
 display_resize(int dw, int dh)
 {
+  Log("display_resize %dx%d", dw, dh);
   display_rectD.w = dw;
   display_rectD.h = dh;
-  aspectD = (float)dw / dh;
-  Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspectD);
 
   // TBD: Review game utilization of viewport
   // Disabled the push event in SDL that occurs on another thread
@@ -1856,6 +1846,9 @@ display_resize(int dw, int dh)
 
   // Console row/col
   if (UITEST) {
+    float aspect = (float)dw / dh;
+    Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspect);
+
     int r, c;
     float rf, cf;
 
@@ -2808,8 +2801,6 @@ platform_pregame()
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           LANDSCAPE_X, LANDSCAPE_Y);
   }
-
-  font_colorD = whiteD;
 
   zoom_factorD = 2;
 
