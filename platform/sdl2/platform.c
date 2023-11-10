@@ -146,6 +146,7 @@ DATA int quitD;
 DATA int last_pressD;
 DATA float retina_scaleD;
 DATA char moreD[] = "-more-";
+enum { STRLEN_MORE = AL(moreD) - 1 };
 
 int
 render_init()
@@ -1505,7 +1506,7 @@ common_text()
 
       AUSE(grect, GR_PAD);
       SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h / 2};
-      p.x -= AL(moreD) / 2 * FWIDTH;
+      p.x -= STRLEN_MORE * FWIDTH / 2;
       p.y -= FHEIGHT / 2;
       render_monofont_string(renderer, &fontD, AP(moreD), p);
       font_color(whiteD);
@@ -1556,9 +1557,25 @@ portrait_text(mode)
     }
 
     if (msg_more || UITEST) {
-      SDL_Point p = {grect.x + grect.w - AL(moreD) * FWIDTH,
-                     grect.y - FHEIGHT - FHEIGHT / 4};
-      render_monofont_string(rendererD, &fontD, AP(moreD), p);
+      SDL_Rect r = {
+          grect.x + grect.w - STRLEN_MORE * FWIDTH - FWIDTH / 2,
+          grect.y + grect.h - FHEIGHT - FHEIGHT / 2,
+          STRLEN_MORE * FWIDTH,
+          FHEIGHT + FHEIGHT / 8,
+      };
+      SDL_Rect r2 = {
+          grect.x + FWIDTH / 2,
+          grect.y + grect.h - FHEIGHT - FHEIGHT / 2,
+          STRLEN_MORE * FWIDTH,
+          FHEIGHT + FHEIGHT / 8,
+      };
+      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+      SDL_RenderFillRect(renderer, &r);
+      SDL_RenderFillRect(renderer, &r2);
+      render_monofont_string(rendererD, &fontD, AP(moreD),
+                             (SDL_Point){r.x, r.y});
+      render_monofont_string(rendererD, &fontD, AP(moreD),
+                             (SDL_Point){r2.x, r2.y});
     }
 
     common_text();
@@ -1615,8 +1632,7 @@ landscape_text(mode)
 
     if (msg_more || UITEST) {
       int wlimit = msg_widthD * FWIDTH;
-      int more_used = AL(moreD) - 1;
-      int mlimit = more_used * FWIDTH;
+      int mlimit = STRLEN_MORE * FWIDTH;
       int margin = (layout_rect.w - wlimit - mlimit) / 4;
 
       SDL_Rect rect2 = {
@@ -1633,9 +1649,9 @@ landscape_text(mode)
       };
 
       SDL_Point p2 = {rect2.x, rect2.y};
-      render_monofont_string(renderer, &fontD, moreD, more_used, p2);
+      render_monofont_string(renderer, &fontD, AP(moreD), p2);
       SDL_Point p3 = {rect3.x, rect3.y};
-      render_monofont_string(renderer, &fontD, moreD, more_used, p3);
+      render_monofont_string(renderer, &fontD, AP(moreD), p3);
       rect_frame(rect2, 1);
       rect_frame(rect3, 1);
     }
