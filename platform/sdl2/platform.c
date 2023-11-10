@@ -1484,30 +1484,32 @@ common_text()
     }
   }
 
-  if (msg_moreD || UITEST) {
-    static int tapD;
-    tapD = (tapD + 1) % 4;
-    switch (tapD) {
-      case 0:
-        font_color(*color_by_palette(RED));
-        break;
-      case 1:
-        font_color(*color_by_palette(GREEN));
-        break;
-      case 2:
-        font_color(*color_by_palette(BLUE));
-        break;
-      case 3:
-        font_color(*color_by_palette(WHITE));
-        break;
-    }
+  if (TOUCH) {
+    if (msg_moreD || UITEST) {
+      static int tapD;
+      tapD = (tapD + 1) % 4;
+      switch (tapD) {
+        case 0:
+          font_color(*color_by_palette(RED));
+          break;
+        case 1:
+          font_color(*color_by_palette(GREEN));
+          break;
+        case 2:
+          font_color(*color_by_palette(BLUE));
+          break;
+        case 3:
+          font_color(*color_by_palette(WHITE));
+          break;
+      }
 
-    AUSE(grect, GR_PAD);
-    SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h / 2};
-    p.x -= AL(moreD) / 2 * FWIDTH;
-    p.y -= FHEIGHT / 2;
-    render_monofont_string(renderer, &fontD, AP(moreD), p);
-    font_color(whiteD);
+      AUSE(grect, GR_PAD);
+      SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h / 2};
+      p.x -= AL(moreD) / 2 * FWIDTH;
+      p.y -= FHEIGHT / 2;
+      render_monofont_string(renderer, &fontD, AP(moreD), p);
+      font_color(whiteD);
+    }
   }
   return 0;
 }
