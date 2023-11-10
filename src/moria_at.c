@@ -13358,12 +13358,10 @@ dungeon()
 
   switch (uD.new_level_flag) {
     case NL_DOWN_STAIR:
-      msg_print("You enter a maze of down staircases.");
-      msg_print("You pass through a one-way door.");
+      msg_print("You pass through a maze of down staircases.");
       break;
     case NL_UP_STAIR:
-      msg_print("You enter a maze of up staircases.");
-      msg_print("You pass through a one-way door.");
+      msg_print("You pass through a maze of up staircases.");
       break;
     case NL_RECALL:
       if (town) {
@@ -13373,7 +13371,7 @@ dungeon()
       }
       break;
     case NL_TRAP:
-      msg_print("You land hard on the ground!");
+      msg_print("You fall, landing hard on the ground!");
       break;
     case NL_MIDPOINT_LOST:
       msg_print("Game version updated, dungeon reset.");

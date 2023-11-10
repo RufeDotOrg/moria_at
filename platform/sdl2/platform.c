@@ -1921,7 +1921,7 @@ portrait_layout()
       (layout_rect.w - olimit) / 2,
       0,  // grectD[GR_GAMEPLAY].y,
       olimit,
-      layout_rect.h - PADSIZE,  // overlay_heightD*FHEIGHT
+      layout_rect.h - PADSIZE - FHEIGHT,  // overlay_heightD*FHEIGHT
   };
   grectD[GR_WIDESCREEN] = grectD[GR_OVERLAY];
 
