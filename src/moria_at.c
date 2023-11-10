@@ -10404,7 +10404,7 @@ show_character()
   line = MAX_A + 1;
   BufMsg(screen, "%-13.013s: %7d", "Level", uD.lev);
   BufMsg(screen, "%-13.013s: %7d", "Experience", uD.exp);
-  BufMsg(screen, "%-13.013s: %7d", "Max Exp", MAX_EXP);  // uD.max_exp);
+  BufMsg(screen, "%-13.013s: %7d", "Max Exp", uD.max_exp);
   BufMsg(screen, "%-13.013s: %7d", "Exp to Adv", lev_exp(uD.lev));
   BufMsg(screen, "%-13.013s: %7d", "Gold", uD.gold);
 
