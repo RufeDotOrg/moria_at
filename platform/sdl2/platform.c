@@ -575,7 +575,7 @@ ui_init()
         if (rmod == 3) {
           bitmap[row][col] = 0;
         } else {
-          bitmap[row][col] = 15;
+          bitmap[row][col] = 7;
         }
       }
     }
@@ -1470,14 +1470,16 @@ common_text()
   {
     AUSE(grect, GR_MINIMAP);
     {
-      SDL_Point p = {grect.x, grect.y - FHEIGHT - 24};
+      SDL_Point p = {grect.x + grect.w / 2, grect.y - FHEIGHT - 24};
       len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
+      p.x -= (len * FWIDTH) / 2;
       render_monofont_string(renderer, &fontD, tmp, len, p);
     }
 
     {
-      SDL_Point p = {grect.x, grect.y + grect.h + 24};
+      SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h + 24};
       len = snprintf(tmp, AL(tmp), "%s", dun_descD);
+      p.x -= (len * FWIDTH) / 2;
       render_monofont_string(renderer, &fontD, tmp, len, p);
     }
   }
