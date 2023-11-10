@@ -442,26 +442,25 @@ int
 show_history()
 {
   char* log;
-  int log_used, line;
+  int log_used;
+  int line = AL(screenD);
 
+  screenD[0][0] = ' ';
+  screen_usedD[0] = 1;
   screen_submodeD = 2;
-  line = 0;
-  for (int it = 1; it < MAX_MSG; ++it) {
+
+  for (int it = MAX_MSG; it > 0; --it) {
     log = AS(msg_cqD, msg_writeD + it);
     log_used = AS(msglen_cqD, msg_writeD + it);
     if (log_used) {
+      line -= 1;
       memcpy(screenD[line], log, log_used);
       screen_usedD[line] = log_used;
-      line += 1;
     }
   }
 
-  if (!line) {
-    screenD[0][0] = ' ';
-    screen_usedD[0] = 1;
-  }
-
-  DRAWMSG("Message History (%d)", line);
+  int count = AL(screenD) - line;
+  DRAWMSG("Message History (%d)", count);
   return inkey();
 }
 int
