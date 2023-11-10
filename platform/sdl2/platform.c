@@ -1554,7 +1554,8 @@ portrait_text(mode)
     }
 
     if (msg_more || UITEST) {
-      SDL_Point p = {grect.x + grect.w - AL(moreD) * FWIDTH, grect.y - FHEIGHT};
+      SDL_Point p = {grect.x + grect.w - AL(moreD) * FWIDTH,
+                     grect.y - FHEIGHT - FHEIGHT / 4};
       render_monofont_string(rendererD, &fontD, AP(moreD), p);
     }
 
@@ -1870,7 +1871,7 @@ portrait_layout()
   int margin = (layout_rect.w - MAP_W) / 2;
 
   grectD[GR_VERSION] = (SDL_Rect){
-      layout_rect.w - margin - 8 * FWIDTH,
+      layout_rect.w / 2,
       0,
       FWIDTH * 8,
       FHEIGHT * 3,
@@ -1896,15 +1897,14 @@ portrait_layout()
       MAP_H,
   };
   grectD[GR_MINIMAP] = (SDL_Rect){
-      PADSIZE +
-          (layout_rect.w - PADSIZE - MMSCALE * MAX_WIDTH - 8 * FWIDTH) / 2,
-      (AL(vitalD) * FHEIGHT - (MMSCALE * MAX_HEIGHT)) / 2,
+      layout_rect.w - margin - MMSCALE * MAX_WIDTH - 4 * FWIDTH,
+      grectD[GR_GAMEPLAY].y - 2 * FHEIGHT - MMSCALE * MAX_HEIGHT,
       MMSCALE * MAX_WIDTH,
       MMSCALE * MAX_HEIGHT,
   };
   grectD[GR_HISTORY] = (SDL_Rect){
       layout_rect.w - 96 - margin - FWIDTH,
-      (8 + 5) * FHEIGHT - 128 - FHEIGHT,
+      FHEIGHT / 2,
       96,
       128,
   };
