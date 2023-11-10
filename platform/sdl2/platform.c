@@ -560,7 +560,7 @@ font_init(struct fontS *font)
 int
 ui_init()
 {
-  enum { UI_W = 12 };
+  enum { UI_W = 16 };
   enum { UI_H = 16 };
   USE(renderer);
   uint8_t bitmap[UI_H][UI_W];
@@ -1871,8 +1871,8 @@ portrait_layout()
   int margin = (layout_rect.w - MAP_W) / 2;
 
   grectD[GR_VERSION] = (SDL_Rect){
-      layout_rect.w / 2,
-      0,
+      layout_rect.w - 8 * FWIDTH,
+      layout_rect.h - 3 * FHEIGHT,
       FWIDTH * 8,
       FHEIGHT * 3,
   };
@@ -1903,9 +1903,9 @@ portrait_layout()
       MMSCALE * MAX_HEIGHT,
   };
   grectD[GR_HISTORY] = (SDL_Rect){
-      layout_rect.w - 96 - margin - FWIDTH,
+      layout_rect.w - 128 - margin - 4 * FWIDTH,
       FHEIGHT / 2,
-      96,
+      128,
       128,
   };
 
