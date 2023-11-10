@@ -2351,90 +2351,85 @@ touch_by_xy(x, y)
   }
 }
 static int
-finger_mode_event_xy(mode, eventtype, x, y)
+fingerdown_xy_mode(x, y, mode)
 {
   int finger = finger_countD - 1;
   if (KEYBOARD) {
     finger = ((KMOD_SHIFT & SDL_GetModState()) != 0);
   }
-  if (eventtype == SDL_FINGERDOWN) {
-    int touch = touch_by_xy(x, y);
-    if (mode == 0) {
-      if (touch > TOUCH_PAD) {
-        char c = char_by_dir(touch - TOUCH_PAD);
-        switch (finger) {
-          case 0:
-            return c;
-          case 1:
-            if (c == ' ') return '=';
-            return c & ~0x20;
-          default:
-            break;
-        }
-      } else if (touch) {
-        switch (touch) {
-          case TOUCH_HISTORY:
-            return CTRL('p');
-          case TOUCH_STAT:
-            return 'C';
-          case TOUCH_MAP:
-            return 'M';
-          case TOUCH_VERSION:
-            return 'v';
-          case TOUCH_GAMEPLAY:
-            return finger ? '-' : 'O';
-          case TOUCH_LB:
-            return finger ? 'd' : 'A';
-          case TOUCH_RB:
-            return finger ? CTRL('a') : '.';
-          default:
-            break;
-        }
-      }
-    }
-    if (mode == 1) {
-      if (touch > TOUCH_PAD) {
-        int dir = touch - TOUCH_PAD;
-        int dx = dir_x(dir);
-        int dy = dir_y(dir);
 
-        if (!dx && !dy) {
-          return 'A' + finger_rowD;
-        }
-        if (dx && !dy) {
-          if (finger)
-            finger_rowD = dx > 0 ? overlay_end() : 0;
-          else
-            finger_colD = CLAMP(finger_colD + dx, 0, 1);
-        }
-        if (dy && !dx) {
-          if (finger)
-            finger_rowD = overlay_bisect(dy);
-          else
-            finger_rowD = overlay_input(dy);
-        }
-        return (finger_colD == 0) ? '*' : '/';
+  int touch = touch_by_xy(x, y);
+  if (mode == 0) {
+    if (touch > TOUCH_PAD) {
+      char c = char_by_dir(touch - TOUCH_PAD);
+      switch (finger) {
+        case 0:
+          return c;
+        case 1:
+          if (c == ' ') return '=';
+          return c & ~0x20;
+        default:
+          break;
       }
-      if (touch == TOUCH_LB) {
-        return ESCAPE;
+    } else if (touch) {
+      switch (touch) {
+        case TOUCH_HISTORY:
+          return CTRL('p');
+        case TOUCH_STAT:
+          return 'C';
+        case TOUCH_MAP:
+          return 'M';
+        case TOUCH_VERSION:
+          return 'v';
+        case TOUCH_GAMEPLAY:
+          return finger ? '-' : 'O';
+        case TOUCH_LB:
+          return finger ? 'd' : 'A';
+        case TOUCH_RB:
+          return finger ? CTRL('a') : '.';
+        default:
+          break;
       }
-      if (touch == TOUCH_RB) {
-        return 'a' + finger_rowD;
-      }
-      if (touch == TOUCH_GAMEPLAY && finger) return '-';
-    }
-    if (mode == 2) {
-      if (touch == TOUCH_LB) return 'o';
-      if (touch == TOUCH_RB) return ESCAPE;
-      if (touch == TOUCH_STAT) return 'C';
-      if (touch == TOUCH_HISTORY) return CTRL('p');
     }
   }
-  if (eventtype == SDL_FINGERUP) {
-    // TBD: fastplay in portrait mode for now
-    int fastplay = (layout_rectD.h > layout_rectD.w);
-    if (fastplay) return ' ';
+  if (mode == 1) {
+    if (touch > TOUCH_PAD) {
+      int dir = touch - TOUCH_PAD;
+      int dx = dir_x(dir);
+      int dy = dir_y(dir);
+
+      if (!dx && !dy) {
+        return 'A' + finger_rowD;
+      }
+      if (dx && !dy) {
+        if (finger)
+          finger_rowD = dx > 0 ? overlay_end() : 0;
+        else
+          finger_colD = CLAMP(finger_colD + dx, 0, 1);
+      }
+      if (dy && !dx) {
+        if (finger)
+          finger_rowD = overlay_bisect(dy);
+        else
+          finger_rowD = overlay_input(dy);
+      }
+      return (finger_colD == 0) ? '*' : '/';
+    }
+    if (touch == TOUCH_LB) {
+      return ESCAPE;
+    }
+    if (touch == TOUCH_RB) {
+      return 'a' + finger_rowD;
+    }
+    if (touch == TOUCH_GAMEPLAY && finger) return '-';
   }
+  if (mode == 2) {
+    if (touch == TOUCH_LB) return 'o';
+    if (touch == TOUCH_RB) return ESCAPE;
+    if (touch == TOUCH_STAT) return 'C';
+    if (touch == TOUCH_HISTORY) return CTRL('p');
+  }
+
   return 0;
 }
 
@@ -2447,19 +2442,21 @@ sdl_pump()
   USE(mode);
   SDL_Event event;
   int ret = 0;
+  // TBD: fastplay in portrait mode for now
+  int fastplay = (MOUSE || TOUCH) ? (layout_rectD.h > layout_rectD.w) : 0;
 
   while (ret == 0 && SDL_PollEvent(&event)) {
-    if ((MOUSE || TOUCH) &&
-        (event.type == SDL_FINGERDOWN || event.type == SDL_FINGERUP)) {
-      finger_countD += (event.type == SDL_FINGERDOWN);
-      // TBD: handle touch outside of view?
+    if ((MOUSE || TOUCH) && event.type == SDL_FINGERDOWN) {
+      finger_countD += 1;
       SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
       if (SDL_PointInFRect(&tp, &view_rect)) {
         int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
         int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
-        ret = finger_mode_event_xy(mode, event.type, x, y);
+        ret = fingerdown_xy_mode(x, y, mode);
       }
-      finger_countD -= (event.type == SDL_FINGERUP);
+    } else if ((MOUSE || TOUCH) && event.type == SDL_FINGERUP) {
+      finger_countD -= 1;
+      if (fastplay) ret = ' ';
     } else if (KEYBOARD && (event.type == SDL_KEYDOWN)) {
       ret = sdl_kb_event(event);
     } else if (event.type == SDL_QUIT) {
