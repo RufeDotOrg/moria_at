@@ -1877,9 +1877,10 @@ portrait_layout()
       FHEIGHT * 3,
   };
 
+  int lift = FHEIGHT / 2;
   grectD[GR_PAD] = (SDL_Rect){
       margin,
-      layout_rect.h - PADSIZE,
+      layout_rect.h - PADSIZE - lift,
       PADSIZE,
       PADSIZE,
   };
@@ -1892,7 +1893,7 @@ portrait_layout()
 
   grectD[GR_GAMEPLAY] = (SDL_Rect){
       margin,
-      layout_rect.h - PADSIZE - MAP_H - FHEIGHT + 3,
+      layout_rect.h - PADSIZE - MAP_H - FHEIGHT + FHEIGHT / 4,
       MAP_W,
       MAP_H,
   };
