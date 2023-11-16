@@ -94,6 +94,7 @@ DATA SDL_Rect safe_rectD;
 DATA struct SDL_Renderer *rendererD;
 DATA uint32_t texture_formatD;
 DATA SDL_PixelFormat *pixel_formatD;
+DATA int orientation_lockD;
 
 DATA uint32_t sprite_idD;
 DATA SDL_Surface *spriteD;
@@ -121,6 +122,7 @@ enum {
   GR_GAMEPLAY,
   GR_MINIMAP,
   GR_HISTORY,
+  GR_LOCK,
   GR_STAT,
   GR_OVERLAY,
   GR_WIDESCREEN,  // improving show_history() in landscape orientation
@@ -633,6 +635,7 @@ font_texture_alphamod(alpha)
 enum {
   TOUCH_NONE,
   TOUCH_HISTORY,
+  TOUCH_LOCK,
   TOUCH_STAT,
   TOUCH_MAP,
   TOUCH_VERSION,
@@ -1694,6 +1697,25 @@ platform_draw()
       SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
       rect_frame(grect, 1);
     }
+    if (mode == 0) {
+      AUSE(grect, GR_LOCK);
+      USE(orientation_lock);
+      int tridx;
+      if (orientation_lock) {
+        tridx = 48;
+      } else {
+        tridx = 45;
+      }
+      if (tridx <= AL(tart_textureD)) {
+        SDL_Rect sprite_rect = {
+            P(point_by_spriteid(tart_textureD[tridx - 1])),
+            ART_W,
+            ART_H,
+        };
+        SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &grect);
+      }
+      rect_frame(grect, 1);
+    }
   }
 
   if (mode == 0)
@@ -1927,6 +1949,8 @@ portrait_layout()
       128,
       128,
   };
+  grectD[GR_LOCK] = grectD[GR_HISTORY];
+  grectD[GR_LOCK].x -= 2 * grectD[GR_HISTORY].w;
 
   grectD[GR_STAT] = (SDL_Rect){
       margin,
@@ -2000,6 +2024,8 @@ landscape_layout()
       96,
       128,
   };
+  grectD[GR_LOCK] = grectD[GR_HISTORY];
+  grectD[GR_LOCK].x -= grectD[GR_HISTORY].w * 2;
 
   grectD[GR_STAT] = (SDL_Rect){
       0,
@@ -2328,6 +2354,12 @@ touch_by_xy(x, y)
     }
   }
   {
+    AUSE(grect, GR_LOCK);
+    if (SDL_PointInRect(&tpp, &grect)) {
+      return TOUCH_LOCK;
+    }
+  }
+  {
     AUSE(grect, GR_MINIMAP);
     if (SDL_PointInRect(&tpp, &grect)) {
       return TOUCH_MAP;
@@ -2370,6 +2402,14 @@ touch_by_xy(x, y)
   }
 }
 static int
+orientation_lock_toggle()
+{
+  // This works; TBD persistent global configuration
+  SDL_SetWindowResizable(windowD, orientation_lockD);
+  orientation_lockD = ~orientation_lockD;
+  return 0;
+}
+static int
 fingerdown_xy_mode(x, y, mode)
 {
   int finger = finger_countD - 1;
@@ -2394,6 +2434,9 @@ fingerdown_xy_mode(x, y, mode)
       switch (touch) {
         case TOUCH_HISTORY:
           return CTRL('p');
+        case TOUCH_LOCK:
+          orientation_lock_toggle();
+          return ' ';
         case TOUCH_STAT:
           return 'C';
         case TOUCH_MAP:
