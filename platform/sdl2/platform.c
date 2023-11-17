@@ -2281,24 +2281,31 @@ SDL_Event event;
 int
 gameplay_tapxy(relx, rely)
 {
+  USE(zoom_factor);
   float gsy = rely;
   float gsx = relx;
+  int cellw = SYMMAP_WIDTH;
+  int cellh = SYMMAP_HEIGHT;
 
-  if (zoom_factorD) {
-    int zf, zh, zw;
-    zf = zoom_factorD;
-    zh = SYMMAP_HEIGHT >> zf;
-    zw = SYMMAP_WIDTH >> zf;
+  if (zoom_factor) {
+    cellh >>= zoom_factor;
+    cellw >>= zoom_factor;
 
-    gsy *= (1.0f + zh) / SYMMAP_HEIGHT;
-    gsx *= (1.0f + zw) / SYMMAP_WIDTH;
+    cellh += 1;
+    cellw += 1;
+
+    gsy *= cellh;
+    gsx *= cellw;
+
+    gsy /= SYMMAP_HEIGHT;
+    gsx /= SYMMAP_WIDTH;
   }
 
   int ry = (int)gsy / ART_H;
   int rx = (int)gsx / ART_W;
-  ylookD = ry;
-  xlookD = rx;
-  return 'O';
+  ylookD = MIN(ry, cellh - 1);
+  xlookD = MIN(rx, cellw - 1);
+  return 0;
 }
 
 int
