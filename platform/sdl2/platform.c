@@ -1712,7 +1712,14 @@ platform_draw()
             ART_W,
             ART_H,
         };
-        SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &grect);
+        SDL_Rect dest = {
+            grect.x,
+            grect.y,
+            ART_W * 2,
+            ART_H * 2,
+        };
+        dest.x += (grect.w - dest.w) / 2;
+        SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
       }
       rect_frame(grect, 1);
     }
