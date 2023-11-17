@@ -10550,7 +10550,7 @@ py_archive_select()
       DRAWMSG("%sArchive: Restore which character?", media);
       c = inkey();
       if (c == 'i') {
-        py_archive_import();
+        if (loadexport) py_archive_import();
 
         // Reload internal media
         c = ESCAPE;
