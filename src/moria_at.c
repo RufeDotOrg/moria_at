@@ -13587,20 +13587,12 @@ dungeon()
               break;
             case 'O': {
               omit_replay = 1;
-              if (zoom_factorD == 0) {
-                py_look(ylookD + panelD.panel_row_min,
-                        xlookD + panelD.panel_col_min);
-              } else {
-                int zf, zh, zw;
-                zf = zoom_factorD;
-                zh = SYMMAP_HEIGHT >> zf;
-                zw = SYMMAP_WIDTH >> zf;
-                int ty = CLAMP(uD.y - zh / 2, panelD.panel_row_min,
-                               panelD.panel_row_max - zh - 1);
-                int tx = CLAMP(uD.x - zw / 2, panelD.panel_col_min,
-                               panelD.panel_col_max - zw - 1);
-                py_look(ylookD + ty, xlookD + tx);
-              }
+              int zoom_factor = zoom_factorD;
+              int cellh = SYMMAP_HEIGHT >> zoom_factor;
+              int cellw = SYMMAP_WIDTH >> zoom_factor;
+              int ty = MAX(uD.y - cellh / 2, panelD.panel_row_min);
+              int tx = MAX(uD.x - cellw / 2, panelD.panel_col_min);
+              py_look(ylookD + ty, xlookD + tx);
             } break;
             case 'R':
               py_rest();
