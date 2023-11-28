@@ -83,6 +83,7 @@ enum { AFF_Y = AL(active_affectD) / AFF_X };
 // TBD: clean-up
 int los();
 int SDL_GetWindowSafeRect();
+int phone_focuslost();
 
 int
 char_visible(char c)
@@ -2154,47 +2155,14 @@ path_append_filename(char *path, int path_len, char *filename)
   }
   *write = 0;
 
-  Log("filename: %s", path);
   return path;
 }
 SDL_RWops *
 rw_file_access(char *filename, char *access)
 {
-  if (__APPLE__)
-    filename = path_append_filename(savepathD, savepath_usedD, filename);
   Log("rw_file_access %s %s", filename, access);
   return SDL_RWFromFile(filename, access);
 }
-int
-platform_savemidpoint(char *filename)
-{
-  int save_size = 0;
-  int write_ok = 0;
-  int memory_ok;
-
-  memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
-               input_action_usedD <= AL(input_actionD) - 1);
-
-  if (memory_ok) {
-    SDL_RWops *rwfile = rw_file_access(filename, "r+");
-    if (rwfile) {
-      SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
-
-      int64_t offset = SDL_RWseek(rwfile, save_size, RW_SEEK_CUR);
-      if (offset > 0) {
-        write_ok = SDL_RWwrite(rwfile, &git_hashD, sizeof(git_hashD), 1);
-        for (int it = 0; it < AL(midpoint_bufD); ++it) {
-          struct bufS buf = midpoint_bufD[it];
-          if (!SDL_RWwrite(rwfile, buf.mem, buf.mem_size, 1)) write_ok = 0;
-        }
-      }
-
-      SDL_RWclose(rwfile);
-    }
-  }
-  return write_ok;
-}
-
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -2248,9 +2216,7 @@ SDL_Event event;
         platform_draw();
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-    if (ANDROID || __APPLE__) {
-      platform_savemidpoint("savechar");
-    }
+    if (ANDROID || __APPLE__) phone_focuslost();
   }
   return 0;
 }
@@ -2617,13 +2583,13 @@ int checksum(blob, len) void *blob;
   return ret;
 }
 int
-platform_save(char *filename)
+path_save(char *path)
 {
   int version = AL(savesumD) - 1;
   int sum = savesumD[version];
   int *savefield = savefieldD[version];
 
-  SDL_RWops *writef = rw_file_access(filename, "w+b");
+  SDL_RWops *writef = rw_file_access(path, "w+b");
   if (writef) {
     checksumD = 0;
     SDL_RWwrite(writef, &sum, sizeof(sum), 1);
@@ -2640,12 +2606,12 @@ platform_save(char *filename)
   return 0;
 }
 int
-platform_load(char *filename)
+path_load(char *path)
 {
   int save_size = 0;
   clear_savebuf();
 
-  SDL_RWops *readf = rw_file_access(filename, "rb");
+  SDL_RWops *readf = rw_file_access(path, "rb");
   if (readf) {
     checksumD = 0;
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
@@ -2709,14 +2675,45 @@ platform_load(char *filename)
   return save_size != 0;
 }
 int
+path_savemidpoint(char *path)
+{
+  int save_size = 0;
+  int write_ok = 0;
+  int memory_ok;
+
+  memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
+               input_action_usedD <= AL(input_actionD) - 1);
+
+  if (memory_ok) {
+    SDL_RWops *rwfile = rw_file_access(path, "r+");
+    if (rwfile) {
+      SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
+
+      int64_t offset = SDL_RWseek(rwfile, save_size, RW_SEEK_CUR);
+      if (offset > 0) {
+        write_ok = SDL_RWwrite(rwfile, &git_hashD, sizeof(git_hashD), 1);
+        for (int it = 0; it < AL(midpoint_bufD); ++it) {
+          struct bufS buf = midpoint_bufD[it];
+          if (!SDL_RWwrite(rwfile, buf.mem, buf.mem_size, 1)) write_ok = 0;
+        }
+      }
+
+      SDL_RWclose(rwfile);
+    }
+  }
+  return write_ok;
+}
+int
 platform_saveexport(char *filename)
 {
   if (exportpath_usedD) {
-    char *external_name =
+    char *internal_path =
+        path_append_filename(savepathD, savepath_usedD, filename);
+    char *external_path =
         path_append_filename(exportpathD, exportpath_usedD, filename);
 
-    if (platform_load(filename)) {
-      return platform_save(external_name);
+    if (path_load(internal_path)) {
+      return path_save(external_path);
     }
   }
   return 0;
@@ -2725,30 +2722,59 @@ int
 platform_loadexport(char *filename)
 {
   if (exportpath_usedD) {
-    char *external_name =
+    char *external_path =
         path_append_filename(exportpathD, exportpath_usedD, filename);
-    return platform_load(external_name);
+    return path_load(external_path);
   }
   return 0;
 }
+int
+platform_load(char *filename)
+{
+  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  return path_load(path);
+}
+int
+platform_save(char *filename)
+{
+  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  return path_save(path);
+}
+int
+platform_savemidpoint(char *filename)
+{
+  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  return path_savemidpoint(path);
+}
+int
+phone_focuslost()
+{
+  return platform_savemidpoint("savechar");
+}
+
 int
 platform_erase(char *filename)
 {
   clear_savebuf();
 
-  SDL_RWops *writef = rw_file_access(filename, "w+b");
+  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  SDL_RWops *writef = rw_file_access(path, "w+b");
   if (writef) SDL_RWclose(writef);
 
   return 0;
 }
+// Internal storage only
 int
 platform_copy(char *srcfile, char *dstfile)
 {
   SDL_RWops *readf, *writef;
+  char *path;
 
-  readf = rw_file_access(srcfile, "rb");
+  path = path_append_filename(savepathD, savepath_usedD, srcfile);
+  readf = rw_file_access(path, "rb");
   if (readf) {
-    writef = rw_file_access(dstfile, "w+b");
+    path_append_filename(savepathD, savepath_usedD, dstfile);
+    writef = rw_file_access(path, "w+b");
     if (writef) {
       char chunk[4 * 1024];
       int read_count;
