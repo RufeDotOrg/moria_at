@@ -18,6 +18,9 @@
 enum { __APPLE__ };
 #endif
 
+#ifndef APPLE
+char *SDL_AppleGetDocumentPath(const char *, const char *);
+#endif
 #ifndef ANDROID
 enum { ANDROID };
 int SDL_AndroidGetExternalStorageState();
@@ -134,6 +137,8 @@ DATA fn text_fnD;
 
 DATA char savepathD[1024];
 DATA int savepath_usedD;
+DATA char exportpathD[1024];
+DATA int exportpath_usedD;
 
 GAME int overlay_copyD[AL(overlay_usedD)];
 GAME int modeD;
@@ -2138,10 +2143,10 @@ orientation_update()
 }
 
 char *
-savepath_by_filename(char *filename)
+path_append_filename(char *path, int path_len, char *filename)
 {
-  int wridx = savepath_usedD;
-  char *write = &savepathD[wridx];
+  int wridx = path_len;
+  char *write = &path[wridx];
 
   if (wridx) *write++ = '/';
   for (char *iter = filename; *iter != 0; ++iter) {
@@ -2149,13 +2154,14 @@ savepath_by_filename(char *filename)
   }
   *write = 0;
 
-  Log("filename: %s", savepathD);
-  return savepathD;
+  Log("filename: %s", path);
+  return path;
 }
 SDL_RWops *
 rw_file_access(char *filename, char *access)
 {
-  if (__APPLE__) filename = savepath_by_filename(filename);
+  if (__APPLE__)
+    filename = path_append_filename(savepathD, savepath_usedD, filename);
   Log("rw_file_access %s %s", filename, access);
   return SDL_RWFromFile(filename, access);
 }
@@ -2705,20 +2711,25 @@ platform_load(char *filename)
 int
 platform_saveexport(char *filename)
 {
-  if (__APPLE__) return 0;  // savepathD is already external
-  char *external_name = savepath_by_filename(filename);
+  if (exportpath_usedD) {
+    char *external_name =
+        path_append_filename(exportpathD, exportpath_usedD, filename);
 
-  if (platform_load(filename)) {
-    return platform_save(external_name);
+    if (platform_load(filename)) {
+      return platform_save(external_name);
+    }
   }
   return 0;
 }
 int
 platform_loadexport(char *filename)
 {
-  if (__APPLE__) return 0;  // savepathD is already external
-  char *external_name = savepath_by_filename(filename);
-  return platform_load(external_name);
+  if (exportpath_usedD) {
+    char *external_name =
+        path_append_filename(exportpathD, exportpath_usedD, filename);
+    return platform_load(external_name);
+  }
+  return 0;
 }
 int
 platform_erase(char *filename)
@@ -2803,6 +2814,19 @@ platform_pregame()
           savepath_usedD = len;
         SDL_free(prefpath);
       }
+
+      char *external = SDL_AppleGetDocumentPath("org.rufe", APPNAME);
+      if (external) {
+        int len = snprintf(exportpathD, AL(exportpathD), "%s", external);
+        if (len < 0 || len >= AL(exportpathD)) {
+          exportpathD[0] = 0;
+        } else {
+          exportpath_usedD = len;
+          platformD.saveexport = platform_saveexport;
+          platformD.loadexport = platform_loadexport;
+        }
+      }
+      SDL_free(external);
     }
 
     if (ANDROID) {
@@ -2810,11 +2834,11 @@ platform_pregame()
       if (state & 0x3) {
         char *external = (char *)SDL_AndroidGetExternalStoragePath();
         Log("Storage: [state %d] path: %s", state, external);
-        int len = snprintf(savepathD, AL(savepathD), "%s", external);
-        if (len < 0 || len >= AL(savepathD)) {
-          savepathD[0] = 0;
+        int len = snprintf(exportpathD, AL(exportpathD), "%s", external);
+        if (len < 0 || len >= AL(exportpathD)) {
+          exportpathD[0] = 0;
         } else {
-          savepath_usedD = len;
+          exportpath_usedD = len;
           platformD.saveexport = platform_saveexport;
           platformD.loadexport = platform_loadexport;
         }
