@@ -13356,6 +13356,7 @@ dungeon()
     snprintf(dun_descD, AL(dun_descD), "%d feet", dun_level * 50);
 
   switch (uD.new_level_flag) {
+    default:
     case NL_DOWN_STAIR:
       msg_print("You pass through a maze of down staircases.");
       break;
