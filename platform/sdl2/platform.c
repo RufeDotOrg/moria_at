@@ -2609,9 +2609,7 @@ path_save(char *path)
 int
 validation()
 {
-  if (uD.y <= 0 || uD.y >= MAX_HEIGHT) return 0;
-  if (uD.x <= 0 || uD.x >= MAX_WIDTH) return 0;
-  if (uD.lev <= 0 || uD.lev >= AL(player_exp)) return 0;
+  if (uD.lev <= 0 || uD.lev > MAX_PLAYER_LEVEL) return 0;
   if (uD.clidx >= AL(classD)) return 0;
   if (uD.ridx >= AL(raceD)) return 0;
   return 1;
