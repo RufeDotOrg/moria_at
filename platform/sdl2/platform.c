@@ -16,11 +16,9 @@
 #define APPNAME "moria.app"
 #ifndef __APPLE__
 enum { __APPLE__ };
-#endif
-
-#ifndef APPLE
 char *SDL_AppleGetDocumentPath(const char *, const char *);
 #endif
+
 #ifndef ANDROID
 enum { ANDROID };
 int SDL_AndroidGetExternalStorageState();
