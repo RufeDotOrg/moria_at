@@ -2864,27 +2864,27 @@ platform_pregame()
           exportpathD[0] = 0;
         } else {
           exportpath_usedD = len;
-          platformD.saveexport = platform_saveexport;
-          platformD.loadexport = platform_loadexport;
         }
+        SDL_free(external);
       }
-      SDL_free(external);
     }
 
     if (ANDROID) {
       int state = SDL_AndroidGetExternalStorageState();
       if (state & 0x3) {
+        int len = 0;
         char *external = (char *)SDL_AndroidGetExternalStoragePath();
-        Log("Storage: [state %d] path: %s", state, external);
-        int len = snprintf(exportpathD, AL(exportpathD), "%s", external);
-        if (len < 0 || len >= AL(exportpathD)) {
+        if (external) {
+          len = snprintf(exportpathD, AL(exportpathD), "%s", external);
+          Log("GetExternalStoragePath: %s", external);
+          SDL_free(external);
+        }
+        if (len <= 0 || len >= AL(exportpathD)) {
           exportpathD[0] = 0;
         } else {
           exportpath_usedD = len;
-          platformD.saveexport = platform_saveexport;
-          platformD.loadexport = platform_loadexport;
         }
-        SDL_free(external);
+        Log("Storage: [state %d] path: %s", state, exportpathD);
       }
     }
 
@@ -2962,6 +2962,11 @@ platform_pregame()
   if (TOUCH) platformD.selection = platform_selection;
   platformD.copy = platform_copy;
   platformD.savemidpoint = platform_savemidpoint;
+
+  if (exportpath_usedD) {
+    platformD.saveexport = platform_saveexport;
+    platformD.loadexport = platform_loadexport;
+  }
 
   return 0;
 }

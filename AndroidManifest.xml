@@ -57,12 +57,15 @@
          then replace "moriaActivity" with the name of your class (e.g. "MyGame")
          in the XML below.
 
-         An example Java class can be found in README-android.md
+	 An example Java class can be found in README-android.md
+
+hasFragileUserData: https://gist.github.com/agnostic-apollo/58def38fdb1c90563454974108ae52df
     -->
     <application android:label="moria"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
-        android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+	    android:theme="@android:style/Theme.NoTitleBar.Fullscreen"
+        android:hasFragileUserData="true"
         android:hardwareAccelerated="true" >
 
         <!-- Example of setting SDL hints from AndroidManifest.xml:
