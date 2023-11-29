@@ -2605,15 +2605,6 @@ path_save(char *path)
   }
   return 0;
 }
-// Bounds checks on variables that may cause memory corruption
-int
-validation()
-{
-  if (uD.lev <= 0 || uD.lev > MAX_PLAYER_LEVEL) return 0;
-  if (uD.clidx >= AL(classD)) return 0;
-  if (uD.ridx >= AL(raceD)) return 0;
-  return 1;
-}
 int
 path_load(char *path)
 {
@@ -2645,13 +2636,6 @@ path_load(char *path)
     } else {
       Log("load char invalid size %d", save_size);
       save_size = 0;
-    }
-
-    if (save_size) {
-      if (!validation()) {
-        Log("WARNING: validation failed on character load");
-        save_size = 0;
-      }
     }
 
     if (input_resumeD == 0) {
@@ -2734,13 +2718,29 @@ platform_saveexport(char *filename)
   }
   return 0;
 }
+// Bounds checks on variables that may cause memory corruption
+// TBD: check objects?
+int
+validation()
+{
+  if (uD.lev <= 0 || uD.lev > MAX_PLAYER_LEVEL) return 0;
+  if (uD.clidx >= AL(classD)) return 0;
+  if (uD.ridx >= AL(raceD)) return 0;
+  for (int it = 0; it < MAX_A; ++it) {
+    if (statD.max_stat[it] < 3 || statD.max_stat[it] > 118) return 0;
+    if (statD.cur_stat[it] < 3 || statD.max_stat[it] > 118) return 0;
+  }
+  return 1;
+}
 int
 platform_loadexport(char *filename)
 {
   if (exportpath_usedD) {
     char *external_path =
         path_append_filename(exportpathD, exportpath_usedD, filename);
-    return path_load(external_path);
+    if (path_load(external_path)) {
+      if (validation()) return 1;
+    }
   }
   return 0;
 }

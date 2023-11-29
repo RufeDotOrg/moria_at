@@ -13923,10 +13923,11 @@ main(int argc, char** argv)
   input_resumeD = 0;
   input_record_readD = input_action_usedD = 0;
 
-  // Perform calculations
-  calc_bonuses();
-  calc_hitpoints();
-  calc_mana();  // may generate messages in gain_prayer()
+  // may generate messages in calc_mana()->gain_prayer()
+  for (int it = 0; it < MAX_A; ++it) {
+    // Perform calculations
+    set_use_stat(it);
+  }
 
   // a fresh cave!
   if (dun_level != 0) {
