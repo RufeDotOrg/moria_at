@@ -466,6 +466,7 @@
 
 // Input
 #define ESCAPE '\033'
+#define RETURN 13
 #define CTRL(x) (x & 0x1f)
 // Output
 enum { BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BRIGHT };
