@@ -11,6 +11,13 @@
 
 #include "tty.c"
 
+#ifndef TCGETS
+#define TCGETS TIOCGETA
+#endif
+#ifndef TCSETS
+#define TCSETS TIOCSETA
+#endif
+
 int
 platform_readansi()
 {
@@ -39,7 +46,7 @@ platform_pregame()
   if (save_termD[1] == 0) {
     fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
-    ioctl(STDIN_FILENO, TCGETA, save_termD);
+    ioctl(STDIN_FILENO, TCGETS, save_termD);
 
     struct termios tbuf;
     tcgetattr(STDIN_FILENO, &tbuf);
@@ -61,7 +68,7 @@ platform_postgame()
     write(STDOUT_FILENO, tc_clearD, sizeof(tc_clearD));
     write(STDOUT_FILENO, tc_show_cursorD, sizeof(tc_show_cursorD));
 
-    ioctl(STDIN_FILENO, TCSETA, save_termD);
+    ioctl(STDIN_FILENO, TCSETS, save_termD);
   }
 
   return 0;
