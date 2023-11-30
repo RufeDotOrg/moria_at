@@ -2,6 +2,8 @@
 #include "moria_at.c"
 #undef main
 
+long long strtoll(const char *restrict str, char **restrict endptr, int base);
+
 int
 read_number(char* prompt, int* number)
 {
