@@ -3,7 +3,7 @@
 DATA char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 DATA char save_termD[128];
 
-#define TC(x) x, AL(x)-1
+#define TC(x) x, AL(x) - 1
 
 static char
 get_sym(int row, int col)
@@ -193,13 +193,14 @@ platform_draw()
     }
     row += 1;
     it = 0;
-    snprintf(vital[row++], AL(vital[0]), "LEV : %6d", vital_statD[it++]);
-    snprintf(vital[row++], AL(vital[0]), "EXP :%7d", vital_statD[it++]);
-    snprintf(vital[row++], AL(vital[0]), "MHP : %6d", vital_statD[it++]);
-    snprintf(vital[row++], AL(vital[0]), "CHP : %6d", vital_statD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "LEV : %6d", vitalD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "EXP :%7d", vitalD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "MANA: %6d", vitalD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "MHP : %6d", vitalD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "CHP : %6d", vitalD[it++]);
     row += 1;
-    snprintf(vital[row++], AL(vital[0]), "AC  : %6d", vital_statD[it++]);
-    snprintf(vital[row++], AL(vital[0]), "GOLD: %6d", vital_statD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "AC  : %6d", vitalD[it++]);
+    snprintf(vital[row++], AL(vital[0]), "GOLD: %6d", vitalD[it++]);
 
     for (it = 0; it < SYMMAP_HEIGHT; ++it) {
       buffer_append(TC(tc_clear_lineD));
