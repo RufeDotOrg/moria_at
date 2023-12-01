@@ -13,7 +13,10 @@
 
 #include "third_party/zlib/puff.c"
 
+#define ORGNAME "org.rufe"
 #define APPNAME "moria.app"
+#define CACHENAME "moria.cache"
+#define SAVENAME "savechar"
 #ifndef __APPLE__
 enum { __APPLE__ };
 char *SDL_AppleGetDocumentPath(const char *, const char *);
@@ -25,6 +28,7 @@ int SDL_AndroidGetExternalStorageState();
 char *SDL_AndroidGetExternalStoragePath();
 #endif
 
+enum { CACHE = 1 };
 enum { UITEST = 0 };
 
 #if defined(ANDROID) || defined(__APPLE__)
@@ -138,6 +142,8 @@ DATA char savepathD[1024];
 DATA int savepath_usedD;
 DATA char exportpathD[1024];
 DATA int exportpath_usedD;
+DATA char cachepathD[1024];
+DATA int cachepath_usedD;
 
 GAME int overlay_copyD[AL(overlay_usedD)];
 GAME int modeD;
@@ -2156,9 +2162,9 @@ path_append_filename(char *path, int path_len, char *filename)
   return path;
 }
 SDL_RWops *
-rw_file_access(char *filename, char *access)
+file_access(char *filename, char *access)
 {
-  Log("rw_file_access %s %s", filename, access);
+  Log("%s file_access %s", access, filename);
   return SDL_RWFromFile(filename, access);
 }
 int
@@ -2580,6 +2586,38 @@ int checksum(blob, len) void *blob;
   }
   return ret;
 }
+// filename unchanged unless a valid classidx is specified
+char *
+filename_by_class(char *filename, int classidx)
+{
+  if (classidx >= 0 && classidx < AL(classD)) {
+    char *dst = &filename[4];
+    for (char *src = classD[classidx].name; *src != 0; ++src) {
+      *dst++ = *src | 0x20;
+    }
+    *dst = 0;
+  }
+  Log("filename_by_class %s", filename);
+  return filename;
+}
+
+int
+path_exists(char *path)
+{
+  SDL_RWops *readf = file_access(path, "rb");
+  uint32_t save_size = 0;
+  if (readf) {
+    SDL_RWread(readf, &save_size, sizeof(save_size), 1);
+    SDL_RWclose(readf);
+  }
+  return save_size != 0;
+}
+int
+path_delete(char *path)
+{
+  SDL_RWops *writef = file_access(path, "wb");
+  if (writef) SDL_RWclose(writef);
+}
 int
 path_save(char *path)
 {
@@ -2587,7 +2625,7 @@ path_save(char *path)
   int sum = savesumD[version];
   int *savefield = savefieldD[version];
 
-  SDL_RWops *writef = rw_file_access(path, "w+b");
+  SDL_RWops *writef = file_access(path, "wb");
   if (writef) {
     checksumD = 0;
     SDL_RWwrite(writef, &sum, sizeof(sum), 1);
@@ -2609,10 +2647,11 @@ path_load(char *path)
   int save_size = 0;
   clear_savebuf();
 
-  SDL_RWops *readf = rw_file_access(path, "rb");
+  SDL_RWops *readf = file_access(path, "rb");
   if (readf) {
     checksumD = 0;
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
+    Log("save_size %d", save_size);
     int version = version_by_savesum(save_size);
     if (version >= 0) {
       int *savefield = savefieldD[version];
@@ -2683,7 +2722,7 @@ path_savemidpoint(char *path)
                input_action_usedD <= AL(input_actionD) - 1);
 
   if (memory_ok) {
-    SDL_RWops *rwfile = rw_file_access(path, "rb+");
+    SDL_RWops *rwfile = file_access(path, "rb+");
     if (rwfile) {
       SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
 
@@ -2701,25 +2740,9 @@ path_savemidpoint(char *path)
   }
   return write_ok;
 }
-int
-platform_saveexport(char *filename)
-{
-  if (exportpath_usedD) {
-    char *internal_path =
-        path_append_filename(savepathD, savepath_usedD, filename);
-    char *external_path =
-        path_append_filename(exportpathD, exportpath_usedD, filename);
-
-    if (path_load(internal_path)) {
-      return path_save(external_path);
-    }
-  }
-  return 0;
-}
 // Bounds checks on variables that may cause memory corruption
-// TBD: check objects?
 int
-validation()
+platform_validation()
 {
   if (uD.lev <= 0 || uD.lev > MAX_PLAYER_LEVEL) return 0;
   if (uD.clidx >= AL(classD)) return 0;
@@ -2728,67 +2751,147 @@ validation()
     if (statD.max_stat[it] < 3 || statD.max_stat[it] > 118) return 0;
     if (statD.cur_stat[it] < 3 || statD.max_stat[it] > 118) return 0;
   }
+  Log("validation passed!");
   return 1;
 }
 int
-platform_loadexport(char *filename)
+platform_load(saveslot, external)
 {
-  if (exportpath_usedD) {
-    char *external_path =
-        path_append_filename(exportpathD, exportpath_usedD, filename);
-    if (path_load(external_path)) {
-      if (validation()) return 1;
-    }
+  char filename[16] = SAVENAME;
+  globalD.saveslot_class = saveslot;
+  filename_by_class(filename, saveslot);
+  char *path;
+  if (external) {
+    path = path_append_filename(exportpathD, exportpath_usedD, filename);
+  } else {
+    path = path_append_filename(savepathD, savepath_usedD, filename);
   }
-  return 0;
-}
-int
-platform_load(char *filename)
-{
-  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+
   return path_load(path);
 }
 int
-platform_save(char *filename)
+platform_save()
 {
+  char filename[16] = SAVENAME;
+  filename_by_class(filename, globalD.saveslot_class);
   char *path = path_append_filename(savepathD, savepath_usedD, filename);
   return path_save(path);
 }
 int
-platform_savemidpoint(char *filename)
+platform_erase()
 {
+  char filename[16] = SAVENAME;
+  filename_by_class(filename, globalD.saveslot_class);
+  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  Log("path delete %s", path);
+  return path_delete(path);
+}
+int
+platform_savemidpoint()
+{
+  char filename[16] = SAVENAME;
+  filename_by_class(filename, globalD.saveslot_class);
   char *path = path_append_filename(savepathD, savepath_usedD, filename);
   return path_savemidpoint(path);
 }
 int
-phone_focuslost()
+platform_loadex()
 {
-  return platform_savemidpoint("savechar");
+  int count = 0;
+  for (int it = 0; it < AL(classD); ++it) {
+    if (platform_load(it, 1)) {
+      if (platform_validation()) count += platform_save();
+    }
+  }
+  return count;
 }
-
 int
-platform_erase(char *filename)
+platform_saveex()
 {
-  clear_savebuf();
+  char filename[16] = SAVENAME;
 
-  char *path = path_append_filename(savepathD, savepath_usedD, filename);
-  SDL_RWops *writef = rw_file_access(path, "wb");
-  if (writef) SDL_RWclose(writef);
-
+  for (int it = 0; it < AL(classD); ++it) {
+    filename_by_class(filename, it);
+    char *in_path, *ex_path;
+    in_path = path_append_filename(savepathD, savepath_usedD, filename);
+    ex_path = path_append_filename(exportpathD, exportpath_usedD, filename);
+    if (path_load(in_path)) path_save(ex_path);
+  }
   return 0;
 }
-// Internal storage only
 int
-platform_copy(char *srcfile, char *dstfile)
+cache_init()
+{
+  char *filename = SAVENAME;
+  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  int fsversion = path_exists(path) ? 1 : 2;
+
+  // fsversion can be upgraded on next "archive" selection by the user
+  globalD.fsversion = fsversion;
+  // saveslot for class being played (-1 means "savechar" / check uD.clidx)
+  globalD.saveslot_class = -1;
+}
+int
+cache_read()
+{
+  SDL_RWops *readf = file_access(cachepathD, "rb");
+  uint32_t success = 0;
+  if (readf) {
+    if (SDL_RWread(readf, &globalD, sizeof(globalD), 1))
+      success = sizeof(globalD);
+    SDL_RWclose(readf);
+  }
+
+  if (!success) {
+    Log("cache init: %d success? %d.", readf != 0, success);
+    cache_init();
+  } else {
+    Log("cache from disk.");
+  }
+}
+
+int
+cache_dump()
+{
+  Log("%d saveslot_class %d fsversion", globalD.saveslot_class,
+      globalD.fsversion);
+  Log("cache is ready.");
+}
+int
+cache_write()
+{
+  SDL_RWops *writef = file_access(cachepathD, "wb");
+  if (writef) {
+    int ret = SDL_RWwrite(writef, &globalD, sizeof(globalD), 1);
+    Log("cache write ret %d", ret);
+    SDL_RWclose(writef);
+  }
+  return writef != 0;
+}
+int
+platform_upgrade()
+{
+  if (platform_load(-1, 0)) {
+    platform_erase();
+    globalD.saveslot_class = uD.clidx;
+    platform_save();
+    Log("upgrade to fsversion 2 complete!");
+  }
+}
+int
+phone_focuslost()
+{
+  if (CACHE) cache_write();
+  return platform_savemidpoint();
+}
+
+int
+path_copy_to(char *srcpath, char *dstpath)
 {
   SDL_RWops *readf, *writef;
-  char *path;
-
-  path = path_append_filename(savepathD, savepath_usedD, srcfile);
-  readf = rw_file_access(path, "rb");
+  readf = file_access(srcpath, "rb");
   if (readf) {
-    path_append_filename(savepathD, savepath_usedD, dstfile);
-    writef = rw_file_access(path, "wb");
+    writef = file_access(dstpath, "wb");
     if (writef) {
       char chunk[4 * 1024];
       int read_count;
@@ -2813,6 +2916,23 @@ platform_selection(int *yptr, int *xptr)
   *yptr = finger_colD;
   *xptr = finger_rowD;
   return modeD == 1;
+}
+
+int
+platform_cache()
+{
+  if (globalD.fsversion == 0) cache_read();
+
+  cache_dump();
+
+  int saveslot_class = globalD.saveslot_class;
+  int ret = 0;
+  if (globalD.fsversion == 1)
+    ret = platform_load(-1, 0);
+  else if (saveslot_class >= 0)
+    ret = platform_load(saveslot_class, 0);
+  Log("resume result %d class %d", ret, globalD.saveslot_class);
+  return ret;
 }
 
 // Initialization
@@ -2845,7 +2965,7 @@ platform_pregame()
     if (__APPLE__ || ANDROID) SDL_DisableScreenSaver();
 
     if (__APPLE__) {
-      char *prefpath = SDL_GetPrefPath("org.rufe", APPNAME);
+      char *prefpath = SDL_GetPrefPath(ORGNAME, APPNAME);
       if (prefpath) {
         int len = snprintf(savepathD, AL(savepathD), "%s", prefpath);
         if (len < 0 || len >= AL(savepathD))
@@ -2855,7 +2975,7 @@ platform_pregame()
         SDL_free(prefpath);
       }
 
-      char *external = SDL_AppleGetDocumentPath("org.rufe", APPNAME);
+      char *external = SDL_AppleGetDocumentPath(ORGNAME, APPNAME);
       if (external) {
         int len = snprintf(exportpathD, AL(exportpathD), "%s", external);
         if (len < 0 || len >= AL(exportpathD)) {
@@ -2883,6 +3003,22 @@ platform_pregame()
           exportpath_usedD = len;
         }
         Log("Storage: [state %d] path: %s", state, exportpathD);
+      }
+    }
+
+    if (CACHE) {
+      char *cache = SDL_GetCachePath(ORGNAME, APPNAME);
+      if (cache) {
+        Log("Cache path: %s", cache);
+        int len = snprintf(cachepathD, AL(cachepathD), "%s", cache);
+        if (len <= 0 || len >= AL(cachepathD)) {
+          cachepathD[0] = 0;
+          len = 0;
+        }
+
+        cachepath_usedD = len;
+        path_append_filename(cachepathD, cachepath_usedD, CACHENAME);
+        SDL_free(cache);
       }
     }
 
@@ -2958,12 +3094,16 @@ platform_pregame()
   }
 
   if (TOUCH) platformD.selection = platform_selection;
-  platformD.copy = platform_copy;
   platformD.savemidpoint = platform_savemidpoint;
 
   if (exportpath_usedD) {
-    platformD.saveexport = platform_saveexport;
-    platformD.loadexport = platform_loadexport;
+    platformD.saveex = platform_saveex;
+    platformD.loadex = platform_loadex;
+    platformD.validation = platform_validation;
+  }
+
+  if (CACHE && cachepath_usedD) {
+    platformD.cache = platform_cache;
   }
 
   return 0;
@@ -2971,8 +3111,11 @@ platform_pregame()
 int
 platform_postgame()
 {
+  if (CACHE) cache_write();
+
   // Exit terminates the android activity
   // otherwise main() may resume with stale memory
   if (ANDROID) exit(0);
+
   return 0;
 }

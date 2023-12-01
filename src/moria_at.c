@@ -315,19 +315,6 @@ uspelltable()
   }
   return 0;
 }
-DATA char backupD[16];
-char*
-savename_by_class(clidx)
-{
-  char* dst;
-  memcpy(backupD, AP("save"));
-  dst = &backupD[4];
-  for (char* src = classD[clidx].name; *src != 0; ++src) {
-    *dst++ = *src | 0x20;
-  }
-  *dst = 0;
-  return backupD;
-}
 void
 affect_update()
 {
@@ -10450,15 +10437,15 @@ show_character()
 }
 
 int
-py_archive_read(summary, load)
+py_archive_read(summary, external)
 struct summaryS* summary;
-fn load;
 {
   int save_count = 0;
   memset(summary, 0, sizeof(struct summaryS) * AL(classD));
   for (int it = 0; it < AL(classD); ++it) {
-    if (load(savename_by_class(it))) {
+    if (platformD.load(it, external)) {
       save_count += 1;
+      summary[it].valid = platformD.validation();
       summary[it].slevel = uD.lev;
       summary[it].sclass = uD.clidx;
       summary[it].srace = uD.ridx;
@@ -10468,109 +10455,99 @@ fn load;
   return save_count;
 }
 int
-py_archive_export()
+py_saveslot_select()
 {
-  int count = 0;
-  for (int it = 0; it < AL(classD); ++it) {
-    count += (platformD.saveexport(savename_by_class(it)) != 0);
-  }
-  int line = 0;
-  BufMsg(screen, "%d characters copied", count);
-  DRAWMSG("Export Character Archive");
-  char c = inkey();
-  return count;
-}
-int
-py_archive_import()
-{
-  int save_count = 0;
-  for (int it = 0; it < AL(classD); ++it) {
-    char* file = savename_by_class(it);
-    if (platformD.loadexport(file)) {
-      if (platformD.save(file)) save_count += 1;
-    }
-  }
-  int line = 0;
-  BufMsg(screen, "%d characters copied", save_count);
-  DRAWMSG("Import Character Archive");
-  char c = inkey();
-  return save_count;
-}
-int
-py_archive_select()
-{
-  struct summaryS summary[AL(classD)];
+  struct summaryS in_summary[AL(classD)];
+  struct summaryS ex_summary[AL(classD)];
   int line;
   char c;
   int save_count;
   uint8_t iidx;
+  int has_external = (platformD.saveex != 0);
 
   // Disable midpoint resume explicitly
   input_resumeD = -1;
 
-  overlay_submodeD = 0;
   iidx = -1;
-  save_count = py_archive_read(summary, platformD.load);
+  save_count = py_archive_read(in_summary, 0);
+  // Assist with import on re-installation
+  if (save_count == 0 && has_external) {
+    save_count += py_archive_read(ex_summary, 1);
+  }
+  // Wait for user selection of class
+  globalD.saveslot_class = -1;
 
   if (save_count) {
-    fn load = platformD.load;
-    fn saveexport = platformD.saveexport;
-    fn loadexport = platformD.loadexport;
+    int using_external = 0;
 
     do {
       line = 0;
+      overlay_submodeD = using_external ? 'a' : 0;
+      char* media = using_external ? "External" : "Internal";
+      struct summaryS* summary = using_external ? ex_summary : in_summary;
       for (int it = 0; it < AL(classD); ++it) {
         if (summary[it].slevel) {
-          BufMsg(overlay, "%c) Level %d %s %s (%d feet)", 'a' + it,
-                 summary[it].slevel, raceD[summary[it].srace].name,
-                 classD[it].name, summary[it].sdepth);
+          if (!summary[it].valid) {
+            BufMsg(overlay, "%c) Invalid %s data file", 'a' + it,
+                   classD[it].name);
+          } else {
+            BufMsg(overlay, "%c) Level %d %s %s (%d feet)", 'a' + it,
+                   summary[it].slevel, raceD[summary[it].srace].name,
+                   classD[summary[it].sclass].name, summary[it].sdepth);
+          }
         } else {
           BufMsg(overlay, " ");
         }
       }
 
-      if (load != loadexport) BufMsg(overlay, "g) Goto Character Creation");
+      if (!using_external) BufMsg(overlay, "g) Goto Character Creation");
 
-      char* media = "";
-      if (saveexport) {
-        if (load != loadexport) {
+      if (has_external) {
+        if (!using_external) {
           line = 's' - 'a';
-          BufMsg(overlay, "s) Store archive to external media");
+          BufMsg(overlay, "s) Save all to external media");
 
           line = 'v' - 'a';
-          BufMsg(overlay, "v) View archive on external media");
+          BufMsg(overlay, "v) View external media");
         } else {
-          media = "External Media ";
-
           line = 'i' - 'a';
           BufMsg(overlay, "i) Import all");
         }
       }
 
-      DRAWMSG("%sArchive: Restore which character?", media);
+      DRAWMSG("%s Media Archive: Restore which character?", media);
       c = inkey();
       if (c == 'i') {
-        if (loadexport) py_archive_import();
+        if (platformD.loadex) platformD.loadex();
 
         // Reload internal media
         c = ESCAPE;
       }
       if (c == ESCAPE) {
-        load = platformD.load;
-        py_archive_read(summary, load);
-        overlay_submodeD = 0;
+        using_external = 0;
         continue;
       }
       if (is_ctrl(c) || c == 'g') return -1;
-      if (c == 's') py_archive_export();
+      if (c == 's') {
+        if (platformD.saveex) platformD.saveex();
+      }
       if (c == 'v') {
-        load = loadexport;
-        py_archive_read(summary, loadexport);
-        overlay_submodeD = 'a';
+        py_archive_read(ex_summary, 1);
+        using_external = 1;
       }
       iidx = c - 'a';
-    } while (iidx >= AL(summary));
-    if (!load(savename_by_class(iidx))) iidx = -1;
+    } while (iidx >= AL(classD));
+
+    Log("load %d using_external? %d", iidx, using_external);
+    if (!platformD.load(iidx, using_external)) iidx = -1;
+
+    // Safeguards on external data
+    if (using_external && platformD.validation()) {
+      if (iidx >= 0) {
+        Log("flushing to internal storage");
+        if (!platformD.save()) iidx = -1;
+      }
+    }
   }
 
   return iidx;
@@ -10719,9 +10696,6 @@ py_reset()
 {
   char c;
   int line;
-  char* savename;
-
-  savename = savename_by_class(uD.clidx);
   overlay_submodeD = -1;
   do {
     line = 0;
@@ -10732,18 +10706,16 @@ py_reset()
     BufMsg(overlay, "d) Delete this character");
     DRAWMSG("Game Reset");
     c = inkey();
+
+    if (c == 'd') platformD.erase();
+
     switch (c) {
       case 'a':
-        if (platformD.copy("savechar", savename) != 0) {
-          msg_print("Backup failed.");
-          msg_pause();
-          c = ESCAPE;
-          break;
-        }
-
-        // fallthrough
+        // fs1 overwrite the saveslot_class; cease using "savechar" file
+        if (globalD.fsversion == 1) platform_upgrade();
       case 'd':
-        platformD.erase("savechar");
+        globalD.fsversion = 2;
+        globalD.saveslot_class = -1;
         longjmp(restartD, 1);
     }
   } while (!is_ctrl(c));
@@ -13627,8 +13599,7 @@ dungeon()
             } break;
             case CTRL('x'):
               if (!RELEASE) {
-                if (platformD.savemidpoint &&
-                    platformD.savemidpoint("savechar")) {
+                if (platformD.savemidpoint && platformD.savemidpoint()) {
                   memcpy(death_descD, AP(quit_stringD));
                   uD.new_level_flag = NL_DEATH;
                   return;  // Interrupt game
@@ -13894,9 +13865,8 @@ main(int argc, char** argv)
   setjmp(restartD);
   hard_reset();
 
-  if (platformD.load("savechar")) {
-  } else if (py_archive_select() < AL(classD)) {
-    platformD.save("savechar");
+  if (platformD.cache && platformD.cache()) {
+  } else if (py_saveslot_select() < AL(classD)) {
   } else {
     if (py_class_select() < 0) return platformD.postgame();
 
@@ -13906,7 +13876,8 @@ main(int argc, char** argv)
     inven_sort();
 
     // Replay state
-    platformD.save("savechar");
+    globalD.saveslot_class = uD.clidx;
+    platformD.save();
   }
 
   // Per-Player initialization
@@ -13929,6 +13900,13 @@ main(int argc, char** argv)
     set_use_stat(it);
   }
 
+  // Release objects in the cave
+  FOR_EACH(obj, {
+    if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
+      obj_unuse(obj);
+    }
+  });
+
   // a fresh cave!
   if (dun_level != 0) {
     cave_gen();
@@ -13943,14 +13921,7 @@ main(int argc, char** argv)
   replay_flag = 0;
 
   if (uD.new_level_flag != NL_DEATH) {
-    // Release objects in the cave
-    FOR_EACH(obj, {
-      if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
-        obj_unuse(obj);
-      }
-    });
-
-    if (platformD.save("savechar")) {
+    if (platformD.save()) {
       longjmp(restartD, 1);
     } else {
       strcpy(death_descD, "Device I/O Error");

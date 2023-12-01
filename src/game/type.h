@@ -19,6 +19,7 @@ struct bufS {
 
 // Summary of savechar
 struct summaryS {
+  int valid;
   int slevel;
   int sclass;
   int srace;
@@ -282,16 +283,24 @@ struct platformS {
   fn pregame;
   fn postgame;
   fn seed;
-  fn load;
+  fn cache;
   fn save;
-  fn savemidpoint;
-  fn saveexport;
-  fn loadexport;
-  fn copy;
   fn erase;
+  fn load;
+  fn savemidpoint;
+  fn saveex;
+  fn loadex;
+  fn validation;
   fn readansi;
   fn predraw;
   fn draw;
   fn selection;
 };
 DATA struct platformS platformD;
+
+// Global options
+struct globalS {
+  int saveslot_class;
+  int fsversion;
+};
+DATA struct globalS globalD;
