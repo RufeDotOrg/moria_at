@@ -6,6 +6,8 @@ LOCAL_MODULE := main
 
 SDL_PATH := ../SDL
 
+LOCAL_CFLAGS := -Wno-return-type
+
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include
 
 # Add your application source files here...
