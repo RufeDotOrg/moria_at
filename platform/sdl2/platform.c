@@ -2683,7 +2683,7 @@ path_savemidpoint(char *path)
                input_action_usedD <= AL(input_actionD) - 1);
 
   if (memory_ok) {
-    SDL_RWops *rwfile = rw_file_access(path, "r+");
+    SDL_RWops *rwfile = rw_file_access(path, "rb+");
     if (rwfile) {
       SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
 
@@ -2772,7 +2772,7 @@ platform_erase(char *filename)
   clear_savebuf();
 
   char *path = path_append_filename(savepathD, savepath_usedD, filename);
-  SDL_RWops *writef = rw_file_access(path, "w+b");
+  SDL_RWops *writef = rw_file_access(path, "wb");
   if (writef) SDL_RWclose(writef);
 
   return 0;
@@ -2788,7 +2788,7 @@ platform_copy(char *srcfile, char *dstfile)
   readf = rw_file_access(path, "rb");
   if (readf) {
     path_append_filename(savepathD, savepath_usedD, dstfile);
-    writef = rw_file_access(path, "w+b");
+    writef = rw_file_access(path, "wb");
     if (writef) {
       char chunk[4 * 1024];
       int read_count;
