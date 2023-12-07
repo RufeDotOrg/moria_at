@@ -2617,6 +2617,7 @@ path_delete(char *path)
 {
   SDL_RWops *writef = file_access(path, "wb");
   if (writef) SDL_RWclose(writef);
+  return 1;
 }
 int
 path_save(char *path)
@@ -2651,7 +2652,6 @@ path_load(char *path)
   if (readf) {
     checksumD = 0;
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
-    Log("save_size %d", save_size);
     int version = version_by_savesum(save_size);
     if (version >= 0) {
       int *savefield = savefieldD[version];
@@ -2740,20 +2740,6 @@ path_savemidpoint(char *path)
   }
   return write_ok;
 }
-// Bounds checks on variables that may cause memory corruption
-int
-platform_validation()
-{
-  if (uD.lev <= 0 || uD.lev > MAX_PLAYER_LEVEL) return 0;
-  if (uD.clidx >= AL(classD)) return 0;
-  if (uD.ridx >= AL(raceD)) return 0;
-  for (int it = 0; it < MAX_A; ++it) {
-    if (statD.max_stat[it] < 3 || statD.max_stat[it] > 118) return 0;
-    if (statD.cur_stat[it] < 3 || statD.max_stat[it] > 118) return 0;
-  }
-  Log("validation passed!");
-  return 1;
-}
 int
 platform_load(saveslot, external)
 {
@@ -2778,10 +2764,10 @@ platform_save()
   return path_save(path);
 }
 int
-platform_erase()
+platform_erase(saveslot)
 {
   char filename[16] = SAVENAME;
-  filename_by_class(filename, globalD.saveslot_class);
+  filename_by_class(filename, saveslot);
   char *path = path_append_filename(savepathD, savepath_usedD, filename);
   Log("path delete %s", path);
   return path_delete(path);
@@ -2793,17 +2779,6 @@ platform_savemidpoint()
   filename_by_class(filename, globalD.saveslot_class);
   char *path = path_append_filename(savepathD, savepath_usedD, filename);
   return path_savemidpoint(path);
-}
-int
-platform_loadex()
-{
-  int count = 0;
-  for (int it = 0; it < AL(classD); ++it) {
-    if (platform_load(it, 1)) {
-      if (platform_validation()) count += platform_save();
-    }
-  }
-  return count;
 }
 int
 platform_saveex()
@@ -2872,7 +2847,7 @@ int
 platform_upgrade()
 {
   if (platform_load(-1, 0)) {
-    platform_erase();
+    platform_erase(-1);
     globalD.saveslot_class = uD.clidx;
     platform_save();
     Log("upgrade to fsversion 2 complete!");
@@ -3098,8 +3073,6 @@ platform_pregame()
 
   if (exportpath_usedD) {
     platformD.saveex = platform_saveex;
-    platformD.loadex = platform_loadex;
-    platformD.validation = platform_validation;
   }
 
   if (CACHE && cachepath_usedD) {

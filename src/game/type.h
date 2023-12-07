@@ -19,7 +19,7 @@ struct bufS {
 
 // Summary of savechar
 struct summaryS {
-  int valid;
+  int invalid;
   int slevel;
   int sclass;
   int srace;
@@ -289,8 +289,6 @@ struct platformS {
   fn load;
   fn savemidpoint;
   fn saveex;
-  fn loadex;
-  fn validation;
   fn readansi;
   fn predraw;
   fn draw;

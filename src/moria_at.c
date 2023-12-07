@@ -6132,16 +6132,12 @@ static void py_stats(stats, len) int8_t* stats;
     stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
 void
-py_init(prng, csel)
+py_race_class_seed_init(rsel, csel, prng)
 {
   int hitdie;
-  int rsel;
   int8_t stat[MAX_A];
 
   seed_init(prng);
-  do {
-    rsel = randint(AL(raceD)) - 1;
-  } while ((raceD[rsel].rtclass & (1 << csel)) == 0);
 
   py_stats(stat, AL(stat));
 
@@ -6172,10 +6168,9 @@ py_init(prng, csel)
   }
   uD.bowth = r_ptr->bthb;
 
-  int clidx = csel;
-  struct classS* cl_ptr = &classD[clidx];
+  struct classS* cl_ptr = &classD[csel];
   hitdie += cl_ptr->adj_hd;
-  uD.clidx = clidx;
+  uD.clidx = csel;
   uD.bth += cl_ptr->mbth;
   uD.search += cl_ptr->msrh;
   uD.fos += cl_ptr->mfos;
@@ -10336,7 +10331,7 @@ show_version()
 }
 
 int
-show_character()
+show_character(narrow)
 {
   USE(msg_width);
   int line;
@@ -10345,7 +10340,7 @@ show_character()
   line = 0;
   int col[2];
 
-  if (msg_width < 80) {
+  if (narrow || msg_width < 80) {
     screen_submodeD = 1;
     col[0] = 20;
     col[1] = 44;
@@ -10436,6 +10431,19 @@ show_character()
   return inkey();
 }
 
+// Bounds checks on variables that may cause memory corruption
+int
+saveslot_validation()
+{
+  if (uD.lev <= 0 || uD.lev > MAX_PLAYER_LEVEL) return 0;
+  if (uD.clidx >= AL(classD)) return 0;
+  if (uD.ridx >= AL(raceD)) return 0;
+  for (int it = 0; it < MAX_A; ++it) {
+    if (statD.max_stat[it] < 3 || statD.max_stat[it] > 118) return 0;
+    if (statD.cur_stat[it] < 3 || statD.max_stat[it] > 118) return 0;
+  }
+  return 1;
+}
 int
 py_archive_read(summary, external)
 struct summaryS* summary;
@@ -10445,7 +10453,7 @@ struct summaryS* summary;
   for (int it = 0; it < AL(classD); ++it) {
     if (platformD.load(it, external)) {
       save_count += 1;
-      summary[it].valid = platformD.validation();
+      summary[it].invalid = !saveslot_validation();
       summary[it].slevel = uD.lev;
       summary[it].sclass = uD.clidx;
       summary[it].srace = uD.ridx;
@@ -10453,6 +10461,75 @@ struct summaryS* summary;
     }
   }
   return save_count;
+}
+int
+summary_saveslot_deletion(struct summaryS* summary, int saveslot)
+{
+  int line;
+  char c;
+
+  overlay_submodeD = 'd';
+  do {
+    line = 0;
+    if (summary->invalid || summary->slevel == 0) {
+      c = 'a';
+    } else {
+      BufMsg(overlay, "a) Alright, delete this character");
+      line += 1;
+      BufMsg(overlay, "c) Cancel deletion");
+      DRAWMSG("Delete level %d %s?", summary->slevel,
+              classD[summary->sclass].name);
+      c = inkey();
+    }
+
+    int ret = 0;
+    switch (c) {
+      case 'a':
+        ret = platformD.erase(saveslot);
+        memset(summary, 0, sizeof(struct summaryS));
+      case 'c':
+        return ret;
+    }
+  } while (!is_ctrl(c));
+  return 0;
+}
+int
+saveslot_race_reroll(saveslot, race)
+{
+  char c;
+  do {
+    py_race_class_seed_init(race, saveslot, platformD.seed());
+    c = show_character(1);
+  } while (!is_ctrl(c));
+  return 1;
+}
+int
+saveslot_creation(int saveslot)
+{
+  int line;
+  char c;
+  uint8_t iidx;
+  overlay_submodeD = 'c';
+
+  do {
+    line = 0;
+    for (int it = 0; it < AL(raceD); ++it) {
+      if (raceD[it].rtclass & (1 << saveslot)) {
+        BufMsg(overlay, "%c) %s", 'a' + it, raceD[it].name);
+      } else {
+        line += 1;
+      }
+    }
+    DRAWMSG("Play a %s of which race?", classD[saveslot].name);
+    c = inkey();
+    iidx = c - 'a';
+    if (iidx >= 0 && iidx <= AL(raceD)) {
+      if (raceD[iidx].rtclass & (1 << saveslot)) {
+        return saveslot_race_reroll(saveslot, iidx);
+      }
+    }
+  } while (!is_ctrl(c));
+  return 0;
 }
 int
 py_saveslot_select()
@@ -10482,25 +10559,21 @@ py_saveslot_select()
 
     do {
       line = 0;
-      overlay_submodeD = using_external ? 'a' : 0;
+      overlay_submodeD = using_external ? 'E' : 'I';
       char* media = using_external ? "External" : "Internal";
       struct summaryS* summary = using_external ? ex_summary : in_summary;
       for (int it = 0; it < AL(classD); ++it) {
-        if (summary[it].slevel) {
-          if (!summary[it].valid) {
-            BufMsg(overlay, "%c) Invalid %s data file", 'a' + it,
-                   classD[it].name);
-          } else {
-            BufMsg(overlay, "%c) Level %d %s %s (%d feet)", 'a' + it,
-                   summary[it].slevel, raceD[summary[it].srace].name,
-                   classD[summary[it].sclass].name, summary[it].sdepth);
-          }
+        if (summary[it].invalid) {
+          BufMsg(overlay, "%c) Invalid %s data file", 'a' + it,
+                 classD[it].name);
+        } else if (summary[it].slevel) {
+          BufMsg(overlay, "%c) Level %d %s %s (%d feet)", 'a' + it,
+                 summary[it].slevel, raceD[summary[it].srace].name,
+                 classD[summary[it].sclass].name, summary[it].sdepth);
         } else {
-          BufMsg(overlay, " ");
+          BufMsg(overlay, "%c)    <create %s>", 'a' + it, classD[it].name);
         }
       }
-
-      if (!using_external) BufMsg(overlay, "g) Goto Character Creation");
 
       if (has_external) {
         if (!using_external) {
@@ -10515,19 +10588,32 @@ py_saveslot_select()
         }
       }
 
-      DRAWMSG("%s Media Archive: Restore which character?", media);
+      DRAWMSG("%s Media Archive: Play which class?", media);
       c = inkey();
       if (c == 'i') {
-        if (platformD.loadex) platformD.loadex();
+        for (int it = 0; it < AL(classD); ++it) {
+          if (platformD.load(it, 1)) {
+            if (saveslot_validation()) {
+              platformD.save();
+            }
+          }
+        }
 
         // Reload internal media
         c = ESCAPE;
       }
       if (c == ESCAPE) {
-        using_external = 0;
+        if (using_external) {
+          using_external = 0;
+        } else if (platformD.selection) {
+          int srow, scol;
+          platformD.selection(&scol, &srow);
+          if (srow >= 0 && srow < AL(classD)) {
+            summary_saveslot_deletion(&summary[srow], srow);
+          }
+        }
         continue;
       }
-      if (is_ctrl(c) || c == 'g') return -1;
       if (c == 's') {
         if (platformD.saveex) platformD.saveex();
       }
@@ -10535,89 +10621,42 @@ py_saveslot_select()
         py_archive_read(ex_summary, 1);
         using_external = 1;
       }
+
       iidx = c - 'a';
-    } while (iidx >= AL(classD));
+      if (iidx >= 0 && iidx <= AL(classD)) {
+        if (summary[iidx].invalid) continue;
+        if (summary[iidx].slevel == 0) {
+          if (!saveslot_creation(iidx)) {
+            Log("creation failed %d", iidx);
+            continue;
+          }
+          Log("creation %d", iidx);
 
-    Log("load %d using_external? %d", iidx, using_external);
-    if (!platformD.load(iidx, using_external)) iidx = -1;
+          dun_level = 1;
 
-    // Safeguards on external data
-    if (using_external && platformD.validation()) {
-      if (iidx >= 0) {
-        Log("flushing to internal storage");
-        if (!platformD.save()) iidx = -1;
+          py_inven_init();
+          inven_sort();
+
+          globalD.saveslot_class = uD.clidx;
+          platformD.save();
+        } else {
+          Log("load %d using_external? %d", iidx, using_external);
+          if (!platformD.load(iidx, using_external)) iidx = -1;
+
+          // Safeguards on external data
+          if (iidx >= 0) {
+            if (using_external && saveslot_validation()) {
+              Log("flushing to internal storage");
+              if (!platformD.save()) iidx = -1;
+            }
+          }
+        }
+        return iidx;
       }
-    }
+    } while (c != CTRL('c'));
   }
 
   return iidx;
-}
-int
-py_class_select()
-{
-  char c;
-  int line, clidx;
-  int srow, scol;
-  uint8_t preview, iidx;
-  fn selection = platformD.selection;
-  int seed[AL(classD)];
-
-  for (int it = 0; it < AL(seed); ++it) {
-    seed[it] = platformD.seed();
-  }
-
-  c = 0;
-  clidx = -1;
-  preview = 0;
-  // Keep ui state; may transition to mode 2 for show_character()
-  overlay_submodeD = 'c';
-  ui_stateD['c'] = 0;
-  do {
-    if (is_upper(c)) {
-      c = show_character();
-    } else {
-      if (preview < AL(classD) && preview != clidx) {
-        clidx = preview;
-        py_init(seed[clidx], clidx);
-        calc_bonuses();
-      }
-
-      line = 0;
-      for (int it = 0; it < AL(classD); ++it) {
-        if (it == clidx) {
-          overlay_usedD[line] =
-              snprintf(overlayD[line], AL(overlayD[line]), "%c) %s %s",
-                       'a' + it, raceD[uD.ridx].name, classD[it].name);
-        } else {
-          overlay_usedD[line] = snprintf(overlayD[line], AL(overlayD[line]),
-                                         "%c) %s", 'a' + it, classD[it].name);
-        }
-        line += 1;
-      }
-      DRAWMSG("Which character class would you like to play?");
-      c = inkey();
-      iidx = c - 'a';
-
-      if (selection) {
-        selection(&scol, &srow);
-        preview = srow;
-      }
-      if (iidx < AL(classD)) {
-        if (preview == iidx) return iidx;
-        preview = iidx;
-      }
-
-      // TBD: Console game may allow ' '
-      if (c == ESCAPE) {
-        seed[preview] = platformD.seed();
-        clidx = -1;
-      } else if (is_ctrl(c)) {
-        break;
-      }
-    }
-  } while (1);
-
-  return -1;
 }
 void
 py_takeoff()
@@ -10679,19 +10718,6 @@ show_all_inven()
   } while (iidx != -1);
 }
 int
-player_confirm()
-{
-  int line = 0;
-  char c;
-  BufMsg(overlay, "a) Confirm");
-  if (in_subcommand("Your current character will be permanently lost!", &c)) {
-    if (c >= 'a' && c <= 'z') {
-      return 1;
-    }
-  }
-  return 0;
-}
-int
 py_reset()
 {
   char c;
@@ -10707,7 +10733,7 @@ py_reset()
     DRAWMSG("Game Reset");
     c = inkey();
 
-    if (c == 'd') platformD.erase();
+    if (c == 'd') platformD.erase(globalD.saveslot_class);
 
     switch (c) {
       case 'a':
@@ -10802,7 +10828,7 @@ py_death()
       if (c == CTRL('p')) {
         c = show_history();
       } else if (c == 'C') {
-        c = show_character();
+        c = show_character(1);
       } else if (c == 'o') {
         // Observe game state at time of death
         draw();
@@ -13512,7 +13538,7 @@ dungeon()
               break;
             case 'C':
               omit_replay = 1;
-              show_character();
+              show_character(0);
               break;
             case 'D':
               py_disarm(&y, &x);
@@ -13868,16 +13894,7 @@ main(int argc, char** argv)
   if (platformD.cache && platformD.cache()) {
   } else if (py_saveslot_select() < AL(classD)) {
   } else {
-    if (py_class_select() < 0) return platformD.postgame();
-
-    dun_level = 1;
-
-    py_inven_init();
-    inven_sort();
-
-    // Replay state
-    globalD.saveslot_class = uD.clidx;
-    platformD.save();
+    return platformD.postgame();
   }
 
   // Per-Player initialization
