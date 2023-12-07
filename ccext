@@ -1,6 +1,9 @@
 readlink src/platform | grep 'sdl2'
 if [ $? -eq 0 ]; then
   if [ -d sdl2 ]; then
+    if [ linux == "${OSTYPE::5}" ]; then
+      export LD_LIBRARY_PATH=`realpath sdl2/build/.libs`
+    fi
     CFLAGS+=" -Isdl2/include "
     LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
   elif hash sdl2-config; then
