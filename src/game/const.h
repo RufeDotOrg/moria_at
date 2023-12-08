@@ -56,6 +56,7 @@
 #define DUN_ROOM_MEAN 16
 #define DUN_UNUSUAL 300 /* Level/x chance of unusual room	       */
 #define MIN_MALLOC_LEVEL 14
+#define MIN_MALLOC_TOWN 7
 #define RND_MALLOC_LEVEL 8
 #define TREAS_ROOM_MEAN 7
 #define TREAS_ANY_ALLOC 2

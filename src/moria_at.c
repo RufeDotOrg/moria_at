@@ -3087,6 +3087,22 @@ summon_undead(y, x)
   return summon;
 }
 void
+alloc_townmon(num)
+{
+  int y, x;
+  int z;
+
+  for (int i = 0; i < num; i++) {
+    do {
+      y = randint(SYMMAP_HEIGHT - 2);
+      x = randint(SYMMAP_WIDTH - 2);
+    } while (caveD[y][x].fval >= MIN_CLOSED_SPACE || (caveD[y][x].midx != 0));
+
+    z = get_mon_num(0);
+    place_monster(y, x, z, 1);
+  }
+}
+void
 alloc_mon(num, dis, slp)
 {
   int y, x, i;
@@ -3719,6 +3735,8 @@ town_gen()
   place_stair_tval(i, j, TV_DOWN_STAIR);
   caveD[i][j].cflag |= CF_FIELDMARK;
   rnd_seed = seed;
+
+  alloc_townmon(randint(RND_MALLOC_LEVEL) + MIN_MALLOC_TOWN);
 
   do {
     i = randint(SYMMAP_HEIGHT - 2);
@@ -6204,6 +6222,7 @@ py_race_class_seed_init(rsel, csel, prng)
            (player_hpD[MAX_PLAYER_LEVEL - 1] > max_value));
 
   uD.lev = 1;
+  uD.max_dlv = 1;
   uD.food = 7500;
   uD.food_digest = 2;
   uD.gold = 100;
@@ -10517,6 +10536,9 @@ saveslot_creation(int saveslot)
   uint8_t iidx;
   overlay_submodeD = 'c';
 
+  // Clear game state
+  memset(__start_game, 0, __stop_game - __start_game);
+
   do {
     line = 0;
     for (int it = 0; it < AL(raceD); ++it) {
@@ -10662,8 +10684,6 @@ py_saveslot_select()
 
       if (summary[iidx].slevel == 0) {
         if (!saveslot_creation(iidx)) continue;
-
-        dun_level = 1;
 
         py_inven_init();
         inven_sort();
@@ -13844,8 +13864,12 @@ dungeon()
     if (!uD.new_level_flag) {
       creatures();
       teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
-      if (!town && randint(MAX_MALLOC_CHANCE) == 1)
-        alloc_mon(1, MAX_SIGHT, FALSE);
+      if (randint(MAX_MALLOC_CHANCE) == 1) {
+        if (town)
+          alloc_townmon(1);
+        else
+          alloc_mon(1, MAX_SIGHT, FALSE);
+      }
     }
 
     if (!town && (turnD & ~-1024) == 0) store_maint();
