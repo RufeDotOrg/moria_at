@@ -10444,6 +10444,15 @@ saveslot_validation()
   }
   return 1;
 }
+void
+summary_update(struct summaryS* summary)
+{
+  summary->invalid = !saveslot_validation();
+  summary->slevel = uD.lev;
+  summary->sclass = uD.clidx;
+  summary->srace = uD.ridx;
+  summary->sdepth = MAX(uD.max_dlv, dun_level) * 50;
+}
 int
 py_archive_read(summary, external)
 struct summaryS* summary;
@@ -10453,22 +10462,18 @@ struct summaryS* summary;
   for (int it = 0; it < AL(classD); ++it) {
     if (platformD.load(it, external)) {
       save_count += 1;
-      summary[it].invalid = !saveslot_validation();
-      summary[it].slevel = uD.lev;
-      summary[it].sclass = uD.clidx;
-      summary[it].srace = uD.ridx;
-      summary[it].sdepth = MAX(uD.max_dlv, dun_level) * 50;
+      summary_update(&summary[it]);
     }
   }
   return save_count;
 }
 int
-summary_saveslot_deletion(struct summaryS* summary, int saveslot)
+summary_saveslot_deletion(struct summaryS* summary, int saveslot, int external)
 {
   int line;
   char c;
 
-  overlay_submodeD = 'd';
+  overlay_submodeD = 0;
   do {
     line = 0;
     if (summary->invalid || summary->slevel == 0) {
@@ -10485,7 +10490,7 @@ summary_saveslot_deletion(struct summaryS* summary, int saveslot)
     int ret = 0;
     switch (c) {
       case 'a':
-        ret = platformD.erase(saveslot);
+        ret = platformD.erase(saveslot, external);
         memset(summary, 0, sizeof(struct summaryS));
       case 'c':
         return ret;
@@ -10496,9 +10501,9 @@ summary_saveslot_deletion(struct summaryS* summary, int saveslot)
 int
 saveslot_race_reroll(saveslot, race)
 {
-  char c = 0;
+  char c = 'o';
   do {
-    if (c != ' ') py_race_class_seed_init(race, saveslot, platformD.seed());
+    if (c == 'o') py_race_class_seed_init(race, saveslot, platformD.seed());
     c = show_character(1);
     if (c == CTRL('c')) break;
   } while (c != ESCAPE);
@@ -10542,6 +10547,7 @@ py_saveslot_select()
   int line;
   char c;
   int save_count;
+  int extern_count = 0;
   uint8_t iidx;
   int has_external = (platformD.saveex != 0);
   int using_external = 0;
@@ -10552,7 +10558,7 @@ py_saveslot_select()
   save_count = py_archive_read(in_summary, 0);
   // Assist with import on re-installation
   if (save_count == 0 && has_external) {
-    save_count += py_archive_read(ex_summary, 1);
+    extern_count = py_archive_read(ex_summary, 1);
   }
 
   do {
@@ -10563,6 +10569,7 @@ py_saveslot_select()
     line = 0;
     overlay_submodeD = using_external ? 'E' : 'I';
     char* media = using_external ? "External" : "Internal";
+    char* other_media = using_external ? "Internal" : "External";
     struct summaryS* summary = using_external ? ex_summary : in_summary;
     for (int it = 0; it < AL(classD); ++it) {
       if (summary[it].invalid) {
@@ -10572,7 +10579,11 @@ py_saveslot_select()
                summary[it].slevel, raceD[summary[it].srace].name,
                classD[summary[it].sclass].name, summary[it].sdepth);
       } else {
-        BufMsg(overlay, "%c)    <create %s>", 'a' + it, classD[it].name);
+        if (using_external) {
+          BufMsg(overlay, " ");
+        } else {
+          BufMsg(overlay, "%c)    <create %s>", 'a' + it, classD[it].name);
+        }
       }
     }
 
@@ -10580,47 +10591,69 @@ py_saveslot_select()
       if (!using_external) {
         line = 's' - 'a';
         BufMsg(overlay, "s) Save all to external media");
-
-        line = 'v' - 'a';
-        BufMsg(overlay, "v) View external media");
-      } else {
+      } else if (extern_count) {
         line = 'i' - 'a';
         BufMsg(overlay, "i) Import all");
       }
+
+      line = 'v' - 'a';
+      BufMsg(overlay, "v) View %s media", other_media);
     }
 
     DRAWMSG("%s Media Archive: Play which class?", media);
     c = inkey();
-    if (c == 'i') {
-      for (int it = 0; it < AL(classD); ++it) {
-        if (platformD.load(it, 1)) {
-          if (saveslot_validation()) {
-            platformD.save();
-          }
-        }
-      }
-
-      // Reload internal media
-      c = ESCAPE;
-    }
+    // Deletion
     if (c == ESCAPE) {
-      if (using_external) {
-        using_external = 0;
-      } else if (platformD.selection) {
+      if (platformD.selection) {
         int srow, scol;
         platformD.selection(&scol, &srow);
         if (srow >= 0 && srow < AL(classD)) {
-          summary_saveslot_deletion(&summary[srow], srow);
+          if (summary_saveslot_deletion(&summary[srow], srow, using_external))
+            extern_count -= (using_external);
         }
       }
       continue;
     }
+    // Import
+    if (c == 'i') {
+      if (using_external) {
+        int count = 0;
+        for (int it = 0; it < AL(classD); ++it) {
+          if (platformD.load(it, 1)) {
+            if (saveslot_validation()) {
+              if (platformD.save()) {
+                summary_update(&in_summary[it]);
+                count += 1;
+              }
+            }
+          }
+        }
+
+        line = 0;
+        BufMsg(overlay, "Loaded characters (x%d)", count);
+        DRAWMSG("%s Media Update", other_media);
+        inkey();
+        // view swap
+        c = 'v';
+      }
+    }
+    // Export
     if (c == 's') {
-      if (platformD.saveex) platformD.saveex();
+      if (platformD.saveex) {
+        int count = platformD.saveex();
+        line = 0;
+        BufMsg(overlay, "Saved characters (x%d)", count);
+        DRAWMSG("%s Media Update", other_media);
+        inkey();
+        // view swap
+        extern_count = 0;
+        c = 'v';
+      }
     }
     if (c == 'v') {
-      py_archive_read(ex_summary, 1);
-      using_external = 1;
+      using_external = !using_external;
+      if (using_external && extern_count == 0)
+        extern_count = py_archive_read(ex_summary, 1);
     }
 
     iidx = c - 'a';
@@ -10725,7 +10758,7 @@ py_reset()
     DRAWMSG("Game Reset");
     c = inkey();
 
-    if (c == 'd') platformD.erase(globalD.saveslot_class);
+    if (c == 'd') platformD.erase(globalD.saveslot_class, 0);
 
     switch (c) {
       case 'a':

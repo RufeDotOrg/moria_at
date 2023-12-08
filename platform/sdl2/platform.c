@@ -2764,11 +2764,16 @@ platform_save()
   return path_save(path);
 }
 int
-platform_erase(saveslot)
+platform_erase(saveslot, external)
 {
   char filename[16] = SAVENAME;
   filename_by_class(filename, saveslot);
-  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  char *path;
+  if (external) {
+    path = path_append_filename(exportpathD, exportpath_usedD, filename);
+  } else {
+    path = path_append_filename(savepathD, savepath_usedD, filename);
+  }
   Log("path delete %s", path);
   return path_delete(path);
 }
@@ -2784,15 +2789,16 @@ int
 platform_saveex()
 {
   char filename[16] = SAVENAME;
+  int count = 0;
 
   for (int it = 0; it < AL(classD); ++it) {
     filename_by_class(filename, it);
     char *in_path, *ex_path;
     in_path = path_append_filename(savepathD, savepath_usedD, filename);
     ex_path = path_append_filename(exportpathD, exportpath_usedD, filename);
-    if (path_load(in_path)) path_save(ex_path);
+    if (path_load(in_path)) count += (path_save(ex_path) != 0);
   }
-  return 0;
+  return count;
 }
 int
 cache_init()
@@ -2847,7 +2853,7 @@ int
 platform_upgrade()
 {
   if (platform_load(-1, 0)) {
-    platform_erase(-1);
+    platform_erase(-1, 0);
     globalD.saveslot_class = uD.clidx;
     platform_save();
     Log("upgrade to fsversion 2 complete!");
