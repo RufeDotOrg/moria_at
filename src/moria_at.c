@@ -10496,11 +10496,12 @@ summary_saveslot_deletion(struct summaryS* summary, int saveslot)
 int
 saveslot_race_reroll(saveslot, race)
 {
-  char c;
+  char c = 0;
   do {
-    py_race_class_seed_init(race, saveslot, platformD.seed());
+    if (c != ' ') py_race_class_seed_init(race, saveslot, platformD.seed());
     c = show_character(1);
-  } while (!is_ctrl(c));
+    if (c == CTRL('c')) break;
+  } while (c != ESCAPE);
   return 1;
 }
 int
@@ -10522,13 +10523,15 @@ saveslot_creation(int saveslot)
     }
     DRAWMSG("Play a %s of which race?", classD[saveslot].name);
     c = inkey();
+    if (c == CTRL('c')) break;
+
     iidx = c - 'a';
     if (iidx >= 0 && iidx <= AL(raceD)) {
       if (raceD[iidx].rtclass & (1 << saveslot)) {
         return saveslot_race_reroll(saveslot, iidx);
       }
     }
-  } while (!is_ctrl(c));
+  } while (c != ESCAPE);
   return 0;
 }
 int
@@ -10541,122 +10544,111 @@ py_saveslot_select()
   int save_count;
   uint8_t iidx;
   int has_external = (platformD.saveex != 0);
+  int using_external = 0;
 
   // Disable midpoint resume explicitly
   input_resumeD = -1;
 
-  iidx = -1;
   save_count = py_archive_read(in_summary, 0);
   // Assist with import on re-installation
   if (save_count == 0 && has_external) {
     save_count += py_archive_read(ex_summary, 1);
   }
-  // Wait for user selection of class
-  globalD.saveslot_class = -1;
 
-  if (save_count) {
-    int using_external = 0;
+  do {
+    // Wait for user selection of class
+    globalD.saveslot_class = -1;
 
-    do {
-      line = 0;
-      overlay_submodeD = using_external ? 'E' : 'I';
-      char* media = using_external ? "External" : "Internal";
-      struct summaryS* summary = using_external ? ex_summary : in_summary;
+    iidx = -1;
+    line = 0;
+    overlay_submodeD = using_external ? 'E' : 'I';
+    char* media = using_external ? "External" : "Internal";
+    struct summaryS* summary = using_external ? ex_summary : in_summary;
+    for (int it = 0; it < AL(classD); ++it) {
+      if (summary[it].invalid) {
+        BufMsg(overlay, "%c) Invalid %s data file", 'a' + it, classD[it].name);
+      } else if (summary[it].slevel) {
+        BufMsg(overlay, "%c) Level %d %s %s (%d feet)", 'a' + it,
+               summary[it].slevel, raceD[summary[it].srace].name,
+               classD[summary[it].sclass].name, summary[it].sdepth);
+      } else {
+        BufMsg(overlay, "%c)    <create %s>", 'a' + it, classD[it].name);
+      }
+    }
+
+    if (has_external) {
+      if (!using_external) {
+        line = 's' - 'a';
+        BufMsg(overlay, "s) Save all to external media");
+
+        line = 'v' - 'a';
+        BufMsg(overlay, "v) View external media");
+      } else {
+        line = 'i' - 'a';
+        BufMsg(overlay, "i) Import all");
+      }
+    }
+
+    DRAWMSG("%s Media Archive: Play which class?", media);
+    c = inkey();
+    if (c == 'i') {
       for (int it = 0; it < AL(classD); ++it) {
-        if (summary[it].invalid) {
-          BufMsg(overlay, "%c) Invalid %s data file", 'a' + it,
-                 classD[it].name);
-        } else if (summary[it].slevel) {
-          BufMsg(overlay, "%c) Level %d %s %s (%d feet)", 'a' + it,
-                 summary[it].slevel, raceD[summary[it].srace].name,
-                 classD[summary[it].sclass].name, summary[it].sdepth);
-        } else {
-          BufMsg(overlay, "%c)    <create %s>", 'a' + it, classD[it].name);
-        }
-      }
-
-      if (has_external) {
-        if (!using_external) {
-          line = 's' - 'a';
-          BufMsg(overlay, "s) Save all to external media");
-
-          line = 'v' - 'a';
-          BufMsg(overlay, "v) View external media");
-        } else {
-          line = 'i' - 'a';
-          BufMsg(overlay, "i) Import all");
-        }
-      }
-
-      DRAWMSG("%s Media Archive: Play which class?", media);
-      c = inkey();
-      if (c == 'i') {
-        for (int it = 0; it < AL(classD); ++it) {
-          if (platformD.load(it, 1)) {
-            if (saveslot_validation()) {
-              platformD.save();
-            }
+        if (platformD.load(it, 1)) {
+          if (saveslot_validation()) {
+            platformD.save();
           }
         }
-
-        // Reload internal media
-        c = ESCAPE;
       }
-      if (c == ESCAPE) {
-        if (using_external) {
-          using_external = 0;
-        } else if (platformD.selection) {
-          int srow, scol;
-          platformD.selection(&scol, &srow);
-          if (srow >= 0 && srow < AL(classD)) {
-            summary_saveslot_deletion(&summary[srow], srow);
-          }
+
+      // Reload internal media
+      c = ESCAPE;
+    }
+    if (c == ESCAPE) {
+      if (using_external) {
+        using_external = 0;
+      } else if (platformD.selection) {
+        int srow, scol;
+        platformD.selection(&scol, &srow);
+        if (srow >= 0 && srow < AL(classD)) {
+          summary_saveslot_deletion(&summary[srow], srow);
         }
-        continue;
       }
-      if (c == 's') {
-        if (platformD.saveex) platformD.saveex();
+      continue;
+    }
+    if (c == 's') {
+      if (platformD.saveex) platformD.saveex();
+    }
+    if (c == 'v') {
+      py_archive_read(ex_summary, 1);
+      using_external = 1;
+    }
+
+    iidx = c - 'a';
+    if (iidx <= AL(classD)) {
+      if (summary[iidx].invalid) continue;
+
+      if (summary[iidx].slevel == 0) {
+        if (!saveslot_creation(iidx)) continue;
+
+        dun_level = 1;
+
+        py_inven_init();
+        inven_sort();
+
+        globalD.saveslot_class = uD.clidx;
+        return platformD.save();
       }
-      if (c == 'v') {
-        py_archive_read(ex_summary, 1);
-        using_external = 1;
-      }
 
-      iidx = c - 'a';
-      if (iidx >= 0 && iidx <= AL(classD)) {
-        if (summary[iidx].invalid) continue;
-        if (summary[iidx].slevel == 0) {
-          if (!saveslot_creation(iidx)) {
-            Log("creation failed %d", iidx);
-            continue;
-          }
-          Log("creation %d", iidx);
-
-          dun_level = 1;
-
-          py_inven_init();
-          inven_sort();
-
-          globalD.saveslot_class = uD.clidx;
-          platformD.save();
-        } else {
-          Log("load %d using_external? %d", iidx, using_external);
-          if (!platformD.load(iidx, using_external)) iidx = -1;
-
-          // Safeguards on external data
-          if (iidx >= 0) {
-            if (using_external && saveslot_validation()) {
-              Log("flushing to internal storage");
-              if (!platformD.save()) iidx = -1;
-            }
-          }
+      if (summary[iidx].slevel) {
+        if (platformD.load(iidx, using_external)) {
+          if (using_external) return platformD.save();
+          return 1;
         }
-        return iidx;
       }
-    } while (c != CTRL('c'));
-  }
+    }
+  } while (c != CTRL('c'));
 
-  return iidx;
+  return 0;
 }
 void
 py_takeoff()
@@ -13891,58 +13883,59 @@ main(int argc, char** argv)
   setjmp(restartD);
   hard_reset();
 
-  if (platformD.cache && platformD.cache()) {
-  } else if (py_saveslot_select() < AL(classD)) {
-  } else {
-    return platformD.postgame();
-  }
+  int ready = platformD.cache ? platformD.cache() : 0;
+  if (!ready) ready = py_saveslot_select();
 
-  // Per-Player initialization
-  magic_init();
+  if (ready) {
+    // Per-Player initialization
+    magic_init();
 
-  // Replay state reset
-  if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
-    replay_flag = TRUE;
-    input_record_writeD = AS(input_actionD, input_resumeD - 1);
-  } else {
-    replay_flag = FALSE;
-    input_record_writeD = 0;
-  }
-  input_resumeD = 0;
-  input_record_readD = input_action_usedD = 0;
-
-  // may generate messages in calc_mana()->gain_prayer()
-  for (int it = 0; it < MAX_A; ++it) {
-    // Perform calculations
-    set_use_stat(it);
-  }
-
-  // Release objects in the cave
-  FOR_EACH(obj, {
-    if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
-      obj_unuse(obj);
-    }
-  });
-
-  // a fresh cave!
-  if (dun_level != 0) {
-    cave_gen();
-  } else {
-    town_gen();
-    store_maint();
-  }
-
-  panel_update(&panelD, uD.y, uD.x, TRUE);
-  py_check_view(TRUE);
-  dungeon();
-  replay_flag = 0;
-
-  if (uD.new_level_flag != NL_DEATH) {
-    if (platformD.save()) {
-      longjmp(restartD, 1);
+    // Replay state reset
+    if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
+      replay_flag = TRUE;
+      input_record_writeD = AS(input_actionD, input_resumeD - 1);
     } else {
-      strcpy(death_descD, "Device I/O Error");
+      replay_flag = FALSE;
+      input_record_writeD = 0;
     }
+    input_resumeD = 0;
+    input_record_readD = input_action_usedD = 0;
+
+    // may generate messages in calc_mana()->gain_prayer()
+    for (int it = 0; it < MAX_A; ++it) {
+      // Perform calculations
+      set_use_stat(it);
+    }
+
+    // Release objects in the cave
+    FOR_EACH(obj, {
+      if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
+        obj_unuse(obj);
+      }
+    });
+
+    // a fresh cave!
+    if (dun_level != 0) {
+      cave_gen();
+    } else {
+      town_gen();
+      store_maint();
+    }
+
+    panel_update(&panelD, uD.y, uD.x, TRUE);
+    py_check_view(TRUE);
+    dungeon();
+    replay_flag = 0;
+
+    if (uD.new_level_flag != NL_DEATH) {
+      if (platformD.save()) {
+        longjmp(restartD, 1);
+      } else {
+        strcpy(death_descD, "Device I/O Error");
+      }
+    }
+  } else {
+    strcpy(death_descD, "Saveslot Error");
   }
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) {
