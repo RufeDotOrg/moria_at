@@ -80,7 +80,8 @@ struct uS {
   uint32_t spell_worked;
   // Ranged attack
   int32_t bowth;
-  int32_t unused1;
+  // Social Class
+  int32_t sc;
   int32_t unused2;
 };
 GAME struct uS uD;
@@ -155,6 +156,14 @@ struct classS {
   uint8_t spell;           /* class use mage spells	*/
   uint8_t m_exp;           /* Class experience factor	*/
   uint8_t first_spell_lev; /* First level where class can use spells. */
+};
+
+struct backgroundS {
+  char *info;    /* History information    */
+  uint8_t roll;  /* Die roll needed for history  */
+  uint8_t chart; /* Table number     */
+  uint8_t next;  /* Pointer to next table  */
+  uint8_t bonus; /* Bonus to the Social Class+50 */
 };
 
 // Only the player has stats

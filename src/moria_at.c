@@ -6150,6 +6150,55 @@ static void py_stats(stats, len) int8_t* stats;
     stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
 void
+py_social_init()
+{
+  int hist_ptr = uD.ridx * 3 + 1;
+  int social_class = randint(4);
+  int cur_ptr = 0;
+  do {
+    int flag = 0;
+    do {
+      if (backgroundD[cur_ptr].chart == hist_ptr) {
+        int test_roll = randint(100);
+        while (test_roll > backgroundD[cur_ptr].roll) cur_ptr++;
+        struct backgroundS* b_ptr = &backgroundD[cur_ptr];
+        social_class += b_ptr->bonus - 50;
+        if (hist_ptr > b_ptr->next) cur_ptr = 0;
+        hist_ptr = b_ptr->next;
+        flag = 1;
+      } else
+        cur_ptr++;
+    } while (!flag);
+  } while (hist_ptr >= 1);
+
+  uD.sc = CLAMP(social_class, 1, 100);
+}
+int
+value_by_stat(stat)
+{
+  return 5 * (stat - 10);
+}
+void
+py_gold_init()
+{
+  py_social_init();
+
+  int roll_value = 0;
+  for (int it = 0; it < A_CHR; ++it) {
+    roll_value += value_by_stat(statD.cur_stat[it]);
+  }
+
+  int gold = value_by_stat(statD.cur_stat[A_CHR]) + uD.sc * 6 + 325;
+  gold -= roll_value;
+  if (!uD.male) gold += 50;
+
+  while (gold < 80) {
+    gold += randint(32);
+  }
+
+  uD.gold = gold;
+}
+void
 py_race_class_seed_init(rsel, csel, prng)
 {
   int hitdie;
@@ -6225,12 +6274,13 @@ py_race_class_seed_init(rsel, csel, prng)
   uD.max_dlv = 1;
   uD.food = 7500;
   uD.food_digest = 2;
-  uD.gold = 100;
 
   uD.mhp = uD.chp = hitdie + con_adj();
   uD.chp_frac = 0;
   uD.cmana = uD.mmana = umana_by_level(1);
   uD.cmana_frac = 0;
+
+  py_gold_init();
 }
 void
 py_inven_init()
@@ -10348,7 +10398,14 @@ show_version()
   DRAWMSG("Version %s", versionD);
   return inkey();
 }
-
+char*
+ugender()
+{
+  if (uD.male)
+    return "Male";
+  else
+    return "Female";
+}
 int
 show_character(narrow)
 {
@@ -10373,7 +10430,6 @@ show_character(narrow)
   BufMsg(screen, "%-13.013s: %3d", "Age", 16);
   BufMsg(screen, "%-13.013s: %3d", "Height", 74);
   BufMsg(screen, "%-13.013s: %3d", "Weight", uD.wt);
-  BufMsg(screen, "%-13.013s: %3d", "Social Class", 1);
 
   BufPad(screen, MAX_A, col[0]);
 
@@ -10387,8 +10443,10 @@ show_character(narrow)
     }
   }
 
-  // BufPad(screen, MAX_A, col[1]);
-  // line = 0;
+  BufPad(screen, MAX_A, col[1]);
+  line = 0;
+  BufMsg(screen, "%-15.015s: %-6.06s", "Gender", ugender());
+  BufMsg(screen, "%-15.015s: %3d", "Social Class", uD.sc);
   // for (int it = 0; it < MAX_A; ++it) {
   //   BufMsg(screen, "|");
   // }
