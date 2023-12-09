@@ -2844,16 +2844,6 @@ cache_write()
   return writef != 0;
 }
 int
-platform_upgrade()
-{
-  if (platform_load(-1, 0)) {
-    platform_erase(-1, 0);
-    globalD.saveslot_class = uD.clidx;
-    platform_save();
-    Log("upgrade to fsversion 2 complete!");
-  }
-}
-int
 phone_focuslost()
 {
   if (CACHE) cache_write();

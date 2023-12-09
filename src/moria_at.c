@@ -10427,7 +10427,9 @@ show_character(narrow)
   line = 0;
   int col[2];
 
-  if (narrow || msg_width < 80) {
+  if (msg_width < 80) narrow = 1;
+
+  if (narrow) {
     screen_submodeD = 1;
     col[0] = 20;
     col[1] = 44;
@@ -10531,7 +10533,7 @@ show_character(narrow)
     }
   }
 
-  if (msg_width < 80) {
+  if (narrow) {
     DRAWMSG("Name: %-13.013s Race: %-17.017s Class: %-13.013s", "...",
             raceD[uD.ridx].name, classD[uD.clidx].name);
   } else {
@@ -10854,6 +10856,18 @@ show_all_inven()
   } while (iidx != -1);
 }
 int
+platform_upgrade()
+{
+  // fs1 overwrite the saveslot_class; cease using "savechar" file
+  if (globalD.fsversion == 1) {
+    if (platformD.load(-1, 0)) {
+      platformD.erase(-1, 0);
+      globalD.saveslot_class = uD.clidx;
+      platformD.save();
+    }
+  }
+}
+int
 py_reset()
 {
   char c;
@@ -10873,8 +10887,7 @@ py_reset()
 
     switch (c) {
       case 'a':
-        // fs1 overwrite the saveslot_class; cease using "savechar" file
-        if (globalD.fsversion == 1) platform_upgrade();
+        platform_upgrade();
       case 'd':
         globalD.fsversion = 2;
         globalD.saveslot_class = -1;
