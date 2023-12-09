@@ -2543,7 +2543,6 @@ platform_random()
     SDL_RWread(readf, &ret, sizeof(ret), 1);
     SDL_RWclose(readf);
   }
-  Log("seed %d", ret);
   return ret;
 }
 
@@ -2638,7 +2637,7 @@ path_save(char *path)
       checksumD ^= ck;
     }
     SDL_RWclose(writef);
-    Log("version %d save checksum %x", version, checksumD);
+    Log("path_save %s: version %d save checksum %x", path, version, checksumD);
     return sum;
   }
   return 0;
@@ -2662,7 +2661,6 @@ path_load(char *path)
         int ck = checksum(buf.mem, savefield[it]);
         checksumD ^= ck;
       }
-      Log("version %d load char checksum %x", version, checksumD);
     } else if (save_size == savesum()) {
       for (int it = 0; it < AL(save_bufD); ++it) {
         struct bufS buf = save_bufD[it];
@@ -2670,9 +2668,7 @@ path_load(char *path)
         int ck = checksum(buf.mem, buf.mem_size);
         checksumD ^= ck;
       }
-      Log("load char checksum %x", checksumD);
     } else {
-      Log("load char invalid size %d", save_size);
       save_size = 0;
     }
 
@@ -2698,7 +2694,6 @@ path_load(char *path)
 
           if (sum) {
             input_resumeD = input_action_usedD;
-            Log("  midpoint (%d input_resumeD)", input_resumeD);
           } else {
             input_resumeD = 0;
             uD.new_level_flag = NL_MIDPOINT_LOST;
@@ -2775,7 +2770,6 @@ platform_erase(saveslot, external)
   } else {
     path = path_append_filename(savepathD, savepath_usedD, filename);
   }
-  Log("path delete %s", path);
   return path_delete(path);
 }
 int
@@ -2835,9 +2829,10 @@ cache_read()
 int
 cache_dump()
 {
-  Log("%d saveslot_class %d fsversion", globalD.saveslot_class,
-      globalD.fsversion);
-  Log("cache is ready.");
+  Log("cache is ready: "
+      "%d saveslot_class "
+      "%d fsversion",
+      globalD.saveslot_class, globalD.fsversion);
 }
 int
 cache_write()
@@ -2913,7 +2908,7 @@ platform_cache()
     ret = platform_load(-1, 0);
   else if (saveslot_class >= 0)
     ret = platform_load(saveslot_class, 0);
-  Log("resume result %d class %d", ret, globalD.saveslot_class);
+  Log("platform_cache result %d class %d", ret, globalD.saveslot_class);
   return ret;
 }
 

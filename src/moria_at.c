@@ -10443,6 +10443,7 @@ show_character(narrow)
   BufMsg(screen, "%-13.013s: %3d", "Age", uD.age);
   BufMsg(screen, "%-13.013s: %3d", "Height", uD.ht);
   BufMsg(screen, "%-13.013s: %3d", "Weight", uD.wt);
+  BufMsg(screen, "%-13.013s: %3d", "Social Class", uD.sc);
 
   BufPad(screen, MAX_A, col[0]);
 
@@ -10458,8 +10459,7 @@ show_character(narrow)
 
   BufPad(screen, MAX_A, col[1]);
   line = 0;
-  BufMsg(screen, "%-15.015s: %-6.06s", "Gender", ugender());
-  BufMsg(screen, "%-15.015s: %3d", "Social Class", uD.sc);
+  BufMsg(screen, "%s: %-6.06s", "Gender", ugender());
 
   line = MAX_A + 1;
   BufMsg(screen, "%-13.013s: %3d", "+ To Hit", cbD.ptohit - cbD.hide_tohit);
@@ -10524,8 +10524,9 @@ show_character(narrow)
     }
 
     if (len > 0) {
-      begin[len] = 0;
-      BufMsg(screen, "%s", begin);
+      screen_usedD[line] = len;
+      memcpy(&screenD[line], begin, len);
+      line += 1;
       history_used += len + 1;
     }
   }
