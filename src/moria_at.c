@@ -3692,16 +3692,14 @@ town_night()
 {
   return ((turnD / (1 << 12)) & 0x1);
 }
-void
+int
 town_gen()
 {
   int i, j, k;
   struct caveS* c_ptr;
   int room[MAX_STORE];
   int room_used;
-  uint32_t seed;
 
-  seed = rnd_seed;
   rnd_seed = town_seed;
 
   uint8_t cflag = town_night() ? 0 : (CF_PERM_LIGHT | CF_ROOM);
@@ -3744,9 +3742,13 @@ town_gen()
            (c_ptr->midx != 0));
   place_stair_tval(i, j, TV_DOWN_STAIR);
   caveD[i][j].cflag |= CF_FIELDMARK;
-  rnd_seed = seed;
-
-  alloc_townmon(randint(RND_MALLOC_LEVEL) + MIN_MALLOC_TOWN);
+  return 0;
+}
+int
+py_intown()
+{
+  int i, j;
+  struct caveS* c_ptr;
 
   do {
     i = randint(SYMMAP_HEIGHT - 2);
@@ -14081,8 +14083,14 @@ main(int argc, char** argv)
     if (dun_level != 0) {
       cave_gen();
     } else {
-      town_gen();
+      // Store rotation
       store_maint();
+      // Generate town
+      fixed_seed_func(town_seed, town_gen);
+      // Random town monsters
+      alloc_townmon(randint(RND_MALLOC_LEVEL) + MIN_MALLOC_TOWN);
+      // Player random placement
+      py_intown();
     }
 
     panel_update(&panelD, uD.y, uD.x, TRUE);

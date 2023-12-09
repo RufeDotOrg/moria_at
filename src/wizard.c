@@ -51,7 +51,7 @@ custom_editor()
     c = read_number(name_list[it], ptr_list[it]);
     if (c == CTRL('c')) break;
   }
-  if (c == AL(name_list)) show_character();
+  if (c == AL(name_list)) show_character(0);
   return c;
 }
 
