@@ -6343,15 +6343,20 @@ void sort(array, len) void* array;
     }
   }
 }
-void
+int fixed_seed_func(seed, func) int (*func)();
+{
+  uint32_t keep_seed;
+
+  keep_seed = rnd_seed;
+  rnd_seed = seed;
+  func();
+  rnd_seed = keep_seed;
+}
+int
 magic_init()
 {
   int i, j, k, h;
   void* tmp;
-  uint32_t keep_seed;
-
-  keep_seed = rnd_seed;
-  rnd_seed = obj_seed;
 
   store_init();
 
@@ -6412,7 +6417,6 @@ magic_init()
       descD[9] = '\0';
     strcpy(titleD[h], descD);
   }
-  rnd_seed = keep_seed;
 }
 int
 dec_stat(stat)
@@ -14029,7 +14033,7 @@ main(int argc, char** argv)
 
   if (ready) {
     // Per-Player initialization
-    magic_init();
+    fixed_seed_func(obj_seed, magic_init);
 
     // Replay state reset
     if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
