@@ -6149,11 +6149,11 @@ static void py_stats(stats, len) int8_t* stats;
   for (i = 0; i < len; i++)
     stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
-void
-py_social_init()
+int
+social_bonus()
 {
   int hist_ptr = uD.ridx * 3 + 1;
-  int social_class = randint(4);
+  int social_bonus = 0;
   int cur_ptr = 0;
   AC(historyD);
   do {
@@ -6164,7 +6164,7 @@ py_social_init()
         while (test_roll > backgroundD[cur_ptr].roll) cur_ptr++;
         struct backgroundS* b_ptr = &backgroundD[cur_ptr];
         strcat(historyD, b_ptr->info);
-        social_class += b_ptr->bonus - 50;
+        social_bonus += b_ptr->bonus - 50;
         if (hist_ptr > b_ptr->next) cur_ptr = 0;
         hist_ptr = b_ptr->next;
         flag = 1;
@@ -6173,7 +6173,7 @@ py_social_init()
     } while (!flag);
   } while (hist_ptr >= 1);
 
-  uD.sc = CLAMP(social_class, 1, 100);
+  return social_bonus;
 }
 int
 value_by_stat(stat)
@@ -6183,8 +6183,6 @@ value_by_stat(stat)
 void
 py_gold_init()
 {
-  py_social_init();
-
   int roll_value = 0;
   for (int it = 0; it < A_CHR; ++it) {
     roll_value += value_by_stat(statD.cur_stat[it]);
@@ -6283,6 +6281,9 @@ py_race_class_seed_init(rsel, csel, prng)
   uD.cmana = uD.mmana = umana_by_level(1);
   uD.cmana_frac = 0;
 
+  int sc = fixed_seed_func(town_seed, social_bonus);
+  uD.sc = CLAMP(randint(4) + sc, 1, 100);
+
   py_gold_init();
   calc_bonuses();
 }
@@ -6351,8 +6352,9 @@ int fixed_seed_func(seed, func) int (*func)();
 
   keep_seed = rnd_seed;
   rnd_seed = seed;
-  func();
+  int ret = func();
   rnd_seed = keep_seed;
+  return ret;
 }
 int
 magic_init()
@@ -6419,6 +6421,7 @@ magic_init()
       descD[9] = '\0';
     strcpy(titleD[h], descD);
   }
+  return 0;
 }
 int
 dec_stat(stat)
@@ -14036,6 +14039,8 @@ main(int argc, char** argv)
   if (ready) {
     // Per-Player initialization
     fixed_seed_func(obj_seed, magic_init);
+    // recreate history text
+    fixed_seed_func(town_seed, social_bonus);
 
     // Replay state reset
     if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
