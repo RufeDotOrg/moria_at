@@ -82,7 +82,9 @@ struct uS {
   int32_t bowth;
   // Social Class
   int32_t sc;
-  int32_t unused2;
+  uint16_t ht;
+  uint8_t age;
+  uint8_t unused;
 };
 GAME struct uS uD;
 

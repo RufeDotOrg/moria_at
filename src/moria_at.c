@@ -6217,8 +6217,7 @@ py_race_class_seed_init(rsel, csel, prng)
   }
 
   uD.male = 1 - randint(2);
-  // TBD: age
-  // TBD: height
+  uD.age = r_ptr->b_age + randint(r_ptr->m_age);
 
   hitdie = r_ptr->bhitdie;
   uD.ridx = rsel;
@@ -6231,8 +6230,10 @@ py_race_class_seed_init(rsel, csel, prng)
   uD.infra = r_ptr->infra;
   uD.mult_exp = r_ptr->b_exp;
   if (uD.male) {
+    uD.ht = randnor(r_ptr->m_b_ht, r_ptr->m_m_ht);
     uD.wt = randnor(r_ptr->m_b_wt, r_ptr->m_m_wt);
   } else {
+    uD.ht = randnor(r_ptr->f_b_ht, r_ptr->f_m_ht);
     uD.wt = randnor(r_ptr->f_b_wt, r_ptr->f_m_wt);
   }
   uD.bowth = r_ptr->bthb;
@@ -10435,8 +10436,8 @@ show_character(narrow)
     // Landscape col2 92
   }
 
-  BufMsg(screen, "%-13.013s: %3d", "Age", 16);
-  BufMsg(screen, "%-13.013s: %3d", "Height", 74);
+  BufMsg(screen, "%-13.013s: %3d", "Age", uD.age);
+  BufMsg(screen, "%-13.013s: %3d", "Height", uD.ht);
   BufMsg(screen, "%-13.013s: %3d", "Weight", uD.wt);
 
   BufPad(screen, MAX_A, col[0]);
