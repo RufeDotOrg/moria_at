@@ -251,8 +251,6 @@ render_update()
   }
 
   SDL_RenderPresent(renderer);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderClear(renderer);
 }
 
 // font.c
@@ -2926,6 +2924,9 @@ platform_pregame()
     if (SDL_EVLOG) SDL_SetHint(SDL_HINT_EVENT_LOGGING, "1");
     if (BATCHING) SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
     if (!ANDROID) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
+
+    if (__APPLE__) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
+    // SDL_SetHint(SDL_HINT_RENDER_METAL_PREFER_LOW_POWER_DEVICE, "1");
 
     // iOS/Android orientation
     SDL_SetHint(SDL_HINT_ORIENTATIONS, ORIENTATION_LIST);
