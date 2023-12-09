@@ -230,9 +230,10 @@ render_update()
   USE(renderer);
   USE(layout);
 
-  SDL_SetRenderTarget(renderer, 0);
-
   if (layout) {
+    SDL_SetRenderTarget(renderer, 0);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
     // USE(safe_rect);
     // SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
     // SDL_RenderFillRect(renderer, &safe_rect);
@@ -1680,12 +1681,11 @@ platform_draw()
 {
   USE(mode);
   USE(renderer);
-  USE(layout_rect);
-  int ret;
+  USE(layout);
 
-  SDL_SetRenderTarget(renderer, layoutD);
+  if (layout) SDL_SetRenderTarget(renderer, layout);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderFillRect(renderer, &layout_rect);
+  SDL_RenderClear(renderer);
 
   if (TOUCH && tpsurfaceD) {
     {
@@ -1733,6 +1733,7 @@ platform_draw()
     }
   }
 
+  int ret;
   if (mode == 0)
     ret = platform_p0();
   else
@@ -1740,6 +1741,7 @@ platform_draw()
 
   if (text_fnD) text_fnD(mode);
 
+  SDL_RenderFlush(renderer);
   render_update();
 
   return ret;
