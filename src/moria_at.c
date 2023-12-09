@@ -701,6 +701,16 @@ seed_init(prng)
   // Burn randomness after seeding
   for (int it = randint(100); it != 0; --it) rnd();
 }
+int fixed_seed_func(seed, func) int (*func)();
+{
+  uint32_t keep_seed;
+
+  keep_seed = rnd_seed;
+  rnd_seed = seed;
+  int ret = func();
+  rnd_seed = keep_seed;
+  return ret;
+}
 int
 damroll(num, sides)
 {
@@ -6346,16 +6356,6 @@ void sort(array, len) void* array;
     }
   }
 }
-int fixed_seed_func(seed, func) int (*func)();
-{
-  uint32_t keep_seed;
-
-  keep_seed = rnd_seed;
-  rnd_seed = seed;
-  int ret = func();
-  rnd_seed = keep_seed;
-  return ret;
-}
 int
 magic_init()
 {
@@ -10460,9 +10460,6 @@ show_character(narrow)
   line = 0;
   BufMsg(screen, "%-15.015s: %-6.06s", "Gender", ugender());
   BufMsg(screen, "%-15.015s: %3d", "Social Class", uD.sc);
-  // for (int it = 0; it < MAX_A; ++it) {
-  //   BufMsg(screen, "|");
-  // }
 
   line = MAX_A + 1;
   BufMsg(screen, "%-13.013s: %3d", "+ To Hit", cbD.ptohit - cbD.hide_tohit);
