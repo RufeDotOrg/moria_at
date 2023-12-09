@@ -2164,8 +2164,9 @@ path_append_filename(char *path, int path_len, char *filename)
 SDL_RWops *
 file_access(char *filename, char *access)
 {
-  Log("%s file_access %s", access, filename);
-  return SDL_RWFromFile(filename, access);
+  SDL_RWops *ret = SDL_RWFromFile(filename, access);
+  if (ret != 0) Log("%s file_access %s", access, filename);
+  return ret;
 }
 int
 sdl_window_event(event)

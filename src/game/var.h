@@ -26,6 +26,9 @@ DATA int overlay_widthD;
 DATA int overlay_heightD;
 DATA int msg_widthD;
 
+// Character social class history text
+DATA char historyD[256];
+
 // Magic affect counters & names
 GAME int32_t maD[MA_COUNT];
 GAME uint8_t spell_orderD[32];

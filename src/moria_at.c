@@ -6155,6 +6155,7 @@ py_social_init()
   int hist_ptr = uD.ridx * 3 + 1;
   int social_class = randint(4);
   int cur_ptr = 0;
+  AC(historyD);
   do {
     int flag = 0;
     do {
@@ -6162,6 +6163,7 @@ py_social_init()
         int test_roll = randint(100);
         while (test_roll > backgroundD[cur_ptr].roll) cur_ptr++;
         struct backgroundS* b_ptr = &backgroundD[cur_ptr];
+        strcat(historyD, b_ptr->info);
         social_class += b_ptr->bonus - 50;
         if (hist_ptr > b_ptr->next) cur_ptr = 0;
         hist_ptr = b_ptr->next;
@@ -6346,9 +6348,9 @@ magic_init()
 {
   int i, j, k, h;
   void* tmp;
-  uint32_t seed;
+  uint32_t keep_seed;
 
-  seed = rnd_seed;
+  keep_seed = rnd_seed;
   rnd_seed = obj_seed;
 
   store_init();
@@ -6410,7 +6412,7 @@ magic_init()
       descD[9] = '\0';
     strcpy(titleD[h], descD);
   }
-  rnd_seed = seed;
+  rnd_seed = keep_seed;
 }
 int
 dec_stat(stat)
@@ -10420,11 +10422,13 @@ show_character(narrow)
     screen_submodeD = 1;
     col[0] = 20;
     col[1] = 44;
+    // Portrait col2 63
   } else {
     // Widescreen
     screen_submodeD = 2;
     col[0] = 25;
     col[1] = 53;
+    // Landscape col2 92
   }
 
   BufMsg(screen, "%-13.013s: %3d", "Age", 16);
@@ -10497,6 +10501,28 @@ show_character(narrow)
   BufMsg(screen, "%-15.015s: %3d", "Perception", MAX(40 - uD.fos, 0));
   BufMsg(screen, "%-15.015s: %3d", "Searching", uD.search);
   BufMsg(screen, "%-15.015s: %3d", "Infra-Vision", uD.infra);
+
+  int history_used = 0;
+  int history_len = strlen(historyD);
+  line = AL(screenD) - 4;
+  enum { HISTORY_WIDTH = 64 };
+  for (int it = 0; it < 4; ++it) {
+    char* begin = &historyD[history_used];
+    int len = 0;
+    if (history_used + HISTORY_WIDTH < history_len) {
+      char* end = begin + HISTORY_WIDTH;
+      while (*end != ' ') --end;
+      len = end - begin;
+    } else {
+      len = history_len - history_used;
+    }
+
+    if (len > 0) {
+      begin[len] = 0;
+      BufMsg(screen, "%s", begin);
+      history_used += len + 1;
+    }
+  }
 
   if (msg_width < 80) {
     DRAWMSG("Name: %-13.013s Race: %-17.017s Class: %-13.013s", "...",
