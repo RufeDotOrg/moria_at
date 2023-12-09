@@ -81,10 +81,10 @@ struct uS {
   // Ranged attack
   int32_t bowth;
   // Social Class
-  int32_t sc;
   uint16_t ht;
   uint8_t age;
-  uint8_t unused;
+  uint8_t sc;
+  int32_t unused;
 };
 GAME struct uS uD;
 
