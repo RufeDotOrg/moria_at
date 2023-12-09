@@ -6284,6 +6284,7 @@ py_race_class_seed_init(rsel, csel, prng)
   uD.cmana_frac = 0;
 
   py_gold_init();
+  calc_bonuses();
 }
 void
 py_inven_init()
