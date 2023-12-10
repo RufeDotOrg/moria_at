@@ -6210,6 +6210,13 @@ py_gold_init()
 
   uD.gold = gold;
 }
+int
+clamp(val, min, max)
+{
+  if (val < min) return min;
+  if (val > max) return max;
+  return val;
+}
 void
 py_race_class_seed_init(rsel, csel, prng)
 {
@@ -6294,7 +6301,7 @@ py_race_class_seed_init(rsel, csel, prng)
   uD.cmana_frac = 0;
 
   int sc = fixed_seed_func(town_seed, social_bonus);
-  uD.sc = CLAMP(randint(4) + sc, 1, 100);
+  uD.sc = clamp(randint(4) + sc, 1, 100);
 
   py_gold_init();
   calc_bonuses();
