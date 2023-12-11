@@ -2853,34 +2853,15 @@ platform_selection(int *yptr, int *xptr)
   return modeD == 1;
 }
 int
-cache_init()
-{
-  char *filename = SAVENAME;
-  char *path = path_append_filename(savepathD, savepath_usedD, filename);
-  int fsversion = path_exists(path) ? 1 : 2;
-
-  // fsversion can be upgraded on next "archive" selection by the user
-  globalD.fsversion = fsversion;
-  // saveslot for class being played
-  // fs1 -1: single file default name
-  // fs2 -1: no resume class selected
-  globalD.saveslot_class = -1;
-  // TBD: better macOS/linux default?
-  globalD.zoom_factor = 2;
-}
-int
 platform_cache()
 {
-  if (!cache_read()) {
-    cache_init();
-  }
+  int ret = cache_read();
   Log("SDL cache is ready: "
       "%d saveslot_class "
-      "%d fsversion "
       "%u zoom_factor ",
-      globalD.saveslot_class, globalD.fsversion, globalD.zoom_factor);
+      globalD.saveslot_class, globalD.zoom_factor);
 
-  return 1;
+  return ret;
 }
 
 // Initialization

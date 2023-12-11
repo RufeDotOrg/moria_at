@@ -314,7 +314,6 @@ DATA struct platformS platformD;
 // Global options
 struct globalS {
   int32_t saveslot_class;
-  int32_t fsversion;
   uint32_t zoom_factor;
 };
 DATA struct globalS globalD;

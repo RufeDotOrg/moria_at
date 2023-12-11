@@ -10871,33 +10871,12 @@ show_all_inven()
 int
 save_reset(save)
 {
-  MUSE(global, fsversion);
-  if (fsversion != WANT_FS) {
-    globalD.fsversion = WANT_FS;
-
-    if (WANT_FS == 2) {
-      // fs1 transfer data to class saveslot; cease using "savechar" default
-      if (fsversion == 1) {
-        if (save) {
-          if (platformD.load(-1, 0)) {
-            platformD.erase(-1, 0);
-            platformD.save(uD.clidx);
-          }
-        } else {
-          platformD.erase(-1, 0);
-        }
-      }
-    }
-  }
-
-  if (fsversion == 2) {
-    if (save) {
-      // TBD: if not dead, keep the midpoint
-      // (requires changes to input_resumeD)
-      // if (uD.new_level_flag == 0) platformD.savemidpoint();
-    } else {
-      platformD.erase(globalD.saveslot_class, 0);
-    }
+  if (save) {
+    // TBD: if not dead, keep the midpoint
+    // (requires changes to input_resumeD in py_saveslot_select())
+    // if (uD.new_level_flag == 0) platformD.savemidpoint();
+  } else {
+    platformD.erase(globalD.saveslot_class, 0);
   }
   globalD.saveslot_class = -1;
 }
@@ -14062,9 +14041,21 @@ platform_setup()
 int
 cache_default()
 {
-  globalD.fsversion = 1;
   globalD.saveslot_class = -1;
   globalD.zoom_factor = 2;
+}
+int
+fs_upgrade()
+{
+  // Make a copy of all characters to external storage
+  platformD.saveex();
+
+  // Move default "savechar" into the class slot
+  if (platformD.load(-1, 0)) {
+    if (platformD.save(uD.clidx)) {
+      platformD.erase(-1, 0);
+    }
+  }
 }
 int
 main(int argc, char** argv)
@@ -14073,6 +14064,9 @@ main(int argc, char** argv)
 
   platformD.pregame();
   if (!platformD.cache()) cache_default();
+
+  // Migration code
+  if (platformD.load(-1, 0)) fs_upgrade();
 
   mon_level_init();
   obj_level_init();
@@ -14084,7 +14078,7 @@ main(int argc, char** argv)
   if (!ready) ready = py_saveslot_select();
 
   if (ready) {
-    globalD.saveslot_class = globalD.fsversion <= 1 ? -1 : uD.clidx;
+    globalD.saveslot_class = uD.clidx;
     if (save_on_readyD) {
       save_on_readyD = 0;
       platformD.save(globalD.saveslot_class);
