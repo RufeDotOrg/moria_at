@@ -293,23 +293,28 @@ struct ownerS {
 struct platformS {
   fn pregame;
   fn postgame;
-  fn seed;
+  // render
+  fn predraw;
+  fn draw;
+  // input
+  fn readansi;
+  fn selection;
+  // i/o
   fn cache;
   fn save;
   fn erase;
   fn load;
   fn savemidpoint;
   fn saveex;
-  fn readansi;
-  fn predraw;
-  fn draw;
-  fn selection;
+  // rng
+  fn seed;
 };
 DATA struct platformS platformD;
 
 // Global options
 struct globalS {
-  int saveslot_class;
-  int fsversion;
+  int32_t saveslot_class;
+  int32_t fsversion;
+  uint32_t zoom_factor;
 };
 DATA struct globalS globalD;

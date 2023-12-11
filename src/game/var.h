@@ -15,7 +15,7 @@ GAME int overlay_usedD[AL(overlayD)];
 GAME int overlay_submodeD;
 DATA uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
-DATA uint32_t zoom_factorD;
+DATA int save_on_readyD;
 
 // Gameplay messages write to a circular queue
 DATA char msg_cqD[MAX_MSG][98];

@@ -58,6 +58,7 @@ typedef int (*fn)();
 
 #define USE(x) typeof(x##D) x = x##D
 #define AUSE(a, idx) typeof(a##D[0]) a = a##D[idx];
+#define MUSE(a, member) typeof(a##D.member) member = a##D.member
 
 // (optionally defined)
 // global declaration

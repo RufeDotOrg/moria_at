@@ -54,6 +54,11 @@ DATA char quit_stringD[] = "quitting";
     }                                      \
   }
 
+int
+noop()
+{
+  return 0;
+}
 static char
 inkey()
 {
@@ -8537,6 +8542,7 @@ inven_choice(char* prompt, char* mode_list)
   int begin, end;
   char subprompt[80];
   char* prefix;
+  int using_selection = platformD.selection != noop;
 
   mode = mode_list[0];
   while (mode) {
@@ -8570,7 +8576,7 @@ inven_choice(char* prompt, char* mode_list)
       if (iidx < end && invenD[iidx]) {
         c = obj_study(obj_get(invenD[iidx]), FALSE);
         // Prohibited on the death screen
-        if (platformD.selection && uD.new_level_flag == 0) {
+        if (using_selection && uD.new_level_flag == 0) {
           switch (c) {
             case 'o':
               inven_drop(iidx);
@@ -10673,7 +10679,7 @@ py_saveslot_select()
   int save_count;
   int extern_count = 0;
   uint8_t iidx;
-  int has_external = (platformD.saveex != 0);
+  int has_external = (platformD.saveex != noop);
   int using_external = 0;
 
   // Disable midpoint resume explicitly
@@ -10686,9 +10692,6 @@ py_saveslot_select()
   }
 
   do {
-    // Wait for user selection of class
-    globalD.saveslot_class = -1;
-
     iidx = -1;
     line = 0;
     overlay_submodeD = using_external ? 'E' : 'I';
@@ -10728,9 +10731,8 @@ py_saveslot_select()
     c = inkey();
     // Deletion
     if (c == ESCAPE) {
-      if (platformD.selection) {
-        int srow, scol;
-        platformD.selection(&scol, &srow);
+      int srow, scol;
+      if (platformD.selection(&scol, &srow)) {
         if (srow >= 0 && srow < AL(classD)) {
           if (summary_saveslot_deletion(&summary[srow], srow, using_external))
             extern_count -= (using_external);
@@ -10745,7 +10747,7 @@ py_saveslot_select()
         for (int it = 0; it < AL(classD); ++it) {
           if (platformD.load(it, 1)) {
             if (saveslot_validation()) {
-              if (platformD.save()) {
+              if (platformD.save(it)) {
                 summary_update(&in_summary[it]);
                 count += 1;
               }
@@ -10763,7 +10765,7 @@ py_saveslot_select()
     }
     // Export
     if (c == 's') {
-      if (platformD.saveex) {
+      if (has_external) {
         int count = platformD.saveex();
         line = 0;
         BufMsg(overlay, "Saved characters (x%d)", count);
@@ -10790,13 +10792,15 @@ py_saveslot_select()
         py_inven_init();
         inven_sort();
 
-        globalD.saveslot_class = uD.clidx;
-        return platformD.save();
+        // save_on_ready: Initial character save
+        save_on_readyD = 1;
+        return 1;
       }
 
       if (summary[iidx].slevel) {
         if (platformD.load(iidx, using_external)) {
-          if (using_external) return platformD.save();
+          // save_on_ready: Transfer to internal storage
+          if (using_external) save_on_readyD = 1;
           return 1;
         }
       }
@@ -10865,16 +10869,20 @@ show_all_inven()
   } while (iidx != -1);
 }
 int
-platform_upgrade()
+platform_upgrade(save)
 {
-  // fs1 overwrite the saveslot_class; cease using "savechar" file
-  if (globalD.fsversion == 1) {
-    if (platformD.load(-1, 0)) {
-      platformD.erase(-1, 0);
-      globalD.saveslot_class = uD.clidx;
-      platformD.save();
+  if (save) {
+    if (globalD.fsversion != WANT_FS) {
+      // fs1 transfer data to class saveslot; cease using "savechar" default
+      if (globalD.fsversion == 1) {
+        if (platformD.load(-1, 0)) {
+          platformD.erase(-1, 0);
+          platformD.save(uD.clidx);
+        }
+      }
     }
   }
+  globalD.fsversion = WANT_FS;
 }
 int
 py_reset()
@@ -10896,9 +10904,8 @@ py_reset()
 
     switch (c) {
       case 'a':
-        platform_upgrade();
       case 'd':
-        globalD.fsversion = 2;
+        platform_upgrade(c == 'a');
         globalD.saveslot_class = -1;
         longjmp(restartD, 1);
     }
@@ -13621,11 +13628,11 @@ dungeon()
               break;
             case '-':
               omit_replay = 1;
-              zoom_factorD = (zoom_factorD - 1) % MAX_ZOOM;
+              globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
               break;
             case '+':
               omit_replay = 1;
-              zoom_factorD = (zoom_factorD + 1) % MAX_ZOOM;
+              globalD.zoom_factor = (globalD.zoom_factor + 1) % MAX_ZOOM;
               break;
             case CTRL('a'):
               py_reactuate(&y, &x, last_actuateD);
@@ -13744,7 +13751,7 @@ dungeon()
               break;
             case 'O': {
               omit_replay = 1;
-              int zoom_factor = zoom_factorD;
+              int zoom_factor = globalD.zoom_factor;
               int cellh = SYMMAP_HEIGHT >> zoom_factor;
               int cellw = SYMMAP_WIDTH >> zoom_factor;
               int ty = MAX(uD.y - cellh / 2, panelD.panel_row_min);
@@ -13783,7 +13790,7 @@ dungeon()
             } break;
             case CTRL('x'):
               if (!RELEASE) {
-                if (platformD.savemidpoint && platformD.savemidpoint()) {
+                if (platformD.savemidpoint()) {
                   memcpy(death_descD, AP(quit_stringD));
                   uD.new_level_flag = NL_DEATH;
                   return;  // Interrupt game
@@ -14024,39 +14031,65 @@ obj_level_init()
     tmp[l]++;
   }
 }
-
 static int
-platform_init()
+platform_setup()
 {
+  fn* func = (void*)&platformD;
+
+  // [0, 1]: are required (pregame, postgame)
   platformD.pregame = platform_pregame;
   platformD.postgame = platform_postgame;
-  platformD.seed = platform_random;
-  platformD.load = platform_load;
-  platformD.save = platform_save;
-  platformD.erase = platform_erase;
-  platformD.readansi = platform_readansi;
-  platformD.predraw = platform_predraw;
-  platformD.draw = platform_draw;
+
+  for (int it = 2; it < sizeof(platformD) / sizeof(fn); ++it) {
+    func[it] = noop;
+  }
   msg_widthD = overlay_widthD = 80;
 
   return 0;
 }
 int
+cache_default()
+{
+  char* filename = SAVENAME;
+  char* path = path_append_filename(savepathD, savepath_usedD, filename);
+  int fsversion = path_exists(path) ? 1 : 2;
+
+  // fsversion can be upgraded on next "archive" selection by the user
+  globalD.fsversion = fsversion;
+  // saveslot for class being played
+  // fs1 -1: single file default name
+  // fs2 -1: no resume class selected
+  globalD.saveslot_class = -1;
+  // oh bother; the platform knows the best default
+  globalD.zoom_factor = 2;
+}
+int
 main(int argc, char** argv)
 {
+  if (!platformD.pregame) {
+    platform_setup();
+    cache_default();
+    platformD.cache();
+  }
+
+  platformD.pregame();
+
   mon_level_init();
   obj_level_init();
-
-  platform_init();
-  platformD.pregame();
 
   setjmp(restartD);
   hard_reset();
 
-  int ready = platformD.cache ? platformD.cache() : 0;
+  int ready = platformD.load(globalD.saveslot_class, 0);
   if (!ready) ready = py_saveslot_select();
 
   if (ready) {
+    globalD.saveslot_class = globalD.fsversion <= 1 ? -1 : uD.clidx;
+    if (save_on_readyD) {
+      save_on_readyD = 0;
+      platformD.save(globalD.saveslot_class);
+    }
+
     // Per-Player initialization
     fixed_seed_func(obj_seed, magic_init);
     // recreate history text
@@ -14106,14 +14139,14 @@ main(int argc, char** argv)
     replay_flag = 0;
 
     if (uD.new_level_flag != NL_DEATH) {
-      if (platformD.save()) {
+      if (platformD.save(globalD.saveslot_class)) {
         longjmp(restartD, 1);
       } else {
         strcpy(death_descD, "Device I/O Error");
       }
     }
   } else {
-    strcpy(death_descD, "Saveslot Error");
+    strcpy(death_descD, "Initialization Error");
   }
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) {

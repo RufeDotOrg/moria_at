@@ -1266,7 +1266,7 @@ SDL_Rect *zoom_prect;
   }
 
   int zf, zh, zw;
-  zf = zoom_factorD;
+  zf = globalD.zoom_factor;
   zh = SYMMAP_HEIGHT >> zf;
   zw = SYMMAP_WIDTH >> zf;
   // give equal vision on each side of the player during zoom
@@ -2265,7 +2265,7 @@ SDL_Event event;
 int
 gameplay_tapxy(relx, rely)
 {
-  USE(zoom_factor);
+  MUSE(global, zoom_factor);
   float gsy = rely;
   float gsx = relx;
   int cellw = SYMMAP_WIDTH;
@@ -2752,10 +2752,10 @@ platform_load(saveslot, external)
   return path_load(path);
 }
 int
-platform_save()
+platform_save(saveslot)
 {
   char filename[16] = SAVENAME;
-  filename_by_class(filename, globalD.saveslot_class);
+  filename_by_class(filename, saveslot);
   char *path = path_append_filename(savepathD, savepath_usedD, filename);
   return path_save(path);
 }
@@ -2796,18 +2796,6 @@ platform_saveex()
   return count;
 }
 int
-cache_init()
-{
-  char *filename = SAVENAME;
-  char *path = path_append_filename(savepathD, savepath_usedD, filename);
-  int fsversion = path_exists(path) ? 1 : 2;
-
-  // fsversion can be upgraded on next "archive" selection by the user
-  globalD.fsversion = fsversion;
-  // saveslot for class being played (-1 means "savechar" / check uD.clidx)
-  globalD.saveslot_class = -1;
-}
-int
 cache_read()
 {
   SDL_RWops *readf = file_access(cachepathD, "rb");
@@ -2818,21 +2806,9 @@ cache_read()
     SDL_RWclose(readf);
   }
 
-  if (!success) {
-    Log("cache init: %d success? %d.", readf != 0, success);
-    cache_init();
-  } else {
+  if (success) {
     Log("cache from disk.");
   }
-}
-
-int
-cache_dump()
-{
-  Log("cache is ready: "
-      "%d saveslot_class "
-      "%d fsversion",
-      globalD.saveslot_class, globalD.fsversion);
 }
 int
 cache_write()
@@ -2888,9 +2864,11 @@ platform_selection(int *yptr, int *xptr)
 int
 platform_cache()
 {
-  if (globalD.fsversion == 0) cache_read();
-
-  cache_dump();
+  cache_read();
+  Log("SDL cache is ready: "
+      "%d saveslot_class "
+      "%d fsversion",
+      globalD.saveslot_class, globalD.fsversion);
 
   int saveslot_class = globalD.saveslot_class;
   int ret = 0;
@@ -3049,7 +3027,23 @@ platform_pregame()
                           LANDSCAPE_X, LANDSCAPE_Y);
   }
 
-  zoom_factorD = 2;
+  platformD.seed = platform_random;
+  platformD.load = platform_load;
+  platformD.save = platform_save;
+  platformD.erase = platform_erase;
+  platformD.readansi = platform_readansi;
+  platformD.predraw = platform_predraw;
+  platformD.draw = platform_draw;
+  if (TOUCH) platformD.selection = platform_selection;
+  platformD.savemidpoint = platform_savemidpoint;
+
+  if (exportpath_usedD) {
+    platformD.saveex = platform_saveex;
+  }
+
+  if (CACHE && cachepath_usedD) {
+    platformD.cache = platform_cache;
+  }
 
   if (WINDOW) {
     SDL_Event event;
@@ -3061,17 +3055,6 @@ platform_pregame()
 
   while (display_rectD.w == 0) {
     sdl_pump();
-  }
-
-  if (TOUCH) platformD.selection = platform_selection;
-  platformD.savemidpoint = platform_savemidpoint;
-
-  if (exportpath_usedD) {
-    platformD.saveex = platform_saveex;
-  }
-
-  if (CACHE && cachepath_usedD) {
-    platformD.cache = platform_cache;
   }
 
   return 0;
