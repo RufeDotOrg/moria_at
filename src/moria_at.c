@@ -10685,6 +10685,9 @@ py_saveslot_select()
   // Disable midpoint resume explicitly
   input_resumeD = -1;
 
+  // No active class
+  globalD.saveslot_class = -1;
+
   save_count = py_archive_read(in_summary, 0);
   // Assist with import on re-installation
   if (save_count == 0 && has_external) {
@@ -10798,11 +10801,13 @@ py_saveslot_select()
       }
 
       if (summary[iidx].slevel) {
-        if (platformD.load(iidx, using_external)) {
-          // save_on_ready: Transfer to internal storage
-          if (using_external) save_on_readyD = 1;
-          return 1;
-        }
+        // resume OK for internal save
+        if (!using_external) input_resumeD = 0;
+
+        int ret = platformD.load(iidx, using_external);
+        // save_on_ready: Transfer to internal storage
+        if (using_external) save_on_readyD = 1;
+        return ret;
       }
     }
   } while (c != CTRL('c'));
@@ -10872,9 +10877,7 @@ int
 save_reset(save)
 {
   if (save) {
-    // TBD: if not dead, keep the midpoint
-    // (requires changes to input_resumeD in py_saveslot_select())
-    // if (uD.new_level_flag == 0) platformD.savemidpoint();
+    platformD.savemidpoint();
   } else {
     platformD.erase(globalD.saveslot_class, 0);
   }
@@ -14054,6 +14057,7 @@ fs_upgrade()
   if (platformD.load(-1, 0)) {
     if (platformD.save(uD.clidx)) {
       platformD.erase(-1, 0);
+      globalD.saveslot_class = uD.clidx;
     }
   }
 }
@@ -14063,9 +14067,10 @@ main(int argc, char** argv)
   platform_setup();
 
   platformD.pregame();
+
   if (!platformD.cache()) cache_default();
 
-  // Migration code
+  // Migration code (may mutate cache)
   if (platformD.load(-1, 0)) fs_upgrade();
 
   mon_level_init();
@@ -14144,6 +14149,7 @@ main(int argc, char** argv)
   }
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) {
+    globalD.saveslot_class = -1;
     inven_reveal();
     py_death();
   }

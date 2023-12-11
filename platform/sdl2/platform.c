@@ -2769,10 +2769,14 @@ platform_erase(saveslot, external)
 int
 platform_savemidpoint()
 {
-  char filename[16] = SAVENAME;
-  filename_by_class(filename, globalD.saveslot_class);
-  char *path = path_append_filename(savepathD, savepath_usedD, filename);
-  return path_savemidpoint(path);
+  MUSE(global, saveslot_class);
+  if (saveslot_class >= 0 && saveslot_class < AL(classD)) {
+    char filename[16] = SAVENAME;
+    filename_by_class(filename, saveslot_class);
+    char *path = path_append_filename(savepathD, savepath_usedD, filename);
+    return path_savemidpoint(path);
+  }
+  return 0;
 }
 int
 platform_saveex()
