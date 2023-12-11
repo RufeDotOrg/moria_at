@@ -10874,41 +10874,6 @@ show_all_inven()
   } while (iidx != -1);
 }
 int
-save_reset(save)
-{
-  if (save) {
-    platformD.savemidpoint();
-  } else {
-    platformD.erase(globalD.saveslot_class, 0);
-  }
-  globalD.saveslot_class = -1;
-}
-int
-py_reset()
-{
-  char c;
-  int line;
-  overlay_submodeD = -1;
-  do {
-    line = 0;
-    BufMsg(overlay, "a) Archive this %s for future play",
-           classD[uD.clidx].name);
-    BufMsg(overlay, "-");
-    BufMsg(overlay, "-");
-    BufMsg(overlay, "d) Delete this character");
-    DRAWMSG("Game Reset");
-    c = inkey();
-
-    switch (c) {
-      case 'a':
-      case 'd':
-        save_reset(c == 'a');
-        longjmp(restartD, 1);
-    }
-  } while (!is_ctrl(c));
-  return -1;
-}
-int
 py_menu()
 {
   char c;
@@ -10968,11 +10933,16 @@ py_menu()
         longjmp(restartD, 1);
 
       case 'd':
+        // Disable midpoint resume explicitly
         input_resumeD = -1;
+        globalD.saveslot_class = uD.clidx;
         longjmp(restartD, 1);
 
       case 'g':
-        py_reset();
+        if (!death) platformD.savemidpoint();
+        globalD.saveslot_class = -1;
+        longjmp(restartD, 1);
+
         return 0;
     }
   }
