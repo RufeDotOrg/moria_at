@@ -10869,20 +10869,37 @@ show_all_inven()
   } while (iidx != -1);
 }
 int
-platform_upgrade(save)
+save_reset(save)
 {
-  if (save) {
-    if (globalD.fsversion != WANT_FS) {
+  MUSE(global, fsversion);
+  if (fsversion != WANT_FS) {
+    globalD.fsversion = WANT_FS;
+
+    if (WANT_FS == 2) {
       // fs1 transfer data to class saveslot; cease using "savechar" default
-      if (globalD.fsversion == 1) {
-        if (platformD.load(-1, 0)) {
+      if (fsversion == 1) {
+        if (save) {
+          if (platformD.load(-1, 0)) {
+            platformD.erase(-1, 0);
+            platformD.save(uD.clidx);
+          }
+        } else {
           platformD.erase(-1, 0);
-          platformD.save(uD.clidx);
         }
       }
     }
   }
-  globalD.fsversion = WANT_FS;
+
+  if (fsversion == 2) {
+    if (save) {
+      // TBD: if not dead, keep the midpoint
+      // (requires changes to input_resumeD)
+      // if (uD.new_level_flag == 0) platformD.savemidpoint();
+    } else {
+      platformD.erase(globalD.saveslot_class, 0);
+    }
+  }
+  globalD.saveslot_class = -1;
 }
 int
 py_reset()
@@ -10900,13 +10917,10 @@ py_reset()
     DRAWMSG("Game Reset");
     c = inkey();
 
-    if (c == 'd') platformD.erase(globalD.saveslot_class, 0);
-
     switch (c) {
       case 'a':
       case 'd':
-        platform_upgrade(c == 'a');
-        globalD.saveslot_class = -1;
+        save_reset(c == 'a');
         longjmp(restartD, 1);
     }
   } while (!is_ctrl(c));
@@ -14034,14 +14048,12 @@ obj_level_init()
 static int
 platform_setup()
 {
-  fn* func = (void*)&platformD;
-
-  // [0, 1]: are required (pregame, postgame)
   platformD.pregame = platform_pregame;
   platformD.postgame = platform_postgame;
 
-  for (int it = 2; it < sizeof(platformD) / sizeof(fn); ++it) {
-    func[it] = noop;
+  fn* func = (void*)&platformD;
+  for (int it = 0; it < sizeof(platformD) / sizeof(fn); ++it) {
+    if (!func[it]) func[it] = noop;
   }
   msg_widthD = overlay_widthD = 80;
 
@@ -14050,29 +14062,17 @@ platform_setup()
 int
 cache_default()
 {
-  char* filename = SAVENAME;
-  char* path = path_append_filename(savepathD, savepath_usedD, filename);
-  int fsversion = path_exists(path) ? 1 : 2;
-
-  // fsversion can be upgraded on next "archive" selection by the user
-  globalD.fsversion = fsversion;
-  // saveslot for class being played
-  // fs1 -1: single file default name
-  // fs2 -1: no resume class selected
+  globalD.fsversion = 1;
   globalD.saveslot_class = -1;
-  // oh bother; the platform knows the best default
   globalD.zoom_factor = 2;
 }
 int
 main(int argc, char** argv)
 {
-  if (!platformD.pregame) {
-    platform_setup();
-    cache_default();
-    platformD.cache();
-  }
+  platform_setup();
 
   platformD.pregame();
+  if (!platformD.cache()) cache_default();
 
   mon_level_init();
   obj_level_init();
@@ -14154,6 +14154,5 @@ main(int argc, char** argv)
     py_death();
   }
 
-  platformD.postgame();
-  return 0;
+  return platformD.postgame();
 }

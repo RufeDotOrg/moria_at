@@ -1363,8 +1363,6 @@ platform_p2()
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
   if (is_text) rect_innerframe(grect);
-
-  return 0;
 }
 
 int
@@ -1458,8 +1456,6 @@ platform_p0()
       }
     }
   }
-
-  return 1;
 }
 
 int
@@ -1733,18 +1729,17 @@ platform_draw()
     }
   }
 
-  int ret;
   if (mode == 0)
-    ret = platform_p0();
+    platform_p0();
   else
-    ret = platform_p2();
+    platform_p2();
 
   if (text_fnD) text_fnD(mode);
 
   SDL_RenderFlush(renderer);
   render_update();
 
-  return ret;
+  return 1;
 }
 
 char
@@ -2740,7 +2735,6 @@ int
 platform_load(saveslot, external)
 {
   char filename[16] = SAVENAME;
-  globalD.saveslot_class = saveslot;
   filename_by_class(filename, saveslot);
   char *path;
   if (external) {
@@ -2806,9 +2800,7 @@ cache_read()
     SDL_RWclose(readf);
   }
 
-  if (success) {
-    Log("cache from disk.");
-  }
+  return success;
 }
 int
 cache_write()
@@ -2824,8 +2816,8 @@ cache_write()
 int
 phone_focuslost()
 {
+  platform_savemidpoint();
   if (CACHE) cache_write();
-  return platform_savemidpoint();
 }
 
 int
@@ -2860,24 +2852,35 @@ platform_selection(int *yptr, int *xptr)
   *xptr = finger_rowD;
   return modeD == 1;
 }
+int
+cache_init()
+{
+  char *filename = SAVENAME;
+  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  int fsversion = path_exists(path) ? 1 : 2;
 
+  // fsversion can be upgraded on next "archive" selection by the user
+  globalD.fsversion = fsversion;
+  // saveslot for class being played
+  // fs1 -1: single file default name
+  // fs2 -1: no resume class selected
+  globalD.saveslot_class = -1;
+  // TBD: better macOS/linux default?
+  globalD.zoom_factor = 2;
+}
 int
 platform_cache()
 {
-  cache_read();
+  if (!cache_read()) {
+    cache_init();
+  }
   Log("SDL cache is ready: "
       "%d saveslot_class "
-      "%d fsversion",
-      globalD.saveslot_class, globalD.fsversion);
+      "%d fsversion "
+      "%u zoom_factor ",
+      globalD.saveslot_class, globalD.fsversion, globalD.zoom_factor);
 
-  int saveslot_class = globalD.saveslot_class;
-  int ret = 0;
-  if (globalD.fsversion == 1)
-    ret = platform_load(-1, 0);
-  else if (saveslot_class >= 0)
-    ret = platform_load(saveslot_class, 0);
-  Log("platform_cache result %d class %d", ret, globalD.saveslot_class);
-  return ret;
+  return 1;
 }
 
 // Initialization
@@ -3057,7 +3060,7 @@ platform_pregame()
     sdl_pump();
   }
 
-  return 0;
+  return init;
 }
 int
 platform_postgame()
