@@ -14104,5 +14104,5 @@ main(int argc, char** argv)
     py_death();
   }
 
-  return platformD.postgame();
+  return platformD.postgame(1);
 }

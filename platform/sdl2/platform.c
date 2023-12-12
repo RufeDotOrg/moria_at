@@ -2216,7 +2216,7 @@ SDL_Event event;
         platform_draw();
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-    if (ANDROID || __APPLE__) platformD.postgame();
+    if (ANDROID || __APPLE__) platformD.postgame(0);
   }
   return 0;
 }
@@ -3067,14 +3067,15 @@ platform_pregame()
   return init;
 }
 int
-platform_postgame()
+platform_postgame(may_exit)
 {
   platform_savemidpoint();
   if (cachepath_usedD) cache_write();
 
-  // Exit terminates the android activity
-  // otherwise main() may resume with stale memory
-  if (ANDROID) exit(0);
+  // Android closure does not require the process to end.
+  // exit(...) ensures the process terminates.
+  // otherwise main() should handle resume with previous memory contents
+  if (ANDROID && may_exit) exit(0);
 
   return 0;
 }
