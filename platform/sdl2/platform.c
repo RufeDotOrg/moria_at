@@ -2796,19 +2796,6 @@ platform_saveex()
   return count;
 }
 int
-cache_read()
-{
-  SDL_RWops *readf = file_access(cachepathD, "rb");
-  uint32_t success = 0;
-  if (readf) {
-    if (SDL_RWread(readf, &globalD, sizeof(globalD), 1))
-      success = sizeof(globalD);
-    SDL_RWclose(readf);
-  }
-
-  return success;
-}
-int
 cache_write()
 {
   SDL_RWops *writef = file_access(cachepathD, "wb");
@@ -2859,15 +2846,38 @@ platform_selection(int *yptr, int *xptr)
   return modeD == 1;
 }
 int
-platform_cache()
+cache_read()
 {
-  int ret = cache_read();
-  Log("SDL cache is ready: "
-      "%d saveslot_class "
-      "%u zoom_factor ",
-      globalD.saveslot_class, globalD.zoom_factor);
+  uint32_t success = 0;
+  if (CACHE && cachepath_usedD) {
+    SDL_RWops *readf = file_access(cachepathD, "rb");
+    if (readf) {
+      if (SDL_RWread(readf, &globalD, sizeof(globalD), 1))
+        success = sizeof(globalD);
+      SDL_RWclose(readf);
+    }
+  }
 
-  return ret;
+  return success;
+}
+int
+cache_default()
+{
+  // try to be FUN on the platform with defaults
+  if (ANDROID || __APPLE__) globalD.zoom_factor = 2;
+}
+int
+fs_upgrade()
+{
+  // Make a copy of all characters to external storage
+  platformD.saveex();
+
+  // Move default "savechar" into the class slot
+  if (platformD.load(-1, 0)) {
+    if (platformD.save(uD.clidx)) {
+      platformD.erase(-1, 0);
+    }
+  }
 }
 
 // Initialization
@@ -2963,6 +2973,12 @@ platform_pregame()
     if (!render_init()) return 1;
   }
 
+  if (!cache_read()) cache_default();
+  Log("SDL cache is ready: "
+      "%d saveslot_class "
+      "%u zoom_factor ",
+      globalD.saveslot_class, globalD.zoom_factor);
+
   for (int it = 0; it < AL(paletteD); ++it) {
     rgbaD[it] = SDL_MapRGBA(pixel_formatD, U4(paletteD[it]));
   }
@@ -3031,10 +3047,6 @@ platform_pregame()
     platformD.saveex = platform_saveex;
   }
 
-  if (CACHE && cachepath_usedD) {
-    platformD.cache = platform_cache;
-  }
-
   if (WINDOW) {
     SDL_Event event;
     event.window.event = SDL_WINDOWEVENT_RESIZED;
@@ -3045,6 +3057,11 @@ platform_pregame()
 
   while (display_rectD.w == 0) {
     sdl_pump();
+  }
+
+  // Migration code
+  if (RELEASE) {
+    if (platformD.load(-1, 0)) fs_upgrade();
   }
 
   return init;

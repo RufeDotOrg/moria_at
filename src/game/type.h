@@ -300,7 +300,6 @@ struct platformS {
   fn readansi;
   fn selection;
   // i/o
-  fn cache;
   fn save;
   fn erase;
   fn load;
@@ -316,4 +315,6 @@ struct globalS {
   int32_t saveslot_class;
   uint32_t zoom_factor;
 };
+// Global data may be cached to disk
+// Does not mutate on a game reset
 DATA struct globalS globalD;

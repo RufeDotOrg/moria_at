@@ -10935,7 +10935,6 @@ py_menu()
       case 'd':
         // Disable midpoint resume explicitly
         input_resumeD = -1;
-        globalD.saveslot_class = uD.clidx;
         longjmp(restartD, 1);
 
       case 'g':
@@ -14012,36 +14011,17 @@ platform_setup()
   return 0;
 }
 int
-cache_default()
+global_init()
 {
   globalD.saveslot_class = -1;
-  globalD.zoom_factor = 2;
-}
-int
-fs_upgrade()
-{
-  // Make a copy of all characters to external storage
-  platformD.saveex();
-
-  // Move default "savechar" into the class slot
-  if (platformD.load(-1, 0)) {
-    if (platformD.save(uD.clidx)) {
-      platformD.erase(-1, 0);
-      globalD.saveslot_class = uD.clidx;
-    }
-  }
+  globalD.zoom_factor = 0;
 }
 int
 main(int argc, char** argv)
 {
+  global_init();
   platform_setup();
-
   platformD.pregame();
-
-  if (!platformD.cache()) cache_default();
-
-  // Migration code (may mutate cache)
-  if (platformD.load(-1, 0)) fs_upgrade();
 
   mon_level_init();
   obj_level_init();
@@ -14119,7 +14099,6 @@ main(int argc, char** argv)
   }
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) {
-    globalD.saveslot_class = -1;
     inven_reveal();
     py_death();
   }
