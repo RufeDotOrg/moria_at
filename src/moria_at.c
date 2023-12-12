@@ -10597,6 +10597,7 @@ struct summaryS* summary;
 int
 summary_saveslot_deletion(struct summaryS* summary, int saveslot, int external)
 {
+  char* media = external ? "External" : "Internal";
   int line;
   char c;
 
@@ -10609,7 +10610,7 @@ summary_saveslot_deletion(struct summaryS* summary, int saveslot, int external)
       BufMsg(overlay, "a) Alright, delete this character");
       line += 1;
       BufMsg(overlay, "c) Cancel deletion");
-      DRAWMSG("Delete level %d %s?", summary->slevel,
+      DRAWMSG("%s Media Archive: Delete level %d %s?", media, summary->slevel,
               classD[summary->sclass].name);
       c = inkey();
     }
