@@ -2926,6 +2926,10 @@ platform_pregame()
         }
         SDL_free(external);
       }
+
+      // Apple allows user interactions with the external path files
+      memcpy(cachepathD, exportpathD, exportpath_usedD);
+      cachepath_usedD = exportpath_usedD;
     }
 
     if (ANDROID) {
@@ -2945,9 +2949,7 @@ platform_pregame()
         }
         Log("Storage: [state %d] path: %s", state, exportpathD);
       }
-    }
 
-    if (CACHE) {
       char *cache = SDL_GetCachePath(ORGNAME, APPNAME);
       if (cache) {
         Log("Cache path: %s", cache);
@@ -2958,9 +2960,13 @@ platform_pregame()
         }
 
         cachepath_usedD = len;
-        path_append_filename(cachepathD, cachepath_usedD, CACHENAME);
         SDL_free(cache);
       }
+    }
+
+    if (CACHE) {
+      path_append_filename(cachepathD, cachepath_usedD, CACHENAME);
+      Log("Game cache enabled: %s", cachepathD);
     }
 
     if (!render_init()) return 1;
