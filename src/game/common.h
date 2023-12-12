@@ -47,6 +47,8 @@ typedef int (*fn)();
 #define AS(arr, id) arr[(id) % AL(arr)]
 // Array End
 #define AE(arr) (arr + sizeof(arr))
+// String length
+#define SL(str) (AL(str)-1)
 
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 #define CLAMP(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))

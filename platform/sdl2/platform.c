@@ -28,7 +28,6 @@ int SDL_AndroidGetExternalStorageState();
 char *SDL_AndroidGetExternalStoragePath();
 #endif
 
-enum { CACHE = 1 };
 enum { UITEST = 0 };
 
 #if defined(ANDROID) || defined(__APPLE__)
@@ -2800,7 +2799,7 @@ cache_write()
   SDL_RWops *writef = file_access(cachepathD, "wb");
   if (writef) {
     int ret = SDL_RWwrite(writef, &globalD, sizeof(globalD), 1);
-    Log("cache write ret %d", ret);
+    Log("cache_write: %d", ret);
     SDL_RWclose(writef);
   }
   return writef != 0;
@@ -2842,7 +2841,7 @@ int
 cache_read()
 {
   uint32_t success = 0;
-  if (CACHE && cachepath_usedD) {
+  if (cachepath_usedD) {
     SDL_RWops *readf = file_access(cachepathD, "rb");
     if (readf) {
       if (SDL_RWread(readf, &globalD, sizeof(globalD), 1))
@@ -2947,12 +2946,12 @@ platform_pregame()
         } else {
           exportpath_usedD = len;
         }
-        Log("Storage: [state %d] path: %s", state, exportpathD);
+        Log("storage: [state %d] exportpath: %s", state, exportpathD);
       }
 
       char *cache = SDL_GetCachePath(ORGNAME, APPNAME);
       if (cache) {
-        Log("Cache path: %s", cache);
+        Log("SDL_GetCachePath: %s", cache);
         int len = snprintf(cachepathD, AL(cachepathD), "%s", cache);
         if (len <= 0 || len >= AL(cachepathD)) {
           cachepathD[0] = 0;
@@ -2964,8 +2963,9 @@ platform_pregame()
       }
     }
 
-    if (CACHE) {
+    if (SL(CACHENAME)) {
       path_append_filename(cachepathD, cachepath_usedD, CACHENAME);
+      cachepath_usedD += SL(CACHENAME);
       Log("Game cache enabled: %s", cachepathD);
     }
 
@@ -2973,9 +2973,9 @@ platform_pregame()
   }
 
   if (!cache_read()) cache_default();
-  Log("SDL cache is ready: "
-      "%d saveslot_class "
-      "%u zoom_factor ",
+  Log("SDL global\n"
+      " %d saveslot_class\n"
+      " %u zoom_factor\n",
       globalD.saveslot_class, globalD.zoom_factor);
 
   for (int it = 0; it < AL(paletteD); ++it) {
@@ -3069,7 +3069,7 @@ int
 platform_postgame()
 {
   platform_savemidpoint();
-  if (CACHE) cache_write();
+  if (cachepath_usedD) cache_write();
 
   // Exit terminates the android activity
   // otherwise main() may resume with stale memory
