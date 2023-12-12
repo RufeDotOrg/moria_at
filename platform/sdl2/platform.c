@@ -2476,6 +2476,7 @@ fingerdown_xy_mode(x, y, mode)
     if (touch == TOUCH_RB) return ESCAPE;
     if (touch == TOUCH_STAT) return 'C';
     if (touch == TOUCH_HISTORY) return CTRL('p');
+    if (touch) return ' ';
   }
 
   return 0;
