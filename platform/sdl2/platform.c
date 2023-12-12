@@ -85,7 +85,6 @@ enum { AFF_Y = AL(active_affectD) / AFF_X };
 // TBD: clean-up
 int los();
 int SDL_GetWindowSafeRect();
-int phone_focuslost();
 
 int
 char_visible(char c)
@@ -2218,7 +2217,7 @@ SDL_Event event;
         platform_draw();
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-    if (ANDROID || __APPLE__) phone_focuslost();
+    if (ANDROID || __APPLE__) platformD.postgame();
   }
   return 0;
 }
@@ -2806,12 +2805,6 @@ cache_write()
   }
   return writef != 0;
 }
-int
-phone_focuslost()
-{
-  platform_savemidpoint();
-  if (CACHE) cache_write();
-}
 
 int
 path_copy_to(char *srcpath, char *dstpath)
@@ -3069,6 +3062,7 @@ platform_pregame()
 int
 platform_postgame()
 {
+  platform_savemidpoint();
   if (CACHE) cache_write();
 
   // Exit terminates the android activity
