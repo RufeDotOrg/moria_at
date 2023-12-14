@@ -3060,9 +3060,7 @@ platform_pregame()
   }
 
   // Migration code
-  if (RELEASE) {
-    if (platformD.load(-1, 0)) fs_upgrade();
-  }
+  if (platformD.load(-1, 0)) fs_upgrade();
 
   return init;
 }
