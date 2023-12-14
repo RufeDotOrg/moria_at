@@ -13744,25 +13744,16 @@ dungeon()
               iidx = inven_choice("Invoke which staff?", "*");
               if (iidx >= 0) inven_try_staff(iidx, &y, &x);
               break;
+            case CTRL('x'):
+              platformD.savemidpoint();
+              // fallthru
             case CTRL('c'):
-              if (!RELEASE) {
-                memcpy(death_descD, AP(quit_stringD));
-                uD.new_level_flag = NL_DEATH;
-                return;  // Interrupt game
-              }
-              break;
+              memcpy(death_descD, AP(quit_stringD));
+              uD.new_level_flag = NL_DEATH;
+              return;  // Interrupt game
             case CTRL('p'): {
               show_history();
             } break;
-            case CTRL('x'):
-              if (!RELEASE) {
-                if (platformD.savemidpoint()) {
-                  memcpy(death_descD, AP(quit_stringD));
-                  uD.new_level_flag = NL_DEATH;
-                  return;  // Interrupt game
-                }
-              }
-              break;
             default:
               break;
           }
