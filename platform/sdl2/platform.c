@@ -22,6 +22,7 @@ int SDL_AndroidGetExternalStorageState();
 char* SDL_AndroidGetExternalStoragePath();
 #endif
 
+enum { FONT = 1 };
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
@@ -1372,10 +1373,13 @@ platform_pregame()
     rgbaD[it] = SDL_MapRGBA(pixel_formatD, U4(paletteD[it]));
   }
 
+  if (FONT && init) {
+    if (!font_load() || !font_init()) return 2;
+  }
+
   if (init) {
     USE(renderer);
     USE(texture_format);
-    if (!font_load() || !font_init(&fontD)) return 2;
     portraitD =
         SDL_CreateTexture(renderer, texture_format, SDL_TEXTUREACCESS_TARGET,
                           PORTRAIT_X, PORTRAIT_Y);

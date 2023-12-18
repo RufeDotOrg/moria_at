@@ -53,7 +53,7 @@ font_load()
 }
 
 STATIC int
-font_init(struct fontS* font)
+font_init()
 {
   struct SDL_Renderer* renderer = rendererD;
   uint32_t format = texture_formatD;
@@ -65,22 +65,22 @@ font_init(struct fontS* font)
     if (fontD.bitmap[it]) fontD.bitmap[it] = 15;
   }
 
-  int16_t width = font->max_pixel_width;
-  int16_t height = font->max_pixel_height;
+  int16_t width = fontD.max_pixel_width;
+  int16_t height = fontD.max_pixel_height;
 
   struct SDL_Surface* surface =
       SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, width, height, 0, format);
   for (int i = START_GLYPH; i < END_GLYPH; ++i) {
     uint64_t glyph_index = i - START_GLYPH;
     memset(surface->pixels, 0, surface->h * surface->pitch);
-    if (glyph_index < AL(font->glyph)) {
-      struct glyphS* glyph = &font->glyph[glyph_index];
+    if (glyph_index < AL(fontD.glyph)) {
+      struct glyphS* glyph = &fontD.glyph[glyph_index];
       int ph, pw, oy, ox;
       ph = glyph->pixel_height;
       pw = glyph->pixel_width;
       oy = glyph->offset_y;
-      ox = glyph->offset_x + font->left_adjustment;
-      bitmap_yx_into_surface(&font->bitmap[glyph->bitmap_offset], ph, pw,
+      ox = glyph->offset_x + fontD.left_adjustment;
+      bitmap_yx_into_surface(&fontD.bitmap[glyph->bitmap_offset], ph, pw,
                              (SDL_Point){ox, oy}, surface);
       // Glyph BlendMode is SDL_BLENDMODE_BLEND
       font_textureD[glyph_index] =
