@@ -93,6 +93,7 @@ char_visible(char c)
 }
 // render.c
 DATA struct SDL_Window *windowD;
+DATA int refresh_rateD;
 DATA SDL_Rect display_rectD;
 DATA SDL_Rect safe_rectD;
 DATA struct SDL_Renderer *rendererD;
@@ -167,11 +168,18 @@ render_init()
   windowD = SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y, winflag);
   if (!windowD) return 0;
 
+  int use_display = SDL_GetWindowDisplayIndex(windowD);
   int num_display = SDL_GetNumVideoDisplays();
   for (int it = 0; it < num_display; ++it) {
     SDL_Rect r;
     SDL_GetDisplayBounds(it, &r);
     Log("%d Display) %d %d %d %d\n", it, r.x, r.y, r.w, r.h);
+    if (it == use_display) {
+      SDL_DisplayMode mode;
+      SDL_GetCurrentDisplayMode(it, &mode);
+      Log(" -> Refresh Rate %d\n", mode.refresh_rate);
+      refresh_rateD = mode.refresh_rate;
+    }
   }
 
   int num_driver = SDL_GetNumRenderDrivers();
@@ -203,6 +211,7 @@ render_init()
       "\n",
       rinfo.name, rinfo.flags, rinfo.max_texture_width,
       rinfo.max_texture_height);
+  Log("vsync %d", (rinfo.flags & SDL_RENDERER_PRESENTVSYNC) != 0);
 
   max_texture_widthD = rinfo.max_texture_width;
   max_texture_heightD = rinfo.max_texture_height;
