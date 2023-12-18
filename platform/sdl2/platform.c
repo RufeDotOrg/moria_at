@@ -34,6 +34,7 @@ enum { MOUSE = TOUCH };
 #endif
 
 enum { SDL_EVLOG = 0 };
+enum { SDL_VERBOSE = 0 };
 enum { BATCHING = 1 };
 enum { REORIENTATION = 1 };
 #define ORIENTATION_LIST \
@@ -1238,7 +1239,7 @@ platform_pregame()
   init = !SDL_WasInit(SDL_SCOPE);
   if (init) {
     if (!RELEASE) Log("Initializing development build");
-    if (!RELEASE) SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
+    if (SDL_VERBOSE) SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
     // SDL config
     if (SDL_EVLOG) SDL_SetHint(SDL_HINT_EVENT_LOGGING, "1");
