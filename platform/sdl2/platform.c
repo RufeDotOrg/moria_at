@@ -57,16 +57,6 @@ enum { LANDSCAPE = 0 };
 // Custom platform code is may be included after the game based on this define
 // Custom code may depend on game logic AND platform specifics
 #define CUSTOM_SETUP 1
-enum { PADSIZE = (26 + 2) * 16 };
-enum { AFF_X = 3 };
-enum { AFF_Y = AL(active_affectD) / AFF_X };
-#define P(p) p.x, p.y
-#define RF(r, framing)                                                    \
-  (SDL_Rect)                                                              \
-  {                                                                       \
-    .x = r.x - (framing), .y = r.y - (framing), .w = r.w + 2 * (framing), \
-    .h = r.h + 2 * (framing),                                             \
-  }
 // Color
 #define C(c) c.r, c.g, c.b, c.a
 #define C3(c) c.r, c.g, c.b
@@ -311,22 +301,6 @@ enum {
 };
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
-
-//  cos of (it * M_PI / 4);
-DATA float cos_table[] = {1.000,  0.707,  0.000,  -0.707,
-                          -1.000, -0.707, -0.000, 0.707};
-static float
-cos_lookup(idx)
-{
-  return cos_table[idx];
-}
-static float
-sin_lookup(idx)
-{
-  idx += 6;
-  idx %= AL(cos_table);
-  return cos_table[idx];
-}
 
 char
 sym_shift(char c)

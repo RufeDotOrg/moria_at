@@ -6,6 +6,18 @@
 
 enum { UITEST = 0 };
 
+enum { PADSIZE = (26 + 2) * 16 };
+enum { AFF_X = 3 };
+enum { AFF_Y = AL(active_affectD) / AFF_X };
+
+#define P(p) p.x, p.y
+#define RF(r, framing)                                                    \
+  (SDL_Rect)                                                              \
+  {                                                                       \
+    .x = r.x - (framing), .y = r.y - (framing), .w = r.w + 2 * (framing), \
+    .h = r.h + 2 * (framing),                                             \
+  }
+
 // art.c
 #define MAX_ART 279
 DATA uint8_t artD[96 * 1024];
@@ -210,6 +222,21 @@ ui_init()
   return icon != 0;
 }
 
+//  cos of (it * M_PI / 4);
+DATA float cos_table[] = {1.000,  0.707,  0.000,  -0.707,
+                          -1.000, -0.707, -0.000, 0.707};
+static float
+cos_lookup(idx)
+{
+  return cos_table[idx];
+}
+static float
+sin_lookup(idx)
+{
+  idx += 6;
+  idx %= AL(cos_table);
+  return cos_table[idx];
+}
 static int
 input_init()
 {
