@@ -809,7 +809,7 @@ SDL_Rect* zoom_prect;
       if (srct) {
         srcr = &sprite_src;
       } else {
-        srct = texture_by_sym(sym);
+        srct = font_texture_by_char(sym);
       }
 
       SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));

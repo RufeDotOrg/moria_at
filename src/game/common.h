@@ -67,6 +67,7 @@ typedef int (*fn)();
 #ifndef DATA
 #define DATA
 #endif
+#define STATIC static
 
 // game data section for determinism verification
 #ifdef __APPLE__
