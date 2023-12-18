@@ -58,8 +58,6 @@ enum { LANDSCAPE = 0 };
 // Custom code may depend on game logic AND platform specifics
 #define CUSTOM_SETUP 1
 // Color
-#define C(c) c.r, c.g, c.b, c.a
-#define C3(c) c.r, c.g, c.b
 #define U4(i) \
   (i & 0xff), ((i >> 8) & 0xff), ((i >> 16) & 0xff), ((i >> 24) & 0xff)
 

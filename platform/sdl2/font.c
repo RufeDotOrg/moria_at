@@ -40,6 +40,7 @@ struct fontS {
 };
 DATA struct fontS fontD;
 DATA struct SDL_Texture* font_textureD[MAX_GLYPH];
+DATA int font_scaleD = 1;
 
 STATIC int
 font_load()
@@ -101,7 +102,7 @@ STATIC void
 font_color(SDL_Color c)
 {
   for (int it = 0; it < AL(font_textureD); ++it) {
-    SDL_SetTextureColorMod(font_textureD[it], C3(c));
+    SDL_SetTextureColorMod(font_textureD[it], c.r, c.g, c.b);
   }
 }
 
@@ -109,11 +110,12 @@ STATIC void
 render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
                        const char* string, int len, SDL_Point origin)
 {
+  USE(font_scale);
   SDL_Rect target_rect = {
       .x = origin.x,
       .y = origin.y,
-      .w = FWIDTH,
-      .h = FHEIGHT,
+      .w = FWIDTH * font_scale,
+      .h = FHEIGHT * font_scale,
   };
 
   for (int it = 0; it < len; ++it) {
@@ -123,7 +125,7 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
       struct SDL_Texture* texture = font_textureD[glyph_index];
       SDL_RenderCopy(renderer, texture, NULL, &target_rect);
     }
-    target_rect.x += FWIDTH;
+    target_rect.x += FWIDTH * font_scale;
   }
 }
 
