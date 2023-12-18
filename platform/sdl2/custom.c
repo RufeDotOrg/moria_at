@@ -237,6 +237,19 @@ sin_lookup(idx)
   idx %= AL(cos_table);
   return cos_table[idx];
 }
+static void surface_ppfill(surface) SDL_Surface* surface;
+{
+  uint8_t bpp = surface->format->BytesPerPixel;
+  uint8_t* pixels = surface->pixels;
+  for (int64_t row = 0; row < surface->h; ++row) {
+    uint8_t* dst = pixels + (surface->pitch * row);
+    for (int64_t col = 0; col < surface->w; ++col) {
+      memcpy(dst, &rgbaD[nearest_pp(row, col)], bpp);
+      dst += bpp;
+    }
+  }
+}
+
 static int
 input_init()
 {
@@ -1522,6 +1535,8 @@ custom_orientation(orientation)
     overlay_heightD = AL(overlayD) + 2;
     msg_widthD = 92;
     landscape_layout();
+  } else {
+    text_fnD = 0;
   }
   return 0;
 }

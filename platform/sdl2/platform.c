@@ -285,7 +285,84 @@ bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t bitmap_size)
 
 #include "font.c"
 
-// Texture
+STATIC void
+display_resize(int dw, int dh)
+{
+  Log("display_resize %dx%d", dw, dh);
+  display_rectD.w = dw;
+  display_rectD.h = dh;
+
+  // TBD: Review game utilization of viewport
+  // Disabled the push event in SDL that occurs on another thread
+  SDL_RenderSetViewport(rendererD, &(SDL_Rect){0, 0, dw, dh});
+}
+
+STATIC int
+orientation_update()
+{
+  USE(display_rect);
+  int orientation = display_rect.w > display_rect.h ? SDL_ORIENTATION_LANDSCAPE
+                                                    : SDL_ORIENTATION_PORTRAIT;
+  if (LANDSCAPE) orientation = SDL_ORIENTATION_LANDSCAPE;
+  if (PORTRAIT) orientation = SDL_ORIENTATION_PORTRAIT;
+
+  USE(layout_rect);
+  USE(safe_rect);
+  float scale = 1.f;
+  if (orientation == SDL_ORIENTATION_LANDSCAPE) {
+    layoutD = landscapeD;
+    layout_rect = (SDL_Rect){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
+
+    {
+      // safe_rect is respected on the orientation axis
+      float fw = safe_rect.w ? safe_rect.w : display_rect.w;
+      float fh = display_rect.h;
+      float xscale = fw / layout_rect.w;
+      float yscale = fh / layout_rect.h;
+      scale = MIN(xscale, yscale);
+      Log("orientation %d %.03f %.03f %d %d sw dh", orientation, xscale, yscale,
+          safe_rect.w, display_rect.h);
+    }
+  } else if (orientation == SDL_ORIENTATION_PORTRAIT) {
+    layoutD = portraitD;
+    layout_rect = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
+
+    {
+      // safe_rect is respected on the orientation axis
+      float fw = display_rect.w;
+      float fh = safe_rect.h ? safe_rect.h : display_rect.h;
+      float xscale = fw / layout_rect.w;
+      float yscale = fh / layout_rect.h;
+      scale = MIN(xscale, yscale);
+      Log("orientation %d %.03f %.03f %d %d dw sh", orientation, xscale, yscale,
+          display_rect.w, safe_rect.h);
+    }
+  } else {
+    layoutD = 0;
+    layout_rect = display_rectD;
+  }
+  layout_rectD = layout_rect;
+
+  // Note tension: center of display vs. center of safe area
+  //   affects visual aesthetic
+  //   affects input positioning for touch
+  SDL_Rect ar_rect = {0, 0, layout_rect.w * scale, layout_rect.h * scale};
+  ar_rect.x = (display_rect.w - ar_rect.w) / 2;
+  ar_rect.y = MAX(safe_rect.y, (display_rect.h - ar_rect.h) / 2);
+
+  float xuse = (float)ar_rect.w / display_rect.w;
+  float yuse = (float)ar_rect.h / display_rect.h;
+  float xpad = (float)ar_rect.x / display_rect.w;
+  float ypad = (float)ar_rect.y / display_rect.h;
+
+  Log("orientation %d scale %f: %.03f %.03f xuse yuse %.03f %.03f xpad ypad",
+      orientation, scale, xuse, yuse, xpad, ypad);
+  SDL_FRect view = {xpad, ypad, xuse, yuse};
+  view_rectD = view;
+
+  return customD.orientation(orientation);
+}
+
 enum {
   TOUCH_NONE,
   TOUCH_HISTORY,
@@ -404,98 +481,6 @@ nearest_pp(y, x)
     }
   }
   return r;
-}
-
-static void surface_ppfill(surface) SDL_Surface* surface;
-{
-  uint8_t bpp = surface->format->BytesPerPixel;
-  uint8_t* pixels = surface->pixels;
-  for (int64_t row = 0; row < surface->h; ++row) {
-    uint8_t* dst = pixels + (surface->pitch * row);
-    for (int64_t col = 0; col < surface->w; ++col) {
-      memcpy(dst, &rgbaD[nearest_pp(row, col)], bpp);
-      dst += bpp;
-    }
-  }
-}
-
-static void
-display_resize(int dw, int dh)
-{
-  Log("display_resize %dx%d", dw, dh);
-  display_rectD.w = dw;
-  display_rectD.h = dh;
-
-  // TBD: Review game utilization of viewport
-  // Disabled the push event in SDL that occurs on another thread
-  SDL_RenderSetViewport(rendererD, &(SDL_Rect){0, 0, dw, dh});
-}
-
-static int
-orientation_update()
-{
-  USE(display_rect);
-  int orientation = display_rect.w > display_rect.h ? SDL_ORIENTATION_LANDSCAPE
-                                                    : SDL_ORIENTATION_PORTRAIT;
-  if (LANDSCAPE) orientation = SDL_ORIENTATION_LANDSCAPE;
-  if (PORTRAIT) orientation = SDL_ORIENTATION_PORTRAIT;
-
-  USE(layout_rect);
-  USE(safe_rect);
-  float scale = 1.f;
-  if (orientation == SDL_ORIENTATION_LANDSCAPE) {
-    layoutD = landscapeD;
-    layout_rect = (SDL_Rect){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
-
-    {
-      // safe_rect is respected on the orientation axis
-      float fw = safe_rect.w ? safe_rect.w : display_rect.w;
-      float fh = display_rect.h;
-      float xscale = fw / layout_rect.w;
-      float yscale = fh / layout_rect.h;
-      scale = MIN(xscale, yscale);
-      Log("orientation %d %.03f %.03f %d %d sw dh", orientation, xscale, yscale,
-          safe_rect.w, display_rect.h);
-    }
-  } else if (orientation == SDL_ORIENTATION_PORTRAIT) {
-    layoutD = portraitD;
-    layout_rect = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
-
-    {
-      // safe_rect is respected on the orientation axis
-      float fw = display_rect.w;
-      float fh = safe_rect.h ? safe_rect.h : display_rect.h;
-      float xscale = fw / layout_rect.w;
-      float yscale = fh / layout_rect.h;
-      scale = MIN(xscale, yscale);
-      Log("orientation %d %.03f %.03f %d %d dw sh", orientation, xscale, yscale,
-          display_rect.w, safe_rect.h);
-    }
-  } else {
-    layoutD = 0;
-    text_fnD = 0;
-    layout_rect = display_rectD;
-  }
-  layout_rectD = layout_rect;
-
-  // Note tension: center of display vs. center of safe area
-  //   affects visual aesthetic
-  //   affects input positioning for touch
-  SDL_Rect ar_rect = {0, 0, layout_rect.w * scale, layout_rect.h * scale};
-  ar_rect.x = (display_rect.w - ar_rect.w) / 2;
-  ar_rect.y = MAX(safe_rect.y, (display_rect.h - ar_rect.h) / 2);
-
-  float xuse = (float)ar_rect.w / display_rect.w;
-  float yuse = (float)ar_rect.h / display_rect.h;
-  float xpad = (float)ar_rect.x / display_rect.w;
-  float ypad = (float)ar_rect.y / display_rect.h;
-
-  Log("orientation %d scale %f: %.03f %.03f xuse yuse %.03f %.03f xpad ypad",
-      orientation, scale, xuse, yuse, xpad, ypad);
-  SDL_FRect view = {xpad, ypad, xuse, yuse};
-  view_rectD = view;
-
-  return customD.orientation(orientation);
 }
 
 char*
