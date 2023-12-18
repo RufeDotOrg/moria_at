@@ -14097,3 +14097,7 @@ main(int argc, char** argv)
 
   return platformD.postgame(1);
 }
+
+#ifdef CUSTOM_SETUP
+#include "platform/custom.c"
+#endif

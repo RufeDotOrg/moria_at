@@ -1,6 +1,177 @@
 
 #define SAVENAME "savechar"
 
+// art.c
+#define MAX_ART 279
+DATA uint8_t artD[96 * 1024];
+DATA uint64_t art_usedD;
+DATA uint32_t art_textureD[MAX_ART];
+int
+art_io()
+{
+  int rc;
+  void *bytes = &artD;
+  unsigned long size = AL(artD);
+  unsigned long zsize = sizeof(artZ);
+  rc = puff(bytes, &size, artZ, &zsize);
+  art_usedD = size;
+  return rc == 0;
+}
+
+static SDL_Point
+point_by_spriteid(sprite_idD)
+{
+  int col = sprite_idD % SPRITE_SQ;
+  int row = sprite_idD / SPRITE_SQ;
+  return (SDL_Point){
+      col * ART_W,
+      row * ART_H,
+  };
+}
+
+int
+art_init()
+{
+  uint8_t bitmap[ART_H][ART_W];
+  uint64_t art_size = (ART_W * ART_H / 8);
+  int byte_count = art_usedD;
+  uint64_t byte_used = 0;
+  for (int it = 0; it < AL(art_textureD); ++it) {
+    int offset = byte_used;
+    byte_used += art_size;
+    if (byte_used > byte_count) break;
+
+    bitfield_to_bitmap(&artD[offset], &bitmap[0][0], ART_W * ART_H);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
+                           point_by_spriteid(sprite_idD), spriteD);
+    art_textureD[it] = sprite_idD++;
+  }
+
+  Log("art_init result %d", byte_used <= byte_count);
+
+  return byte_used <= byte_count;
+}
+
+// treasure
+#define MAX_TART 53
+DATA uint8_t tartD[16 * 1024];
+DATA uint64_t tart_usedD;
+DATA uint32_t tart_textureD[MAX_TART];
+int
+tart_io()
+{
+  int rc;
+  void *bytes = &tartD;
+  unsigned long size = AL(tartD);
+  unsigned long zsize = sizeof(treasureZ);
+  rc = puff(bytes, &size, treasureZ, &zsize);
+  tart_usedD = size;
+  return rc == 0;
+}
+
+int
+tart_init()
+{
+  uint8_t bitmap[ART_H][ART_W];
+  uint64_t art_size = (ART_W * ART_H / 8);
+  int byte_count = tart_usedD;
+  uint64_t byte_used = 0;
+  for (int it = 0; it < AL(tart_textureD); ++it) {
+    int offset = byte_used;
+    byte_used += art_size;
+    if (byte_used > byte_count) break;
+
+    bitfield_to_bitmap(&tartD[offset], &bitmap[0][0], ART_W * ART_H);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
+                           point_by_spriteid(sprite_idD), spriteD);
+    tart_textureD[it] = sprite_idD++;
+  }
+
+  Log("tart_init result %d", byte_used <= byte_count);
+
+  return byte_used <= byte_count;
+}
+
+// wall
+#define MAX_WART 6
+DATA uint8_t wartD[4 * 1024];
+DATA uint64_t wart_usedD;
+DATA uint32_t wart_textureD[MAX_WART];
+int
+wart_io()
+{
+  int rc;
+  void *bytes = &wartD;
+  unsigned long size = AL(wartD);
+  unsigned long zsize = sizeof(wallZ);
+  rc = puff(bytes, &size, wallZ, &zsize);
+  wart_usedD = size;
+  return rc == 0;
+}
+
+int
+wart_init()
+{
+  uint8_t bitmap[ART_H][ART_W];
+  uint64_t art_size = (ART_W * ART_H / 8);
+  int byte_count = wart_usedD;
+  uint64_t byte_used = 0;
+  for (int it = 0; it < AL(wart_textureD); ++it) {
+    int offset = byte_used;
+    byte_used += art_size;
+    if (byte_used > byte_count) break;
+
+    bitfield_to_bitmap(&wartD[offset], &bitmap[0][0], ART_W * ART_H);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
+                           point_by_spriteid(sprite_idD), spriteD);
+    wart_textureD[it] = sprite_idD++;
+  }
+
+  Log("wart_init result %d", byte_used <= byte_count);
+
+  return byte_used <= byte_count;
+}
+
+// player
+#define MAX_PART 13
+DATA uint8_t partD[4 * 1024];
+DATA uint64_t part_usedD;
+DATA uint32_t part_textureD[MAX_PART];
+int
+part_io()
+{
+  int rc;
+  void *bytes = &partD;
+  unsigned long size = AL(partD);
+  unsigned long zsize = sizeof(playerZ);
+  rc = puff(bytes, &size, playerZ, &zsize);
+  part_usedD = size;
+  return rc == 0;
+}
+
+int
+part_init()
+{
+  uint8_t bitmap[ART_H][ART_W];
+  uint64_t art_size = (ART_W * ART_H / 8);
+  int byte_count = part_usedD;
+  uint64_t byte_used = 0;
+  for (int it = 0; it < AL(part_textureD); ++it) {
+    int offset = byte_used;
+    byte_used += art_size;
+    if (byte_used > byte_count) break;
+
+    bitfield_to_bitmap(&partD[offset], &bitmap[0][0], ART_W * ART_H);
+    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
+                           point_by_spriteid(sprite_idD), spriteD);
+    part_textureD[it] = sprite_idD++;
+  }
+
+  Log("part_init result %d", byte_used <= byte_count);
+
+  return byte_used <= byte_count;
+}
+
 int
 ui_init()
 {
@@ -251,15 +422,726 @@ landscape_layout()
   return 0;
 }
 
+// Text Drawing
+static int
+rect_altfill(r)
+SDL_Rect r;
+{
+  int rx = r.x;
+  int ry = r.y;
+  int rh = r.h;
+  int rw = r.w;
+  uint32_t rc[] = {
+      lightingD[1],
+      lightingD[2],
+  };
+  for (int row = 0; row * FHEIGHT < rh; ++row) {
+    int color = rc[row % 2];
+    SDL_SetRenderDrawColor(rendererD, U4(color));
+    SDL_Rect target = {
+        rx,
+        ry + row * FHEIGHT,
+        rw,
+        FHEIGHT,
+    };
+    SDL_RenderFillRect(rendererD, &target);
+  }
+
+  return 0;
+}
+void rect_innerframe(r) SDL_Rect r;
+{
+  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
+  SDL_RenderDrawRect(rendererD, &r);
+  SDL_RenderDrawRect(rendererD, &RF(r, -1));
+  SDL_RenderDrawRect(rendererD, &RF(r, -3));
+}
+void rect_frame(r, scale) SDL_Rect r;
+{
+  int i = scale * 3;
+  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
+  SDL_RenderDrawRect(rendererD, &RF(r, i));
+  SDL_RenderDrawRect(rendererD, &RF(r, i + 1));
+  SDL_RenderDrawRect(rendererD, &RF(r, i + 3));
+}
+int
+vitalstat_text()
+{
+  char tmp[80];
+  int len = 0;
+  AUSE(grect, GR_STAT);
+
+  if (uD.lev) {
+    rect_altfill(grect);
+    if (uD.ridx < AL(raceD) && uD.clidx < AL(classD)) {
+      int it = 0;
+      len = snprintf(tmp, AL(tmp), "%s %s", raceD[uD.ridx].name,
+                     classD[uD.clidx].name);
+      SDL_Point p = {grect.x + grect.w / 2 - (len * FWIDTH) / 2,
+                     grect.y + it * FHEIGHT + 1};
+      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
+    }
+    for (int it = 0; it < MAX_A; ++it) {
+      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
+                     vitalD[it], stat_abbrD[it], vital_statD[it]);
+      SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
+      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
+    }
+    {
+      int it = MAX_A;
+      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
+      SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
+      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
+    }
+
+    char *affstr[AFF_X];
+    for (int it = 0; it < AFF_Y; ++it) {
+      for (int jt = 0; jt < AL(affstr); ++jt) {
+        int idx = AL(affstr) * it + jt;
+        if (UITEST) {
+          affstr[jt] = affectD[idx][0];
+        } else if (active_affectD[idx])
+          affstr[jt] = affectD[idx][active_affectD[idx] - 1];
+        else
+          affstr[jt] = "";
+      }
+
+      len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
+                     affstr[1], affstr[2]);
+      SDL_Point p = {
+          grect.x + FWIDTH / 2,
+          grect.y + AL(vital_nameD) * FHEIGHT + it * FHEIGHT,
+      };
+      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
+    }
+
+    rect_innerframe(grect);
+  }
+  return 0;
+}
+int
+common_text()
+{
+  USE(layout_rect);
+  USE(renderer);
+  char tmp[80];
+  int len;
+  {
+    AUSE(grect, GR_VERSION);
+    SDL_Point p = {grect.x, grect.y};
+    render_monofont_string(renderer, &fontD, "moria", AL("moria"), p);
+    p.y += FHEIGHT;
+    render_monofont_string(renderer, &fontD, "version", AL("version"), p);
+    p.y += FHEIGHT;
+    render_monofont_string(renderer, &fontD, versionD + 10, AL(versionD) - 11,
+                           p);
+  }
+
+  {
+    AUSE(grect, GR_MINIMAP);
+    {
+      SDL_Point p = {grect.x + grect.w / 2, grect.y - FHEIGHT - 24};
+      len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
+      p.x -= (len * FWIDTH) / 2;
+      render_monofont_string(renderer, &fontD, tmp, len, p);
+    }
+
+    {
+      SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h + 24};
+      len = snprintf(tmp, AL(tmp), "%s", dun_descD);
+      p.x -= (len * FWIDTH) / 2;
+      render_monofont_string(renderer, &fontD, tmp, len, p);
+    }
+  }
+
+  if (TOUCH) {
+    if (msg_moreD || UITEST) {
+      static int tapD;
+      tapD = (tapD + 1) % 4;
+      switch (tapD) {
+        case 0:
+          font_color(*color_by_palette(RED));
+          break;
+        case 1:
+          font_color(*color_by_palette(GREEN));
+          break;
+        case 2:
+          font_color(*color_by_palette(BLUE));
+          break;
+        case 3:
+          font_color(*color_by_palette(WHITE));
+          break;
+      }
+
+      AUSE(grect, GR_PAD);
+      SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h / 2};
+      p.x -= STRLEN_MORE * FWIDTH / 2;
+      p.y -= FHEIGHT / 2;
+      render_monofont_string(renderer, &fontD, AP(moreD), p);
+      font_color(whiteD);
+    }
+  }
+  return 0;
+}
+int
+portrait_text(mode)
+{
+  USE(renderer);
+  USE(msg_more);
+
+  if (mode == 0) {
+    AUSE(grect, GR_GAMEPLAY);
+    char *msg = AS(msg_cqD, msg_writeD);
+    int msg_used = AS(msglen_cqD, msg_writeD);
+    int alpha = 255;
+
+    SDL_Point p = {
+        grect.x + FWIDTH / 2,
+        grect.y + FHEIGHT / 2,
+    };
+
+    // Gameplay shows previous message to help the player out
+    if (!msg_used) {
+      msg = AS(msg_cqD, msg_writeD - 1);
+      msg_used = AS(msglen_cqD, msg_writeD - 1);
+      alpha = 150;
+    }
+
+    if (UITEST) {
+      SDL_Rect msg_target = {p.x, p.y, msg_widthD * FWIDTH,
+                             FHEIGHT + FHEIGHT / 8};
+      SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+      SDL_RenderFillRect(renderer, &msg_target);
+    }
+
+    if (msg_used) {
+      SDL_Rect fill = {p.x, p.y, msg_used * FWIDTH, FHEIGHT + FHEIGHT / 8};
+      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+      SDL_RenderFillRect(renderer, &fill);
+
+      font_texture_alphamod(alpha);
+      render_monofont_string(renderer, &fontD, msg, msg_used, p);
+      font_texture_alphamod(255);
+    }
+
+    if (msg_more || UITEST) {
+      SDL_Rect r = {
+          grect.x + grect.w - STRLEN_MORE * FWIDTH - FWIDTH / 2,
+          grect.y + grect.h - FHEIGHT - FHEIGHT / 2,
+          STRLEN_MORE * FWIDTH,
+          FHEIGHT + FHEIGHT / 8,
+      };
+      SDL_Rect r2 = {
+          grect.x + FWIDTH / 2,
+          grect.y + grect.h - FHEIGHT - FHEIGHT / 2,
+          STRLEN_MORE * FWIDTH,
+          FHEIGHT + FHEIGHT / 8,
+      };
+      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+      SDL_RenderFillRect(renderer, &r);
+      SDL_RenderFillRect(renderer, &r2);
+      render_monofont_string(rendererD, &fontD, AP(moreD),
+                             (SDL_Point){r.x, r.y});
+      render_monofont_string(rendererD, &fontD, AP(moreD),
+                             (SDL_Point){r2.x, r2.y});
+    }
+
+    common_text();
+  }
+
+  return 0;
+}
+int
+landscape_text(mode)
+{
+  USE(msg_more);
+  USE(renderer);
+  USE(layout_rect);
+
+  if (mode == 0) {
+    char *msg = AS(msg_cqD, msg_writeD);
+    int msg_used = AS(msglen_cqD, msg_writeD);
+    int alpha = 255;
+
+    // Show previous message to help the player out
+    if (!msg_used) {
+      msg = AS(msg_cqD, msg_writeD - 1);
+      msg_used = AS(msglen_cqD, msg_writeD - 1);
+      alpha = 128;
+    }
+
+    SDL_Point p = {layout_rect.w / 2 - msg_used * FWIDTH / 2, 0};
+    SDL_Rect rect = {
+        p.x - FWIDTH,
+        p.y,
+        (1 + msg_used) * FWIDTH,
+        FHEIGHT,
+    };
+    if (UITEST) {
+      SDL_Rect text_target = {
+          layout_rect.w / 2 - (msg_widthD * FWIDTH / 2) - FWIDTH / 2,
+          p.y,
+          (1 + msg_widthD) * FWIDTH,
+          FHEIGHT,
+      };
+      SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
+      SDL_RenderFillRect(renderer, &text_target);
+    }
+
+    if (msg_used) {
+      font_texture_alphamod(alpha);
+      render_monofont_string(renderer, &fontD, msg, msg_used, p);
+      font_texture_alphamod(255);
+
+      SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+      rect_frame(rect, 1);
+    }
+
+    if (msg_more || UITEST) {
+      int wlimit = msg_widthD * FWIDTH;
+      int mlimit = STRLEN_MORE * FWIDTH;
+      int margin = (layout_rect.w - wlimit - mlimit) / 4;
+
+      SDL_Rect rect2 = {
+          margin,
+          0,
+          mlimit,
+          FHEIGHT,
+      };
+      SDL_Rect rect3 = {
+          layout_rect.w - margin - mlimit,
+          0,
+          mlimit,
+          FHEIGHT,
+      };
+
+      SDL_Point p2 = {rect2.x, rect2.y};
+      render_monofont_string(renderer, &fontD, AP(moreD), p2);
+      SDL_Point p3 = {rect3.x, rect3.y};
+      render_monofont_string(renderer, &fontD, AP(moreD), p3);
+      rect_frame(rect2, 1);
+      rect_frame(rect3, 1);
+    }
+
+    common_text();
+  } else {
+    vitalstat_text();
+  }
+
+  return 0;
+}
+
+// Drawing
+int
+map_draw(zoom_prect)
+SDL_Rect *zoom_prect;
+{
+  SDL_Rect dest_rect;
+  SDL_Rect sprite_src;
+  SDL_Point rp;
+  dest_rect.w = ART_W;
+  dest_rect.h = ART_H;
+  SDL_SetRenderTarget(rendererD, map_textureD);
+  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
+  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
+  int imagine = countD.imagine;
+  for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
+    dest_rect.y = row * ART_H;
+    for (int col = 0; col < SYMMAP_WIDTH; ++col) {
+      dest_rect.x = col * ART_W;
+
+      struct vizS *viz = &vizD[row][col];
+      char sym = viz->sym;
+      uint64_t fidx = viz->floor;
+      uint64_t light = viz->light;
+      uint64_t dim = viz->dim;
+      uint64_t cridx = viz->cr;
+      uint64_t tridx = viz->tr;
+
+      // Art priority creature, wall, treasure, fallback to symmap ASCII
+      SDL_Texture *srct = 0;
+      SDL_Rect *srcr = 0;
+
+      if (sym == '@') {
+        rp = (SDL_Point){col, row};
+      }
+
+      if (!imagine) {
+        if (cridx && cridx <= AL(art_textureD)) {
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(art_textureD[cridx - 1])),
+              ART_W,
+              ART_H,
+          };
+          srct = sprite_textureD;
+        } else if (fidx && fidx <= AL(wart_textureD)) {
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(wart_textureD[fidx - 1])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
+        } else if (tridx && tridx <= AL(tart_textureD)) {
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(tart_textureD[tridx - 1])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
+        } else if (sym == '@') {
+          sprite_src = (SDL_Rect){
+              P(point_by_spriteid(part_textureD[0 + (turnD) % 2])),
+              ART_W,
+              ART_H,
+          };
+
+          srct = sprite_textureD;
+        }
+      }
+
+      if (srct) {
+        srcr = &sprite_src;
+      } else {
+        srct = texture_by_sym(sym);
+      }
+
+      SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));
+      SDL_RenderFillRect(rendererD, &dest_rect);
+
+      if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
+      SDL_RenderCopy(rendererD, srct, srcr, &dest_rect);
+      if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
+      switch (viz->fade) {
+        case 1:
+          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);
+          SDL_RenderFillRect(rendererD, &dest_rect);
+          break;
+        case 2:
+          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 64);
+          SDL_RenderFillRect(rendererD, &dest_rect);
+          break;
+        case 3:
+          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 98);
+          SDL_RenderFillRect(rendererD, &dest_rect);
+          break;
+      }
+    }
+  }
+
+  if (sprite_textureD) {
+    uint32_t oidx = caveD[uD.y][uD.x].oidx;
+    struct objS *obj = &entity_objD[oidx];
+    uint32_t tval = obj->tval;
+    dest_rect.y = rp.y * ART_H;
+    dest_rect.x = rp.x * ART_W;
+
+    if (tval - 1 < TV_MAX_PICK_UP || tval == TV_CHEST) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[2])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    } else if (tval == TV_GLYPH) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[3])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    } else if (tval == TV_VIS_TRAP) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[4])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+
+    if (countD.paralysis) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[5])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (countD.poison) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[6])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (maD[MA_SLOW]) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[7])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (maD[MA_BLIND]) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[8])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (countD.confusion) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[9])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (maD[MA_FEAR]) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[10])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+    if (uD.food < PLAYER_FOOD_FAINT) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[12])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    } else if (uD.food <= PLAYER_FOOD_ALERT) {
+      sprite_src = (SDL_Rect){
+          P(point_by_spriteid(part_textureD[11])),
+          ART_W,
+          ART_H,
+      };
+      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+    }
+  }
+
+  int zf, zh, zw;
+  zf = globalD.zoom_factor;
+  zh = SYMMAP_HEIGHT >> zf;
+  zw = SYMMAP_WIDTH >> zf;
+  // give equal vision on each side of the player during zoom
+  int zsymmetry = (zf != 0);
+
+  int zy, zx;
+  zy = CLAMP(rp.y - zh / 2, 0, SYMMAP_HEIGHT - zh - zsymmetry);
+  zx = CLAMP(rp.x - zw / 2, 0, SYMMAP_WIDTH - zw - zsymmetry);
+  zoom_prect->x = zx * ART_W;
+  zoom_prect->y = zy * ART_H;
+  zoom_prect->w = (zw + zsymmetry) * ART_W;
+  zoom_prect->h = (zh + zsymmetry) * ART_H;
+
+  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
+  SDL_RenderDrawRect(rendererD, zoom_prect);
+
+  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+  SDL_SetRenderTarget(rendererD, layoutD);
+  return 0;
+}
+int
+platform_p0()
+{
+  USE(renderer);
+  USE(msg_more);
+  USE(minimap_enlarge);
+
+  int show_minimap = (maD[MA_BLIND] == 0);
+  int show_game = 1;
+
+  vitalstat_text();
+
+  {
+    USE(mmtexture);
+
+    if (show_minimap) {
+      AUSE(grect, GR_MINIMAP);
+      USE(mmsurface);
+      bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
+                             (SDL_Point){0, 0}, mmsurface);
+      SDL_UpdateTexture(mmtexture, NULL, mmsurface->pixels, mmsurface->pitch);
+
+      SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
+      rect_frame(grect, 3);
+    }
+
+    if (show_game) {
+      AUSE(grect, GR_GAMEPLAY);
+      if (minimap_enlarge) {
+        SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
+      } else {
+        SDL_Rect zoom_rect;
+        map_draw(&zoom_rect);
+        SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &grect);
+      }
+    }
+  }
+}
+int
+platform_p2()
+{
+  USE(mode);
+  USE(renderer);
+  USE(overlay_width);
+  USE(overlay_height);
+  char *msg = AS(msg_cqD, msg_writeD);
+  int msg_used = AS(msglen_cqD, msg_writeD);
+  int is_text;
+  AUSE(grect, GR_OVERLAY);
+
+  if (mode == 1) {
+    is_text = 1;
+  } else {
+    is_text = (screen_submodeD != 0);
+    if (screen_submodeD == 2) {
+      grect = grectD[GR_WIDESCREEN];
+      overlay_width = msg_widthD;
+    }
+  }
+
+  SDL_Rect src_rect = {
+      0,
+      0,
+      overlay_width * FWIDTH,
+      overlay_height * FHEIGHT,
+  };
+  SDL_SetRenderTarget(renderer, text_textureD);
+  if (is_text) {
+    rect_altfill(src_rect);
+  } else {
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderFillRect(renderer, &src_rect);
+  }
+
+  int left = FWIDTH / 2;
+  if (msg_used)
+    render_monofont_string(renderer, &fontD, msg, msg_used,
+                           (SDL_Point){left, 0});
+
+  switch (mode) {
+    case 1: {
+      for (int row = 0; row < AL(overlayD); ++row) {
+        SDL_Point p = {
+            left,
+            row * FHEIGHT + FHEIGHT,
+        };
+        char *text = overlayD[row];
+        int tlen = overlay_usedD[row];
+        if (TOUCH && row == finger_rowD) {
+          font_color((SDL_Color){255, 0, 0, 255});
+          if (tlen <= 1) {
+            text = "-";
+            tlen = 1;
+          }
+        }
+        render_monofont_string(renderer, &fontD, text, tlen, p);
+        if (TOUCH && row == finger_rowD) {
+          font_color(whiteD);
+        }
+      }
+    } break;
+    case 2: {
+      for (int row = 0; row < AL(screenD); ++row) {
+        SDL_Point p = {left, row * FHEIGHT + FHEIGHT};
+        render_monofont_string(renderer, &fontD, screenD[row],
+                               screen_usedD[row], p);
+      }
+    } break;
+  }
+
+  SDL_SetRenderTarget(renderer, layoutD);
+  SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
+  if (is_text) rect_innerframe(grect);
+}
+int
+custom_draw()
+{
+  USE(mode);
+  USE(renderer);
+  USE(layout);
+
+  if (layout) SDL_SetRenderTarget(renderer, layout);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
+
+  if (TOUCH && tpsurfaceD) {
+    {
+      AUSE(grect, GR_PAD);
+      SDL_RenderCopy(rendererD, tptextureD, 0, &grect);
+    }
+
+    int bc[] = {RED, GREEN};
+    for (int it = 0; it < MAX_BUTTON; ++it) {
+      AUSE(grect, GR_BUTTON1 + it);
+      SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
+      SDL_RenderFillRect(rendererD, &grect);
+    }
+
+    if (ui_textureD && mode != 1) {
+      AUSE(grect, GR_HISTORY);
+      SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
+      rect_frame(grect, 1);
+    }
+    if (mode == 0) {
+      AUSE(grect, GR_LOCK);
+      USE(orientation_lock);
+      int tridx;
+      if (orientation_lock) {
+        tridx = 48;
+      } else {
+        tridx = 45;
+      }
+      if (tridx <= AL(tart_textureD)) {
+        SDL_Rect sprite_rect = {
+            P(point_by_spriteid(tart_textureD[tridx - 1])),
+            ART_W,
+            ART_H,
+        };
+        SDL_Rect dest = {
+            grect.x,
+            grect.y,
+            ART_W * 2,
+            ART_H * 2,
+        };
+        dest.x += (grect.w - dest.w) / 2;
+        SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
+      }
+      rect_frame(grect, 1);
+    }
+  }
+
+  if (mode == 0)
+    platform_p0();
+  else
+    platform_p2();
+
+  if (text_fnD) text_fnD(mode);
+
+  SDL_RenderFlush(renderer);
+  render_update();
+
+  return 1;
+}
+
 int
 custom_orientation(orientation)
 {
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
+    text_fnD = landscape_text;
     overlay_widthD = 67;
     overlay_heightD = AL(overlayD) + 1;
     msg_widthD = 63;
     portrait_layout();
   } else if (orientation == SDL_ORIENTATION_LANDSCAPE) {
+    text_fnD = portrait_text;
     overlay_widthD = 78;
     overlay_heightD = AL(overlayD) + 2;
     msg_widthD = 92;
@@ -268,9 +1150,11 @@ custom_orientation(orientation)
   return 0;
 }
 
+
 int
 custom_setup()
 {
   customD.orientation = custom_orientation;
   customD.pregame = custom_pregame;
+  customD.draw = custom_draw;
 }

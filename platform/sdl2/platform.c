@@ -5,8 +5,9 @@
 
 #define Log SDL_Log
 
-#include "art.c"
 #include "font_zip.c"
+
+#include "art.c"
 #include "player.c"
 #include "treasure.c"
 #include "wall.c"
@@ -16,7 +17,7 @@
 #define ORGNAME "org.rufe"
 #define APPNAME "moria.app"
 #define CACHENAME "moria.cache"
-#define SAVENAME "savechar"
+#define SAVENAME "savechar" // TBD custom
 #ifndef __APPLE__
 enum { __APPLE__ };
 char *SDL_AppleGetDocumentPath(const char *, const char *);
@@ -52,6 +53,11 @@ enum { PORTRAIT = 0 };
 enum { LANDSCAPE = 0 };
 #define LANDSCAPE_X 1920
 #define LANDSCAPE_Y 1080
+
+// The game directly includes platform for iterative dev
+// Custom platform code is may be included after the game based on this define
+// Custom code may depend on game logic AND platform specifics
+#define CUSTOM_SETUP 1
 
 enum { ART_W = 32 };
 enum { ART_H = 64 };
@@ -130,7 +136,7 @@ enum {
   GR_LOCK,
   GR_STAT,
   GR_OVERLAY,
-  GR_WIDESCREEN,  // improving show_history() in landscape orientation
+  GR_WIDESCREEN,  // show_history() in landscape orientation
   GR_COUNT
 };
 enum { MAX_BUTTON = 2 };
@@ -230,7 +236,6 @@ render_init()
 
   return 1;
 }
-
 void
 render_update()
 {
@@ -241,9 +246,6 @@ render_update()
     SDL_SetRenderTarget(renderer, 0);
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
     SDL_RenderClear(renderer);
-    // USE(safe_rect);
-    // SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
-    // SDL_RenderFillRect(renderer, &safe_rect);
 
     USE(display_rect);
     USE(view_rect);
@@ -253,8 +255,6 @@ render_update()
         view_rect.w * display_rect.w,
         view_rect.h * display_rect.h,
     };
-    // SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-    // SDL_RenderFillRect(renderer, &target);
     SDL_RenderCopy(renderer, layout, NULL, &target);
   }
 
@@ -349,177 +349,6 @@ bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
   }
 }
 
-// art.c
-#define MAX_ART 279
-DATA uint8_t artD[96 * 1024];
-DATA uint64_t art_usedD;
-DATA uint32_t art_textureD[MAX_ART];
-int
-art_io()
-{
-  int rc;
-  void *bytes = &artD;
-  unsigned long size = AL(artD);
-  unsigned long zsize = sizeof(artZ);
-  rc = puff(bytes, &size, artZ, &zsize);
-  art_usedD = size;
-  return rc == 0;
-}
-
-static SDL_Point
-point_by_spriteid(sprite_idD)
-{
-  int col = sprite_idD % SPRITE_SQ;
-  int row = sprite_idD / SPRITE_SQ;
-  return (SDL_Point){
-      col * ART_W,
-      row * ART_H,
-  };
-}
-
-int
-art_init()
-{
-  uint8_t bitmap[ART_H][ART_W];
-  uint64_t art_size = (ART_W * ART_H / 8);
-  int byte_count = art_usedD;
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(art_textureD); ++it) {
-    int offset = byte_used;
-    byte_used += art_size;
-    if (byte_used > byte_count) break;
-
-    bitfield_to_bitmap(&artD[offset], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_idD), spriteD);
-    art_textureD[it] = sprite_idD++;
-  }
-
-  Log("art_init result %d", byte_used <= byte_count);
-
-  return byte_used <= byte_count;
-}
-
-// treasure
-#define MAX_TART 53
-DATA uint8_t tartD[16 * 1024];
-DATA uint64_t tart_usedD;
-DATA uint32_t tart_textureD[MAX_TART];
-int
-tart_io()
-{
-  int rc;
-  void *bytes = &tartD;
-  unsigned long size = AL(tartD);
-  unsigned long zsize = sizeof(treasureZ);
-  rc = puff(bytes, &size, treasureZ, &zsize);
-  tart_usedD = size;
-  return rc == 0;
-}
-
-int
-tart_init()
-{
-  uint8_t bitmap[ART_H][ART_W];
-  uint64_t art_size = (ART_W * ART_H / 8);
-  int byte_count = tart_usedD;
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(tart_textureD); ++it) {
-    int offset = byte_used;
-    byte_used += art_size;
-    if (byte_used > byte_count) break;
-
-    bitfield_to_bitmap(&tartD[offset], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_idD), spriteD);
-    tart_textureD[it] = sprite_idD++;
-  }
-
-  Log("tart_init result %d", byte_used <= byte_count);
-
-  return byte_used <= byte_count;
-}
-
-// wall
-#define MAX_WART 6
-DATA uint8_t wartD[4 * 1024];
-DATA uint64_t wart_usedD;
-DATA uint32_t wart_textureD[MAX_WART];
-int
-wart_io()
-{
-  int rc;
-  void *bytes = &wartD;
-  unsigned long size = AL(wartD);
-  unsigned long zsize = sizeof(wallZ);
-  rc = puff(bytes, &size, wallZ, &zsize);
-  wart_usedD = size;
-  return rc == 0;
-}
-
-int
-wart_init()
-{
-  uint8_t bitmap[ART_H][ART_W];
-  uint64_t art_size = (ART_W * ART_H / 8);
-  int byte_count = wart_usedD;
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(wart_textureD); ++it) {
-    int offset = byte_used;
-    byte_used += art_size;
-    if (byte_used > byte_count) break;
-
-    bitfield_to_bitmap(&wartD[offset], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_idD), spriteD);
-    wart_textureD[it] = sprite_idD++;
-  }
-
-  Log("wart_init result %d", byte_used <= byte_count);
-
-  return byte_used <= byte_count;
-}
-
-// player
-#define MAX_PART 13
-DATA uint8_t partD[4 * 1024];
-DATA uint64_t part_usedD;
-DATA uint32_t part_textureD[MAX_PART];
-int
-part_io()
-{
-  int rc;
-  void *bytes = &partD;
-  unsigned long size = AL(partD);
-  unsigned long zsize = sizeof(playerZ);
-  rc = puff(bytes, &size, playerZ, &zsize);
-  part_usedD = size;
-  return rc == 0;
-}
-
-int
-part_init()
-{
-  uint8_t bitmap[ART_H][ART_W];
-  uint64_t art_size = (ART_W * ART_H / 8);
-  int byte_count = part_usedD;
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(part_textureD); ++it) {
-    int offset = byte_used;
-    byte_used += art_size;
-    if (byte_used > byte_count) break;
-
-    bitfield_to_bitmap(&partD[offset], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_idD), spriteD);
-    part_textureD[it] = sprite_idD++;
-  }
-
-  Log("part_init result %d", byte_used <= byte_count);
-
-  return byte_used <= byte_count;
-}
-
 int
 font_load()
 {
@@ -574,39 +403,6 @@ font_init(struct fontS *font)
   }
 
   return 1;
-}
-
-int
-ui_init()
-{
-  enum { UI_W = 16 };
-  enum { UI_H = 16 };
-  USE(renderer);
-  uint8_t bitmap[UI_H][UI_W];
-  SDL_Surface *icon;
-
-  icon = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, UI_W, UI_H, 0,
-                                        texture_formatD);
-  if (icon) {
-    for (int row = 0; row < UI_H; ++row) {
-      for (int col = 0; col < UI_W; ++col) {
-        int rmod = row % 4;
-        if (rmod == 3) {
-          bitmap[row][col] = 0;
-        } else {
-          bitmap[row][col] = 7;
-        }
-      }
-    }
-    for (int it = 0; it < 4; ++it) {
-      bitmap[it * 4 + 1][1] = 0;
-    }
-
-    bitmap_yx_into_surface(&bitmap[0][0], UI_H, UI_W, (SDL_Point){0, 0}, icon);
-    ui_textureD = SDL_CreateTextureFromSurface(renderer, icon);
-    SDL_FreeSurface(icon);
-  }
-  return icon != 0;
 }
 
 static void
@@ -1037,720 +833,6 @@ platform_predraw()
   return 1;
 }
 
-static int
-rect_altfill(r)
-SDL_Rect r;
-{
-  int rx = r.x;
-  int ry = r.y;
-  int rh = r.h;
-  int rw = r.w;
-  uint32_t rc[] = {
-      lightingD[1],
-      lightingD[2],
-  };
-  for (int row = 0; row * FHEIGHT < rh; ++row) {
-    int color = rc[row % 2];
-    SDL_SetRenderDrawColor(rendererD, U4(color));
-    SDL_Rect target = {
-        rx,
-        ry + row * FHEIGHT,
-        rw,
-        FHEIGHT,
-    };
-    SDL_RenderFillRect(rendererD, &target);
-  }
-
-  return 0;
-}
-void rect_innerframe(r) SDL_Rect r;
-{
-  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
-  SDL_RenderDrawRect(rendererD, &r);
-  SDL_RenderDrawRect(rendererD, &RF(r, -1));
-  SDL_RenderDrawRect(rendererD, &RF(r, -3));
-}
-void rect_frame(r, scale) SDL_Rect r;
-{
-  int i = scale * 3;
-  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
-  SDL_RenderDrawRect(rendererD, &RF(r, i));
-  SDL_RenderDrawRect(rendererD, &RF(r, i + 1));
-  SDL_RenderDrawRect(rendererD, &RF(r, i + 3));
-}
-
-int
-map_draw(zoom_prect)
-SDL_Rect *zoom_prect;
-{
-  SDL_Rect dest_rect;
-  SDL_Rect sprite_src;
-  SDL_Point rp;
-  dest_rect.w = ART_W;
-  dest_rect.h = ART_H;
-  SDL_SetRenderTarget(rendererD, map_textureD);
-  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
-  int imagine = countD.imagine;
-  for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
-    dest_rect.y = row * ART_H;
-    for (int col = 0; col < SYMMAP_WIDTH; ++col) {
-      dest_rect.x = col * ART_W;
-
-      struct vizS *viz = &vizD[row][col];
-      char sym = viz->sym;
-      uint64_t fidx = viz->floor;
-      uint64_t light = viz->light;
-      uint64_t dim = viz->dim;
-      uint64_t cridx = viz->cr;
-      uint64_t tridx = viz->tr;
-
-      // Art priority creature, wall, treasure, fallback to symmap ASCII
-      SDL_Texture *srct = 0;
-      SDL_Rect *srcr = 0;
-
-      if (sym == '@') {
-        rp = (SDL_Point){col, row};
-      }
-
-      if (!imagine) {
-        if (cridx && cridx <= AL(art_textureD)) {
-          sprite_src = (SDL_Rect){
-              P(point_by_spriteid(art_textureD[cridx - 1])),
-              ART_W,
-              ART_H,
-          };
-          srct = sprite_textureD;
-        } else if (fidx && fidx <= AL(wart_textureD)) {
-          sprite_src = (SDL_Rect){
-              P(point_by_spriteid(wart_textureD[fidx - 1])),
-              ART_W,
-              ART_H,
-          };
-
-          srct = sprite_textureD;
-        } else if (tridx && tridx <= AL(tart_textureD)) {
-          sprite_src = (SDL_Rect){
-              P(point_by_spriteid(tart_textureD[tridx - 1])),
-              ART_W,
-              ART_H,
-          };
-
-          srct = sprite_textureD;
-        } else if (sym == '@') {
-          sprite_src = (SDL_Rect){
-              P(point_by_spriteid(part_textureD[0 + (turnD) % 2])),
-              ART_W,
-              ART_H,
-          };
-
-          srct = sprite_textureD;
-        }
-      }
-
-      if (srct) {
-        srcr = &sprite_src;
-      } else {
-        srct = texture_by_sym(sym);
-      }
-
-      SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));
-      SDL_RenderFillRect(rendererD, &dest_rect);
-
-      if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
-      SDL_RenderCopy(rendererD, srct, srcr, &dest_rect);
-      if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
-      switch (viz->fade) {
-        case 1:
-          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);
-          SDL_RenderFillRect(rendererD, &dest_rect);
-          break;
-        case 2:
-          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 64);
-          SDL_RenderFillRect(rendererD, &dest_rect);
-          break;
-        case 3:
-          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 98);
-          SDL_RenderFillRect(rendererD, &dest_rect);
-          break;
-      }
-    }
-  }
-
-  if (sprite_textureD) {
-    uint32_t oidx = caveD[uD.y][uD.x].oidx;
-    struct objS *obj = &entity_objD[oidx];
-    uint32_t tval = obj->tval;
-    dest_rect.y = rp.y * ART_H;
-    dest_rect.x = rp.x * ART_W;
-
-    if (tval - 1 < TV_MAX_PICK_UP || tval == TV_CHEST) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[2])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    } else if (tval == TV_GLYPH) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[3])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    } else if (tval == TV_VIS_TRAP) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[4])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    }
-
-    if (countD.paralysis) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[5])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    }
-    if (countD.poison) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[6])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    }
-    if (maD[MA_SLOW]) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[7])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    }
-    if (maD[MA_BLIND]) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[8])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    }
-    if (countD.confusion) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[9])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    }
-    if (maD[MA_FEAR]) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[10])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    }
-    if (uD.food < PLAYER_FOOD_FAINT) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[12])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    } else if (uD.food <= PLAYER_FOOD_ALERT) {
-      sprite_src = (SDL_Rect){
-          P(point_by_spriteid(part_textureD[11])),
-          ART_W,
-          ART_H,
-      };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
-    }
-  }
-
-  int zf, zh, zw;
-  zf = globalD.zoom_factor;
-  zh = SYMMAP_HEIGHT >> zf;
-  zw = SYMMAP_WIDTH >> zf;
-  // give equal vision on each side of the player during zoom
-  int zsymmetry = (zf != 0);
-
-  int zy, zx;
-  zy = CLAMP(rp.y - zh / 2, 0, SYMMAP_HEIGHT - zh - zsymmetry);
-  zx = CLAMP(rp.x - zw / 2, 0, SYMMAP_WIDTH - zw - zsymmetry);
-  zoom_prect->x = zx * ART_W;
-  zoom_prect->y = zy * ART_H;
-  zoom_prect->w = (zw + zsymmetry) * ART_W;
-  zoom_prect->h = (zh + zsymmetry) * ART_H;
-
-  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
-  SDL_RenderDrawRect(rendererD, zoom_prect);
-
-  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-  SDL_SetRenderTarget(rendererD, layoutD);
-  return 0;
-}
-
-int
-platform_p2()
-{
-  USE(mode);
-  USE(renderer);
-  USE(overlay_width);
-  USE(overlay_height);
-  char *msg = AS(msg_cqD, msg_writeD);
-  int msg_used = AS(msglen_cqD, msg_writeD);
-  int is_text;
-  AUSE(grect, GR_OVERLAY);
-
-  if (mode == 1) {
-    is_text = 1;
-  } else {
-    is_text = (screen_submodeD != 0);
-    if (screen_submodeD == 2) {
-      grect = grectD[GR_WIDESCREEN];
-      overlay_width = msg_widthD;
-    }
-  }
-
-  SDL_Rect src_rect = {
-      0,
-      0,
-      overlay_width * FWIDTH,
-      overlay_height * FHEIGHT,
-  };
-  SDL_SetRenderTarget(renderer, text_textureD);
-  if (is_text) {
-    rect_altfill(src_rect);
-  } else {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderFillRect(renderer, &src_rect);
-  }
-
-  int left = FWIDTH / 2;
-  if (msg_used)
-    render_monofont_string(renderer, &fontD, msg, msg_used,
-                           (SDL_Point){left, 0});
-
-  switch (mode) {
-    case 1: {
-      for (int row = 0; row < AL(overlayD); ++row) {
-        SDL_Point p = {
-            left,
-            row * FHEIGHT + FHEIGHT,
-        };
-        char *text = overlayD[row];
-        int tlen = overlay_usedD[row];
-        if (TOUCH && row == finger_rowD) {
-          font_color((SDL_Color){255, 0, 0, 255});
-          if (tlen <= 1) {
-            text = "-";
-            tlen = 1;
-          }
-        }
-        render_monofont_string(renderer, &fontD, text, tlen, p);
-        if (TOUCH && row == finger_rowD) {
-          font_color(whiteD);
-        }
-      }
-    } break;
-    case 2: {
-      for (int row = 0; row < AL(screenD); ++row) {
-        SDL_Point p = {left, row * FHEIGHT + FHEIGHT};
-        render_monofont_string(renderer, &fontD, screenD[row],
-                               screen_usedD[row], p);
-      }
-    } break;
-  }
-
-  SDL_SetRenderTarget(renderer, layoutD);
-  SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
-  if (is_text) rect_innerframe(grect);
-}
-
-int
-vitalstat_text()
-{
-  char tmp[80];
-  int len = 0;
-  AUSE(grect, GR_STAT);
-
-  if (uD.lev) {
-    rect_altfill(grect);
-    if (uD.ridx < AL(raceD) && uD.clidx < AL(classD)) {
-      int it = 0;
-      len = snprintf(tmp, AL(tmp), "%s %s", raceD[uD.ridx].name,
-                     classD[uD.clidx].name);
-      SDL_Point p = {grect.x + grect.w / 2 - (len * FWIDTH) / 2,
-                     grect.y + it * FHEIGHT + 1};
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
-    }
-    for (int it = 0; it < MAX_A; ++it) {
-      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
-                     vitalD[it], stat_abbrD[it], vital_statD[it]);
-      SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
-    }
-    {
-      int it = MAX_A;
-      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
-      SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
-    }
-
-    char *affstr[AFF_X];
-    for (int it = 0; it < AFF_Y; ++it) {
-      for (int jt = 0; jt < AL(affstr); ++jt) {
-        int idx = AL(affstr) * it + jt;
-        if (UITEST) {
-          affstr[jt] = affectD[idx][0];
-        } else if (active_affectD[idx])
-          affstr[jt] = affectD[idx][active_affectD[idx] - 1];
-        else
-          affstr[jt] = "";
-      }
-
-      len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
-                     affstr[1], affstr[2]);
-      SDL_Point p = {
-          grect.x + FWIDTH / 2,
-          grect.y + AL(vital_nameD) * FHEIGHT + it * FHEIGHT,
-      };
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
-    }
-
-    rect_innerframe(grect);
-  }
-  return 0;
-}
-
-int
-platform_p0()
-{
-  USE(renderer);
-  USE(msg_more);
-  USE(minimap_enlarge);
-
-  int show_minimap = (maD[MA_BLIND] == 0);
-  int show_game = 1;
-
-  vitalstat_text();
-
-  {
-    USE(mmtexture);
-
-    if (show_minimap) {
-      AUSE(grect, GR_MINIMAP);
-      USE(mmsurface);
-      bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
-                             (SDL_Point){0, 0}, mmsurface);
-      SDL_UpdateTexture(mmtexture, NULL, mmsurface->pixels, mmsurface->pitch);
-
-      SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
-      rect_frame(grect, 3);
-    }
-
-    if (show_game) {
-      AUSE(grect, GR_GAMEPLAY);
-      if (minimap_enlarge) {
-        SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
-      } else {
-        SDL_Rect zoom_rect;
-        map_draw(&zoom_rect);
-        SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &grect);
-      }
-    }
-  }
-}
-
-int
-common_text()
-{
-  USE(layout_rect);
-  USE(renderer);
-  char tmp[80];
-  int len;
-  {
-    AUSE(grect, GR_VERSION);
-    SDL_Point p = {grect.x, grect.y};
-    render_monofont_string(renderer, &fontD, "moria", AL("moria"), p);
-    p.y += FHEIGHT;
-    render_monofont_string(renderer, &fontD, "version", AL("version"), p);
-    p.y += FHEIGHT;
-    render_monofont_string(renderer, &fontD, versionD + 10, AL(versionD) - 11,
-                           p);
-  }
-
-  {
-    AUSE(grect, GR_MINIMAP);
-    {
-      SDL_Point p = {grect.x + grect.w / 2, grect.y - FHEIGHT - 24};
-      len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
-      p.x -= (len * FWIDTH) / 2;
-      render_monofont_string(renderer, &fontD, tmp, len, p);
-    }
-
-    {
-      SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h + 24};
-      len = snprintf(tmp, AL(tmp), "%s", dun_descD);
-      p.x -= (len * FWIDTH) / 2;
-      render_monofont_string(renderer, &fontD, tmp, len, p);
-    }
-  }
-
-  if (TOUCH) {
-    if (msg_moreD || UITEST) {
-      static int tapD;
-      tapD = (tapD + 1) % 4;
-      switch (tapD) {
-        case 0:
-          font_color(*color_by_palette(RED));
-          break;
-        case 1:
-          font_color(*color_by_palette(GREEN));
-          break;
-        case 2:
-          font_color(*color_by_palette(BLUE));
-          break;
-        case 3:
-          font_color(*color_by_palette(WHITE));
-          break;
-      }
-
-      AUSE(grect, GR_PAD);
-      SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h / 2};
-      p.x -= STRLEN_MORE * FWIDTH / 2;
-      p.y -= FHEIGHT / 2;
-      render_monofont_string(renderer, &fontD, AP(moreD), p);
-      font_color(whiteD);
-    }
-  }
-  return 0;
-}
-
-int
-portrait_text(mode)
-{
-  USE(renderer);
-  USE(msg_more);
-
-  if (mode == 0) {
-    AUSE(grect, GR_GAMEPLAY);
-    char *msg = AS(msg_cqD, msg_writeD);
-    int msg_used = AS(msglen_cqD, msg_writeD);
-    int alpha = 255;
-
-    SDL_Point p = {
-        grect.x + FWIDTH / 2,
-        grect.y + FHEIGHT / 2,
-    };
-
-    // Gameplay shows previous message to help the player out
-    if (!msg_used) {
-      msg = AS(msg_cqD, msg_writeD - 1);
-      msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = 150;
-    }
-
-    if (UITEST) {
-      SDL_Rect msg_target = {p.x, p.y, msg_widthD * FWIDTH,
-                             FHEIGHT + FHEIGHT / 8};
-      SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-      SDL_RenderFillRect(renderer, &msg_target);
-    }
-
-    if (msg_used) {
-      SDL_Rect fill = {p.x, p.y, msg_used * FWIDTH, FHEIGHT + FHEIGHT / 8};
-      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-      SDL_RenderFillRect(renderer, &fill);
-
-      font_texture_alphamod(alpha);
-      render_monofont_string(renderer, &fontD, msg, msg_used, p);
-      font_texture_alphamod(255);
-    }
-
-    if (msg_more || UITEST) {
-      SDL_Rect r = {
-          grect.x + grect.w - STRLEN_MORE * FWIDTH - FWIDTH / 2,
-          grect.y + grect.h - FHEIGHT - FHEIGHT / 2,
-          STRLEN_MORE * FWIDTH,
-          FHEIGHT + FHEIGHT / 8,
-      };
-      SDL_Rect r2 = {
-          grect.x + FWIDTH / 2,
-          grect.y + grect.h - FHEIGHT - FHEIGHT / 2,
-          STRLEN_MORE * FWIDTH,
-          FHEIGHT + FHEIGHT / 8,
-      };
-      SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-      SDL_RenderFillRect(renderer, &r);
-      SDL_RenderFillRect(renderer, &r2);
-      render_monofont_string(rendererD, &fontD, AP(moreD),
-                             (SDL_Point){r.x, r.y});
-      render_monofont_string(rendererD, &fontD, AP(moreD),
-                             (SDL_Point){r2.x, r2.y});
-    }
-
-    common_text();
-  }
-
-  return 0;
-}
-
-int
-landscape_text(mode)
-{
-  USE(msg_more);
-  USE(renderer);
-  USE(layout_rect);
-
-  if (mode == 0) {
-    char *msg = AS(msg_cqD, msg_writeD);
-    int msg_used = AS(msglen_cqD, msg_writeD);
-    int alpha = 255;
-
-    // Show previous message to help the player out
-    if (!msg_used) {
-      msg = AS(msg_cqD, msg_writeD - 1);
-      msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = 128;
-    }
-
-    SDL_Point p = {layout_rect.w / 2 - msg_used * FWIDTH / 2, 0};
-    SDL_Rect rect = {
-        p.x - FWIDTH,
-        p.y,
-        (1 + msg_used) * FWIDTH,
-        FHEIGHT,
-    };
-    if (UITEST) {
-      SDL_Rect text_target = {
-          layout_rect.w / 2 - (msg_widthD * FWIDTH / 2) - FWIDTH / 2,
-          p.y,
-          (1 + msg_widthD) * FWIDTH,
-          FHEIGHT,
-      };
-      SDL_SetRenderDrawColor(renderer, 64, 64, 64, 255);
-      SDL_RenderFillRect(renderer, &text_target);
-    }
-
-    if (msg_used) {
-      font_texture_alphamod(alpha);
-      render_monofont_string(renderer, &fontD, msg, msg_used, p);
-      font_texture_alphamod(255);
-
-      SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-      rect_frame(rect, 1);
-    }
-
-    if (msg_more || UITEST) {
-      int wlimit = msg_widthD * FWIDTH;
-      int mlimit = STRLEN_MORE * FWIDTH;
-      int margin = (layout_rect.w - wlimit - mlimit) / 4;
-
-      SDL_Rect rect2 = {
-          margin,
-          0,
-          mlimit,
-          FHEIGHT,
-      };
-      SDL_Rect rect3 = {
-          layout_rect.w - margin - mlimit,
-          0,
-          mlimit,
-          FHEIGHT,
-      };
-
-      SDL_Point p2 = {rect2.x, rect2.y};
-      render_monofont_string(renderer, &fontD, AP(moreD), p2);
-      SDL_Point p3 = {rect3.x, rect3.y};
-      render_monofont_string(renderer, &fontD, AP(moreD), p3);
-      rect_frame(rect2, 1);
-      rect_frame(rect3, 1);
-    }
-
-    common_text();
-  } else {
-    vitalstat_text();
-  }
-
-  return 0;
-}
-
-int
-platform_draw()
-{
-  USE(mode);
-  USE(renderer);
-  USE(layout);
-
-  if (layout) SDL_SetRenderTarget(renderer, layout);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderClear(renderer);
-
-  if (TOUCH && tpsurfaceD) {
-    {
-      AUSE(grect, GR_PAD);
-      SDL_RenderCopy(rendererD, tptextureD, 0, &grect);
-    }
-
-    int bc[] = {RED, GREEN};
-    for (int it = 0; it < MAX_BUTTON; ++it) {
-      AUSE(grect, GR_BUTTON1 + it);
-      SDL_SetRenderDrawColor(rendererD, U4(paletteD[bc[it]]));
-      SDL_RenderFillRect(rendererD, &grect);
-    }
-
-    if (ui_textureD && mode != 1) {
-      AUSE(grect, GR_HISTORY);
-      SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
-      rect_frame(grect, 1);
-    }
-    if (mode == 0) {
-      AUSE(grect, GR_LOCK);
-      USE(orientation_lock);
-      int tridx;
-      if (orientation_lock) {
-        tridx = 48;
-      } else {
-        tridx = 45;
-      }
-      if (tridx <= AL(tart_textureD)) {
-        SDL_Rect sprite_rect = {
-            P(point_by_spriteid(tart_textureD[tridx - 1])),
-            ART_W,
-            ART_H,
-        };
-        SDL_Rect dest = {
-            grect.x,
-            grect.y,
-            ART_W * 2,
-            ART_H * 2,
-        };
-        dest.x += (grect.w - dest.w) / 2;
-        SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
-      }
-      rect_frame(grect, 1);
-    }
-  }
-
-  if (mode == 0)
-    platform_p0();
-  else
-    platform_p2();
-
-  if (text_fnD) text_fnD(mode);
-
-  SDL_RenderFlush(renderer);
-  render_update();
-
-  return 1;
-}
-
 char
 sym_shift(char c)
 {
@@ -1869,34 +951,6 @@ static void surface_ppfill(surface) SDL_Surface *surface;
   }
 }
 
-static int
-input_init()
-{
-  int cx = PADSIZE / 2;
-  int cy = PADSIZE / 2;
-  ppD[0] = (SDL_Point){cx, cy};
-
-  enum { PPDIST = 3 * PADSIZE / 8 };
-  for (int it = 0; it < 8; ++it) {
-    int ox = cos_lookup(it) * PPDIST;
-    int oy = sin_lookup(it) * PPDIST;
-    ppD[1 + it].x = cx + ox;
-    ppD[1 + it].y = cy + oy;
-  }
-
-  if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
-  tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, PADSIZE, PADSIZE,
-                                              0, texture_formatD);
-  if (tptextureD) SDL_DestroyTexture(tptextureD);
-  tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
-                                 PADSIZE, PADSIZE);
-  SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
-  surface_ppfill(tpsurfaceD);
-  SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
-
-  return 0;
-}
-
 static void
 display_resize(int dw, int dh)
 {
@@ -1926,151 +980,6 @@ display_resize(int dw, int dh)
 }
 
 static int
-portrait_layout()
-{
-  USE(layout_rect);
-  int margin = (layout_rect.w - MAP_W) / 2;
-
-  grectD[GR_VERSION] = (SDL_Rect){
-      layout_rect.w - 8 * FWIDTH,
-      layout_rect.h - 3 * FHEIGHT,
-      FWIDTH * 8,
-      FHEIGHT * 3,
-  };
-
-  int lift = FHEIGHT / 2;
-  grectD[GR_PAD] = (SDL_Rect){
-      margin,
-      layout_rect.h - PADSIZE - lift,
-      PADSIZE,
-      PADSIZE,
-  };
-
-  int size = PADSIZE / 2;
-  grectD[GR_BUTTON1] = (SDL_Rect){layout_rect.w - margin - size * 2,
-                                  grectD[GR_PAD].y + size, size, size};
-  grectD[GR_BUTTON2] =
-      (SDL_Rect){layout_rect.w - margin - size, grectD[GR_PAD].y, size, size};
-
-  grectD[GR_GAMEPLAY] = (SDL_Rect){
-      margin,
-      layout_rect.h - PADSIZE - MAP_H - FHEIGHT + FHEIGHT / 4,
-      MAP_W,
-      MAP_H,
-  };
-  grectD[GR_MINIMAP] = (SDL_Rect){
-      layout_rect.w - margin - MMSCALE * MAX_WIDTH - 4 * FWIDTH,
-      grectD[GR_GAMEPLAY].y - 2 * FHEIGHT - MMSCALE * MAX_HEIGHT,
-      MMSCALE * MAX_WIDTH,
-      MMSCALE * MAX_HEIGHT,
-  };
-  grectD[GR_HISTORY] = (SDL_Rect){
-      layout_rect.w - 128 - margin - 4 * FWIDTH,
-      FHEIGHT / 2,
-      128,
-      128,
-  };
-  grectD[GR_LOCK] = grectD[GR_HISTORY];
-  grectD[GR_LOCK].x -= 2 * grectD[GR_HISTORY].w;
-
-  grectD[GR_STAT] = (SDL_Rect){
-      margin,
-      0,
-      PADSIZE + 3,
-      (8 + 5) * FHEIGHT,
-  };
-
-  int olimit = overlay_widthD * FWIDTH;
-  grectD[GR_OVERLAY] = (SDL_Rect){
-      (layout_rect.w - olimit) / 2,
-      0,  // grectD[GR_GAMEPLAY].y,
-      olimit,
-      layout_rect.h - PADSIZE - FHEIGHT,  // overlay_heightD*FHEIGHT
-  };
-  grectD[GR_WIDESCREEN] = grectD[GR_OVERLAY];
-
-  return 0;
-}
-static int
-landscape_layout()
-{
-  USE(layout_rect);
-  int xmargin = (layout_rect.w - MAP_W) / 2;
-  int ymargin = FHEIGHT + 8;
-
-  grectD[GR_VERSION] = (SDL_Rect){
-      layout_rect.w - 8 * FWIDTH,
-      layout_rect.h - 3 * FHEIGHT,
-      FWIDTH * 8,
-      FHEIGHT * 3,
-  };
-
-  int lift = (layout_rect.h - (8 + 5) * FHEIGHT - PADSIZE - ymargin) / 2;
-  grectD[GR_PAD] = (SDL_Rect){
-      0,
-      layout_rect.h - PADSIZE - lift,
-      PADSIZE,
-      PADSIZE,
-  };
-
-  int size = PADSIZE / 2;
-  grectD[GR_BUTTON1] = (SDL_Rect){
-      layout_rect.w - size * 2,
-      grectD[GR_PAD].y + size,
-      size,
-      size,
-  };
-  grectD[GR_BUTTON2] = (SDL_Rect){
-      layout_rect.w - size,
-      grectD[GR_PAD].y,
-      size,
-      size,
-  };
-
-  grectD[GR_GAMEPLAY] = (SDL_Rect){
-      xmargin,
-      ymargin,
-      MAP_W,
-      MAP_H,
-  };
-  grectD[GR_MINIMAP] = (SDL_Rect){
-      (layout_rect.w - PADSIZE) + (PADSIZE - MMSCALE * MAX_WIDTH) / 2,
-      FHEIGHT * 5,
-      MMSCALE * MAX_WIDTH,
-      MMSCALE * MAX_HEIGHT,
-  };
-  grectD[GR_HISTORY] = (SDL_Rect){
-      layout_rect.w - size / 2 - 96 / 2,
-      layout_rect.h / 2 - 128 - FHEIGHT,
-      96,
-      128,
-  };
-  grectD[GR_LOCK] = grectD[GR_HISTORY];
-  grectD[GR_LOCK].x -= grectD[GR_HISTORY].w * 2;
-
-  grectD[GR_STAT] = (SDL_Rect){
-      0,
-      ymargin,
-      PADSIZE,
-      (8 + 5) * FHEIGHT,
-  };
-
-  grectD[GR_OVERLAY] = (SDL_Rect){
-      xmargin,
-      0,
-      overlay_widthD * FWIDTH,
-      overlay_heightD * FHEIGHT,
-  };
-  grectD[GR_WIDESCREEN] = (SDL_Rect){
-      xmargin,
-      0,
-      layout_rect.w - xmargin,
-      overlay_heightD * FHEIGHT,
-  };
-
-  return 0;
-}
-static int
 orientation_update()
 {
   USE(display_rect);
@@ -2084,7 +993,6 @@ orientation_update()
   float scale = 1.f;
   if (orientation == SDL_ORIENTATION_LANDSCAPE) {
     layoutD = landscapeD;
-    text_fnD = landscape_text;
     layout_rect = (SDL_Rect){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
 
     {
@@ -2099,7 +1007,6 @@ orientation_update()
     }
   } else if (orientation == SDL_ORIENTATION_PORTRAIT) {
     layoutD = portraitD;
-    text_fnD = portrait_text;
     layout_rect = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
 
     {
@@ -2136,19 +1043,7 @@ orientation_update()
   SDL_FRect view = {xpad, ypad, xuse, yuse};
   view_rectD = view;
 
-  if (orientation == SDL_ORIENTATION_PORTRAIT) {
-    overlay_widthD = 67;
-    overlay_heightD = AL(overlayD) + 1;
-    msg_widthD = 63;
-    portrait_layout();
-  } else if (orientation == SDL_ORIENTATION_LANDSCAPE) {
-    overlay_widthD = 78;
-    overlay_heightD = AL(overlayD) + 2;
-    msg_widthD = 92;
-    landscape_layout();
-  }
-
-  return 0;
+  return customD.orientation(orientation);
 }
 
 char *
@@ -2211,7 +1106,7 @@ SDL_Event event;
       if (mode) {
         return (finger_colD == 0) ? '*' : '/';
       } else if (drw) {
-        platform_draw();
+        customD.draw();
       }
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
@@ -2222,7 +1117,7 @@ SDL_Event event;
       if (mode)
         return (finger_colD == 0) ? '*' : '/';
       else
-        platform_draw();
+        customD.draw();
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
     if (ANDROID || __APPLE__) platformD.postgame(0);
@@ -2993,62 +1888,27 @@ platform_pregame()
   }
 
   if (init) {
+    USE(renderer);
+    USE(texture_format);
     if (!font_load() || !font_init(&fontD)) return 2;
-
-    if (ART_H * SPRITE_SQ <= max_texture_heightD &&
-        ART_W * SPRITE_SQ <= max_texture_widthD) {
-      spriteD =
-          SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ART_W * SPRITE_SQ,
-                                         ART_H * SPRITE_SQ, 0, texture_formatD);
-      if (spriteD) {
-        if (!art_io() || !art_init()) return 3;
-        if (!tart_io() || !tart_init()) return 3;
-        if (!wart_io() || !wart_init()) return 3;
-        if (!part_io() || !part_init()) return 3;
-
-        if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
-          sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
-          if (sprite_textureD)
-            SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
-        } else {
-          Log("WARNING: Assets exceed available sprite memory");
-        }
-        SDL_FreeSurface(spriteD);
-        spriteD = 0;
-      }
-    }
-
-    if (TOUCH) ui_init();
-    if (TOUCH) input_init();
-
-    mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
-                                                MAX_HEIGHT, 0, texture_formatD);
-    mmtextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
-                                   MAX_WIDTH, MAX_HEIGHT);
-    SDL_SetTextureBlendMode(mmtextureD, SDL_BLENDMODE_NONE);
-    map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
-                                     SDL_TEXTUREACCESS_TARGET, MAP_W, MAP_H);
-    SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
-    text_textureD =
-        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
-                          2 * 1024, 2 * 1024);
-
-    layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
     portraitD =
-        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+        SDL_CreateTexture(renderer, texture_format, SDL_TEXTUREACCESS_TARGET,
                           PORTRAIT_X, PORTRAIT_Y);
     landscapeD =
-        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+        SDL_CreateTexture(renderer, texture_format, SDL_TEXTUREACCESS_TARGET,
                           LANDSCAPE_X, LANDSCAPE_Y);
   }
 
+#ifdef CUSTOM_SETUP
+  custom_setup();
+#endif
   platformD.seed = platform_random;
   platformD.load = platform_load;
   platformD.save = platform_save;
   platformD.erase = platform_erase;
   platformD.readansi = platform_readansi;
   platformD.predraw = platform_predraw;
-  platformD.draw = platform_draw;
+  platformD.draw = customD.draw;
   if (TOUCH) platformD.selection = platform_selection;
   platformD.savemidpoint = platform_savemidpoint;
 
@@ -3067,6 +1927,8 @@ platform_pregame()
   while (display_rectD.w == 0) {
     sdl_pump();
   }
+
+  customD.pregame();
 
   // Migration code
   if (platformD.load(-1, 0)) fs_upgrade();

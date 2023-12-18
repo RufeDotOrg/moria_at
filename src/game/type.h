@@ -310,6 +310,14 @@ struct platformS {
 };
 DATA struct platformS platformD;
 
+struct customS {
+  fn orientation;
+  fn pregame;
+  fn predraw;
+  fn draw;
+};
+DATA struct customS customD;
+
 // Global options
 struct globalS {
   int32_t saveslot_class;
