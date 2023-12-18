@@ -7,29 +7,22 @@
 
 #include "font_zip.c"
 
-#include "art.c"
-#include "player.c"
-#include "treasure.c"
-#include "wall.c"
-
 #include "third_party/zlib/puff.c"
 
 #define ORGNAME "org.rufe"
 #define APPNAME "moria.app"
 #define CACHENAME "moria.cache"
-#define SAVENAME "savechar" // TBD custom
+#define SAVENAME "savechar"  // TBD custom
 #ifndef __APPLE__
 enum { __APPLE__ };
-char *SDL_AppleGetDocumentPath(const char *, const char *);
+char* SDL_AppleGetDocumentPath(const char*, const char*);
 #endif
 
 #ifndef ANDROID
 enum { ANDROID };
 int SDL_AndroidGetExternalStorageState();
-char *SDL_AndroidGetExternalStoragePath();
+char* SDL_AndroidGetExternalStoragePath();
 #endif
-
-enum { UITEST = 0 };
 
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
@@ -46,7 +39,14 @@ enum { BATCHING = 1 };
 enum { REORIENTATION = 1 };
 #define ORIENTATION_LIST \
   "Portrait LandscapeRight PortraitUpsideDown LandscapeLeft"
+enum { VSYNC = 1 };
+enum { QUALITY = 0 };
 
+enum { WINDOW = 0 };
+#define WINDOW_X 1920  // 1440, 1334
+#define WINDOW_Y 1080  // 720, 750
+
+// optional: layout restriction
 enum { PORTRAIT = 0 };
 #define PORTRAIT_X 1080
 #define PORTRAIT_Y 1920
@@ -58,17 +58,6 @@ enum { LANDSCAPE = 0 };
 // Custom platform code is may be included after the game based on this define
 // Custom code may depend on game logic AND platform specifics
 #define CUSTOM_SETUP 1
-
-enum { ART_W = 32 };
-enum { ART_H = 64 };
-enum { SPRITE_SQ = 32 };
-enum { MAP_W = SYMMAP_WIDTH * ART_W };
-enum { MAP_H = SYMMAP_HEIGHT * ART_H };
-enum { MMSCALE = 2 };
-
-enum { WINDOW = 0 };
-#define WINDOW_X 1920  // 1440, 1334
-#define WINDOW_Y 1080  // 720, 750
 enum { FHEIGHT = 32 };
 enum { FWIDTH = 16 };
 enum { PADSIZE = (26 + 2) * FWIDTH };
@@ -87,39 +76,36 @@ enum { AFF_Y = AL(active_affectD) / AFF_X };
 #define U4(i) \
   (i & 0xff), ((i >> 8) & 0xff), ((i >> 16) & 0xff), ((i >> 24) & 0xff)
 
-// TBD: clean-up
-int los();
-int SDL_GetWindowSafeRect();
+enum { ART_W = 32 };
+enum { ART_H = 64 };
+enum { SPRITE_SQ = 32 };
+enum { MAP_W = SYMMAP_WIDTH * ART_W };
+enum { MAP_H = SYMMAP_HEIGHT * ART_H };
+enum { MMSCALE = 2 };
 
-int
-char_visible(char c)
-{
-  uint8_t vis = c - 0x21;
-  return vis < 0x7f - 0x21;
-}
 // render.c
-DATA struct SDL_Window *windowD;
+DATA struct SDL_Window* windowD;
 DATA int refresh_rateD;
 DATA SDL_Rect display_rectD;
 DATA SDL_Rect safe_rectD;
-DATA struct SDL_Renderer *rendererD;
+DATA struct SDL_Renderer* rendererD;
 DATA uint32_t texture_formatD;
-DATA SDL_PixelFormat *pixel_formatD;
+DATA SDL_PixelFormat* pixel_formatD;
 DATA int orientation_lockD;
 
 DATA uint32_t sprite_idD;
-DATA SDL_Surface *spriteD;
-DATA SDL_Texture *sprite_textureD;
-DATA SDL_Surface *mmsurfaceD;
-DATA SDL_Texture *mmtextureD;
-DATA SDL_Texture *ui_textureD;
-DATA SDL_Surface *tpsurfaceD;
-DATA SDL_Texture *tptextureD;
-DATA SDL_Texture *map_textureD;
-DATA SDL_Texture *text_textureD;
-DATA SDL_Texture *portraitD;
-DATA SDL_Texture *landscapeD;
-DATA SDL_Texture *layoutD;
+DATA SDL_Surface* spriteD;
+DATA SDL_Texture* sprite_textureD;
+DATA SDL_Surface* mmsurfaceD;
+DATA SDL_Texture* mmtextureD;
+DATA SDL_Texture* ui_textureD;
+DATA SDL_Surface* tpsurfaceD;
+DATA SDL_Texture* tptextureD;
+DATA SDL_Texture* map_textureD;
+DATA SDL_Texture* text_textureD;
+DATA SDL_Texture* portraitD;
+DATA SDL_Texture* landscapeD;
+DATA SDL_Texture* layoutD;
 DATA SDL_Rect layout_rectD;
 DATA SDL_FRect view_rectD;
 DATA uint32_t max_texture_widthD;
@@ -297,7 +283,7 @@ struct fontS {
   uint64_t bitmap_used;
 };
 DATA struct fontS fontD;
-DATA struct SDL_Texture *font_textureD[MAX_GLYPH];
+DATA struct SDL_Texture* font_textureD[MAX_GLYPH];
 
 // hex RGBA to little endian
 #define CHEX(x) __builtin_bswap32(x)
@@ -314,22 +300,22 @@ DATA uint32_t lightingD[] = {
     CHEX(0x3c3c3cff),
     CHEX(0x505050ff),
 };
-static SDL_Color *
+static SDL_Color*
 color_by_palette(c)
 {
-  return (SDL_Color *)&paletteD[c];
+  return (SDL_Color*)&paletteD[c];
 }
 
 void
-bitmap_yx_into_surface(void *bitmap, int64_t ph, int64_t pw, SDL_Point into,
-                       struct SDL_Surface *surface)
+bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
+                       struct SDL_Surface* surface)
 {
   uint8_t bpp = surface->format->BytesPerPixel;
-  uint8_t *pixels = surface->pixels;
+  uint8_t* pixels = surface->pixels;
   int64_t pitch = surface->pitch;
-  uint8_t *src = bitmap;
+  uint8_t* src = bitmap;
   for (int64_t row = 0; row < ph; ++row) {
-    uint8_t *dst = pixels + (pitch * (into.y + row)) + (bpp * into.x);
+    uint8_t* dst = pixels + (pitch * (into.y + row)) + (bpp * into.x);
     for (int64_t col = 0; col < pw; ++col) {
       memcpy(dst, &rgbaD[*src & 0xff], bpp);
       src += 1;
@@ -339,7 +325,7 @@ bitmap_yx_into_surface(void *bitmap, int64_t ph, int64_t pw, SDL_Point into,
 }
 
 void
-bitfield_to_bitmap(uint8_t *bitfield, uint8_t *bitmap, int64_t bitmap_size)
+bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t bitmap_size)
 {
   int byte_count = bitmap_size / 8;
   for (int it = 0; it < byte_count; ++it) {
@@ -353,7 +339,7 @@ int
 font_load()
 {
   int rc;
-  void *bytes = &fontD;
+  void* bytes = &fontD;
   unsigned long size = sizeof(fontD);
   unsigned long zsize = sizeof(font_zip);
   rc = puff(bytes, &size, font_zip, &zsize);
@@ -361,9 +347,9 @@ font_load()
 }
 
 int
-font_init(struct fontS *font)
+font_init(struct fontS* font)
 {
-  struct SDL_Renderer *renderer = rendererD;
+  struct SDL_Renderer* renderer = rendererD;
   uint32_t format = texture_formatD;
 
   if (font_textureD[0]) return 0;
@@ -376,13 +362,13 @@ font_init(struct fontS *font)
   int16_t width = font->max_pixel_width;
   int16_t height = font->max_pixel_height;
 
-  struct SDL_Surface *surface =
+  struct SDL_Surface* surface =
       SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, width, height, 0, format);
   for (int i = START_GLYPH; i < END_GLYPH; ++i) {
     uint64_t glyph_index = i - START_GLYPH;
     memset(surface->pixels, 0, surface->h * surface->pitch);
     if (glyph_index < AL(font->glyph)) {
-      struct glyphS *glyph = &font->glyph[glyph_index];
+      struct glyphS* glyph = &font->glyph[glyph_index];
       int ph, pw, oy, ox;
       ph = glyph->pixel_height;
       pw = glyph->pixel_width;
@@ -414,8 +400,8 @@ font_color(SDL_Color c)
 }
 
 void
-render_monofont_string(struct SDL_Renderer *renderer, struct fontS *font,
-                       const char *string, int len, SDL_Point origin)
+render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
+                       const char* string, int len, SDL_Point origin)
 {
   SDL_Rect target_rect = {
       .x = origin.x,
@@ -428,7 +414,7 @@ render_monofont_string(struct SDL_Renderer *renderer, struct fontS *font,
     char c = string[it];
     if (char_visible(c)) {
       uint64_t glyph_index = c - START_GLYPH;
-      struct SDL_Texture *texture = font_textureD[glyph_index];
+      struct SDL_Texture* texture = font_textureD[glyph_index];
       SDL_RenderCopy(renderer, texture, NULL, &target_rect);
     }
     target_rect.x += FWIDTH;
@@ -459,10 +445,10 @@ enum {
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 
-SDL_Texture *
+SDL_Texture*
 texture_by_sym(char c)
 {
-  SDL_Texture *t = 0;
+  SDL_Texture* t = 0;
   if (c == '.') return 0;
   if (char_visible(c)) {
     uint64_t glyph_index = c - START_GLYPH;
@@ -485,352 +471,6 @@ sin_lookup(idx)
   idx += 6;
   idx %= AL(cos_table);
   return cos_table[idx];
-}
-
-// Draw
-int
-obj_viz(obj, viz)
-struct objS *obj;
-struct vizS *viz;
-{
-  if (obj->tval != TV_INVIS_TRAP) viz->sym = obj->tchar;
-  switch (obj->tval) {
-      // Misc
-    case TV_MISC:
-      return 25;
-    case TV_CHEST:
-      if (obj->idflag & ID_REVEAL && obj->flags & CH_TRAPPED) return 33;
-      if (obj->flags & CH_LOCKED) return 34;
-      if (obj->sn == SN_EMPTY) return 35;
-      return 32;
-    case TV_SPIKE:
-      return 50;
-    case TV_PROJECTILE:
-      return 13;
-    case TV_LIGHT:
-      return 21;
-    case TV_LAUNCHER:
-      return 15;
-      // Worn
-    case TV_HAFTED:
-      return 24;
-    case TV_POLEARM:
-      return 6;
-    case TV_SWORD:
-      return 14;
-    case TV_DIGGING:
-      return 10;
-    case TV_BOOTS:
-      return 22;
-    case TV_GLOVES:
-      return 23;
-    case TV_CLOAK:
-      return 20;
-    case TV_HELM:
-      if (obj->subval <= 5)
-        return 11;  // helm
-      else
-        return 39;  // crown
-    case TV_SHIELD:
-      return 2;
-    case TV_HARD_ARMOR:
-      return 9;
-    case TV_SOFT_ARMOR:
-      return 1;
-    case TV_AMULET:
-      return 3;
-    case TV_RING:
-      return 7;
-      // Activate
-    case TV_STAFF:
-      return 12;
-    case TV_WAND:
-      return 5;
-    case TV_SCROLL1:
-    case TV_SCROLL2:
-      return 8;
-    case TV_POTION1:
-    case TV_POTION2:
-    case TV_FLASK:
-      return 4;
-    case TV_FOOD:
-      if ((obj->subval & 0x3f) <= 20)
-        return 40;  // mushroom/mold
-      else
-        return 19;  // food
-    case TV_MAGIC_BOOK:
-      return 18;
-    case TV_PRAYER_BOOK:
-      return 17;
-      // Gold
-      // TBD: copper/silver/gold/mithril/gems by subval
-    case TV_GOLD:
-      return 16;
-    /* Dungeon Fixtures */
-    case TV_VIS_TRAP:
-      if (obj->tchar == ' ')
-        viz->light = 0;
-      else
-        return 26;
-      break;
-    case TV_RUBBLE:
-      return 27;
-    case TV_OPEN_DOOR:
-      return 28;
-    case TV_CLOSED_DOOR:
-      if (obj->p1 == 0 || (obj->idflag & ID_REVEAL) == 0)
-        return 29;
-      else if (obj->p1 > 0)
-        return 36;  // locked
-      else if (obj->p1 < 0)
-        return 37;  // stuck
-    case TV_UP_STAIR:
-      return 30;
-    case TV_DOWN_STAIR:
-      return 31;
-    case TV_SECRET_DOOR:
-      viz->floor = 2;
-      break;
-    case TV_GLYPH:
-      return 38;
-  }
-  return 0;
-}
-static int
-cave_color(row, col)
-{
-  struct caveS *c_ptr;
-  struct monS *mon;
-  struct objS *obj;
-  int color = 0;
-
-  c_ptr = &caveD[row][col];
-  mon = &entity_monD[c_ptr->midx];
-  if (mon->mlit) {
-    color = BRIGHT + MAGENTA;
-  } else if (c_ptr->fval == BOUNDARY_WALL) {
-    color = BRIGHT + WHITE;
-  } else if (CF_LIT & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
-    color = BRIGHT + WHITE;
-  } else if (CF_LIT & c_ptr->cflag) {
-    color = BRIGHT + BLACK;
-  }
-
-  if (color <= BRIGHT + BLACK && c_ptr->oidx) {
-    obj = &entity_objD[c_ptr->oidx];
-    if (CF_VIZ & c_ptr->cflag) {
-      if (obj->tval == TV_UP_STAIR) {
-        color = BRIGHT + GREEN;
-      } else if (obj->tval == TV_DOWN_STAIR) {
-        color = BRIGHT + RED;
-      } else if (obj->tval == TV_VIS_TRAP || obj->tval == TV_RUBBLE) {
-        color = BRIGHT + YELLOW;
-      } else if (obj->tval == TV_SECRET_DOOR) {
-        color = BRIGHT + WHITE;
-      } else if (obj->tval == TV_CLOSED_DOOR) {
-        color = BRIGHT + BLACK;
-      } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
-        color = BRIGHT + BLUE;
-      } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
-        color = BRIGHT + GREEN;
-      }
-    }
-  }
-
-  if (color <= BRIGHT + BLACK && (CF_TEMP_LIGHT & c_ptr->cflag)) {
-    color = BRIGHT + CYAN;
-  }
-
-  return color;
-}
-static int
-fade_by_distance(y1, x1, y2, x2)
-{
-  int dy = y1 - y2;
-  int dx = x1 - x2;
-  int sq = dx * dx + dy * dy;
-
-  if (sq <= 1) return 1;
-  if (sq <= 4) return 2;
-  if (sq <= 9) return 3;
-  return 4;
-}
-static void
-viz_update()
-{
-  int blind, py, px;
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
-
-  struct vizS *vptr = &vizD[0][0];
-  blind = maD[MA_BLIND];
-  py = uD.y;
-  px = uD.x;
-  for (int row = rmin; row < rmax; ++row) {
-    for (int col = cmin; col < cmax; ++col) {
-      struct caveS *c_ptr = &caveD[row][col];
-      struct monS *mon = &entity_monD[c_ptr->midx];
-      struct objS *obj = &entity_objD[c_ptr->oidx];
-      struct vizS viz = {0};
-      if (row != py || col != px) {
-        viz.light = (c_ptr->cflag & CF_SEEN) != 0;
-        viz.fade = fade_by_distance(py, px, row, col) - 1;
-        if (mon->mlit) {
-          viz.cr = mon->cidx;
-          viz.sym = creatureD[mon->cidx].cchar;
-        } else if (blind) {
-          // May have MA_DETECT resulting in lit monsters above
-          // No walls, objects, or lighting
-          viz.light = 0;
-          viz.fade = 3;
-        } else if (CF_VIZ & c_ptr->cflag) {
-          switch (c_ptr->fval) {
-            case GRANITE_WALL:
-            case BOUNDARY_WALL:
-              viz.sym = '#';
-              viz.floor = 1;
-              break;
-            case QUARTZ_WALL:
-              viz.sym = '#';
-              viz.floor = 3 + (c_ptr->oidx != 0);
-              break;
-            case MAGMA_WALL:
-              viz.sym = '#';
-              viz.floor = 5 + (c_ptr->oidx != 0);
-              break;
-            case FLOOR_OBST:
-              viz.tr = obj_viz(obj, &viz);
-              break;
-            default:
-              viz.light += ((CF_LIT & c_ptr->cflag) != 0);
-              viz.dim = obj->tval && los(py, px, row, col) == 0;
-              viz.tr = obj_viz(obj, &viz);
-              break;
-          }
-        }
-      } else {
-        viz.sym = '@';
-        viz.light = 3;
-      }
-
-      *vptr++ = viz;
-    }
-  }
-}
-void
-viz_minimap_stair(row, col, color)
-{
-  row = CLAMP(row, 2, MAX_HEIGHT - 1);
-  col = CLAMP(col, 1, MAX_WIDTH - 2 - 1);
-  minimapD[row][col] = color;
-  minimapD[row][col - 1] = color;
-  minimapD[row - 1][col] = color;
-  minimapD[row - 1][col + 1] = color;
-  minimapD[row - 2][col + 1] = color;
-  minimapD[row - 2][col + 2] = color;
-}
-void
-viz_minimap()
-{
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
-  int color;
-
-  if (minimap_enlargeD && dun_level) {
-    for (int row = 0; row < MAX_HEIGHT; ++row) {
-      for (int col = 0; col < MAX_WIDTH; ++col) {
-        color = cave_color(row, col);
-
-        if ((row >= rmin && row <= rmax) && (col >= cmin && col <= cmax) &&
-            color == 0) {
-          color = BRIGHT + BLACK;
-        }
-
-        minimapD[row][col] = color;
-        if (color == BRIGHT + GREEN || color == BRIGHT + RED)
-          viz_minimap_stair(row, col, color);
-      }
-    }
-  } else {
-    enum { RATIO = MAX_WIDTH / SYMMAP_WIDTH };
-    for (int row = 0; row < MAX_HEIGHT / RATIO; ++row) {
-      for (int col = 0; col < MAX_WIDTH / RATIO; ++col) {
-        color = cave_color(row + rmin, col + cmin);
-        for (int i = 0; i < RATIO; ++i) {
-          for (int j = 0; j < RATIO; ++j) {
-            minimapD[row * RATIO + i][col * RATIO + j] = color;
-          }
-        }
-      }
-    }
-  }
-}
-static void
-overlay_autoselect()
-{
-  int row = finger_rowD;
-  if (overlay_usedD[row] <= 1) {
-    for (int it = row + 1; it < AL(overlay_usedD); it += 1) {
-      if (overlay_usedD[it] > 1) {
-        finger_rowD = it;
-        return;
-      }
-    }
-
-    for (int it = row - 1; it > 0; --it) {
-      if (overlay_usedD[it] > 1) {
-        finger_rowD = it;
-        return;
-      }
-    }
-
-    finger_rowD = 0;
-  }
-}
-
-static int
-mode_change()
-{
-  int subprev = submodeD;
-  int subnext = overlay_submodeD;
-  int mprev = modeD;
-  int mnext;
-
-  if (screen_usedD[0])
-    mnext = 2;
-  else if (overlay_usedD[0])
-    mnext = 1;
-  else
-    mnext = 0;
-
-  if (mprev != mnext || subprev != subnext) {
-    if (mprev == 1) ui_stateD[subprev] = finger_rowD;
-
-    if (mnext == 1) {
-      finger_rowD = (subnext > 0) ? ui_stateD[subnext] : 0;
-      finger_colD = (subnext == 'e') ? 1 : 0;
-
-      overlay_autoselect();
-    }
-  }
-
-  modeD = mnext;
-  submodeD = subnext;
-  memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
-
-  return mnext;
-}
-int
-platform_predraw()
-{
-  mode_change();
-  viz_update();
-  viz_minimap();
-  return 1;
 }
 
 char
@@ -938,12 +578,12 @@ nearest_pp(y, x)
   return r;
 }
 
-static void surface_ppfill(surface) SDL_Surface *surface;
+static void surface_ppfill(surface) SDL_Surface* surface;
 {
   uint8_t bpp = surface->format->BytesPerPixel;
-  uint8_t *pixels = surface->pixels;
+  uint8_t* pixels = surface->pixels;
   for (int64_t row = 0; row < surface->h; ++row) {
-    uint8_t *dst = pixels + (surface->pitch * row);
+    uint8_t* dst = pixels + (surface->pitch * row);
     for (int64_t col = 0; col < surface->w; ++col) {
       memcpy(dst, &rgbaD[nearest_pp(row, col)], bpp);
       dst += bpp;
@@ -961,22 +601,6 @@ display_resize(int dw, int dh)
   // TBD: Review game utilization of viewport
   // Disabled the push event in SDL that occurs on another thread
   SDL_RenderSetViewport(rendererD, &(SDL_Rect){0, 0, dw, dh});
-
-  // Console row/col
-  if (UITEST) {
-    float aspect = (float)dw / dh;
-    Log("Window %dw%d wXh; Aspect ratio %.03f", dw, dh, aspect);
-
-    int r, c;
-    float rf, cf;
-
-    r = dh / FHEIGHT;
-    c = dw / FWIDTH;
-    rf = 1.0f / r;
-    cf = 1.0f / c;
-    Log("font %d width %d height console %drow %dcol rf/cf %f %f\n", FWIDTH,
-        FHEIGHT, r, c, rf, cf);
-  }
 }
 
 static int
@@ -1046,24 +670,24 @@ orientation_update()
   return customD.orientation(orientation);
 }
 
-char *
-path_append_filename(char *path, int path_len, char *filename)
+char*
+path_append_filename(char* path, int path_len, char* filename)
 {
   int wridx = path_len;
-  char *write = &path[wridx];
+  char* write = &path[wridx];
 
   if (wridx) *write++ = '/';
-  for (char *iter = filename; *iter != 0; ++iter) {
+  for (char* iter = filename; *iter != 0; ++iter) {
     *write++ = *iter;
   }
   *write = 0;
 
   return path;
 }
-SDL_RWops *
-file_access(char *filename, char *access)
+SDL_RWops*
+file_access(char* filename, char* access)
 {
-  SDL_RWops *ret = SDL_RWFromFile(filename, access);
+  SDL_RWops* ret = SDL_RWFromFile(filename, access);
   if (ret != 0) Log("%s file_access %s", access, filename);
   return ret;
 }
@@ -1438,7 +1062,7 @@ int
 platform_random()
 {
   int ret = -1;
-  SDL_RWops *readf = SDL_RWFromFile("/dev/urandom", "rb");
+  SDL_RWops* readf = SDL_RWFromFile("/dev/urandom", "rb");
   if (readf) {
     SDL_RWread(readf, &ret, sizeof(ret), 1);
     SDL_RWclose(readf);
@@ -1475,11 +1099,11 @@ clear_savebuf()
 
   return 0;
 }
-int checksum(blob, len) void *blob;
+int checksum(blob, len) void* blob;
 {
-  int *iter = blob;
+  int* iter = blob;
   int count = len / sizeof(int);
-  int *end = iter + count;
+  int* end = iter + count;
   int ret = 0;
   for (; iter < end; ++iter) {
     ret ^= *iter;
@@ -1487,12 +1111,12 @@ int checksum(blob, len) void *blob;
   return ret;
 }
 // filename unchanged unless a valid classidx is specified
-char *
-filename_by_class(char *filename, int classidx)
+char*
+filename_by_class(char* filename, int classidx)
 {
   if (classidx >= 0 && classidx < AL(classD)) {
-    char *dst = &filename[4];
-    for (char *src = classD[classidx].name; *src != 0; ++src) {
+    char* dst = &filename[4];
+    for (char* src = classD[classidx].name; *src != 0; ++src) {
       *dst++ = *src | 0x20;
     }
     *dst = 0;
@@ -1502,9 +1126,9 @@ filename_by_class(char *filename, int classidx)
 }
 
 int
-path_exists(char *path)
+path_exists(char* path)
 {
-  SDL_RWops *readf = file_access(path, "rb");
+  SDL_RWops* readf = file_access(path, "rb");
   uint32_t save_size = 0;
   if (readf) {
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
@@ -1513,20 +1137,20 @@ path_exists(char *path)
   return save_size != 0;
 }
 int
-path_delete(char *path)
+path_delete(char* path)
 {
-  SDL_RWops *writef = file_access(path, "wb");
+  SDL_RWops* writef = file_access(path, "wb");
   if (writef) SDL_RWclose(writef);
   return 1;
 }
 int
-path_save(char *path)
+path_save(char* path)
 {
   int version = AL(savesumD) - 1;
   int sum = savesumD[version];
-  int *savefield = savefieldD[version];
+  int* savefield = savefieldD[version];
 
-  SDL_RWops *writef = file_access(path, "wb");
+  SDL_RWops* writef = file_access(path, "wb");
   if (writef) {
     checksumD = 0;
     SDL_RWwrite(writef, &sum, sizeof(sum), 1);
@@ -1543,18 +1167,18 @@ path_save(char *path)
   return 0;
 }
 int
-path_load(char *path)
+path_load(char* path)
 {
   int save_size = 0;
   clear_savebuf();
 
-  SDL_RWops *readf = file_access(path, "rb");
+  SDL_RWops* readf = file_access(path, "rb");
   if (readf) {
     checksumD = 0;
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
     int version = version_by_savesum(save_size);
     if (version >= 0) {
-      int *savefield = savefieldD[version];
+      int* savefield = savefieldD[version];
       for (int it = 0; it < AL(save_bufD); ++it) {
         struct bufS buf = save_bufD[it];
         SDL_RWread(readf, buf.mem, savefield[it], 1);
@@ -1608,7 +1232,7 @@ path_load(char *path)
   return save_size != 0;
 }
 int
-path_savemidpoint(char *path)
+path_savemidpoint(char* path)
 {
   int save_size = 0;
   int write_ok = 0;
@@ -1618,7 +1242,7 @@ path_savemidpoint(char *path)
                input_action_usedD <= AL(input_actionD) - 1);
 
   if (memory_ok) {
-    SDL_RWops *rwfile = file_access(path, "rb+");
+    SDL_RWops* rwfile = file_access(path, "rb+");
     if (rwfile) {
       SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
 
@@ -1641,7 +1265,7 @@ platform_load(saveslot, external)
 {
   char filename[16] = SAVENAME;
   filename_by_class(filename, saveslot);
-  char *path;
+  char* path;
   if (external) {
     path = path_append_filename(exportpathD, exportpath_usedD, filename);
   } else {
@@ -1655,7 +1279,7 @@ platform_save(saveslot)
 {
   char filename[16] = SAVENAME;
   filename_by_class(filename, saveslot);
-  char *path = path_append_filename(savepathD, savepath_usedD, filename);
+  char* path = path_append_filename(savepathD, savepath_usedD, filename);
   return path_save(path);
 }
 int
@@ -1663,7 +1287,7 @@ platform_erase(saveslot, external)
 {
   char filename[16] = SAVENAME;
   filename_by_class(filename, saveslot);
-  char *path;
+  char* path;
   if (external) {
     path = path_append_filename(exportpathD, exportpath_usedD, filename);
   } else {
@@ -1678,7 +1302,7 @@ platform_savemidpoint()
   if (saveslot_class >= 0 && saveslot_class < AL(classD)) {
     char filename[16] = SAVENAME;
     filename_by_class(filename, saveslot_class);
-    char *path = path_append_filename(savepathD, savepath_usedD, filename);
+    char* path = path_append_filename(savepathD, savepath_usedD, filename);
     return path_savemidpoint(path);
   }
   return 0;
@@ -1701,7 +1325,7 @@ platform_saveex()
 int
 cache_write()
 {
-  SDL_RWops *writef = file_access(cachepathD, "wb");
+  SDL_RWops* writef = file_access(cachepathD, "wb");
   if (writef) {
     int ret = SDL_RWwrite(writef, &globalD, sizeof(globalD), 1);
     Log("cache_write: %d", ret);
@@ -1711,7 +1335,7 @@ cache_write()
 }
 
 int
-path_copy_to(char *srcpath, char *dstpath)
+path_copy_to(char* srcpath, char* dstpath)
 {
   SDL_RWops *readf, *writef;
   readf = file_access(srcpath, "rb");
@@ -1736,7 +1360,7 @@ path_copy_to(char *srcpath, char *dstpath)
 }
 
 int
-platform_selection(int *yptr, int *xptr)
+platform_selection(int* yptr, int* xptr)
 {
   *yptr = finger_colD;
   *xptr = finger_rowD;
@@ -1747,7 +1371,7 @@ cache_read()
 {
   uint32_t success = 0;
   if (cachepath_usedD) {
-    SDL_RWops *readf = file_access(cachepathD, "rb");
+    SDL_RWops* readf = file_access(cachepathD, "rb");
     if (readf) {
       if (SDL_RWread(readf, &globalD, sizeof(globalD), 1))
         success = sizeof(globalD);
@@ -1787,10 +1411,13 @@ platform_pregame()
   init = !SDL_WasInit(SDL_SCOPE);
   if (init) {
     if (!RELEASE) Log("Initializing development build");
+    if (!RELEASE) SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
+
     // SDL config
     if (SDL_EVLOG) SDL_SetHint(SDL_HINT_EVENT_LOGGING, "1");
     if (BATCHING) SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
-    if (!ANDROID) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "0");
+    if (VSYNC) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+    if (QUALITY) SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     if (__APPLE__) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
     // SDL_SetHint(SDL_HINT_RENDER_METAL_PREFER_LOW_POWER_DEVICE, "1");
@@ -1798,6 +1425,8 @@ platform_pregame()
     // iOS/Android orientation
     SDL_SetHint(SDL_HINT_ORIENTATIONS, ORIENTATION_LIST);
 
+    // Platform Screensaver
+    if (__APPLE__ || ANDROID) SDL_DisableScreenSaver();
     // Platform Input isolation
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI, "0");
     // Mouse->Touch
@@ -1807,10 +1436,8 @@ platform_pregame()
 
     SDL_Init(SDL_SCOPE);
 
-    if (__APPLE__ || ANDROID) SDL_DisableScreenSaver();
-
     if (__APPLE__) {
-      char *prefpath = SDL_GetPrefPath(ORGNAME, APPNAME);
+      char* prefpath = SDL_GetPrefPath(ORGNAME, APPNAME);
       if (prefpath) {
         int len = snprintf(savepathD, AL(savepathD), "%s", prefpath);
         if (len < 0 || len >= AL(savepathD))
@@ -1820,7 +1447,7 @@ platform_pregame()
         SDL_free(prefpath);
       }
 
-      char *external = SDL_AppleGetDocumentPath(ORGNAME, APPNAME);
+      char* external = SDL_AppleGetDocumentPath(ORGNAME, APPNAME);
       if (external) {
         int len = snprintf(exportpathD, AL(exportpathD), "%s", external);
         if (len < 0 || len >= AL(exportpathD)) {
@@ -1831,16 +1458,18 @@ platform_pregame()
         SDL_free(external);
       }
 
-      // Apple allows user interactions with the external path files
-      memcpy(cachepathD, exportpathD, exportpath_usedD);
-      cachepath_usedD = exportpath_usedD;
+      if (SL(CACHENAME)) {
+        // Apple allows user interactions with the external path files
+        memcpy(cachepathD, exportpathD, exportpath_usedD);
+        cachepath_usedD = exportpath_usedD;
+      }
     }
 
     if (ANDROID) {
       int state = SDL_AndroidGetExternalStorageState();
       if (state & 0x3) {
         int len = 0;
-        char *external = (char *)SDL_AndroidGetExternalStoragePath();
+        char* external = (char*)SDL_AndroidGetExternalStoragePath();
         if (external) {
           len = snprintf(exportpathD, AL(exportpathD), "%s", external);
           Log("GetExternalStoragePath: %s", external);
@@ -1854,21 +1483,23 @@ platform_pregame()
         Log("storage: [state %d] exportpath: %s", state, exportpathD);
       }
 
-      char *cache = SDL_GetCachePath(ORGNAME, APPNAME);
-      if (cache) {
-        Log("SDL_GetCachePath: %s", cache);
-        int len = snprintf(cachepathD, AL(cachepathD), "%s", cache);
-        if (len <= 0 || len >= AL(cachepathD)) {
-          cachepathD[0] = 0;
-          len = 0;
-        }
+      if (SL(CACHENAME)) {
+        char* cache = SDL_GetCachePath(ORGNAME, APPNAME);
+        if (cache) {
+          Log("SDL_GetCachePath: %s", cache);
+          int len = snprintf(cachepathD, AL(cachepathD), "%s", cache);
+          if (len <= 0 || len >= AL(cachepathD)) {
+            cachepathD[0] = 0;
+            len = 0;
+          }
 
-        cachepath_usedD = len;
-        SDL_free(cache);
+          cachepath_usedD = len;
+          SDL_free(cache);
+        }
       }
     }
 
-    if (SL(CACHENAME)) {
+    if (SL(CACHENAME) && cachepath_usedD) {
       path_append_filename(cachepathD, cachepath_usedD, CACHENAME);
       cachepath_usedD += SL(CACHENAME);
       Log("Game cache enabled: %s", cachepathD);
@@ -1907,7 +1538,7 @@ platform_pregame()
   platformD.save = platform_save;
   platformD.erase = platform_erase;
   platformD.readansi = platform_readansi;
-  platformD.predraw = platform_predraw;
+  platformD.predraw = customD.predraw;
   platformD.draw = customD.draw;
   if (TOUCH) platformD.selection = platform_selection;
   platformD.savemidpoint = platform_savemidpoint;

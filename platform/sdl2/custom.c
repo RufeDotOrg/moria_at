@@ -1,5 +1,10 @@
 
-#define SAVENAME "savechar"
+#include "art.c"
+#include "player.c"
+#include "treasure.c"
+#include "wall.c"
+
+enum { UITEST = 0 };
 
 // art.c
 #define MAX_ART 279
@@ -10,7 +15,7 @@ int
 art_io()
 {
   int rc;
-  void *bytes = &artD;
+  void* bytes = &artD;
   unsigned long size = AL(artD);
   unsigned long zsize = sizeof(artZ);
   rc = puff(bytes, &size, artZ, &zsize);
@@ -61,7 +66,7 @@ int
 tart_io()
 {
   int rc;
-  void *bytes = &tartD;
+  void* bytes = &tartD;
   unsigned long size = AL(tartD);
   unsigned long zsize = sizeof(treasureZ);
   rc = puff(bytes, &size, treasureZ, &zsize);
@@ -101,7 +106,7 @@ int
 wart_io()
 {
   int rc;
-  void *bytes = &wartD;
+  void* bytes = &wartD;
   unsigned long size = AL(wartD);
   unsigned long zsize = sizeof(wallZ);
   rc = puff(bytes, &size, wallZ, &zsize);
@@ -141,7 +146,7 @@ int
 part_io()
 {
   int rc;
-  void *bytes = &partD;
+  void* bytes = &partD;
   unsigned long size = AL(partD);
   unsigned long zsize = sizeof(playerZ);
   rc = puff(bytes, &size, playerZ, &zsize);
@@ -179,7 +184,7 @@ ui_init()
   enum { UI_H = 16 };
   USE(renderer);
   uint8_t bitmap[UI_H][UI_W];
-  SDL_Surface *icon;
+  SDL_Surface* icon;
 
   icon = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, UI_W, UI_H, 0,
                                         texture_formatD);
@@ -494,7 +499,7 @@ vitalstat_text()
       if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
     }
 
-    char *affstr[AFF_X];
+    char* affstr[AFF_X];
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
         int idx = AL(affstr) * it + jt;
@@ -591,7 +596,7 @@ portrait_text(mode)
 
   if (mode == 0) {
     AUSE(grect, GR_GAMEPLAY);
-    char *msg = AS(msg_cqD, msg_writeD);
+    char* msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
     int alpha = 255;
 
@@ -659,7 +664,7 @@ landscape_text(mode)
   USE(layout_rect);
 
   if (mode == 0) {
-    char *msg = AS(msg_cqD, msg_writeD);
+    char* msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
     int alpha = 255;
 
@@ -734,7 +739,7 @@ landscape_text(mode)
 // Drawing
 int
 map_draw(zoom_prect)
-SDL_Rect *zoom_prect;
+SDL_Rect* zoom_prect;
 {
   SDL_Rect dest_rect;
   SDL_Rect sprite_src;
@@ -750,7 +755,7 @@ SDL_Rect *zoom_prect;
     for (int col = 0; col < SYMMAP_WIDTH; ++col) {
       dest_rect.x = col * ART_W;
 
-      struct vizS *viz = &vizD[row][col];
+      struct vizS* viz = &vizD[row][col];
       char sym = viz->sym;
       uint64_t fidx = viz->floor;
       uint64_t light = viz->light;
@@ -759,8 +764,8 @@ SDL_Rect *zoom_prect;
       uint64_t tridx = viz->tr;
 
       // Art priority creature, wall, treasure, fallback to symmap ASCII
-      SDL_Texture *srct = 0;
-      SDL_Rect *srcr = 0;
+      SDL_Texture* srct = 0;
+      SDL_Rect* srcr = 0;
 
       if (sym == '@') {
         rp = (SDL_Point){col, row};
@@ -832,7 +837,7 @@ SDL_Rect *zoom_prect;
 
   if (sprite_textureD) {
     uint32_t oidx = caveD[uD.y][uD.x].oidx;
-    struct objS *obj = &entity_objD[oidx];
+    struct objS* obj = &entity_objD[oidx];
     uint32_t tval = obj->tval;
     dest_rect.y = rp.y * ART_H;
     dest_rect.x = rp.x * ART_W;
@@ -992,7 +997,7 @@ platform_p2()
   USE(renderer);
   USE(overlay_width);
   USE(overlay_height);
-  char *msg = AS(msg_cqD, msg_writeD);
+  char* msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
   int is_text;
   AUSE(grect, GR_OVERLAY);
@@ -1033,7 +1038,7 @@ platform_p2()
             left,
             row * FHEIGHT + FHEIGHT,
         };
-        char *text = overlayD[row];
+        char* text = overlayD[row];
         int tlen = overlay_usedD[row];
         if (TOUCH && row == finger_rowD) {
           font_color((SDL_Color){255, 0, 0, 255});
@@ -1130,6 +1135,350 @@ custom_draw()
 
   return 1;
 }
+int
+obj_viz(obj, viz)
+struct objS* obj;
+struct vizS* viz;
+{
+  if (obj->tval != TV_INVIS_TRAP) viz->sym = obj->tchar;
+  switch (obj->tval) {
+      // Misc
+    case TV_MISC:
+      return 25;
+    case TV_CHEST:
+      if (obj->idflag & ID_REVEAL && obj->flags & CH_TRAPPED) return 33;
+      if (obj->flags & CH_LOCKED) return 34;
+      if (obj->sn == SN_EMPTY) return 35;
+      return 32;
+    case TV_SPIKE:
+      return 50;
+    case TV_PROJECTILE:
+      return 13;
+    case TV_LIGHT:
+      return 21;
+    case TV_LAUNCHER:
+      return 15;
+      // Worn
+    case TV_HAFTED:
+      return 24;
+    case TV_POLEARM:
+      return 6;
+    case TV_SWORD:
+      return 14;
+    case TV_DIGGING:
+      return 10;
+    case TV_BOOTS:
+      return 22;
+    case TV_GLOVES:
+      return 23;
+    case TV_CLOAK:
+      return 20;
+    case TV_HELM:
+      if (obj->subval <= 5)
+        return 11;  // helm
+      else
+        return 39;  // crown
+    case TV_SHIELD:
+      return 2;
+    case TV_HARD_ARMOR:
+      return 9;
+    case TV_SOFT_ARMOR:
+      return 1;
+    case TV_AMULET:
+      return 3;
+    case TV_RING:
+      return 7;
+      // Activate
+    case TV_STAFF:
+      return 12;
+    case TV_WAND:
+      return 5;
+    case TV_SCROLL1:
+    case TV_SCROLL2:
+      return 8;
+    case TV_POTION1:
+    case TV_POTION2:
+    case TV_FLASK:
+      return 4;
+    case TV_FOOD:
+      if ((obj->subval & 0x3f) <= 20)
+        return 40;  // mushroom/mold
+      else
+        return 19;  // food
+    case TV_MAGIC_BOOK:
+      return 18;
+    case TV_PRAYER_BOOK:
+      return 17;
+      // Gold
+      // TBD: copper/silver/gold/mithril/gems by subval
+    case TV_GOLD:
+      return 16;
+    /* Dungeon Fixtures */
+    case TV_VIS_TRAP:
+      if (obj->tchar == ' ')
+        viz->light = 0;
+      else
+        return 26;
+      break;
+    case TV_RUBBLE:
+      return 27;
+    case TV_OPEN_DOOR:
+      return 28;
+    case TV_CLOSED_DOOR:
+      if (obj->p1 == 0 || (obj->idflag & ID_REVEAL) == 0)
+        return 29;
+      else if (obj->p1 > 0)
+        return 36;  // locked
+      else if (obj->p1 < 0)
+        return 37;  // stuck
+    case TV_UP_STAIR:
+      return 30;
+    case TV_DOWN_STAIR:
+      return 31;
+    case TV_SECRET_DOOR:
+      viz->floor = 2;
+      break;
+    case TV_GLYPH:
+      return 38;
+  }
+  return 0;
+}
+static int
+cave_color(row, col)
+{
+  struct caveS* c_ptr;
+  struct monS* mon;
+  struct objS* obj;
+  int color = 0;
+
+  c_ptr = &caveD[row][col];
+  mon = &entity_monD[c_ptr->midx];
+  if (mon->mlit) {
+    color = BRIGHT + MAGENTA;
+  } else if (c_ptr->fval == BOUNDARY_WALL) {
+    color = BRIGHT + WHITE;
+  } else if (CF_LIT & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
+    color = BRIGHT + WHITE;
+  } else if (CF_LIT & c_ptr->cflag) {
+    color = BRIGHT + BLACK;
+  }
+
+  if (color <= BRIGHT + BLACK && c_ptr->oidx) {
+    obj = &entity_objD[c_ptr->oidx];
+    if (CF_VIZ & c_ptr->cflag) {
+      if (obj->tval == TV_UP_STAIR) {
+        color = BRIGHT + GREEN;
+      } else if (obj->tval == TV_DOWN_STAIR) {
+        color = BRIGHT + RED;
+      } else if (obj->tval == TV_VIS_TRAP || obj->tval == TV_RUBBLE) {
+        color = BRIGHT + YELLOW;
+      } else if (obj->tval == TV_SECRET_DOOR) {
+        color = BRIGHT + WHITE;
+      } else if (obj->tval == TV_CLOSED_DOOR) {
+        color = BRIGHT + BLACK;
+      } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
+        color = BRIGHT + BLUE;
+      } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
+        color = BRIGHT + GREEN;
+      }
+    }
+  }
+
+  if (color <= BRIGHT + BLACK && (CF_TEMP_LIGHT & c_ptr->cflag)) {
+    color = BRIGHT + CYAN;
+  }
+
+  return color;
+}
+static int
+fade_by_distance(y1, x1, y2, x2)
+{
+  int dy = y1 - y2;
+  int dx = x1 - x2;
+  int sq = dx * dx + dy * dy;
+
+  if (sq <= 1) return 1;
+  if (sq <= 4) return 2;
+  if (sq <= 9) return 3;
+  return 4;
+}
+static void
+viz_update()
+{
+  int blind, py, px;
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+
+  struct vizS* vptr = &vizD[0][0];
+  blind = maD[MA_BLIND];
+  py = uD.y;
+  px = uD.x;
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      struct caveS* c_ptr = &caveD[row][col];
+      struct monS* mon = &entity_monD[c_ptr->midx];
+      struct objS* obj = &entity_objD[c_ptr->oidx];
+      struct vizS viz = {0};
+      if (row != py || col != px) {
+        viz.light = (c_ptr->cflag & CF_SEEN) != 0;
+        viz.fade = fade_by_distance(py, px, row, col) - 1;
+        if (mon->mlit) {
+          viz.cr = mon->cidx;
+          viz.sym = creatureD[mon->cidx].cchar;
+        } else if (blind) {
+          // May have MA_DETECT resulting in lit monsters above
+          // No walls, objects, or lighting
+          viz.light = 0;
+          viz.fade = 3;
+        } else if (CF_VIZ & c_ptr->cflag) {
+          switch (c_ptr->fval) {
+            case GRANITE_WALL:
+            case BOUNDARY_WALL:
+              viz.sym = '#';
+              viz.floor = 1;
+              break;
+            case QUARTZ_WALL:
+              viz.sym = '#';
+              viz.floor = 3 + (c_ptr->oidx != 0);
+              break;
+            case MAGMA_WALL:
+              viz.sym = '#';
+              viz.floor = 5 + (c_ptr->oidx != 0);
+              break;
+            case FLOOR_OBST:
+              viz.tr = obj_viz(obj, &viz);
+              break;
+            default:
+              viz.light += ((CF_LIT & c_ptr->cflag) != 0);
+              viz.dim = obj->tval && los(py, px, row, col) == 0;
+              viz.tr = obj_viz(obj, &viz);
+              break;
+          }
+        }
+      } else {
+        viz.sym = '@';
+        viz.light = 3;
+      }
+
+      *vptr++ = viz;
+    }
+  }
+}
+void
+viz_minimap_stair(row, col, color)
+{
+  row = CLAMP(row, 2, MAX_HEIGHT - 1);
+  col = CLAMP(col, 1, MAX_WIDTH - 2 - 1);
+  minimapD[row][col] = color;
+  minimapD[row][col - 1] = color;
+  minimapD[row - 1][col] = color;
+  minimapD[row - 1][col + 1] = color;
+  minimapD[row - 2][col + 1] = color;
+  minimapD[row - 2][col + 2] = color;
+}
+void
+viz_minimap()
+{
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+  int color;
+
+  if (minimap_enlargeD && dun_level) {
+    for (int row = 0; row < MAX_HEIGHT; ++row) {
+      for (int col = 0; col < MAX_WIDTH; ++col) {
+        color = cave_color(row, col);
+
+        if ((row >= rmin && row <= rmax) && (col >= cmin && col <= cmax) &&
+            color == 0) {
+          color = BRIGHT + BLACK;
+        }
+
+        minimapD[row][col] = color;
+        if (color == BRIGHT + GREEN || color == BRIGHT + RED)
+          viz_minimap_stair(row, col, color);
+      }
+    }
+  } else {
+    enum { RATIO = MAX_WIDTH / SYMMAP_WIDTH };
+    for (int row = 0; row < MAX_HEIGHT / RATIO; ++row) {
+      for (int col = 0; col < MAX_WIDTH / RATIO; ++col) {
+        color = cave_color(row + rmin, col + cmin);
+        for (int i = 0; i < RATIO; ++i) {
+          for (int j = 0; j < RATIO; ++j) {
+            minimapD[row * RATIO + i][col * RATIO + j] = color;
+          }
+        }
+      }
+    }
+  }
+}
+static void
+overlay_autoselect()
+{
+  int row = finger_rowD;
+  if (overlay_usedD[row] <= 1) {
+    for (int it = row + 1; it < AL(overlay_usedD); it += 1) {
+      if (overlay_usedD[it] > 1) {
+        finger_rowD = it;
+        return;
+      }
+    }
+
+    for (int it = row - 1; it > 0; --it) {
+      if (overlay_usedD[it] > 1) {
+        finger_rowD = it;
+        return;
+      }
+    }
+
+    finger_rowD = 0;
+  }
+}
+
+static int
+mode_change()
+{
+  int subprev = submodeD;
+  int subnext = overlay_submodeD;
+  int mprev = modeD;
+  int mnext;
+
+  if (screen_usedD[0])
+    mnext = 2;
+  else if (overlay_usedD[0])
+    mnext = 1;
+  else
+    mnext = 0;
+
+  if (mprev != mnext || subprev != subnext) {
+    if (mprev == 1) ui_stateD[subprev] = finger_rowD;
+
+    if (mnext == 1) {
+      finger_rowD = (subnext > 0) ? ui_stateD[subnext] : 0;
+      finger_colD = (subnext == 'e') ? 1 : 0;
+
+      overlay_autoselect();
+    }
+  }
+
+  modeD = mnext;
+  submodeD = subnext;
+  memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
+
+  return mnext;
+}
+int
+custom_predraw()
+{
+  mode_change();
+  viz_update();
+  viz_minimap();
+  return 1;
+}
 
 int
 custom_orientation(orientation)
@@ -1150,11 +1499,11 @@ custom_orientation(orientation)
   return 0;
 }
 
-
 int
 custom_setup()
 {
   customD.orientation = custom_orientation;
   customD.pregame = custom_pregame;
   customD.draw = custom_draw;
+  customD.predraw = custom_predraw;
 }

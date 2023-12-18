@@ -1,4 +1,10 @@
 static int
+char_visible(char c)
+{
+  uint8_t vis = c - 0x21;
+  return vis < 0x7f - 0x21;
+}
+static int
 dir_x(dir)
 {
   switch (dir) {
