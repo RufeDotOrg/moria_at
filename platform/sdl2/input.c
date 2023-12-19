@@ -12,8 +12,28 @@ enum {
   TOUCH_RB,
   TOUCH_PAD
 };
+enum {
+  GR_VERSION,
+  GR_PAD,
+  GR_BUTTON1,
+  GR_BUTTON2,
+  GR_GAMEPLAY,
+  GR_MINIMAP,
+  GR_HISTORY,
+  GR_LOCK,
+  GR_STAT,
+  GR_OVERLAY,
+  GR_WIDESCREEN,  // show_history() in landscape orientation
+  GR_COUNT
+};
+enum { MAX_BUTTON = 2 };
+
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
+DATA SDL_Rect grectD[GR_COUNT];
+DATA int xD;
+DATA uint8_t finger_countD;
+DATA int last_pressD;
 
 char
 sym_shift(char c)

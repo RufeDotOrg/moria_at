@@ -1,4 +1,7 @@
 
+#include "disk.c"
+#include "input.c"
+
 #include "art.c"
 #include "player.c"
 #include "treasure.c"
@@ -9,6 +12,22 @@ enum { UITEST = 0 };
 enum { PADSIZE = (26 + 2) * 16 };
 enum { AFF_X = 3 };
 enum { AFF_Y = AL(active_affectD) / AFF_X };
+
+DATA SDL_Color whiteD = {255, 255, 255, 255};
+DATA char moreD[] = "-more-";
+
+DATA fn text_fnD;
+DATA uint32_t sprite_idD;
+DATA SDL_Surface* spriteD;
+DATA SDL_Texture* sprite_textureD;
+DATA SDL_Surface* mmsurfaceD;
+DATA SDL_Texture* mmtextureD;
+DATA SDL_Texture* ui_textureD;
+DATA SDL_Surface* tpsurfaceD;
+DATA SDL_Texture* tptextureD;
+DATA SDL_Texture* map_textureD;
+DATA SDL_Texture* text_textureD;
+enum { STRLEN_MORE = AL(moreD) - 1 };
 
 #define P(p) p.x, p.y
 #define RF(r, framing)                                                    \
@@ -249,7 +268,6 @@ static void surface_ppfill(surface) SDL_Surface* surface;
     }
   }
 }
-
 static int
 tp_init()
 {
@@ -277,7 +295,19 @@ tp_init()
 
   return 0;
 }
+int
+fs_upgrade()
+{
+  // Make a copy of all characters to external storage
+  platformD.saveex();
 
+  // Move default "savechar" into the class slot
+  if (platformD.load(-1, 0)) {
+    if (platformD.save(uD.clidx)) {
+      platformD.erase(-1, 0);
+    }
+  }
+}
 int
 custom_pregame()
 {
@@ -319,6 +349,16 @@ custom_pregame()
       rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET, 2 * 1024, 2 * 1024);
 
   layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
+
+  // Migration code
+  if (platformD.load(-1, 0)) fs_upgrade();
+}
+
+int
+custom_postgame()
+{
+  platform_savemidpoint();
+  if (cachepath_usedD) cache_write();
 }
 
 static int
@@ -1544,8 +1584,9 @@ custom_orientation(orientation)
 int
 custom_setup()
 {
-  customD.orientation = custom_orientation;
   customD.pregame = custom_pregame;
+  customD.postgame = custom_postgame;
+  customD.orientation = custom_orientation;
   customD.draw = custom_draw;
   customD.predraw = custom_predraw;
 }

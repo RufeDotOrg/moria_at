@@ -79,41 +79,13 @@ DATA uint32_t texture_formatD;
 DATA SDL_PixelFormat* pixel_formatD;
 DATA int orientation_lockD;
 
-DATA uint32_t sprite_idD;
-DATA SDL_Surface* spriteD;
-DATA SDL_Texture* sprite_textureD;
-DATA SDL_Surface* mmsurfaceD;
-DATA SDL_Texture* mmtextureD;
-DATA SDL_Texture* ui_textureD;
-DATA SDL_Surface* tpsurfaceD;
-DATA SDL_Texture* tptextureD;
-DATA SDL_Texture* map_textureD;
-DATA SDL_Texture* text_textureD;
 DATA SDL_Texture* portraitD;
 DATA SDL_Texture* landscapeD;
 DATA SDL_Texture* layoutD;
 DATA SDL_Rect layout_rectD;
 DATA SDL_FRect view_rectD;
-DATA uint32_t max_texture_widthD;
-DATA uint32_t max_texture_heightD;
-
-enum {
-  GR_VERSION,
-  GR_PAD,
-  GR_BUTTON1,
-  GR_BUTTON2,
-  GR_GAMEPLAY,
-  GR_MINIMAP,
-  GR_HISTORY,
-  GR_LOCK,
-  GR_STAT,
-  GR_OVERLAY,
-  GR_WIDESCREEN,  // show_history() in landscape orientation
-  GR_COUNT
-};
-enum { MAX_BUTTON = 2 };
-SDL_Rect grectD[GR_COUNT];
-DATA fn text_fnD;
+DATA int max_texture_widthD;
+DATA int max_texture_heightD;
 
 GAME int overlay_copyD[AL(overlay_usedD)];
 GAME int modeD;
@@ -121,14 +93,8 @@ GAME int submodeD;
 GAME uint8_t finger_rowD;
 GAME uint8_t finger_colD;
 
-DATA SDL_Color whiteD = {255, 255, 255, 255};
-DATA int xD;
-DATA uint8_t finger_countD;
 DATA int quitD;
-DATA int last_pressD;
 DATA float retina_scaleD;
-DATA char moreD[] = "-more-";
-enum { STRLEN_MORE = AL(moreD) - 1 };
 
 int
 render_init()
@@ -356,8 +322,6 @@ orientation_update()
   return customD.orientation(orientation);
 }
 
-#include "disk.c"
-
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -416,9 +380,6 @@ SDL_Event event;
   return 0;
 }
 
-#include "input.c"
-
-// Game interface
 int
 platform_random()
 {
@@ -429,20 +390,6 @@ platform_random()
     SDL_RWclose(readf);
   }
   return ret;
-}
-
-int
-fs_upgrade()
-{
-  // Make a copy of all characters to external storage
-  platformD.saveex();
-
-  // Move default "savechar" into the class slot
-  if (platformD.load(-1, 0)) {
-    if (platformD.save(uD.clidx)) {
-      platformD.erase(-1, 0);
-    }
-  }
 }
 
 // Initialization
@@ -523,21 +470,22 @@ platform_pregame()
   }
 
   while (display_rectD.w == 0) {
-    sdl_pump();
+    SDL_Event event;
+    if (SDL_PollEvent(&event)) {
+      if (event.type == SDL_WINDOWEVENT) {
+        sdl_window_event(event);
+      }
+    }
   }
 
   customD.pregame();
-
-  // Migration code
-  if (platformD.load(-1, 0)) fs_upgrade();
 
   return init;
 }
 int
 platform_postgame(may_exit)
 {
-  platform_savemidpoint();
-  if (cachepath_usedD) cache_write();
+  customD.postgame();
 
   // Android closure does not require the process to end.
   // exit(...) ensures the process terminates.

@@ -311,8 +311,9 @@ struct platformS {
 DATA struct platformS platformD;
 
 struct customS {
-  fn orientation;
   fn pregame;
+  fn postgame;
+  fn orientation;
   fn predraw;
   fn draw;
 };
