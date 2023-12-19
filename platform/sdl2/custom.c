@@ -251,7 +251,7 @@ static void surface_ppfill(surface) SDL_Surface* surface;
 }
 
 static int
-input_init()
+tp_init()
 {
   int cx = PADSIZE / 2;
   int cy = PADSIZE / 2;
@@ -305,7 +305,7 @@ custom_pregame()
   }
 
   if (TOUCH) ui_init();
-  if (TOUCH) input_init();
+  if (TOUCH) tp_init();
 
   mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
                                               MAX_HEIGHT, 0, texture_formatD);
