@@ -153,7 +153,6 @@ render_init()
   max_texture_widthD = rinfo.max_texture_width;
   max_texture_heightD = rinfo.max_texture_height;
   texture_formatD = rinfo.texture_formats[0];
-  pixel_formatD = SDL_AllocFormat(rinfo.texture_formats[0]);
 
   {
     int rw, rh;
@@ -163,6 +162,11 @@ render_init()
     int ww, wh;
     SDL_GetWindowSize(windowD, &ww, &wh);
     retina_scaleD = MAX((float)rw / ww, (float)rh / wh);
+  }
+
+  pixel_formatD = SDL_AllocFormat(rinfo.texture_formats[0]);
+  if (!RELEASE && pixel_formatD->BytesPerPixel != 4) {
+    Log("WARNING: BytesPerPixel != 4");
   }
 
   return 1;
@@ -211,35 +215,6 @@ static SDL_Color*
 color_by_palette(c)
 {
   return (SDL_Color*)&paletteD[c];
-}
-
-void
-bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
-                       struct SDL_Surface* surface)
-{
-  uint8_t bpp = surface->format->BytesPerPixel;
-  uint8_t* pixels = surface->pixels;
-  int64_t pitch = surface->pitch;
-  uint8_t* src = bitmap;
-  for (int64_t row = 0; row < ph; ++row) {
-    uint8_t* dst = pixels + (pitch * (into.y + row)) + (bpp * into.x);
-    for (int64_t col = 0; col < pw; ++col) {
-      memcpy(dst, &rgbaD[*src & 0xff], bpp);
-      src += 1;
-      dst += bpp;
-    }
-  }
-}
-
-void
-bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t bitmap_size)
-{
-  int byte_count = bitmap_size / 8;
-  for (int it = 0; it < byte_count; ++it) {
-    for (int jt = 0; jt < 8; ++jt) {
-      bitmap[it * 8 + jt] = ((bitfield[it] & (1 << jt)) != 0) * 15;
-    }
-  }
 }
 
 #include "font.c"
