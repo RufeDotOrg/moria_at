@@ -1594,13 +1594,13 @@ int
 custom_orientation(orientation)
 {
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
-    text_fnD = landscape_text;
+    text_fnD = portrait_text;
     overlay_widthD = 67;
     overlay_heightD = AL(overlayD) + 1;
     msg_widthD = 63;
     portrait_layout();
   } else if (orientation == SDL_ORIENTATION_LANDSCAPE) {
-    text_fnD = portrait_text;
+    text_fnD = landscape_text;
     overlay_widthD = 78;
     overlay_heightD = AL(overlayD) + 2;
     msg_widthD = 92;
