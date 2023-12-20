@@ -13,7 +13,6 @@ enum { PADSIZE = (26 + 2) * 16 };
 enum { AFF_X = 3 };
 enum { AFF_Y = AL(active_affectD) / AFF_X };
 
-DATA SDL_Color whiteD = {255, 255, 255, 255};
 DATA char moreD[] = "-more-";
 
 DATA fn text_fnD;
@@ -381,6 +380,8 @@ custom_pregame()
 
   // Migration code
   if (platformD.load(-1, 0)) fs_upgrade();
+
+  font_color(*color_by_palette(WHITE));
 }
 
 int
@@ -692,7 +693,7 @@ common_text()
       p.x -= STRLEN_MORE * FWIDTH / 2;
       p.y -= FHEIGHT / 2;
       render_monofont_string(renderer, &fontD, AP(moreD), p);
-      font_color(whiteD);
+      font_color(*color_by_palette(WHITE));
     }
   }
   return 0;
@@ -1150,7 +1151,7 @@ platform_p2()
         char* text = overlayD[row];
         int tlen = overlay_usedD[row];
         if (TOUCH && row == finger_rowD) {
-          font_color((SDL_Color){255, 0, 0, 255});
+          font_color(*color_by_palette(RED));
           if (tlen <= 1) {
             text = "-";
             tlen = 1;
@@ -1158,7 +1159,7 @@ platform_p2()
         }
         render_monofont_string(renderer, &fontD, text, tlen, p);
         if (TOUCH && row == finger_rowD) {
-          font_color(whiteD);
+          font_color(*color_by_palette(WHITE));
         }
       }
     } break;
