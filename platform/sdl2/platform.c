@@ -58,16 +58,9 @@ enum { LANDSCAPE = 0 };
 // Custom platform code is may be included after the game based on this define
 // Custom code may depend on game logic AND platform specifics
 #define CUSTOM_SETUP 1
-// Color
-#define U4(i) \
-  (i & 0xff), ((i >> 8) & 0xff), ((i >> 16) & 0xff), ((i >> 24) & 0xff)
 
 enum { ART_W = 32 };
 enum { ART_H = 64 };
-enum { SPRITE_SQ = 32 };
-enum { MAP_W = SYMMAP_WIDTH * ART_W };
-enum { MAP_H = SYMMAP_HEIGHT * ART_H };
-enum { MMSCALE = 2 };
 
 // render.c
 DATA struct SDL_Window* windowD;
@@ -194,27 +187,6 @@ render_update()
   }
 
   SDL_RenderPresent(renderer);
-}
-
-// hex RGBA to little endian
-#define CHEX(x) __builtin_bswap32(x)
-DATA uint32_t paletteD[] = {
-    CHEX(0x00000000), CHEX(0xcc0000ff), CHEX(0x4e9a06ff), CHEX(0xc4a000ff),
-    CHEX(0x3465a4ff), CHEX(0x75507bff), CHEX(0x06989aff), CHEX(0xd3d7cfff),
-    CHEX(0x555753ff), CHEX(0xef2929ff), CHEX(0x8ae234ff), CHEX(0xfce94fff),
-    CHEX(0x729fcfff), CHEX(0xad7fa8ff), CHEX(0x34e2e2ff), CHEX(0xeeeeecff),
-};
-DATA uint32_t rgbaD[AL(paletteD)];
-DATA uint32_t lightingD[] = {
-    CHEX(0x161616ff),
-    CHEX(0x282828ff),
-    CHEX(0x3c3c3cff),
-    CHEX(0x505050ff),
-};
-static SDL_Color*
-color_by_palette(c)
-{
-  return (SDL_Color*)&paletteD[c];
 }
 
 #include "font.c"
@@ -355,6 +327,14 @@ SDL_Event event;
   return 0;
 }
 
+STATIC int
+rate_of_refresh()
+{
+  USE(refresh_rate);
+  if (!refresh_rate) refresh_rate = 60;
+  return refresh_rate;
+}
+
 int
 platform_random()
 {
@@ -410,10 +390,6 @@ platform_pregame()
     landscapeD =
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           LANDSCAPE_X, LANDSCAPE_Y);
-  }
-
-  for (int it = 0; it < AL(paletteD); ++it) {
-    rgbaD[it] = SDL_MapRGBA(pixel_formatD, U4(paletteD[it]));
   }
 
   platformD.seed = platform_random;

@@ -12,6 +12,10 @@ enum { UITEST = 0 };
 enum { PADSIZE = (26 + 2) * 16 };
 enum { AFF_X = 3 };
 enum { AFF_Y = AL(active_affectD) / AFF_X };
+enum { SPRITE_SQ = 32 };
+enum { MAP_W = SYMMAP_WIDTH * ART_W };
+enum { MAP_H = SYMMAP_HEIGHT * ART_H };
+enum { MMSCALE = 2 };
 
 DATA char moreD[] = "-more-";
 
@@ -35,6 +39,29 @@ enum { STRLEN_MORE = AL(moreD) - 1 };
     .x = r.x - (framing), .y = r.y - (framing), .w = r.w + 2 * (framing), \
     .h = r.h + 2 * (framing),                                             \
   }
+#define U4(i) \
+  (i & 0xff), ((i >> 8) & 0xff), ((i >> 16) & 0xff), ((i >> 24) & 0xff)
+
+// hex RGBA to little endian
+#define CHEX(x) __builtin_bswap32(x)
+DATA uint32_t paletteD[] = {
+    CHEX(0x00000000), CHEX(0xcc0000ff), CHEX(0x4e9a06ff), CHEX(0xc4a000ff),
+    CHEX(0x3465a4ff), CHEX(0x75507bff), CHEX(0x06989aff), CHEX(0xd3d7cfff),
+    CHEX(0x555753ff), CHEX(0xef2929ff), CHEX(0x8ae234ff), CHEX(0xfce94fff),
+    CHEX(0x729fcfff), CHEX(0xad7fa8ff), CHEX(0x34e2e2ff), CHEX(0xeeeeecff),
+};
+DATA uint32_t rgbaD[AL(paletteD)];
+DATA uint32_t lightingD[] = {
+    CHEX(0x161616ff),
+    CHEX(0x282828ff),
+    CHEX(0x3c3c3cff),
+    CHEX(0x505050ff),
+};
+static SDL_Color*
+color_by_palette(c)
+{
+  return (SDL_Color*)&paletteD[c];
+}
 
 void
 bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
@@ -53,7 +80,6 @@ bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
     }
   }
 }
-
 void
 bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t bitmap_size)
 {
@@ -339,6 +365,10 @@ fs_upgrade()
 int
 custom_pregame()
 {
+  for (int it = 0; it < AL(paletteD); ++it) {
+    rgbaD[it] = SDL_MapRGBA(pixel_formatD, U4(paletteD[it]));
+  }
+
   if (ART_H * SPRITE_SQ <= max_texture_heightD &&
       ART_W * SPRITE_SQ <= max_texture_widthD) {
     spriteD =
