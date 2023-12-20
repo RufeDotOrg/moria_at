@@ -10814,7 +10814,7 @@ py_saveslot_select()
 
   return 0;
 }
-void
+static void
 py_takeoff()
 {
   char c;
@@ -11618,7 +11618,7 @@ try_disarm_chest(y, x)
     }
   }
 }
-void py_disarm(uy, ux) int *uy, *ux;
+static void py_disarm(uy, ux) int *uy, *ux;
 {
   int y, x, dir;
   struct caveS* c_ptr;
@@ -13583,9 +13583,87 @@ dungeon()
             find_init(dir, &y, &x);
           }
         } else {
+          if (KEYBOARD) {
+            switch (c) {
+              case '?':
+                py_help();
+                break;
+              case 'W':
+                py_where();
+                break;
+              case 'X':
+                py_offhand();
+                break;
+              case 'Z':
+                iidx = inven_choice("Invoke which staff?", "*");
+                if (iidx >= 0) inven_try_staff(iidx, &y, &x);
+                break;
+              case '1' ... '9':
+                MSG("Numlock is required for arrowkey movement");
+                break;
+              case 'c':
+                close_object();
+                break;
+              case 'e': {
+                int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
+                MSG("You wear %d %s.", count, count > 1 ? "items" : "item");
+              } break;
+              case 'f':
+                py_bash(&y, &x);
+                break;
+              case 'i': {
+                int count = inven_overlay(0, INVEN_EQUIP);
+                MSG("You carry %d %s:", count, count > 1 ? "items" : "item");
+              } break;
+              case 'q':
+                iidx = inven_choice("Quaff what?", "*");
+                if (iidx >= 0) inven_quaff(iidx);
+                break;
+              case 'r':
+                iidx = inven_choice("Read what?", "*");
+                if (iidx >= 0) inven_read(iidx, &y, &x);
+                break;
+              case 'o':
+                py_open();
+                break;
+              case 'w':
+                iidx = inven_choice("Wear/Wield which item?", "*");
+                if (iidx >= 0 && iidx < INVEN_EQUIP) inven_wear(iidx);
+                break;
+              case 'x':
+                py_examine();
+                break;
+              case 'z':
+                iidx = inven_choice("Aim which wand?", "*");
+                if (iidx >= 0) py_zap(iidx);
+                break;
+              case 'D':
+                py_disarm(&y, &x);
+                break;
+              case 'E':
+                iidx = inven_choice("Eat what?", "*");
+                if (iidx >= 0) inven_eat(iidx);
+                break;
+              case 'I':
+                inven_sort();
+                int count = inven_overlay(0, INVEN_EQUIP);
+                MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
+                break;
+              case 'R':
+                py_rest();
+                break;
+              case 'S':
+                iidx = inven_choice("Study which item?", "*/");
+                if (iidx >= 0) obj_study(obj_get(invenD[iidx]), 0);
+                break;
+              case 'T':
+                py_takeoff();
+                break;
+            }
+          }
+
           switch (c) {
-            case '?':
-              py_help();
+            default:
               break;
             case '=':
               py_menu();
@@ -13607,36 +13685,8 @@ dungeon()
             case ',':
               py_pickup(y, x, TRUE);
               break;
-            case '1' ... '9':
-              MSG("Numlock is required for arrowkey movement");
-              break;
-            case 'c':
-              close_object();
-              break;
             case 'd':
               py_drop();
-              break;
-            case 'e': {
-              int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
-              MSG("You wear %d %s.", count, count > 1 ? "items" : "item");
-            } break;
-            case 'f':
-              py_bash(&y, &x);
-              break;
-            case 'i': {
-              int count = inven_overlay(0, INVEN_EQUIP);
-              MSG("You carry %d %s:", count, count > 1 ? "items" : "item");
-            } break;
-            case 'q':
-              iidx = inven_choice("Quaff what?", "*");
-              if (iidx >= 0) inven_quaff(iidx);
-              break;
-            case 'r':
-              iidx = inven_choice("Read what?", "*");
-              if (iidx >= 0) inven_read(iidx, &y, &x);
-              break;
-            case 'o':
-              py_open();
               break;
             case 's':
               msg_print("You search the area.");
@@ -13644,17 +13694,6 @@ dungeon()
               break;
             case 'v':
               show_version();
-              break;
-            case 'w':
-              iidx = inven_choice("Wear/Wield which item?", "*");
-              if (iidx >= 0 && iidx < INVEN_EQUIP) inven_wear(iidx);
-              break;
-            case 'x':
-              py_examine();
-              break;
-            case 'z':
-              iidx = inven_choice("Aim which wand?", "*");
-              if (iidx >= 0) py_zap(iidx);
               break;
             case '<':
               go_up();
@@ -13669,20 +13708,6 @@ dungeon()
             case 'C':
               omit_replay = 1;
               show_character(0);
-              break;
-            case 'D':
-              py_disarm(&y, &x);
-              break;
-            case 'E':
-              iidx = inven_choice("Eat what?", "*");
-              if (iidx >= 0) inven_eat(iidx);
-              break;
-            case 'I':
-              inven_sort();
-              int count = inven_overlay(0, INVEN_EQUIP);
-              MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
-              break;
-            case 'L':
               break;
             case 'M':
               if (HACK) {
@@ -13701,12 +13726,6 @@ dungeon()
               } else {
                 omit_replay = 1;
               }
-
-              // TBD: fix console moria
-              // screen_submodeD = 0;
-              // screenD[0][0] = ' ';
-              // screen_usedD[0] = 1;
-
               if (maD[MA_BLIND] == 0) {
                 minimap_enlargeD = TRUE;
                 // TBD: text only for console mode?
@@ -13724,26 +13743,6 @@ dungeon()
               int tx = MAX(uD.x - cellw / 2, panelD.panel_col_min);
               py_look(ylookD + ty, xlookD + tx);
             } break;
-            case 'R':
-              py_rest();
-              break;
-            case 'S':
-              iidx = inven_choice("Study which item?", "*/");
-              if (iidx >= 0) obj_study(obj_get(invenD[iidx]), 0);
-              break;
-            case 'T':
-              py_takeoff();
-              break;
-            case 'W':
-              py_where();
-              break;
-            case 'X':
-              py_offhand();
-              break;
-            case 'Z':
-              iidx = inven_choice("Invoke which staff?", "*");
-              if (iidx >= 0) inven_try_staff(iidx, &y, &x);
-              break;
             case CTRL('x'):
               platformD.savemidpoint();
               // fallthru
@@ -13751,12 +13750,11 @@ dungeon()
               memcpy(death_descD, AP(quit_stringD));
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game
-            case CTRL('p'): {
+            case CTRL('p'):
               show_history();
-            } break;
-            default:
               break;
           }
+
           if (HACK) {
             switch (c) {
               case CTRL('a'): {
@@ -13809,16 +13807,13 @@ dungeon()
                 int fy, fx;
                 fy = y_obj_teleportD;
                 fx = x_obj_teleportD;
-
                 for (row = 1; row < MAX_HEIGHT - 1; ++row) {
                   for (col = 1; col < MAX_WIDTH - 1; ++col) {
                     int oidx = caveD[row][col].oidx;
                     if (!oidx) continue;
                     struct objS* obj = &entity_objD[oidx];
                     if (is_door(obj->tval)) continue;
-
                     if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
-
                     if (py_teleport_near(row, col, &y, &x)) {
                       MSG("Teleport to obj %d", oidx);
                       y_obj_teleportD = row;

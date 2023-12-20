@@ -11,6 +11,8 @@
 
 #include "tty.c"
 
+enum { KEYBOARD = 1 };
+
 #ifndef TCGETS
 #define TCGETS TIOCGETA
 #endif
