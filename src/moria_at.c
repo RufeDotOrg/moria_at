@@ -368,7 +368,6 @@ draw()
   }
   AC(screen_usedD);
   AC(overlay_usedD);
-  minimap_enlargeD = FALSE;
 }
 
 void
@@ -13713,6 +13712,7 @@ dungeon()
                 // TBD: text only for console mode?
                 DRAWMSG("");
                 inkey();
+                minimap_enlargeD = FALSE;
               }
               break;
             case 'O': {
