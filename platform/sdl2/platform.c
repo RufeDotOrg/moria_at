@@ -59,9 +59,6 @@ enum { LANDSCAPE = 0 };
 // Custom code may depend on game logic AND platform specifics
 #define CUSTOM_SETUP 1
 
-enum { ART_W = 32 };
-enum { ART_H = 64 };
-
 // render.c
 DATA struct SDL_Window* windowD;
 DATA int refresh_rateD;
@@ -79,12 +76,6 @@ DATA SDL_Rect layout_rectD;
 DATA SDL_FRect view_rectD;
 DATA int max_texture_widthD;
 DATA int max_texture_heightD;
-
-GAME int overlay_copyD[AL(overlay_usedD)];
-GAME int modeD;
-GAME int submodeD;
-GAME uint8_t finger_rowD;
-GAME uint8_t finger_colD;
 
 DATA int quitD;
 DATA float retina_scaleD;

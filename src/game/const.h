@@ -473,3 +473,6 @@
 enum { BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BRIGHT };
 // Longest single message (may be concatenated with other messages)
 #define STRLEN_MSG 79
+// Art
+enum { ART_W = 32 };
+enum { ART_H = 64 };

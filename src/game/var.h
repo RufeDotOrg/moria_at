@@ -121,6 +121,11 @@ DATA char git_hashD[] = "AbCdEfGhIjKlMnO";
 
 // Optional UI state
 GAME uint8_t ui_stateD[256];
+GAME int overlay_copyD[AL(overlay_usedD)];
+GAME int modeD;
+GAME int submodeD;
+GAME uint8_t finger_rowD;
+GAME uint8_t finger_colD;
 
 // Replay
 GAME int replay_flag;
