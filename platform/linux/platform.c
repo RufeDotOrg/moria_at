@@ -60,6 +60,10 @@ platform_pregame()
     write(STDOUT_FILENO, tc_hide_cursorD, sizeof(tc_hide_cursorD));
   }
 
+  platformD.readansi = platform_readansi;
+  platformD.draw = platform_draw;
+  platformD.predraw = platform_predraw;
+
   return 0;
 }
 
