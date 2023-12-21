@@ -54,11 +54,6 @@ DATA char quit_stringD[] = "quitting";
     }                                      \
   }
 
-int
-noop()
-{
-  return 0;
-}
 static char
 inkey()
 {
@@ -13985,13 +13980,10 @@ obj_level_init()
 static int
 platform_setup()
 {
+  FT(platform);
   platformD.pregame = platform_pregame;
   platformD.postgame = platform_postgame;
 
-  fn* func = (void*)&platformD;
-  for (int it = 0; it < sizeof(platformD) / sizeof(fn); ++it) {
-    if (!func[it]) func[it] = noop;
-  }
   msg_widthD = overlay_widthD = 80;
 
   return 0;

@@ -48,7 +48,7 @@ typedef int (*fn)();
 // Array End
 #define AE(arr) (arr + sizeof(arr))
 // String Length
-#define SL(str) (AL(str)-1)
+#define SL(str) (AL(str) - 1)
 // String Pair
 #define SP(str) str, SL(str)
 
@@ -60,8 +60,11 @@ typedef int (*fn)();
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
 
+// Use global var
 #define USE(x) typeof(x##D) x = x##D
+// Array Use
 #define AUSE(a, idx) typeof(a##D[0]) a = a##D[idx];
+// Member Use
 #define MUSE(a, member) typeof(a##D.member) member = a##D.member
 
 // (optionally defined)
@@ -160,3 +163,17 @@ enum { RELEASE = 0 };
       body;                                                      \
     }                                                            \
   }
+
+// Function Table
+#define FT(x) ftable_clear(&x##D, sizeof(x##D) / sizeof(fn))
+int
+noop()
+{
+  return 0;
+}
+STATIC int
+ftable_clear(void* ftable, int size)
+{
+  fn* func = ftable;
+  for (int it = 0; it < size; ++it) func[it] = noop;
+}
