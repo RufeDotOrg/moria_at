@@ -407,7 +407,7 @@ disk_init()
     }
   }
 
-  if (SL(CACHENAME) && cachepath_usedD) {
+  if (SL(CACHENAME)) {
     path_append_filename(cachepathD, cachepath_usedD, CACHENAME);
     cachepath_usedD += SL(CACHENAME);
     Log("Game cache enabled: %s", cachepathD);
