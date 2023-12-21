@@ -67,7 +67,6 @@ DATA SDL_Rect safe_rectD;
 DATA struct SDL_Renderer* rendererD;
 DATA uint32_t texture_formatD;
 DATA SDL_PixelFormat* pixel_formatD;
-DATA int orientation_lockD;
 
 DATA SDL_Texture* portraitD;
 DATA SDL_Texture* landscapeD;

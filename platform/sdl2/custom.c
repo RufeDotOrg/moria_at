@@ -1237,7 +1237,7 @@ custom_draw()
     }
     if (mode == 0) {
       AUSE(grect, GR_LOCK);
-      USE(orientation_lock);
+      MUSE(global, orientation_lock);
       int tridx;
       if (orientation_lock) {
         tridx = 48;

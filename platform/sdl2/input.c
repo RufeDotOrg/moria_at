@@ -309,9 +309,9 @@ touch_by_xy(x, y)
 static int
 orientation_lock_toggle()
 {
-  // This works; TBD persistent global configuration
-  SDL_SetWindowResizable(windowD, orientation_lockD);
-  orientation_lockD = ~orientation_lockD;
+  MUSE(global, orientation_lock);
+  SDL_SetWindowResizable(windowD, orientation_lock);
+  globalD.orientation_lock = ~orientation_lock;
   return 0;
 }
 static int
