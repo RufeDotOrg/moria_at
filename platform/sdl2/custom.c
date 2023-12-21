@@ -406,8 +406,6 @@ custom_pregame()
   text_textureD = SDL_CreateTexture(
       rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET, 2 * 1024, 2 * 1024);
 
-  layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
-
   // Migration code
   if (platformD.load(-1, 0)) fs_upgrade();
 
@@ -817,7 +815,7 @@ landscape_text(mode)
 
     SDL_Point p = {layout_rect.w / 2 - msg_used * FWIDTH / 2, 0};
     SDL_Rect rect = {
-        p.x - FWIDTH,
+        p.x - FWIDTH / 2,
         p.y,
         (1 + msg_used) * FWIDTH,
         FHEIGHT,
@@ -1624,18 +1622,21 @@ int
 custom_orientation(orientation)
 {
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
+    layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
     text_fnD = portrait_text;
     overlay_widthD = 67;
     overlay_heightD = AL(overlayD) + 1;
     msg_widthD = 63;
     portrait_layout();
   } else if (orientation == SDL_ORIENTATION_LANDSCAPE) {
+    layout_rectD = (SDL_Rect){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
     text_fnD = landscape_text;
     overlay_widthD = 78;
     overlay_heightD = AL(overlayD) + 2;
     msg_widthD = 92;
     landscape_layout();
   } else {
+    layout_rectD = display_rectD;
     text_fnD = 0;
   }
   return 0;
