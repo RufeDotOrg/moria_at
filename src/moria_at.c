@@ -464,7 +464,6 @@ char* command;
   DRAWMSG("%s", prompt ? prompt : "");
   do {
     c = inkey();
-    if (is_ctrl(c)) break;
   } while (c == ' ');
   *command = c;
   return is_ctrl(c) ? 0 : 1;
@@ -8588,7 +8587,6 @@ inven_choice(char* prompt, char* mode_list)
     } else if (c == '-') {
       inven_sort();
     } else {
-      mode = 0;
       for (int it = 0; it < 2; ++it) {
         if (mode_list[it] == c) mode = c;
       }
@@ -13667,7 +13665,6 @@ dungeon()
               break;
             case '=':
               py_menu();
-              msg_advance();
               break;
             case '-':
               omit_replay = 1;
