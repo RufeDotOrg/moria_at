@@ -156,8 +156,8 @@ int
 platform_draw()
 {
   buffer_usedD = 0;
-  buffer_append(SL(tc_clearD));
-  buffer_append(SL(tc_move_cursorD));
+  buffer_append(SP(tc_clearD));
+  buffer_append(SP(tc_move_cursorD));
   char* msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
   if (msg_used) {
@@ -166,18 +166,18 @@ platform_draw()
   if (msg_moreD) {
     buffer_append(AP(" -more-"));
   }
-  buffer_append(SL(tc_crlfD));
+  buffer_append(SP(tc_crlfD));
   if (screen_usedD[0]) {
     for (int row = 0; row < AL(screenD); ++row) {
-      buffer_append(SL(tc_clear_lineD));
+      buffer_append(SP(tc_clear_lineD));
       buffer_append(screenD[row], screen_usedD[row]);
-      buffer_append(SL(tc_crlfD));
+      buffer_append(SP(tc_crlfD));
     }
   } else if (overlay_usedD[0]) {
     for (int row = 0; row < AL(overlayD); ++row) {
-      buffer_append(SL(tc_clear_lineD));
+      buffer_append(SP(tc_clear_lineD));
       buffer_append(overlayD[row], overlay_usedD[row]);
-      buffer_append(SL(tc_crlfD));
+      buffer_append(SP(tc_crlfD));
     }
   } else {
     char vital[SYMMAP_HEIGHT][13];
@@ -201,7 +201,7 @@ platform_draw()
     snprintf(vital[row++], AL(vital[0]), "GOLD: %6d", vitalD[it++]);
 
     for (it = 0; it < SYMMAP_HEIGHT; ++it) {
-      buffer_append(SL(tc_clear_lineD));
+      buffer_append(SP(tc_clear_lineD));
       buffer_append(vital[it], AL(vital[0]));
       buffer_append(AP(symmapD[it]));
       if (it < AL(active_affectD)) {
@@ -210,10 +210,10 @@ platform_draw()
           buffer_append(aff, strlen(aff));
         }
       }
-      buffer_append(SL(tc_crlfD));
+      buffer_append(SP(tc_crlfD));
     }
   }
-  buffer_append(SL(tc_move_cursorD));
+  buffer_append(SP(tc_move_cursorD));
   write(STDOUT_FILENO, bufferD, buffer_usedD);
   return 1;
 }
