@@ -465,6 +465,8 @@ char* command;
   do {
     c = inkey();
   } while (c == ' ');
+  // Draw again
+  if (c == CTRL('d')) c = ' ';
   *command = c;
   return is_ctrl(c) ? 0 : 1;
 }
@@ -509,10 +511,10 @@ int* dir;
 {
   char c, command;
   if (!prompt) prompt = "Which direction?";
-  DRAWMSG("%s", prompt);
   do {
+    DRAWMSG("%s", prompt);
     c = inkey();
-  } while (c == ' ');
+  } while (c == ' ' || c == CTRL('d'));
   command = map_roguedir(c);
   if (command >= '1' && command <= '9' && command != '5') {
     *dir = command - '0';

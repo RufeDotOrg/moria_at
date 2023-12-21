@@ -273,7 +273,6 @@ int
 sdl_window_event(event)
 SDL_Event event;
 {
-  int mode = modeD;
   Log("SDL_WindowEvent "
       "[ event %d ] "
       "[ data1 %d data2 %d ]"
@@ -305,21 +304,14 @@ SDL_Event event;
       // android 11 devices don't render the first frame (e.g. samsung A20)
       if (ANDROID) SDL_RenderPresent(rendererD);
 
-      if (mode) {
-        return (finger_colD == 0) ? '*' : '/';
-      } else if (drw) {
-        customD.draw();
-      }
+      return CTRL('d');
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
     if (display_rectD.w != 0) {
       // android 11 devices don't render the first frame (e.g. samsung A20)
       if (ANDROID) SDL_RenderPresent(rendererD);
 
-      if (mode)
-        return (finger_colD == 0) ? '*' : '/';
-      else
-        customD.draw();
+      return CTRL('d');
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
     if (ANDROID || __APPLE__) platformD.postgame(0);
