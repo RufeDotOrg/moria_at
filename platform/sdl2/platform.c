@@ -1,3 +1,5 @@
+#ifndef PLATFORM
+#define PLATFORM
 #include <setjmp.h>
 #include <time.h>
 
@@ -54,9 +56,11 @@ enum { LANDSCAPE = 0 };
 #define LANDSCAPE_X 1920
 #define LANDSCAPE_Y 1080
 
-// The game directly includes platform for iterative dev
-// Custom platform code is may be included after the game based on this define
-// Custom code may depend on game logic AND platform specifics
+// Game includes platform.c twice.
+// First inclusion is for iterative dev (access all APIs until deps are known)
+// Second inclusion is after game code for game-aware rendering and platform specifics
+//
+// User may prune platform from the game code by moving both includes to the bottom.
 #define CUSTOM_SETUP 1
 
 // render.c
@@ -178,8 +182,6 @@ render_update()
 
   SDL_RenderPresent(renderer);
 }
-
-#include "font.c"
 
 STATIC void
 display_resize(int dw, int dh)
@@ -381,7 +383,7 @@ platform_pregame()
   }
 
   if (FONT && init) {
-    if (!font_load() || !font_init()) return 3;
+    if (!font_init()) return 3;
   }
 
   if (INPUT && init) {
@@ -427,3 +429,8 @@ platform_postgame(may_exit)
 
   return 0;
 }
+#else
+#ifdef CUSTOM_SETUP
+#include "custom.c"
+#endif
+#endif

@@ -1,5 +1,7 @@
 #include "game.c"
 
+#include "platform/platform.c"
+
 enum { HACK = 0 };
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
@@ -14084,6 +14086,4 @@ main(int argc, char** argv)
   return platformD.postgame(1);
 }
 
-#ifdef CUSTOM_SETUP
-#include "platform/custom.c"
-#endif
+#include "platform/platform.c"

@@ -1,6 +1,5 @@
-#define main _main
-#include "src/moria_at.c"
-#undef main
+
+#include "src/game.c"
 
 #define nameof(x) #x
 static char* save_nameD[] = {

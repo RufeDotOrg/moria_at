@@ -54,12 +54,12 @@ font_load()
 }
 
 STATIC int
-font_init()
+glyph_init()
 {
   USE(renderer);
   USE(texture_format);
-  struct SDL_Surface* surface;
 
+  struct SDL_Surface* surface;
   surface = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, FWIDTH, FHEIGHT, 0,
                                            texture_format);
   if (surface) {
@@ -103,6 +103,12 @@ font_init()
   }
 
   return 1;
+}
+
+int
+font_init()
+{
+  return font_load() && glyph_init();
 }
 
 STATIC void

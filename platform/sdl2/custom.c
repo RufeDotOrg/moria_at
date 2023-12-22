@@ -1,5 +1,7 @@
+#pragma once
 
 #include "disk.c"
+#include "font.c"
 #include "input.c"
 
 #include "art.c"

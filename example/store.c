@@ -1,7 +1,5 @@
 
-#define main _main
-#include "src/moria_at.c"
-#undef main
+#include "src/game.c"
 
 int
 usage()
