@@ -297,7 +297,7 @@ ui_init()
   return icon != 0;
 }
 
-//  cos of (it * M_PI / 4);
+//  cos of (it * M_PI * 2 / 8);
 DATA float cos_table[] = {1.000,  0.707,  0.000,  -0.707,
                           -1.000, -0.707, -0.000, 0.707};
 static float

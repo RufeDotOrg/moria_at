@@ -5,6 +5,23 @@ char_visible(char c)
   return vis < 0x7f - 0x21;
 }
 static int
+is_ctrl(c)
+{
+  return c <= 0x1f;
+}
+static int
+is_lower(c)
+{
+  uint8_t iidx = c - 'a';
+  return iidx <= 'z' - 'a';
+}
+static int
+is_upper(c)
+{
+  uint8_t iidx = c - 'A';
+  return iidx <= 'Z' - 'A';
+}
+static int
 dir_x(dir)
 {
   switch (dir) {
@@ -33,21 +50,4 @@ dir_y(dir)
       return -1;
   }
   return 0;
-}
-static int
-is_ctrl(c)
-{
-  return c <= 0x1f;
-}
-static int
-is_lower(c)
-{
-  uint8_t iidx = c - 'a';
-  return iidx <= 'z' - 'a';
-}
-static int
-is_upper(c)
-{
-  uint8_t iidx = c - 'A';
-  return iidx <= 'Z' - 'A';
 }
