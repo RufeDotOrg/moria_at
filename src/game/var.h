@@ -1,4 +1,7 @@
 
+#include "t_mon.c"
+#include "t_obj.c"
+
 // Visual info
 DATA struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 DATA int vitalD[8];
@@ -102,9 +105,6 @@ DATA char death_descD[80];
 DATA char dun_descD[16];
 DATA int ylookD;
 DATA int xlookD;
-
-ARR_REUSE(obj, 256);
-ARR_REUSE(mon, 256);
 
 // Known refers to stackable treasures that are instanced
 // Distinct from identification which is PER object
