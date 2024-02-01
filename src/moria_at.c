@@ -520,24 +520,15 @@ int* dir;
 
   return 0;
 }
-
+// Undefined if called on a pointer to zero
 int
 bit_pos(test)
 uint32_t* test;
 {
-  int i;
-  uint32_t mask = 0x1;
+  int i = __builtin_ctz(*test);
+  *test ^= (1 << i);
 
-  for (i = 0; i < sizeof(*test) * 8; i++) {
-    if (*test & mask) {
-      *test &= ~mask;
-      return (i);
-    }
-    mask <<= 1;
-  }
-
-  /* no one bits found */
-  return (-1);
+  return i;
 }
 static void
 go_up()
