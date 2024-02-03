@@ -7215,7 +7215,7 @@ sleep_monster_aoe(maxdis)
         seen += 1;
         MSG("%s falls asleep.", descD);
       } else {
-        MSG("%s is unaffected.", descD)
+        MSG("%s is unaffected.", descD);
       }
     }
   });
