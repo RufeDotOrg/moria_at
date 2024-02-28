@@ -115,3 +115,8 @@ static char* syllableD[] = {
     "wed",  "werg", "wex",  "whon", "wun",  "x",   "yerg", "yp",  "zun",
 };
 static char titleD[MAX_SUBVAL][10];
+static char* gutteralD[] = {
+    "a",  "as", "be",  "e",  "hen",   "j",  "lon", "mu",  "na",
+    "on", "ry", "shi", "sk", "stein", "va", "ya",  "zos",
+};
+static char heronameD[16];

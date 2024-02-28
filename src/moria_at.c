@@ -6423,6 +6423,18 @@ magic_init()
       descD[9] = '\0';
     strcpy(titleD[h], descD);
   }
+  {
+    descD[0] = 0;
+    k = randint(2) + 1;
+    for (i = 0; i < k; i++) {
+      for (j = 1 + randint(2); j > 0; j--)
+        strcat(descD, gutteralD[randint(AL(gutteralD)) - 1]);
+      if (i < k - 1) strcat(descD, " ");
+    }
+    for (i = 12; i < AL(heronameD); ++i)
+      if (descD[i] == ' ') descD[i] = 0;
+    strcpy(heronameD, descD);
+  }
   return 0;
 }
 int
@@ -10535,13 +10547,8 @@ show_character(narrow)
     }
   }
 
-  if (narrow) {
-    DRAWMSG("Name: %-13.013s Race: %-17.017s Class: %-13.013s", "...",
-            raceD[uD.ridx].name, classD[uD.clidx].name);
-  } else {
-    DRAWMSG("Name: %-18.018s Race: %-21.021s Class: %-13.013s", "...",
-            raceD[uD.ridx].name, classD[uD.clidx].name);
-  }
+  DRAWMSG("   %s the %s %s", heronameD, raceD[uD.ridx].name,
+          classD[uD.clidx].name);
   return inkey();
 }
 
