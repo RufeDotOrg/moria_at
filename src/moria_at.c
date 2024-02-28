@@ -6431,6 +6431,10 @@ magic_init()
         strcat(descD, gutteralD[randint(AL(gutteralD)) - 1]);
       if (i < k - 1) strcat(descD, " ");
     }
+    descD[0] &= ~0x20;
+    for (i = 1; i < 12; ++i) {
+      if (descD[i] == ' ') descD[i + 1] &= ~0x20;
+    }
     for (i = 12; i < AL(heronameD); ++i)
       if (descD[i] == ' ') descD[i] = 0;
     strcpy(heronameD, descD);
@@ -10547,8 +10551,7 @@ show_character(narrow)
     }
   }
 
-  DRAWMSG("   %s the %s %s", heronameD, raceD[uD.ridx].name,
-          classD[uD.clidx].name);
+  DRAWMSG("Name: %s", heronameD);
   return inkey();
 }
 
