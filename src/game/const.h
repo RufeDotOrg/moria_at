@@ -17,12 +17,10 @@
 #define MIN_CLOSED_SPACE 4
 #define FLOOR_OBST 4 /* a corridor space with cl/st/se door or rubble */
 #define MAX_FLOOR 4
-#define TMP1_WALL 8 /* Prevents corridor formation; replaced by granite */
-#define TMP2_WALL 9 /* Corridor+room intersection */
 #define MIN_WALL 12
 #define GRANITE_WALL 12
-#define MAGMA_WALL 13
-#define QUARTZ_WALL 14
+#define MAGMA_WALL 13 // build_room(): Prevents corridor formation; replaced by granite
+#define QUARTZ_WALL 14 // build_corridor(): Corrior+room intersection; replaced by granite */
 #define BOUNDARY_WALL 15
 
 // Cave flags
@@ -44,7 +42,6 @@
 
 #define DUN_TUN_RND 9  /* 1/Chance of Random direction        */
 #define DUN_TUN_CHG 70 /* Chance of changing direction (99 max) */
-#define DUN_TUN_CON 15 /* Chance of extra tunneling        */
 #define DUN_TUN_PEN 25 /* % chance of room doors         */
 #define DUN_TUN_JCT 15 /* % chance of doors at tunnel junctions */
 #define DUN_STR_DEN 5  /* Density of streamers          */

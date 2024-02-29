@@ -3,6 +3,7 @@
 #include "platform/platform.c"
 
 enum { HACK = 0 };
+enum { TEST_CAVEGEN = 0 };
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
 GAME int find_threat;
@@ -582,7 +583,7 @@ cave_floor_near(y, x)
   }
   return FALSE;
 }
-void
+static void
 cave_init()
 {
   for (int row = 0; row < MAX_HEIGHT; ++row) {
@@ -600,12 +601,13 @@ cave_init()
 static void
 place_boundary()
 {
+  for (int row = 0; row < MAX_HEIGHT; ++row) caveD[row][0].fval = BOUNDARY_WALL;
   for (int row = 0; row < MAX_HEIGHT; ++row)
-    for (int col = 0; col < MAX_WIDTH; ++col)
-      if ((row == 0 || row + 1 == MAX_HEIGHT) ||
-          (col == 0 || col + 1 == MAX_WIDTH)) {
-        caveD[row][col].fval = BOUNDARY_WALL;
-      }
+    caveD[row][MAX_WIDTH - 1].fval = BOUNDARY_WALL;
+
+  for (int col = 0; col < MAX_WIDTH; ++col) caveD[0][col].fval = BOUNDARY_WALL;
+  for (int col = 0; col < MAX_WIDTH; ++col)
+    caveD[MAX_HEIGHT - 1][col].fval = BOUNDARY_WALL;
 }
 
 #define RNG_M 2147483647L /* m = 2^31 - 1 */
@@ -1100,23 +1102,43 @@ place_door(y, x)
   int tmp;
   int lock;
 
-  tmp = randint(2 + (dun_level >= 5));
-  if (tmp == 1) {
-    place_broken_door(randint(4) == 1, y, x);
-  } else if (tmp == 2) {
-    tmp = randint(12);
-    lock = randint(10);
-    if (tmp > 3)
-      place_closed_door(0, y, x);
-    else if (tmp == 3)
-      place_closed_door(-lock, y, x);
-    else
-      place_closed_door(lock, y, x);
-  } else
-    place_secret_door(y, x);
+  if (obj_usedD < AL(objD)) {
+    tmp = randint(2 + (dun_level >= 5));
+    if (tmp == 1) {
+      place_broken_door(randint(4) == 1, y, x);
+    } else if (tmp == 2) {
+      tmp = randint(12);
+      lock = randint(10);
+      if (tmp > 3)
+        place_closed_door(0, y, x);
+      else if (tmp == 3)
+        place_closed_door(-lock, y, x);
+      else
+        place_closed_door(lock, y, x);
+    } else
+      place_secret_door(y, x);
+  }
 }
 DATA coords doorstk[100];
 DATA int doorindex;
+static int
+protect_floor(y, x, ydir, xdir)
+{
+  struct caveS* c_ptr;
+  // Perpendicular
+  int oy = xdir;
+  int ox = ydir;
+  int ret = 0;
+
+  c_ptr = &caveD[y + oy][x + ox];
+  ret += (c_ptr->fval == GRANITE_WALL);
+  if (c_ptr->fval == GRANITE_WALL) c_ptr->fval = QUARTZ_WALL;
+
+  c_ptr = &caveD[y - oy][x - ox];
+  ret += (c_ptr->fval == GRANITE_WALL);
+  if (c_ptr->fval == GRANITE_WALL) c_ptr->fval = QUARTZ_WALL;
+  return ret;
+}
 static void
 build_corridor(row1, col1, row2, col2)
 {
@@ -1126,11 +1148,10 @@ build_corridor(row1, col1, row2, col2)
   coords tunstk[1000], wallstk[1000];
   coords* tun_ptr;
   int row_dir, col_dir, tunindex, wallindex;
-  int stop_flag, door_flag, wall_flag, main_loop_count;
+  int door_flag, wall_flag, main_loop_count;
   int start_row, start_col;
 
   /* Main procedure for Tunnel  		*/
-  stop_flag = FALSE;
   door_flag = FALSE;
   wall_flag = FALSE;
   tunindex = 0;
@@ -1143,7 +1164,8 @@ build_corridor(row1, col1, row2, col2)
   do {
     /* prevent infinite loops, just in case */
     main_loop_count++;
-    if (main_loop_count > 2000) stop_flag = TRUE;
+    if (main_loop_count > 2000) break;
+    if (tunindex >= AL(tunstk)) break;
 
     if (randint(100) > DUN_TUN_CHG) {
       if (randint(DUN_TUN_RND) == 1)
@@ -1162,73 +1184,61 @@ build_corridor(row1, col1, row2, col2)
       tmp_col = col1 + col_dir;
     }
     c_ptr = &caveD[tmp_row][tmp_col];
-    if (c_ptr->fval == TMP2_WALL) continue;
+    if (c_ptr->fval > GRANITE_WALL) continue;
+    // wall_flag prevents repeat penetration (along the perimeter of a room)
+    if (wall_flag) {
+      if (c_ptr->fval <= MAX_FLOOR)
+        wall_flag = 0;
+      else
+        continue;
+    }
 
-    // Room pass-through
-    if (wall_flag && c_ptr->fval == FLOOR_NULL) {
-      if (caveD[row1][col1].fval == GRANITE_WALL) {
-        if (wallindex < 1000) {
-          wallstk[wallindex].y = row1;
-          wallstk[wallindex].x = col1;
+    if (c_ptr->fval == FLOOR_NULL) {
+      tunstk[tunindex].y = tmp_row;
+      tunstk[tunindex].x = tmp_col;
+      tunindex++;
+      door_flag = FALSE;
+    } else if (c_ptr->fval == GRANITE_WALL) {
+      if (wallindex < AL(wallstk)) {
+        wall_flag = TRUE;
+        c_ptr->fval = FLOOR_CORR;
+
+        if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2) {
+          wallstk[wallindex].y = tmp_row;
+          wallstk[wallindex].x = tmp_col;
           wallindex++;
+          door_flag = TRUE;
+        }
+
+        if (in_bounds(tmp_row + row_dir, tmp_col + col_dir)) {
+          tmp_row += row_dir;
+          tmp_col += col_dir;
+
+          caveD[tmp_row][tmp_col].fval = FLOOR_CORR;
+
+          if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2 &&
+              !door_flag) {
+            wallstk[wallindex].y = tmp_row;
+            wallstk[wallindex].x = tmp_col;
+            wallindex++;
+            door_flag = TRUE;
+          }
         }
       }
-      wall_flag = FALSE;
+    } else if (c_ptr->fval == FLOOR_CORR) {
+      if (!door_flag) {
+        door_flag = TRUE;
+        if (doorindex < AL(doorstk)) {
+          doorstk[doorindex].y = tmp_row;
+          doorstk[doorindex].x = tmp_col;
+          doorindex++;
+        }
+      }
     }
 
     row1 = tmp_row;
     col1 = tmp_col;
-    if (c_ptr->fval == FLOOR_NULL) {
-      if (tunindex < 1000) {
-        tunstk[tunindex].y = row1;
-        tunstk[tunindex].x = col1;
-        tunindex++;
-      }
-      door_flag = FALSE;
-    } else if (!wall_flag && c_ptr->fval == GRANITE_WALL) {
-      if (wallindex < 1000) {
-        wallstk[wallindex].y = tmp_row;
-        wallstk[wallindex].x = tmp_col;
-        wallindex++;
-      }
-
-      // Puncture through wall in this direction
-      if (diff_chunk(tmp_row, tmp_col, tmp_row + row_dir, tmp_col + col_dir)) {
-        if (wallindex < 1000) {
-          wallstk[wallindex].y = tmp_row + row_dir;
-          wallstk[wallindex].x = tmp_col + col_dir;
-          wallindex++;
-        }
-      }
-
-      // Protect adjacent remaining wall
-      for (i = tmp_row - 1; i <= tmp_row + 1; i++)
-        for (j = tmp_col - 1; j <= tmp_col + 1; j++) {
-          d_ptr = &caveD[i][j];
-          if (d_ptr->fval == GRANITE_WALL) {
-            d_ptr->fval = TMP2_WALL;
-          }
-        }
-
-      wall_flag = TRUE;
-
-    } else if (c_ptr->fval == FLOOR_CORR || c_ptr->fval == FLOOR_OBST) {
-      if (!door_flag) {
-        if (doorindex < AL(doorstk)) {
-          doorstk[doorindex].y = row1;
-          doorstk[doorindex].x = col1;
-          doorindex++;
-        }
-        door_flag = TRUE;
-      }
-      if (randint(100) > DUN_TUN_CON) {
-        int cdis = distance(start_row, start_col, tmp_row, tmp_col);
-        if (cdis > 10) {
-          stop_flag = TRUE;
-        }
-      }
-    }
-  } while (((row1 != row2) || (col1 != col2)) && (!stop_flag));
+  } while (((tmp_row != row2) || (tmp_col != col2)));
 
   tun_ptr = &tunstk[0];
   for (i = 0; i < tunindex; i++) {
@@ -1240,8 +1250,8 @@ build_corridor(row1, col1, row2, col2)
     tmp_row = wallstk[i].y;
     tmp_col = wallstk[i].x;
     c_ptr = &caveD[tmp_row][tmp_col];
-    // Filter duplicates in wallstk; protects TMP1_WALL
-    if (c_ptr->fval > TMP1_WALL) {
+
+    if (!c_ptr->oidx) {
       if (c_ptr->cflag & CF_UNUSUAL) {
         if (randint(3) == 1) {
           place_secret_door(wallstk[i].y, wallstk[i].x);
@@ -1249,30 +1259,22 @@ build_corridor(row1, col1, row2, col2)
           place_closed_door(randint(21) - 11, wallstk[i].y, wallstk[i].x);
         }
       } else {
-        if (randint(100) < DUN_TUN_PEN)
-          place_door(wallstk[i].y, wallstk[i].x);
-        else {
-          /* these have to be doorways to rooms */
-          c_ptr->fval = FLOOR_CORR;
-        }
+        if (randint(100) < DUN_TUN_PEN) place_door(wallstk[i].y, wallstk[i].x);
       }
     }
   }
 }
 static void
-fill_cave(fval)
+granite_cave()
 {
-  int i, j;
+  int i, j, fval;
   struct caveS* c_ptr;
-
-  /* no need to check the border of the cave */
 
   for (i = MAX_HEIGHT - 2; i > 0; i--) {
     c_ptr = &caveD[i][1];
     for (j = MAX_WIDTH - 2; j > 0; j--) {
-      if ((c_ptr->fval == FLOOR_NULL) || (c_ptr->fval == TMP1_WALL) ||
-          (c_ptr->fval == TMP2_WALL))
-        c_ptr->fval = fval;
+      if ((c_ptr->fval == FLOOR_NULL) || (c_ptr->fval > GRANITE_WALL))
+        c_ptr->fval = GRANITE_WALL;
       c_ptr++;
     }
   }
@@ -3241,31 +3243,30 @@ void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
 static void
 build_vault(y, x)
 {
-  for (int i = -1; i <= 1; ++i) {
-    for (int j = -1; j <= 1; ++j) {
-      if (i != 0 || j != 0) caveD[y + i][x + j].fval = TMP1_WALL;
+  if (!TEST_CAVEGEN) {
+    for (int i = -1; i <= 1; ++i) {
+      for (int j = -1; j <= 1; ++j) {
+        if (i != 0 || j != 0) caveD[y + i][x + j].fval = MAGMA_WALL;
+      }
     }
   }
 }
 static void
 build_pillar(y, x)
 {
-  for (int i = -1; i <= 1; ++i) {
-    for (int j = -1; j <= 1; ++j) {
-      caveD[y + i][x + j].fval = TMP1_WALL;
-    }
-  }
+  build_vault(y, x);
+  caveD[y][x].fval = MAGMA_WALL;
 }
 static void
 build_chamber(y, x, h, w)
 {
   for (int j = -w; j <= w; ++j) {
-    caveD[y + h][x + j].fval = TMP1_WALL;
-    caveD[y - h][x + j].fval = TMP1_WALL;
+    caveD[y + h][x + j].fval = MAGMA_WALL;
+    caveD[y - h][x + j].fval = MAGMA_WALL;
   }
-  caveD[y][x - w].fval = TMP1_WALL;
-  caveD[y][x + w].fval = TMP1_WALL;
-  caveD[y][x].fval = TMP1_WALL;
+  caveD[y][x - w].fval = MAGMA_WALL;
+  caveD[y][x + w].fval = MAGMA_WALL;
+  caveD[y][x].fval = MAGMA_WALL;
 }
 static void
 chunk_trap(ychunk, xchunk, num)
@@ -3440,7 +3441,7 @@ int* xcenter;
           else if (j == xmin || j == xmax)
             c_ptr->fval = GRANITE_WALL;
           else if ((i ^ j) & 0x1)
-            c_ptr->fval = TMP1_WALL;
+            c_ptr->fval = MAGMA_WALL;
           else
             c_ptr->fval = floor;
         }
@@ -3470,9 +3471,9 @@ int* xcenter;
           else if (j == xmin || j == xmax)
             c_ptr->fval = GRANITE_WALL;
           else if (i == y)
-            c_ptr->fval = TMP1_WALL;
+            c_ptr->fval = MAGMA_WALL;
           else if (j == x)
-            c_ptr->fval = TMP1_WALL;
+            c_ptr->fval = MAGMA_WALL;
           else
             c_ptr->fval = floor;
         }
@@ -3532,14 +3533,14 @@ int* xcenter;
       caveD[ymax][x].fval = 0;
 
       if (type2 & 0x1) {
-        caveD[y][x].fval = TMP1_WALL;
-        caveD[y + 1][x].fval = TMP1_WALL;
+        caveD[y][x].fval = MAGMA_WALL;
+        caveD[y + 1][x].fval = MAGMA_WALL;
       }
       if (type2 > 4) {
-        caveD[y - 1][x - 1].fval = TMP1_WALL;
-        caveD[y - 1][x + 1].fval = TMP1_WALL;
-        caveD[y + 2][x - 1].fval = TMP1_WALL;
-        caveD[y + 2][x + 1].fval = TMP1_WALL;
+        caveD[y - 1][x - 1].fval = MAGMA_WALL;
+        caveD[y - 1][x + 1].fval = MAGMA_WALL;
+        caveD[y + 2][x - 1].fval = MAGMA_WALL;
+        caveD[y + 2][x + 1].fval = MAGMA_WALL;
       }
       chunk_trap(ychunk, xchunk, 1 + randint(2));
       break;
@@ -3631,9 +3632,12 @@ cave_gen()
   // MSG("feet %d room: %d (type1: %d type2: %d)", dun_level * 50, k, pick1,
   // pick2);
 
-  for (i = 0; i < k; i++) {
+  doorindex = 0;
+  for (j = 0; j < k; j++) {
     pick1 = randint(k) - 1;
     pick2 = randint(k) - 1;
+
+    // swap
     y1 = yloc[pick1];
     x1 = xloc[pick1];
     yloc[pick1] = yloc[pick2];
@@ -3641,33 +3645,34 @@ cave_gen()
     yloc[pick2] = y1;
     xloc[pick2] = x1;
   }
-  doorindex = 0;
   /* move zero entry to k, so that can call build_corridor all k times */
   yloc[k] = yloc[0];
   xloc[k] = xloc[0];
-  for (i = 0; i < k; i++) {
-    y1 = yloc[i];
-    x1 = xloc[i];
-    y2 = yloc[i + 1];
-    x2 = xloc[i + 1];
+  for (j = 0; j < k; j++) {
+    y1 = yloc[j];
+    x1 = xloc[j];
+    y2 = yloc[j + 1];
+    x2 = xloc[j + 1];
+    // connect each room to another
     build_corridor(y2, x2, y1, x1);
   }
 
-  fill_cave(GRANITE_WALL);
+  granite_cave();
+  place_boundary();
   for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL, DUN_STR_MC);
   for (i = 0; i < DUN_STR_QUA; i++) place_streamer(QUARTZ_WALL, DUN_STR_QC);
-  place_boundary();
-  /* Place intersection doors  */
+
+  /* Corridor intersection doors  */
   for (i = 0; i < doorindex; i++) {
     try_door(doorstk[i].y, doorstk[i].x - 1);
     try_door(doorstk[i].y, doorstk[i].x + 1);
     try_door(doorstk[i].y - 1, doorstk[i].x);
     try_door(doorstk[i].y + 1, doorstk[i].x);
   }
+  // Exits
   place_stairs(TV_DOWN_STAIR, randint(2));
   place_stairs(TV_UP_STAIR, 1);
-  /* Set up the character co-ords, used by alloc_monster, place_win_monster
-   */
+  // Character co-ords; used by alloc_monster, place_win_monster
   new_spot(&uD.y, &uD.x);
 
   if (dun_level >= 7) alloc_obj(set_corr, 3, randint(alloc_level));
@@ -3679,6 +3684,45 @@ cave_gen()
   alloc_mon((randint(RND_MALLOC_LEVEL) + MIN_MALLOC_LEVEL + alloc_level), 0,
             TRUE);
   if (dun_level >= WIN_MON_APPEAR) place_win_monster();
+}
+static int checkD[MAX_HEIGHT][MAX_WIDTH];
+static void
+dfs(y, x)
+{
+  if (in_bounds(y, x)) {
+    if (caveD[y][x].fval <= MAX_FLOOR && !checkD[y][x]) {
+      checkD[y][x] = 1;
+      for (int row = y - 1; row <= y + 1; ++row) {
+        for (int col = x - 1; col <= x + 1; ++col) {
+          dfs(row, col);
+        }
+      }
+    }
+  }
+}
+static int
+cave_check(y, x)
+{
+  printf("cave_check %d %d xy\n", x, y);
+  memset(checkD, 0, sizeof(int) * MAX_HEIGHT * MAX_WIDTH);
+  dfs(y, x);
+  int count = 0;
+  int fail = 0;
+  for (int row = 0; row < MAX_HEIGHT; ++row) {
+    for (int col = 0; col < MAX_WIDTH; ++col) {
+      count += caveD[row][col].fval <= MAX_FLOOR;
+      struct caveS* c_ptr = &caveD[row][col];
+      if (c_ptr->fval <= MAX_FLOOR && !checkD[row][col]) {
+        c_ptr->cflag |= CF_PERM_LIGHT;
+        c_ptr->oidx = 1;
+        fail += 1;
+      }
+    }
+  }
+
+  entity_objD[1].tval = TV_GOLD;
+  printf("cave_check dfs fail_count? %d - %d floor tiles\n", fail, count);
+  return fail == 0;
 }
 static int
 town_night()
@@ -14013,6 +14057,29 @@ main(int argc, char** argv)
   int ready = platformD.load(globalD.saveslot_class, 0);
   if (!ready) ready = py_saveslot_select();
 
+  // hmm
+  if (TEST_CAVEGEN) {
+    int dlev = dun_level;
+    int seed_count = 64 * 1024;
+    for (uint32_t it = 0; it < seed_count; ++it) {
+      hard_reset();
+      dun_level = dlev;
+      rnd_seed = it;
+      cave_gen();
+      if (!cave_check(uD.y, uD.x)) {
+        // Proceed to play for debug
+        hard_reset();
+        platformD.load(globalD.saveslot_class, 0);
+        memset(&objD[0], 0, sizeof(objD[0]));
+        rnd_seed = it;
+        input_resumeD = -1;
+        break;
+      }
+    }
+    printf("test passed; seed_count %d\n", seed_count);
+    exit(0);
+  }
+
   if (ready) {
     globalD.saveslot_class = uD.clidx;
     if (save_on_readyD) {
@@ -14048,6 +14115,7 @@ main(int argc, char** argv)
         obj_unuse(obj);
       }
     });
+    memset(&entity_objD[0], 0, sizeof(entity_objD[0]));
 
     // a fresh cave!
     if (dun_level != 0) {

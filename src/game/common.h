@@ -59,6 +59,7 @@ typedef int (*fn)();
 #define OF2(x) (((x - 1) & x) == 0)
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
+//#define LOGFMT(x, ...) printf(x "\n", ##__VA_ARGS__)
 
 // Use global var
 #define USE(x) typeof(x##D) x = x##D
