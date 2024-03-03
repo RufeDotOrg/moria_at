@@ -576,9 +576,9 @@ go_down()
 int
 cave_floor_near(y, x)
 {
-  for (int col = y - 1; col <= y + 1; ++col) {
-    for (int row = x - 1; row <= x + 1; ++row) {
-      if (caveD[col][row].fval <= MAX_FLOOR) return TRUE;
+  for (int row = y - 1; row <= y + 1; ++row) {
+    for (int col = x - 1; col <= x + 1; ++col) {
+      if (caveD[row][col].fval <= MAX_FLOOR) return TRUE;
     }
   }
   return FALSE;
@@ -1414,9 +1414,9 @@ static void new_spot(y, x) int *y, *x;
 static int
 next_to_object(y1, x1)
 {
-  for (int col = y1 - 1; col <= y1 + 1; ++col) {
-    for (int row = x1 - 1; row <= x1 + 1; ++row) {
-      if (caveD[col][row].oidx) return TRUE;
+  for (int row = y1 - 1; row <= y1 + 1; ++row) {
+    for (int col = x1 - 1; col <= x1 + 1; ++col) {
+      if (caveD[row][col].oidx) return TRUE;
     }
   }
   return FALSE;
@@ -4394,9 +4394,9 @@ int
 illuminate(y, x)
 {
   if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
-  for (int col = y - 1; col <= y + 1; ++col) {
-    for (int row = x - 1; row <= x + 1; ++row) {
-      caveD[col][row].cflag |= (CF_PERM_LIGHT | CF_SEEN);
+  for (int row = y - 1; row <= y + 1; ++row) {
+    for (int col = x - 1; col <= x + 1; ++col) {
+      caveD[row][col].cflag |= (CF_PERM_LIGHT | CF_SEEN);
     }
   }
 
@@ -4434,11 +4434,11 @@ unlight_area(y, x)
     unlight_room(y, x);
     known = TRUE;
   }
-  for (int col = y - 1; col <= y + 1; ++col) {
-    for (int row = x - 1; row <= x + 1; ++row) {
-      if (caveD[col][row].fval == FLOOR_CORR &&
-          caveD[col][row].cflag & CF_PERM_LIGHT) {
-        caveD[col][row].cflag &= ~CF_PERM_LIGHT;
+  for (int row = y - 1; row <= y + 1; ++row) {
+    for (int col = x - 1; col <= x + 1; ++col) {
+      if (caveD[row][col].fval == FLOOR_CORR &&
+          caveD[row][col].cflag & CF_PERM_LIGHT) {
+        caveD[row][col].cflag &= ~CF_PERM_LIGHT;
         known = TRUE;
       }
     }
@@ -13753,9 +13753,9 @@ dungeon()
             case 'M':
               if (HACK) {
                 map_area();
-                for (int col = 1; col < MAX_HEIGHT; ++col) {
-                  for (int row = 1; row < MAX_WIDTH; ++row) {
-                    struct caveS* c_ptr = &caveD[col][row];
+                for (int row = 1; row < MAX_HEIGHT; ++row) {
+                  for (int col = 1; col < MAX_WIDTH; ++col) {
+                    struct caveS* c_ptr = &caveD[row][col];
                     struct objS* obj = &entity_objD[c_ptr->oidx];
                     if (obj->tval == TV_INVIS_TRAP) {
                       obj->tval = TV_VIS_TRAP;
