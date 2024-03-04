@@ -1470,29 +1470,29 @@ num_adjacent_corridor(y, x)
   return (i);
 }
 static int
-next_to(y, x)
+is_corridor(y, x)
 {
-  int next;
+  int ret;
   int adj;
 
-  next = FALSE;
+  ret = FALSE;
   adj = num_adjacent_corridor(y, x);
   if (adj >= 2) {
     if ((caveD[y - 1][x].fval >= MIN_WALL) &&
         (caveD[y + 1][x].fval >= MIN_WALL))
-      next = TRUE;
+      ret = TRUE;
     else if ((caveD[y][x - 1].fval >= MIN_WALL) &&
              (caveD[y][x + 1].fval >= MIN_WALL))
-      next = TRUE;
+      ret = TRUE;
   }
-  return (next);
+  return ret;
 }
 static void
 try_door(y, x)
 {
-  if ((caveD[y][x].fval == FLOOR_CORR) && (randint(100) <= DUN_TUN_JCT) &&
-      next_to(y, x))
-    place_door(y, x);
+  if (caveD[y][x].fval == FLOOR_CORR && randint(100) <= DUN_TUN_JCT) {
+    if (is_corridor(y, x)) place_door(y, x);
+  }
 }
 int
 set_null()
@@ -14042,7 +14042,6 @@ main(int argc, char** argv)
   int ready = platformD.load(globalD.saveslot_class, 0);
   if (!ready) ready = py_saveslot_select();
 
-  // hmm
   if (TEST_CAVEGEN) {
     for (int dlev = 0; dlev < 50; ++dlev) {
       int seed_count = 64 * 1024;
