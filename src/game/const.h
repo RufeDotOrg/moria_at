@@ -20,7 +20,7 @@
 #define MIN_WALL 12
 #define GRANITE_WALL 12
 #define MAGMA_WALL 13 // build_room(): Prevents corridor formation; replaced by granite
-#define QUARTZ_WALL 14 // build_corridor(): Corrior+room intersection; replaced by granite */
+#define QUARTZ_WALL 14 // build_corridor(): Corrior+room intersection; replaced by granite
 #define BOUNDARY_WALL 15
 
 // Cave flags

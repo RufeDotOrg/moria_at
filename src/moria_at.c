@@ -1184,7 +1184,7 @@ build_corridor(row1, col1, row2, col2)
       tmp_col = col1 + col_dir;
     }
     c_ptr = &caveD[tmp_row][tmp_col];
-    if (c_ptr->fval > GRANITE_WALL) continue;
+    if (c_ptr->fval > MAGMA_WALL) continue;
     // wall_flag prevents repeat penetration (along the perimeter of a room)
     if (wall_flag) {
       if (c_ptr->fval <= MAX_FLOOR)
