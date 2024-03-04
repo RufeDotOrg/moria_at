@@ -44,7 +44,7 @@
 #define DUN_TUN_RND 9  /* 1/Chance of Random direction        */
 #define DUN_TUN_CHG 70 /* Chance of changing direction (99 max) */
 #define DUN_TUN_PEN 25 /* % chance of room doors         */
-#define DUN_TUN_JCT 15 /* % chance of doors at tunnel junctions */
+#define DUN_TUN_JCT 40  /* % chance of doors at tunnel junctions */
 #define DUN_STR_DEN 5  /* Density of streamers          */
 #define DUN_STR_RNG 2  /* Width of streamers          */
 #define DUN_STR_MAG 3  /* Number of magma streamers         */

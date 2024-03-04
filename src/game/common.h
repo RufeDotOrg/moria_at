@@ -102,6 +102,18 @@ enum { RELEASE = 0 };
       body;                                                      \
     }                                                            \
   }
+#define ADJ4(y, x, body)      \
+  {                           \
+    struct caveS* c_ptr;      \
+    c_ptr = &caveD[y - 1][x]; \
+    body;                     \
+    c_ptr = &caveD[y + 1][x]; \
+    body;                     \
+    c_ptr = &caveD[y][x - 1]; \
+    body;                     \
+    c_ptr = &caveD[y][x + 1]; \
+    body;                     \
+  }
 
 // Function Table
 #define FT(x) ftable_clear(&x##D, sizeof(x##D) / sizeof(fn))

@@ -1459,44 +1459,38 @@ place_stairs(tval, num)
   }
 }
 int
-next_to_corr(y, x)
+num_adjacent_corridor(y, x)
 {
-  int k, j, i;
-  struct caveS* c_ptr;
+  int i;
 
   i = 0;
-  for (j = y - 1; j <= (y + 1); j++)
-    for (k = x - 1; k <= (x + 1); k++) {
-      c_ptr = &caveD[j][k];
-      /* should fail if there is already a door present */
-      if (c_ptr->fval == FLOOR_CORR &&
-          (c_ptr->oidx == 0 || entity_objD[c_ptr->oidx].tval < TV_MIN_DOORS))
-        i++;
-    }
+  ADJ4(y, x, {
+    if (c_ptr->fval == FLOOR_CORR && c_ptr->oidx == 0) i++;
+  });
   return (i);
 }
 static int
 next_to(y, x)
 {
   int next;
+  int adj;
 
-  if (next_to_corr(y, x) > 2)
+  next = FALSE;
+  adj = num_adjacent_corridor(y, x);
+  if (adj >= 2) {
     if ((caveD[y - 1][x].fval >= MIN_WALL) &&
         (caveD[y + 1][x].fval >= MIN_WALL))
       next = TRUE;
     else if ((caveD[y][x - 1].fval >= MIN_WALL) &&
              (caveD[y][x + 1].fval >= MIN_WALL))
       next = TRUE;
-    else
-      next = FALSE;
-  else
-    next = FALSE;
+  }
   return (next);
 }
 static void
 try_door(y, x)
 {
-  if ((caveD[y][x].fval == FLOOR_CORR) && (randint(100) > DUN_TUN_JCT) &&
+  if ((caveD[y][x].fval == FLOOR_CORR) && (randint(100) <= DUN_TUN_JCT) &&
       next_to(y, x))
     place_door(y, x);
 }
