@@ -12,11 +12,12 @@
 #define FLOOR_NULL 0
 #define FLOOR_LIGHT 1
 #define FLOOR_DARK 2
-#define FLOOR_CORR 3
-#define MAX_OPEN_SPACE 3
-#define MIN_CLOSED_SPACE 4
-#define FLOOR_OBST 4 /* a corridor space with cl/st/se door or rubble */
-#define MAX_FLOOR 4
+#define FLOOR_THRESHOLD 3 // Transition from corridor to room
+#define FLOOR_CORR 4
+#define MAX_OPEN_SPACE 4 // Open with regard to movement
+#define MIN_CLOSED_SPACE 5 // Closed with regard to movement
+#define FLOOR_OBST 5 /* a corridor space with cl/st/se door or rubble */
+#define MAX_FLOOR 5 // Not a wall during cavegen()
 #define MIN_WALL 12
 #define GRANITE_WALL 12
 #define MAGMA_WALL 13 // build_room(): Prevents corridor formation; replaced by granite

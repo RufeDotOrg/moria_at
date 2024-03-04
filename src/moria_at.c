@@ -1201,7 +1201,7 @@ build_corridor(row1, col1, row2, col2)
     } else if (c_ptr->fval == GRANITE_WALL) {
       if (wallindex < AL(wallstk)) {
         wall_flag = TRUE;
-        c_ptr->fval = FLOOR_CORR;
+        c_ptr->fval = FLOOR_THRESHOLD;
 
         if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2) {
           wallstk[wallindex].y = tmp_row;
@@ -1214,7 +1214,7 @@ build_corridor(row1, col1, row2, col2)
           tmp_row += row_dir;
           tmp_col += col_dir;
 
-          caveD[tmp_row][tmp_col].fval = FLOOR_CORR;
+          caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
 
           if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2 &&
               !door_flag) {
@@ -4436,7 +4436,7 @@ unlight_area(y, x)
   }
   for (int row = y - 1; row <= y + 1; ++row) {
     for (int col = x - 1; col <= x + 1; ++col) {
-      if (caveD[row][col].fval == FLOOR_CORR &&
+      if (caveD[row][col].fval < MAX_FLOOR &&
           caveD[row][col].cflag & CF_PERM_LIGHT) {
         caveD[row][col].cflag &= ~CF_PERM_LIGHT;
         known = TRUE;
@@ -7005,27 +7005,23 @@ twall(y, x)
   struct caveS* c_ptr;
   int res, found;
 
-  res = FALSE;
   c_ptr = &caveD[y][x];
+  res = FALSE;
+  found = FALSE;
   if (c_ptr->cflag & CF_ROOM) {
-    /* should become a room space, check to see whether it should be
-       LIGHT_FLOOR or DARK_FLOOR */
-    found = FALSE;
+    // room: LIGHT_FLOOR or DARK_FLOOR
     for (i = y - 1; i <= y + 1; i++)
       for (j = x - 1; j <= x + 1; j++)
-        if (caveD[i][j].fval <= FLOOR_CORR) {
+        if (caveD[i][j].fval < FLOOR_THRESHOLD) {
           c_ptr->fval = caveD[i][j].fval;
           c_ptr->cflag |= (CF_PERM_LIGHT & caveD[i][j].cflag);
           found = TRUE;
           break;
         }
-    if (!found) {
-      c_ptr->fval = FLOOR_CORR;
-    }
-  } else {
-    /* should become a corridor space */
-    c_ptr->fval = FLOOR_CORR;
   }
+
+  if (!found) c_ptr->fval = FLOOR_CORR;
+
   if (panel_contains(&panelD, y, x))
     if (CF_LIT & c_ptr->cflag && c_ptr->oidx)
       msg_print("You have found something!");
