@@ -3527,11 +3527,6 @@ int* xcenter;
         }
       }
 
-      // + shaped rooms fill to y-max
-      // This is a work around for vertical stacking
-      // TBD: all room types may fail to connect when y-adjacent fill to y-max?
-      caveD[ymax][x].fval = 0;
-
       if (type2 & 0x1) {
         caveD[y][x].fval = MAGMA_WALL;
         caveD[y + 1][x].fval = MAGMA_WALL;
