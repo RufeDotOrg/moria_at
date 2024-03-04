@@ -14050,24 +14050,26 @@ main(int argc, char** argv)
 
   // hmm
   if (TEST_CAVEGEN) {
-    int dlev = dun_level;
-    int seed_count = 64 * 1024;
-    for (uint32_t it = 0; it < seed_count; ++it) {
-      hard_reset();
-      dun_level = dlev;
-      rnd_seed = it;
-      cave_gen();
-      if (!cave_check(uD.y, uD.x)) {
-        // Proceed to play for debug
+    for (int dlev = 0; dlev < 50; ++dlev) {
+      int seed_count = 64 * 1024;
+      for (uint32_t it = 0; it < seed_count; ++it) {
         hard_reset();
-        platformD.load(globalD.saveslot_class, 0);
-        memset(&objD[0], 0, sizeof(objD[0]));
+        dun_level = dlev;
         rnd_seed = it;
-        input_resumeD = -1;
-        break;
+        cave_gen();
+        if (!cave_check(uD.y, uD.x)) {
+          // Proceed to play for debug
+          hard_reset();
+          platformD.load(globalD.saveslot_class, 0);
+          memset(&objD[0], 0, sizeof(objD[0]));
+          rnd_seed = it;
+          input_resumeD = -1;
+          break;
+        }
       }
+      printf("test passed; dlev %d seed_count %d\n", dlev, seed_count);
     }
-    printf("test passed; seed_count %d\n", seed_count);
+    printf("all dlev OK\n");
     exit(0);
   }
 
