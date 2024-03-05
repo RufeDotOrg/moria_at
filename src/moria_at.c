@@ -6468,8 +6468,9 @@ magic_init()
     for (i = 1; i < 12; ++i) {
       if (descD[i] == ' ') descD[i + 1] &= ~0x20;
     }
-    for (i = 12; i < AL(heronameD); ++i)
-      if (descD[i] == ' ') descD[i] = 0;
+    for (i = 12; i < AL(heronameD) - 1; ++i)
+      if (descD[i] == ' ') break;
+    descD[i] = 0;
     strcpy(heronameD, descD);
   }
   return 0;
