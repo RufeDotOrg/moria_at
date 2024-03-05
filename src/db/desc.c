@@ -116,7 +116,7 @@ static char* syllableD[] = {
 };
 static char titleD[MAX_SUBVAL][10];
 static char* gutteralD[] = {
-    "a",  "as", "be",  "e",  "hen",   "j",  "lon", "mu",  "na",
-    "on", "ry", "shi", "sk", "stein", "va", "ya",  "zos",
+    "a",  "as", "be", "e",   "hen", "in",  "j",  "lon", "mu",
+    "na", "on", "ry", "shi", "sk",  "ste", "va", "ya",  "zos",
 };
 static char heronameD[16];
