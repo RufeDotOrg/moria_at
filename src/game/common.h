@@ -71,7 +71,7 @@ typedef int (*fn)();
 // (optionally defined)
 // global declaration
 #ifndef DATA
-#define DATA
+#define DATA static
 #endif
 #define STATIC static
 
