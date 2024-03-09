@@ -10173,10 +10173,20 @@ struct objS* obj;
 
   return FALSE;
 }
+int
+mon_surprise(m_ptr)
+struct monS* m_ptr;
+{
+  // +200 tohit is +20% crit chance
+  int ret = 200;
+  // Add specific limitations to the crit/hit bonus here
+  if (!m_ptr->mlit) ret /= 2;
+  return ret;
+}
 void
 inven_throw_dir(iidx, dir)
 {
-  int tbth, tpth, tdam, adj;
+  int tbth, tpth, tdam, adj, surprise;
   int wtohit, wtodam;
   int y, x, fromy, fromx, cdis;
   int flag, drop;
@@ -10240,7 +10250,13 @@ inven_throw_dir(iidx, dir)
         }
         tbth = tbth - cdis;
 
-        if (test_hit(tbth, adj, tpth, cr_ptr->ac)) {
+        surprise = 0;
+        if (m_ptr->msleep) {
+          surprise = test_hit(tbth, adj, tpth, cr_ptr->ac);
+          if (surprise) surprise = mon_surprise(m_ptr);
+        }
+
+        if (surprise || test_hit(tbth, adj, tpth, cr_ptr->ac)) {
           strcpy(tname, descD);
           mon_desc(c_ptr->midx);
           descD[0] |= 0x20;
@@ -10251,7 +10267,7 @@ inven_throw_dir(iidx, dir)
 
           // TBD: named projectile weapons with damage multipliers?
           // tdam = tot_dam(obj, tdam, i);
-          tdam = critical_blow(obj->weight, tpth, adj, tdam);
+          tdam = critical_blow(obj->weight, tpth + surprise, adj, tdam);
           if (tdam < 0) tdam = 0;
 
           if (mon_take_hit(c_ptr->midx, tdam)) {
@@ -11263,18 +11279,12 @@ py_attack(y, x)
     // Barehand after other penalties
     if (!tval) tohit -= 3;
 
+    surprise = 0;
     if (mon->msleep) {
       // Effectively x^2 chance to hit a sleeping monster
       // This preserves early game difficulty, invis penalties, weapon too_heavy
       surprise = test_hit(base_tohit, lev_adj, tohit, creature_ac);
-      if (surprise) {
-        // +200 tohit is +20% crit chance
-        surprise = 200;
-        // Add specific limitations to the crit/hit bonus here
-        if (!mon->mlit) surprise /= 2;
-      }
-    } else {
-      surprise = 0;
+      if (surprise) surprise = mon_surprise(mon);
     }
 
     // You make a lot of noise
