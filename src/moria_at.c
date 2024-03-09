@@ -11227,8 +11227,8 @@ py_shield_attack(y, x)
 void
 py_attack(y, x)
 {
-  int k, blows;
-  int base_tohit, lev_adj, tohit, todam, creature_ac;
+  int k, blows, surprise;
+  int base_tohit, lev_adj, tohit, todam, tval, tweight, creature_ac;
 
   int midx = caveD[y][x].midx;
   struct monS* mon = &entity_monD[midx];
@@ -11236,9 +11236,19 @@ py_attack(y, x)
   struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
   turn_flag = TRUE;
+  tval = obj->tval;
+  creature_ac = cre->ac;
   if (py_affect(MA_FEAR)) {
     msg_print("You are too afraid!");
   } else {
+    if (tval) {
+      blows = attack_blows(obj->weight);
+      tweight = obj->weight;
+    } else {
+      blows = 2;
+      tweight = 1;
+    }
+
     tohit = cbD.ptohit;
     todam = cbD.ptodam;
     base_tohit = uD.bth;
@@ -11250,32 +11260,42 @@ py_attack(y, x)
       lev_adj /= 2;
     }
 
-    switch (obj->tval) {
-      default:
-        blows = attack_blows(obj->weight);
-        break;
-      case 0:
-        blows = 2;
-        tohit -= 3;
-        break;
+    // Barehand after other penalties
+    if (!tval) tohit -= 3;
+
+    if (mon->msleep) {
+      // Effectively x^2 chance to hit a sleeping monster
+      // This preserves early game difficulty, invis penalties, weapon too_heavy
+      surprise = test_hit(base_tohit, lev_adj, tohit, creature_ac);
+      if (surprise) {
+        // +200 tohit is +20% crit chance
+        surprise = 200;
+        // Add specific limitations to the crit/hit bonus here
+        if (!mon->mlit) surprise /= 2;
+      }
+    } else {
+      surprise = 0;
     }
 
+    // You make a lot of noise
     mon->msleep = 0;
+
     mon_desc(midx);
     descD[0] = descD[0] | 0x20;
-    creature_ac = cre->ac;
     /* Loop for number of blows,  trying to hit the critter.	  */
     for (int it = 0; it < blows; ++it) {
-      if (test_hit(base_tohit, lev_adj, tohit, creature_ac)) {
+      // Only the first blow may surprise the beast
+      if (it > 0) surprise = 0;
+
+      if (surprise || test_hit(base_tohit, lev_adj, tohit, creature_ac)) {
         MSG("You hit %s.", descD);
-        if (obj->tval) {
+        k = 1;
+        if (tval) {
           k = pdamroll(obj->damage);
           k = tot_dam(obj, k, mon->cidx);
-          k = critical_blow(obj->weight, tohit, lev_adj, k);
-        } else {
-          k = damroll(1, 1);
-          k = critical_blow(1, tohit, lev_adj, k);
         }
+
+        k = critical_blow(tweight, tohit + surprise, lev_adj, k);
         k += todam;
 
         if (uD.melee_genocide) {
