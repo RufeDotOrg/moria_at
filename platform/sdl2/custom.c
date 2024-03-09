@@ -412,6 +412,8 @@ custom_pregame()
   if (platformD.load(-1, 0)) fs_upgrade();
 
   font_color(*color_by_palette(WHITE));
+
+  if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
 }
 
 int
