@@ -10186,7 +10186,7 @@ struct monS* m_ptr;
 void
 inven_throw_dir(iidx, dir)
 {
-  int tbth, tpth, tdam, adj, surprise;
+  int tbth, tpth, tdam, adj, tweight, surprise;
   int wtohit, wtodam;
   int y, x, fromy, fromx, cdis;
   int flag, drop;
@@ -10264,10 +10264,12 @@ inven_throw_dir(iidx, dir)
 
           tdam = pdamroll(obj->damage) + obj->todam + wtodam;
           if (bowid) tdam *= obj_get(bowid)->damage[1];
+          tweight = obj->weight;
+          if (bowid) tweight += obj_get(bowid)->weight;
 
           // TBD: named projectile weapons with damage multipliers?
           // tdam = tot_dam(obj, tdam, i);
-          tdam = critical_blow(obj->weight, tpth + surprise, adj, tdam);
+          tdam = critical_blow(tweight, tpth + surprise, adj, tdam);
           if (tdam < 0) tdam = 0;
 
           if (mon_take_hit(c_ptr->midx, tdam)) {
