@@ -10235,7 +10235,7 @@ inven_throw_dir(iidx, dir)
         }
         tpth = cbD.ptohit + obj->tohit + wtohit;
         if (m_ptr->mlit == 0) {
-          tpth /= 2;
+          if (tpth > 0) tpth /= 2;
           tbth /= 2;
           adj /= 2;
         }
@@ -11269,7 +11269,7 @@ py_attack(y, x)
     lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
     // reduce hit if monster not lit
     if (mon->mlit == 0) {
-      tohit /= 2;
+      if (tohit > 0) tohit /= 2;
       base_tohit /= 2;
       lev_adj /= 2;
     }
