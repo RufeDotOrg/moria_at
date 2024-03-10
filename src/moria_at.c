@@ -10187,7 +10187,7 @@ void
 inven_throw_dir(iidx, dir)
 {
   int tbth, tpth, tdam, adj, tweight, surprise;
-  int wtohit, wtodam;
+  int wtohit, wtodam, wheavy;
   int y, x, fromy, fromx, cdis;
   int flag, drop;
   struct caveS* c_ptr;
@@ -10205,6 +10205,7 @@ inven_throw_dir(iidx, dir)
   }
 
   int bowid = bow_by_projectile(iidx);
+  wheavy = 0;
   if (bowid) {
     obj = obj_get(bowid);
     obj_desc(obj, 1);
@@ -10213,6 +10214,8 @@ inven_throw_dir(iidx, dir)
 
     wtohit += obj->tohit;
     wtodam += obj->todam;
+    // str vs weight check
+    wheavy = tohit_by_weight(obj->weight);
   }
 
   obj = obj_get(invenD[iidx]);
@@ -10248,6 +10251,7 @@ inven_throw_dir(iidx, dir)
           tbth /= 2;
           adj /= 2;
         }
+        tpth += wheavy;
         tbth = tbth - cdis;
 
         surprise = 0;
