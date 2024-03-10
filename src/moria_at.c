@@ -10680,6 +10680,7 @@ saveslot_race_reroll(saveslot, race)
 {
   char c = 'o';
   do {
+    if (KEYBOARD && c == ' ') c = 'o';
     if (c == 'o') py_race_class_seed_init(race, saveslot, platformD.seed());
     c = show_character(1);
     if (c == CTRL('c')) break;
