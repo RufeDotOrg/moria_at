@@ -12090,7 +12090,7 @@ tunnel_tool(y, x, iidx)
   struct caveS* c_ptr;
   struct objS* obj;
   int tabil, wall_chance, wall_min, turn_count;
-  int wtohit;
+  int wheavy;
 
   c_ptr = &caveD[y][x];
   obj = obj_get(invenD[iidx]);
@@ -12111,10 +12111,10 @@ tunnel_tool(y, x, iidx)
     msg_print("You dig with your hands, making no progress.");
   } else {
     obj_desc(obj, 1);
-    wtohit = tohit_by_weight(obj->weight);
+    wheavy = tohit_by_weight(obj->weight);
     countD.paralysis = 1;
 
-    if (wtohit) {
+    if (wheavy) {
       MSG("You have trouble digging with %s, it is very heavy.", descD);
     } else {
       MSG("You begin tunneling with %s.", descD);
@@ -12122,7 +12122,7 @@ tunnel_tool(y, x, iidx)
 
     /* If this weapon is too heavy for the player to wield properly, then
        also make it harder to dig with it. tabil may be negative.  */
-    tabil = obj_tabil(obj, TRUE) + wtohit;
+    tabil = obj_tabil(obj, TRUE) + wheavy;
 
     wall_chance = 0;
     switch (c_ptr->fval) {
