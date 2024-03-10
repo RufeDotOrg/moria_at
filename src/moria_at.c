@@ -8338,7 +8338,7 @@ struct objS* obj;
   int line;
   int reveal, blows, eqidx;
   int number, stackweight, stacklimit;
-  int wtohit;
+  int wheavy;
 
   reveal = obj->idflag & ID_REVEAL;
   if (obj->tidx) {
@@ -8346,6 +8346,7 @@ struct objS* obj;
     screen_submodeD = 1;
     if (HACK) obj->idflag = ID_REVEAL;
     eqidx = may_equip(obj->tval);
+    wheavy = tohit_by_weight(obj->weight);
     number = obj->number;
     if (for_sale && (STACK_SINGLE & obj->subval)) number = 1;
 
@@ -8374,9 +8375,13 @@ struct objS* obj;
     }
 
     if (obj->tval == TV_DIGGING) {
+      if (wheavy) BufMsg(screen, "%-17.017s: %+d", "Too Heavy Penalty", wheavy);
       BufMsg(screen, "%-17.017s: %+d", "+ To Digging", obj_tabil(obj, reveal));
     }
     if (obj->tval == TV_LAUNCHER) {
+      if (wheavy) BufMsg(screen, "%-17.017s: %+d", "Too Heavy Penalty", wheavy);
+      BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
+      BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
       if (obj->p1 < AL(projectile_nameD)) {
         BufMsg(screen, "%-17.017s: %s", "Projectile",
                projectile_nameD[obj->p1]);
@@ -8388,8 +8393,7 @@ struct objS* obj;
       }
     }
     if (eqidx == INVEN_WIELD) {
-      wtohit = tohit_by_weight(obj->weight);
-      if (wtohit) BufMsg(screen, "%-17.017s: %+d", "Heavy Penalty", wtohit);
+      if (wheavy) BufMsg(screen, "%-17.017s: %+d", "Too Heavy Penalty", wheavy);
       BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
       BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
 
