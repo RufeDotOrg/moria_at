@@ -10197,12 +10197,13 @@ inven_throw_dir(iidx, dir)
     obj = obj_get(bowid);
     obj_desc(obj, 1);
     obj_detail(obj);
-    MSG("You grasp %s%s.", descD, detailD);
 
     wtohit += obj->tohit;
     wtodam += obj->todam;
     // str vs weight check
     wheavy = tohit_by_weight(obj->weight);
+
+    MSG("You %s %s%s.", wheavy ? "struggle to aim" : "grasp", descD, detailD);
   }
 
   obj = obj_get(invenD[iidx]);
