@@ -5464,13 +5464,10 @@ calc_bonuses()
 {
   int tflag;
   int ac, toac;
-  int wtohit, tohit, todam;
+  int tohit, todam;
   int hide_tohit, hide_todam, hide_toac;
 
-  wtohit = invenD[INVEN_WIELD]
-               ? tohit_by_weight(obj_get(invenD[INVEN_WIELD])->weight)
-               : 0;
-  tohit = tohit_adj() + wtohit;
+  tohit = tohit_adj();
   todam = todam_adj();
   toac = toac_adj();
   ac = 0;
@@ -5512,20 +5509,6 @@ calc_bonuses()
     }
   }
   cbD.tflag = tflag;
-
-  if (cbD.weapon_heavy ^ (wtohit != 0)) {
-    cbD.weapon_heavy = (wtohit != 0);
-    if (wtohit) {
-      msg_print("You have trouble wielding such a heavy weapon.");
-    } else {
-      msg_print("You are strong enough to wield your weapon.");
-    }
-  } else if (cbD.prev_weapon != invenD[INVEN_WIELD]) {
-    if (wtohit) {
-      msg_print("You have trouble wielding such a heavy weapon.");
-    }
-  }
-  cbD.prev_weapon = invenD[INVEN_WIELD];
 }
 // uD.mflags && maD are NOT up-to-date at the time of this call
 void
@@ -11254,8 +11237,8 @@ py_shield_attack(y, x)
 void
 py_attack(y, x)
 {
-  int k, blows, surprise;
-  int base_tohit, lev_adj, tohit, todam, tval, tweight, creature_ac;
+  int k, blows, surprise, hit_count;
+  int base_tohit, lev_adj, tohit, todam, tval, tweight, wheavy, creature_ac;
 
   int midx = caveD[y][x].midx;
   struct monS* mon = &entity_monD[midx];
@@ -11268,12 +11251,15 @@ py_attack(y, x)
   if (py_affect(MA_FEAR)) {
     msg_print("You are too afraid!");
   } else {
+    // Barehand
+    blows = 2;
+    tweight = 1;
+    wheavy = 0;
+    // Weapon
     if (tval) {
       blows = attack_blows(obj->weight);
       tweight = obj->weight;
-    } else {
-      blows = 2;
-      tweight = 1;
+      wheavy = tohit_by_weight(obj->weight);
     }
 
     tohit = cbD.ptohit;
@@ -11289,6 +11275,8 @@ py_attack(y, x)
 
     // Barehand after other penalties
     if (!tval) tohit -= 3;
+    // Add penalty for weapon too heavy
+    tohit += wheavy;
 
     surprise = 0;
     if (mon->msleep) {
@@ -11304,11 +11292,13 @@ py_attack(y, x)
     mon_desc(midx);
     descD[0] = descD[0] | 0x20;
     /* Loop for number of blows,  trying to hit the critter.	  */
+    hit_count = 0;
     for (int it = 0; it < blows; ++it) {
       // Only the first blow may surprise the beast
       if (it > 0) surprise = 0;
 
       if (surprise || test_hit(base_tohit, lev_adj, tohit, creature_ac)) {
+        hit_count += 1;
         MSG("You hit %s.", descD);
         k = 1;
         if (tval) {
@@ -11348,6 +11338,9 @@ py_attack(y, x)
         MSG("You miss %s.", descD);
       }
     }
+
+    if (wheavy && !hit_count)
+      msg_print("You have trouble wielding such a heavy weapon.");
   }
 }
 static void

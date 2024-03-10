@@ -97,11 +97,11 @@ struct cbS {
   int32_t hide_toac;
   int32_t hide_tohit;
   int32_t hide_todam;
-  int32_t prev_weapon;
   // Treasure flags from equipment
   int32_t tflag;
   // Other flags
-  uint8_t weapon_heavy;
+  // int32_t prev_weapon;
+  // uint8_t weapon_heavy;
 };
 GAME struct cbS cbD;
 
