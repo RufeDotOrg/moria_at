@@ -13188,6 +13188,7 @@ store_item_purchase(sidx, item)
   if (obj->tidx) {
     count = obj->subval & STACK_PROJECTILE ? obj->number : 1;
     cost = store_value(sidx, obj_value(obj), 1);
+    if (HACK) cost = 0;
     if (uD.gold >= cost) {
       if ((iidx = inven_obj_mergecount(obj, count)) >= 0) {
         obj_get(invenD[iidx])->number += count;
