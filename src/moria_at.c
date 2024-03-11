@@ -10248,7 +10248,7 @@ inven_throw_dir(iidx, dir)
         tbth = tbth - cdis;
 
         surprise = 0;
-        if (m_ptr->msleep) {
+        if (m_ptr->msleep && cr_seen(cr_ptr)) {
           surprise = test_hit(tbth, adj, tpth, cr_ptr->ac);
           if (surprise) surprise = mon_surprise(m_ptr);
         }
@@ -11285,7 +11285,7 @@ py_attack(y, x)
     tohit += wheavy;
 
     surprise = 0;
-    if (mon->msleep) {
+    if (mon->msleep && cr_seen(cre)) {
       // Effectively x^2 chance to hit a sleeping monster
       // This preserves early game difficulty, invis penalties, weapon too_heavy
       surprise = test_hit(base_tohit, lev_adj, tohit, creature_ac);
