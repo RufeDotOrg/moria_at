@@ -6873,7 +6873,7 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         cre = &creatureD[m_ptr->cidx];
 
         // Bolt provides a temporary light
-        if (cr_seen(cre)) m_ptr->mlit = TRUE;
+        if (!py_affect(MA_BLIND) && cr_seen(cre)) m_ptr->mlit = TRUE;
 
         mon_desc(c_ptr->midx);
         descD[0] = descD[0] | 0x20;
