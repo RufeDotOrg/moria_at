@@ -11998,7 +11998,7 @@ py_monlook_dir(dir)
         seen += 1;
         mon_desc(it_index);
         // hack: mon death_descD pronoun is a/an
-        MSG("You see %s.", death_descD);
+        MSG("You see %s.%s", death_descD, mon->msleep ? " (asleep)" : "");
         msg_pause();
       }
     }
