@@ -6171,6 +6171,26 @@ static void py_stats(stats, len) int8_t* stats;
     stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
 int
+heroname_init()
+{
+  int i, j, k;
+  descD[0] = 0;
+  k = randint(2) + 1;
+  for (i = 0; i < k; i++) {
+    for (j = 1 + randint(2); j > 0; j--)
+      strcat(descD, gutteralD[randint(AL(gutteralD)) - 1]);
+    if (i < k - 1) strcat(descD, " ");
+  }
+  descD[0] &= ~0x20;
+  for (i = 1; i < 12; ++i) {
+    if (descD[i] == ' ') descD[i + 1] &= ~0x20;
+  }
+  for (i = 12; i < AL(heronameD) - 1; ++i)
+    if (descD[i] == ' ') break;
+  descD[i] = 0;
+  strcpy(heronameD, descD);
+}
+int
 social_bonus()
 {
   int hist_ptr = uD.ridx * 3 + 1;
@@ -6309,6 +6329,8 @@ py_race_class_seed_init(rsel, csel, prng)
   uD.cmana = uD.mmana = umana_by_level(1);
   uD.cmana_frac = 0;
 
+  fixed_seed_func(town_seed, heroname_init);
+
   int sc = fixed_seed_func(town_seed, social_bonus);
   uD.sc = clamp(randint(4) + sc, 1, 100);
 
@@ -6438,23 +6460,6 @@ magic_init()
     else
       descD[9] = '\0';
     strcpy(titleD[h], descD);
-  }
-  {
-    descD[0] = 0;
-    k = randint(2) + 1;
-    for (i = 0; i < k; i++) {
-      for (j = 1 + randint(2); j > 0; j--)
-        strcat(descD, gutteralD[randint(AL(gutteralD)) - 1]);
-      if (i < k - 1) strcat(descD, " ");
-    }
-    descD[0] &= ~0x20;
-    for (i = 1; i < 12; ++i) {
-      if (descD[i] == ' ') descD[i + 1] &= ~0x20;
-    }
-    for (i = 12; i < AL(heronameD) - 1; ++i)
-      if (descD[i] == ' ') break;
-    descD[i] = 0;
-    strcpy(heronameD, descD);
   }
   return 0;
 }
@@ -14112,6 +14117,7 @@ main(int argc, char** argv)
 
     // Per-Player initialization
     fixed_seed_func(obj_seed, magic_init);
+    fixed_seed_func(town_seed, heroname_init);
     // recreate history text
     fixed_seed_func(town_seed, social_bonus);
 
