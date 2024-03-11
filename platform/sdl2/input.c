@@ -271,7 +271,8 @@ touch_by_xy(x, y)
     }
   }
 
-  {
+  enum { OPT_VERSION = 0 };
+  if (OPT_VERSION) {
     AUSE(grect, GR_VERSION);
     if (SDL_PointInRect(&tpp, &grect)) {
       return TOUCH_VERSION;
