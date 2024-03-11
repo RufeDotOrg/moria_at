@@ -4281,6 +4281,13 @@ struct creatureS* cr_ptr;
   else
     return FALSE;
 }
+static int
+cr_seen2(cr_ptr)
+struct creatureS* cr_ptr;
+{
+  if (py_affect(MA_BLIND)) return 0;
+  return cr_seen(cr_ptr);
+}
 void
 update_mon(midx)
 {
@@ -6873,7 +6880,7 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         cre = &creatureD[m_ptr->cidx];
 
         // Bolt provides a temporary light
-        if (!py_affect(MA_BLIND) && cr_seen(cre)) m_ptr->mlit = TRUE;
+        if (cr_seen2(cre)) m_ptr->mlit = TRUE;
 
         mon_desc(c_ptr->midx);
         descD[0] = descD[0] | 0x20;
@@ -10248,7 +10255,7 @@ inven_throw_dir(iidx, dir)
         tbth = tbth - cdis;
 
         surprise = 0;
-        if (m_ptr->msleep && cr_seen(cr_ptr)) {
+        if (m_ptr->msleep && cr_seen2(cr_ptr)) {
           surprise = test_hit(tbth, adj, tpth, cr_ptr->ac);
           if (surprise) surprise = mon_surprise(m_ptr);
         }
@@ -11285,7 +11292,7 @@ py_attack(y, x)
     tohit += wheavy;
 
     surprise = 0;
-    if (mon->msleep && cr_seen(cre)) {
+    if (mon->msleep && cr_seen2(cre)) {
       // Effectively x^2 chance to hit a sleeping monster
       // This preserves early game difficulty, invis penalties, weapon too_heavy
       surprise = test_hit(base_tohit, lev_adj, tohit, creature_ac);
