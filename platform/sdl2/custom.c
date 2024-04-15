@@ -372,6 +372,10 @@ fs_upgrade()
 int
 custom_pregame()
 {
+  if (DISK && !disk_init()) return 1;
+  if (FONT && !font_init()) return 2;
+  if (INPUT && !input_init()) return 3;
+
   for (int it = 0; it < AL(paletteD); ++it) {
     rgbaD[it] = SDL_MapRGBA(pixel_formatD, U4(paletteD[it]));
   }
@@ -382,10 +386,10 @@ custom_pregame()
         SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ART_W * SPRITE_SQ,
                                        ART_H * SPRITE_SQ, 0, texture_formatD);
     if (spriteD) {
-      if (!art_io() || !art_init()) return 3;
-      if (!tart_io() || !tart_init()) return 3;
-      if (!wart_io() || !wart_init()) return 3;
-      if (!part_io() || !part_init()) return 3;
+      if (!art_io() || !art_init()) return 4;
+      if (!tart_io() || !tart_init()) return 4;
+      if (!wart_io() || !wart_init()) return 4;
+      if (!part_io() || !part_init()) return 4;
 
       if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
         sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
@@ -419,6 +423,7 @@ custom_pregame()
   font_color(*color_by_palette(WHITE));
 
   if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
+  return 0;
 }
 
 int
@@ -1654,17 +1659,4 @@ custom_orientation(orientation)
 int
 custom_setup()
 {
-  if (DISK && !disk_init()) return 2;
-  if (FONT && !font_init()) return 3;
-  if (INPUT && !input_init()) return 4;
-
-  // override platform_init() ??
-  customD.pregame = custom_pregame;
-  customD.postgame = custom_postgame;
-  customD.orientation = custom_orientation;
-  customD.draw = custom_draw;
-  customD.predraw = custom_predraw;
-  // ??
-  platformD.predraw = custom_predraw;
-  platformD.draw = custom_draw;
 }

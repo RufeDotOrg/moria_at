@@ -413,6 +413,34 @@ platform_postgame(may_exit)
 
   return 0;
 }
+
+static int
+platform_init()
+{
+  FT(platform);
+  FT(custom);
+  platformD.pregame = platform_pregame;
+  platformD.postgame = platform_postgame;
+  platformD.seed = platform_random;
+
+  msg_widthD = overlay_widthD = 80;
+
+  return 0;
+}
 #else  // PLATFORM
+// maybe customD shouldn't be known outside of this scope; it can intercept
+// functions where necessary calling platformD before or after it's own code
 #include "custom.c"
+static int
+custom_init()
+{
+  platform_init();
+  platformD.predraw = custom_predraw;
+  platformD.draw = custom_draw;
+
+  customD.pregame = custom_pregame;
+  customD.postgame = custom_postgame;
+  customD.orientation = custom_orientation;
+}
+#define platform_init custom_init
 #endif

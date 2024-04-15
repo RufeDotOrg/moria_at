@@ -163,8 +163,6 @@ struct customS {
   fn pregame;
   fn postgame;
   fn orientation;
-  fn predraw;
-  fn draw;
 };
 DATA struct customS customD;
 #endif

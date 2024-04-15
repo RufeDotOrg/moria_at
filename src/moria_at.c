@@ -14059,28 +14059,20 @@ obj_level_init()
     tmp[l]++;
   }
 }
-static int
-platform_setup()
-{
-  FT(platform);
-  platformD.pregame = platform_pregame;
-  platformD.postgame = platform_postgame;
-
-  msg_widthD = overlay_widthD = 80;
-
-  return 0;
-}
 int
 global_init()
 {
   globalD.saveslot_class = -1;
   globalD.zoom_factor = 0;
 }
+
+#include "platform/platform.c"
+
 int
 main(int argc, char** argv)
 {
   global_init();
-  platform_setup();
+  platform_init();
   platformD.pregame();
 
   mon_level_init();
@@ -14191,5 +14183,3 @@ main(int argc, char** argv)
 
   return platformD.postgame(1);
 }
-
-#include "platform/platform.c"
