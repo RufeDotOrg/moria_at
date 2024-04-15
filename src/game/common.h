@@ -1,3 +1,6 @@
+#ifndef COMMON
+#define COMMON
+
 // stdint
 typedef __UINT8_TYPE__ uint8_t;
 typedef __UINT16_TYPE__ uint16_t;
@@ -94,6 +97,10 @@ enum { RELEASE = 1 };
 enum { RELEASE = 0 };
 #endif
 
+#ifndef CTRL
+#define CTRL(x) (x & 0x1f)
+#endif
+
 #define FOR_EACH(type, body)                                     \
   {                                                              \
     for (int it_index = 0; it_index < AL(type##D); ++it_index) { \
@@ -128,3 +135,36 @@ ftable_clear(void* ftable, int size)
   fn* func = ftable;
   for (int it = 0; it < size; ++it) func[it] = noop;
 }
+
+// Common Interface
+struct platformS {
+  fn pregame;
+  fn postgame;
+  // render
+  fn predraw;
+  fn draw;
+  // input
+  fn readansi;
+  fn selection;
+  // i/o
+  fn save;
+  fn erase;
+  fn load;
+  fn savemidpoint;
+  fn saveex;
+  // rng
+  fn seed;
+};
+DATA struct platformS platformD;
+
+// Do we REALLY use an interface for this?
+// Uhhhmm is this known?
+struct customS {
+  fn pregame;
+  fn postgame;
+  fn orientation;
+  fn predraw;
+  fn draw;
+};
+DATA struct customS customD;
+#endif

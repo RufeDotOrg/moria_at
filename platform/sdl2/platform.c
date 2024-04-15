@@ -1,3 +1,17 @@
+//
+// #include platform.c twice for custom code:
+// Custom code comes last, depending on game and platform details in depth.
+// Written to the intersection of the game & platform.
+//
+// Platform and Game code coexist peacefully:
+//  1) cc game.c
+//  2) cc platform.c
+//  3) cc $(cat game.c platform.c) OR cc $(cat platform.c game.c)
+//
+// Two workflows exist:
+// 1) Iterative development (access all APIs until deps are known)
+// 2) Release build (isolate platform DLL/SO + game code)
+//
 #ifndef PLATFORM
 #define PLATFORM
 #include <setjmp.h>
@@ -22,9 +36,6 @@ int SDL_AndroidGetExternalStorageState();
 char* SDL_AndroidGetExternalStoragePath();
 #endif
 
-enum { DISK = 1 };
-enum { FONT = 1 };
-enum { INPUT = 1 };
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
@@ -55,13 +66,6 @@ enum { PORTRAIT = 0 };
 enum { LANDSCAPE = 0 };
 #define LANDSCAPE_X 1920
 #define LANDSCAPE_Y 1080
-
-// Game includes platform.c twice.
-// First inclusion is for iterative dev (access all APIs until deps are known)
-// Second inclusion is after game code for game-aware rendering and platform specifics
-//
-// User may prune platform from the game code by moving both includes to the bottom.
-#define CUSTOM_SETUP 1
 
 // render.c
 DATA struct SDL_Window* windowD;
@@ -336,10 +340,7 @@ platform_random()
 int
 platform_pregame()
 {
-  int init;
-
-  init = !SDL_WasInit(SDL_SCOPE);
-  if (init) {
+  if (!SDL_WasInit(SDL_SCOPE)) {
     if (!RELEASE) Log("Initializing development build");
     if (SDL_VERBOSE) SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
@@ -374,27 +375,12 @@ platform_pregame()
     landscapeD =
         SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                           LANDSCAPE_X, LANDSCAPE_Y);
+
+    // platform_init() ?
+    platformD.seed = platform_random;
+
+    customD.pregame();
   }
-
-  platformD.seed = platform_random;
-
-  if (DISK && init) {
-    if (!disk_init()) return 2;
-  }
-
-  if (FONT && init) {
-    if (!font_init()) return 3;
-  }
-
-  if (INPUT && init) {
-    if (!input_init()) return 4;
-  }
-
-#ifdef CUSTOM_SETUP
-  custom_setup();
-  platformD.predraw = customD.predraw;
-  platformD.draw = customD.draw;
-#endif
 
   if (WINDOW) {
     SDL_Event event;
@@ -413,9 +399,7 @@ platform_pregame()
     }
   }
 
-  customD.pregame();
-
-  return init;
+  return 0;
 }
 int
 platform_postgame(may_exit)
@@ -429,8 +413,6 @@ platform_postgame(may_exit)
 
   return 0;
 }
-#else
-#ifdef CUSTOM_SETUP
+#else  // PLATFORM
 #include "custom.c"
-#endif
 #endif

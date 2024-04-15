@@ -425,3 +425,5 @@ disk_init()
   platformD.savemidpoint = platform_savemidpoint;
   if (exportpath_usedD) platformD.saveex = platform_saveex;
 }
+
+#define DISK 1

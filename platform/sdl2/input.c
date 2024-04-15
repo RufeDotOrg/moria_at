@@ -461,3 +461,5 @@ input_init()
   if (TOUCH) platformD.selection = platform_selection;
   return 1;
 }
+
+#define INPUT 1

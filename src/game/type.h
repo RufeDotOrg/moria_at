@@ -290,35 +290,10 @@ struct ownerS {
   uint8_t insult_max;
 };
 
-struct platformS {
-  fn pregame;
-  fn postgame;
   // render
-  fn predraw;
-  fn draw;
   // input
-  fn readansi;
-  fn selection;
   // i/o
-  fn save;
-  fn erase;
-  fn load;
-  fn savemidpoint;
-  fn saveex;
   // rng
-  fn seed;
-};
-DATA struct platformS platformD;
-
-struct customS {
-  fn pregame;
-  fn postgame;
-  fn orientation;
-  fn predraw;
-  fn draw;
-};
-DATA struct customS customD;
-
 // Global options
 struct globalS {
   int32_t saveslot_class;

@@ -161,3 +161,5 @@ font_texture_by_char(char c)
   }
   return t;
 }
+
+#define FONT 1

@@ -1,5 +1,10 @@
 #pragma once
 
+enum { DISK = 0 };
+enum { FONT = 0 };
+enum { INPUT = 0 };
+
+// Override DISK/FONT/INPUT when included
 #include "disk.c"
 #include "font.c"
 #include "input.c"
@@ -1649,9 +1654,17 @@ custom_orientation(orientation)
 int
 custom_setup()
 {
+  if (DISK && !disk_init()) return 2;
+  if (FONT && !font_init()) return 3;
+  if (INPUT && !input_init()) return 4;
+
+  // override platform_init() ??
   customD.pregame = custom_pregame;
   customD.postgame = custom_postgame;
   customD.orientation = custom_orientation;
   customD.draw = custom_draw;
   customD.predraw = custom_predraw;
+  // ??
+  platformD.predraw = custom_predraw;
+  platformD.draw = custom_draw;
 }
