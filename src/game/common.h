@@ -143,6 +143,9 @@ struct platformS {
   // render
   fn predraw;
   fn draw;
+  fn orientation;
+  // rng
+  fn seed;
   // input
   fn readansi;
   fn selection;
@@ -152,17 +155,6 @@ struct platformS {
   fn load;
   fn savemidpoint;
   fn saveex;
-  // rng
-  fn seed;
 };
 DATA struct platformS platformD;
-
-// Do we REALLY use an interface for this?
-// Uhhhmm is this known?
-struct customS {
-  fn pregame;
-  fn postgame;
-  fn orientation;
-};
-DATA struct customS customD;
 #endif

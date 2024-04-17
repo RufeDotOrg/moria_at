@@ -372,6 +372,8 @@ fs_upgrade()
 int
 custom_pregame()
 {
+  platform_pregame();
+
   if (DISK && !disk_init()) return 1;
   if (FONT && !font_init()) return 2;
   if (INPUT && !input_init()) return 3;
@@ -427,10 +429,12 @@ custom_pregame()
 }
 
 int
-custom_postgame()
+custom_postgame(may_exit)
 {
   platform_savemidpoint();
   if (cachepath_usedD) cache_write();
+
+  return platform_postgame(may_exit);
 }
 
 static int
@@ -1105,7 +1109,7 @@ SDL_Rect* zoom_prect;
   return 0;
 }
 int
-platform_p0()
+draw_mode0()
 {
   USE(renderer);
   USE(msg_more);
@@ -1143,7 +1147,7 @@ platform_p0()
   }
 }
 int
-platform_p2()
+draw_mode2()
 {
   USE(mode);
   USE(renderer);
@@ -1276,16 +1280,14 @@ custom_draw()
   }
 
   if (mode == 0)
-    platform_p0();
+    draw_mode0();
   else
-    platform_p2();
+    draw_mode2();
 
   if (text_fnD) text_fnD(mode);
 
   SDL_RenderFlush(renderer);
-  render_update();
-
-  return 1;
+  return platform_draw();
 }
 int
 obj_viz(obj, viz)
@@ -1635,6 +1637,8 @@ custom_predraw()
 int
 custom_orientation(orientation)
 {
+  platform_orientation(orientation);
+
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
     layout_rectD = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
     text_fnD = portrait_text;
@@ -1654,9 +1658,4 @@ custom_orientation(orientation)
     text_fnD = 0;
   }
   return 0;
-}
-
-int
-custom_setup()
-{
 }
