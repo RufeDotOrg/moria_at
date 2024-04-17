@@ -3789,7 +3789,7 @@ void
 hard_reset()
 {
   // Clear game state
-  memset(__start_game, 0, __stop_game - __start_game);
+  // memset(__start_game, 0, __stop_game - __start_game);
 
   // Message history
   AC(msglen_cqD);
@@ -10697,7 +10697,7 @@ saveslot_creation(int saveslot)
   overlay_submodeD = 'c';
 
   // Clear game state
-  memset(__start_game, 0, __stop_game - __start_game);
+  // memset(__start_game, 0, __stop_game - __start_game);
 
   do {
     line = 0;
@@ -14071,6 +14071,10 @@ global_init()
 int
 main(int argc, char** argv)
 {
+#ifdef __FATCOSMOCC__
+  libD = cosmo_dlopen("libSDL2.so", RTLD_LAZY);
+  printf("%p libD\n", libD);
+#endif
   global_init();
   platform_init();
   platformD.pregame();

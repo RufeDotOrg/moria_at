@@ -5,7 +5,7 @@ enum { FONT = 0 };
 enum { INPUT = 0 };
 
 // Override DISK/FONT/INPUT when included
-#include "disk.c"
+//#include "disk.c"
 #include "font.c"
 #include "input.c"
 
@@ -372,6 +372,7 @@ fs_upgrade()
 int
 custom_pregame()
 {
+  Log(__FUNCTION__);
   platform_pregame();
 
   if (DISK && !disk_init()) return 1;
@@ -425,6 +426,7 @@ custom_pregame()
   font_color(*color_by_palette(WHITE));
 
   if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
+  Log(__FUNCTION__);
   return 0;
 }
 

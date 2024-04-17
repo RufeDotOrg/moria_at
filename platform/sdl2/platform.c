@@ -21,6 +21,14 @@
 
 #define Log SDL_Log
 
+#ifdef __FATCOSMOCC__
+#include <cosmo.h>
+#include <dlfcn.h>
+void* libD;
+typedef void* (*vfn)();
+#include "cosmo-sdl.h"
+#endif
+
 #include "third_party/zlib/puff.c"
 
 #define ORGNAME "org.rufe"
@@ -341,6 +349,7 @@ platform_random()
 int
 platform_pregame()
 {
+  Log(__FUNCTION__);
   if (!SDL_WasInit(SDL_SCOPE)) {
     if (!RELEASE) Log("Initializing development build");
     if (SDL_VERBOSE) SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
@@ -395,6 +404,7 @@ platform_pregame()
     }
   }
 
+  Log(__FUNCTION__);
   return 0;
 }
 int

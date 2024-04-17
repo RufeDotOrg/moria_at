@@ -11,8 +11,8 @@ function try_gcc_clang() {
       fi
       CFLAGS+=" -Isdl2/include "
   
-      [ "$CC" == gcc ] && LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
-      [ "$CC" == clang ] && LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
+      LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
+      LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
     elif hash sdl2-config; then
       SDL2_FLAGS=`sdl2-config --cflags`
       SDL2_LIBS=`sdl2-config --libs`
@@ -23,3 +23,21 @@ function try_gcc_clang() {
 }
 
 try_gcc_clang
+
+function try_cosmocc()
+{
+  readlink src/platform | grep 'sdl2'
+  if [ $? -eq 0 ]; then
+    DIR=cosmo-sdl2
+    if [ -d "$DIR" ]; then
+      if [ linux == "${OSTYPE::5}" ]; then
+        # export LD_LIBRARY_PATH=`realpath $DIR/build/.libs`
+        export LD_LIBRARY_PATH=.
+      fi
+      CFLAGS+=" -I$DIR/include "
+      # No linkage
+    fi
+  fi
+}
+
+try_cosmocc
