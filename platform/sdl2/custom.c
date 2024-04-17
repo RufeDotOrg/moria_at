@@ -431,9 +431,7 @@ custom_pregame()
 int
 custom_postgame(may_exit)
 {
-  platform_savemidpoint();
-  if (cachepath_usedD) cache_write();
-
+  if (DISK) disk_postgame(may_exit);
   return platform_postgame(may_exit);
 }
 

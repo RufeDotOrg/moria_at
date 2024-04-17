@@ -257,7 +257,7 @@ platform_erase(saveslot, external)
   return path_delete(path);
 }
 int
-platform_savemidpoint()
+disk_savemidpoint()
 {
   MUSE(global, saveslot_class);
   if (saveslot_class >= 0 && saveslot_class < AL(classD)) {
@@ -342,6 +342,13 @@ cache_read()
 }
 
 int
+disk_postgame(may_exit)
+{
+  disk_savemidpoint();
+  if (cachepath_usedD) cache_write();
+}
+
+int
 disk_init()
 {
   if (__APPLE__) {
@@ -422,7 +429,7 @@ disk_init()
   platformD.load = platform_load;
   platformD.save = platform_save;
   platformD.erase = platform_erase;
-  platformD.savemidpoint = platform_savemidpoint;
+  platformD.savemidpoint = disk_savemidpoint;
   if (exportpath_usedD) platformD.saveex = platform_saveex;
   return 1;
 }
