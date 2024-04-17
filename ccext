@@ -1,15 +1,25 @@
-readlink src/platform | grep 'sdl2'
-if [ $? -eq 0 ]; then
-  if [ -d sdl2 ]; then
-    if [ linux == "${OSTYPE::5}" ]; then
-      export LD_LIBRARY_PATH=`realpath sdl2/build/.libs`
+function try_gcc_clang() {
+  [ "$CC" == gcc ] && OK=1
+  [ "$CC" == clang ] && OK=1
+  [ -z "$OK" ] && return
+  
+  readlink src/platform | grep 'sdl2'
+  if [ $? -eq 0 ]; then
+    if [ -d sdl2 ]; then
+      if [ linux == "${OSTYPE::5}" ]; then
+        export LD_LIBRARY_PATH=`realpath sdl2/build/.libs`
+      fi
+      CFLAGS+=" -Isdl2/include "
+  
+      [ "$CC" == gcc ] && LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
+      [ "$CC" == clang ] && LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
+    elif hash sdl2-config; then
+      SDL2_FLAGS=`sdl2-config --cflags`
+      SDL2_LIBS=`sdl2-config --libs`
+      CFLAGS+=" $SDL2_FLAGS "
+      LFLAGS+=" $SDL2_LIBS "
     fi
-    CFLAGS+=" -Isdl2/include "
-    LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
-  elif hash sdl2-config; then
-    SDL2_FLAGS=`sdl2-config --cflags`
-    SDL2_LIBS=`sdl2-config --libs`
-    CFLAGS+=" $SDL2_FLAGS "
-    LFLAGS+=" $SDL2_LIBS "
   fi
-fi
+}
+
+try_gcc_clang
