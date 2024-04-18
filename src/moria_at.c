@@ -14068,11 +14068,15 @@ global_init()
 
 #include "platform/platform.c"
 
+DATA char* libnameD[] = {"libSDL2-2.0.so", "SDL2.dll"};
 int
 main(int argc, char** argv)
 {
 #ifdef __FATCOSMOCC__
-  libD = cosmo_dlopen("libSDL2-2.0.so", RTLD_LAZY);
+  for (int it = 0; it < AL(libnameD); ++it) {
+    libD = cosmo_dlopen(libnameD[it], RTLD_LAZY);
+    if (libD) break;
+  }
   printf("%p libD\n", libD);
 #endif
 

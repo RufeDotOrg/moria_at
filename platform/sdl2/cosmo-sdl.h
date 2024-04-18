@@ -18,7 +18,7 @@
 #define SDL_GetWindowDisplayIndex abi_SDL_GetWindowDisplayIndex
 #define SDL_GetWindowSize abi_SDL_GetWindowSize
 #define SDL_Init abi_SDL_Init
-#define SDL_Log abi_SDL_Log
+#define SDL_Log printf
 #define SDL_MapRGBA abi_SDL_MapRGBA
 #define SDL_PollEvent abi_SDL_PollEvent
 #define SDL_RenderClear abi_SDL_RenderClear

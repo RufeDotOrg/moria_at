@@ -47,10 +47,12 @@ char* SDL_AndroidGetExternalStoragePath();
 enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
 enum { MOUSE = 0 };
+enum { PC = 0 };
 #else
 enum { TOUCH = 0 };
 enum { KEYBOARD = 1 };
 enum { MOUSE = TOUCH };
+enum { PC = 1 };
 #endif
 
 enum { SDL_EVLOG = 0 };
@@ -361,6 +363,7 @@ platform_pregame()
     if (QUALITY) SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     if (__APPLE__) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
+    if (PC) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
     // SDL_SetHint(SDL_HINT_RENDER_METAL_PREFER_LOW_POWER_DEVICE, "1");
 
     // iOS/Android orientation
