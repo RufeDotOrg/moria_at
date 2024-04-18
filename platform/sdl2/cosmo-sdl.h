@@ -1,43 +1,45 @@
-#define SDL_AllocFormat ((vfn)cosmo_dlsym(libD, "SDL_AllocFormat"))
-#define SDL_CreateRenderer ((vfn)cosmo_dlsym(libD, "SDL_CreateRenderer"))
-#define SDL_CreateRGBSurfaceWithFormat ((vfn)cosmo_dlsym(libD, "SDL_CreateRGBSurfaceWithFormat"))
-#define SDL_CreateTexture ((vfn)cosmo_dlsym(libD, "SDL_CreateTexture"))
-#define SDL_CreateTextureFromSurface ((vfn)cosmo_dlsym(libD, "SDL_CreateTextureFromSurface"))
-#define SDL_CreateWindow ((vfn)cosmo_dlsym(libD, "SDL_CreateWindow"))
-#define SDL_FreeSurface ((vfn)cosmo_dlsym(libD, "SDL_FreeSurface"))
-#define SDL_GetCurrentDisplayMode ((vfn)cosmo_dlsym(libD, "SDL_GetCurrentDisplayMode"))
-#define SDL_GetDisplayBounds ((vfn)cosmo_dlsym(libD, "SDL_GetDisplayBounds"))
-#define SDL_GetModState ((fn)cosmo_dlsym(libD, "SDL_GetModState"))
-#define SDL_GetNumRenderDrivers ((fn)cosmo_dlsym(libD, "SDL_GetNumRenderDrivers"))
-#define SDL_GetNumVideoDisplays ((fn)cosmo_dlsym(libD, "SDL_GetNumVideoDisplays"))
-#define SDL_GetRenderDriverInfo ((vfn)cosmo_dlsym(libD, "SDL_GetRenderDriverInfo"))
-#define SDL_GetRendererInfo ((vfn)cosmo_dlsym(libD, "SDL_GetRendererInfo"))
-#define SDL_GetRendererOutputSize ((vfn)cosmo_dlsym(libD, "SDL_GetRendererOutputSize"))
-#define SDL_GetWindowDisplayIndex ((fn)cosmo_dlsym(libD, "SDL_GetWindowDisplayIndex"))
-#define SDL_GetWindowSize ((vfn)cosmo_dlsym(libD, "SDL_GetWindowSize"))
-#define SDL_Init ((vfn)cosmo_dlsym(libD, "SDL_Init"))
-#define SDL_Log ((vfn)cosmo_dlsym(libD, "SDL_Log"))
-#define SDL_MapRGBA ((fn)cosmo_dlsym(libD, "SDL_MapRGBA"))
-#define SDL_PollEvent ((vfn)cosmo_dlsym(libD, "SDL_PollEvent"))
-#define SDL_RenderClear ((vfn)cosmo_dlsym(libD, "SDL_RenderClear"))
-#define SDL_RenderCopy ((vfn)cosmo_dlsym(libD, "SDL_RenderCopy"))
-#define SDL_RenderDrawRect ((vfn)cosmo_dlsym(libD, "SDL_RenderDrawRect"))
-#define SDL_RenderFillRect ((vfn)cosmo_dlsym(libD, "SDL_RenderFillRect"))
-#define SDL_RenderFlush ((vfn)cosmo_dlsym(libD, "SDL_RenderFlush"))
-#define SDL_RenderPresent ((vfn)cosmo_dlsym(libD, "SDL_RenderPresent"))
-#define SDL_RenderSetViewport ((vfn)cosmo_dlsym(libD, "SDL_RenderSetViewport"))
-#define SDL_RWclose ((vfn)cosmo_dlsym(libD, "SDL_RWclose"))
-#define SDL_RWFromFile ((vfn)cosmo_dlsym(libD, "SDL_RWFromFile"))
-#define SDL_RWread ((vfn)cosmo_dlsym(libD, "SDL_RWread"))
-#define SDL_RWseek ((vfn)cosmo_dlsym(libD, "SDL_RWseek"))
-#define SDL_RWwrite ((vfn)cosmo_dlsym(libD, "SDL_RWwrite"))
-#define SDL_SetHint ((vfn)cosmo_dlsym(libD, "SDL_SetHint"))
-#define SDL_SetRenderDrawBlendMode ((vfn)cosmo_dlsym(libD, "SDL_SetRenderDrawBlendMode"))
-#define SDL_SetRenderDrawColor ((vfn)cosmo_dlsym(libD, "SDL_SetRenderDrawColor"))
-#define SDL_SetRenderTarget ((vfn)cosmo_dlsym(libD, "SDL_SetRenderTarget"))
-#define SDL_SetTextureAlphaMod ((vfn)cosmo_dlsym(libD, "SDL_SetTextureAlphaMod"))
-#define SDL_SetTextureBlendMode ((vfn)cosmo_dlsym(libD, "SDL_SetTextureBlendMode"))
-#define SDL_SetTextureColorMod ((vfn)cosmo_dlsym(libD, "SDL_SetTextureColorMod"))
-#define SDL_SetWindowResizable ((vfn)cosmo_dlsym(libD, "SDL_SetWindowResizable"))
-#define SDL_UpdateTexture ((vfn)cosmo_dlsym(libD, "SDL_UpdateTexture"))
-#define SDL_WasInit ((vfn)cosmo_dlsym(libD, "SDL_WasInit"))
+#include "cosmo-abi.h"
+
+#define SDL_AllocFormat abi_SDL_AllocFormat
+#define SDL_CreateRenderer abi_SDL_CreateRenderer
+#define SDL_CreateRGBSurfaceWithFormat abi_SDL_CreateRGBSurfaceWithFormat
+#define SDL_CreateTexture abi_SDL_CreateTexture
+#define SDL_CreateTextureFromSurface abi_SDL_CreateTextureFromSurface
+#define SDL_CreateWindow abi_SDL_CreateWindow
+#define SDL_FreeSurface abi_SDL_FreeSurface
+#define SDL_GetCurrentDisplayMode abi_SDL_GetCurrentDisplayMode
+#define SDL_GetDisplayBounds abi_SDL_GetDisplayBounds
+#define SDL_GetModState abi_SDL_GetModState
+#define SDL_GetNumRenderDrivers abi_SDL_GetNumRenderDrivers
+#define SDL_GetNumVideoDisplays abi_SDL_GetNumVideoDisplays
+#define SDL_GetRenderDriverInfo abi_SDL_GetRenderDriverInfo
+#define SDL_GetRendererInfo abi_SDL_GetRendererInfo
+#define SDL_GetRendererOutputSize abi_SDL_GetRendererOutputSize
+#define SDL_GetWindowDisplayIndex abi_SDL_GetWindowDisplayIndex
+#define SDL_GetWindowSize abi_SDL_GetWindowSize
+#define SDL_Init abi_SDL_Init
+#define SDL_Log abi_SDL_Log
+#define SDL_MapRGBA abi_SDL_MapRGBA
+#define SDL_PollEvent abi_SDL_PollEvent
+#define SDL_RenderClear abi_SDL_RenderClear
+#define SDL_RenderCopy abi_SDL_RenderCopy
+#define SDL_RenderDrawRect abi_SDL_RenderDrawRect
+#define SDL_RenderFillRect abi_SDL_RenderFillRect
+#define SDL_RenderFlush abi_SDL_RenderFlush
+#define SDL_RenderPresent abi_SDL_RenderPresent
+#define SDL_RenderSetViewport abi_SDL_RenderSetViewport
+#define SDL_RWclose abi_SDL_RWclose
+#define SDL_RWFromFile abi_SDL_RWFromFile
+#define SDL_RWread abi_SDL_RWread
+#define SDL_RWseek abi_SDL_RWseek
+#define SDL_RWwrite abi_SDL_RWwrite
+#define SDL_SetHint abi_SDL_SetHint
+#define SDL_SetRenderDrawBlendMode abi_SDL_SetRenderDrawBlendMode
+#define SDL_SetRenderDrawColor abi_SDL_SetRenderDrawColor
+#define SDL_SetRenderTarget abi_SDL_SetRenderTarget
+#define SDL_SetTextureAlphaMod abi_SDL_SetTextureAlphaMod
+#define SDL_SetTextureBlendMode abi_SDL_SetTextureBlendMode
+#define SDL_SetTextureColorMod abi_SDL_SetTextureColorMod
+#define SDL_SetWindowResizable abi_SDL_SetWindowResizable
+#define SDL_UpdateTexture abi_SDL_UpdateTexture
+#define SDL_WasInit abi_SDL_WasInit

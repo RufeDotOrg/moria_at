@@ -14072,9 +14072,10 @@ int
 main(int argc, char** argv)
 {
 #ifdef __FATCOSMOCC__
-  libD = cosmo_dlopen("libSDL2.so", RTLD_LAZY);
+  libD = cosmo_dlopen("libSDL2-2.0.so", RTLD_LAZY);
   printf("%p libD\n", libD);
 #endif
+
   global_init();
   platform_init();
   platformD.pregame();

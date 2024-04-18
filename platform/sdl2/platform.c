@@ -25,7 +25,6 @@
 #include <cosmo.h>
 #include <dlfcn.h>
 void* libD;
-typedef void* (*vfn)();
 #include "cosmo-sdl.h"
 #endif
 
@@ -98,6 +97,7 @@ DATA float retina_scaleD;
 int
 render_init()
 {
+  Log(__FUNCTION__);
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
   if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
   if (REORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
@@ -376,6 +376,7 @@ platform_pregame()
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
     SDL_Init(SDL_SCOPE);
+    Log("init complete");
 
     if (!render_init()) return 1;
 
