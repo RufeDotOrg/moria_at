@@ -14073,6 +14073,7 @@ int
 main(int argc, char** argv)
 {
 #ifdef __FATCOSMOCC__
+  setenv("LD_LIBRARY_PATH", ".", 0);
   for (int it = 0; it < AL(libnameD); ++it) {
     libD = cosmo_dlopen(libnameD[it], RTLD_LAZY);
     if (libD) break;
