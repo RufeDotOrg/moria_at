@@ -14079,7 +14079,7 @@ lib_load()
   }
   return 0;
 }
-enum { MAX_PATH = 1 * 1024 };
+enum { MAX_PATH = 4 * 1024 };
 int
 cosmo_init()
 {
