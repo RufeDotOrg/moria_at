@@ -363,7 +363,9 @@ platform_pregame()
     if (QUALITY) SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     if (__APPLE__) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
-    if (PC) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+    if (PC && !SDL_GetHint(SDL_HINT_RENDER_DRIVER)) {
+      SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+    }
     // SDL_SetHint(SDL_HINT_RENDER_METAL_PREFER_LOW_POWER_DEVICE, "1");
 
     // iOS/Android orientation

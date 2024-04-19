@@ -34,6 +34,7 @@
 #define SDL_RWseek abi_SDL_RWseek
 #define SDL_RWwrite abi_SDL_RWwrite
 #define SDL_SetHint abi_SDL_SetHint
+#define SDL_GetHint abi_SDL_GetHint
 #define SDL_SetRenderDrawBlendMode abi_SDL_SetRenderDrawBlendMode
 #define SDL_SetRenderDrawColor abi_SDL_SetRenderDrawColor
 #define SDL_SetRenderTarget abi_SDL_SetRenderTarget
