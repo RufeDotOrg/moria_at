@@ -14068,19 +14068,47 @@ global_init()
 
 #include "platform/platform.c"
 
+#ifdef __FATCOSMOCC__
 DATA char* libnameD[] = {"libSDL2-2.0.so", "SDL2.dll"};
+void*
+lib_load()
+{
+  for (int it = 0; it < AL(libnameD); ++it) {
+    void* lib = cosmo_dlopen(libnameD[it], RTLD_LAZY);
+    if (lib) return lib;
+  }
+  return 0;
+}
+enum { MAX_PATH = 1 * 1024 };
+int
+cosmo_init()
+{
+  char path[MAX_PATH] = ":.:";
+  char* sys_ld = getenv("LD_LIBRARY_PATH");
+  if (sys_ld) {
+    int ldlen = strlen(sys_ld);
+    if (ldlen > MAX_PATH - 4) {
+      printf("LD_LIBRARY_PATH is enormous.\n");
+      return 1;
+    }
+    memcpy(path, sys_ld, ldlen);
+    memcpy(path + ldlen, ":.:", 4);
+  }
+  printf("setenv LD_LIBRARY_PATH: %s\n", path);
+  setenv("LD_LIBRARY_PATH", path, 1);
+
+  // Cosmo does not re-init dlopen-helper on an environment change
+  libD = lib_load();
+  printf("%p libD\n", libD);
+
+  global_init();
+}
+#define global_init cosmo_init
+#endif
+
 int
 main(int argc, char** argv)
 {
-#ifdef __FATCOSMOCC__
-  setenv("LD_LIBRARY_PATH", ".", 0);
-  for (int it = 0; it < AL(libnameD); ++it) {
-    libD = cosmo_dlopen(libnameD[it], RTLD_LAZY);
-    if (libD) break;
-  }
-  printf("%p libD\n", libD);
-#endif
-
   global_init();
   platform_init();
   platformD.pregame();
