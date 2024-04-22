@@ -3707,7 +3707,7 @@ static struct treasureS treasureD[] = {
      101,
      {1, 1},
      40},
-    {"Fire Absorbtion",
+    {"Fire Absorption",
      0x00000100L,
      TV_POTION2,
      '!', /*  262*/
@@ -3721,7 +3721,7 @@ static struct treasureS treasureD[] = {
      102,
      {1, 1},
      1},
-    {"Frost Absorbtion",
+    {"Frost Absorption",
      0x00000200L,
      TV_POTION2,
      '!', /*  263*/
