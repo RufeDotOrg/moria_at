@@ -14069,7 +14069,8 @@ global_init()
 #include "platform/platform.c"
 
 #ifdef __FATCOSMOCC__
-DATA char* libnameD[] = {"libSDL2-2.0.so", "SDL2.dll"};
+// TBD: dylib name
+DATA char* libnameD[] = {"libSDL2-2.0.so", "SDL2.dll", "libSDL2-2.0.0.dylib"};
 void*
 lib_load()
 {
@@ -14169,7 +14170,11 @@ cosmo_init()
     if (mkdir(exe, 0755) && errno != EEXIST) {
       return 0;
     }
-    strlcat(exe, "dlopen-helper", PATH_MAX);
+    if (!IsAarch64())
+      strlcat(exe, "dlopen-helper", PATH_MAX);
+    else
+      strlcat(exe, "aarch64-dlopen-helper", PATH_MAX);
+
     steam_helper(exe);
     int newer = is_file_newer_than(GetProgramExecutableName(), exe);
     printf("dlopen newer? %d\n", newer);
