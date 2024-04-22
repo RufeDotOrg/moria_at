@@ -14087,20 +14087,94 @@ steam_debug()
 {
   char path[MAX_PATH];
   char* dir = getcwd(path, MAX_PATH);
-  printf("cwd: %s\n", dir);
+  printf("env cwd: %s\n", dir);
   free(dir);
   struct stat statbuf;
   for (int it = 0; it < AL(libnameD); ++it) {
     if (stat(libnameD[it], &statbuf) == 0) {
-      printf("%s %jd\n", libnameD[it], statbuf.st_size);
+      printf("  %s %jd bytes\n", libnameD[it], statbuf.st_size);
     }
   }
+  printf("env TMPDIR: %s\n", getenv("TMPDIR"));
+  printf("env HOME: %s\n", getenv("HOME"));
   return 0;
+}
+#include <errno.h>
+static const char*
+get_tmp_dir(void)
+{
+  const char* tmpdir;
+  if (!(tmpdir = getenv("TMPDIR")) || !*tmpdir) {
+    if (!(tmpdir = getenv("HOME")) || !*tmpdir) {
+      tmpdir = ".";
+    }
+  }
+  return tmpdir;
+}
+static int
+is_file_newer_than(const char* path, const char* other)
+{
+  struct stat st1, st2;
+  if (stat(path, &st1)) {
+    return -1;
+  }
+  if (stat(other, &st2)) {
+    if (errno == ENOENT) {
+      return 2;
+    } else {
+      return -1;
+    }
+  }
+  return timespec_cmp(st1.st_mtim, st2.st_mtim) > 0;
+}
+// TBD: aarch64 dlopen-helper
+int
+steam_helper(char* exe)
+{
+  printf("copy to %s\n", exe);
+
+  int fdin, fdout;
+
+  unlink(exe);
+
+  if ((fdout = creat(exe, 0755)) == -1) {
+    perror(exe);
+    return 0;
+  }
+  if ((fdin = open("dlopen-helper", O_RDONLY)) == -1) {
+    perror("dlopen-helper source");
+    return 0;
+  }
+  if (copyfd(fdin, fdout, -1) == -1) {
+    perror("dlopen copy");
+    return 0;
+  }
+  close(fdout);
+  close(fdin);
+
+  printf("steam_helper: copy complete\n");
+
+  return 1;
 }
 int
 cosmo_init()
 {
   steam_debug();
+
+  if (!IsWindows()) {
+    char exe[PATH_MAX];
+    strlcpy(exe, get_tmp_dir(), PATH_MAX);
+    if (exe[0] == '.') return 0;
+    strlcat(exe, "/.cosmo/", PATH_MAX);
+    if (mkdir(exe, 0755) && errno != EEXIST) {
+      return 0;
+    }
+    strlcat(exe, "dlopen-helper", PATH_MAX);
+    steam_helper(exe);
+    int newer = is_file_newer_than(GetProgramExecutableName(), exe);
+    printf("dlopen newer? %d\n", newer);
+  }
+
   char path[MAX_PATH] = ":.:";
   char* sys_ld = getenv("LD_LIBRARY_PATH");
   if (sys_ld) {
@@ -14120,6 +14194,8 @@ cosmo_init()
   printf("%p libD\n", libD);
 
   global_init();
+
+  if (!libD) exit(1);
 }
 #define global_init cosmo_init
 #endif
