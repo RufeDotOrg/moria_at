@@ -14080,9 +14080,27 @@ lib_load()
   return 0;
 }
 enum { MAX_PATH = 4 * 1024 };
+#include <sys/stat.h>
+#include <unistd.h>
+int
+steam_debug()
+{
+  char path[MAX_PATH];
+  char* dir = getcwd(path, MAX_PATH);
+  printf("cwd: %s\n", dir);
+  free(dir);
+  struct stat statbuf;
+  for (int it = 0; it < AL(libnameD); ++it) {
+    if (stat(libnameD[it], &statbuf) == 0) {
+      printf("%s %jd\n", libnameD[it], statbuf.st_size);
+    }
+  }
+  return 0;
+}
 int
 cosmo_init()
 {
+  steam_debug();
   char path[MAX_PATH] = ":.:";
   char* sys_ld = getenv("LD_LIBRARY_PATH");
   if (sys_ld) {
