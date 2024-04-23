@@ -14132,24 +14132,22 @@ is_file_newer_than(const char* path, const char* other)
 int
 steam_helper(char* exe)
 {
-  printf("copy to %s\n", exe);
-
   int fdin, fdout;
-
-  unlink(exe);
+  // Verify source before proceeding to truncate destination
+  if ((fdin = open("dlopen-helper", O_RDONLY)) == -1) {
+    perror("dlopen-helper no source");
+    return 0;
+  }
 
   if ((fdout = creat(exe, 0755)) == -1) {
     perror(exe);
-    return 0;
-  }
-  if ((fdin = open("dlopen-helper", O_RDONLY)) == -1) {
-    perror("dlopen-helper source");
     return 0;
   }
   if (copyfd(fdin, fdout, -1) == -1) {
     perror("dlopen copy");
     return 0;
   }
+
   close(fdout);
   close(fdin);
 
@@ -14168,6 +14166,7 @@ cosmo_init()
     if (exe[0] == '.') return 0;
     strlcat(exe, "/.cosmo/", PATH_MAX);
     if (mkdir(exe, 0755) && errno != EEXIST) {
+      perror("mkdir");
       return 0;
     }
     if (!IsAarch64())
