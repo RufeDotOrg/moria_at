@@ -5,7 +5,7 @@ enum { FONT = 0 };
 enum { INPUT = 0 };
 
 // Override DISK/FONT/INPUT when included
-//#include "disk.c"
+#include "disk.c"
 #include "font.c"
 #include "input.c"
 
