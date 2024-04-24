@@ -79,10 +79,20 @@ typedef int (*fn)();
 #define STATIC static
 
 // game data section for determinism verification
-#ifdef __APPLE__
+#if defined(__FATCOSMOCC__)
+// ape.lds: SECTION prefix based cosmocc defaults
+#define SECTION ".sort.data"
+__attribute__((aligned(64)))
+__attribute__((section(SECTION ".game.alpha"))) unsigned char __start_game[0];
+#define GAME __attribute__((section(SECTION ".game.play")))
+__attribute__((aligned(64)))
+__attribute__((section(SECTION ".game.zed"))) unsigned char __stop_game[0];
+
+#elif defined(__APPLE__)
 #define GAME DATA __attribute__((section("__DATA,game")))
 extern unsigned char __start_game[] __asm("section$start$__DATA$game");
 extern unsigned char __stop_game[] __asm("section$end$__DATA$game");
+
 #else
 #define GAME DATA
 extern unsigned char __start_game[] __attribute__((__weak__));
