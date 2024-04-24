@@ -381,7 +381,6 @@ platform_pregame()
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
     SDL_Init(SDL_SCOPE);
-    Log("init complete");
 
     if (!render_init()) return 1;
 

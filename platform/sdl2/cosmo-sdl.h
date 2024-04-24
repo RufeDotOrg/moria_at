@@ -4,6 +4,7 @@
 #define SDL_CreateRenderer abi_SDL_CreateRenderer
 #define SDL_CreateRGBSurfaceWithFormat abi_SDL_CreateRGBSurfaceWithFormat
 #define SDL_CreateTexture abi_SDL_CreateTexture
+#define SDL_DestroyTexture abi_SDL_DestroyTexture
 #define SDL_CreateTextureFromSurface abi_SDL_CreateTextureFromSurface
 #define SDL_CreateWindow abi_SDL_CreateWindow
 #define SDL_FreeSurface abi_SDL_FreeSurface

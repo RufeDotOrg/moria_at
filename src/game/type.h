@@ -290,10 +290,6 @@ struct ownerS {
   uint8_t insult_max;
 };
 
-  // render
-  // input
-  // i/o
-  // rng
 // Global options
 struct globalS {
   int32_t saveslot_class;

@@ -94,7 +94,7 @@ extern unsigned char __start_game[] __asm("section$start$__DATA$game");
 extern unsigned char __stop_game[] __asm("section$end$__DATA$game");
 
 #else
-#define GAME DATA
+#define GAME DATA __attribute__((section("game")))
 extern unsigned char __start_game[] __attribute__((__weak__));
 extern unsigned char __stop_game[] __attribute__((__weak__));
 #endif

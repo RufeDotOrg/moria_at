@@ -3789,7 +3789,7 @@ void
 hard_reset()
 {
   // Clear game state
-  // memset(__start_game, 0, __stop_game - __start_game);
+  memset(__start_game, 0, __stop_game - __start_game);
 
   // Message history
   AC(msglen_cqD);
@@ -10697,7 +10697,7 @@ saveslot_creation(int saveslot)
   overlay_submodeD = 'c';
 
   // Clear game state
-  // memset(__start_game, 0, __stop_game - __start_game);
+  memset(__start_game, 0, __stop_game - __start_game);
 
   do {
     line = 0;
