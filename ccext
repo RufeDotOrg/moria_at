@@ -26,6 +26,9 @@ try_gcc_clang
 
 function try_cosmocc()
 {
+  [ `basename "$CC"` == cosmocc ] && OK=1
+  [ -z "$OK" ] && return
+
   readlink src/platform | grep 'sdl2'
   if [ $? -eq 0 ]; then
     DIR=cosmo-sdl2
