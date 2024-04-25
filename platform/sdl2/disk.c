@@ -398,7 +398,7 @@ disk_init()
       Log("storage: [state %d] exportpath: %s", state, exportpathD);
     }
 
-    if (SL(CACHENAME)) {
+    if (!PC && SL(CACHENAME) != 0) {
       char* cache = SDL_GetCachePath(ORGNAME, APPNAME);
       if (cache) {
         Log("SDL_GetCachePath: %s", cache);

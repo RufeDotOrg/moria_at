@@ -49,6 +49,7 @@ enum { KEYBOARD = 0 };
 enum { MOUSE = 0 };
 enum { PC = 0 };
 #else
+char* SDL_GetCachePath(const char*, const char*);
 enum { TOUCH = 0 };
 enum { KEYBOARD = 1 };
 enum { MOUSE = TOUCH };
