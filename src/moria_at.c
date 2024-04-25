@@ -14087,9 +14087,8 @@ int
 steam_debug()
 {
   char path[MAX_PATH];
-  char* dir = getcwd(path, MAX_PATH);
-  printf("env cwd: %s\n", dir);
-  free(dir);
+  getcwd(path, MAX_PATH);
+  printf("env cwd: %s\n", path);
   struct stat statbuf;
   for (int it = 0; it < AL(libnameD); ++it) {
     if (stat(libnameD[it], &statbuf) == 0) {

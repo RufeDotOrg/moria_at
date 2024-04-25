@@ -99,7 +99,6 @@ DATA float retina_scaleD;
 int
 render_init()
 {
-  Log(__FUNCTION__);
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
   if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
   if (REORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
@@ -351,7 +350,6 @@ platform_random()
 int
 platform_pregame()
 {
-  Log(__FUNCTION__);
   if (!SDL_WasInit(SDL_SCOPE)) {
     if (!RELEASE) Log("Initializing development build");
     if (SDL_VERBOSE) SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
@@ -409,7 +407,6 @@ platform_pregame()
     }
   }
 
-  Log(__FUNCTION__);
   return 0;
 }
 int
