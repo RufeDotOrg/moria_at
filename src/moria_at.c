@@ -22,15 +22,15 @@ DATA char quit_stringD[] = "quitting";
     len = CLAMP(len, 0, sizeof(vtype) - 1);                     \
     msg_game(vtype, len);                                       \
   }
-// This clobbers unflushed messages, and does not persist to history
-#define DRAWMSG(x, ...)                                        \
-  {                                                            \
-    char* msg = AS(msg_cqD, msg_writeD);                       \
-    int len = snprintf(msg, STRLEN_MSG + 1, x, ##__VA_ARGS__); \
-    AS(msglen_cqD, msg_writeD) = CLAMP(len, 0, STRLEN_MSG);    \
-    draw();                                                    \
-    AS(msglen_cqD, msg_writeD) = 0;                            \
-  }
+// This clobbers unflushed messages, draws, and does not persist to history
+#define CLOBBER_MSG(x, ...)                      \
+  ({                                             \
+    char* msg = AS(msg_cqD, msg_writeD);         \
+    int len = STRLEN_MSG + 1;                    \
+    snprintf(msg, len, x, ##__VA_ARGS__);        \
+    AS(msglen_cqD, msg_writeD) = STRLEN_MSG + 1; \
+    draw(WAIT_ANY);                              \
+  })
 
 #define BufMsg(name, text, ...)                                     \
   {                                                                 \
@@ -57,6 +57,7 @@ DATA char quit_stringD[] = "quitting";
     }                                      \
   }
 
+// maybe inkey() should have a record/norecord flag instead external branches
 static char
 inkey()
 {
@@ -355,20 +356,6 @@ affect_update()
   active_affectD[idx++] = (countD.imagine != 0);
 }
 void
-draw()
-{
-  if (!replay_flag) {
-    vital_update();
-    affect_update();
-
-    platformD.predraw();
-    platformD.draw();
-  }
-  AC(screen_usedD);
-  AC(overlay_usedD);
-}
-
-void
 msg_advance()
 {
   int log_used;
@@ -376,6 +363,58 @@ msg_advance()
   msg_writeD += (log_used != 0);
   AS(msglen_cqD, msg_writeD) = 0;
 }
+
+enum { WHITESPACE = 0x20202020 };
+#define WAIT_NONE 0
+#define WAIT_ANY -1
+// wait 0: don't wait
+// wait -1: any key
+// wait non-zero: pedantic mode wait for exact input
+// flag: ignore redraw
+// flag: ignore spacebar input
+//
+// REDRAW CTRL('d') support? without clearing overlay/screen info
+int
+draw(wait)
+{
+  int flush_draw = !replay_flag;
+  char c = wait;
+
+  if (flush_draw) {
+    vital_update();
+    affect_update();
+
+    platformD.predraw();
+    platformD.draw();
+  }
+
+  if (wait > 0) {
+    do {
+      do {
+        c = platformD.readansi();
+      } while (c == 0);
+      // INTERRUPT
+      if (c == CTRL('c')) break;
+    } while (c != wait);
+  }
+  if (wait < 0) c = inkey();
+
+  // Overlay information is reset
+  AC(screen_usedD);
+  AC(overlay_usedD);
+
+  // Message is either retained to history or clobbered
+  if (wait >= 0) {
+    msg_advance();
+  } else {
+    // Clobber last message
+    memset(AS(msg_cqD, msg_writeD), WHITESPACE, STRLEN_MSG + 1);
+    AS(msglen_cqD, msg_writeD) = 0;
+  }
+
+  return c;
+}
+
 void
 msg_pause()
 {
@@ -386,20 +425,12 @@ msg_pause()
   if (log_used) {
     msg_moreD += 1;
 
-    // wait for user to acknowledge prior buffer -more-
     if (replay_flag) {
-      draw();
+      draw(WAIT_NONE);
     } else {
-      do {
-        draw();
-        do {
-          c = platformD.readansi();
-        } while (c == 0);
-        if (c == ESCAPE) break;
-        if (c == CTRL('c')) break;
-      } while (c != ' ');
+      // wait for user to acknowledge prior buffer -more-
+      draw(' ');
     }
-    msg_advance();
   }
 }
 
@@ -449,8 +480,7 @@ show_history()
   }
 
   int count = AL(screenD) - line;
-  DRAWMSG("Message History (%d)", count);
-  return inkey();
+  return CLOBBER_MSG("Message History (%d)", count);
 }
 int
 in_subcommand(prompt, command)
@@ -459,9 +489,9 @@ char* command;
 {
   char c;
 
-  DRAWMSG("%s", prompt ? prompt : "");
+  // ugh this loop
   do {
-    c = inkey();
+    c = CLOBBER_MSG("%s", prompt ? prompt : "");
   } while (c == ' ');
   // Draw again
   if (c == CTRL('d')) c = ' ';
@@ -509,9 +539,9 @@ int* dir;
 {
   char c, command;
   if (!prompt) prompt = "Which direction?";
+  // ugh loop
   do {
-    DRAWMSG("%s", prompt);
-    c = inkey();
+    c = CLOBBER_MSG("%s", prompt);
   } while (c == ' ' || c == CTRL('d'));
   command = map_roguedir(c);
   if (command >= '1' && command <= '9' && command != '5') {
@@ -8562,8 +8592,7 @@ struct objS* obj;
     }
 
     obj_desc(obj, number);
-    DRAWMSG("You study %s.", descD);
-    return inkey();
+    return CLOBBER_MSG("You study %s.", descD);
   }
 
   return 0;
@@ -10477,8 +10506,7 @@ show_version()
   BufMsg(screen, "Programming: %s", "Alan Newton");
   BufMsg(screen, "Art: %s", "Nathan Miller");
 
-  DRAWMSG("Version %s", versionD);
-  return inkey();
+  return CLOBBER_MSG("Version %s", versionD);
 }
 char*
 ugender()
@@ -10489,7 +10517,7 @@ ugender()
     return "Female";
 }
 int
-show_character(narrow)
+show_character(narrow, is_reroll)
 {
   USE(msg_width);
   int line;
@@ -10604,8 +10632,8 @@ show_character(narrow)
     }
   }
 
-  DRAWMSG("Name: %s", heronameD);
-  return inkey();
+  // PC_MSG("(SPACEBAR: reroll / ESCAPE: accept)");
+  return CLOBBER_MSG("Name: %-16.16s", heronameD);
 }
 
 // Bounds checks on variables that may cause memory corruption
@@ -10660,9 +10688,8 @@ summary_saveslot_deletion(struct summaryS* summary, int saveslot, int external)
       BufMsg(overlay, "a) Alright, delete this character");
       line += 1;
       BufMsg(overlay, "c) Cancel deletion");
-      DRAWMSG("%s Media Archive: Delete level %d %s?", media, summary->slevel,
-              classD[summary->sclass].name);
-      c = inkey();
+      c = CLOBBER_MSG("%s Media Archive: Delete level %d %s?", media,
+                      summary->slevel, classD[summary->sclass].name);
     }
 
     int ret = 0;
@@ -10683,7 +10710,7 @@ saveslot_race_reroll(saveslot, race)
   do {
     if (KEYBOARD && c == ' ') c = 'o';
     if (c == 'o') py_race_class_seed_init(race, saveslot, platformD.seed());
-    c = show_character(1);
+    c = show_character(1, 1);
     if (c == CTRL('c')) break;
   } while (c != ESCAPE);
   return 1;
@@ -10708,8 +10735,7 @@ saveslot_creation(int saveslot)
         line += 1;
       }
     }
-    DRAWMSG("Play a %s of which race?", classD[saveslot].name);
-    c = inkey();
+    c = CLOBBER_MSG("Play a %s of which race?", classD[saveslot].name);
     if (c == CTRL('c')) break;
 
     iidx = c - 'a';
@@ -10750,6 +10776,7 @@ py_saveslot_select()
     iidx = -1;
     line = 0;
     overlay_submodeD = using_external ? 'E' : 'I';
+    char* pc_text = PC ? " (SHIFT: delete)" : "";
     char* media = using_external ? "External" : "Internal";
     char* other_media = using_external ? "Internal" : "External";
     struct summaryS* summary = using_external ? ex_summary : in_summary;
@@ -10782,8 +10809,7 @@ py_saveslot_select()
       BufMsg(overlay, "v) View %s media", other_media);
     }
 
-    DRAWMSG("%s Media Archive: Play which class?", media);
-    c = inkey();
+    c = CLOBBER_MSG("%s Media Archive: Play which class?%s", media, pc_text);
     // Deletion
     if (c == ESCAPE) {
       int srow, scol;
@@ -10812,8 +10838,7 @@ py_saveslot_select()
 
         line = 0;
         BufMsg(overlay, "Loaded characters (x%d)", count);
-        DRAWMSG("%s Media Update", other_media);
-        inkey();
+        CLOBBER_MSG("%s Media Update", other_media);
         // view swap
         c = 'v';
       }
@@ -10824,8 +10849,7 @@ py_saveslot_select()
         int count = platformD.saveex();
         line = 0;
         BufMsg(overlay, "Saved characters (x%d)", count);
-        DRAWMSG("%s Media Update", other_media);
-        inkey();
+        CLOBBER_MSG("%s Media Update", other_media);
         // view swap
         extern_count = 0;
         c = 'v';
@@ -10837,29 +10861,37 @@ py_saveslot_select()
         extern_count = py_archive_read(ex_summary, 1);
     }
 
-    iidx = c - 'a';
-    if (iidx <= AL(classD)) {
-      if (summary[iidx].invalid) continue;
+    if (is_lower(c)) {
+      iidx = c - 'a';
+      if (iidx < AL(classD)) {
+        if (summary[iidx].invalid) continue;
 
-      if (summary[iidx].slevel == 0) {
-        if (!saveslot_creation(iidx)) continue;
+        if (summary[iidx].slevel == 0) {
+          if (!saveslot_creation(iidx)) continue;
 
-        py_inven_init();
-        inven_sort();
+          py_inven_init();
+          inven_sort();
 
-        // save_on_ready: Initial character save
-        save_on_readyD = 1;
-        return 1;
+          // save_on_ready: Initial character save
+          save_on_readyD = 1;
+          return 1;
+        }
+
+        if (summary[iidx].slevel) {
+          // resume OK for internal save
+          if (!using_external) input_resumeD = 0;
+
+          int ret = platformD.load(iidx, using_external);
+          // save_on_ready: Transfer to internal storage
+          if (using_external) save_on_readyD = 1;
+          return ret;
+        }
       }
-
-      if (summary[iidx].slevel) {
-        // resume OK for internal save
-        if (!using_external) input_resumeD = 0;
-
-        int ret = platformD.load(iidx, using_external);
-        // save_on_ready: Transfer to internal storage
-        if (using_external) save_on_readyD = 1;
-        return ret;
+    } else if (is_upper(c)) {
+      iidx = c - 'A';
+      if (!summary[iidx].invalid) {
+        if (summary_saveslot_deletion(&summary[iidx], iidx, using_external))
+          extern_count -= (using_external);
       }
     }
   } while (c != CTRL('c'));
@@ -10908,8 +10940,7 @@ py_grave()
       col += 1;
     }
   }
-  DRAWMSG("Killed by %s. (CTRL-P log) (C/o/v/ESC)", death_descD);
-  return inkey();
+  return CLOBBER_MSG("Killed by %s. (CTRL-P log) (C/o/v/ESC)", death_descD);
 }
 static void
 show_all_inven()
@@ -11010,10 +11041,10 @@ py_death()
       if (c == CTRL('p')) {
         c = show_history();
       } else if (c == 'C') {
-        c = show_character(1);
+        c = show_character(1, 0);
       } else if (c == 'o') {
         // Observe game state at time of death
-        draw();
+        draw(WAIT_NONE);
         c = inkey();
       } else if (c == 'v') {
         c = show_version();
@@ -13251,7 +13282,6 @@ pawn_entrance()
       inven_sort();
     }
   }
-  msg_advance();
 }
 static void
 store_entrance(sidx)
@@ -13276,7 +13306,6 @@ store_entrance(sidx)
       store_sort(sidx);
     }
   }
-  msg_advance();
 }
 void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
 {
@@ -13597,7 +13626,7 @@ dungeon()
       msg_moreD = 0;
       replay_flag = (input_record_readD < input_record_writeD);
       c = 0;
-      draw();
+      draw(WAIT_NONE);
       if (!teleport && countD.rest != 0) break;
       if (!teleport && countD.paralysis != 0) break;
 
@@ -13608,7 +13637,6 @@ dungeon()
       } else if (find_flag) {
         mmove(find_direction, &y, &x);
       } else {
-        msg_advance();
         c = inkey();
 
         // AWN: Period attempts auto-detection of a situational command
@@ -13756,6 +13784,8 @@ dungeon()
             case CTRL('a'):
               py_reactuate(&y, &x, last_actuateD);
               break;
+            case CTRL('d'):
+              break;
             case ' ':
               break;
             case ',':
@@ -13783,7 +13813,7 @@ dungeon()
               break;
             case 'C':
               omit_replay = 1;
-              show_character(0);
+              show_character(0, 0);
               break;
             case 'M':
               if (HACK) {
@@ -13805,8 +13835,7 @@ dungeon()
               if (maD[MA_BLIND] == 0) {
                 minimap_enlargeD = TRUE;
                 // TBD: text only for console mode?
-                DRAWMSG("");
-                inkey();
+                CLOBBER_MSG("");
                 minimap_enlargeD = FALSE;
               }
               break;
@@ -13840,9 +13869,6 @@ dungeon()
                 uD.new_level_flag = NL_DOWN_STAIR;
                 uD.gold = 10000;
                 turn_flag = TRUE;
-              } break;
-              case CTRL('d'): {
-                detect_obj(oset_obj, TRUE);
               } break;
               case CTRL('e'): {
                 earthquake();

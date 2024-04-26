@@ -2,7 +2,7 @@
 #include "moria_at.c"
 #undef main
 
-long long strtoll(const char *restrict str, char **restrict endptr, int base);
+long long strtoll(const char* restrict str, char** restrict endptr, int base);
 
 int
 read_number(char* prompt, int* number)
@@ -14,8 +14,7 @@ read_number(char* prompt, int* number)
   do {
     line = 0;
     BufMsg(screen, "%s", input);
-    DRAWMSG("%s", prompt);
-    c = platformD.readansi();
+    c = CLOBBER_MSG("%s", prompt);
     switch (c) {
       case CTRL('c'):
       case ESCAPE:
@@ -93,8 +92,8 @@ hp_editor()
       BufMsg(screen, "level %2d) %3d\t\tlevel %2d) %3d", it + 1, player_hpD[it],
              it + step + 1, player_hpD[it + step]);
     }
-    DRAWMSG("HP EDITOR (level %d): SPACEBAR to reroll; ESCAPE to exit", uD.lev);
-    c = platformD.readansi();
+    c = CLOBBER_MSG("HP EDITOR (level %d): SPACEBAR to reroll; ESCAPE to exit",
+                    uD.lev);
 
     if (c == ESCAPE) return c;
     if (c == ' ') {
@@ -157,8 +156,7 @@ main(int argc, char** argv)
       BufMsg(screen, "w) Wizard Mode to disk");
       BufMsg(screen, "x) Exit writing changes to disk");
 
-      DRAWMSG("Modify Character (%s)?", filename);
-      c = platformD.readansi();
+      c = CLOBBER_MSG("Modify Character (%s)?", filename);
       switch (c) {
         case 'a':
           c = hp_editor();
