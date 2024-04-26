@@ -3,6 +3,7 @@
 
 enum { FHEIGHT = 32 };
 enum { FWIDTH = 16 };
+enum { FALPHA = 225 };
 
 #define MAX_FOOTPRINT (32 * 1024)
 #define START_GLYPH 0x21
@@ -147,6 +148,15 @@ font_texture_alphamod(alpha)
 {
   for (int it = 0; it < AL(font_textureD); ++it) {
     SDL_SetTextureAlphaMod(font_textureD[it], alpha);
+  }
+}
+
+STATIC void
+font_reset()
+{
+  for (int it = 0; it < AL(font_textureD); ++it) {
+    SDL_SetTextureColorMod(font_textureD[it], 255, 255, 255);
+    SDL_SetTextureAlphaMod(font_textureD[it], FALPHA);
   }
 }
 

@@ -422,7 +422,7 @@ custom_pregame()
   // Migration code
   if (platformD.load(-1, 0)) fs_upgrade();
 
-  font_color(*color_by_palette(WHITE));
+  font_reset();
 
   if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
   return 0;
@@ -728,7 +728,7 @@ common_text()
           font_color(*color_by_palette(BLUE));
           break;
         case 3:
-          font_color(*color_by_palette(WHITE));
+          font_reset();
           break;
       }
 
@@ -737,7 +737,7 @@ common_text()
       p.x -= STRLEN_MORE * FWIDTH / 2;
       p.y -= FHEIGHT / 2;
       render_monofont_string(renderer, &fontD, AP(moreD), p);
-      font_color(*color_by_palette(WHITE));
+      font_reset();
     }
   }
   return 0;
@@ -752,7 +752,7 @@ portrait_text(mode)
     AUSE(grect, GR_GAMEPLAY);
     char* msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
-    int alpha = 255;
+    int alpha = FALPHA;
 
     SDL_Point p = {
         grect.x + FWIDTH / 2,
@@ -780,7 +780,7 @@ portrait_text(mode)
 
       font_texture_alphamod(alpha);
       render_monofont_string(renderer, &fontD, msg, msg_used, p);
-      font_texture_alphamod(255);
+      font_reset();
     }
 
     if (msg_more || UITEST) {
@@ -820,7 +820,7 @@ landscape_text(mode)
   if (mode == 0) {
     char* msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
-    int alpha = 255;
+    int alpha = FALPHA;
 
     // Show previous message to help the player out
     if (!msg_used) {
@@ -850,7 +850,7 @@ landscape_text(mode)
     if (msg_used) {
       font_texture_alphamod(alpha);
       render_monofont_string(renderer, &fontD, msg, msg_used, p);
-      font_texture_alphamod(255);
+      font_reset();
 
       SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
       rect_frame(rect, 1);
@@ -1203,7 +1203,7 @@ draw_mode2()
         }
         render_monofont_string(renderer, &fontD, text, tlen, p);
         if (TOUCH && row == finger_rowD) {
-          font_color(*color_by_palette(WHITE));
+          font_reset();
         }
       }
     } break;
