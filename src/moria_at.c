@@ -389,7 +389,7 @@ int
 draw(wait)
 {
   int flush_draw = !replay_flag;
-  char c = wait;
+  char c = 0;
 
   if (flush_draw) {
     vital_update();
@@ -412,14 +412,9 @@ draw(wait)
   AC(screen_usedD);
   AC(overlay_usedD);
 
-  // Message is either retained to history or clobbered
-  if (wait >= 0) {
-    msg_advance();
-  } else {
-    // Clobber last message
-    memset(AS(msg_cqD, msg_writeD), WHITESPACE, STRLEN_MSG + 1);
-    AS(msglen_cqD, msg_writeD) = 0;
-  }
+  if (wait >= 0) msg_advance();
+  memset(AS(msg_cqD, msg_writeD), WHITESPACE, STRLEN_MSG + 1);
+  AS(msglen_cqD, msg_writeD) = 0;
 
   return c;
 }
@@ -434,12 +429,8 @@ msg_pause()
   if (log_used) {
     msg_moreD += 1;
 
-    if (replay_flag) {
-      draw(WAIT_NONE);
-    } else {
-      // wait for user to acknowledge prior buffer -more-
-      draw(' ');
-    }
+    // non-replay mode waits for user to acknowledge buffer text -more-
+    draw(replay_flag ? WAIT_NONE : ' ');
   }
 }
 
@@ -13844,7 +13835,7 @@ dungeon()
               if (maD[MA_BLIND] == 0) {
                 minimap_enlargeD = TRUE;
                 // TBD: text only for console mode?
-                CLOBBER_MSG("");
+                CLOBBER_MSG("You check your map of the dungeon.");
                 minimap_enlargeD = FALSE;
               }
               break;
