@@ -383,8 +383,6 @@ enum { WHITESPACE = 0x20202020 };
 // wait non-zero: pedantic mode wait for exact input
 // flag: ignore redraw
 // flag: ignore spacebar input
-//
-// REDRAW CTRL('d') support? without clearing overlay/screen info
 int
 draw(wait)
 {
@@ -396,17 +394,21 @@ draw(wait)
     affect_update();
 
     platformD.predraw();
-    platformD.draw();
   }
 
-  if (wait > 0) {
-    do {
-      c = read_input();
-      // INTERRUPT
-      if (c == CTRL('c')) break;
-    } while (c != wait);
+  while (flush_draw) {
+    platformD.draw();
+
+    if (wait > 0) {
+      do {
+        c = read_input();
+        // INTERRUPT
+        if (c == CTRL('c')) break;
+      } while (c != wait);
+    }
+    if (wait < 0) c = game_input();
+    flush_draw = (c == CTRL('d'));
   }
-  if (wait < 0) c = game_input();
 
   // Overlay information is reset
   AC(screen_usedD);
@@ -493,8 +495,6 @@ char* command;
   do {
     c = CLOBBER_MSG("%s", prompt ? prompt : "");
   } while (c == ' ');
-  // Draw again
-  if (c == CTRL('d')) c = ' ';
   *command = c;
   return is_ctrl(c) ? 0 : 1;
 }
@@ -542,7 +542,7 @@ int* dir;
   // ugh loop
   do {
     c = CLOBBER_MSG("%s", prompt);
-  } while (c == ' ' || c == CTRL('d'));
+  } while (c == ' ');
   command = map_roguedir(c);
   if (command >= '1' && command <= '9' && command != '5') {
     *dir = command - '0';
@@ -13711,14 +13711,16 @@ dungeon()
                 break;
               case 'e': {
                 int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
-                MSG("You wear %d %s.", count, count > 1 ? "items" : "item");
+                CLOBBER_MSG("You wear %d %s.", count,
+                            count > 1 ? "items" : "item");
               } break;
               case 'f':
                 py_bash(&y, &x);
                 break;
               case 'i': {
                 int count = inven_overlay(0, INVEN_EQUIP);
-                MSG("You carry %d %s:", count, count > 1 ? "items" : "item");
+                CLOBBER_MSG("You carry %d %s:", count,
+                            count > 1 ? "items" : "item");
               } break;
               case 'q':
                 iidx = inven_choice("Quaff what?", "*");
@@ -13752,7 +13754,8 @@ dungeon()
               case 'I':
                 inven_sort();
                 int count = inven_overlay(0, INVEN_EQUIP);
-                MSG("You organize %d %s:", count, count > 1 ? "items" : "item");
+                CLOBBER_MSG("You organize %d %s:", count,
+                            count > 1 ? "items" : "item");
                 break;
               case 'R':
                 py_rest();
@@ -13783,8 +13786,6 @@ dungeon()
               break;
             case CTRL('a'):
               py_reactuate(&y, &x, last_actuateD);
-              break;
-            case CTRL('d'):
               break;
             case ' ':
               break;
@@ -13855,7 +13856,11 @@ dungeon()
               memcpy(death_descD, AP(quit_stringD));
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game
+            case CTRL('d'):
+              omit_replay = 1;
+              break;
             case CTRL('p'):
+              omit_replay = 1;
               show_history();
               break;
           }
