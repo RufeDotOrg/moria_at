@@ -11058,7 +11058,7 @@ py_death()
     py_menu();
   } while (1);
 }
-static void
+static int
 py_help()
 {
   int line = 0;
@@ -11097,25 +11097,14 @@ py_help()
   BufMsg(screen, "W: where about the dungeon");
   BufMsg(screen, "X: exchange primary weapon to offhand");
   BufMsg(screen, "Z: staff invocation");
+  BufMsg(screen, "!: repeat (A)ctuate");
   BufMsg(screen, ",: pickup object");
-  BufMsg(screen, ".: automatic dungeon interaction");
+  BufMsg(screen, ".: auto-dungeon (stairs, pickup, enter shop or search)");
+
   line += 1;
-  BufMsg(screen, "CTRL-a: repeat last actuate");
   BufMsg(screen, "CTRL-p: message history");
-  BufMsg(screen, "CTRL-x: save and exit (test)");
-  msg_print("? - help");
-
-  if (HACK) {
-    msg_pause();
-    msg_print("Hack Commands");
-
-    line = 0;
-    BufMsg(screen, "CTRL('f'): food");
-    BufMsg(screen, "CTRL('h'): heal");
-    BufMsg(screen, "CTRL('t'): teleport");
-    BufMsg(screen, "CTRL('m'): teleport-to-monster");
-    BufMsg(screen, "CTRL('o'): teleport-to-object");
-  }
+  BufMsg(screen, "CTRL-x: save and exit");
+  return CLOBBER_MSG("? - help");
 }
 int inven_damage(typ, perc) int (*typ)();
 {
@@ -13703,9 +13692,6 @@ dungeon()
                 iidx = inven_choice("Invoke which staff?", "*");
                 if (iidx >= 0) inven_try_staff(iidx, &y, &x);
                 break;
-              case '1' ... '9':
-                MSG("Numlock is required for arrowkey movement");
-                break;
               case 'c':
                 close_object();
                 break;
@@ -13784,7 +13770,7 @@ dungeon()
               omit_replay = 1;
               globalD.zoom_factor = (globalD.zoom_factor + 1) % MAX_ZOOM;
               break;
-            case CTRL('a'):
+            case '!':
               py_reactuate(&y, &x, last_actuateD);
               break;
             case ' ':
