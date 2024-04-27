@@ -11104,6 +11104,7 @@ py_help()
   line += 1;
   BufMsg(screen, "CTRL-p: message history");
   BufMsg(screen, "CTRL-x: save and exit");
+  BufMsg(screen, "CTRL-c: exit");
   return CLOBBER_MSG("? - help");
 }
 int inven_damage(typ, perc) int (*typ)();
@@ -13839,7 +13840,6 @@ dungeon()
               platformD.savemidpoint();
               // fallthru
             case CTRL('c'):
-              // TBD: currently disk_postgame() results in savemidpoint() too
               memcpy(death_descD, AP(quit_stringD));
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game

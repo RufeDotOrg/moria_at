@@ -344,7 +344,7 @@ cache_read()
 int
 disk_postgame(may_exit)
 {
-  disk_savemidpoint();
+  if (uD.new_level_flag != NL_DEATH) disk_savemidpoint();
   if (cachepath_usedD) cache_write();
 }
 
