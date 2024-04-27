@@ -57,18 +57,29 @@ DATA char quit_stringD[] = "quitting";
     }                                      \
   }
 
-// maybe inkey() should have a record/norecord flag instead external branches
+// Platform input without recording
+int
+read_input()
+{
+  char c;
+  do {
+    c = platformD.readansi();
+  } while (c == 0);
+  return c;
+}
+
+// Gameplay input
+// If a recording is loaded, it reads back from the buffer
+// Otherwise read an input, and keep record of it
 static char
-inkey()
+game_input()
 {
   char c;
 
   if (input_record_readD < input_record_writeD) {
     c = AS(input_recordD, input_record_readD++);
   } else {
-    do {
-      c = platformD.readansi();
-    } while (c == 0);
+    c = read_input();
     AS(input_recordD, input_record_writeD++) = c;
     input_record_readD += 1;
   }
@@ -390,14 +401,12 @@ draw(wait)
 
   if (wait > 0) {
     do {
-      do {
-        c = platformD.readansi();
-      } while (c == 0);
+      c = read_input();
       // INTERRUPT
       if (c == CTRL('c')) break;
     } while (c != wait);
   }
-  if (wait < 0) c = inkey();
+  if (wait < 0) c = game_input();
 
   // Overlay information is reset
   AC(screen_usedD);
@@ -11045,7 +11054,7 @@ py_death()
       } else if (c == 'o') {
         // Observe game state at time of death
         draw(WAIT_NONE);
-        c = inkey();
+        c = read_input();
       } else if (c == 'v') {
         c = show_version();
       } else {
@@ -13637,7 +13646,7 @@ dungeon()
       } else if (find_flag) {
         mmove(find_direction, &y, &x);
       } else {
-        c = inkey();
+        c = game_input();
 
         // AWN: Period attempts auto-detection of a situational command
         if (c == '.') {
