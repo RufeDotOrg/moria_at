@@ -13853,6 +13853,7 @@ dungeon()
               platformD.savemidpoint();
               // fallthru
             case CTRL('c'):
+              // TBD: currently disk_postgame() results in savemidpoint() too
               memcpy(death_descD, AP(quit_stringD));
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game
