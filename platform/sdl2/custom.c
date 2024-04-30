@@ -3,13 +3,16 @@
 enum { DISK = 0 };
 enum { FONT = 0 };
 enum { INPUT = 0 };
+enum { COLOR = 0 };
 
 // Override DISK/FONT/INPUT when included
+#include "color.c"
 #include "disk.c"
 #include "font.c"
 #include "input.c"
 
 #include "art.c"
+#include "icon.c"
 #include "player.c"
 #include "treasure.c"
 #include "wall.c"
@@ -369,6 +372,13 @@ fs_upgrade()
     }
   }
 }
+int puff_io(out, outmax, in, insize) void* out;
+void* in;
+{
+  unsigned long size = outmax;
+  if (puff(out, &size, in, &(unsigned long){insize}) == 0) return size;
+  return 0;
+}
 int
 custom_pregame()
 {
@@ -402,6 +412,31 @@ custom_pregame()
       }
       SDL_FreeSurface(spriteD);
       spriteD = 0;
+    }
+  }
+
+  if (PC) {
+    enum { ICO_SZ = 128 };
+    SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ICO_SZ,
+                                                    ICO_SZ, 0, texture_formatD);
+    if (s) {
+      if (puff_io(s->pixels, s->h * s->pitch, AP(icoZ))) {
+        Log("puff_io for icon OK\n");
+        int pitch = s->pitch;
+        uint8_t* pixels = s->pixels;
+        for (int row = 0; row < ICO_SZ; ++row) {
+          int* pptr = vptr(pixels + (row * pitch));
+          for (int col = 0; col < ICO_SZ; ++col) {
+            int rgb = rgb_by_labr(*pptr);
+            if (rgb == -1) rgb = 0;
+            *pptr = rgb;
+            pptr += 1;
+          }
+        }
+
+        SDL_SetWindowIcon(windowD, s);
+        SDL_FreeSurface(s);
+      }
     }
   }
 

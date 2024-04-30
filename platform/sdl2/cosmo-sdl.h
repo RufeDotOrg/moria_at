@@ -42,6 +42,7 @@
 #define SDL_SetTextureAlphaMod abi_SDL_SetTextureAlphaMod
 #define SDL_SetTextureBlendMode abi_SDL_SetTextureBlendMode
 #define SDL_SetTextureColorMod abi_SDL_SetTextureColorMod
+#define SDL_SetWindowIcon abi_SDL_SetWindowIcon
 #define SDL_SetWindowResizable abi_SDL_SetWindowResizable
 #define SDL_UpdateTexture abi_SDL_UpdateTexture
 #define SDL_WasInit abi_SDL_WasInit

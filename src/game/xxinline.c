@@ -51,3 +51,8 @@ dir_y(dir)
   }
   return 0;
 }
+static void*
+vptr(void* ptr)
+{
+  return ptr;
+}
