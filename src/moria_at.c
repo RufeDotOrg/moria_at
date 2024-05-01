@@ -14172,9 +14172,14 @@ steam_helper(char* exe)
 
   return 1;
 }
+
+#include <libc/nt/events.h>
 int
 cosmo_init()
 {
+  // This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
+  printf("%p GetMessage()\n", (fn)GetMessage);
+
   steam_debug();
 
   if (!IsWindows()) {
