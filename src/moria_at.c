@@ -14175,8 +14175,22 @@ steam_helper(char* exe)
 
 #include <libc/nt/events.h>
 int
-cosmo_init()
+cosmo_init(int argc, char** argv)
 {
+  int opt = 0;
+  while (opt != -1) {
+    opt = getopt(argc, argv, "dh?");
+    switch (opt) {
+      case 'd':
+        ShowCrashReports();
+        break;
+      case '?':
+      case 'h':
+        printf("%s [-d]\n", GetProgramExecutableName());
+        exit(1);
+    }
+  }
+
   // This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
   if (GUI) printf("%p GetMessage()\n", (fn)GetMessage);
 
@@ -14229,7 +14243,7 @@ cosmo_init()
 int
 main(int argc, char** argv)
 {
-  global_init();
+  global_init(argc, argv);
   platform_init();
   platformD.pregame();
 
