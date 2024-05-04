@@ -22,6 +22,7 @@
 #define Log SDL_Log
 
 #ifdef __FATCOSMOCC__
+enum { GUI = 0 };
 #include <cosmo.h>
 #include <dlfcn.h>
 void* libD;

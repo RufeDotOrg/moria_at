@@ -14178,7 +14178,7 @@ int
 cosmo_init()
 {
   // This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
-  printf("%p GetMessage()\n", (fn)GetMessage);
+  if (GUI) printf("%p GetMessage()\n", (fn)GetMessage);
 
   steam_debug();
 
