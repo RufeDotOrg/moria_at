@@ -1004,9 +1004,11 @@ SDL_Rect* zoom_prect;
       SDL_SetRenderDrawColor(rendererD, U4(lightingD[light]));
       SDL_RenderFillRect(rendererD, &dest_rect);
 
-      if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
-      SDL_RenderCopy(rendererD, srct, srcr, &dest_rect);
-      if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
+      if (srct) {
+        if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
+        SDL_RenderCopy(rendererD, srct, srcr, &dest_rect);
+        if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
+      }
       switch (viz->fade) {
         case 1:
           SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);

@@ -58,7 +58,7 @@ enum { PC = 1 };
 #endif
 
 enum { SDL_EVLOG = 0 };
-enum { SDL_VERBOSE = 0 };
+enum { SDL_VERBOSE = 1 };
 enum { BATCHING = 1 };
 enum { REORIENTATION = 1 };
 #define ORIENTATION_LIST \
@@ -279,11 +279,6 @@ int
 sdl_window_event(event)
 SDL_Event event;
 {
-  Log("SDL_WindowEvent "
-      "[ event %d ] "
-      "[ data1 %d data2 %d ]"
-      "",
-      event.window.event, event.window.data1, event.window.data2);
   if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
       event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
     int drw = display_rectD.w;
