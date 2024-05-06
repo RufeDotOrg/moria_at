@@ -14174,19 +14174,23 @@ steam_helper(char* exe)
 }
 
 #include <libc/nt/events.h>
+#include "crash.c"
 int
 cosmo_init(int argc, char** argv)
 {
   int opt = 0;
   while (opt != -1) {
-    opt = getopt(argc, argv, "dh?");
+    opt = getopt(argc, argv, "cdh?");
     switch (opt) {
+      case 'c':
+        if (IsWindows()) ModuleCrashReports();
+        break;
       case 'd':
         ShowCrashReports();
         break;
       case '?':
       case 'h':
-        printf("%s [-d]\n", GetProgramExecutableName());
+        printf("%s [-cd]\n", GetProgramExecutableName());
         exit(1);
     }
   }
