@@ -99,9 +99,24 @@ DATA int quitD;
 DATA float retina_scaleD;
 
 int
+check_gl()
+{
+  const char* hint = SDL_GetHint(SDL_HINT_RENDER_DRIVER);
+  Log("SDL_RENDER_DRIVER hint: %s", hint);
+  if (!hint) return 0;
+
+  char gl[] = {'o', 'p', 'e', 'n'};
+  for (int it = 0; it < AL(gl); ++it) {
+    if (hint[it] != gl[it]) return 0;
+  }
+  return 1;
+}
+
+int
 render_init()
 {
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
+  if (check_gl()) winflag |= SDL_WINDOW_OPENGL;
   if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
   if (REORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
   windowD = SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y, winflag);
@@ -357,11 +372,13 @@ platform_pregame()
     if (VSYNC) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
     if (QUALITY) SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
-    if (__APPLE__) SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
-    if (PC && !SDL_GetHint(SDL_HINT_RENDER_DRIVER)) {
-      SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+    if (PC) {
+      if (!SDL_GetHint(SDL_HINT_RENDER_DRIVER))
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+    } else {
+      SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
+      // SDL_SetHint(SDL_HINT_RENDER_METAL_PREFER_LOW_POWER_DEVICE, "1");
     }
-    // SDL_SetHint(SDL_HINT_RENDER_METAL_PREFER_LOW_POWER_DEVICE, "1");
 
     // iOS/Android orientation
     SDL_SetHint(SDL_HINT_ORIENTATIONS, ORIENTATION_LIST);
