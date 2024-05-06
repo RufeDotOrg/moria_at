@@ -14173,6 +14173,17 @@ steam_helper(char* exe)
   return 1;
 }
 
+// Logging fix-up
+// Avoid default SDL behavior of accessing parent console window
+#include <libc/nexgen32e/nt2sysv.h>
+static const char* SDL_priority_prefixes[SDL_NUM_LOG_PRIORITIES] = {
+    NULL, "VERBOSE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"};
+void
+gamelog(void* nulldata, int category, SDL_LogPriority p, const char* message)
+{
+  printf("R_ %s: %s\r\n", SDL_priority_prefixes[p], message);
+}
+
 #include <libc/nt/events.h>
 #include "crash.c"
 int
@@ -14237,9 +14248,15 @@ cosmo_init(int argc, char** argv)
   libD = lib_load();
   printf("%p libD\n", libD);
 
-  global_init();
-
   if (!libD) exit(1);
+
+  if (IsWindows()) {
+    SDL_LogSetOutputFunction(NT2SYSV(gamelog), 0);
+  } else {
+    SDL_LogSetOutputFunction(gamelog, 0);
+  }
+
+  global_init();
 }
 #define global_init cosmo_init
 #endif

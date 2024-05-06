@@ -21,6 +21,7 @@
 #define SDL_Init abi_SDL_Init
 #define SDL_Log printf
 #define SDL_LogSetAllPriority abi_SDL_LogSetAllPriority
+#define SDL_LogSetOutputFunction abi_SDL_LogSetOutputFunction
 #define SDL_MapRGBA abi_SDL_MapRGBA
 #define SDL_PollEvent abi_SDL_PollEvent
 #define SDL_RenderClear abi_SDL_RenderClear
