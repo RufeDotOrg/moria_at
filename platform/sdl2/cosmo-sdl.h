@@ -19,7 +19,6 @@
 #define SDL_GetWindowDisplayIndex abi_SDL_GetWindowDisplayIndex
 #define SDL_GetWindowSize abi_SDL_GetWindowSize
 #define SDL_Init abi_SDL_Init
-#define SDL_Log printf
 #define SDL_LogSetAllPriority abi_SDL_LogSetAllPriority
 #define SDL_LogSetOutputFunction abi_SDL_LogSetOutputFunction
 #define SDL_MapRGBA abi_SDL_MapRGBA
@@ -48,3 +47,12 @@
 #define SDL_SetWindowResizable abi_SDL_SetWindowResizable
 #define SDL_UpdateTexture abi_SDL_UpdateTexture
 #define SDL_WasInit abi_SDL_WasInit
+
+typedef void (*elipsis)(SDL_PRINTF_FORMAT_STRING const char* a, ...);
+typedef void __attribute__((__ms_abi__)) (*win_elipsis)(
+    SDL_PRINTF_FORMAT_STRING const char* a, ...);
+#define SDL_Log(x, ...)                                            \
+  if (IsWindows())                                                 \
+    ((win_elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__); \
+  else                                                             \
+    ((elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__);
