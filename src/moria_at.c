@@ -14184,30 +14184,36 @@ gamelog(void* nulldata, int category, SDL_LogPriority p, const char* message)
   printf("R_ %s: %s\r\n", SDL_priority_prefixes[p], message);
 }
 
+// This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
 #include <libc/nt/events.h>
-#include "crash.c"
+static void
+enable_windows_gui()
+{
+  printf("%p GetMessage()\n", (fn)GetMessage);
+}
+
 int
 cosmo_init(int argc, char** argv)
 {
   int opt = 0;
   while (opt != -1) {
-    opt = getopt(argc, argv, "cdh?");
+    opt = getopt(argc, argv, "dh?");
     switch (opt) {
-      case 'c':
-        if (IsWindows()) ModuleCrashReports();
-        break;
       case 'd':
         ShowCrashReports();
         break;
       case '?':
       case 'h':
-        printf("%s [-cd]\n", GetProgramExecutableName());
+        printf(
+            "%s [-dh]\n"
+            "d: debug; Show crash reports\n"
+            "h: help\n",
+            GetProgramExecutableName());
         exit(1);
     }
   }
 
-  // This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
-  if (GUI) printf("%p GetMessage()\n", (fn)GetMessage);
+  if (GUI) enable_windows_gui();
 
   steam_debug();
 
