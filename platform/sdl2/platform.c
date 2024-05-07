@@ -120,11 +120,19 @@ render_init()
     winflag |= SDL_WINDOW_OPENGL;
 
     if (1) {
-      printf("SDL_GL_LoadLibrary test\n");
+#ifdef __FATCOSMOCC__
+      if (IsWindows()) {
+        int64_t hlib = LoadLibraryA("OPENGL32.DLL");
+        Log("%lld hlib to opengl32.dll\n", hlib);
+        int r = FreeLibrary(hlib);
+        printf("%d FreeLibrary result\n", r);
+      }
+#endif
+      Log("SDL_GL_LoadLibrary test\n");
       int ret = SDL_GL_LoadLibrary(0);
-      printf("    ret %d\n", ret);
+      Log("    ret %d\n", ret);
       SDL_GL_UnloadLibrary();
-      printf("SDL_GL_UnloadLibrary\n");
+      Log("SDL_GL_UnloadLibrary\n");
     }
   }
   if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
