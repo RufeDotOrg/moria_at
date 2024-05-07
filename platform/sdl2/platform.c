@@ -25,6 +25,7 @@
 enum { GUI = 0 };
 #include <cosmo.h>
 #include <dlfcn.h>
+#include <libc/nt/dll.h> // SDL OverrideSO
 void* libD;
 #include "cosmo-sdl.h"
 #endif
