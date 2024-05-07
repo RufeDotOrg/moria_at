@@ -49,6 +49,8 @@
 #define SDL_WasInit abi_SDL_WasInit
 
 #define SDL_GetError abi_SDL_GetError
+#define SDL_GL_LoadLibrary abi_SDL_GL_LoadLibrary
+#define SDL_GL_UnloadLibrary abi_SDL_GL_UnloadLibrary
 
 typedef void (*elipsis)(SDL_PRINTF_FORMAT_STRING const char* a, ...);
 typedef void __attribute__((__ms_abi__)) (*win_elipsis)(

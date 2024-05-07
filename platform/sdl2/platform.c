@@ -116,7 +116,17 @@ int
 render_init()
 {
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
-  if (check_gl()) winflag |= SDL_WINDOW_OPENGL;
+  if (check_gl()) {
+    winflag |= SDL_WINDOW_OPENGL;
+
+    if (1) {
+      printf("SDL_GL_LoadLibrary test\n");
+      int ret = SDL_GL_LoadLibrary(0);
+      printf("    ret %d\n", ret);
+      SDL_GL_UnloadLibrary();
+      printf("SDL_GL_UnloadLibrary\n");
+    }
+  }
   if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
   if (REORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
   windowD = SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y, winflag);
