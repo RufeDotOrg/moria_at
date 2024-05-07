@@ -14115,6 +14115,7 @@ steam_debug()
   }
   printf("env TMPDIR: %s\n", getenv("TMPDIR"));
   printf("env HOME: %s\n", getenv("HOME"));
+  printf("env KPRINTF_LOG: %s\n", getenv("KPRINTF_LOG"));
   return 0;
 }
 #include <errno.h>
