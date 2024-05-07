@@ -14090,9 +14090,10 @@ global_init()
 // TBD: dylib name
 DATA char* libnameD[] = {"libSDL2-2.0.so", "SDL2.dll", "libSDL2-2.0.0.dylib"};
 void*
-lib_load()
+load_lib()
 {
   for (int it = 0; it < AL(libnameD); ++it) {
+    printf("load_lib(): %s\n", libnameD[it]);
     void* lib = cosmo_dlopen(libnameD[it], RTLD_LAZY);
     if (lib) return lib;
   }
@@ -14252,7 +14253,7 @@ cosmo_init(int argc, char** argv)
   setenv("LD_LIBRARY_PATH", path, 1);
 
   // Cosmo does not re-init dlopen-helper on an environment change
-  libD = lib_load();
+  libD = load_lib();
   printf("%p libD\n", libD);
 
   if (!libD) exit(1);
