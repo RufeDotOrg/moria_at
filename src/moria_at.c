@@ -14118,6 +14118,7 @@ steam_debug()
   printf("env HOME: %s\n", getenv("HOME"));
   printf("env KPRINTF_LOG: %s\n", getenv("KPRINTF_LOG"));
   printf("env SDL_OPENGL_LIBRARY: %s\n", getenv("SDL_OPENGL_LIBRARY"));
+  printf("pid %d tid %d\n", getpid(), gettid());
   return 0;
 }
 #include <errno.h>
