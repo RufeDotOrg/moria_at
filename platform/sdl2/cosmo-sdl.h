@@ -48,6 +48,8 @@
 #define SDL_UpdateTexture abi_SDL_UpdateTexture
 #define SDL_WasInit abi_SDL_WasInit
 
+#define SDL_GetError abi_SDL_GetError
+
 typedef void (*elipsis)(SDL_PRINTF_FORMAT_STRING const char* a, ...);
 typedef void __attribute__((__ms_abi__)) (*win_elipsis)(
     SDL_PRINTF_FORMAT_STRING const char* a, ...);
@@ -56,3 +58,8 @@ typedef void __attribute__((__ms_abi__)) (*win_elipsis)(
     ((win_elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__); \
   else                                                             \
     ((elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__);
+#define SDL_SetError(x, ...)                                            \
+  if (IsWindows())                                                      \
+    ((win_elipsis)cosmo_dlsym(libD, "SDL_SetError"))(x, ##__VA_ARGS__); \
+  else                                                                  \
+    ((elipsis)cosmo_dlsym(libD, "SDL_SetError"))(x, ##__VA_ARGS__);

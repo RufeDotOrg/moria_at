@@ -14263,6 +14263,12 @@ cosmo_init(int argc, char** argv)
     SDL_LogSetOutputFunction(gamelog, 0);
   }
 
+  if (1) {
+    printf("SDL_SetError() test\n");
+    SDL_SetError("%s error codepath", GetProgramExecutableName());
+    printf("%s\n", SDL_GetError());
+  }
+
   global_init();
 }
 #define global_init cosmo_init
