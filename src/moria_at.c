@@ -14077,11 +14077,12 @@ obj_level_init()
     tmp[l]++;
   }
 }
+// try to be FUN on the platform with defaults
 int
 global_init()
 {
   globalD.saveslot_class = -1;
-  globalD.zoom_factor = 0;
+  globalD.zoom_factor = PC ? 0 : 2;
 }
 
 #include "platform/platform.c"

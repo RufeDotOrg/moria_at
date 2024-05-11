@@ -284,12 +284,6 @@ platform_saveex()
   return count;
 }
 int
-cache_default()
-{
-  // try to be FUN on the platform with defaults
-  if (ANDROID || __APPLE__) globalD.zoom_factor = 2;
-}
-int
 cache_write()
 {
   SDL_RWops* writef = file_access(cachepathD, "wb");
@@ -420,11 +414,13 @@ disk_init()
     Log("Game cache enabled: %s", cachepathD);
   }
 
-  if (!cache_read()) cache_default();
-  Log("SDL global\n"
+  int cache_valid = cache_read();
+  Log("global cache_valid (%d)\n"
       " %d saveslot_class\n"
-      " %u zoom_factor\n",
-      globalD.saveslot_class, globalD.zoom_factor);
+      " %u zoom_factor\n"
+      " %u orientation_lock\n",
+      cache_valid, globalD.saveslot_class, globalD.zoom_factor,
+      globalD.orientation_lock);
 
   platformD.load = platform_load;
   platformD.save = platform_save;

@@ -25,7 +25,7 @@
 enum { GUI = 0 };
 #include <cosmo.h>
 #include <dlfcn.h>
-#include <libc/nt/dll.h> // SDL OverrideSO
+#include <libc/nt/dll.h>  // SDL OverrideSO
 void* libD;
 #include "cosmo-sdl.h"
 #endif
@@ -168,7 +168,12 @@ render_init()
           it, rinfo.name, rinfo.flags);
     }
   }
-  rendererD = SDL_CreateRenderer(windowD, -1, 0);
+
+  int ridx = -1;
+  // Prefer to the last used renderer; delete the cache to reset
+  if (PC && globalD.pc_renderer > 0 && globalD.pc_renderer <= num_driver)
+    ridx = globalD.pc_renderer - 1;
+  rendererD = SDL_CreateRenderer(windowD, ridx, 0);
   if (!rendererD) return 0;
   // ANDROID fix for SDL Error: BLASTBufferQueue
   if (ANDROID) SDL_RenderPresent(rendererD);
