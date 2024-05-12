@@ -28,6 +28,8 @@ enum { GUI = 0 };
 #include <libc/nt/dll.h>  // SDL OverrideSO
 void* libD;
 #include "cosmo-sdl.h"
+enum { MOD_CRASH = 0 };
+#include "cosmo-crash.c"
 #endif
 
 #include "third_party/zlib/puff.c"

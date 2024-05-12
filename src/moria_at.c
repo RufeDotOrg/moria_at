@@ -14212,27 +14212,25 @@ cosmo_loadsym(void* handle, const char* name)
   printf("%p %s: %p\n", handle, name, ret);
   return ret;
 }
+
 int
 cosmo_init(int argc, char** argv)
 {
   int opt = 0;
   while (opt != -1) {
-    opt = getopt(argc, argv, "dh?");
+    opt = getopt(argc, argv, "h?");
     switch (opt) {
-      case 'd':
-        ShowCrashReports();
-        break;
       case '?':
       case 'h':
         printf(
-            "%s [-dh]\n"
-            "d: debug; Show crash reports\n"
+            "%s [-h]\n"
             "h: help\n",
             GetProgramExecutableName());
         exit(1);
     }
   }
 
+  if (MOD_CRASH) crash_init();
   if (GUI) enable_windows_gui();
 
   steam_debug();
