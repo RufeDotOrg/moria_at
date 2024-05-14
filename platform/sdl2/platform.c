@@ -121,22 +121,6 @@ render_init()
   int winflag = WINDOW ? SDL_WINDOW_BORDERLESS : SDL_WINDOW_FULLSCREEN;
   if (check_gl()) {
     winflag |= SDL_WINDOW_OPENGL;
-
-    if (1) {
-#ifdef __FATCOSMOCC__
-      if (IsWindows()) {
-        int64_t hlib = LoadLibraryA("OPENGL32.DLL");
-        Log("%lld hlib to opengl32.dll\n", hlib);
-        int r = FreeLibrary(hlib);
-        printf("%d FreeLibrary result\n", r);
-      }
-#endif
-      Log("SDL_GL_LoadLibrary test\n");
-      int ret = SDL_GL_LoadLibrary(0);
-      Log("    ret %d\n", ret);
-      SDL_GL_UnloadLibrary();
-      Log("SDL_GL_UnloadLibrary\n");
-    }
   }
   if (__APPLE__) winflag |= SDL_WINDOW_ALLOW_HIGHDPI;
   if (REORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
@@ -173,8 +157,6 @@ render_init()
 
   int ridx = -1;
   // Prefer to the last used renderer; delete the cache to reset
-  if (PC && globalD.pc_renderer > 0 && globalD.pc_renderer <= num_driver)
-    ridx = globalD.pc_renderer - 1;
   rendererD = SDL_CreateRenderer(windowD, ridx, 0);
   if (!rendererD) return 0;
   // ANDROID fix for SDL Error: BLASTBufferQueue
@@ -399,8 +381,12 @@ platform_pregame()
     if (QUALITY) SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     if (PC) {
-      if (!SDL_GetHint(SDL_HINT_RENDER_DRIVER))
-        SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+      if (!SDL_GetHint(SDL_HINT_RENDER_DRIVER)) {
+        if (globalD.pc_renderer[0])
+          SDL_SetHint(SDL_HINT_RENDER_DRIVER, globalD.pc_renderer);
+        else
+          SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+      }
     } else {
       SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
       // SDL_SetHint(SDL_HINT_RENDER_METAL_PREFER_LOW_POWER_DEVICE, "1");

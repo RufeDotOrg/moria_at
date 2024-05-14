@@ -78,7 +78,7 @@ CustomCrashReport(ucontext_t* ctx)
   switch (platform_phaseD) {
     case PLATFORM_PREGAME:
       // Crash during initialization switch to "software" renderer
-      globalD.pc_renderer = 1;
+      memcpy(globalD.pc_renderer, AP("software"));
       // Fall-thru; save-to-disk
     case PLATFORM_GAME:
       platformD.postgame();

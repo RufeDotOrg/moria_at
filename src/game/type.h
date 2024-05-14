@@ -1,7 +1,7 @@
 
 // reference to buffer of known length in bytes
 struct bufS {
-  void *mem;
+  void* mem;
   uint64_t mem_size;
 };
 // Buffer
@@ -119,7 +119,7 @@ struct countS {
 GAME struct countS countD;
 
 struct raceS {
-  char *name;          /* Type of race			*/
+  char* name;          /* Type of race			*/
   uint8_t attr[MAX_A]; /* Attribute adjustments */
   uint8_t b_age;       /* Base age of character		*/
   uint8_t m_age;       /* Maximum age of character	*/
@@ -145,7 +145,7 @@ struct raceS {
 };
 
 struct classS {
-  char *name;              /* type of class		*/
+  char* name;              /* type of class		*/
   uint8_t adj_hd;          /* Adjust hit points		*/
   uint8_t mdis;            /* mod disarming traps		*/
   uint8_t msrh;            /* modifier to searching	*/
@@ -161,7 +161,7 @@ struct classS {
 };
 
 struct backgroundS {
-  char *info;    /* History information    */
+  char* info;    /* History information    */
   uint8_t roll;  /* Die roll needed for history  */
   uint8_t chart; /* Table number     */
   uint8_t next;  /* Pointer to next table  */
@@ -204,7 +204,7 @@ struct caveS {
 GAME struct caveS caveD[MAX_HEIGHT][MAX_WIDTH];
 
 struct treasureS {
-  char *name;        /* Object name		*/
+  char* name;        /* Object name		*/
   uint32_t flags;    /* Special flags	*/
   uint8_t tval;      /* Category number	*/
   uint8_t tchar;     /* Character representation*/
@@ -244,7 +244,7 @@ struct objS {
 };
 
 struct creatureS {
-  char *name;             /* Descrip of creature	*/
+  char* name;             /* Descrip of creature	*/
   uint32_t cmove;         /* Bit field		*/
   uint32_t spells;        /* Creature spells	*/
   uint16_t cdefense;      /* Bit field		*/
@@ -281,7 +281,7 @@ struct monS {
 };
 
 struct ownerS {
-  char *name;
+  char* name;
   int16_t max_cost;
   uint8_t max_inflate;
   uint8_t min_inflate;
@@ -295,7 +295,7 @@ struct globalS {
   int32_t saveslot_class;
   uint32_t zoom_factor;
   uint32_t orientation_lock;
-  uint32_t pc_renderer;
+  char pc_renderer[16];
 };
 // Global data may be cached to disk
 // Does not mutate on a game reset
