@@ -51,6 +51,16 @@ CustomCrashReport()
     }
     sleep(3);
   }
+
+  switch (platform_phaseD) {
+    case PLATFORM_PREGAME:
+      // Crash during initialization switch to "software" renderer
+      globalD.pc_renderer = 1;
+      // Fall-thru; save-to-disk
+    case PLATFORM_GAME:
+      platformD.postgame();
+      break;
+  }
 }
 
 void
