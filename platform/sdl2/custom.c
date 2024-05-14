@@ -408,6 +408,8 @@ custom_pregame()
       sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
       if (sprite_textureD)
         SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
+      else
+        Log("WARNING: Unable to CreateTextureFromSurface for sprites");
     } else {
       Log("WARNING: Assets exceed available sprite memory");
     }
