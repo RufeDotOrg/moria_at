@@ -385,9 +385,10 @@ int
 custom_pregame()
 {
   platform_phaseD = PLATFORM_PREGAME;
+  if (DISK && !disk_init()) return 1;
+
   platform_pregame();
 
-  if (DISK && !disk_init()) return 1;
   if (FONT && !font_init()) return 2;
   if (INPUT && !input_init()) return 3;
 
