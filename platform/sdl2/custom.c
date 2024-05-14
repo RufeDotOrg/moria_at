@@ -396,27 +396,23 @@ custom_pregame()
     rgbaD[it] = SDL_MapRGBA(pixel_formatD, U4(paletteD[it]));
   }
 
-  if (ART_H * SPRITE_SQ <= max_texture_heightD &&
-      ART_W * SPRITE_SQ <= max_texture_widthD) {
-    spriteD =
-        SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ART_W * SPRITE_SQ,
-                                       ART_H * SPRITE_SQ, 0, texture_formatD);
-    if (spriteD) {
-      if (!art_io() || !art_init()) return 4;
-      if (!tart_io() || !tart_init()) return 4;
-      if (!wart_io() || !wart_init()) return 4;
-      if (!part_io() || !part_init()) return 4;
+  spriteD = SDL_CreateRGBSurfaceWithFormat(
+      SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0, texture_formatD);
+  if (spriteD) {
+    if (!art_io() || !art_init()) return 4;
+    if (!tart_io() || !tart_init()) return 4;
+    if (!wart_io() || !wart_init()) return 4;
+    if (!part_io() || !part_init()) return 4;
 
-      if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
-        sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
-        if (sprite_textureD)
-          SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
-      } else {
-        Log("WARNING: Assets exceed available sprite memory");
-      }
-      SDL_FreeSurface(spriteD);
-      spriteD = 0;
+    if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
+      sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
+      if (sprite_textureD)
+        SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
+    } else {
+      Log("WARNING: Assets exceed available sprite memory");
     }
+    SDL_FreeSurface(spriteD);
+    spriteD = 0;
   }
 
   if (PC) {
