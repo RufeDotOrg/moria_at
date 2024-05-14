@@ -436,7 +436,6 @@ sdl_pump()
 
   if (ret == 0) {
     nanosleep(&(struct timespec){0, 8e6}, 0);
-    // TBD: Full framerate on PC?
     if (PC) ret = CTRL('d');
   }
 

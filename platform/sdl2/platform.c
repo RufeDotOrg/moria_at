@@ -52,12 +52,14 @@ enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
 enum { MOUSE = 0 };
 enum { PC = 0 };
+enum { VSYNC = 1 };
 #else
 char* SDL_GetCachePath(const char*, const char*);
 enum { TOUCH = 0 };
 enum { KEYBOARD = 1 };
 enum { MOUSE = TOUCH };
 enum { PC = 1 };
+enum { VSYNC = 0 };
 #endif
 
 enum { SDL_EVLOG = 0 };
@@ -66,7 +68,6 @@ enum { BATCHING = 1 };
 enum { REORIENTATION = 1 };
 #define ORIENTATION_LIST \
   "Portrait LandscapeRight PortraitUpsideDown LandscapeLeft"
-enum { VSYNC = 1 };
 enum { QUALITY = 0 };
 
 enum { WINDOW = 0 };
