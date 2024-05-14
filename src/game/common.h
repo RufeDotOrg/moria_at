@@ -147,6 +147,7 @@ ftable_clear(void* ftable, int size)
 }
 
 // Common Interface
+enum { PLATFORM_PREGAME = 1, PLATFORM_GAME = 2, PLATFORM_POSTGAME = 3 };
 struct platformS {
   fn pregame;
   fn postgame;

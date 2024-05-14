@@ -34,6 +34,7 @@ DATA SDL_Rect grectD[GR_COUNT];
 DATA int xD;
 DATA uint8_t finger_countD;
 DATA int last_pressD;
+DATA int quitD;
 
 char
 sym_shift(char c)

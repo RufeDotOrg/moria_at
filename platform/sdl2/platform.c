@@ -98,7 +98,6 @@ DATA SDL_FRect view_rectD;
 DATA int max_texture_widthD;
 DATA int max_texture_heightD;
 
-DATA int quitD;
 DATA float retina_scaleD;
 
 int

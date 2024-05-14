@@ -29,6 +29,7 @@ enum { MMSCALE = 2 };
 
 DATA char moreD[] = "-more-";
 
+DATA int platform_phaseD;
 DATA fn text_fnD;
 DATA uint32_t sprite_idD;
 DATA SDL_Surface* spriteD;
@@ -382,6 +383,7 @@ void* in;
 int
 custom_pregame()
 {
+  platform_phaseD = PLATFORM_PREGAME;
   platform_pregame();
 
   if (DISK && !disk_init()) return 1;
@@ -454,10 +456,13 @@ custom_pregame()
   text_textureD = SDL_CreateTexture(
       rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET, 2 * 1024, 2 * 1024);
 
+  font_reset();
+
+  // Hardware dependent "risky" initialization complete!
+  platform_phaseD = PLATFORM_GAME;
+
   // Migration code
   if (platformD.load(-1, 0)) fs_upgrade();
-
-  font_reset();
 
   if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
   return 0;
@@ -466,6 +471,9 @@ custom_pregame()
 int
 custom_postgame(may_exit)
 {
+  // Postgame activities should not be called from the crash handler
+  platform_phaseD = PLATFORM_POSTGAME;
+
   if (DISK) disk_postgame(may_exit);
   return platform_postgame(may_exit);
 }
