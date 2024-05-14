@@ -9,6 +9,9 @@
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 
+#include "libc/calls/struct/ucontext.internal.h"
+#include "libc/calls/ucontext.h"
+
 struct NtModuleInfo {
   void* lpBaseOfDll;
   uint32_t SizeOfImage;
@@ -17,9 +20,14 @@ struct NtModuleInfo {
 
 uint32_t __attribute__((__ms_abi__)) (*GetModuleInformation)(int64_t, int64_t,
                                                              void*, uint32_t);
+uint16_t
+    __attribute__((__ms_abi__)) (*RtlCaptureStackBackTrace)(uint32_t, uint32_t,
+                                                            void*, uint32_t*);
+
+extern GLOBAL int platform_phaseD;
 
 static void
-CustomCrashReport()
+CustomCrashReport(ucontext_t* ctx)
 {
   kprintf("Rufe.org crash augmentation enabled\n");
 
@@ -49,7 +57,22 @@ CustomCrashReport()
       if (byte_count > sizeof(mod_list))
         kprintf("... MODULE_MAX exceeded: some modules are not listed!\n");
     }
-    sleep(3);
+  }
+
+  uint64_t pc = 0;
+  if (ctx) {
+    pc = ctx->uc_mcontext.PC;
+    if (pc > UINT32_MAX) {
+      kprintf("Foreign code backtrace:\n");
+      enum { STACK_MAX = 64 };
+      void* stack[STACK_MAX];
+      uint32_t hash;
+      int stack_count = RtlCaptureStackBackTrace(0, STACK_MAX, stack, &hash);
+      for (int it = 0; it < stack_count; ++it) {
+        kprintf(" %p\n", stack[it]);
+      }
+      kprintf("Hash: 0x%x stack_count %d\n", hash, stack_count);
+    }
   }
 
   switch (platform_phaseD) {
@@ -61,13 +84,15 @@ CustomCrashReport()
       platformD.postgame();
       break;
   }
+
+  if (IsWindows()) sleep(3);
 }
 
 void
 __game_crash(int sig, struct siginfo* si, void* arg)
 {
   __oncrash(sig, si, arg);
-  CustomCrashReport();
+  CustomCrashReport(arg);
 }
 
 static void
@@ -102,6 +127,9 @@ crash_init()
   if (IsWindows()) {
     void* psapi = cosmo_dlopen("psapi.dll", RTLD_LAZY);
     GetModuleInformation = cosmo_dlsym(psapi, "GetModuleInformation");
+
+    void* ntdll = cosmo_dlopen("ntdll.dll", RTLD_LAZY);
+    RtlCaptureStackBackTrace = cosmo_dlsym(ntdll, "RtlCaptureStackBackTrace");
   }
 
   InstallCrashHandler(SIGQUIT, 0);

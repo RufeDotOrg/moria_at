@@ -27,9 +27,10 @@ enum { MAP_W = SYMMAP_WIDTH * ART_W };
 enum { MAP_H = SYMMAP_HEIGHT * ART_H };
 enum { MMSCALE = 2 };
 
+GLOBAL int platform_phaseD;
+
 DATA char moreD[] = "-more-";
 
-DATA int platform_phaseD;
 DATA fn text_fnD;
 DATA uint32_t sprite_idD;
 DATA SDL_Surface* spriteD;

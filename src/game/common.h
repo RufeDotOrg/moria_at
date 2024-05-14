@@ -71,8 +71,11 @@ typedef int (*fn)();
 // Member Use
 #define MUSE(a, member) typeof(a##D.member) member = a##D.member
 
-// (optionally defined)
 // global declaration
+#ifndef GLOBAL
+#define GLOBAL
+#endif
+// (optionally defined)
 #ifndef DATA
 #define DATA static
 #endif
