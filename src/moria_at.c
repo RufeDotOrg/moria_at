@@ -489,12 +489,7 @@ in_subcommand(prompt, command)
 char* prompt;
 char* command;
 {
-  char c;
-
-  // ugh this loop
-  do {
-    c = CLOBBER_MSG("%s", prompt ? prompt : "");
-  } while (c == ' ');
+  char c = CLOBBER_MSG("%s", prompt ? prompt : "");
   *command = c;
   return is_ctrl(c) ? 0 : 1;
 }
