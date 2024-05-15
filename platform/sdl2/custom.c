@@ -441,6 +441,7 @@ custom_pregame()
       }
     }
   }
+  if (PC) SDL_ShowCursor(SDL_DISABLE);
 
   if (TOUCH) ui_init();
   if (TOUCH) tp_init();

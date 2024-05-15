@@ -45,6 +45,7 @@
 #define SDL_SetTextureColorMod abi_SDL_SetTextureColorMod
 #define SDL_SetWindowIcon abi_SDL_SetWindowIcon
 #define SDL_SetWindowResizable abi_SDL_SetWindowResizable
+#define SDL_ShowCursor abi_SDL_ShowCursor
 #define SDL_UpdateTexture abi_SDL_UpdateTexture
 #define SDL_WasInit abi_SDL_WasInit
 
