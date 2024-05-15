@@ -10931,6 +10931,19 @@ show_all_inven()
     }
   } while (iidx != -1);
 }
+static int
+py_undo()
+{
+  int memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
+                   input_action_usedD <= AL(input_actionD) - 1);
+  if (memory_ok) {
+    USE(input_action_used);
+    input_resumeD = (input_action_used - 1);
+    // Disable midpoint resume explicitly
+    if (input_resumeD == 0) input_resumeD = -1;
+    longjmp(restartD, 1);
+  }
+}
 int
 py_menu()
 {
@@ -11052,6 +11065,7 @@ py_help()
   line += 1;
   BufMsg(screen, "CTRL-p: message history");
   BufMsg(screen, "CTRL-c: save and exit");
+  BufMsg(screen, "CTRL-z: undo");
 
   BufPad(screen, AL(screenD), 34);
 
@@ -13701,6 +13715,10 @@ dungeon()
             case CTRL('p'):
               omit_replay = 1;
               show_history();
+              break;
+            case CTRL('z'):
+              omit_replay = 1;
+              py_undo();
               break;
           }
 
