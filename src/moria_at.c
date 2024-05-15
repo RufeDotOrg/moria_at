@@ -6571,16 +6571,21 @@ res_stat(stat)
   return FALSE;
 }
 static void
-py_where()
+py_where_on_map()
 {
+  int restore_zoom;
   int dir;
-  while (get_dir("Map: Which direction?", &dir)) {
+
+  restore_zoom = globalD.zoom_factor;
+  globalD.zoom_factor = 0;
+  while (get_dir("Where on Map | Scroll which direction?", &dir)) {
     mmove(dir, &panelD.panel_row, &panelD.panel_col);
     if (panelD.panel_row > MAX_ROW - 2) panelD.panel_row = MAX_ROW - 2;
     if (panelD.panel_col > MAX_COL - 2) panelD.panel_col = MAX_COL - 2;
     panel_bounds(&panelD);
   }
   panel_update(&panelD, uD.y, uD.x, TRUE);
+  globalD.zoom_factor = restore_zoom;
 }
 void
 py_add_food(num)
@@ -11028,7 +11033,7 @@ py_death()
     do {
       if (c == CTRL('p')) {
         c = show_history();
-      } else if (c == 'C') {
+      } else if (c == 'c') {
         c = show_character(1, 0);
       } else if (c == 'o') {
         // Observe game state at time of death
@@ -11052,14 +11057,14 @@ py_help()
   int line = 1;
 
   screen_submodeD = 1;
-  BufMsg(screen, "A: actuate inventory item");
-  BufMsg(screen, "C: character screen");
+  BufMsg(screen, "a: actuate inventory item");
+  BufMsg(screen, "c: character screen");
   BufMsg(screen, "d: drop inventory or equipment");
   BufMsg(screen, "R: Rest until healed");
-  BufMsg(screen, "M: map dungeon");
+  BufMsg(screen, "m: map dungeon");
   BufMsg(screen, "v: version info");
   line += 1;
-  BufMsg(screen, "=: advanced Game Actions");
+  BufMsg(screen, "ESC: Game Menu");
   BufMsg(screen, "+/-: zoom in/out");
   BufMsg(screen, "!: repeat last spell/item");
   line += 1;
@@ -11071,20 +11076,21 @@ py_help()
 
   line = 1;
   BufMsg(screen, ".: auto-command. One of the following:");
-  BufMsg(screen, "<: up stairs");
-  BufMsg(screen, ">: down stairs");
-  BufMsg(screen, ",: pickup object");
-  BufMsg(screen, "s: search for traps/doors");
+  BufMsg(screen, "  <: up stairs");
+  BufMsg(screen, "  >: down stairs");
+  BufMsg(screen, "  ,: pickup object");
+  BufMsg(screen, "  s: search for traps/doors");
 
   if (KEYBOARD) {
     line += 1;
     BufMsg(screen, "KEYBOARD EXTRAS");
-    BufMsg(screen, "f: force/bash chest/door/monster");
-    BufMsg(screen, "i/I: inventory sort");
-    BufMsg(screen, "x: examine objects/monsters");
-    BufMsg(screen, "S: Study an object");
-    BufMsg(screen, "W: Where about the dungeon");
-    BufMsg(screen, "X: eXchange primary weapon to offhand");
+    BufMsg(screen,
+           "f: force/bash chest/door/monster");  // deprecate or add mobile UI?
+    BufMsg(screen, "i: inventory sort");         // maybe '-' on actuate
+    BufMsg(screen, "w: weapon swap with offhand");  // handy
+    BufMsg(screen, "x: examine objects/monsters");  // show look frame?
+    BufMsg(screen, "M: Where on map");              // useful?
+    BufMsg(screen, "S: Study an object");           // maybe SHIFT on actuate
   }
 
   return CLOBBER_MSG("? - help");
@@ -13596,24 +13602,24 @@ dungeon()
               case '?':
                 py_help();
                 break;
-              case 'W':
-                py_where();
-                break;
-              case 'X':
-                py_offhand();
+              case ESCAPE:
+                py_menu();
                 break;
               case 'f':
                 py_bash(&y, &x);
+                break;
+              case 'w':
+                py_offhand();
                 break;
               case 'x':
                 py_examine();
                 break;
               case 'i':
-              case 'I':
                 inven_sort();
-                int count = inven_overlay(0, INVEN_EQUIP);
-                CLOBBER_MSG("You organize %d %s:", count,
-                            count > 1 ? "items" : "item");
+                py_actuate(&y, &x);
+                break;
+              case 'M':
+                py_where_on_map();
                 break;
               case 'R':
                 py_rest();
@@ -13629,7 +13635,7 @@ dungeon()
             default:
               break;
             case '=':
-              py_menu();
+              if (!KEYBOARD) py_menu();
               break;
             case '-':
               omit_replay = 1;
@@ -13663,15 +13669,15 @@ dungeon()
             case '>':
               go_down();
               break;
-            case 'A':
+            case 'a':
               // Generalized inventory interaction
               py_actuate(&y, &x);
               break;
-            case 'C':
+            case 'c':
               omit_replay = 1;
               show_character(0, 0);
               break;
-            case 'M':
+            case 'm':
               if (HACK) {
                 map_area();
                 for (int row = 1; row < MAX_HEIGHT; ++row) {
@@ -13691,7 +13697,7 @@ dungeon()
               if (maD[MA_BLIND] == 0) {
                 minimap_enlargeD = TRUE;
                 // TBD: text only for console mode?
-                CLOBBER_MSG("You check your map of the dungeon.");
+                CLOBBER_MSG("You check your dungeon map.");
                 minimap_enlargeD = FALSE;
               }
               break;

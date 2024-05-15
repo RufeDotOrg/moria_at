@@ -171,7 +171,7 @@ SDL_Event event;
       case SDLK_KP_PERIOD:
         return '.';
       case SDLK_KP_0:
-        return 'M';
+        return 'm';
     }
   }
   return 0;
@@ -345,15 +345,15 @@ fingerdown_xy_mode(x, y, mode)
           orientation_lock_toggle();
           return ' ';
         case TOUCH_STAT:
-          return 'C';
+          return 'c';
         case TOUCH_MAP:
-          return 'M';
+          return 'm';
         case TOUCH_VERSION:
           return 'v';
         case TOUCH_GAMEPLAY:
           return finger ? '-' : 'O';
         case TOUCH_LB:
-          return finger ? 'd' : 'A';
+          return finger ? 'd' : 'a';
         case TOUCH_RB:
           return finger ? CTRL('a') : '.';
         default:
@@ -395,7 +395,7 @@ fingerdown_xy_mode(x, y, mode)
   if (mode == 2) {
     if (touch == TOUCH_LB) return 'o';
     if (touch == TOUCH_RB) return ESCAPE;
-    if (touch == TOUCH_STAT) return 'C';
+    if (touch == TOUCH_STAT) return 'c';
     if (touch == TOUCH_HISTORY) return CTRL('p');
     if (touch) return ' ';
   }
