@@ -11055,17 +11055,16 @@ py_help()
   BufMsg(screen, "a: actuate inventory item");
   BufMsg(screen, "c: character screen");
   BufMsg(screen, "d: drop inventory or equipment");
-  BufMsg(screen, "R: Rest until healed");
   BufMsg(screen, "m: map dungeon");
   BufMsg(screen, "v: version info");
-  line += 1;
-  BufMsg(screen, "ESC: Game Menu");
-  BufMsg(screen, "+/-: zoom in/out");
-  BufMsg(screen, "!: repeat last spell/item");
   line += 1;
   BufMsg(screen, "CTRL-p: message history");
   BufMsg(screen, "CTRL-c: save and exit");
   BufMsg(screen, "CTRL-z: undo");
+  line += 1;
+  BufMsg(screen, "ESC: Game Menu");
+  BufMsg(screen, "+/-: zoom in/out");
+  BufMsg(screen, "!: repeat last spell/item");
 
   BufPad(screen, AL(screenD), 34);
 
@@ -11079,12 +11078,13 @@ py_help()
   if (KEYBOARD) {
     line += 1;
     BufMsg(screen, "KEYBOARD EXTRAS");
-    BufMsg(screen,
-           "f: force/bash chest/door/monster");  // deprecate or add mobile UI?
-    BufMsg(screen, "i: inventory sort");         // maybe '-' on actuate
+    // deprecate or add mobile UI?
+    // BufMsg(screen, "f: force/bash chest/door/monster");
+    BufMsg(screen, "i: inventory sort");            // maybe '-' on actuate
     BufMsg(screen, "w: weapon swap with offhand");  // handy
     BufMsg(screen, "x: examine objects/monsters");  // show look frame?
     BufMsg(screen, "M: Where on map");              // useful?
+    BufMsg(screen, "R: Rest until healed");         // handy
     BufMsg(screen, "S: Study an object");           // maybe SHIFT on actuate
   }
 
@@ -13600,9 +13600,9 @@ dungeon()
               case ESCAPE:
                 py_menu();
                 break;
-              case 'f':
-                py_bash(&y, &x);
-                break;
+              // case 'f':
+              //   py_bash(&y, &x);
+              //   break;
               case 'w':
                 py_offhand();
                 break;
