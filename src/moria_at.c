@@ -10898,31 +10898,6 @@ py_saveslot_select()
 
   return 0;
 }
-static void
-py_takeoff()
-{
-  char c;
-  int into;
-
-  if (py_inven_slot() == 0) {
-    msg_print("You don't have room in your inventory.");
-  } else if (equip_count() == 0) {
-    msg_print("You aren't wearing anything!");
-  } else {
-    inven_overlay(INVEN_EQUIP, MAX_INVEN);
-    if (in_subcommand("Take off which item?", &c)) {
-      uint8_t iidx = INVEN_EQUIP + (c - 'a');
-      if (iidx < MAX_INVEN) {
-        if (invenD[iidx]) {
-          into = inven_slot();
-          if (into >= 0) {
-            equip_swap_into(iidx, into);
-          }
-        }
-      }
-    }
-  }
-}
 static int
 py_grave()
 {
@@ -11061,50 +11036,43 @@ py_death()
 static int
 py_help()
 {
-  int line = 0;
+  int line = 1;
 
   screen_submodeD = 1;
-  BufMsg(screen, "c: close door/chest");
-  BufMsg(screen, "d: drop object");
-  BufMsg(screen, "e: equipment");
-  BufMsg(screen, "f: force/bash chest/door/monster");
-  BufMsg(screen, "i: inventory");
-  BufMsg(screen, "q: quaff potion");
-  BufMsg(screen, "r: read scroll");
-  BufMsg(screen, "o: open object");
-  BufMsg(screen, "s: search for traps/doors");
+  BufMsg(screen, "A: actuate inventory item");
+  BufMsg(screen, "C: character screen");
+  BufMsg(screen, "d: drop inventory or equipment");
+  BufMsg(screen, "R: Rest until healed");
+  BufMsg(screen, "M: map dungeon");
   BufMsg(screen, "v: version info");
-  BufMsg(screen, "w: wear object");
-  BufMsg(screen, "x: examine objects/monsters");
-  BufMsg(screen, "z: zap wand");
-  BufMsg(screen, "<: up stairs");
-  BufMsg(screen, ">: down stairs");
-  BufMsg(screen, "=: Advanced Game Actions");
-  BufMsg(screen, "+/-: Zoom in/out");
+  line += 1;
+  BufMsg(screen, "=: advanced Game Actions");
+  BufMsg(screen, "+/-: zoom in/out");
+  BufMsg(screen, "!: repeat last spell/item");
+  line += 1;
+  BufMsg(screen, "CTRL-p: message history");
+  BufMsg(screen, "CTRL-c: save and exit");
 
   BufPad(screen, AL(screenD), 34);
 
-  line = 0;
-  BufMsg(screen, "A: actuate inventory item");
-  BufMsg(screen, "C: character screen");
-  BufMsg(screen, "D: disarm trap");
-  BufMsg(screen, "E: eat object");
-  BufMsg(screen, "I: inventory sort");
-  BufMsg(screen, "M: map dungeon");
-  BufMsg(screen, "R: rest until healed");
-  BufMsg(screen, "S: study an object");
-  BufMsg(screen, "T: take off equipment");
-  BufMsg(screen, "W: where about the dungeon");
-  BufMsg(screen, "X: exchange primary weapon to offhand");
-  BufMsg(screen, "Z: staff invocation");
-  BufMsg(screen, "!: repeat (A)ctuate");
+  line = 1;
+  BufMsg(screen, ".: auto-command. One of the following:");
+  BufMsg(screen, "<: up stairs");
+  BufMsg(screen, ">: down stairs");
   BufMsg(screen, ",: pickup object");
-  BufMsg(screen, ".: auto-dungeon (stairs, pickup, enter shop or search)");
+  BufMsg(screen, "s: search for traps/doors");
 
-  line += 1;
-  BufMsg(screen, "CTRL-p: message history");
-  BufMsg(screen, "CTRL-x: save and exit");
-  BufMsg(screen, "CTRL-c: exit");
+  if (KEYBOARD) {
+    line += 1;
+    BufMsg(screen, "KEYBOARD EXTRAS");
+    BufMsg(screen, "f: force/bash chest/door/monster");
+    BufMsg(screen, "i/I: inventory sort");
+    BufMsg(screen, "x: examine objects/monsters");
+    BufMsg(screen, "S: Study an object");
+    BufMsg(screen, "W: Where about the dungeon");
+    BufMsg(screen, "X: eXchange primary weapon to offhand");
+  }
+
   return CLOBBER_MSG("? - help");
 }
 int inven_damage(typ, perc) int (*typ)();
@@ -11589,39 +11557,6 @@ mon_attack(midx)
     }
   }
 }
-static void
-close_object()
-{
-  int y, x, dir;
-  struct caveS* c_ptr;
-  struct objS* obj;
-
-  y = uD.y;
-  x = uD.x;
-  if (get_dir(0, &dir)) {
-    mmove(dir, &y, &x);
-    c_ptr = &caveD[y][x];
-    obj = &entity_objD[c_ptr->oidx];
-
-    if (obj->tval == TV_OPEN_DOOR) {
-      turn_flag = TRUE;
-      if (c_ptr->midx == 0) {
-        if (obj->p1 == 0) {
-          // invcopy(&t_list[c_ptr->tptr], OBJ_CLOSED_DOOR);
-          obj->tval = TV_CLOSED_DOOR;
-          obj->tchar = '+';
-          c_ptr->fval = FLOOR_OBST;
-        } else
-          msg_print("The door appears to be broken.");
-      } else {
-        // Costs a turn, otherwise can be abused for detection
-        msg_print("Something is in your way!");
-      }
-    } else {
-      msg_print("You do not see anything you can close there.");
-    }
-  }
-}
 void
 chest_trap(y, x)
 {
@@ -11712,42 +11647,6 @@ try_disarm_chest(y, x)
       py_experience();
     } else {
       msg_print("You failed to disarm the chest.");
-    }
-  }
-}
-static void py_disarm(uy, ux) int *uy, *ux;
-{
-  int y, x, dir;
-  struct caveS* c_ptr;
-  struct objS* obj;
-
-  y = *uy;
-  x = *ux;
-  if (countD.confusion) {
-    msg_print("You are too confused to disarm.");
-  } else if (get_dir(0, &dir)) {
-    mmove(dir, &y, &x);
-    c_ptr = &caveD[y][x];
-    obj = &entity_objD[c_ptr->oidx];
-
-    if (obj->tval != TV_VIS_TRAP && obj->tval != TV_CHEST) {
-      msg_print("You do not see anything to disarm there.");
-    }
-    if (c_ptr->midx) {
-      // Prevent invis-detection via disarm: no free turn
-      msg_print("Something is in your way!");
-    } else if (obj->tval == TV_VIS_TRAP) {
-      *uy = y;
-      *ux = x;
-    } else if (obj->tval == TV_CHEST) {
-      if ((obj->idflag & ID_REVEAL) == 0)
-        msg_print("You don't see a trap on the chest.");
-      else if ((obj->flags & CH_TRAPPED) == 0)
-        msg_print("The chest is not trapped.");
-      else {
-        *uy = y;
-        *ux = x;
-      }
     }
   }
 }
@@ -13689,55 +13588,13 @@ dungeon()
               case 'X':
                 py_offhand();
                 break;
-              case 'Z':
-                iidx = inven_choice("Invoke which staff?", "*");
-                if (iidx >= 0) inven_try_staff(iidx, &y, &x);
-                break;
-              case 'c':
-                close_object();
-                break;
-              case 'e': {
-                int count = inven_overlay(INVEN_EQUIP, MAX_INVEN);
-                CLOBBER_MSG("You wear %d %s.", count,
-                            count > 1 ? "items" : "item");
-              } break;
               case 'f':
                 py_bash(&y, &x);
-                break;
-              case 'i': {
-                int count = inven_overlay(0, INVEN_EQUIP);
-                CLOBBER_MSG("You carry %d %s:", count,
-                            count > 1 ? "items" : "item");
-              } break;
-              case 'q':
-                iidx = inven_choice("Quaff what?", "*");
-                if (iidx >= 0) inven_quaff(iidx);
-                break;
-              case 'r':
-                iidx = inven_choice("Read what?", "*");
-                if (iidx >= 0) inven_read(iidx, &y, &x);
-                break;
-              case 'o':
-                py_open();
-                break;
-              case 'w':
-                iidx = inven_choice("Wear/Wield which item?", "*");
-                if (iidx >= 0 && iidx < INVEN_EQUIP) inven_wear(iidx);
                 break;
               case 'x':
                 py_examine();
                 break;
-              case 'z':
-                iidx = inven_choice("Aim which wand?", "*");
-                if (iidx >= 0) py_zap(iidx);
-                break;
-              case 'D':
-                py_disarm(&y, &x);
-                break;
-              case 'E':
-                iidx = inven_choice("Eat what?", "*");
-                if (iidx >= 0) inven_eat(iidx);
-                break;
+              case 'i':
               case 'I':
                 inven_sort();
                 int count = inven_overlay(0, INVEN_EQUIP);
@@ -13750,9 +13607,6 @@ dungeon()
               case 'S':
                 iidx = inven_choice("Study which item?", "*/");
                 if (iidx >= 0) obj_study(obj_get(invenD[iidx]), 0);
-                break;
-              case 'T':
-                py_takeoff();
                 break;
             }
           }
@@ -13836,10 +13690,8 @@ dungeon()
               int tx = MAX(uD.x - cellw / 2, panelD.panel_col_min);
               py_look(ylookD + ty, xlookD + tx);
             } break;
-            case CTRL('x'):
-              platformD.savemidpoint();
-              // fallthru
             case CTRL('c'):
+              platformD.savemidpoint();
               memcpy(death_descD, AP(quit_stringD));
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game
@@ -13929,11 +13781,10 @@ dungeon()
                 msg_print("The air about you becomes charged.");
                 ma_duration(MA_RECALL, 1);
               } break;
-              case CTRL('z'): {
-                dun_level += 1;
-                uD.new_level_flag = NL_DOWN_STAIR;
-                turn_flag = TRUE;
-              } break;
+              case CTRL('x'):
+                memcpy(death_descD, AP(quit_stringD));
+                uD.new_level_flag = NL_DEATH;
+                return;  // Interrupt game
             }
           }
         }
