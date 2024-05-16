@@ -436,6 +436,13 @@ msg_pause()
   }
 }
 
+// Use before CLOBBER_MSG macro
+// Adds right-justified text to the title text
+static void msg_hint(hint, hintlen) char* hint;
+{
+  char* msg_end = AS(msg_cqD, msg_writeD) + STRLEN_MSG;
+  memcpy(msg_end - hintlen - 1, hint, hintlen);
+}
 static void msg_game(msg, msglen) char* msg;
 {
   char* log;
@@ -3643,8 +3650,6 @@ cave_gen()
         }
         k++;
       }
-  // MSG("feet %d room: %d (type1: %d type2: %d)", dun_level * 50, k, pick1,
-  // pick2);
 
   doorindex = 0;
   for (j = 0; j < k; j++) {
@@ -8623,7 +8628,7 @@ inven_choice(char* prompt, char* mode_list)
         break;
     }
 
-    // TBD: Console Append (mode_list[1] ? "(/ equip, * inven, - sort)" : "")
+    if (PC) msg_hint(AP("(/ equip, * inven, - sort, SHIFT: study)"));
     snprintf(subprompt, AL(subprompt), "%s: %s", prefix, prompt);
     inven_overlay(begin, end);
 
@@ -10632,7 +10637,7 @@ show_character(narrow, is_reroll)
     }
   }
 
-  // PC_MSG("(SPACEBAR: reroll / ESCAPE: accept)");
+  if (PC) msg_hint(AP("(SPACEBAR: reroll / ESCAPE: accept)"));
   return CLOBBER_MSG("Name: %-16.16s", heronameD);
 }
 
@@ -10776,7 +10781,6 @@ py_saveslot_select()
     iidx = -1;
     line = 0;
     overlay_submodeD = using_external ? 'E' : 'I';
-    char* pc_text = PC ? " (SHIFT: delete)" : "";
     char* media = using_external ? "External" : "Internal";
     char* other_media = using_external ? "Internal" : "External";
     struct summaryS* summary = using_external ? ex_summary : in_summary;
@@ -10809,7 +10813,8 @@ py_saveslot_select()
       BufMsg(overlay, "v) View %s media", other_media);
     }
 
-    c = CLOBBER_MSG("%s Media Archive: Play which class?%s", media, pc_text);
+    if (PC) msg_hint(AP(" (SHIFT: delete character)"));
+    c = CLOBBER_MSG("%s Media Archive: Play which class?", media);
     // Deletion
     if (c == ESCAPE) {
       int srow, scol;
@@ -10915,7 +10920,8 @@ py_grave()
       col += 1;
     }
   }
-  return CLOBBER_MSG("Killed by %s. (CTRL-P log) (C/o/v/ESC)", death_descD);
+  if (PC) msg_hint(AP("(CTRL-P log) (c/o/v/ESC)"));
+  return CLOBBER_MSG("Killed by %s.", death_descD);
 }
 static void
 show_all_inven()
@@ -11032,8 +11038,7 @@ py_death()
         c = show_character(1, 0);
       } else if (c == 'o') {
         // Observe game state at time of death
-        draw(WAIT_NONE);
-        c = read_input();
+        c = draw(WAIT_ANY);
       } else if (c == 'v') {
         c = show_version();
       } else {
@@ -13691,7 +13696,6 @@ dungeon()
               }
               if (maD[MA_BLIND] == 0) {
                 minimap_enlargeD = TRUE;
-                // TBD: text only for console mode?
                 CLOBBER_MSG("You check your dungeon map.");
                 minimap_enlargeD = FALSE;
               }
