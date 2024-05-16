@@ -8628,7 +8628,10 @@ inven_choice(char* prompt, char* mode_list)
         break;
     }
 
-    if (PC) msg_hint(AP("(/ equip, * inven, - sort, SHIFT: study)"));
+    if (PC)
+      msg_hint(AP("(/ equip, * inven, - sort, SHIFT: study)"));
+    else
+      msg_hint(AP("(LEFT: inventory | RIGHT: equipment"));
     snprintf(subprompt, AL(subprompt), "%s: %s", prefix, prompt);
     inven_overlay(begin, end);
 
@@ -10637,7 +10640,10 @@ show_character(narrow, is_reroll)
     }
   }
 
-  if (PC) msg_hint(AP("(SPACEBAR: reroll / ESCAPE: accept)"));
+  if (PC)
+    msg_hint(AP("(SPACEBAR: reroll, ESCAPE: accept)"));
+  else
+    msg_hint(AP("(RED: reroll | GREEN: accept)"));
   return CLOBBER_MSG("Name: %-16.16s", heronameD);
 }
 
@@ -10813,7 +10819,10 @@ py_saveslot_select()
       BufMsg(overlay, "v) View %s media", other_media);
     }
 
-    if (PC) msg_hint(AP(" (SHIFT: delete character)"));
+    if (PC)
+      msg_hint(AP(" (SHIFT: delete character)"));
+    else
+      msg_hint(AP("(RED: delete | GREEN: play)"));
     c = CLOBBER_MSG("%s Media Archive: Play which class?", media);
     // Deletion
     if (c == ESCAPE) {
