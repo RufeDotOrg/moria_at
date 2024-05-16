@@ -17,7 +17,8 @@ enum { COLOR = 0 };
 #include "treasure.c"
 #include "wall.c"
 
-enum { UITEST = 0 };
+enum { TEST_UI = 0 };
+enum { TEST_REPLAY = 0 };
 
 enum { PADSIZE = (26 + 2) * 16 };
 enum { AFF_X = 3 };
@@ -701,7 +702,7 @@ vitalstat_text()
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
         int idx = AL(affstr) * it + jt;
-        if (UITEST) {
+        if (TEST_UI) {
           affstr[jt] = affectD[idx][0];
         } else if (active_affectD[idx])
           affstr[jt] = affectD[idx][active_affectD[idx] - 1];
@@ -754,11 +755,22 @@ common_text()
       len = snprintf(tmp, AL(tmp), "%s", dun_descD);
       p.x -= (len * FWIDTH) / 2;
       render_monofont_string(renderer, &fontD, tmp, len, p);
+
+      if (PC && TEST_REPLAY) {
+        p.x = grect.x + FWIDTH / 2;
+        p.y += FHEIGHT;
+        len = snprintf(tmp, AL(tmp), "Replay ActionID: %d", input_action_usedD);
+        render_monofont_string(renderer, &fontD, tmp, len, p);
+
+        p.y += FHEIGHT;
+        len = snprintf(tmp, AL(tmp), "Replay InputID: %d", input_record_readD);
+        render_monofont_string(renderer, &fontD, tmp, len, p);
+      }
     }
   }
 
   if (TOUCH) {
-    if (msg_moreD || UITEST) {
+    if (msg_moreD || TEST_UI) {
       static int tapD;
       tapD = (tapD + 1) % 4;
       switch (tapD) {
@@ -810,7 +822,7 @@ portrait_text(mode)
       alpha = 150;
     }
 
-    if (UITEST) {
+    if (TEST_UI) {
       SDL_Rect msg_target = {p.x, p.y, msg_widthD * FWIDTH,
                              FHEIGHT + FHEIGHT / 8};
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -827,7 +839,7 @@ portrait_text(mode)
       font_reset();
     }
 
-    if (msg_more || UITEST) {
+    if (msg_more || TEST_UI) {
       SDL_Rect r = {
           grect.x + grect.w - STRLEN_MORE * FWIDTH - FWIDTH / 2,
           grect.y + grect.h - FHEIGHT - FHEIGHT / 2,
@@ -880,7 +892,7 @@ landscape_text(mode)
         (1 + msg_used) * FWIDTH,
         FHEIGHT,
     };
-    if (UITEST) {
+    if (TEST_UI) {
       SDL_Rect text_target = {
           layout_rect.w / 2 - (msg_widthD * FWIDTH / 2) - FWIDTH / 2,
           p.y,
@@ -900,7 +912,7 @@ landscape_text(mode)
       rect_frame(rect, 1);
     }
 
-    if (msg_more || UITEST) {
+    if (msg_more || TEST_UI) {
       int wlimit = msg_widthD * FWIDTH;
       int mlimit = STRLEN_MORE * FWIDTH;
       int margin = (layout_rect.w - wlimit - mlimit) / 4;

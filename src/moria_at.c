@@ -80,8 +80,12 @@ game_input()
     c = AS(input_recordD, input_record_readD++);
   } else {
     c = read_input();
-    AS(input_recordD, input_record_writeD++) = c;
-    input_record_readD += 1;
+
+    // Ignore redraw (system generated input)
+    if (c != CTRL('d')) {
+      AS(input_recordD, input_record_writeD++) = c;
+      input_record_readD += 1;
+    }
   }
 
   return c;
