@@ -11084,6 +11084,10 @@ py_help()
   BufMsg(screen, "+/-: zoom in/out");
   BufMsg(screen, "!: repeat last spell/item");
 
+  line += 1;
+  BufMsg(screen, "SHIFT: non-combat run & dig");
+  BufMsg(screen, "hljk: movement & combat");
+
   BufPad(screen, AL(screenD), 34);
 
   line = 1;
@@ -11098,12 +11102,20 @@ py_help()
     BufMsg(screen, "KEYBOARD EXTRAS");
     // deprecate or add mobile UI?
     // BufMsg(screen, "f: force/bash chest/door/monster");
-    BufMsg(screen, "i: inventory sort");            // maybe '-' on actuate
-    BufMsg(screen, "w: weapon swap with offhand");  // handy
-    BufMsg(screen, "x: examine objects/monsters");  // show look frame?
-    BufMsg(screen, "M: Where on map");              // useful?
-    BufMsg(screen, "R: Rest until healed");         // handy
-    BufMsg(screen, "S: Study an object");           // maybe SHIFT on actuate
+    BufMsg(screen, "  i: inventory sort");            // maybe '-' on actuate
+    BufMsg(screen, "  w: weapon swap with offhand");  // handy
+    BufMsg(screen, "  x: examine objects/monsters");  // show look frame?
+    BufMsg(screen, "  M: Map scan mode");             // useful?
+    BufMsg(screen, "  R: Rest until healed");         // handy
+    BufMsg(screen, "  S: Study an object");           // maybe SHIFT on actuate
+                                                      //
+    line += 1;
+    BufMsg(screen, "NUMPAD");
+    BufMsg(screen, "  2468: movement & combat");
+    BufMsg(screen, "  0: alias to minimap");
+    BufMsg(screen, "  .: alias to zoom");
+    BufMsg(screen, "  enter: alias to spacebar");
+    BufMsg(screen, "  +/-: alias to zoom");
   }
 
   return CLOBBER_MSG("? - help");
