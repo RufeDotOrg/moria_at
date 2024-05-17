@@ -18,9 +18,10 @@ struct NtModuleInfo {
   void* EntryPoint;
 };
 
-uint32_t __attribute__((__ms_abi__)) (*GetModuleInformation)(int64_t, int64_t,
-                                                             void*, uint32_t);
-uint16_t
+static uint32_t
+    __attribute__((__ms_abi__)) (*GetModuleInformation)(int64_t, int64_t, void*,
+                                                        uint32_t);
+static uint16_t
     __attribute__((__ms_abi__)) (*RtlCaptureStackBackTrace)(uint32_t, uint32_t,
                                                             void*, uint32_t*);
 
@@ -63,15 +64,15 @@ CustomCrashReport(ucontext_t* ctx)
   if (ctx) {
     pc = ctx->uc_mcontext.PC;
     if (pc > UINT32_MAX) {
-      kprintf("Foreign code backtrace:\n");
-      enum { STACK_MAX = 64 };
-      void* stack[STACK_MAX];
-      uint32_t hash;
-      int stack_count = RtlCaptureStackBackTrace(0, STACK_MAX, stack, &hash);
-      for (int it = 0; it < stack_count; ++it) {
-        kprintf(" %p\n", stack[it]);
-      }
-      kprintf("Hash: 0x%x stack_count %d\n", hash, stack_count);
+      // kprintf("Foreign code backtrace:\n");
+      // enum { STACK_MAX = 64 };
+      // void* stack[STACK_MAX];
+      // uint32_t hash;
+      // int stack_count = RtlCaptureStackBackTrace(0, STACK_MAX, stack, &hash);
+      // for (int it = 0; it < stack_count; ++it) {
+      //   kprintf(" %p\n", stack[it]);
+      // }
+      // kprintf("Hash: 0x%x stack_count %d\n", hash, stack_count);
     }
   }
 
@@ -128,8 +129,9 @@ crash_init()
     void* psapi = cosmo_dlopen("psapi.dll", RTLD_LAZY);
     GetModuleInformation = cosmo_dlsym(psapi, "GetModuleInformation");
 
-    void* ntdll = cosmo_dlopen("ntdll.dll", RTLD_LAZY);
-    RtlCaptureStackBackTrace = cosmo_dlsym(ntdll, "RtlCaptureStackBackTrace");
+    // void* ntdll = cosmo_dlopen("ntdll.dll", RTLD_LAZY);
+    // RtlCaptureStackBackTrace = cosmo_dlsym(ntdll,
+    // "RtlCaptureStackBackTrace");
   }
 
   InstallCrashHandler(SIGQUIT, 0);
