@@ -13725,15 +13725,17 @@ dungeon()
                 minimap_enlargeD = FALSE;
               }
               break;
-            case 'O': {
-              omit_replay = 1;
-              int zoom_factor = globalD.zoom_factor;
-              int cellh = SYMMAP_HEIGHT >> zoom_factor;
-              int cellw = SYMMAP_WIDTH >> zoom_factor;
-              int ty = MAX(uD.y - cellh / 2, panelD.panel_row_min);
-              int tx = MAX(uD.x - cellw / 2, panelD.panel_col_min);
-              py_look(ylookD + ty, xlookD + tx);
-            } break;
+            case 'O':
+              if (!KEYBOARD) {
+                omit_replay = 1;
+                int zoom_factor = globalD.zoom_factor;
+                int cellh = SYMMAP_HEIGHT >> zoom_factor;
+                int cellw = SYMMAP_WIDTH >> zoom_factor;
+                int ty = MAX(uD.y - cellh / 2, panelD.panel_row_min);
+                int tx = MAX(uD.x - cellw / 2, panelD.panel_col_min);
+                py_look(ylookD + ty, xlookD + tx);
+              }
+              break;
             case CTRL('c'):
               platformD.savemidpoint();
               memcpy(death_descD, AP(quit_stringD));
