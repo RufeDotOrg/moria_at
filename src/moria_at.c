@@ -14100,6 +14100,16 @@ enable_windows_gui()
 {
   printf("%p GetMessage()\n", (fn)GetMessage);
 }
+static void
+enable_windows_console()
+{
+  if (IsWindows() && AllocConsole()) {
+    close(0);
+    close(1);
+    open("/dev/tty", O_RDWR);
+    dup(0);
+  }
+}
 
 void*
 cosmo_loadso(char* name)
@@ -14122,12 +14132,16 @@ cosmo_init(int argc, char** argv)
 {
   int opt = 0;
   while (opt != -1) {
-    opt = getopt(argc, argv, "h?");
+    opt = getopt(argc, argv, "ch?");
     switch (opt) {
+      case 'c':
+        if (GUI) enable_windows_console();
+        break;
       case '?':
       case 'h':
         printf(
-            "%s [-h]\n"
+            "%s [-ch]\n"
+            "c: console enabled on Windows\n"
             "h: help\n",
             GetProgramExecutableName());
         exit(1);
