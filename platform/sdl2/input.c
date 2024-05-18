@@ -31,7 +31,6 @@ enum { MAX_BUTTON = 2 };
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 DATA SDL_Rect grectD[GR_COUNT];
-DATA int xD;
 DATA uint8_t finger_countD;
 DATA int last_pressD;
 DATA int quitD;
@@ -85,15 +84,6 @@ sym_shift(char c)
   return c;
 }
 static char
-dir_by_scancode(sym)
-{
-  switch (sym) {
-    case SDLK_KP_1 ... SDLK_KP_9:
-      return 1 + (sym - SDLK_KP_1);
-  }
-  return -1;
-}
-static char
 char_by_dir(dir)
 {
   switch (dir) {
@@ -119,6 +109,27 @@ char_by_dir(dir)
       return ' ';
   }
 }
+static char
+gamesym_by_scancode(code, shiftbit)
+{
+  switch (code) {
+    case SDL_SCANCODE_KP_1 ... SDL_SCANCODE_KP_9: {
+      int dir = 1 + (code - SDL_SCANCODE_KP_1);
+      return char_by_dir(dir) ^ shiftbit;
+    }
+    case SDL_SCANCODE_KP_0:
+      return 'm';
+    case SDL_SCANCODE_KP_ENTER:
+      return ' ';
+    case SDL_SCANCODE_KP_PLUS:
+      return '+';
+    case SDL_SCANCODE_KP_MINUS:
+      return '-';
+    case SDL_SCANCODE_KP_PERIOD:
+      return '.';
+  }
+  return 0;
+}
 
 static int
 nearest_pp(y, x)
@@ -142,14 +153,13 @@ nearest_pp(y, x)
 }
 
 int
-sdl_kb_event(event)
+sdl_keyboard_event(event)
 SDL_Event event;
 {
   SDL_Keymod km = SDL_GetModState();
   int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
 
   if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
-    // if (event.key.keysym.sym == ' ') xD = (xD + 1) % 8;
     if (isalpha(event.key.keysym.sym)) {
       if (km & KMOD_CTRL)
         return CTRL(event.key.keysym.sym);
@@ -159,20 +169,7 @@ SDL_Event event;
       return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
     }
   } else if (modeD == 0) {
-    int dir = dir_by_scancode(event.key.keysym.sym);
-    if (dir > 0) return char_by_dir(dir) ^ shift;
-    switch (event.key.keysym.sym) {
-      case SDLK_KP_ENTER:
-        return ' ';
-      case SDLK_KP_PLUS:
-        return '+';
-      case SDLK_KP_MINUS:
-        return '-';
-      case SDLK_KP_PERIOD:
-        return '.';
-      case SDLK_KP_0:
-        return 'm';
-    }
+    return gamesym_by_scancode(event.key.keysym.scancode, shift);
   }
   return 0;
 }
@@ -426,7 +423,7 @@ sdl_pump()
       finger_countD -= 1;
       if (fastplay) ret = ' ';
     } else if (KEYBOARD && (event.type == SDL_KEYDOWN)) {
-      ret = sdl_kb_event(event);
+      ret = sdl_keyboard_event(event);
     } else if (event.type == SDL_QUIT) {
       quitD = TRUE;
     } else if (event.type == SDL_WINDOWEVENT) {
