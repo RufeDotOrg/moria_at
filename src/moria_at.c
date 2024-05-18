@@ -13982,8 +13982,11 @@ obj_level_init()
 int
 global_init()
 {
+  FT(platform);
   globalD.saveslot_class = -1;
   globalD.zoom_factor = PC ? 0 : 2;
+
+  msg_widthD = overlay_widthD = 80;
 }
 
 #include "platform/platform.c"
@@ -14198,6 +14201,7 @@ cosmo_init(int argc, char** argv)
   }
 
   global_init();
+  platformD.seed = vptr(rdseed);
 }
 #define global_init cosmo_init
 #endif

@@ -449,14 +449,11 @@ platform_postgame(may_exit)
 static int
 platform_init()
 {
-  FT(platform);
   platformD.pregame = platform_pregame;
   platformD.postgame = platform_postgame;
   platformD.draw = platform_draw;
   platformD.orientation = platform_orientation;
-  platformD.seed = platform_random;
-
-  msg_widthD = overlay_widthD = 80;
+  if (platformD.seed == noop) platformD.seed = platform_random;
 
   return 0;
 }
