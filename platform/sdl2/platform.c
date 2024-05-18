@@ -22,7 +22,7 @@
 #define Log SDL_Log
 
 #ifdef __FATCOSMOCC__
-enum { GUI = 0 };
+enum { GUI = 1 };
 #include <cosmo.h>
 #include <dlfcn.h>
 #include <libc/nt/dll.h>  // SDL OverrideSO

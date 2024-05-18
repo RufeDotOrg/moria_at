@@ -14169,6 +14169,9 @@ cosmo_init(int argc, char** argv)
   printf("setenv LD_LIBRARY_PATH: %s\n", path);
   setenv("LD_LIBRARY_PATH", path, 1);
 
+  printf("setenv KPRINTF_LOG (non-override)\n");
+  setenv("KPRINTF_LOG", "crash.txt", 0);
+
   // Cosmo does not re-init dlopen-helper on an environment change
   libD = load_lib();
   printf("%p libD\n", libD);
