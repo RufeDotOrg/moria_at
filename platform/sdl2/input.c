@@ -112,21 +112,35 @@ char_by_dir(dir)
 static char
 gamesym_by_scancode(code, shiftbit)
 {
-  switch (code) {
-    case SDL_SCANCODE_KP_1 ... SDL_SCANCODE_KP_9: {
-      int dir = 1 + (code - SDL_SCANCODE_KP_1);
-      return char_by_dir(dir) ^ shiftbit;
+  USE(mode);
+  if (mode == 0) {
+    switch (code) {
+      case SDL_SCANCODE_KP_1 ... SDL_SCANCODE_KP_9: {
+        int dir = 1 + (code - SDL_SCANCODE_KP_1);
+        return char_by_dir(dir) ^ shiftbit;
+      }
+      case SDL_SCANCODE_KP_0:
+        return 'm';
+      case SDL_SCANCODE_KP_ENTER:
+        return ' ';
+      case SDL_SCANCODE_KP_PLUS:
+        return '+';
+      case SDL_SCANCODE_KP_MINUS:
+        return '-';
+      case SDL_SCANCODE_KP_PERIOD:
+        return '.';
     }
-    case SDL_SCANCODE_KP_0:
-      return 'm';
-    case SDL_SCANCODE_KP_ENTER:
-      return ' ';
-    case SDL_SCANCODE_KP_PLUS:
-      return '+';
-    case SDL_SCANCODE_KP_MINUS:
-      return '-';
-    case SDL_SCANCODE_KP_PERIOD:
-      return '.';
+  }
+
+  if (mode > 0) {
+    switch (code) {
+      case SDL_SCANCODE_KP_MINUS:
+        return '-';
+      case SDL_SCANCODE_KP_MULTIPLY:
+        return '*';
+      case SDL_SCANCODE_KP_DIVIDE:
+        return '/';
+    }
   }
   return 0;
 }
@@ -156,19 +170,22 @@ int
 sdl_keyboard_event(event)
 SDL_Event event;
 {
-  SDL_Keymod km = SDL_GetModState();
-  int shift = (km & KMOD_SHIFT) != 0 ? 0x20 : 0;
+  int mod = event.key.keysym.mod;
+  int shift = (mod & KMOD_SHIFT) != 0 ? 0x20 : 0;
 
   if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
     if (isalpha(event.key.keysym.sym)) {
-      if (km & KMOD_CTRL)
+      int ctrl = (mod & KMOD_CTRL);
+      if (ctrl)
         return CTRL(event.key.keysym.sym);
       else
         return event.key.keysym.sym ^ shift;
     } else {
       return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
     }
-  } else if (modeD == 0) {
+  } else {
+    if (mod & KMOD_NUM) return 0;
+
     return gamesym_by_scancode(event.key.keysym.scancode, shift);
   }
   return 0;

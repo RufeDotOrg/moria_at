@@ -11110,7 +11110,7 @@ py_help()
     BufMsg(screen, "  S: Study an object");           // maybe SHIFT on actuate
                                                       //
     line += 1;
-    BufMsg(screen, "NUMPAD");
+    BufMsg(screen, "NUMPAD (Numlock OFF)");
     BufMsg(screen, "  2468: movement & combat");
     BufMsg(screen, "  0: alias to minimap");
     BufMsg(screen, "  .: alias to zoom");
