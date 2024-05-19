@@ -14132,16 +14132,20 @@ cosmo_init(int argc, char** argv)
 {
   int opt = 0;
   while (opt != -1) {
-    opt = getopt(argc, argv, "ch?");
+    opt = getopt(argc, argv, "lch?");
     switch (opt) {
       case 'c':
         if (GUI) enable_windows_console();
         break;
+      case 'l':
+        freopen("log.txt", "wb", stdout);
+        break;
       case '?':
       case 'h':
         printf(
-            "%s [-ch]\n"
+            "%s [-clh]\n"
             "c: console enabled on Windows\n"
+            "l: write stdout to log.txt\n"
             "h: help\n",
             GetProgramExecutableName());
         exit(1);
