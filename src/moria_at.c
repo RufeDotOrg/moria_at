@@ -11971,9 +11971,9 @@ py_monlook_dir(dir)
       if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
         seen += 1;
         mon_desc(it_index);
+        if (mon->msleep) msg_hint(AP("(sleeping)"));
         // hack: mon death_descD pronoun is a/an
-        MSG("You see %s.%s", death_descD, mon->msleep ? " (asleep)" : "");
-        msg_pause();
+        CLOBBER_MSG("You see %s.", death_descD);
       }
     }
   });
@@ -11998,8 +11998,7 @@ py_objlook_dir(dir)
           los(y, x, obj->fy, obj->fx)) {
         seen += 1;
         obj_desc(obj, obj->number);
-        MSG("You see %s.", descD);
-        msg_pause();
+        CLOBBER_MSG("You see %s.", descD);
       }
     }
   });
