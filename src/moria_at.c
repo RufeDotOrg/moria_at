@@ -14111,22 +14111,6 @@ enable_windows_console()
   }
 }
 
-void*
-cosmo_loadso(char* name)
-{
-  int64_t hlib = LoadLibraryA(name);
-  printf("cosmo_loadso %s %llx\n", name, hlib);
-  return (void*)hlib;
-}
-void*
-cosmo_loadsym(void* handle, const char* name)
-{
-  void* ret;
-  ret = GetProcAddress((int64_t)handle, name);
-  printf("%p %s: %p\n", handle, name, ret);
-  return ret;
-}
-
 int
 cosmo_init(int argc, char** argv)
 {
@@ -14209,13 +14193,6 @@ cosmo_init(int argc, char** argv)
     printf("SDL_SetError() test\n");
     SDL_SetError("%s error codepath", GetProgramExecutableName());
     printf("%s\n", SDL_GetError());
-  }
-
-  if (IsWindows()) {
-    printf("Enabling cosmo_loadso Override for SDL2\n");
-    void __attribute__((__ms_abi__)) (*override)(void*, void*) =
-        cosmo_dlsym(libD, "SDL_OverrideSo");
-    override(NT2SYSV(cosmo_loadso), NT2SYSV(cosmo_loadsym));
   }
 
   global_init();
