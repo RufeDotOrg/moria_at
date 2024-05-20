@@ -444,7 +444,7 @@ msg_pause()
 // Adds right-justified text to the title text
 static void msg_hint(hint, hintlen) char* hint;
 {
-  char* msg_end = AS(msg_cqD, msg_writeD) + STRLEN_MSG;
+  char* msg_end = AS(msg_cqD, msg_writeD) + overlay_widthD;
   memcpy(msg_end - hintlen - 1, hint, hintlen);
 }
 static void msg_game(msg, msglen) char* msg;
@@ -8635,7 +8635,7 @@ inven_choice(char* prompt, char* mode_list)
     if (PC)
       msg_hint(AP("(/ equip, * inven, - sort, SHIFT: study)"));
     else
-      msg_hint(AP("(LEFT: inventory | RIGHT: equipment"));
+      msg_hint(AP("(LEFT: inventory | RIGHT: equipment)"));
     snprintf(subprompt, AL(subprompt), "%s: %s", prefix, prompt);
     inven_overlay(begin, end);
 
