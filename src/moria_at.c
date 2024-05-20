@@ -11102,7 +11102,7 @@ py_help()
     BufMsg(screen, "KEYBOARD EXTRAS");
     // deprecate or add mobile UI?
     // BufMsg(screen, "f: force/bash chest/door/monster");
-    BufMsg(screen, "  i: inventory sort");            // maybe '-' on actuate
+    BufMsg(screen, "  i/e: inventory/equipment actuate");
     BufMsg(screen, "  w: weapon swap with offhand");  // handy
     BufMsg(screen, "  x: examine objects/monsters");  // show look frame?
     BufMsg(screen, "  M: Map scan mode");             // useful?
@@ -13292,11 +13292,11 @@ void py_reactuate(y_ptr, x_ptr, obj_id) int *y_ptr, *x_ptr;
   }
   msg_print("Unable to repeat command.");
 }
-void py_actuate(y_ptr, x_ptr) int *y_ptr, *x_ptr;
+void py_actuate(y_ptr, x_ptr, submode) int *y_ptr, *x_ptr;
 {
   int iidx;
 
-  overlay_submodeD = 'i';
+  overlay_submodeD = submode;
   do {
     msg_pause();
     iidx =
@@ -13633,6 +13633,9 @@ dungeon()
               // case 'f':
               //   py_bash(&y, &x);
               //   break;
+              case 'e':
+                py_actuate(&y, &x, 'e');
+                break;
               case 'w':
                 py_offhand();
                 break;
@@ -13640,8 +13643,7 @@ dungeon()
                 py_examine();
                 break;
               case 'i':
-                inven_sort();
-                py_actuate(&y, &x);
+                py_actuate(&y, &x, 'i');
                 break;
               case 'M':
                 py_where_on_map();
@@ -13696,7 +13698,7 @@ dungeon()
               break;
             case 'a':
               // Generalized inventory interaction
-              py_actuate(&y, &x);
+              py_actuate(&y, &x, 'i');
               break;
             case 'c':
               omit_replay = 1;
