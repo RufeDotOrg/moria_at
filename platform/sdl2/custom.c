@@ -1160,6 +1160,15 @@ SDL_Rect* zoom_prect;
   SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
   SDL_RenderDrawRect(rendererD, zoom_prect);
 
+  if (ylookD >= 0 && xlookD >= 0) {
+    SDL_Rect look_rect;
+    look_rect.x = (zx + xlookD) * ART_W;
+    look_rect.y = (zy + ylookD) * ART_H;
+    look_rect.w = ART_W;
+    look_rect.h = ART_H;
+    SDL_RenderDrawRect(rendererD, &look_rect);
+  }
+
   SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
   SDL_SetRenderTarget(rendererD, layoutD);
   return 0;

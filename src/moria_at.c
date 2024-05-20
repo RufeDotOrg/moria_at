@@ -417,6 +417,7 @@ draw(wait)
   // Overlay information is reset
   AC(screen_usedD);
   AC(overlay_usedD);
+  ylookD = xlookD = -1;
 
   if (wait >= 0) msg_advance();
   memset(AS(msg_cqD, msg_writeD), WHITESPACE, STRLEN_MSG + 1);
