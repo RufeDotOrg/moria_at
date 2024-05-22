@@ -11960,26 +11960,37 @@ int
 py_monlook_dir(dir)
 {
   int y, x, oy, ox, ly, lx, seen;
+
   seen = 0;
   y = uD.y;
   x = uD.x;
   ly = dir_y(dir);
   lx = dir_x(dir);
-  FOR_EACH(mon, {
-    if (mon->mlit && distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) {
-      oy = (ly != 0) * (-((mon->fy - y) < 0) + ((mon->fy - y) > 0));
-      ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
-      if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
-        seen += 1;
-        ylookD = mon->fy;
-        xlookD = mon->fx;
-        mon_desc(it_index);
-        if (mon->msleep) msg_hint(AP("(sleeping)"));
-        // hack: mon death_descD pronoun is a/an
-        CLOBBER_MSG("You see %s.", death_descD);
+
+  rect_t zr;
+  zoom_rect(&zr);
+
+  point_t limit = {zr.x + zr.w, zr.y + zr.h};
+  for (int row = zr.y; row < limit.y; ++row) {
+    for (int col = zr.x; col < limit.x; ++col) {
+      struct caveS* c_ptr = &caveD[row][col];
+      struct monS* mon = &entity_monD[c_ptr->midx];
+      if (mon->mlit) {
+        oy = (ly != 0) * (-((mon->fy - y) < 0) + ((mon->fy - y) > 0));
+        ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
+        if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
+          seen += 1;
+          ylookD = mon->fy;
+          xlookD = mon->fx;
+          mon_desc(c_ptr->midx);
+          if (mon->msleep) msg_hint(AP("(sleeping)"));
+          // hack: mon death_descD pronoun is a/an
+          death_descD[0] |= 0x20;
+          CLOBBER_MSG("You see %s.", death_descD);
+        }
       }
     }
-  });
+  }
   return seen;
 }
 int
@@ -11991,10 +12002,15 @@ py_objlook_dir(dir)
   x = uD.x;
   ly = dir_y(dir);
   lx = dir_x(dir);
-  FOR_EACH(obj, {
-    if (obj->fy == 0 || obj->fx == 0) continue;
-    if (obj->tval == TV_INVIS_TRAP) continue;
-    if (distance(y, x, obj->fy, obj->fx) <= MAX_SIGHT) {
+
+  rect_t zr;
+  zoom_rect(&zr);
+  point_t limit = {zr.x + zr.w, zr.y + zr.h};
+  for (int row = zr.y; row < limit.y; ++row) {
+    for (int col = zr.x; col < limit.x; ++col) {
+      struct caveS* c_ptr = &caveD[row][col];
+      struct objS* obj = &entity_objD[c_ptr->oidx];
+      if (obj->tval == TV_INVIS_TRAP) continue;
       oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
       ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
       if (oy == ly && ox == lx && (CF_VIZ & caveD[obj->fy][obj->fx].cflag) &&
@@ -12006,7 +12022,7 @@ py_objlook_dir(dir)
         CLOBBER_MSG("You see %s.", descD);
       }
     }
-  });
+  }
 
   return seen;
 }
