@@ -20,6 +20,8 @@
 #include "SDL.h"
 
 #define Log SDL_Log
+#define rect_t SDL_Rect
+#define point_t SDL_Point
 
 #ifdef __FATCOSMOCC__
 enum { GUI = 1 };
@@ -85,8 +87,8 @@ enum { LANDSCAPE = 0 };
 // render.c
 DATA struct SDL_Window* windowD;
 DATA int refresh_rateD;
-DATA SDL_Rect display_rectD;
-DATA SDL_Rect safe_rectD;
+DATA rect_t display_rectD;
+DATA rect_t safe_rectD;
 DATA struct SDL_Renderer* rendererD;
 DATA uint32_t texture_formatD;
 DATA SDL_PixelFormat* pixel_formatD;
@@ -94,7 +96,7 @@ DATA SDL_PixelFormat* pixel_formatD;
 DATA SDL_Texture* portraitD;
 DATA SDL_Texture* landscapeD;
 DATA SDL_Texture* layoutD;
-DATA SDL_Rect layout_rectD;
+DATA rect_t layout_rectD;
 DATA SDL_FRect view_rectD;
 DATA int max_texture_widthD;
 DATA int max_texture_heightD;
@@ -130,7 +132,7 @@ render_init()
   int use_display = SDL_GetWindowDisplayIndex(windowD);
   int num_display = SDL_GetNumVideoDisplays();
   for (int it = 0; it < num_display; ++it) {
-    SDL_Rect r;
+    rect_t r;
     SDL_GetDisplayBounds(it, &r);
     Log("%d Display) %d %d %d %d\n", it, r.x, r.y, r.w, r.h);
     if (it == use_display) {
@@ -209,7 +211,7 @@ platform_draw()
 
     USE(display_rect);
     USE(view_rect);
-    SDL_Rect target = {
+    rect_t target = {
         view_rect.x * display_rect.w,
         view_rect.y * display_rect.h,
         view_rect.w * display_rect.w,
@@ -231,7 +233,7 @@ display_resize(int dw, int dh)
 
   // TBD: Review game utilization of viewport
   // Disabled the push event in SDL that occurs on another thread
-  SDL_RenderSetViewport(rendererD, &(SDL_Rect){0, 0, dw, dh});
+  SDL_RenderSetViewport(rendererD, &(rect_t){0, 0, dw, dh});
 }
 
 STATIC int
@@ -246,7 +248,7 @@ platform_orientation(orientation)
   float scale = 1.f;
   if (orientation == SDL_ORIENTATION_LANDSCAPE) {
     layoutD = landscapeD;
-    layout_rect = (SDL_Rect){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
+    layout_rect = (rect_t){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
 
     {
       // safe_rect is respected on the orientation axis
@@ -260,7 +262,7 @@ platform_orientation(orientation)
     }
   } else if (orientation == SDL_ORIENTATION_PORTRAIT) {
     layoutD = portraitD;
-    layout_rect = (SDL_Rect){0, 0, PORTRAIT_X, PORTRAIT_Y};
+    layout_rect = (rect_t){0, 0, PORTRAIT_X, PORTRAIT_Y};
 
     {
       // safe_rect is respected on the orientation axis
@@ -281,7 +283,7 @@ platform_orientation(orientation)
   // Note tension: center of display vs. center of safe area
   //   affects visual aesthetic
   //   affects input positioning for touch
-  SDL_Rect ar_rect = {0, 0, layout_rect.w * scale, layout_rect.h * scale};
+  rect_t ar_rect = {0, 0, layout_rect.w * scale, layout_rect.h * scale};
   ar_rect.x = (display_rect.w - ar_rect.w) / 2;
   ar_rect.y = MAX(safe_rect.y, (display_rect.h - ar_rect.h) / 2);
 
@@ -318,7 +320,7 @@ SDL_Event event;
       dw *= retina_scaleD;
       dh *= retina_scaleD;
     } else {
-      safe_rectD = (SDL_Rect){0, 0, dw, dh};
+      safe_rectD = (rect_t){0, 0, dw, dh};
     }
 
     if (dw != drw || dh != drh) {

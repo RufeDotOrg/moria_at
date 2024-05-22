@@ -125,7 +125,7 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
                        const char* string, int len, SDL_Point origin)
 {
   USE(font_scale);
-  SDL_Rect target_rect = {
+  rect_t target_rect = {
       .x = origin.x,
       .y = origin.y,
       .w = FWIDTH * font_scale,

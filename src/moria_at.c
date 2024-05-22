@@ -2,6 +2,7 @@
 
 #include "platform/platform.c"
 
+
 enum { HACK = 0 };
 enum { TEST_CAVEGEN = 0 };
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};

@@ -3,6 +3,7 @@
 #include "game/const.h"
 #include "game/type.h"
 #include "game/var.h"
+#include "game/xxcast.c"
 #include "game/xxinline.c"
 
 #include "db/char.c"

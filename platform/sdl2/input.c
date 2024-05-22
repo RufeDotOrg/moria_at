@@ -30,7 +30,7 @@ enum { MAX_BUTTON = 2 };
 
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
-DATA SDL_Rect grectD[GR_COUNT];
+DATA rect_t grectD[GR_COUNT];
 DATA uint8_t finger_countD;
 DATA int last_pressD;
 DATA int quitD;
@@ -194,7 +194,7 @@ SDL_Event event;
 int
 gameplay_tapxy(relx, rely)
 {
-  SDL_Rect zr;
+  rect_t zr;
   zoom_rect(&zr);
 
   int try = (float)rely * zr.h;
