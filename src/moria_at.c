@@ -11970,6 +11970,8 @@ py_monlook_dir(dir)
       ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
       if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
         seen += 1;
+        ylookD = mon->fy;
+        xlookD = mon->fx;
         mon_desc(it_index);
         if (mon->msleep) msg_hint(AP("(sleeping)"));
         // hack: mon death_descD pronoun is a/an
@@ -11997,6 +11999,8 @@ py_objlook_dir(dir)
       if (oy == ly && ox == lx && (CF_VIZ & caveD[obj->fy][obj->fx].cflag) &&
           los(y, x, obj->fy, obj->fx)) {
         seen += 1;
+        ylookD = obj->fy;
+        xlookD = obj->fx;
         obj_desc(obj, obj->number);
         CLOBBER_MSG("You see %s.", descD);
       }
@@ -12034,25 +12038,39 @@ py_look(y, x)
   struct objS* obj;
   struct monS* mon;
 
-  if (py_affect(MA_BLIND))
-    msg_print("You can't see a thing!");
-  else if (countD.imagine > 0)
-    msg_print("You can't believe what you are seeing! It's like a dream!");
-  else {
-    c_ptr = &caveD[y][x];
-    mon = &entity_monD[c_ptr->midx];
+  c_ptr = &caveD[y][x];
+  mon = &entity_monD[c_ptr->midx];
+  if (mon->mlit) {
+    mon_desc(c_ptr->midx);
+    // hack: mon death_descD pronoun is a/an
+    death_descD[0] |= 0x20;
+    MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
+  } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
+    obj = &entity_objD[c_ptr->oidx];
+    if (obj->tval != TV_INVIS_TRAP) {
+      obj_desc(obj, obj->number);
+      MSG("You see %s.", descD);
+    }
+  } else {
+    int fallback = 0;
+    if (y == uD.y && x == uD.x) {
+      fallback = randint(2);
+      fallback += (statD.use_stat[A_CHR] > 17);
+    }
 
-    if (mon->mlit) {
-      mon_desc(c_ptr->midx);
-      // hack: mon death_descD pronoun is a/an
-      death_descD[0] |= 0x20;
-      MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
-    } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
-      obj = &entity_objD[c_ptr->oidx];
-      if (obj->tval != TV_INVIS_TRAP) {
-        obj_desc(obj, obj->number);
-        MSG("You see %s.", descD);
-      }
+    switch (fallback) {
+      case 1:
+        MSG("Ain't you a sight for sore eyes.");
+        break;
+      case 2:
+        MSG("Looking good, hero.");
+        break;
+      case 3:
+        MSG("%s.", "Gee, ain't you cute");
+        break;
+      default:
+        MSG("You don't see anything.");
+        break;
     }
   }
 }
@@ -13730,12 +13748,11 @@ dungeon()
             case 'O':
               if (!KEYBOARD) {
                 omit_replay = 1;
-                int zoom_factor = globalD.zoom_factor;
-                int cellh = SYMMAP_HEIGHT >> zoom_factor;
-                int cellw = SYMMAP_WIDTH >> zoom_factor;
-                int ty = MAX(uD.y - cellh / 2, panelD.panel_row_min);
-                int tx = MAX(uD.x - cellw / 2, panelD.panel_col_min);
-                py_look(ylookD + ty, xlookD + tx);
+                if (py_affect(MA_BLIND)) {
+                  MSG("You can't see a thing!");
+                } else {
+                  py_look(ylookD, xlookD);
+                }
               }
               break;
             case CTRL('c'):

@@ -626,6 +626,54 @@ landscape_layout()
   return 0;
 }
 
+// Rectangle
+
+// Shrinks w/h of subrect to fit alignrect
+// Fits subrect within the xrange yrange of alignrect
+void
+align_subrect(SDL_Rect* pi_alignrect, SDL_Rect* pio_subrect)
+{
+  SDL_Rect* align = pi_alignrect;
+  SDL_Rect* subrect = pio_subrect;
+
+  if (subrect->w > align->w) subrect->w = align->w;
+  if (subrect->h > align->h) subrect->h = align->h;
+
+  if (subrect->x < align->x) subrect->x = align->x;
+  if (subrect->x + subrect->w > align->x + align->w)
+    subrect->x = align->x + align->w - subrect->w;
+
+  if (subrect->y < align->y) subrect->y = align->y;
+  if (subrect->y + subrect->h > align->y + align->h)
+    subrect->y = align->y + align->h - subrect->h;
+}
+int
+view_rect(SDL_Rect* po_rect)
+{
+  po_rect->x = panelD.panel_col_min;
+  po_rect->y = panelD.panel_row_min;
+  po_rect->w = SYMMAP_WIDTH;
+  po_rect->h = SYMMAP_HEIGHT;
+}
+int
+zoom_rect(SDL_Rect* po_rect)
+{
+  int zoom_factor = globalD.zoom_factor;
+  int cellh = SYMMAP_HEIGHT >> zoom_factor;
+  int cellw = SYMMAP_WIDTH >> zoom_factor;
+
+  SDL_Rect view;
+  view_rect(&view);
+  SDL_Rect rect = {
+      uD.x - cellw / 2,
+      uD.y - cellh / 2,
+      cellw + (zoom_factor != 0),
+      cellh + (zoom_factor != 0),
+  };
+  align_subrect(&view, &rect);
+  memcpy(po_rect, &rect, sizeof(rect));
+}
+
 // Text Drawing
 static int
 rect_altfill(r)
@@ -947,9 +995,10 @@ landscape_text(mode)
 }
 
 // Drawing
+
+// Modifies RenderTarget!
 int
-map_draw(zoom_prect)
-SDL_Rect* zoom_prect;
+map_draw()
 {
   SDL_Rect dest_rect;
   SDL_Rect sprite_src;
@@ -1043,6 +1092,10 @@ SDL_Rect* zoom_prect;
           SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 98);
           SDL_RenderFillRect(rendererD, &dest_rect);
           break;
+      }
+      if (viz->look) {
+        SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
+        SDL_RenderDrawRect(rendererD, &dest_rect);
       }
     }
   }
@@ -1141,36 +1194,6 @@ SDL_Rect* zoom_prect;
       SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
     }
   }
-
-  int zf, zh, zw;
-  zf = globalD.zoom_factor;
-  zh = SYMMAP_HEIGHT >> zf;
-  zw = SYMMAP_WIDTH >> zf;
-  // give equal vision on each side of the player during zoom
-  int zsymmetry = (zf != 0);
-
-  int zy, zx;
-  zy = CLAMP(rp.y - zh / 2, 0, SYMMAP_HEIGHT - zh - zsymmetry);
-  zx = CLAMP(rp.x - zw / 2, 0, SYMMAP_WIDTH - zw - zsymmetry);
-  zoom_prect->x = zx * ART_W;
-  zoom_prect->y = zy * ART_H;
-  zoom_prect->w = (zw + zsymmetry) * ART_W;
-  zoom_prect->h = (zh + zsymmetry) * ART_H;
-
-  SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
-  SDL_RenderDrawRect(rendererD, zoom_prect);
-
-  if (ylookD >= 0 && xlookD >= 0) {
-    SDL_Rect look_rect;
-    look_rect.x = (zx + xlookD) * ART_W;
-    look_rect.y = (zy + ylookD) * ART_H;
-    look_rect.w = ART_W;
-    look_rect.h = ART_H;
-    SDL_RenderDrawRect(rendererD, &look_rect);
-  }
-
-  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-  SDL_SetRenderTarget(rendererD, layoutD);
   return 0;
 }
 int
@@ -1204,9 +1227,27 @@ draw_mode0()
       if (minimap_enlarge) {
         SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
       } else {
-        SDL_Rect zoom_rect;
-        map_draw(&zoom_rect);
-        SDL_RenderCopy(rendererD, map_textureD, &zoom_rect, &grect);
+        map_draw();
+
+        SDL_Rect zr;
+        zoom_rect(&zr);
+
+        SDL_Rect vr;
+        view_rect(&vr);
+
+        SDL_Rect source = {zr.x - vr.x, zr.y - vr.y, zr.w, zr.h};
+        source.x *= ART_W;
+        source.w *= ART_W;
+        source.y *= ART_H;
+        source.h *= ART_H;
+
+        SDL_SetRenderDrawColor(rendererD, U4(paletteD[BRIGHT + WHITE]));
+        SDL_RenderDrawRect(rendererD, &source);
+
+        SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+        SDL_SetRenderTarget(rendererD, layoutD);
+
+        SDL_RenderCopy(rendererD, map_textureD, &source, &grect);
       }
     }
   }
@@ -1583,6 +1624,12 @@ viz_update()
 
       *vptr++ = viz;
     }
+  }
+
+  uint32_t vy = ylookD - rmin;
+  uint32_t vx = xlookD - cmin;
+  if (vy < SYMMAP_HEIGHT && vx < SYMMAP_WIDTH) {
+    vizD[vy][vx].look = 1;
   }
 }
 void

@@ -194,30 +194,20 @@ SDL_Event event;
 int
 gameplay_tapxy(relx, rely)
 {
-  MUSE(global, zoom_factor);
-  float gsy = rely;
-  float gsx = relx;
-  int cellw = SYMMAP_WIDTH;
-  int cellh = SYMMAP_HEIGHT;
+  SDL_Rect zr;
+  zoom_rect(&zr);
 
-  if (zoom_factor) {
-    cellh >>= zoom_factor;
-    cellw >>= zoom_factor;
+  int try = (float)rely * zr.h;
+  try /= SYMMAP_HEIGHT;
+  try /= ART_H;
 
-    cellh += 1;
-    cellw += 1;
+  int trx = (float)relx * zr.w;
+  trx /= SYMMAP_WIDTH;
+  trx /= ART_W;
 
-    gsy *= cellh;
-    gsx *= cellw;
+  ylookD = zr.y + CLAMP(try, 0, zr.h - 1);
+  xlookD = zr.x + CLAMP(trx, 0, zr.w - 1);
 
-    gsy /= SYMMAP_HEIGHT;
-    gsx /= SYMMAP_WIDTH;
-  }
-
-  int ry = (int)gsy / ART_H;
-  int rx = (int)gsx / ART_W;
-  ylookD = MIN(ry, cellh - 1);
-  xlookD = MIN(rx, cellw - 1);
   return 0;
 }
 

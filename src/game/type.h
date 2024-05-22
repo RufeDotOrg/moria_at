@@ -34,7 +34,8 @@ struct vizS {
   uint8_t dim;
   uint8_t tr;
   uint16_t cr;
-  uint16_t fade;
+  uint8_t fade;
+  uint8_t look;
 };
 
 // U the player
