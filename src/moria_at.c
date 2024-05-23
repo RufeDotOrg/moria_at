@@ -2,7 +2,6 @@
 
 #include "platform/platform.c"
 
-
 enum { HACK = 0 };
 enum { TEST_CAVEGEN = 0 };
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
@@ -10918,6 +10917,13 @@ py_saveslot_select()
 
   return 0;
 }
+#define TOMB(x, ...)                                     \
+  {                                                      \
+    int len = snprintf(AP(tmp), x, ##__VA_ARGS__);       \
+    memcpy(&screenD[line][xcenter - len / 2], tmp, len); \
+    line += 1;                                           \
+  }
+
 static int
 py_grave()
 {
@@ -10935,8 +10941,25 @@ py_grave()
       col += 1;
     }
   }
+
+  int xcenter = 26;
+  char tmp[STRLEN_MSG + 1];
+  int line = 3;
+  TOMB("RIP");
+  TOMB("%s", heronameD);
+  line += 1;
+  TOMB("%s %s", raceD[uD.ridx].name, classD[uD.clidx].name);
+  TOMB("Level : %d", uD.lev);
+  TOMB("Exp : %d", uD.exp);
+  TOMB("Gold : %d", uD.gold);
+  TOMB("Depth : %d", dun_level * 50);
+  line += 1;
+  TOMB("Killed by");
+  death_descD[0] |= 0x20;
+  TOMB("%s.", death_descD);
+
   if (PC) msg_hint(AP("(CTRL-P log) (c/o/v/ESC)"));
-  return CLOBBER_MSG("Killed by %s.", death_descD);
+  return CLOBBER_MSG("You are dead, sorry!");
 }
 static void
 show_all_inven()
