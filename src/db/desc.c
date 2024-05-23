@@ -95,6 +95,13 @@ static char* amulets[] = {
     "Bone",  "Brass",     "Bronze", "Pewter", "Tortoise Shell",
 };
 
+static char* walls[] = {
+    "granite wall",
+    "magma intrusion",
+    "quartz vein",
+    "permanent wall",
+};
+
 static char* syllableD[] = {
     "a",    "ab",   "ag",   "aks",  "ala",  "an",  "ankh", "app", "arg",
     "arze", "ash",  "aus",  "ban",  "bar",  "bat", "bek",  "bie", "bin",

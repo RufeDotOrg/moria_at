@@ -12091,6 +12091,9 @@ py_look(y, x)
       obj_desc(obj, obj->number);
       MSG("You see %s.", descD);
     }
+  } else if (c_ptr->fval >= MIN_WALL) {
+    int wall_idx = c_ptr->fval - MIN_WALL;
+    if (wall_idx < AL(walls)) MSG("You see a %s.", walls[wall_idx]);
   } else {
     int fallback = 0;
     if (y == uD.y && x == uD.x) {
@@ -12159,21 +12162,21 @@ tunnel_tool(y, x, iidx)
       case QUARTZ_WALL:
         wall_min = 80;
         wall_chance = 400;
-        msg_print("You tunnel into the quartz vein.");
         break;
       case MAGMA_WALL:
         wall_min = 10;
         wall_chance = 600;
-        msg_print("You tunnel into the magma intrusion.");
         break;
       case GRANITE_WALL:
         wall_min = 10;
         wall_chance = 1200;
-        msg_print("You tunnel into the granite wall.");
         break;
       default:
         break;
     }
+
+    int wall_idx = c_ptr->fval - MIN_WALL;
+    if (wall_idx < AL(walls)) MSG("You tunnel into the %s.", walls[wall_idx]);
 
     if (wall_chance) {
       do {
@@ -13961,9 +13964,12 @@ dungeon()
               } else {
                 if (obj->tval == TV_GOLD) {
                   obj_desc(obj, obj->number);
-                  MSG("You see %s glimmering in the %s.", descD,
-                      c_ptr->fval == QUARTZ_WALL ? "quartz vein"
-                                                 : "magma intrusion");
+
+                  int wall_idx = c_ptr->fval - MIN_WALL;
+                  if (wall_idx < AL(walls)) {
+                    MSG("You see %s glimmering in the %s.", descD,
+                        walls[wall_idx]);
+                  }
                 } else if (obj->tval == TV_RUBBLE) {
                   msg_print("You see rubble.");
                 }
