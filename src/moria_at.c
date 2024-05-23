@@ -1008,10 +1008,6 @@ near_light(y, x)
   }
   return FALSE;
 }
-typedef struct {
-  int y;
-  int x;
-} coords;
 int
 in_bounds(row, col)
 {
@@ -1156,7 +1152,7 @@ place_door(y, x)
       place_secret_door(y, x);
   }
 }
-DATA coords doorstk[100];
+DATA point_t doorstk[100];
 DATA int doorindex;
 static int
 protect_floor(y, x, ydir, xdir)
@@ -1182,8 +1178,8 @@ build_corridor(row1, col1, row2, col2)
   int tmp_row, tmp_col, i, j;
   struct caveS* c_ptr;
   struct caveS* d_ptr;
-  coords tunstk[1000], wallstk[1000];
-  coords* tun_ptr;
+  point_t tunstk[1000], wallstk[1000];
+  point_t* tun_ptr;
   int row_dir, col_dir, tunindex, wallindex;
   int door_flag, wall_flag, main_loop_count;
   int start_row, start_col;
