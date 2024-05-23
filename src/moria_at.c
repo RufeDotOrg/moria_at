@@ -12088,21 +12088,7 @@ py_look(y, x)
       MSG("You see %s.", descD);
     }
   } else if (y == uD.y && x == uD.x) {
-    int fallback = 0;
-    fallback = randint(2);
-    fallback += (statD.use_stat[A_CHR] > 17);
-
-    switch (fallback) {
-      case 1:
-        MSG("Ain't you a sight for sore eyes.");
-        break;
-      case 2:
-        MSG("Looking good, hero.");
-        break;
-      case 3:
-        MSG("%s.", "Gee, ain't you cute");
-        break;
-    }
+    MSG("Looking good, hero.");
   } else {
     if (c_ptr->fval >= MIN_WALL) {
       int wall_idx = c_ptr->fval - MIN_WALL;
