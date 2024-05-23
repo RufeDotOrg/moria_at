@@ -12091,15 +12091,10 @@ py_look(y, x)
       obj_desc(obj, obj->number);
       MSG("You see %s.", descD);
     }
-  } else if (c_ptr->fval >= MIN_WALL) {
-    int wall_idx = c_ptr->fval - MIN_WALL;
-    if (wall_idx < AL(walls)) MSG("You see a %s.", walls[wall_idx]);
-  } else {
+  } else if (y == uD.y && x == uD.x) {
     int fallback = 0;
-    if (y == uD.y && x == uD.x) {
-      fallback = randint(2);
-      fallback += (statD.use_stat[A_CHR] > 17);
-    }
+    fallback = randint(2);
+    fallback += (statD.use_stat[A_CHR] > 17);
 
     switch (fallback) {
       case 1:
@@ -12111,9 +12106,15 @@ py_look(y, x)
       case 3:
         MSG("%s.", "Gee, ain't you cute");
         break;
-      default:
-        MSG("You don't see anything.");
-        break;
+    }
+  } else {
+    if (c_ptr->fval >= MIN_WALL) {
+      int wall_idx = c_ptr->fval - MIN_WALL;
+      if (wall_idx < AL(walls)) MSG("You see a %s.", walls[wall_idx]);
+    } else if (c_ptr->cflag & CF_SEEN) {
+      MSG("You see the dungeon floor.");
+    } else {
+      MSG("You don't see anything.");
     }
   }
 }
