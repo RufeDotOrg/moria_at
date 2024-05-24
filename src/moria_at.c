@@ -415,6 +415,7 @@ draw(wait)
         // INTERRUPT
         if (c == CTRL('c')) break;
       } while (c != wait);
+      Log("yield from explicit wait with %c(%d)", c, c);
     }
     if (wait < 0) c = game_input();
     flush_draw = (c == CTRL('d'));

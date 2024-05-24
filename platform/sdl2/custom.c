@@ -1711,6 +1711,7 @@ overlay_autoselect()
   }
 }
 
+// mode_change feels wrong all around; other predraw activites are safe memory copy of information
 static int
 mode_change()
 {
@@ -1733,13 +1734,13 @@ mode_change()
       finger_rowD = (subnext > 0) ? ui_stateD[subnext] : 0;
       finger_colD = (subnext == 'e') ? 1 : 0;
 
+      // This always poses a risk to det-sim; requires predraw() even during replay
       overlay_autoselect();
     }
   }
 
   modeD = mnext;
   submodeD = subnext;
-  memcpy(overlay_copyD, overlay_usedD, sizeof(overlay_copyD));
 
   return mnext;
 }

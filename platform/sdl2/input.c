@@ -212,24 +212,29 @@ gameplay_tapxy(relx, rely)
 }
 
 int
+overlay_begin()
+{
+  return 0;
+}
+int
 overlay_end()
 {
-  for (int it = AL(overlay_copyD) - 1; it > 0; --it) {
-    if (overlay_copyD[it] > 2) return it;
+  for (int it = AL(overlay_usedD) - 1; it > 0; --it) {
+    if (overlay_usedD[it] > 2) return it;
   }
-  return AL(overlay_copyD) - 1;
+  return AL(overlay_usedD) - 1;
 }
 int
 overlay_bisect(dir)
 {
-  int sample[AL(overlay_copyD)];
+  int sample[AL(overlay_usedD)];
   int sample_used;
   int row = finger_rowD;
 
-  sample[0] = CLAMP(row + dir, 0, AL(overlay_copyD) - 1);
+  sample[0] = CLAMP(row + dir, 0, AL(overlay_usedD) - 1);
   sample_used = 0;
-  for (int it = row; it >= 0 && it < AL(overlay_copyD); it += dir) {
-    if (overlay_copyD[it] > 2) {
+  for (int it = row; it >= 0 && it < AL(overlay_usedD); it += dir) {
+    if (overlay_usedD[it] > 2) {
       sample[sample_used] = it;
       sample_used += 1;
     }
@@ -241,8 +246,8 @@ int
 overlay_input(input)
 {
   int row = finger_rowD;
-  for (int it = row + input; it >= 0 && it < AL(overlay_copyD); it += input) {
-    if (overlay_copyD[it] > 1) return it;
+  for (int it = row + input; it >= 0 && it < AL(overlay_usedD); it += input) {
+    if (overlay_usedD[it] > 1) return it;
   }
   return row;
 }
@@ -374,9 +379,10 @@ fingerdown_xy_mode(x, y, mode)
       if (!dx && !dy) {
         return 'A' + finger_rowD;
       }
+
       if (dx && !dy) {
         if (finger)
-          finger_rowD = dx > 0 ? overlay_end() : 0;
+          finger_rowD = dx < 0 ? overlay_begin() : overlay_end();
         else
           finger_colD = CLAMP(finger_colD + dx, 0, 1);
       }
@@ -386,6 +392,8 @@ fingerdown_xy_mode(x, y, mode)
         else
           finger_rowD = overlay_input(dy);
       }
+      // Column changes are a tab-change and require returning to game
+      // simulation atm TBD: CTRL('d') would refresh selection-only changes
       return (finger_colD == 0) ? '*' : '/';
     }
     if (touch == TOUCH_LB) {
