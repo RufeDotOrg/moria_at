@@ -18,7 +18,6 @@ enum { COLOR = 0 };
 #include "wall.c"
 
 enum { TEST_UI = 0 };
-enum { TEST_REPLAY = 0 };
 
 enum { PADSIZE = (26 + 2) * 16 };
 enum { AFF_X = 3 };
@@ -47,7 +46,7 @@ enum { STRLEN_MORE = AL(moreD) - 1 };
 
 #define P(p) p.x, p.y
 #define RF(r, framing)                                                    \
-  (rect_t)                                                              \
+  (rect_t)                                                                \
   {                                                                       \
     .x = r.x - (framing), .y = r.y - (framing), .w = r.w + 2 * (framing), \
     .h = r.h + 2 * (framing),                                             \
@@ -503,7 +502,7 @@ portrait_layout()
 
   int size = PADSIZE / 2;
   grectD[GR_BUTTON1] = (rect_t){layout_rect.w - margin - size * 2,
-                                  grectD[GR_PAD].y + size, size, size};
+                                grectD[GR_PAD].y + size, size, size};
   grectD[GR_BUTTON2] =
       (rect_t){layout_rect.w - margin - size, grectD[GR_PAD].y, size, size};
 
@@ -807,12 +806,19 @@ common_text()
       if (PC && TEST_REPLAY) {
         p.x = grect.x + FWIDTH / 2;
         p.y += FHEIGHT;
-        len = snprintf(tmp, AL(tmp), "Replay ActionID: %d", input_action_usedD);
+        len = snprintf(tmp, AL(tmp), "Input Actions: %d", input_action_usedD);
         render_monofont_string(renderer, &fontD, tmp, len, p);
 
         p.y += FHEIGHT;
-        len = snprintf(tmp, AL(tmp), "Replay InputID: %d", input_record_readD);
+        len = snprintf(tmp, AL(tmp), "Replay Character: %d", input_record_readD);
         render_monofont_string(renderer, &fontD, tmp, len, p);
+
+        p.y += FHEIGHT;
+        if (replay_desync) {
+          font_color(*color_by_palette(RED));
+          render_monofont_string(renderer, &fontD, AP("REPLAY DESYNC!!!"), p);
+          font_reset();
+        }
       }
     }
   }
@@ -872,7 +878,7 @@ portrait_text(mode)
 
     if (TEST_UI) {
       rect_t msg_target = {p.x, p.y, msg_widthD * FWIDTH,
-                             FHEIGHT + FHEIGHT / 8};
+                           FHEIGHT + FHEIGHT / 8};
       SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
       SDL_RenderFillRect(renderer, &msg_target);
     }

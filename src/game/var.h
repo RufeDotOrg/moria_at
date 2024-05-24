@@ -128,7 +128,8 @@ GAME uint8_t finger_rowD;
 GAME uint8_t finger_colD;
 
 // Replay
-GAME int replay_flag;
+DATA int replay_flag;
+DATA int replay_desync;
 DATA char input_recordD[4 * 1024];
 DATA uint32_t input_record_writeD;
 DATA uint32_t input_record_readD;

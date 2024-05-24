@@ -49,7 +49,7 @@ typedef int (*fn)();
 // Array Slot
 #define AS(arr, id) arr[(id) % AL(arr)]
 // Array End
-#define AE(arr) (arr + sizeof(arr))
+#define AE(arr) ((uint8_t*)arr + sizeof(arr))
 // String Length
 #define SL(str) (AL(str) - 1)
 // String Pair
