@@ -326,6 +326,16 @@ orientation_lock_toggle()
   return 0;
 }
 static int
+column_transition(dx)
+{
+  USE(finger_col);
+
+  finger_col = CLAMP(finger_col + dx, 0, 1);
+  finger_colD = finger_col;
+
+  return (finger_col == 0) ? '*' : '/';
+}
+static int
 fingerdown_xy_mode(x, y, mode)
 {
   int finger = finger_countD - 1;
@@ -384,7 +394,7 @@ fingerdown_xy_mode(x, y, mode)
         if (finger)
           finger_rowD = dx < 0 ? overlay_begin() : overlay_end();
         else
-          finger_colD = CLAMP(finger_colD + dx, 0, 1);
+          return column_transition(dx);
       }
       if (dy && !dx) {
         if (finger)
@@ -392,9 +402,7 @@ fingerdown_xy_mode(x, y, mode)
         else
           finger_rowD = overlay_input(dy);
       }
-      // Column changes are a tab-change and require returning to game
-      // simulation atm TBD: CTRL('d') would refresh selection-only changes
-      return (finger_colD == 0) ? '*' : '/';
+      return CTRL('d');
     }
     if (touch == TOUCH_LB) {
       return ESCAPE;
