@@ -251,6 +251,28 @@ overlay_input(input)
   }
   return row;
 }
+static void
+overlay_autoselect()
+{
+  int row = finger_rowD;
+  if (overlay_usedD[row] <= 1) {
+    for (int it = row + 1; it < AL(overlay_usedD); it += 1) {
+      if (overlay_usedD[it] > 1) {
+        finger_rowD = it;
+        return;
+      }
+    }
+
+    for (int it = row - 1; it > 0; --it) {
+      if (overlay_usedD[it] > 1) {
+        finger_rowD = it;
+        return;
+      }
+    }
+
+    finger_rowD = 0;
+  }
+}
 
 static int
 touch_by_xy(x, y)
@@ -461,19 +483,59 @@ sdl_pump()
 
   return ret;
 }
+// mode_change is triggered by interactive UI navigation
+// may edit row/col selection to make the interface feel "smart"
+// not utilized by the replay system
+static int
+mode_change()
+{
+  int subprev = submodeD;
+  int subnext = overlay_submodeD;
+  int mprev = modeD;
+  int mnext;
+
+  if (screen_usedD[0])
+    mnext = 2;
+  else if (overlay_usedD[0])
+    mnext = 1;
+  else
+    mnext = 0;
+
+  if (mprev != mnext || subprev != subnext) {
+    if (mprev == 1) ui_stateD[subprev] = finger_rowD;
+
+    if (mnext == 1) {
+      finger_rowD = (subnext > 0) ? ui_stateD[subnext] : 0;
+      finger_colD = (subnext == 'e') ? 1 : 0;
+
+      overlay_autoselect();
+    }
+  }
+
+  modeD = mnext;
+  submodeD = subnext;
+
+  return mnext;
+}
 int
 platform_readansi()
 {
+  // Experimental
+  mode_change();
+
+  // TBD: pass mode to pump?
   char c = sdl_pump();
   if (quitD) return CTRL('c');
   return c;
 }
+
+// direct access to selection is not deterministic simulation
 int
 platform_selection(int* yptr, int* xptr)
 {
   *yptr = finger_colD;
   *xptr = finger_rowD;
-  return modeD == 1;
+  return 0;
 }
 
 int

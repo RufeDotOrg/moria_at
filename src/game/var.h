@@ -121,10 +121,10 @@ DATA char git_hashD[] = "AbCdEfGhIjKlMnO";
 
 // Optional UI state
 GAME uint8_t ui_stateD[256];
-GAME int modeD;
-GAME int submodeD;
-GAME uint8_t finger_rowD;
-GAME uint8_t finger_colD;
+DATA int modeD;
+DATA int submodeD;
+DATA uint8_t finger_rowD;
+DATA uint8_t finger_colD;
 
 // Replay
 DATA int replay_flag;

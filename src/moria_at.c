@@ -399,12 +399,12 @@ draw(wait)
     c = game_input();
   }
 
-  // if (flush_draw) {
-  vital_update();
-  affect_update();
+  if (flush_draw) {
+    vital_update();
+    affect_update();
 
-  platformD.predraw();
-  //}
+    platformD.predraw();
+  }
 
   while (flush_draw) {
     platformD.draw();
@@ -415,7 +415,6 @@ draw(wait)
         // INTERRUPT
         if (c == CTRL('c')) break;
       } while (c != wait);
-      Log("yield from explicit wait with %c(%d)", c, c);
     }
     if (wait < 0) c = game_input();
     flush_draw = (c == CTRL('d'));
@@ -6188,6 +6187,7 @@ py_rest()
     countD.rest = 9999;
   else
     countD.rest = -9999;
+  turn_flag = TRUE;
 }
 static int
 py_take_hit(damage)
@@ -13562,6 +13562,8 @@ dir_by_confusion()
 #include <sys/types.h>
 static void* replayD;
 static int64_t replay_sizeD;
+static void* ccoffset =
+    0x000000000069510;  // nm bin/moria_at | grep 'start_game'
 static void
 replay_diverge_size()
 {
@@ -13573,7 +13575,6 @@ replay_diverge_size()
     if (lhs[it] != rhs[it]) {
       if (contig) printf("  ");
       int64_t offset = it * sizeof(int);
-      int ccoffset = 0x000000000069510;  // nm bin/moria_at | grep 'start_game'
       printf("%p (%p): 0x%x 0x%x\n", (void*)0 + offset, ccoffset + offset,
              lhs[it], rhs[it]);
       if (__start_game + offset > entity_monD &&
@@ -13589,6 +13590,7 @@ replay_diverge_size()
       contig = 0;
     }
   }
+  printf("Compiler ccoffset: %p", ccoffset);
   printf("Start game: %p\n", __start_game);
   printf("Monster range: %p %p\n", entity_monD, AE(entity_monD));
   printf("Object range: %p %p\n", entity_objD, AE(entity_objD));
@@ -13641,10 +13643,10 @@ void
 dungeon()
 {
   int c, y, x, iidx;
-  int ymine, xmine;
   uint32_t dir, teleport;
   int town;
   int omit_replay;
+  int check_replay;
 
   town = (dun_level == 0);
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
@@ -13684,8 +13686,8 @@ dungeon()
     turn_flag = FALSE;
     inven_check_weight();
     inven_check_light();
-    ymine = xmine = -1;
 
+    if (TEST_REPLAY) check_replay = input_record_writeD;
     do {
       omit_replay = 0;
       msg_moreD = 0;
@@ -13772,12 +13774,14 @@ dungeon()
                 py_offhand();
                 break;
               case 'x':
+                omit_replay = 1;
                 py_examine();
                 break;
               case 'i':
                 py_actuate(&y, &x, 'i');
                 break;
               case 'M':
+                omit_replay = 1;
                 py_where_on_map();
                 break;
               case 'R':
@@ -13820,6 +13824,7 @@ dungeon()
               py_search(y, x);
               break;
             case 'v':
+              omit_replay = 1;
               show_version();
               break;
             case '<':
@@ -14026,28 +14031,10 @@ dungeon()
             }
           } else if (obj->tval == TV_CLOSED_DOOR) {
             open_object(y, x);
+          } else if (py_affect(MA_BLIND) == 0 && obj->tval == TV_RUBBLE) {
+            tunnel(y, x);
           } else {
             find_flag = FALSE;
-            if (py_affect(MA_BLIND) == 0) {
-              if (ymine == y && xmine == x) {
-                if (obj->tval == TV_GOLD || obj->tval == TV_RUBBLE)
-                  tunnel(y, x);
-              } else {
-                if (obj->tval == TV_GOLD) {
-                  obj_desc(obj, obj->number);
-
-                  int wall_idx = c_ptr->fval - MIN_WALL;
-                  if (wall_idx < AL(walls)) {
-                    MSG("You see %s glimmering in the %s.", descD,
-                        walls[wall_idx]);
-                  }
-                } else if (obj->tval == TV_RUBBLE) {
-                  msg_print("You see rubble.");
-                }
-                ymine = y;
-                xmine = x;
-              }
-            }
           }
           panel_update(&panelD, uD.y, uD.x, FALSE);
         }
@@ -14055,8 +14042,9 @@ dungeon()
 
       if (c) {
         if (omit_replay) {
-          input_record_readD = input_record_writeD =
-              AS(input_actionD, input_action_usedD - 1);
+          int last_action = AS(input_actionD, input_action_usedD - 1);
+          input_record_readD = input_record_writeD = last_action;
+          if (TEST_REPLAY && check_replay != last_action) exit(1);
         } else if (turn_flag) {
           AS(input_actionD, input_action_usedD++) = input_record_readD;
         }
@@ -14402,6 +14390,10 @@ main(int argc, char** argv)
     input_resumeD = 0;
     input_record_readD = 0;
     input_action_usedD = 0;
+
+    // Input reset (values are initialized by ui_stateD on first interaction)
+    modeD = submodeD = 0;
+    finger_rowD = finger_colD = 0;
 
     // may generate messages in calc_mana()->gain_prayer()
     for (int it = 0; it < MAX_A; ++it) {

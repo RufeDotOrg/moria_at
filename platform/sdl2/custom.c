@@ -810,7 +810,8 @@ common_text()
         render_monofont_string(renderer, &fontD, tmp, len, p);
 
         p.y += FHEIGHT;
-        len = snprintf(tmp, AL(tmp), "Replay Character: %d", input_record_readD);
+        len =
+            snprintf(tmp, AL(tmp), "Input Record: %d", input_record_readD);
         render_monofont_string(renderer, &fontD, tmp, len, p);
 
         p.y += FHEIGHT;
@@ -1203,7 +1204,7 @@ map_draw()
   return 0;
 }
 int
-draw_mode0()
+draw_game()
 {
   USE(renderer);
   USE(msg_more);
@@ -1259,9 +1260,8 @@ draw_mode0()
   }
 }
 int
-draw_mode2()
+draw_menu(mode)
 {
-  USE(mode);
   USE(renderer);
   USE(overlay_width);
   USE(overlay_height);
@@ -1337,9 +1337,14 @@ draw_mode2()
 int
 custom_draw()
 {
-  USE(mode);
   USE(renderer);
   USE(layout);
+
+  int mode = 0;
+  if (screen_usedD[0])
+    mode = 2;
+  else if (overlay_usedD[0])
+    mode = 1;
 
   if (layout) SDL_SetRenderTarget(renderer, layout);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -1392,9 +1397,9 @@ custom_draw()
   }
 
   if (mode == 0)
-    draw_mode0();
+    draw_game();
   else
-    draw_mode2();
+    draw_menu(mode);
 
   if (text_fnD) text_fnD(mode);
 
@@ -1688,66 +1693,9 @@ viz_minimap()
     }
   }
 }
-static void
-overlay_autoselect()
-{
-  int row = finger_rowD;
-  if (overlay_usedD[row] <= 1) {
-    for (int it = row + 1; it < AL(overlay_usedD); it += 1) {
-      if (overlay_usedD[it] > 1) {
-        finger_rowD = it;
-        return;
-      }
-    }
-
-    for (int it = row - 1; it > 0; --it) {
-      if (overlay_usedD[it] > 1) {
-        finger_rowD = it;
-        return;
-      }
-    }
-
-    finger_rowD = 0;
-  }
-}
-
-// mode_change feels wrong all around; other predraw activites are safe memory copy of information
-static int
-mode_change()
-{
-  int subprev = submodeD;
-  int subnext = overlay_submodeD;
-  int mprev = modeD;
-  int mnext;
-
-  if (screen_usedD[0])
-    mnext = 2;
-  else if (overlay_usedD[0])
-    mnext = 1;
-  else
-    mnext = 0;
-
-  if (mprev != mnext || subprev != subnext) {
-    if (mprev == 1) ui_stateD[subprev] = finger_rowD;
-
-    if (mnext == 1) {
-      finger_rowD = (subnext > 0) ? ui_stateD[subnext] : 0;
-      finger_colD = (subnext == 'e') ? 1 : 0;
-
-      // This always poses a risk to det-sim; requires predraw() even during replay
-      overlay_autoselect();
-    }
-  }
-
-  modeD = mnext;
-  submodeD = subnext;
-
-  return mnext;
-}
 int
 custom_predraw()
 {
-  mode_change();
   viz_update();
   viz_minimap();
   return 1;
