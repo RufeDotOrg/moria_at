@@ -13410,7 +13410,7 @@ player_maint()
     if (statD.cur_stat[it] < statD.max_stat[it]) {
       if (!flag) {
         flag = 1;
-        msg_print("A wind from the Misty Mountains renews your being.");
+        msg_print("A wind from the misty mountains renews your being.");
       }
       res_stat(it);
     }
@@ -13577,6 +13577,8 @@ dungeon()
 
   switch (uD.new_level_flag) {
     default:
+      msg_print("A golden sun rises above the misty mountains.");
+      break;
     case NL_DOWN_STAIR:
       msg_print("You pass through a maze of down staircases.");
       break;
