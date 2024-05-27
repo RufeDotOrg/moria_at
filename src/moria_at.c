@@ -10964,7 +10964,7 @@ py_grave()
   death_descD[0] |= 0x20;
   TOMB("%s.", death_descD);
 
-  if (PC) msg_hint(AP("(CTRL-P log) (c/o/v/ESC)"));
+  if (PC) msg_hint(AP("(CTRL-p/z) (c/o/v/ESC)"));
   return CLOBBER_MSG("You are dead, sorry!");
 }
 static void
@@ -10981,7 +10981,7 @@ show_all_inven()
     }
   } while (iidx != -1);
 }
-static int
+static void
 py_undo()
 {
   int memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
@@ -11046,24 +11046,20 @@ py_menu()
         continue;
 
       case 'b':
-        if (!memory_ok) return 0;
-
-        input_resumeD = (input_action - 1);
-        // Disable midpoint resume explicitly
-        if (input_resumeD == 0) input_resumeD = -1;
-        longjmp(restartD, 1);
+        py_undo();
+        return 0;
 
       case 'd':
         // Disable midpoint resume explicitly
         input_resumeD = -1;
         longjmp(restartD, 1);
+        break;
 
       case 'g':
         if (!death) platformD.savemidpoint();
         globalD.saveslot_class = -1;
         longjmp(restartD, 1);
-
-        return 0;
+        break;
     }
   }
   return 0;
@@ -11078,6 +11074,8 @@ py_death()
     do {
       if (c == CTRL('p')) {
         c = show_history();
+      } else if (c == CTRL('z')) {
+        py_undo();
       } else if (c == 'c') {
         c = show_character(1, 0);
       } else if (c == 'o') {
