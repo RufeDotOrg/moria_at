@@ -14150,10 +14150,7 @@ static void
 enable_windows_console()
 {
   if (IsWindows() && AllocConsole()) {
-    close(0);
-    close(1);
-    open("/dev/tty", O_RDWR);
-    dup(0);
+    freopen("/dev/tty", "wb", stdout);
   }
 }
 
@@ -14182,7 +14179,14 @@ cosmo_init(int argc, char** argv)
     }
   }
 
-  if (MOD_CRASH) crash_init();
+  if (MOD_CRASH) {
+    if (IsWindows())
+      crash_init();
+    else if (IsXnu())
+      noop();
+    else
+      ShowCrashReports();
+  }
   if (GUI) enable_windows_gui();
 
   steam_debug();
@@ -14220,7 +14224,7 @@ cosmo_init(int argc, char** argv)
   printf("setenv LD_LIBRARY_PATH: %s\n", path);
   setenv("LD_LIBRARY_PATH", path, 1);
 
-  printf("setenv KPRINTF_LOG (non-override)\n");
+  printf("setenv KPRINTF_LOG (does not override)\n");
   setenv("KPRINTF_LOG", "crash.txt", 0);
 
   // Cosmo does not re-init dlopen-helper on an environment change
@@ -14231,14 +14235,10 @@ cosmo_init(int argc, char** argv)
 
   if (IsWindows()) {
     SDL_LogSetOutputFunction(NT2SYSV(gamelog), 0);
+  } else if (IsXnu()) {
+    SDL_LogSetOutputFunction(0, 0);
   } else {
     SDL_LogSetOutputFunction(gamelog, 0);
-  }
-
-  if (1) {
-    printf("SDL_SetError() test\n");
-    SDL_SetError("%s error codepath", GetProgramExecutableName());
-    printf("%s\n", SDL_GetError());
   }
 
   global_init();

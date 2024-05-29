@@ -59,10 +59,7 @@ typedef void __attribute__((__ms_abi__)) (*win_elipsis)(
 #define SDL_Log(x, ...)                                            \
   if (IsWindows())                                                 \
     ((win_elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__); \
+  else if (IsXnu())                                                \
+    printf(x "\n", ##__VA_ARGS__);                                 \
   else                                                             \
     ((elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__);
-#define SDL_SetError(x, ...)                                            \
-  if (IsWindows())                                                      \
-    ((win_elipsis)cosmo_dlsym(libD, "SDL_SetError"))(x, ##__VA_ARGS__); \
-  else                                                                  \
-    ((elipsis)cosmo_dlsym(libD, "SDL_SetError"))(x, ##__VA_ARGS__);
