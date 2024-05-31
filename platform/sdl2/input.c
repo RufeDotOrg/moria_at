@@ -146,7 +146,8 @@ gamesym_by_scancode(code, shiftbit)
 }
 
 static int
-nearest_pp(y, x)
+nearest_pp(y, x, po_dsq)
+int* po_dsq;
 {
   int r = -1;
   int64_t min_dsq = INT64_MAX;
@@ -163,6 +164,7 @@ nearest_pp(y, x)
       r = it;
     }
   }
+  if (po_dsq) *po_dsq = min_dsq;
   return r;
 }
 
@@ -330,7 +332,7 @@ touch_by_xy(x, y)
     if (SDL_PointInRect(&tpp, &grect)) {
       SDL_Point rel = {tpp.x - grect.x, tpp.y - grect.y};
 
-      int n = nearest_pp(rel.y, rel.x);
+      int n = nearest_pp(rel.y, rel.x, 0);
       r = TOUCH_PAD + pp_keyD[n];
     }
 

@@ -35,7 +35,6 @@ DATA fn text_fnD;
 DATA uint32_t sprite_idD;
 DATA SDL_Surface* spriteD;
 DATA SDL_Texture* sprite_textureD;
-DATA SDL_Surface* mmsurfaceD;
 DATA SDL_Texture* mmtextureD;
 DATA SDL_Texture* ui_textureD;
 DATA SDL_Surface* tpsurfaceD;
@@ -62,7 +61,6 @@ DATA uint32_t paletteD[] = {
     CHEX(0x555753ff), CHEX(0xef2929ff), CHEX(0x8ae234ff), CHEX(0xfce94fff),
     CHEX(0x729fcfff), CHEX(0xad7fa8ff), CHEX(0x34e2e2ff), CHEX(0xeeeeecff),
 };
-DATA uint32_t rgbaD[AL(paletteD)];
 DATA uint32_t lightingD[] = {
     CHEX(0x161616ff),
     CHEX(0x282828ff),
@@ -74,6 +72,12 @@ color_by_palette(c)
 {
   return (SDL_Color*)&paletteD[c];
 }
+static int
+rgba_by_palette(c)
+{
+  int pc = SDL_MapRGBA(pixel_formatD, U4(paletteD[c]));
+  return pc;
+}
 
 void
 bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
@@ -82,11 +86,14 @@ bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
   uint8_t bpp = surface->format->BytesPerPixel;
   uint8_t* pixels = surface->pixels;
   int64_t pitch = surface->pitch;
+  // TBD: lightingD
+  int color =
+      SDL_MapRGBA(pixel_formatD, 0xee, 0xee, 0xec, 0xff);  // -1 // white
   uint8_t* src = bitmap;
   for (int64_t row = 0; row < ph; ++row) {
     uint8_t* dst = pixels + (pitch * (into.y + row)) + (bpp * into.x);
     for (int64_t col = 0; col < pw; ++col) {
-      memcpy(dst, &rgbaD[*src & 0xff], bpp);
+      if (*src) memcpy(dst, &color, bpp);
       src += 1;
       dst += bpp;
     }
@@ -98,7 +105,7 @@ bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t bitmap_size)
   int byte_count = bitmap_size / 8;
   for (int it = 0; it < byte_count; ++it) {
     for (int jt = 0; jt < 8; ++jt) {
-      bitmap[it * 8 + jt] = ((bitfield[it] & (1 << jt)) != 0) * 15;
+      bitmap[it * 8 + jt] = ((bitfield[it] & (1 << jt)) != 0);
     }
   }
 }
@@ -329,7 +336,12 @@ static void surface_ppfill(surface) SDL_Surface* surface;
   for (int64_t row = 0; row < surface->h; ++row) {
     uint8_t* dst = pixels + (surface->pitch * row);
     for (int64_t col = 0; col < surface->w; ++col) {
-      memcpy(dst, &rgbaD[nearest_pp(row, col)], bpp);
+      int dsq;
+      int cidx = nearest_pp(row, col, &dsq);
+      int labr = CLAMP(65 - sqrt(dsq), 0, 100);
+      int color = rgb_by_labr(labr);
+
+      memcpy(dst, &color, bpp);
       dst += bpp;
     }
   }
@@ -392,10 +404,6 @@ custom_pregame()
   if (FONT && !font_init()) return 2;
   if (INPUT && !input_init()) return 3;
 
-  for (int it = 0; it < AL(paletteD); ++it) {
-    rgbaD[it] = SDL_MapRGBA(pixel_formatD, U4(paletteD[it]));
-  }
-
   spriteD = SDL_CreateRGBSurfaceWithFormat(
       SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0, texture_formatD);
   if (spriteD) {
@@ -446,8 +454,6 @@ custom_pregame()
   if (TOUCH) ui_init();
   if (TOUCH) tp_init();
 
-  mmsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, MAX_WIDTH,
-                                              MAX_HEIGHT, 0, texture_formatD);
   mmtextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
                                  MAX_WIDTH, MAX_HEIGHT);
   SDL_SetTextureBlendMode(mmtextureD, SDL_BLENDMODE_NONE);
@@ -810,8 +816,7 @@ common_text()
         render_monofont_string(renderer, &fontD, tmp, len, p);
 
         p.y += FHEIGHT;
-        len =
-            snprintf(tmp, AL(tmp), "Input Record: %d", input_record_readD);
+        len = snprintf(tmp, AL(tmp), "Input Record: %d", input_record_readD);
         render_monofont_string(renderer, &fontD, tmp, len, p);
 
         p.y += FHEIGHT;
@@ -1220,10 +1225,8 @@ draw_game()
 
     if (show_minimap) {
       AUSE(grect, GR_MINIMAP);
-      USE(mmsurface);
-      bitmap_yx_into_surface(&minimapD[0][0], MAX_HEIGHT, MAX_WIDTH,
-                             (SDL_Point){0, 0}, mmsurface);
-      SDL_UpdateTexture(mmtexture, NULL, mmsurface->pixels, mmsurface->pitch);
+      SDL_UpdateTexture(mmtexture, NULL, &minimapD[0][0],
+                        MAX_WIDTH * sizeof(minimapD[0][0]));
 
       SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
       rect_frame(grect, 3);
@@ -1354,6 +1357,7 @@ custom_draw()
     {
       AUSE(grect, GR_PAD);
       SDL_RenderCopy(rendererD, tptextureD, 0, &grect);
+      rect_frame(grect, 0);
     }
 
     int bc[] = {RED, GREEN};
@@ -1525,7 +1529,7 @@ cave_color(row, col)
   c_ptr = &caveD[row][col];
   mon = &entity_monD[c_ptr->midx];
   if (mon->mlit) {
-    color = BRIGHT + MAGENTA;
+    color = BRIGHT + PURPLE;
   } else if (c_ptr->fval == BOUNDARY_WALL) {
     color = BRIGHT + WHITE;
   } else if (CF_LIT & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
@@ -1556,7 +1560,7 @@ cave_color(row, col)
   }
 
   if (color <= BRIGHT + BLACK && (CF_TEMP_LIGHT & c_ptr->cflag)) {
-    color = BRIGHT + CYAN;
+    color = BRIGHT + TEAL;
   }
 
   return color;
@@ -1646,14 +1650,15 @@ viz_update()
 void
 viz_minimap_stair(row, col, color)
 {
+  int rgba = rgba_by_palette(color);
   row = CLAMP(row, 2, MAX_HEIGHT - 1);
   col = CLAMP(col, 1, MAX_WIDTH - 2 - 1);
-  minimapD[row][col] = color;
-  minimapD[row][col - 1] = color;
-  minimapD[row - 1][col] = color;
-  minimapD[row - 1][col + 1] = color;
-  minimapD[row - 2][col + 1] = color;
-  minimapD[row - 2][col + 2] = color;
+  minimapD[row][col] = rgba;
+  minimapD[row][col - 1] = rgba;
+  minimapD[row - 1][col] = rgba;
+  minimapD[row - 1][col + 1] = rgba;
+  minimapD[row - 2][col + 1] = rgba;
+  minimapD[row - 2][col + 2] = rgba;
 }
 void
 viz_minimap()
@@ -1674,7 +1679,7 @@ viz_minimap()
           color = BRIGHT + BLACK;
         }
 
-        minimapD[row][col] = color;
+        minimapD[row][col] = rgba_by_palette(color);
         if (color == BRIGHT + GREEN || color == BRIGHT + RED)
           viz_minimap_stair(row, col, color);
       }
@@ -1686,7 +1691,7 @@ viz_minimap()
         color = cave_color(row + rmin, col + cmin);
         for (int i = 0; i < RATIO; ++i) {
           for (int j = 0; j < RATIO; ++j) {
-            minimapD[row * RATIO + i][col * RATIO + j] = color;
+            minimapD[row * RATIO + i][col * RATIO + j] = rgba_by_palette(color);
           }
         }
       }

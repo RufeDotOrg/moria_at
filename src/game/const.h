@@ -468,7 +468,7 @@
 #define RETURN 13
 #define CTRL(x) (x & 0x1f)
 // Output
-enum { BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE, BRIGHT };
+enum { BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, TEAL, WHITE, BRIGHT };
 // Longest single message (may be concatenated with other messages)
 #define STRLEN_MSG 79
 // Art

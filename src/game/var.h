@@ -16,7 +16,7 @@ GAME int screen_submodeD;
 DATA char overlayD[22][80];
 GAME int overlay_usedD[AL(overlayD)];
 GAME int overlay_submodeD;
-DATA uint8_t minimapD[MAX_HEIGHT][MAX_WIDTH];
+DATA int minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
 DATA int save_on_readyD;
 
@@ -166,7 +166,7 @@ DATA int savechar_v003[] = {
 };
 #define SAVESUM003 16420
 DATA int savesumD[] = {SAVESUM000, SAVESUM001, SAVESUM002, SAVESUM003};
-DATA int *savefieldD[] = {
+DATA int* savefieldD[] = {
     savechar_v000,
     savechar_v001,
     savechar_v002,
