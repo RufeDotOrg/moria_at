@@ -28,36 +28,32 @@ static uint16_t
 extern GLOBAL int platform_phaseD;
 
 static void
-CustomCrashReport(ucontext_t* ctx)
+WindowsCrashReport(ucontext_t* ctx)
 {
-  kprintf("Rufe.org crash augmentation enabled\n");
-
-  if (IsWindows()) {
-    enum { MODULE_MAX = 32 };
-    int64_t mod_list[MODULE_MAX];
-    uint32_t byte_count;
-    int pid = GetCurrentProcessId();
-    int64_t handle =
-        OpenProcess(kNtProcessVmRead | kNtProcessQueryInformation, 0, pid);
-    if (EnumProcessModules(handle, mod_list, sizeof(mod_list), &byte_count)) {
-      int module_count = MIN(byte_count / sizeof(int64_t), MODULE_MAX);
-      kprintf("module_count %d\n", module_count);
-      for (int it = 0; it < module_count; ++it) {
-        struct NtModuleInfo modinfo;
-        if (GetModuleInformation &&
-            GetModuleInformation(handle, mod_list[it], &modinfo,
-                                 sizeof(modinfo))) {
-          kprintf(" Address Range %p - %p", modinfo.lpBaseOfDll,
-                  modinfo.lpBaseOfDll + modinfo.SizeOfImage);
-        }
-        uint16_t wide_name[PATH_MAX];
-        GetModuleBaseName(handle, mod_list[it], wide_name, PATH_MAX);
-        kprintf(" %hs ", wide_name);
-        kprintf("\n");
+  enum { MODULE_MAX = 32 };
+  int64_t mod_list[MODULE_MAX];
+  uint32_t byte_count;
+  int pid = GetCurrentProcessId();
+  int64_t handle =
+      OpenProcess(kNtProcessVmRead | kNtProcessQueryInformation, 0, pid);
+  if (EnumProcessModules(handle, mod_list, sizeof(mod_list), &byte_count)) {
+    int module_count = MIN(byte_count / sizeof(int64_t), MODULE_MAX);
+    kprintf("module_count %d\n", module_count);
+    for (int it = 0; it < module_count; ++it) {
+      struct NtModuleInfo modinfo;
+      if (GetModuleInformation &&
+          GetModuleInformation(handle, mod_list[it], &modinfo,
+                               sizeof(modinfo))) {
+        kprintf(" Address Range %p - %p", modinfo.lpBaseOfDll,
+                modinfo.lpBaseOfDll + modinfo.SizeOfImage);
       }
-      if (byte_count > sizeof(mod_list))
-        kprintf("... MODULE_MAX exceeded: some modules are not listed!\n");
+      uint16_t wide_name[PATH_MAX];
+      GetModuleBaseName(handle, mod_list[it], wide_name, PATH_MAX);
+      kprintf(" %hs ", wide_name);
+      kprintf("\n");
     }
+    if (byte_count > sizeof(mod_list))
+      kprintf("... MODULE_MAX exceeded: some modules are not listed!\n");
   }
 
   uint64_t pc = 0;
@@ -76,6 +72,14 @@ CustomCrashReport(ucontext_t* ctx)
     }
   }
 
+  sleep(3);
+}
+
+static void
+CommonCrashReport(ucontext_t* ctx)
+{
+  kprintf("Rufe.org crash augmentation enabled\n");
+
   switch (platform_phaseD) {
     case PLATFORM_PREGAME:
       // Crash during initialization switch to "software" renderer
@@ -85,15 +89,14 @@ CustomCrashReport(ucontext_t* ctx)
       platformD.postgame();
       break;
   }
-
-  if (IsWindows()) sleep(3);
 }
 
 void
 __game_crash(int sig, struct siginfo* si, void* arg)
 {
   __oncrash(sig, si, arg);
-  CustomCrashReport(arg);
+  CommonCrashReport(arg);
+  if (IsWindows()) WindowsCrashReport(arg);
 }
 
 static void
