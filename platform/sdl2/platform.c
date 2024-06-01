@@ -117,6 +117,16 @@ check_gl()
   return 1;
 }
 
+void
+pixel_convert(void* pio_rgba)
+{
+  SDL_Color* src = pio_rgba;
+  int pf = SDL_MapRGBA(pixel_formatD, src->r, src->g, src->b, src->a);
+
+  int* color = pio_rgba;
+  *color = pf;
+}
+
 int
 render_init()
 {
@@ -128,6 +138,9 @@ render_init()
   if (REORIENTATION) winflag |= SDL_WINDOW_RESIZABLE;
   windowD = SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y, winflag);
   if (!windowD) return 0;
+
+  uint32_t format = SDL_GetWindowPixelFormat(windowD);
+  Log("Window pixel format (%d) %s", format, SDL_GetPixelFormatName(format));
 
   int use_display = SDL_GetWindowDisplayIndex(windowD);
   int num_display = SDL_GetNumVideoDisplays();
@@ -179,7 +192,6 @@ render_init()
 
   max_texture_widthD = rinfo.max_texture_width;
   max_texture_heightD = rinfo.max_texture_height;
-  texture_formatD = rinfo.texture_formats[0];
 
   {
     int rw, rh;
@@ -191,9 +203,23 @@ render_init()
     retina_scaleD = MAX((float)rw / ww, (float)rh / wh);
   }
 
-  pixel_formatD = SDL_AllocFormat(rinfo.texture_formats[0]);
-  if (!RELEASE && pixel_formatD->BytesPerPixel != 4) {
-    Log("WARNING: BytesPerPixel != 4");
+  if (!texture_formatD) {
+    texture_formatD = rinfo.texture_formats[0];
+    for (int it = 0; it < rinfo.num_texture_formats; ++it) {
+      if (rinfo.texture_formats[it] == SDL_PIXELFORMAT_ABGR8888) {
+        texture_formatD = SDL_PIXELFORMAT_ABGR8888;
+      }
+    }
+    Log("Texture pixel format (%d) %s", texture_formatD,
+        SDL_GetPixelFormatName(texture_formatD));
+  }
+
+  if (texture_formatD != SDL_PIXELFORMAT_ABGR8888) {
+    Log("Perf: GPU pixelformat");
+    pixel_formatD = SDL_AllocFormat(texture_formatD);
+    if (!pixel_formatD) return 0;
+
+    if (pixel_formatD->BytesPerPixel != 4) Log("Perf: BytesPerPixel != 4");
   }
 
   return 1;

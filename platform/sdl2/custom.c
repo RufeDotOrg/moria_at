@@ -75,8 +75,7 @@ color_by_palette(c)
 static int
 rgba_by_palette(c)
 {
-  int pc = SDL_MapRGBA(pixel_formatD, U4(paletteD[c]));
-  return pc;
+  return paletteD[c];
 }
 
 void
@@ -87,8 +86,8 @@ bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
   uint8_t* pixels = surface->pixels;
   int64_t pitch = surface->pitch;
   // TBD: lightingD
-  int color =
-      SDL_MapRGBA(pixel_formatD, 0xee, 0xee, 0xec, 0xff);  // -1 // white
+  int color = 0xffeceeee;
+  if (pixel_formatD) pixel_convert(&color);
   uint8_t* src = bitmap;
   for (int64_t row = 0; row < ph; ++row) {
     uint8_t* dst = pixels + (pitch * (into.y + row)) + (bpp * into.x);
@@ -340,6 +339,7 @@ static void surface_ppfill(surface) SDL_Surface* surface;
       int cidx = nearest_pp(row, col, &dsq);
       int labr = CLAMP(65 - sqrt(dsq), 0, 100);
       int color = rgb_by_labr(labr);
+      if (pixel_formatD) pixel_convert(&color);
 
       memcpy(dst, &color, bpp);
       dst += bpp;
@@ -365,8 +365,8 @@ tp_init()
   tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, PADSIZE, PADSIZE,
                                               0, texture_formatD);
   if (tptextureD) SDL_DestroyTexture(tptextureD);
-  tptextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
-                                 PADSIZE, PADSIZE);
+  tptextureD = SDL_CreateTexture(rendererD, texture_formatD,
+                                 SDL_TEXTUREACCESS_STREAMING, PADSIZE, PADSIZE);
   SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
   surface_ppfill(tpsurfaceD);
   SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
@@ -427,8 +427,8 @@ custom_pregame()
 
   if (PC) {
     enum { ICO_SZ = 128 };
-    SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, ICO_SZ,
-                                                    ICO_SZ, 0, texture_formatD);
+    SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(
+        SDL_SWSURFACE, ICO_SZ, ICO_SZ, 0, SDL_PIXELFORMAT_ABGR8888);
     if (s) {
       if (puff_io(s->pixels, s->h * s->pitch, AP(icoZ))) {
         Log("puff_io for icon OK\n");
@@ -454,12 +454,17 @@ custom_pregame()
   if (TOUCH) ui_init();
   if (TOUCH) tp_init();
 
-  mmtextureD = SDL_CreateTexture(rendererD, 0, SDL_TEXTUREACCESS_STREAMING,
-                                 MAX_WIDTH, MAX_HEIGHT);
+  // !!texture_formatD override!! minimapD is streaming abgr8888
+  mmtextureD =
+      SDL_CreateTexture(rendererD, SDL_PIXELFORMAT_ABGR8888,
+                        SDL_TEXTUREACCESS_STREAMING, MAX_WIDTH, MAX_HEIGHT);
+
   SDL_SetTextureBlendMode(mmtextureD, SDL_BLENDMODE_NONE);
+
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, MAP_W, MAP_H);
   SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
+
   text_textureD = SDL_CreateTexture(
       rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET, 2 * 1024, 2 * 1024);
 
@@ -1225,8 +1230,6 @@ draw_game()
 
     if (show_minimap) {
       AUSE(grect, GR_MINIMAP);
-      SDL_UpdateTexture(mmtexture, NULL, &minimapD[0][0],
-                        MAX_WIDTH * sizeof(minimapD[0][0]));
 
       SDL_RenderCopy(rendererD, mmtexture, NULL, &grect);
       rect_frame(grect, 3);
@@ -1697,6 +1700,9 @@ viz_minimap()
       }
     }
   }
+
+  SDL_UpdateTexture(mmtextureD, NULL, &minimapD[0][0],
+                    MAX_WIDTH * sizeof(minimapD[0][0]));
 }
 int
 custom_predraw()
