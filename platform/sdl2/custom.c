@@ -85,8 +85,7 @@ bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
   uint8_t bpp = surface->format->BytesPerPixel;
   uint8_t* pixels = surface->pixels;
   int64_t pitch = surface->pitch;
-  // TBD: lightingD
-  int color = 0xffeceeee;
+  int color = -1;
   if (pixel_formatD) pixel_convert(&color);
   uint8_t* src = bitmap;
   for (int64_t row = 0; row < ph; ++row) {
@@ -693,12 +692,10 @@ rect_t r;
   int ry = r.y;
   int rh = r.h;
   int rw = r.w;
-  uint32_t rc[] = {
-      lightingD[1],
-      lightingD[2],
-  };
+  uint32_t even = lightingD[1];
+  uint32_t odd = lightingD[2];
   for (int row = 0; row * FHEIGHT < rh; ++row) {
-    int color = rc[row % 2];
+    int color = row % 2 ? odd : even;
     SDL_SetRenderDrawColor(rendererD, U4(color));
     rect_t target = {
         rx,
@@ -1097,6 +1094,11 @@ map_draw()
         if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
       }
       switch (viz->fade) {
+        case 0:
+          // TBD: configuration on default dimming?
+          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 16);
+          SDL_RenderFillRect(rendererD, &dest_rect);
+          break;
         case 1:
           SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);
           SDL_RenderFillRect(rendererD, &dest_rect);
