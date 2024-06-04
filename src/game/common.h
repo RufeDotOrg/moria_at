@@ -172,3 +172,12 @@ struct platformS {
 };
 DATA struct platformS platformD;
 #endif
+
+#define V2(v) v[0], v[1]
+#define V3(v) v[0], v[1], v[2]
+#define V4(v) v[0], v[1], v[2], v[3]
+#define V2b(v) V2(bptr(v))
+#define V3b(v) V3(bptr(v))
+#define V4b(v) V4(bptr(v))
+#define XY(v) (v).x, (v).y
+#define WH(r) (r).w, (r).h

@@ -56,3 +56,8 @@ vptr(void* ptr)
 {
   return ptr;
 }
+static uint8_t*
+bptr(void* ptr)
+{
+  return ptr;
+}
