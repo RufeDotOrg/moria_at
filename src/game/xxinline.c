@@ -61,3 +61,8 @@ bptr(void* ptr)
 {
   return ptr;
 }
+static int*
+iptr(void* ptr)
+{
+  return ptr;
+}

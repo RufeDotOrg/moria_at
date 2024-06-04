@@ -467,8 +467,9 @@
 #define ESCAPE '\033'
 #define RETURN 13
 #define CTRL(x) (x & 0x1f)
-// Output
-enum { BLACK, RED, GREEN, YELLOW, BLUE, PURPLE, TEAL, WHITE, BRIGHT };
+
+// Color
+enum { RED = 0, ORANGE, YELLOW, GREEN, TEAL, BLUE, PURPLE, PINK, BRIGHT };
 // Longest single message (may be concatenated with other messages)
 #define STRLEN_MSG 79
 // Art

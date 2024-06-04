@@ -179,5 +179,8 @@ DATA struct platformS platformD;
 #define V2b(v) V2(bptr(v))
 #define V3b(v) V3(bptr(v))
 #define V4b(v) V4(bptr(v))
+#define V2i(v) V2(iptr(v))
+#define V3i(v) V3(iptr(v))
+#define V4i(v) V4(iptr(v))
 #define XY(v) (v).x, (v).y
 #define WH(r) (r).w, (r).h

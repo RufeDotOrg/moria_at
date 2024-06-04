@@ -113,10 +113,10 @@ font_init()
 }
 
 STATIC void
-font_color(SDL_Color c)
+font_color(color)
 {
   for (int it = 0; it < AL(font_textureD); ++it) {
-    SDL_SetTextureColorMod(font_textureD[it], c.r, c.g, c.b);
+    SDL_SetTextureColorMod(font_textureD[it], V3b(&color));
   }
 }
 
