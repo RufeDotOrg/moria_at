@@ -417,6 +417,8 @@ draw(wait)
         c = read_input();
         // INTERRUPT
         if (c == CTRL('c')) break;
+        // REFRESH
+        if (c == CTRL('d')) break;
       } while (c != wait);
     }
     if (wait < 0) c = game_input();

@@ -386,7 +386,7 @@ fingerdown_xy_mode(x, y, mode)
           return CTRL('p');
         case TOUCH_LOCK:
           orientation_lock_toggle();
-          return ' ';
+          return CTRL('d');
         case TOUCH_STAT:
           return 'c';
         case TOUCH_MAP:
@@ -514,8 +514,6 @@ mode_change(mnext)
 int
 platform_readansi()
 {
-
-  // TBD: pass mode to pump?
   char c = sdl_pump();
   if (quitD) return CTRL('c');
   return c;
