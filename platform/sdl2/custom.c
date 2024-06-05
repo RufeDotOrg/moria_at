@@ -1350,60 +1350,64 @@ custom_draw()
   USE(renderer);
   USE(layout);
 
+  if (layout) SDL_SetRenderTarget(renderer, layout);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
+
   int mode = 0;
   if (screen_usedD[0])
     mode = 2;
   else if (overlay_usedD[0])
     mode = 1;
 
-  if (layout) SDL_SetRenderTarget(renderer, layout);
-  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-  SDL_RenderClear(renderer);
+  if (INPUT && TOUCH) {
+    mode_change(mode);
 
-  if (TOUCH && tpsurfaceD) {
-    {
-      AUSE(grect, GR_PAD);
-      SDL_RenderCopy(rendererD, tptextureD, 0, &grect);
-      rect_frame(grect, 0);
-    }
-
-    for (int it = 0; it < MAX_BUTTON; ++it) {
-      AUSE(grect, GR_BUTTON1 + it);
-      int color = rgba_by_palette(it == 0 ? RED : GREEN);
-      SDL_SetRenderDrawColor(rendererD, V4b(&color));
-      SDL_RenderFillRect(rendererD, &grect);
-    }
-
-    if (ui_textureD && mode != 1) {
-      AUSE(grect, GR_HISTORY);
-      SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
-      rect_frame(grect, 1);
-    }
-    if (mode == 0) {
-      AUSE(grect, GR_LOCK);
-      MUSE(global, orientation_lock);
-      int tridx;
-      if (orientation_lock) {
-        tridx = 48;
-      } else {
-        tridx = 45;
+    if (tpsurfaceD) {
+      {
+        AUSE(grect, GR_PAD);
+        SDL_RenderCopy(rendererD, tptextureD, 0, &grect);
+        rect_frame(grect, 0);
       }
-      if (tridx <= AL(tart_textureD)) {
-        rect_t sprite_rect = {
-            XY(point_by_spriteid(tart_textureD[tridx - 1])),
-            ART_W,
-            ART_H,
-        };
-        rect_t dest = {
-            grect.x,
-            grect.y,
-            ART_W * 2,
-            ART_H * 2,
-        };
-        dest.x += (grect.w - dest.w) / 2;
-        SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
+
+      for (int it = 0; it < MAX_BUTTON; ++it) {
+        AUSE(grect, GR_BUTTON1 + it);
+        int color = rgba_by_palette(it == 0 ? RED : GREEN);
+        SDL_SetRenderDrawColor(rendererD, V4b(&color));
+        SDL_RenderFillRect(rendererD, &grect);
       }
-      rect_frame(grect, 1);
+
+      if (ui_textureD && mode != 1) {
+        AUSE(grect, GR_HISTORY);
+        SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
+        rect_frame(grect, 1);
+      }
+      if (mode == 0) {
+        AUSE(grect, GR_LOCK);
+        MUSE(global, orientation_lock);
+        int tridx;
+        if (orientation_lock) {
+          tridx = 48;
+        } else {
+          tridx = 45;
+        }
+        if (tridx <= AL(tart_textureD)) {
+          rect_t sprite_rect = {
+              XY(point_by_spriteid(tart_textureD[tridx - 1])),
+              ART_W,
+              ART_H,
+          };
+          rect_t dest = {
+              grect.x,
+              grect.y,
+              ART_W * 2,
+              ART_H * 2,
+          };
+          dest.x += (grect.w - dest.w) / 2;
+          SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
+        }
+        rect_frame(grect, 1);
+      }
     }
   }
 

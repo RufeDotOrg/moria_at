@@ -489,19 +489,11 @@ sdl_pump()
 // may edit row/col selection to make the interface feel "smart"
 // not utilized by the replay system
 static int
-mode_change()
+mode_change(mnext)
 {
   int subprev = submodeD;
   int subnext = overlay_submodeD;
   int mprev = modeD;
-  int mnext;
-
-  if (screen_usedD[0])
-    mnext = 2;
-  else if (overlay_usedD[0])
-    mnext = 1;
-  else
-    mnext = 0;
 
   if (mprev != mnext || subprev != subnext) {
     if (mprev == 1) ui_stateD[subprev] = finger_rowD;
@@ -522,8 +514,6 @@ mode_change()
 int
 platform_readansi()
 {
-  // Experimental
-  mode_change();
 
   // TBD: pass mode to pump?
   char c = sdl_pump();
