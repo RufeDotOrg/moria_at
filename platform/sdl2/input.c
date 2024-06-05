@@ -481,6 +481,9 @@ sdl_pump()
   if (ret == 0) {
     nanosleep(&(struct timespec){0, 8e6}, 0);
     if (PC) ret = CTRL('d');
+  } else {
+    USE(msg_more);
+    if (!PC && mode == 0 && msg_more && !fastplay && ret != CTRL('d')) ret = ' ';
   }
 
   return ret;
