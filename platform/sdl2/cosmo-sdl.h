@@ -13,10 +13,12 @@
 #define SDL_GetModState abi_SDL_GetModState
 #define SDL_GetNumRenderDrivers abi_SDL_GetNumRenderDrivers
 #define SDL_GetNumVideoDisplays abi_SDL_GetNumVideoDisplays
+#define SDL_GetPixelFormatName abi_SDL_GetPixelFormatName
 #define SDL_GetRenderDriverInfo abi_SDL_GetRenderDriverInfo
 #define SDL_GetRendererInfo abi_SDL_GetRendererInfo
 #define SDL_GetRendererOutputSize abi_SDL_GetRendererOutputSize
 #define SDL_GetWindowDisplayIndex abi_SDL_GetWindowDisplayIndex
+#define SDL_GetWindowPixelFormat abi_SDL_GetWindowPixelFormat
 #define SDL_GetWindowSize abi_SDL_GetWindowSize
 #define SDL_Init abi_SDL_Init
 #define SDL_LogSetAllPriority abi_SDL_LogSetAllPriority
