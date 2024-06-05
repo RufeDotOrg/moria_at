@@ -14183,8 +14183,7 @@ cosmo_init(int argc, char** argv)
 
   if (MOD_CRASH) {
     // TBD: IsXnu() issues with custom handler (does default handler work?)
-    if (IsLinux() || IsWindows())
-      crash_init();
+    if (IsLinux() || IsWindows()) crash_init();
   }
   if (GUI) enable_windows_gui();
 
