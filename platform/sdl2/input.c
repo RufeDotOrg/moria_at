@@ -454,8 +454,6 @@ sdl_pump()
   USE(mode);
   SDL_Event event;
   int ret = 0;
-  // TBD: fastplay in portrait mode for now
-  int fastplay = (MOUSE || TOUCH) ? (layout_rectD.h > layout_rectD.w) : 0;
 
   while (ret == 0 && SDL_PollEvent(&event)) {
     if ((MOUSE || TOUCH) && event.type == SDL_FINGERDOWN) {
@@ -468,7 +466,6 @@ sdl_pump()
       }
     } else if ((MOUSE || TOUCH) && event.type == SDL_FINGERUP) {
       finger_countD -= 1;
-      if (fastplay) ret = ' ';
     } else if (KEYBOARD && (event.type == SDL_KEYDOWN)) {
       ret = sdl_keyboard_event(event);
     } else if (event.type == SDL_QUIT) {
@@ -483,7 +480,8 @@ sdl_pump()
     if (PC) ret = CTRL('d');
   } else {
     USE(msg_more);
-    if (!PC && mode == 0 && msg_more && !fastplay && ret != CTRL('d')) ret = ' ';
+    // TBD: game option to allow soft ack of -more-?
+    if (!PC && mode == 0 && msg_more && ret != CTRL('d')) ret = ' ';
   }
 
   return ret;
