@@ -853,6 +853,17 @@ common_text()
       font_reset();
     }
   }
+  if (PC) {
+    if (msg_moreD || TEST_UI) {
+      DATA char spacebar[] = "-press spacebar-";
+      AUSE(grect, GR_PAD);
+      SDL_Point p = {0, layout_rect.h};
+      p.x += AL(spacebar);
+      p.y -= FHEIGHT;
+      render_monofont_string(renderer, &fontD, AP(spacebar), p);
+    }
+  }
+
   return 0;
 }
 int
