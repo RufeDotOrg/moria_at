@@ -398,7 +398,7 @@ fingerdown_xy_mode(x, y, mode)
         case TOUCH_LB:
           return finger ? 'd' : 'a';
         case TOUCH_RB:
-          return finger ? CTRL('a') : '.';
+          return finger ? '!' : '.';
         default:
           break;
       }
