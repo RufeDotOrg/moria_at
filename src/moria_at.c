@@ -3846,8 +3846,7 @@ hard_reset()
   screen_submodeD = 0;
 }
 BOOL
-panel_contains(panel, y, x)
-struct panelS* panel;
+panel_contains(y, x)
 {
   int rmin = panelD.panel_row_min;
   int rmax = panelD.panel_row_max;
@@ -4286,7 +4285,7 @@ detect_mon(int (*valid)(), int known)
 
   flag = FALSE;
   FOR_EACH(mon, {
-    if (panel_contains(&panelD, mon->fy, mon->fx)) {
+    if (panel_contains(mon->fy, mon->fx)) {
       cr_ptr = &creatureD[mon->cidx];
       if (!mon->mlit) {
         if (valid(cr_ptr)) {
@@ -6878,7 +6877,7 @@ light_line(dir, y, x)
     else {
       if ((c_ptr->cflag & CF_PERM_LIGHT) == 0) {
         if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
-        if ((c_ptr->cflag & CF_ROOM) != 0 && panel_contains(&panelD, y, x))
+        if ((c_ptr->cflag & CF_ROOM) != 0 && panel_contains(y, x))
           light_room(y, x);
       }
       c_ptr->cflag |= (CF_PERM_LIGHT | CF_SEEN);
@@ -7056,7 +7055,7 @@ twall(y, x)
 
   if (!found) c_ptr->fval = FLOOR_CORR;
 
-  if (panel_contains(&panelD, y, x))
+  if (panel_contains(y, x))
     if (CF_LIT & c_ptr->cflag && c_ptr->oidx)
       msg_print("You have found something!");
   res = TRUE;
