@@ -3809,8 +3809,8 @@ town_gen()
   build_pawn();
 
   do {
-    i = randint(SYMMAP_HEIGHT - 2);
-    j = randint(SYMMAP_WIDTH - 2);
+    i = 1 + randint(SYMMAP_HEIGHT - 3);
+    j = 1 + randint(SYMMAP_WIDTH - 3);
     c_ptr = &caveD[i][j];
   } while (c_ptr->fval >= MIN_CLOSED_SPACE || (c_ptr->oidx != 0) ||
            (c_ptr->midx != 0));
