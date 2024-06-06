@@ -1440,6 +1440,11 @@ place_stair_tval(y, x, tval)
   obj->number = 1;
 
   cave_ptr->oidx = obj_index(obj);
+
+  if (TEST_CAVEGEN) {
+    if (y < 2 || y + 2 > MAX_HEIGHT) exit(1);
+    if (x < 1 || x + 2 > MAX_WIDTH) exit(1);
+  }
 }
 static void new_spot(y, x) int *y, *x;
 {
@@ -1476,11 +1481,12 @@ place_stairs(tval, num)
     flag = FALSE;
     j = 0;
     do {
-      /* Note: don't let y1/x1 be zero, and don't let y2/x2 be equal
-         to cur_height-1/cur_width-1, these values are always
-         BOUNDARY_ROCK. */
-      y1 = randint(MAX_HEIGHT - 14);
-      x1 = randint(MAX_WIDTH - 14);
+      /* Note: don't let y1/x1 be one
+       * don't let y2/x2 be equal to cur_height-2/cur_width-2
+       * viz_minimap_stair is simplest when we are not adjacent to BOUNDARY_ROCK
+       * */
+      y1 = 1 + randint(MAX_HEIGHT - 15);
+      x1 = 1 + randint(MAX_WIDTH - 15);
       y2 = y1 + 12;
       x2 = x1 + 12;
       do {

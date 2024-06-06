@@ -1679,8 +1679,6 @@ viz_update()
 void
 viz_minimap_stair(row, col, rgba)
 {
-  row = CLAMP(row, 2, MAX_HEIGHT - 1);
-  col = CLAMP(col, 1, MAX_WIDTH - 2 - 1);
   minimapD[row][col] = rgba;
   minimapD[row][col - 1] = rgba;
   minimapD[row - 1][col] = rgba;
