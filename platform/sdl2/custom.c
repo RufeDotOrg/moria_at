@@ -1239,21 +1239,26 @@ draw_game()
     if (show_minimap) {
       AUSE(grect, GR_MINIMAP);
 
-      SDL_Rect src = {
+      SDL_Rect panel = {
           panelD.panel_col_min,
           panelD.panel_row_min,
           SYMMAP_WIDTH,
           SYMMAP_HEIGHT,
       };
-
-      SDL_RenderCopy(rendererD, mmtexture, minimap_enlarge ? &src : 0, &grect);
+      SDL_RenderCopy(rendererD, mmtexture, &panel, &grect);
       rect_frame(grect, 3);
     }
 
     if (show_game) {
       AUSE(grect, GR_GAMEPLAY);
       if (minimap_enlarge) {
-        SDL_RenderCopy(rendererD, mmtexture, 0, &grect);
+        SDL_Rect scale = {
+            0,
+            0,
+            dun_level ? MAX_WIDTH : SYMMAP_WIDTH,
+            dun_level ? MAX_HEIGHT : SYMMAP_HEIGHT,
+        };
+        SDL_RenderCopy(rendererD, mmtexture, &scale, &grect);
       } else {
         map_draw();
 
@@ -1578,7 +1583,7 @@ cave_color(row, col)
       } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
         color = rgba_by_palette(BRIGHT + BLUE);
       } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
-        color = rgba_by_palette(BLUE);
+        color = rgba_by_palette(BRIGHT + PURPLE);
       }
     }
   }
@@ -1686,38 +1691,28 @@ viz_minimap_stair(row, col, rgba)
 void
 viz_minimap()
 {
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
+  int full_map = minimap_enlargeD && dun_level;
+  MUSE(panel, panel_row_min);
+  MUSE(panel, panel_col_min);
+  int rmin = full_map ? 0 : panel_row_min;
+  int rmax = rmin + (full_map ? MAX_HEIGHT : SYMMAP_HEIGHT);
+  int cmin = full_map ? 0 : panel_col_min;
+  int cmax = cmin + (full_map ? MAX_WIDTH : SYMMAP_WIDTH);
   int color;
 
-  if (minimap_enlargeD && dun_level) {
-    for (int row = 0; row < MAX_HEIGHT; ++row) {
-      for (int col = 0; col < MAX_WIDTH; ++col) {
-        color = cave_color(row, col);
+  for (int row = rmin; row < rmax; ++row) {
+    for (int col = cmin; col < cmax; ++col) {
+      color = cave_color(row, col);
 
-        if ((row >= rmin && row <= rmax) && (col >= cmin && col <= cmax) &&
-            color == 0) {
-          color = lightingD[1];
-        }
+      uint32_t drow = row - panel_row_min;
+      uint32_t dcol = col - panel_col_min;
+      if (!color && (drow < SYMMAP_HEIGHT && dcol < SYMMAP_WIDTH)) {
+        color = lightingD[0];
+      }
 
-        minimapD[row][col] = color;
-        if (color == rgba_by_palette(BLUE) || color == rgba_by_palette(RED))
-          viz_minimap_stair(row, col, color);
-      }
-    }
-  } else {
-    enum { RATIO = MAX_WIDTH / SYMMAP_WIDTH };
-    for (int row = 0; row < MAX_HEIGHT / RATIO; ++row) {
-      for (int col = 0; col < MAX_WIDTH / RATIO; ++col) {
-        color = cave_color(row + rmin, col + cmin);
-        for (int i = 0; i < RATIO; ++i) {
-          for (int j = 0; j < RATIO; ++j) {
-            minimapD[row * RATIO + i][col * RATIO + j] = color;
-          }
-        }
-      }
+      minimapD[row][col] = color;
+      if (color == rgba_by_palette(BLUE) || color == rgba_by_palette(RED))
+        viz_minimap_stair(row, col, color);
     }
   }
 
