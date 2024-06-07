@@ -13590,9 +13590,10 @@ dir_by_confusion()
   msg_print("You are confused.");
   return dir;
 }
-static fail(char* text)
+static void
+fail(char* text)
 {
-  printf(text);
+  puts(text);
   exit(0);
 }
 void
