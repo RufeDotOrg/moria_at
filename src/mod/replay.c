@@ -5,7 +5,7 @@
 static void* replayD;
 static int64_t replay_sizeD;
 // nm bin/moria_at | grep 'start_game'
-static void* ccoffset = 0x000000000069510;
+static void* ccoffset = 0x000000000049d880;  // 0x000000000069510;
 
 static void
 replay_diverge_size()
@@ -18,8 +18,8 @@ replay_diverge_size()
     if (lhs[it] != rhs[it]) {
       if (contig) printf("  ");
       int64_t offset = it * sizeof(int);
-      printf("%p (%p): 0x%x 0x%x\n", (void*)0 + offset, ccoffset + offset,
-             lhs[it], rhs[it]);
+      printf("%p (cc %p): 0x%x 0x%x replay v. game\n", (void*)0 + offset,
+             ccoffset + offset, lhs[it], rhs[it]);
       if (__start_game + offset > entity_monD &&
           __start_game + offset < AE(entity_monD)) {
         printf("  ^ monster desync\n");
@@ -28,12 +28,15 @@ replay_diverge_size()
           __start_game + offset < AE(entity_objD)) {
         printf("  ^ object desync\n");
       }
+      if (__start_game + offset > caveD && __start_game + offset < AE(caveD)) {
+        printf("  ^ cave desync\n");
+      }
       contig += 1;
     } else {
       contig = 0;
     }
   }
-  printf("Compiler ccoffset: %p", ccoffset);
+  printf("\nCompiler ccoffset: %p\n", ccoffset);
   printf("Start game: %p\n", __start_game);
   printf("Monster range: %p %p\n", entity_monD, AE(entity_monD));
   printf("Object range: %p %p\n", entity_objD, AE(entity_objD));
@@ -59,6 +62,7 @@ replay_memcmp()
       int r = memcmp(replayD, __start_game, replay_size);
       if (r != 0) {
         replay_desync = 1;
+        printf("DESYNC DETAILS:\n");
         replay_diverge_size();
         puts(name);
         // Halt the replay to see what is happening

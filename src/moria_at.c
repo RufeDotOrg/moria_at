@@ -11,11 +11,11 @@ enum { TEST_REPLAY = 0 };
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
 GAME int find_threat;
-DATA int find_direction;
-DATA int find_flag;
-DATA int find_openarea;
-DATA int find_breakright, find_breakleft;
-DATA int find_prevdir;
+GAME int find_direction;
+GAME int find_flag;
+GAME int find_openarea;
+GAME int find_breakright, find_breakleft;
+GAME int find_prevdir;
 DATA jmp_buf restartD;
 DATA int drop_modeD;
 DATA char quit_stringD[] = "quitting";
@@ -13688,6 +13688,7 @@ dungeon()
           if (KEYBOARD) {
             switch (c) {
               case '?':
+                omit_replay = 1;
                 py_help();
                 break;
               case ESCAPE:

@@ -12,10 +12,10 @@ DATA int active_affectD[15];
 // Full-screen & overlay (choice)
 DATA char screenD[22][98];
 GAME int screen_usedD[AL(screenD)];
-GAME int screen_submodeD;
+DATA int screen_submodeD;
 DATA char overlayD[22][80];
 GAME int overlay_usedD[AL(overlayD)];
-GAME int overlay_submodeD;
+DATA int overlay_submodeD;
 DATA int minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
 DATA int save_on_readyD;
