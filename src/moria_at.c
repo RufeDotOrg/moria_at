@@ -13133,7 +13133,6 @@ inven_pawn(iidx)
       uD.gold += cost;
       MSG("You sold %s for %d gold.", descD, cost);
     }
-    turn_flag = 1;
     msg_pause();
   }
 }
@@ -13261,11 +13260,12 @@ store_item_purchase(sidx, item)
       MSG("You bought %s for %d gold (%c).", descD, cost, iidx + 'a');
       if (obj->number != count) MSG("You have %d.", obj->number);
       store_item_destroy(sidx, item, count);
-      turn_flag = 1;
     }
     msg_pause();
   }
 }
+// entering a store or pawn shop passes a turn
+// this eliminates replay_hack() calls on sort, purchase, and sell
 static void
 pawn_entrance()
 {
@@ -13287,12 +13287,11 @@ pawn_entrance()
       if (item < INVEN_EQUIP) obj_study(obj_get(invenD[item]), 1);
     } else if (c == '-') {
       inven_sort();
-      replay_hack();
     }
   }
+
+  turn_flag = 1;
 }
-// maybe entering a store at all should pass a turn;
-// this eliminates replay_hack() calls on sort
 static void
 store_entrance(sidx)
 {
@@ -13314,9 +13313,10 @@ store_entrance(sidx)
       if (item < AL(store_objD[0])) obj_study(&store_objD[sidx][item], 1);
     } else if (c == '-') {
       store_sort(sidx);
-      replay_hack();
     }
   }
+
+  turn_flag = 1;
 }
 void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
 {
