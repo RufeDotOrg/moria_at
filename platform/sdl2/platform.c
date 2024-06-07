@@ -139,8 +139,10 @@ render_init()
   windowD = SDL_CreateWindow("", 0, 0, WINDOW_X, WINDOW_Y, winflag);
   if (!windowD) return 0;
 
-  uint32_t format = SDL_GetWindowPixelFormat(windowD);
-  Log("Window pixel format (%d) %s", format, SDL_GetPixelFormatName(format));
+  if (!RELEASE) {
+    uint32_t format = SDL_GetWindowPixelFormat(windowD);
+    Log("Window pixel format (%d) %s", format, SDL_GetPixelFormatName(format));
+  }
 
   int use_display = SDL_GetWindowDisplayIndex(windowD);
   int num_display = SDL_GetNumVideoDisplays();
