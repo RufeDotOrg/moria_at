@@ -13811,7 +13811,6 @@ dungeon()
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game
             case CTRL('d'):
-              omit_replay = 1;
               break;
             case CTRL('p'):
               omit_replay = 1;
