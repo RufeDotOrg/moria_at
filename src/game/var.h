@@ -133,6 +133,7 @@ DATA char input_recordD[4 * 1024];
 DATA uint32_t input_record_writeD;
 DATA uint32_t input_record_readD;
 DATA int input_resumeD;
+// Could optimize to uint8_t using record count
 DATA int16_t input_actionD[2 * 1024];
 DATA int input_action_usedD;
 DATA struct bufS midpoint_bufD[] = {

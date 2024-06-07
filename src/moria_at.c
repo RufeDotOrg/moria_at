@@ -74,9 +74,8 @@ read_input()
   return c;
 }
 
-// Gameplay input
-// If a recording is loaded, it reads back from the buffer
-// Otherwise read an input, and keep record of it
+// If a recording is loaded, read from the buffer
+// Otherwise read platform input, and keep record of it
 static char
 game_input()
 {
@@ -383,6 +382,16 @@ msg_advance()
   log_used = AS(msglen_cqD, msg_writeD);
   msg_writeD += (log_used != 0);
   AS(msglen_cqD, msg_writeD) = 0;
+}
+// Sorting commands modify GAME simulation
+// Passing a turn is a work-around to ensure input chain is preserved
+// This turn cost can be merged with useful actions (purchase/sell/actuate)
+static void
+replay_hack()
+{
+  // TBD: save replay_action():
+  // main loop should check input_action_usedD before changing input_records
+  turn_flag = 1;
 }
 
 enum { WHITESPACE = 0x20202020 };
@@ -8679,6 +8688,7 @@ inven_choice(char* prompt, char* mode_list)
       }
     } else if (c == '-') {
       inven_sort();
+      replay_hack();
     } else {
       for (int it = 0; it < 2; ++it) {
         if (mode_list[it] == c) mode = c;
@@ -13123,6 +13133,7 @@ inven_pawn(iidx)
       uD.gold += cost;
       MSG("You sold %s for %d gold.", descD, cost);
     }
+    turn_flag = 1;
     msg_pause();
   }
 }
@@ -13250,6 +13261,7 @@ store_item_purchase(sidx, item)
       MSG("You bought %s for %d gold (%c).", descD, cost, iidx + 'a');
       if (obj->number != count) MSG("You have %d.", obj->number);
       store_item_destroy(sidx, item, count);
+      turn_flag = 1;
     }
     msg_pause();
   }
@@ -13275,9 +13287,12 @@ pawn_entrance()
       if (item < INVEN_EQUIP) obj_study(obj_get(invenD[item]), 1);
     } else if (c == '-') {
       inven_sort();
+      replay_hack();
     }
   }
 }
+// maybe entering a store at all should pass a turn;
+// this eliminates replay_hack() calls on sort
 static void
 store_entrance(sidx)
 {
@@ -13299,6 +13314,7 @@ store_entrance(sidx)
       if (item < AL(store_objD[0])) obj_study(&store_objD[sidx][item], 1);
     } else if (c == '-') {
       store_sort(sidx);
+      replay_hack();
     }
   }
 }
@@ -13356,6 +13372,8 @@ void py_reactuate(y_ptr, x_ptr, obj_id) int *y_ptr, *x_ptr;
 void py_actuate(y_ptr, x_ptr, submode) int *y_ptr, *x_ptr;
 {
   int iidx;
+  USE(last_actuate);
+  USE(last_cast);
 
   overlay_submodeD = submode;
   do {
@@ -13369,6 +13387,11 @@ void py_actuate(y_ptr, x_ptr, submode) int *y_ptr, *x_ptr;
       yx_autoinven(y_ptr, x_ptr, iidx);
     }
   } while (!turn_flag && iidx >= 0);
+
+  if (!turn_flag) {
+    last_actuateD = last_actuate;
+    last_castD = last_cast;
+  }
 }
 static void
 regenhp(percent)
@@ -13567,13 +13590,17 @@ dir_by_confusion()
   msg_print("You are confused.");
   return dir;
 }
+static fail(char* text)
+{
+  printf(text);
+  exit(0);
+}
 void
 dungeon()
 {
   int c, y, x, iidx;
   uint32_t dir, teleport;
   int town;
-  int omit_replay;
   int check_replay;
 
   town = (dun_level == 0);
@@ -13613,19 +13640,35 @@ dungeon()
 
   teleport = FALSE;
   do {
-    turn_flag = FALSE;
+    int last_action = AS(input_actionD, input_action_usedD - 1);
     inven_check_weight();
     inven_check_light();
 
-    if (TEST_REPLAY) check_replay = input_record_writeD;
-    do {
-      omit_replay = 0;
+    if (TEST_REPLAY) check_replay = rnd_seed;
+    turn_flag = (countD.rest != 0) || (countD.paralysis != 0);
+    if (teleport) turn_flag = 0;
+    while (!turn_flag) {
+      if (input_record_readD == input_record_writeD) {
+        if (last_action != input_record_writeD) {
+          if (TEST_REPLAY) {
+            printf("dropped %d inputs: ", input_record_writeD - last_action);
+            for (int it = last_action; it < input_record_writeD; ++it) {
+              char c = input_recordD[it];
+              if (char_visible(c)) printf("(%c)", c);
+              printf("%d ", c);
+            }
+            printf("\n");
+            if (check_replay != rnd_seed) fail("seed moved; turn did not\n");
+          }
+
+          input_record_readD = input_record_writeD = last_action;
+        }
+      }
+
       msg_moreD = 0;
       replay_flag = (input_record_readD < input_record_writeD);
       c = 0;
       draw(WAIT_NONE);
-      if (!teleport && countD.rest != 0) break;
-      if (!teleport && countD.paralysis != 0) break;
 
       y = uD.y;
       x = uD.x;
@@ -13689,7 +13732,6 @@ dungeon()
           if (KEYBOARD) {
             switch (c) {
               case '?':
-                omit_replay = 1;
                 py_help();
                 break;
               case ESCAPE:
@@ -13705,14 +13747,12 @@ dungeon()
                 py_offhand();
                 break;
               case 'x':
-                omit_replay = 1;
                 py_examine();
                 break;
               case 'i':
                 py_actuate(&y, &x, 'i');
                 break;
               case 'M':
-                omit_replay = 1;
                 py_where_on_map();
                 break;
               case 'R':
@@ -13732,11 +13772,9 @@ dungeon()
               if (!KEYBOARD) py_menu();
               break;
             case '-':
-              omit_replay = 1;
               globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
               break;
             case '+':
-              omit_replay = 1;
               globalD.zoom_factor = (globalD.zoom_factor + 1) % MAX_ZOOM;
               break;
             case '!':
@@ -13755,7 +13793,6 @@ dungeon()
               py_search(y, x);
               break;
             case 'v':
-              omit_replay = 1;
               show_version();
               break;
             case '<':
@@ -13769,7 +13806,6 @@ dungeon()
               py_actuate(&y, &x, 'i');
               break;
             case 'c':
-              omit_replay = 1;
               show_character(0, 0);
               break;
             case 'm':
@@ -13786,8 +13822,6 @@ dungeon()
                     }
                   }
                 }
-              } else {
-                omit_replay = 1;
               }
               if (maD[MA_BLIND] == 0) {
                 minimap_enlargeD = TRUE;
@@ -13797,7 +13831,6 @@ dungeon()
               break;
             case 'O':
               if (!KEYBOARD) {
-                omit_replay = 1;
                 if (py_affect(MA_BLIND)) {
                   MSG("You can't see a thing!");
                 } else {
@@ -13813,11 +13846,9 @@ dungeon()
             case CTRL('d'):
               break;
             case CTRL('p'):
-              omit_replay = 1;
               show_history();
               break;
             case CTRL('z'):
-              omit_replay = 1;
               py_undo();
               break;
           }
@@ -13974,17 +14005,11 @@ dungeon()
           panel_update(&panelD, uD.y, uD.x, FALSE);
         }
       }
+    }
 
-      if (c) {
-        if (omit_replay) {
-          int last_action = AS(input_actionD, input_action_usedD - 1);
-          input_record_readD = input_record_writeD = last_action;
-          if (TEST_REPLAY && check_replay != last_action) exit(1);
-        } else if (turn_flag) {
-          AS(input_actionD, input_action_usedD++) = input_record_readD;
-        }
-      }
-    } while (!turn_flag);
+    if (turn_flag && last_action != input_record_readD) {
+      AS(input_actionD, input_action_usedD++) = input_record_readD;
+    }
 
     ma_tick(0);  // rising
     if (!uD.new_level_flag) {
