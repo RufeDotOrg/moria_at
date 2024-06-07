@@ -8615,6 +8615,7 @@ struct objS* obj;
     }
 
     obj_desc(obj, number);
+    if (!PC) msg_hint(AP("(RED: drop | GREEN: use)"));
     return CLOBBER_MSG("You study %s.", descD);
   }
 
