@@ -10,12 +10,14 @@ enum { TEST_REPLAY = 0 };
 
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
-GAME int find_threat;
-GAME int find_direction;
-GAME int find_flag;
-GAME int find_openarea;
-GAME int find_breakright, find_breakleft;
-GAME int find_prevdir;
+GAME int find_threatD;
+GAME int find_flagD;
+// find state
+DATA int find_directionD;
+DATA int find_openareaD;
+DATA int find_breakrightD, find_breakleftD;
+DATA int find_prevdirD;
+// end find state
 DATA jmp_buf restartD;
 DATA int drop_modeD;
 DATA char quit_stringD[] = "quitting";
@@ -478,7 +480,7 @@ static void msg_game(msg, msglen) char* msg;
     AS(msglen_cqD, msg_writeD) = MIN(log_used + msg_used, msg_width);
 
   if (countD.rest) countD.rest = 0;
-  if (find_flag) find_flag = 0;
+  if (find_flagD) find_flagD = 0;
 }
 #define msg_print(x) msg_game(x, AL(x) - 1)
 #define see_print(x) \
@@ -4048,53 +4050,52 @@ see_wall(dir, y, x)
 }
 void find_init(dir, y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
-  int deepleft, deepright;
-  int i, shortleft, shortright;
-
   if (!mmove(dir, y_ptr, x_ptr))
-    find_flag = FALSE;
+    find_flagD = FALSE;
   else {
-    find_direction = dir;
-    find_flag = TRUE;
-    find_breakright = find_breakleft = FALSE;
-    find_prevdir = dir;
+    find_directionD = dir;
+    find_flagD = TRUE;
+    find_breakrightD = find_breakleftD = FALSE;
+    find_prevdirD = dir;
     if (py_affect(MA_BLIND) == 0) {
-      i = chome[dir];
-      deepleft = deepright = FALSE;
-      shortright = shortleft = FALSE;
+      int i = chome[dir];
+      int deepleft = 0;
+      int deepright = 0;
+      int shortleft = 0;
+      int shortright = 0;
       if (see_wall(cycle[i + 1], uD.y, uD.x)) {
-        find_breakleft = TRUE;
+        find_breakleftD = TRUE;
         shortleft = TRUE;
       } else if (see_wall(cycle[i + 1], *y_ptr, *x_ptr)) {
-        find_breakleft = TRUE;
+        find_breakleftD = TRUE;
         deepleft = TRUE;
       }
       if (see_wall(cycle[i - 1], uD.y, uD.x)) {
-        find_breakright = TRUE;
+        find_breakrightD = TRUE;
         shortright = TRUE;
       } else if (see_wall(cycle[i - 1], *y_ptr, *x_ptr)) {
-        find_breakright = TRUE;
+        find_breakrightD = TRUE;
         deepright = TRUE;
       }
-      if (find_breakleft && find_breakright) {
-        find_openarea = FALSE;
+      if (find_breakleftD && find_breakrightD) {
+        find_openareaD = FALSE;
         if (dir & 1) { /* a hack to allow angled corridor entry */
           if (deepleft && !deepright)
-            find_prevdir = cycle[i - 1];
+            find_prevdirD = cycle[i - 1];
           else if (deepright && !deepleft)
-            find_prevdir = cycle[i + 1];
+            find_prevdirD = cycle[i + 1];
         }
         /* else if there is a wall two spaces ahead and seem to be in a
            corridor, then force a turn into the side corridor, must
            be moving straight into a corridor here */
         else if (see_wall(cycle[i], *y_ptr, *x_ptr)) {
           if (shortleft && !shortright)
-            find_prevdir = cycle[i - 2];
+            find_prevdirD = cycle[i - 2];
           else if (shortright && !shortleft)
-            find_prevdir = cycle[i + 2];
+            find_prevdirD = cycle[i + 2];
         }
       } else
-        find_openarea = TRUE;
+        find_openareaD = TRUE;
     }
   }
 }
@@ -4117,7 +4118,7 @@ find_event(y, x)
 
   option = 0;
   option2 = 0;
-  dir = find_prevdir;
+  dir = find_prevdirD;
   max = (dir & 1) + 1;
   /* Look at every newly adjacent square. */
   for (i = -max; i <= max; i++) {
@@ -4141,28 +4142,28 @@ find_event(y, x)
       /* Detect adjacent visible monsters that may not otherwise disturb */
       if (c_ptr->midx != 0) {
         if (entity_monD[c_ptr->midx].mlit) {
-          return 1;
+          return 2;
         }
       }
 
       if (c_ptr->fval <= MAX_OPEN_SPACE) {
-        if (find_openarea) {
+        if (find_openareaD) {
           /* Have we found a break? */
           if (i < 0) {
-            if (find_breakright) {
-              return 1;
+            if (find_breakrightD) {
+              return 3;
             }
           } else if (i > 0) {
-            if (find_breakleft) {
-              return 1;
+            if (find_breakleftD) {
+              return 4;
             }
           }
         } else if (option == 0)
           option = newdir; /* The first new direction. */
         else if (option2 != 0) {
-          return 1; /* Three new directions. STOP. */
+          return 5; /* Three new directions. STOP. */
         } else if (option != cycle[chome[dir] + i - 1]) {
-          return 1; /* If not adjacent to prev, STOP */
+          return 6; /* If not adjacent to prev, STOP */
         } else {
           /* Two adjacent choices. Make option2 the diagonal,
              and remember the other diagonal adjacent to the first
@@ -4176,43 +4177,43 @@ find_event(y, x)
             option = newdir;
           }
         }
-      } else if (find_openarea) {
+      } else if (find_openareaD) {
         /* We see an obstacle. In open area, STOP if on a side
            previously open. */
         if (i < 0) {
-          if (find_breakleft) {
-            return 1;
+          if (find_breakleftD) {
+            return 7;
           }
-          find_breakright = TRUE;
+          find_breakrightD = TRUE;
         } else if (i > 0) {
-          if (find_breakright) {
-            return 1;
+          if (find_breakrightD) {
+            return 8;
           }
-          find_breakleft = TRUE;
+          find_breakleftD = TRUE;
         }
       }
     }
   }
 
-  if (find_openarea == FALSE) { /* choose a direction. */
+  if (find_openareaD == FALSE) { /* choose a direction. */
     if (option2 == 0) {
       /* There is only one option, or if two, then we always examine
          potential corners and never cur known corners, so you step
          into the straight option. */
-      if (option != 0) find_direction = option;
+      if (option != 0) find_directionD = option;
       if (option2 == 0)
-        find_prevdir = option;
+        find_prevdirD = option;
       else
-        find_prevdir = option2;
+        find_prevdirD = option2;
     } else {
       /* Two options! */
       row = y;
       col = x;
       mmove(option, &row, &col);
       if (!see_wall(option, row, col) || !see_wall(check_dir, row, col)) {
-        if (find_threat) {
+        if (find_threatD) {
           /* STOP: the player can make a choice */
-          return 1;
+          return 9;
         } else {
           /* Don't see that it is closed off.  This could be a
              potential corner or an intersection. */
@@ -4220,17 +4221,17 @@ find_event(y, x)
           /* Can not see anything ahead and in the direction we are
              turning, assume that it is a potential corner. */
           {
-            find_direction = option;
-            find_prevdir = option2;
+            find_directionD = option;
+            find_prevdirD = option2;
           } else {
             /* STOP: we are next to an intersection or a room */
-            return 1;
+            return 10;
           }
         }
       } else {
         /* This corner is seen to be enclosed; we cut the corner. */
-        find_direction = option2;
-        find_prevdir = option2;
+        find_directionD = option2;
+        find_prevdirD = option2;
       }
     }
   }
@@ -12786,9 +12787,9 @@ creatures()
     if (mon->mlit && !waslit[it_index]) seen_lit += 1;
   });
 
-  find_threat = (seen_act != 0);
+  find_threatD = (seen_act != 0);
   if (seen_act) countD.rest = 0;
-  if (seen_lit) find_flag = FALSE;
+  if (seen_lit) find_flagD = FALSE;
 
   return seen_act;
 }
@@ -12825,7 +12826,7 @@ static void hit_trap(y, x, uy, ux) int *uy, *ux;
   obj->tchar = '^';
   obj->idflag |= ID_REVEAL;
   c_ptr->cflag |= CF_FIELDMARK;
-  find_flag = FALSE;
+  find_flagD = FALSE;
 
   dam = obj->damage[1] ? pdamroll(obj->damage) : 0;
 
@@ -13630,8 +13631,8 @@ dungeon()
       x = uD.x;
       if (teleport) {
         if (equip_vibrate(TR_TELEPORT)) py_teleport(40, &y, &x);
-      } else if (find_flag) {
-        mmove(find_direction, &y, &x);
+      } else if (find_flagD) {
+        mmove(find_directionD, &y, &x);
       } else {
         c = game_input();
         if (TEST_REPLAY && !is_ctrl(c)) Log("execute (%c:%d)\n", c, c);
@@ -13913,9 +13914,9 @@ dungeon()
         struct monS* mon = &entity_monD[c_ptr->midx];
         struct objS* obj = &entity_objD[c_ptr->oidx];
 
-        if (find_flag && mon->mlit) {
+        if (find_flagD && mon->mlit) {
           // Run is non-combat movement
-          find_flag = FALSE;
+          find_flagD = FALSE;
         } else {
           // doors known to be jammed are bashed prior to movement
           if (obj->tval == TV_CLOSED_DOOR) {
@@ -13946,8 +13947,12 @@ dungeon()
 
             // Perception check on movement
             if (uD.fos <= 1 || randint(uD.fos) == 1) py_search(y, x);
-            if (py_affect(MA_BLIND) == 0 && find_flag) {
-              if (find_event(y, x)) find_flag = FALSE;
+            if (py_affect(MA_BLIND) == 0 && find_flagD) {
+              int evcode = find_event(y, x);
+              if (evcode) {
+                if (TEST_REPLAY) Log("find_event %d", evcode);
+                find_flagD = FALSE;
+              }
             }
 
             if (obj->tval == TV_CHEST && obj->sn != SN_EMPTY) {
@@ -13964,7 +13969,8 @@ dungeon()
           } else if (py_affect(MA_BLIND) == 0 && obj->tval == TV_RUBBLE) {
             tunnel(y, x);
           } else {
-            find_flag = FALSE;
+            if (TEST_REPLAY) Log("find_flagD = FALSE");
+            find_flagD = FALSE;
           }
           panel_update(&panelD, uD.y, uD.x, FALSE);
         }
