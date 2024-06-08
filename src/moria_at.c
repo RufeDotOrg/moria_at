@@ -4346,32 +4346,38 @@ struct creatureS* cr_ptr;
   if (py_affect(MA_BLIND)) return 0;
   return perceive_creature(cr_ptr);
 }
-void
+#define test_bit(mem, bit) (((mem) & (1 << (uint32_t)(bit))) != 0)
+int
 update_mon(midx)
 {
-  int flag, fy, fx, cdis, infra;
+  int flag, fy, fx, cdis;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
+  MUSE(u, y);
+  MUSE(u, x);
+  MUSE(u, mflag);
+  MUSE(u, infra);
+  int blind = (maD[MA_BLIND] != 0);
 
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
   flag = FALSE;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
-  if (py_affect(MA_DETECT_EVIL) && (CD_EVIL & cr_ptr->cdefense)) {
+  if (test_bit(mflag, MA_DETECT_EVIL) && (CD_EVIL & cr_ptr->cdefense)) {
     flag = TRUE;
-  } else if (py_affect(MA_DETECT_MON) &&
+  } else if (test_bit(mflag, MA_DETECT_MON) &&
              ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
     flag = TRUE;
-  } else if (py_affect(MA_DETECT_INVIS) && (CM_INVISIBLE & cr_ptr->cmove)) {
+  } else if (test_bit(mflag, MA_DETECT_INVIS) &&
+             (CM_INVISIBLE & cr_ptr->cmove)) {
     flag = TRUE;
-  } else if (maD[MA_BLIND] == 0) {
-    infra = (CD_INFRA & cr_ptr->cdefense);
-    cdis = distance(uD.y, uD.x, fy, fx);
-    if (cdis <= MAX_SIGHT && los(uD.y, uD.x, fy, fx)) {
+  } else if (!blind) {
+    cdis = distance(y, x, fy, fx);
+    if (cdis <= MAX_SIGHT && los(y, x, fy, fx)) {
       c_ptr = &caveD[fy][fx];
-      if (infra && (cdis <= uD.infra)) {
+      if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= infra)) {
         flag = TRUE;
       } else if (CF_LIT & c_ptr->cflag) {
         flag = perceive_creature(cr_ptr);
@@ -4380,6 +4386,7 @@ update_mon(midx)
   }
 
   m_ptr->mlit = flag;
+  return flag;
 }
 static int
 mon_multiply(mon)
