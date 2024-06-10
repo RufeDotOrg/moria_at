@@ -3863,15 +3863,6 @@ hard_reset()
   overlay_submodeD = 0;
   screen_submodeD = 0;
 }
-BOOL
-panel_contains(y, x)
-{
-  int rmin = panelD.panel_row_min;
-  int rmax = panelD.panel_row_max;
-  int cmin = panelD.panel_col_min;
-  int cmax = panelD.panel_col_max;
-  return (y >= rmin && y < rmax && x >= cmin && x < cmax);
-}
 void
 panel_bounds(struct panelS* panel)
 {
@@ -4294,25 +4285,25 @@ int
 detect_mon(int (*valid)(), int known)
 {
   struct creatureS* cr_ptr;
-  int flag;
+  int flag = 0;
 
-  flag = FALSE;
   FOR_EACH(mon, {
-    if (panel_contains(mon->fy, mon->fx)) {
-      cr_ptr = &creatureD[mon->cidx];
-      if (!mon_lit(it_index)) {
-        if (valid(cr_ptr)) {
-          mon->mshow = 1;
-          flag = TRUE;
-        }
+    cr_ptr = &creatureD[mon->cidx];
+    if (!mon_lit(it_index)) {
+      if (valid(cr_ptr)) {
+        mon->mshow = 1;
+        flag = TRUE;
       }
     }
   });
 
   if (flag) {
-    msg_print("Your senses tingle!");
-    // draw with temporary visibility
-    msg_pause();
+    // Experimental: show whole map
+    // TBD: Alternative is force panel update
+    // (base detection range on player yx for determism)
+    minimap_enlargeD = 1;
+    CLOBBER_MSG("Your senses tingle!");
+    minimap_enlargeD = 0;
   } else if (known) {
     msg_print("You detect nothing further.");
   }
@@ -4373,11 +4364,6 @@ mon_lit(midx)
                (CM_INVISIBLE & cr_ptr->cmove)) {
       flag = TRUE;
     } else if (!blind) {
-      // natural sight; check panel_contains?
-      // oh dang; panel_contains may not be deterministic because of 'M'
-      // where_on_map command watch out for that!!!
-      // TBD: cross-check later
-      // faster to check based on SYMMAP dimensions & player position anyway
       fy = m_ptr->fy;
       fx = m_ptr->fx;
       cdis = distance(y, x, fy, fx);
@@ -6908,8 +6894,7 @@ light_line(dir, y, x)
     else {
       if ((c_ptr->cflag & CF_PERM_LIGHT) == 0) {
         if (c_ptr->fval == FLOOR_DARK) c_ptr->fval = FLOOR_LIGHT;
-        if ((c_ptr->cflag & CF_ROOM) != 0 && panel_contains(y, x))
-          light_room(y, x);
+        if ((c_ptr->cflag & CF_ROOM) != 0) light_room(y, x);
       }
       c_ptr->cflag |= (CF_PERM_LIGHT | CF_SEEN);
 
@@ -7088,9 +7073,8 @@ twall(y, x)
 
   if (!found) c_ptr->fval = FLOOR_CORR;
 
-  if (panel_contains(y, x))
-    if (CF_LIT & c_ptr->cflag && c_ptr->oidx)
-      msg_print("You have found something!");
+  if (CF_LIT & c_ptr->cflag && c_ptr->oidx)
+    msg_print("You have found something!");
   res = TRUE;
 
   return (res);
