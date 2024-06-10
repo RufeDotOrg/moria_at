@@ -4315,6 +4315,8 @@ detect_mon(int (*valid)(), int known)
 
   if (flag) {
     msg_print("Your senses tingle!");
+    // draw with temporary visibility
+    msg_pause();
   } else if (known) {
     msg_print("You detect nothing further.");
   }
