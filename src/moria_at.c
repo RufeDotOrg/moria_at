@@ -10677,10 +10677,6 @@ show_character(narrow, is_reroll)
     }
   }
 
-  if (PC)
-    msg_hint(AP("(SPACEBAR: reroll, ESCAPE: accept)"));
-  else
-    msg_hint(AP("(RED: reroll | GREEN: accept)"));
   return CLOBBER_MSG("Name: %-16.16s", heronameD);
 }
 
@@ -10758,6 +10754,10 @@ saveslot_race_reroll(saveslot, race)
   do {
     if (KEYBOARD && c == ' ') c = 'o';
     if (c == 'o') py_race_class_seed_init(race, saveslot, platformD.seed());
+    if (PC)
+      msg_hint(AP("(SPACEBAR: reroll, ESCAPE: accept)"));
+    else
+      msg_hint(AP("(RED: reroll | GREEN: accept)"));
     c = show_character(1, 1);
     if (c == CTRL('c')) break;
   } while (c != ESCAPE);
