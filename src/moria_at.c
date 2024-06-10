@@ -11282,63 +11282,6 @@ corrode_gas(verbose)
     msg_print("There is an acrid smell coming from your pack.");
 }
 void
-py_shield_attack(y, x)
-{
-  int midx, k, avg_max_hp, base_tohit, adj;
-  struct creatureS* cr_ptr;
-  struct monS* m_ptr;
-  struct objS* shield;
-
-  turn_flag = TRUE;
-  if (py_affect(MA_FEAR)) {
-    MSG("You are too afraid to bash anyone!");
-  } else if (!invenD[INVEN_ARM]) {
-    MSG("You must wear a shield to bash monsters!");
-  } else {
-    midx = caveD[y][x].midx;
-    m_ptr = &entity_monD[midx];
-    cr_ptr = &creatureD[m_ptr->cidx];
-    shield = obj_get(invenD[INVEN_ARM]);
-    m_ptr->msleep = 0;
-    mon_desc(midx);
-    base_tohit = statD.use_stat[A_STR] + shield->weight / 2 + uD.wt / 10;
-    adj = uD.lev * level_adj[uD.clidx][LA_BTH];
-    if (!m_ptr->mlit)
-      base_tohit = (base_tohit / 2) -
-                   (statD.use_stat[A_DEX] * (BTH_PLUS_ADJ - 1)) - (adj / 2);
-
-    if (test_hit(base_tohit, adj, statD.use_stat[A_DEX], cr_ptr->ac)) {
-      MSG("You bash %s.", descD);
-      k = pdamroll(shield->damage);
-      k = critical_blow(shield->weight / 4 + statD.use_stat[A_STR], 0, adj, k);
-      k += uD.wt / 60 + 3;
-
-      /* See if we done it in.  			     */
-      if (mon_take_hit(midx, k)) {
-        MSG("You have slain %s.", descD);
-        py_experience();
-      } else {
-        /* Can not stun Balrog */
-        avg_max_hp = (cr_ptr->cdefense & CD_MAX_HP
-                          ? cr_ptr->hd[0] * cr_ptr->hd[1]
-                          : (cr_ptr->hd[0] * (cr_ptr->hd[1] + 1)) >> 1);
-        if ((100 + randint(400) + randint(400)) > (m_ptr->hp + avg_max_hp)) {
-          m_ptr->mstunned += randint(3) + 1;
-          if (m_ptr->mstunned > 24) m_ptr->mstunned = 24;
-          MSG("%s appears stunned!", descD);
-        } else
-          MSG("%s ignores your bash!", descD);
-      }
-    } else {
-      MSG("You miss %s.", descD);
-    }
-    if (randint(150) > statD.use_stat[A_DEX]) {
-      msg_print("You are off balance.");
-      countD.paralysis = 1 + randint(2);
-    }
-  }
-}
-void
 py_attack(y, x)
 {
   int k, blows, surprise, hit_count;
@@ -11751,22 +11694,20 @@ try_disarm_chest(y, x)
     }
   }
 }
-static int
-bash(y, x)
+static void
+door_bash(y, x)
 {
-  int tmp, movement;
+  int tmp;
   struct caveS* c_ptr;
   struct objS* obj;
 
   c_ptr = &caveD[y][x];
   obj = &entity_objD[c_ptr->oidx];
 
-  movement = 0;
-  if (c_ptr->midx) {
-    py_shield_attack(y, x);
-  } else if (obj->tval == TV_CLOSED_DOOR) {
+  if (c_ptr->midx == 0 && obj->tval == TV_CLOSED_DOOR) {
     turn_flag = TRUE;
     msg_print("You smash into the door!");
+
     tmp = statD.use_stat[A_STR] + uD.wt / 2;
     /* Use (roughly) similar method as for monsters. */
     if (randint(tmp * (20 + ABS(obj->p1))) < 10 * (tmp - ABS(obj->p1))) {
@@ -11775,17 +11716,12 @@ bash(y, x)
       obj->tchar = '\'';
       obj->p1 = 1 - randint(2); /* 50% chance of breaking door */
       c_ptr->fval = FLOOR_CORR;
-      if (countD.confusion == 0) movement = 1;
     } else if (randint(150) > statD.use_stat[A_DEX]) {
       msg_print("You are off-balance.");
       countD.paralysis = 1 + randint(2);
     } else
       msg_print("The door holds firm.");
-  } else {
-    msg_print("You bash it, but nothing interesting happens.");
   }
-
-  return movement;
 }
 static void
 py_drop()
@@ -11796,27 +11732,6 @@ py_drop()
 
   if (iidx >= 0) inven_drop(iidx);
   drop_modeD = 0;
-}
-static void py_bash(uy, ux) int *uy, *ux;
-{
-  int y, x, dir;
-
-  y = uD.y;
-  x = uD.x;
-  if (get_dir(0, &dir)) {
-    if (countD.confusion) {
-      turn_flag = TRUE;
-      msg_print("You are confused.");
-      do {
-        dir = randint(9);
-      } while (dir == 5);
-    }
-    mmove(dir, &y, &x);
-    if (bash(y, x)) {
-      *uy = y;
-      *ux = x;
-    }
-  }
 }
 static void
 open_object(y, x)
@@ -12782,23 +12697,8 @@ creatures()
             }
           }
         }
-        if (mon->mstunned != 0) {
-          /* NOTE: Balrog = 100*100 = 10000, it always
-             recovers instantly */
-          if (randint(5000) < cr_ptr->level * cr_ptr->level)
-            mon->mstunned = 0;
-          else
-            mon->mstunned--;
-          if (mon->mstunned == 0) {
-            if (mon->mlit) {
-              MSG("The %s recovers and glares at you.", cr_ptr->name);
-            }
-          }
-        }
         if (mon->msleep == 0) {
-          if (mon->mstunned == 0) {
-            if (mon_move(it_index, cdis)) seen_act += mon->mlit;
-          }
+          if (mon_move(it_index, cdis)) seen_act += mon->mlit;
         }
       }
     }
@@ -13746,9 +13646,6 @@ dungeon()
               case ESCAPE:
                 py_menu();
                 break;
-              // case 'f':
-              //   py_bash(&y, &x);
-              //   break;
               case 'e':
                 py_actuate(&y, &x, 'e');
                 break;
@@ -13959,10 +13856,9 @@ dungeon()
         } else {
           // doors known to be jammed are bashed prior to movement
           if (obj->tval == TV_CLOSED_DOOR) {
-            if (mon->id == 0) {
-              if (obj->p1 < 0 && (obj->idflag & ID_REVEAL)) {
-                bash(y, x);
-              }
+            if (obj->p1 < 0 && (obj->idflag & ID_REVEAL)) {
+              // may mutate cave
+              door_bash(y, x);
             }
           }
 

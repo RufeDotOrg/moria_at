@@ -275,10 +275,12 @@ struct monS {
   int32_t hp;
   uint8_t fy;
   uint8_t fx;
+  uint8_t unused1;
   uint8_t mlit;
-  uint8_t mstunned;
   uint8_t mconfused;
   uint8_t msilenced;
+  uint8_t unused2;
+  uint8_t unused3;
 };
 
 struct ownerS {
