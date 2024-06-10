@@ -474,5 +474,5 @@ static char* affectD[][3] = {
     {"Poison"},
     {"+Spell"},
     {"Imagine"},
-    {""},
+    {"Threat"},
 };

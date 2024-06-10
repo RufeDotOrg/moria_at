@@ -374,6 +374,7 @@ affect_update()
   // Gain spells, imagine, ...
   active_affectD[idx++] = (spcount && spell_orderD[spcount - 1] == 0);
   active_affectD[idx++] = (countD.imagine != 0);
+  active_affectD[idx++] = (find_threatD != 0);
 }
 void
 msg_advance()
