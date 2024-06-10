@@ -4150,11 +4150,7 @@ find_event(y, x)
       }
 
       /* Detect adjacent visible monsters that may not otherwise disturb */
-      if (c_ptr->midx != 0) {
-        if (entity_monD[c_ptr->midx].mlit) {
-          return 2;
-        }
-      }
+      if (mon_lit(c_ptr->midx)) return 2;
 
       if (c_ptr->fval <= MAX_OPEN_SPACE) {
         if (find_openareaD) {
@@ -4304,9 +4300,9 @@ detect_mon(int (*valid)(), int known)
   FOR_EACH(mon, {
     if (panel_contains(mon->fy, mon->fx)) {
       cr_ptr = &creatureD[mon->cidx];
-      if (!mon->mlit) {
+      if (!mon_lit(it_index)) {
         if (valid(cr_ptr)) {
-          mon->mlit = TRUE;
+          mon->mshow = 1;
           flag = TRUE;
         }
       }
@@ -4351,9 +4347,9 @@ struct creatureS* cr_ptr;
 }
 #define test_bit(mem, bit) (((mem) & (1 << (uint32_t)(bit))) != 0)
 int
-update_mon(midx)
+mon_lit(midx)
 {
-  int flag, fy, fx, cdis;
+  int fy, fx, cdis;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -4362,34 +4358,45 @@ update_mon(midx)
   MUSE(u, mflag);
   MUSE(u, infra);
   int blind = (maD[MA_BLIND] != 0);
+  int flag = 0;
 
-  m_ptr = &entity_monD[midx];
-  cr_ptr = &creatureD[m_ptr->cidx];
-  flag = FALSE;
-  fy = m_ptr->fy;
-  fx = m_ptr->fx;
-  if (test_bit(mflag, MA_DETECT_EVIL) && (CD_EVIL & cr_ptr->cdefense)) {
-    flag = TRUE;
-  } else if (test_bit(mflag, MA_DETECT_MON) &&
-             ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
-    flag = TRUE;
-  } else if (test_bit(mflag, MA_DETECT_INVIS) &&
-             (CM_INVISIBLE & cr_ptr->cmove)) {
-    flag = TRUE;
-  } else if (!blind) {
-    cdis = distance(y, x, fy, fx);
-    if (cdis <= MAX_SIGHT && los(y, x, fy, fx)) {
-      c_ptr = &caveD[fy][fx];
-      if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= infra)) {
-        flag = TRUE;
-      } else if (CF_LIT & c_ptr->cflag) {
-        flag = perceive_creature(cr_ptr);
+  if (midx) {
+    m_ptr = &entity_monD[midx];
+    cr_ptr = &creatureD[m_ptr->cidx];
+
+    if (test_bit(mflag, MA_DETECT_EVIL) && (CD_EVIL & cr_ptr->cdefense)) {
+      flag = TRUE;
+    } else if (test_bit(mflag, MA_DETECT_MON) &&
+               ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
+      flag = TRUE;
+    } else if (test_bit(mflag, MA_DETECT_INVIS) &&
+               (CM_INVISIBLE & cr_ptr->cmove)) {
+      flag = TRUE;
+    } else if (!blind) {
+      // natural sight; check panel_contains?
+      // oh dang; panel_contains may not be deterministic because of 'M'
+      // where_on_map command watch out for that!!!
+      // TBD: cross-check later
+      // faster to check based on SYMMAP dimensions & player position anyway
+      fy = m_ptr->fy;
+      fx = m_ptr->fx;
+      cdis = distance(y, x, fy, fx);
+      if (cdis <= MAX_SIGHT && los(y, x, fy, fx)) {
+        c_ptr = &caveD[fy][fx];
+        if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= infra)) {
+          flag = TRUE;
+        } else if (CF_LIT & c_ptr->cflag) {
+          flag = perceive_creature(cr_ptr);
+        }
       }
     }
   }
 
-  m_ptr->mlit = flag;
   return flag;
+}
+int
+update_mon(midx)
+{
 }
 static int
 mon_multiply(mon)
@@ -5370,13 +5377,11 @@ mon_desc(midx)
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
 
-  if (mon->mlit)
+  if (mon_lit(midx))
     snprintf(descD, AL(descD), "The %s", cre->name);
   else
     strcpy(descD, "It");
 
-  // if (CM_WIN & cre->cmove)
-  //  snprintf(death_descD, AL(death_descD), "The %s", cre->name);
   if (is_a_vowel(cre->name[0]))
     snprintf(death_descD, AL(death_descD), "An %s", cre->name);
   else
@@ -6954,7 +6959,8 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         cre = &creatureD[m_ptr->cidx];
 
         // Bolt provides a temporary light
-        if (perceive_creature2(cre)) m_ptr->mlit = TRUE;
+        int mod_light = ((c_ptr->cflag & CF_TEMP_LIGHT) == 0);
+        if (mod_light) c_ptr->cflag ^= CF_TEMP_LIGHT;
 
         mon_desc(c_ptr->midx);
         descD[0] = descD[0] | 0x20;
@@ -6962,6 +6968,7 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
 
         // draw with temporary visibility
         msg_pause();
+        if (mod_light) c_ptr->cflag ^= CF_TEMP_LIGHT;
 
         if (harm_type & cre->cdefense) {
           dam = dam * 2;
@@ -7180,9 +7187,7 @@ poly_monster(dir, y, x)
         midx = place_monster(
             y, x, randint(m_level[MAX_MON_LEVEL] - m_level[0]) - 1 + m_level[0],
             FALSE);
-        if (midx) update_mon(midx);
-        m_ptr = &entity_monD[midx];
-        if (m_ptr->mlit) poly = TRUE;
+        if (mon_lit(midx)) poly = TRUE;
       } else {
         mon_desc(c_ptr->midx);
         MSG("%s is unaffected.", descD);
@@ -7292,7 +7297,7 @@ sleep_monster(dir, y, x)
 
       if (sleep) m_ptr->msleep = 500;
 
-      if (m_ptr->mlit) {
+      if (mon_lit(c_ptr->midx)) {
         mon_desc(c_ptr->midx);
         if (sleep) {
           seen += 1;
@@ -7324,7 +7329,7 @@ sleep_monster_aoe(maxdis)
 
     if (sleep) mon->msleep = 500;
 
-    if (mon->mlit) {
+    if (mon_lit(it_index)) {
       mon_desc(it_index);
       if (sleep) {
         seen += 1;
@@ -7483,7 +7488,7 @@ build_wall(dir, y, x)
             py_experience();
           }
         } else if (cr_ptr->cchar == 'E' || cr_ptr->cchar == 'X') {
-          if (m_ptr->mlit) MSG("%s grows larger.", descD);
+          if (mon_lit(c_ptr->midx)) MSG("%s grows larger.", descD);
           /* must be an earth elemental or an earth spirit, or a Xorn
              increase its hit points */
           m_ptr->hp += damroll(4, 8);
@@ -7592,7 +7597,7 @@ dispel_creature(cflag, damage)
         (distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) &&
         los(y, x, mon->fy, mon->fx)) {
       dispel = TRUE;
-      mon->mlit = TRUE;
+      mon->mshow = 1;
       mon->msilenced = TRUE;
       mon_desc(it_index);
       if (mon_take_hit(it_index, randint(damage))) {
@@ -7603,6 +7608,7 @@ dispel_creature(cflag, damage)
       }
     }
   });
+  msg_pause();
   return (dispel);
 }
 int
@@ -7761,7 +7767,7 @@ turn_undead()
         mon->msleep = 0;
       }
 
-      if (mon->mlit) {
+      if (mon_lit(it_index)) {
         mon_desc(it_index);
         if (success) {
           MSG("%s runs frantically!", descD);
@@ -7897,21 +7903,22 @@ speed_monster_aoe(spd)
     if (distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT &&
         los(y, x, mon->fy, mon->fx)) {
       mon->msleep = 0;
+      int mlit = mon_lit(it_index);
       mon_desc(it_index);
       cr_ptr = &creatureD[mon->cidx];
       if (spd > 0) {
         mon->mspeed += spd;
-        if (mon->mlit) {
+        if (mlit) {
           see_count += 1;
           MSG("%s starts moving faster.", descD);
         }
       } else if (randint(MAX_MON_LEVEL) > cr_ptr->level) {
         mon->mspeed += spd;
-        if (mon->mlit) {
+        if (mlit) {
           MSG("%s starts moving slower.", descD);
           see_count += 1;
         }
-      } else if (mon->mlit) {
+      } else if (mlit) {
         MSG("%s resists the affects.", descD);
       }
     }
@@ -8025,7 +8032,7 @@ earthquake()
               py_experience();
             }
           } else if (cr_ptr->cchar == 'E' || cr_ptr->cchar == 'X') {
-            if (m_ptr->mlit) MSG("%s grows larger.", descD);
+            if (mon_lit(c_ptr->midx)) MSG("%s grows larger.", descD);
             /* must be an earth elemental or an earth spirit, or a Xorn
                increase its hit points */
             m_ptr->hp += damroll(4, 8);
@@ -10251,13 +10258,13 @@ struct objS* obj;
   return FALSE;
 }
 int
-mon_surprise(m_ptr)
+mon_surprise(m_ptr, mlit)
 struct monS* m_ptr;
 {
   // +200 tohit is +20% crit chance
   int ret = 200;
   // Add specific limitations to the crit/hit bonus here
-  if (!m_ptr->mlit) ret /= 2;
+  if (!mlit) ret /= 2;
   return ret;
 }
 void
@@ -10266,6 +10273,7 @@ inven_throw_dir(iidx, dir)
   int tbth, tpth, tdam, adj, tweight, surprise;
   int wtohit, wtodam, wheavy;
   int y, x, fromy, fromx, cdis;
+  int mlit;
   int flag, drop;
   struct caveS* c_ptr;
   struct objS* obj;
@@ -10317,6 +10325,7 @@ inven_throw_dir(iidx, dir)
         m_ptr = &entity_monD[c_ptr->midx];
         cr_ptr = &creatureD[m_ptr->cidx];
 
+        int mlit = mon_lit(c_ptr->midx);
         adj = uD.lev * level_adj[uD.clidx][LA_BTHB];
         if (bowid) {
           tbth = uD.bowth;
@@ -10324,7 +10333,7 @@ inven_throw_dir(iidx, dir)
           tbth = uD.bowth * 24 / 32;
         }
         tpth = cbD.ptohit + obj->tohit + wtohit;
-        if (m_ptr->mlit == 0) {
+        if (mlit == 0) {
           if (tpth > 0) tpth /= 2;
           tbth /= 2;
           adj /= 2;
@@ -10335,7 +10344,7 @@ inven_throw_dir(iidx, dir)
         surprise = 0;
         if (m_ptr->msleep && perceive_creature2(cr_ptr)) {
           surprise = test_hit(tbth, adj, tpth, cr_ptr->ac);
-          if (surprise) surprise = mon_surprise(m_ptr);
+          if (surprise) surprise = mon_surprise(m_ptr, mlit);
         }
 
         if (surprise || test_hit(tbth, adj, tpth, cr_ptr->ac)) {
@@ -11294,6 +11303,7 @@ py_attack(y, x)
   struct creatureS* cre = &creatureD[mon->cidx];
   struct objS* obj = obj_get(invenD[INVEN_WIELD]);
 
+  int mlit = mon_lit(midx);
   turn_flag = TRUE;
   tval = obj->tval;
   creature_ac = cre->ac;
@@ -11316,7 +11326,7 @@ py_attack(y, x)
     base_tohit = uD.bth;
     lev_adj = uD.lev * level_adj[uD.clidx][LA_BTH];
     // reduce hit if monster not lit
-    if (mon->mlit == 0) {
+    if (mlit == 0) {
       if (tohit > 0) tohit /= 2;
       base_tohit /= 2;
       lev_adj /= 2;
@@ -11332,7 +11342,7 @@ py_attack(y, x)
       // Effectively x^2 chance to hit a sleeping monster
       // This preserves early game difficulty, invis penalties, weapon too_heavy
       surprise = test_hit(base_tohit, lev_adj, tohit, creature_ac);
-      if (surprise) surprise = mon_surprise(mon);
+      if (surprise) surprise = mon_surprise(mon, mlit);
     }
 
     // You make a lot of noise
@@ -11946,7 +11956,7 @@ py_monlook_dir(dir)
     for (int col = zr.x; col < limit.x; ++col) {
       struct caveS* c_ptr = &caveD[row][col];
       struct monS* mon = &entity_monD[c_ptr->midx];
-      if (mon->mlit) {
+      if (mon_lit(c_ptr->midx)) {
         oy = (ly != 0) * (-((mon->fy - y) < 0) + ((mon->fy - y) > 0));
         ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
         if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
@@ -12028,7 +12038,7 @@ py_look(y, x)
 
   c_ptr = &caveD[y][x];
   mon = &entity_monD[c_ptr->midx];
-  if (mon->mlit) {
+  if (mon_lit(c_ptr->midx)) {
     mon_desc(c_ptr->midx);
     // hack: mon death_descD pronoun is a/an
     death_descD[0] |= 0x20;
@@ -12419,6 +12429,7 @@ mon_try_spell(midx, cdis)
   int spell_choice[32];
   int took_turn;
   struct monS* mon;
+  int mlit;
   struct creatureS* cr_ptr;
 
   mon = &entity_monD[midx];
@@ -12458,6 +12469,7 @@ mon_try_spell(midx, cdis)
       spell_index = thrown_spell - 4;
       ++thrown_spell;
 
+      mlit = mon_lit(midx);
       mon_desc(midx);
       if (spell_index < AL(mon_spell_nameD)) {
         MSG("%s casts a spell of %s.", descD, mon_spell_nameD[spell_index]);
@@ -12543,7 +12555,7 @@ mon_try_spell(midx, cdis)
         case 17: /*Drain Mana   */
           if (uD.cmana > 0) {
             MSG("%s draws psychic energy from you!", descD);
-            if (mon->mlit) {
+            if (mlit) {
               MSG("%s appears healthier.", descD);
             }
             int r1 = (randint(cr_ptr->level) >> 1) + 1;
@@ -12668,27 +12680,26 @@ movement_rate(speed)
 int
 creatures()
 {
-  int move_count, y, x, cdis, seen_act, seen_lit;
-  uint8_t waslit[AL(entity_monD)];
+  int move_count, y, x, cdis, seen_act;
   int adj_speed;
 
+  // TBD: this caching of player information is wrong by design.
+  // Always check memory as a policy is flexible to design churn
+  // and will not be performant. ce la vie.
   adj_speed = py_speed() + pack_heavy;
   y = uD.y;
   x = uD.x;
-  seen_act = 0;
-  seen_lit = 0;
-  for (int it = 0; it < AL(entity_monD); ++it) {
-    struct monS* mon = &entity_monD[it];
-    waslit[it] = mon->mlit;
-    if (mon->id) update_mon(it);
-  }
 
+  seen_act = 0;
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
+    // Special visibility expires before movement
+    if (mon->mshow) mon->mshow = 0;
+
     move_count = movement_rate(mon->mspeed + adj_speed);
     for (; move_count > 0; --move_count) {
       cdis = distance(y, x, mon->fy, mon->fx);
-      if (mon->mlit || cdis <= cr_ptr->aaf) {
+      if (mon_lit(it_index) || cdis <= cr_ptr->aaf) {
         if (mon->msleep) {
           if (py_tr(TR_AGGRAVATE))
             mon->msleep = 0;
@@ -12700,16 +12711,15 @@ creatures()
           }
         }
         if (mon->msleep == 0) {
-          if (mon_move(it_index, cdis)) seen_act += mon->mlit;
+          if (mon_move(it_index, cdis)) seen_act += mon_lit(it_index);
         }
       }
     }
-    if (mon->mlit && !waslit[it_index]) seen_lit += 1;
   });
 
   find_threatD = (seen_act != 0);
   if (seen_act) countD.rest = 0;
-  if (seen_lit) find_flagD = FALSE;
+  if (seen_act) find_flagD = FALSE;
 
   return seen_act;
 }
@@ -13852,7 +13862,7 @@ dungeon()
         struct monS* mon = &entity_monD[c_ptr->midx];
         struct objS* obj = &entity_objD[c_ptr->oidx];
 
-        if (find_flagD && mon->mlit) {
+        if (find_flagD && mon_lit(c_ptr->midx)) {
           // Run is non-combat movement
           find_flagD = FALSE;
         } else {

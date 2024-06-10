@@ -41,6 +41,8 @@ DATA SDL_Surface* tpsurfaceD;
 DATA SDL_Texture* tptextureD;
 DATA SDL_Texture* map_textureD;
 DATA SDL_Texture* text_textureD;
+DATA uint16_t mon_drawD[AL(monD)];
+
 enum { STRLEN_MORE = AL(moreD) - 1 };
 
 #define RF(r, framing)                                                    \
@@ -1549,15 +1551,13 @@ static int
 cave_color(row, col)
 {
   struct caveS* c_ptr;
-  struct monS* mon;
   struct objS* obj;
   int color = 0;
   int grey = lightingD[2];
   USE(white);
 
   c_ptr = &caveD[row][col];
-  mon = &entity_monD[c_ptr->midx];
-  if (mon->mlit) {
+  if (mon_drawD[c_ptr->midx]) {
     color = rgba_by_palette(BRIGHT + PINK);
   } else if (c_ptr->fval == BOUNDARY_WALL) {
     color = white;
@@ -1622,15 +1622,15 @@ viz_update()
   for (int row = rmin; row < rmax; ++row) {
     for (int col = cmin; col < cmax; ++col) {
       struct caveS* c_ptr = &caveD[row][col];
-      struct monS* mon = &entity_monD[c_ptr->midx];
       struct objS* obj = &entity_objD[c_ptr->oidx];
       struct vizS viz = {0};
       if (row != py || col != px) {
         viz.light = (c_ptr->cflag & CF_SEEN) != 0;
         viz.fade = fade_by_distance(py, px, row, col) - 1;
-        if (mon->mlit) {
-          viz.cr = mon->cidx;
-          viz.sym = creatureD[mon->cidx].cchar;
+        if (mon_drawD[c_ptr->midx]) {
+          int cr = mon_drawD[c_ptr->midx];
+          viz.cr = cr;
+          viz.sym = creatureD[cr].cchar;
         } else if (blind) {
           // May have MA_DETECT resulting in lit monsters above
           // No walls, objects, or lighting
@@ -1720,6 +1720,14 @@ viz_minimap()
 int
 custom_predraw()
 {
+  FOR_EACH(mon, {
+    int draw = mon->mshow ? 1 : mon_lit(it_index);
+
+    int cidx = 0;
+    if (draw) cidx = mon->cidx;
+    mon_drawD[it_index] = cidx;
+  });
+
   viz_update();
   viz_minimap();
   return 1;
