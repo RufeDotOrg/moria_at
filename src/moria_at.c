@@ -381,6 +381,7 @@ msg_advance()
 {
   int log_used;
   log_used = AS(msglen_cqD, msg_writeD);
+  if (log_used) msg_turnD = turnD;
   msg_writeD += (log_used != 0);
   AS(msglen_cqD, msg_writeD) = 0;
 }

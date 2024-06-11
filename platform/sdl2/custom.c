@@ -878,7 +878,7 @@ portrait_text(mode)
     AUSE(grect, GR_GAMEPLAY);
     char* msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
-    int alpha = FALPHA;
+    int alpha = turnD == msg_turnD ? FALPHA : 128;
 
     SDL_Point p = {
         grect.x + FWIDTH / 2,
@@ -889,7 +889,6 @@ portrait_text(mode)
     if (!msg_used) {
       msg = AS(msg_cqD, msg_writeD - 1);
       msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = 150;
     }
 
     if (TEST_UI) {
@@ -946,13 +945,12 @@ landscape_text(mode)
   if (mode == 0) {
     char* msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
-    int alpha = FALPHA;
+    int alpha = turnD == msg_turnD ? FALPHA : 128;
 
     // Show previous message to help the player out
     if (!msg_used) {
       msg = AS(msg_cqD, msg_writeD - 1);
       msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = 128;
     }
 
     SDL_Point p = {layout_rect.w / 2 - msg_used * FWIDTH / 2, 0};
