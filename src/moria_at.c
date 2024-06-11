@@ -13496,7 +13496,7 @@ fail(char* text)
 void
 dungeon()
 {
-  int c, y, x, iidx;
+  int y, x, iidx;
   uint32_t dir, teleport;
   int town;
   int check_replay;
@@ -13565,7 +13565,6 @@ dungeon()
 
       msg_moreD = 0;
       replay_flag = (input_record_readD < input_record_writeD);
-      c = 0;
       draw(WAIT_NONE);
 
       y = uD.y;
@@ -13575,7 +13574,7 @@ dungeon()
       } else if (find_flagD) {
         mmove(find_directionD, &y, &x);
       } else {
-        c = game_input();
+        char c = game_input();
         if (TEST_REPLAY && !is_ctrl(c)) Log("execute (%c:%d)\n", c, c);
 
         // AWN: Period attempts auto-detection of a situational command
