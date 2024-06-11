@@ -11563,7 +11563,9 @@ mon_attack(midx)
           if (iidx >= 0) {
             struct objS* obj = obj_get(invenD[iidx]);
             if (oset_zap(obj) && obj->p1 > 0) {
-              mon->hp += cre->level * obj->p1;
+              int gain = cre->level * obj->p1;
+              // Overflow check (balrog, mainly)
+              if (mon->hp + gain > mon->hp) mon->hp += gain;
               obj->p1 = 0;
               obj->idflag |= ID_EMPTY;
               msg_print("Energy drains from your pack!");
@@ -13917,7 +13919,7 @@ dungeon()
 
     if (!town && (turnD & ~-1024) == 0) store_maint();
     ma_tick();  // falling
-    tick();  // uD.new_level_flag may change (player dies from poison)
+    tick();     // uD.new_level_flag may change (player dies from poison)
     turnD += 1;
     if (TEST_REPLAY) replay_memcmp();
   } while (!uD.new_level_flag);

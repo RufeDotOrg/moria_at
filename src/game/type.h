@@ -271,16 +271,13 @@ struct monS {
   int32_t id;
   uint16_t cidx;  // creature definition
   uint16_t msleep;
-  int32_t mspeed;  // TBD: 1 byte?
-  int32_t hp;
+  int16_t hp;
   uint8_t fy;
   uint8_t fx;
   uint8_t mshow;  // override visibility rules prior to creatures() update
-  uint8_t unused1;
+  int8_t mspeed;
   uint8_t mconfused;
   uint8_t msilenced;
-  uint8_t unused2;
-  uint8_t unused3;
 };
 
 struct ownerS {
