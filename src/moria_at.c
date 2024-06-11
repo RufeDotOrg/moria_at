@@ -401,8 +401,6 @@ enum { WHITESPACE = 0x20202020 };
 // wait 0: don't wait
 // wait -1: any key (REPLAY includes key)
 // wait non-zero: pedantic mode wait for exact input (REPLAY excludes input)
-// flag: ignore redraw
-// flag: ignore spacebar input
 int
 draw(wait)
 {
@@ -460,7 +458,7 @@ msg_pause()
     msg_moreD += 1;
 
     // non-replay mode waits for user to acknowledge buffer text -more-
-    draw(replay_flag ? WAIT_NONE : ' ');
+    draw(' ');
   }
 }
 
