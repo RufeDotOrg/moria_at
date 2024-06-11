@@ -12681,8 +12681,6 @@ creatures()
     int mlit = mon_lit(it_index);
     int msleep = mon->msleep;
 
-    l_act[it_index] = msleep ? -1 : move_count;
-
     if (!replay_flag && distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
       printf("local %s #%d | %d msleep | %d mlit", cr_ptr->name, it_index,
              msleep, mlit);
@@ -12691,22 +12689,25 @@ creatures()
         cdis = distance(y, x, mon->fy, mon->fx);
         if (mon_lit(it_index) || cdis <= cr_ptr->aaf) {
           if (py_tr(TR_AGGRAVATE))
-            mon->msleep = 0;
+            msleep = 0;
           else {
             uint32_t notice = randint(1024);
             if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
-              mon->msleep = MAX(mon->msleep - (100 / cdis), 0);
+              msleep = MAX(msleep - (100 / cdis), 0);
             }
           }
         }
       }
 
-      if (mon->msleep == 0) l_wake[it_index] = 1;
+      if (msleep == 0) l_wake[it_index] = 1;
+      mon->msleep = msleep;
     }
     if (!replay_flag && distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
       printf(" | %d msleep final\n", mon->msleep);
 
-    seen_threat += (mon_lit(it_index) && mon->msleep == 0);
+    l_act[it_index] = msleep ? -1 : move_count;
+
+    seen_threat += (mon_lit(it_index) && msleep == 0);
   });
 
   FOR_EACH(mon, {
