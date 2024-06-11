@@ -4281,15 +4281,34 @@ detect_obj(int (*valid)(), int known)
 
   return (detect);
 }
+point_t
+quad_by_yx(y, x)
+{
+  point_t r;
+
+  int pcol = (x - SYMMAP_WIDTH / 4) / (SYMMAP_WIDTH / 2);
+  r.x = CLAMP(pcol, 0, MAX_COL - 2);
+
+  int prow = (y - SYMMAP_HEIGHT / 4) / (SYMMAP_HEIGHT / 2);
+  r.y = CLAMP(prow, 0, MAX_ROW - 2);
+
+  return r;
+}
 int
 detect_mon(int (*valid)(), int known)
 {
   struct creatureS* cr_ptr;
   int flag = 0;
+  int drow, dcol;
+  struct panelS p;
+
+  panel_update(&p, uD.y, uD.x, 1);
 
   FOR_EACH(mon, {
-    cr_ptr = &creatureD[mon->cidx];
-    if (!mon_lit(it_index)) {
+    drow = mon->fy - p.panel_row_min;
+    dcol = mon->fx - p.panel_col_min;
+    if ((uint32_t)drow < SYMMAP_HEIGHT && (uint32_t)dcol < SYMMAP_WIDTH) {
+      cr_ptr = &creatureD[mon->cidx];
       if (valid(cr_ptr)) {
         mon->mshow = 1;
         flag = TRUE;
@@ -4298,12 +4317,9 @@ detect_mon(int (*valid)(), int known)
   });
 
   if (flag) {
-    // Experimental: show whole map
-    // TBD: Alternative is force panel update
-    // (base detection range on player yx for determism)
-    minimap_enlargeD = 1;
+    // Experimental: snap panel update on detection
+    panelD = p;
     CLOBBER_MSG("Your senses tingle!");
-    minimap_enlargeD = 0;
   } else if (known) {
     msg_print("You detect nothing further.");
   }
@@ -4336,6 +4352,8 @@ struct creatureS* cr_ptr;
   if (py_affect(MA_BLIND)) return 0;
   return perceive_creature(cr_ptr);
 }
+// dependency on mflag requires ma_tick() to have run
+// note: direct check of MA_BLIND is because sight can change during creatures()
 #define test_bit(mem, bit) (((mem) & (1 << (uint32_t)(bit))) != 0)
 int
 mon_lit(midx)
@@ -7581,7 +7599,6 @@ dispel_creature(cflag, damage)
         (distance(y, x, mon->fy, mon->fx) <= MAX_SIGHT) &&
         los(y, x, mon->fy, mon->fx)) {
       dispel = TRUE;
-      mon->mshow = 1;
       mon->msilenced = TRUE;
       mon_desc(it_index);
       if (mon_take_hit(it_index, randint(damage))) {
