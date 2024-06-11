@@ -5,6 +5,7 @@
 enum { HACK = 0 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
+enum { TEST_CREATURE = 0 };
 
 // #include "src/mod/replay.c"
 
@@ -12656,87 +12657,103 @@ movement_rate(speed)
   return speed;
 }
 int
+creature_movement(int* l_act)
+{
+  FOR_EACH(mon, {
+    if (TEST_CREATURE && l_act[it_index] >= 0) {
+      struct creatureS* cr_ptr = &creatureD[mon->cidx];
+      printf("%d: %s mon_move %d | msleep %d\n", it_index, cr_ptr->name,
+             l_act[it_index], mon->msleep);
+    }
+
+    for (int act = l_act[it_index]; act > 0; --act) {
+      mon_move(it_index);
+    }
+  });
+}
+int
+creature_threat(int* l_act)
+{
+  int threat = 0;
+  // Tag relevant threats after movement is complete
+  FOR_EACH(mon, {
+    if (l_act[it_index] > 0) {
+      threat += mon_lit(it_index);
+    }
+  });
+
+  return threat;
+}
+int
 creatures()
 {
-  int move_count, y, x, cdis;
-
-  // TBD: this caching of player information is wrong by design.
-  // Always check memory as a policy is flexible to design churn
-  // and will not be performant. ce la vie.
-  int adj_speed = py_speed() + pack_heavy;
-  y = uD.y;
-  x = uD.x;
-
-  if (!replay_flag) printf("----turn----\n");
-
   int seen_threat = 0;
   int l_act[AL(monD)] = {0};
   int l_wake[AL(monD)] = {0};
-  FOR_EACH(mon, {
-    struct creatureS* cr_ptr = &creatureD[mon->cidx];
-    // Special visibility expires before movement
-    if (mon->mshow) mon->mshow = 0;
+  if (TEST_CREATURE && !replay_flag) printf("----turn----\n");
 
-    move_count = movement_rate(mon->mspeed + adj_speed);
-    int mlit = mon_lit(it_index);
-    int msleep = mon->msleep;
+  // We calculate monster move_count & msleep prior to mon_move
+  // This enables caching of player state into registers
+  {
+    int adj_speed = py_speed() + pack_heavy;
+    MUSE(u, y);
+    MUSE(u, x);
+    MUSE(u, stealth);
+    int aggr = py_tr(TR_AGGRAVATE);
 
-    if (!replay_flag && distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
-      printf("local %s #%d | %d msleep | %d mlit", cr_ptr->name, it_index,
-             msleep, mlit);
-    if (msleep) {
-      for (; move_count > 0; --move_count) {
-        cdis = distance(y, x, mon->fy, mon->fx);
-        if (mon_lit(it_index) || cdis <= cr_ptr->aaf) {
-          if (py_tr(TR_AGGRAVATE))
-            msleep = 0;
-          else {
-            uint32_t notice = randint(1024);
-            if (notice * notice * notice <= (1 << (29 - uD.stealth))) {
-              msleep = MAX(msleep - (100 / cdis), 0);
+    FOR_EACH(mon, {
+      struct creatureS* cr_ptr = &creatureD[mon->cidx];
+      // Special visibility expires before movement
+      if (mon->mshow) mon->mshow = 0;
+
+      int move_count = movement_rate(mon->mspeed + adj_speed);
+      int mlit = mon_lit(it_index);
+      int msleep = mon->msleep;
+
+      if (TEST_CREATURE && !replay_flag &&
+          distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
+        printf("local %s #%d | %d msleep | %d mlit", cr_ptr->name, it_index,
+               msleep, mlit);
+      if (msleep) {
+        int cdis = distance(y, x, mon->fy, mon->fx);
+        for (; move_count > 0; --move_count) {
+          if (mlit || cdis <= cr_ptr->aaf) {
+            if (aggr)
+              msleep = 0;
+            else {
+              uint32_t notice = randint(1024);
+              if (notice * notice * notice <= (1 << (29 - stealth))) {
+                msleep = MAX(msleep - (100 / cdis), 0);
+              }
             }
           }
         }
+
+        if (TEST_CREATURE && msleep == 0) l_wake[it_index] = 1;
+        mon->msleep = msleep;
       }
+      if (TEST_CREATURE && !replay_flag &&
+          distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
+        printf(" | %d msleep final\n", mon->msleep);
 
-      if (msleep == 0) l_wake[it_index] = 1;
-      mon->msleep = msleep;
-    }
-    if (!replay_flag && distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
-      printf(" | %d msleep final\n", mon->msleep);
+      l_act[it_index] = msleep ? -1 : move_count;
 
-    l_act[it_index] = msleep ? -1 : move_count;
+      // Tag potential threat early, mon_move may display messages
+      seen_threat += (mlit && msleep == 0);
+    });
+  }
 
-    // Tag potential threat early since movement may display many messages
-    seen_threat += (mon_lit(it_index) && msleep == 0);
-  });
-
-  FOR_EACH(mon, {
-    if (l_wake[it_index]) {
-      struct creatureS* cr_ptr = &creatureD[mon->cidx];
-      printf("%d: %s wakes\n", it_index, cr_ptr->name);
-    }
-  });
-
-  FOR_EACH(mon, {
-    if (l_act[it_index] >= 0) {
-      if (1) {
+  if (TEST_CREATURE) {
+    FOR_EACH(mon, {
+      if (l_wake[it_index]) {
         struct creatureS* cr_ptr = &creatureD[mon->cidx];
-        printf("%d: %s mon_move %d | msleep %d\n", it_index, cr_ptr->name,
-               l_act[it_index], mon->msleep);
+        printf("%d: %s wakes\n", it_index, cr_ptr->name);
       }
-      for (int act = l_act[it_index]; act > 0; --act) {
-        mon_move(it_index);
-      }
-    }
-  });
+    });
+  }
 
-  // Tag relevant threats after movement is complete
-  FOR_EACH(mon, {
-    if (l_act[it_index] >= 0) {
-      seen_threat += mon_lit(it_index);
-    }
-  });
+  creature_movement(l_act);
+  seen_threat += creature_threat(l_act);
 
   // only interrupt run on changes in threat
   // this allows the player use run away from a monster
