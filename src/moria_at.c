@@ -4281,19 +4281,6 @@ detect_obj(int (*valid)(), int known)
 
   return (detect);
 }
-point_t
-quad_by_yx(y, x)
-{
-  point_t r;
-
-  int pcol = (x - SYMMAP_WIDTH / 4) / (SYMMAP_WIDTH / 2);
-  r.x = CLAMP(pcol, 0, MAX_COL - 2);
-
-  int prow = (y - SYMMAP_HEIGHT / 4) / (SYMMAP_HEIGHT / 2);
-  r.y = CLAMP(prow, 0, MAX_ROW - 2);
-
-  return r;
-}
 int
 detect_mon(int (*valid)(), int known)
 {
