@@ -12583,12 +12583,13 @@ mon_try_spell(midx, cdis)
 }
 // Returns true if make_move() is attempted
 static int
-mon_move(midx, cdis)
+mon_move(midx)
 {
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
   int mm[9];
   int took_turn, random, flee;
+  int cdis;
 
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
@@ -12596,6 +12597,7 @@ mon_move(midx, cdis)
   took_turn = FALSE;
   random = FALSE;
   flee = FALSE;
+  cdis = distance(uD.y, uD.x, m_ptr->fy, m_ptr->fx);
 
   if (cr_ptr->cmove & CM_MULTIPLY) mon_try_multiply(m_ptr);
   if (cr_ptr->spells & CS_FREQ)
@@ -12666,17 +12668,28 @@ creatures()
   y = uD.y;
   x = uD.x;
 
+  if (!replay_flag) printf("----turn----\n");
   seen_threat = 0;
+  int l_act[AL(monD)] = {0};
+  int l_wake[AL(monD)] = {0};
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     // Special visibility expires before movement
     if (mon->mshow) mon->mshow = 0;
 
     move_count = movement_rate(mon->mspeed + adj_speed);
-    for (; move_count > 0; --move_count) {
-      cdis = distance(y, x, mon->fy, mon->fx);
-      if (mon_lit(it_index) || cdis <= cr_ptr->aaf) {
-        if (mon->msleep) {
+    int mlit = mon_lit(it_index);
+    int msleep = mon->msleep;
+
+    l_act[it_index] = msleep ? -1 : move_count;
+
+    if (!replay_flag && distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
+      printf("local %s #%d | %d msleep | %d mlit", cr_ptr->name, it_index,
+             msleep, mlit);
+    if (msleep) {
+      for (; move_count > 0; --move_count) {
+        cdis = distance(y, x, mon->fy, mon->fx);
+        if (mon_lit(it_index) || cdis <= cr_ptr->aaf) {
           if (py_tr(TR_AGGRAVATE))
             mon->msleep = 0;
           else {
@@ -12686,18 +12699,42 @@ creatures()
             }
           }
         }
-        if (mon->msleep == 0) {
-          if (mon_move(it_index, cdis)) seen_threat += mon_lit(it_index);
-        }
       }
+
+      if (mon->msleep == 0) l_wake[it_index] = 1;
     }
+    if (!replay_flag && distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
+      printf(" | %d msleep final\n", mon->msleep);
 
     seen_threat += (mon_lit(it_index) && mon->msleep == 0);
   });
 
-  find_threatD = (seen_threat != 0);
+  FOR_EACH(mon, {
+    if (l_wake[it_index]) {
+      struct creatureS* cr_ptr = &creatureD[mon->cidx];
+      printf("%d: %s wakes\n", it_index, cr_ptr->name);
+    }
+  });
+
+  FOR_EACH(mon, {
+    if (l_act[it_index] >= 0) {
+      if (1) {
+        struct creatureS* cr_ptr = &creatureD[mon->cidx];
+        printf("%d: %s mon_move %d | msleep %d\n", it_index, cr_ptr->name,
+               l_act[it_index], mon->msleep);
+      }
+      for (int act = l_act[it_index]; act > 0; --act) {
+        mon_move(it_index);
+      }
+      seen_threat += mon_lit(it_index);
+    }
+  });
+
+  // only interrupt run on changes in threat
+  // this allows the player use run away from a monster
+  if (seen_threat > find_threatD) find_flagD = 0;
   if (seen_threat) countD.rest = 0;
-  if (seen_threat) find_flagD = FALSE;
+  find_threatD = seen_threat;
 
   return seen_threat;
 }
