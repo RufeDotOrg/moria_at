@@ -12658,18 +12658,18 @@ movement_rate(speed)
 int
 creatures()
 {
-  int move_count, y, x, cdis, seen_threat;
-  int adj_speed;
+  int move_count, y, x, cdis;
 
   // TBD: this caching of player information is wrong by design.
   // Always check memory as a policy is flexible to design churn
   // and will not be performant. ce la vie.
-  adj_speed = py_speed() + pack_heavy;
+  int adj_speed = py_speed() + pack_heavy;
   y = uD.y;
   x = uD.x;
 
   if (!replay_flag) printf("----turn----\n");
-  seen_threat = 0;
+
+  int seen_threat = 0;
   int l_act[AL(monD)] = {0};
   int l_wake[AL(monD)] = {0};
   FOR_EACH(mon, {
@@ -12707,6 +12707,7 @@ creatures()
 
     l_act[it_index] = msleep ? -1 : move_count;
 
+    // Tag potential threat early since movement may display many messages
     seen_threat += (mon_lit(it_index) && msleep == 0);
   });
 
@@ -12727,6 +12728,12 @@ creatures()
       for (int act = l_act[it_index]; act > 0; --act) {
         mon_move(it_index);
       }
+    }
+  });
+
+  // Tag relevant threats after movement is complete
+  FOR_EACH(mon, {
+    if (l_act[it_index] >= 0) {
       seen_threat += mon_lit(it_index);
     }
   });
