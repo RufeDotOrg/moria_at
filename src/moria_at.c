@@ -12656,7 +12656,7 @@ movement_rate(speed)
 int
 creatures()
 {
-  int move_count, y, x, cdis, seen_act;
+  int move_count, y, x, cdis, seen_threat;
   int adj_speed;
 
   // TBD: this caching of player information is wrong by design.
@@ -12666,7 +12666,7 @@ creatures()
   y = uD.y;
   x = uD.x;
 
-  seen_act = 0;
+  seen_threat = 0;
   FOR_EACH(mon, {
     struct creatureS* cr_ptr = &creatureD[mon->cidx];
     // Special visibility expires before movement
@@ -12687,17 +12687,19 @@ creatures()
           }
         }
         if (mon->msleep == 0) {
-          if (mon_move(it_index, cdis)) seen_act += mon_lit(it_index);
+          if (mon_move(it_index, cdis)) seen_threat += mon_lit(it_index);
         }
       }
     }
+
+    seen_threat += (mon_lit(it_index) && mon->msleep == 0);
   });
 
-  find_threatD = (seen_act != 0);
-  if (seen_act) countD.rest = 0;
-  if (seen_act) find_flagD = FALSE;
+  find_threatD = (seen_threat != 0);
+  if (seen_threat) countD.rest = 0;
+  if (seen_threat) find_flagD = FALSE;
 
-  return seen_act;
+  return seen_threat;
 }
 BOOL
 py_teleport_near(y, x, uy, ux)
