@@ -12716,26 +12716,27 @@ creatures()
                msleep, mlit);
       if (msleep) {
         int cdis = distance(y, x, mon->fy, mon->fx);
-        for (; move_count > 0; --move_count) {
-          if (mlit || cdis <= cr_ptr->aaf) {
-            if (aggr)
-              msleep = 0;
-            else {
-              uint32_t notice = randint(1024);
-              if (notice * notice * notice <= (1 << (29 - stealth))) {
-                msleep = MAX(msleep - (100 / cdis), 0);
-              }
+        // Monster area of affect
+        if (mlit || cdis <= cr_ptr->aaf) {
+          if (aggr) msleep = 0;
+          // Chance to wake per move
+          while (msleep && move_count) {
+            uint32_t notice = randint(1024);
+            if (notice * notice * notice <= (1 << (29 - stealth))) {
+              msleep = MAX(msleep - (100 / cdis), 0);
             }
+            if (msleep) --move_count;
           }
         }
-
         if (TEST_CREATURE && msleep == 0) l_wake[it_index] = 1;
         mon->msleep = msleep;
       }
+
       if (TEST_CREATURE && !replay_flag &&
           distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
         printf(" | %d msleep final\n", mon->msleep);
 
+      // Dance monster dance!
       l_act[it_index] = msleep ? -1 : move_count;
 
       // Tag potential threat early, mon_move may display messages
@@ -12747,7 +12748,9 @@ creatures()
     FOR_EACH(mon, {
       if (l_wake[it_index]) {
         struct creatureS* cr_ptr = &creatureD[mon->cidx];
-        printf("%d: %s wakes\n", it_index, cr_ptr->name);
+        printf("%d: %s wakes with %d/%d move_count\n", it_index, cr_ptr->name,
+               l_act[it_index],
+               movement_rate(mon->mspeed + py_speed() + pack_heavy));
       }
     });
   }
