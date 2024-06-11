@@ -4398,10 +4398,6 @@ mon_lit(midx)
 
   return flag;
 }
-int
-update_mon(midx)
-{
-}
 static int
 mon_multiply(mon)
 struct monS* mon;
@@ -4434,7 +4430,6 @@ struct monS* mon;
         }
         if (c_ptr->midx == 0) {
           midx = place_monster(j, k, mon->cidx, FALSE);
-          if (midx) update_mon(midx);
           return midx;
         }
       }
@@ -4555,15 +4550,13 @@ py_light_on(y, x)
   if (near_light(y, x)) light_room(y, x);
 }
 void
-py_check_view(full)
+py_check_view()
 {
   if (py_affect(MA_BLIND)) {
     py_light_off(uD.y, uD.x);
   } else {
     py_light_on(uD.y, uD.x);
   }
-
-  if (full) FOR_EACH(mon, { update_mon(it_index); });
 }
 int
 enchant(int16_t* bonus, int16_t limit)
@@ -6795,7 +6788,7 @@ teleport_to(ny, nx)
   uD.y = y;
   uD.x = x;
   panel_update(&panelD, y, x, FALSE);
-  py_check_view(TRUE);
+  py_check_view();
 }
 // TBD: We may loop infinitely with the added restriction of oidx != 0
 // Phase door (short range) teleport runs a higher risk
@@ -6847,7 +6840,6 @@ teleport_away(midx, dis)
   move_rec(fy, fx, yn, xn);
   m_ptr->fy = yn;
   m_ptr->fx = xn;
-  update_mon(midx);
 }
 void
 get_flags(int typ, uint32_t* weapon_type, int* harm_type, int (**destroy)())
@@ -6919,8 +6911,6 @@ light_line(dir, y, x)
       if (c_ptr->midx) {
         m_ptr = &entity_monD[c_ptr->midx];
         cr_ptr = &creatureD[m_ptr->cidx];
-        /* light up and draw monster */
-        update_mon(c_ptr->midx);
         mon_desc(c_ptr->midx);
         if (CD_LIGHT & cr_ptr->cdefense) {
           if (mon_take_hit(c_ptr->midx, damroll(2, 8))) {
@@ -12322,7 +12312,6 @@ static void make_move(midx, mm) int* mm;
       move_rec(fy, fx, newy, newx);
       m_ptr->fy = newy;
       m_ptr->fx = newx;
-      update_mon(midx);
       do_turn = TRUE;
     }
     if (do_turn) break;
@@ -12536,12 +12525,10 @@ mon_try_spell(midx, cdis)
         case 14: /*Summon Monster*/
         {
           int midx = summon_monster(uD.y, uD.x);
-          update_mon(midx);
         } break;
         case 15: /*Summon Undead*/
         {
           int midx = summon_undead(uD.y, uD.x);
-          update_mon(midx);
         } break;
         case 16: /*Slow Person   */
           if (py_tr(TR_FREE_ACT))
@@ -13380,7 +13367,7 @@ player_maint()
   }
 }
 void
-ma_tick(check_view)
+ma_tick()
 {
   uint32_t active, delta;
   int32_t tick[AL(maD)];
@@ -13412,7 +13399,7 @@ ma_tick(check_view)
   // calculations are called after count/flag changes
   if (delta) {
     calc_bonuses();
-    if (MA_VIEW & delta) py_check_view(check_view);
+    if (MA_VIEW & delta) py_check_view();
   }
 }
 void
@@ -13929,7 +13916,7 @@ dungeon()
       AS(input_actionD, input_action_usedD++) = input_record_readD;
     }
 
-    ma_tick(0);  // rising
+    ma_tick();  // rising
     if (!uD.new_level_flag) {
       creatures();
       teleport = (py_tr(TR_TELEPORT) && randint(100) == 1);
@@ -13942,7 +13929,7 @@ dungeon()
     }
 
     if (!town && (turnD & ~-1024) == 0) store_maint();
-    ma_tick(!uD.new_level_flag);  // falling
+    ma_tick();  // falling
     tick();  // uD.new_level_flag may change (player dies from poison)
     turnD += 1;
     if (TEST_REPLAY) replay_memcmp();
@@ -14298,7 +14285,7 @@ main(int argc, char** argv)
     }
 
     panel_update(&panelD, uD.y, uD.x, TRUE);
-    py_check_view(TRUE);
+    py_check_view();
     dungeon();
     replay_flag = 0;
 
