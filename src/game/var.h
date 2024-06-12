@@ -29,6 +29,7 @@ DATA int overlay_widthD;
 DATA int overlay_heightD;
 DATA int msg_widthD;
 DATA int msg_turnD;
+DATA int last_turnD;
 
 // Character social class history text
 DATA char historyD[256];

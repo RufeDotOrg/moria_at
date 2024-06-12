@@ -13627,7 +13627,9 @@ dungeon()
       } else if (find_flagD) {
         mmove(find_directionD, &y, &x);
       } else {
+        // not running, not paralysed, not resting; what do we DO?
         char c = game_input();
+        if (!replay_flag && (c != CTRL('d') && c != ' ')) last_turnD = turnD;
         if (TEST_REPLAY && !is_ctrl(c)) Log("execute (%c:%d)\n", c, c);
 
         // AWN: Period attempts auto-detection of a situational command

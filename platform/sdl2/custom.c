@@ -800,6 +800,19 @@ common_text()
       len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
       p.x -= (len * FWIDTH) / 2;
       render_monofont_string(renderer, &fontD, tmp, len, p);
+
+      int delta = turnD - last_turnD;
+      if (delta) {
+        p.x += len * FWIDTH + 1;
+        if (delta > 0)
+          font_color(font_rgba(BRIGHT + GREEN));
+        else
+          font_color(font_rgba(BRIGHT + RED));
+
+        len = snprintf(tmp, AL(tmp), "%+d", turnD - last_turnD);
+        render_monofont_string(renderer, &fontD, tmp, len, p);
+        font_reset();
+      }
     }
 
     {
