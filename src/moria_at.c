@@ -6568,7 +6568,7 @@ lose_stat(sidx)
 {
   uint32_t sustain = sustain_stat(sidx);
   if (py_tr(sustain)) {
-    MSG("%s for a moment,  it passes.", stat_lossD[sidx]);
+    MSG("%s for a moment, it passes.", stat_lossD[sidx]);
   } else {
     dec_stat(sidx);
     MSG("%s.", stat_lossD[sidx]);
