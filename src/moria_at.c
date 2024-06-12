@@ -12218,9 +12218,8 @@ static void make_move(midx, mm) int* mm;
   }
 
   for (int i = 0; i < 5; ++i) {
-    newy = fy;
-    newx = fx;
-    mmove(mm[i], &newy, &newx);
+    newy = fy + dir_y(mm[i]);
+    newx = fx + dir_x(mm[i]);
     c_ptr = &caveD[newy][newx];
     obj = &entity_objD[c_ptr->oidx];
 
