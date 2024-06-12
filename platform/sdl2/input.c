@@ -176,7 +176,7 @@ SDL_Event event;
   int shift = (mod & KMOD_SHIFT) != 0 ? 0x20 : 0;
 
   if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
-    if (isalpha(event.key.keysym.sym)) {
+    if (char_alpha(event.key.keysym.sym)) {
       int ctrl = (mod & KMOD_CTRL);
       if (ctrl)
         return CTRL(event.key.keysym.sym);

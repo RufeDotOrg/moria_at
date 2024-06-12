@@ -1,27 +1,37 @@
-static int
+#if defined(__FATCOSMOCC__)
+#define XX inline
+#else
+#define XX static
+#endif
+XX int
 char_visible(char c)
 {
   uint8_t vis = c - 0x21;
   return vis < 0x7f - 0x21;
 }
-static int
+XX int
+char_alpha(char c)
+{
+  return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
+}
+XX int
 is_ctrl(c)
 {
   return c <= 0x1f;
 }
-static int
+XX int
 is_lower(c)
 {
   uint8_t iidx = c - 'a';
   return iidx <= 'z' - 'a';
 }
-static int
+XX int
 is_upper(c)
 {
   uint8_t iidx = c - 'A';
   return iidx <= 'Z' - 'A';
 }
-static int
+XX int
 dir_x(dir)
 {
   switch (dir) {
@@ -36,7 +46,7 @@ dir_x(dir)
   }
   return 0;
 }
-static int
+XX int
 dir_y(dir)
 {
   switch (dir) {
@@ -51,17 +61,17 @@ dir_y(dir)
   }
   return 0;
 }
-static void*
+XX void*
 vptr(void* ptr)
 {
   return ptr;
 }
-static uint8_t*
+XX uint8_t*
 bptr(void* ptr)
 {
   return ptr;
 }
-static int*
+XX int*
 iptr(void* ptr)
 {
   return ptr;
