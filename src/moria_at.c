@@ -1045,18 +1045,6 @@ diff_chunk(y1, x1, y2, x2)
   return (y1 / CHUNK_HEIGHT != y2 / CHUNK_HEIGHT ||
           x1 / CHUNK_WIDTH != x2 / CHUNK_WIDTH);
 }
-int
-distance(y1, x1, y2, x2)
-{
-  int dy, dx;
-
-  dy = y1 - y2;
-  if (dy < 0) dy = -dy;
-  dx = x1 - x2;
-  if (dx < 0) dx = -dx;
-
-  return ((((dy + dx) << 1) - (dy > dx ? dx : dy)) >> 1);
-}
 static void rand_dir(rdir, cdir) int *rdir, *cdir;
 {
   int tmp;

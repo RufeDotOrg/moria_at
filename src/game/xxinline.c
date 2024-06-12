@@ -61,6 +61,15 @@ dir_y(dir)
   }
   return 0;
 }
+XX int
+distance(y1, x1, y2, x2)
+{
+  int dy, dx;
+
+  dy = ABS(y1 - y2);
+  dx = ABS(x1 - x2);
+  return ((((dy + dx) << 1) - (dy > dx ? dx : dy)) >> 1);
+}
 XX void*
 vptr(void* ptr)
 {
