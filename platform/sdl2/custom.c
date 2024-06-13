@@ -796,12 +796,12 @@ common_text()
   {
     AUSE(grect, GR_MINIMAP);
     {
-      SDL_Point p = {grect.x + grect.w / 2, grect.y - FHEIGHT - 24};
+      SDL_Point p = {grect.x, grect.y - FHEIGHT - 24};
       len = snprintf(tmp, AL(tmp), "turn:%7d", turnD);
-      p.x -= (len * FWIDTH) / 2;
       render_monofont_string(renderer, &fontD, tmp, len, p);
 
       int delta = turnD - last_turnD;
+      if (TEST_UI) delta = 1234567;
       if (delta) {
         p.x += len * FWIDTH + 1;
         if (delta > 0)
@@ -809,7 +809,7 @@ common_text()
         else
           font_color(font_rgba(BRIGHT + RED));
 
-        len = snprintf(tmp, AL(tmp), "%+d", turnD - last_turnD);
+        len = snprintf(tmp, AL(tmp), "%+d", delta);
         render_monofont_string(renderer, &fontD, tmp, len, p);
         font_reset();
       }
