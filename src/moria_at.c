@@ -10986,7 +10986,7 @@ py_grave()
   death_descD[0] |= 0x20;
   TOMB("%s.", death_descD);
 
-  if (PC) msg_hint(AP("(CTRL-p/z) (c/o/v/ESC)"));
+  if (PC) msg_hint(AP("(CTRL-z) (c/o/p/v/ESC)"));
   return CLOBBER_MSG("You are dead, sorry!");
 }
 static void
@@ -11094,7 +11094,7 @@ py_death()
   do {
     c = 0;
     do {
-      if (c == CTRL('p')) {
+      if (c == 'p') {
         c = show_history();
       } else if (c == CTRL('z')) {
         py_undo();
@@ -11125,9 +11125,9 @@ py_help()
   BufMsg(screen, "c: character screen");
   BufMsg(screen, "d: drop inventory or equipment");
   BufMsg(screen, "m: map dungeon");
+  BufMsg(screen, "p: message history");
   BufMsg(screen, "v: version info");
   line += 1;
-  BufMsg(screen, "CTRL-p: message history");
   BufMsg(screen, "CTRL-c: save and exit");
   BufMsg(screen, "CTRL-z: undo");
   line += 1;
@@ -13793,7 +13793,7 @@ dungeon()
               return;  // Interrupt game
             case CTRL('d'):
               break;
-            case CTRL('p'):
+            case 'p':
               show_history();
               break;
             case CTRL('z'):

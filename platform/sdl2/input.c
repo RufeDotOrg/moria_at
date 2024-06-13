@@ -383,7 +383,7 @@ fingerdown_xy_mode(x, y, mode)
     } else if (touch) {
       switch (touch) {
         case TOUCH_HISTORY:
-          return CTRL('p');
+          return 'p';
         case TOUCH_LOCK:
           orientation_lock_toggle();
           return CTRL('d');
@@ -440,7 +440,7 @@ fingerdown_xy_mode(x, y, mode)
     if (touch == TOUCH_LB) return 'o';
     if (touch == TOUCH_RB) return ESCAPE;
     if (touch == TOUCH_STAT) return 'c';
-    if (touch == TOUCH_HISTORY) return CTRL('p');
+    if (touch == TOUCH_HISTORY) return 'p';
     if (touch) return ' ';
   }
 
