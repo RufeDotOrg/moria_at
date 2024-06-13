@@ -396,6 +396,15 @@ replay_hack()
   // main loop should check input_action_usedD before changing input_records
   turn_flag = 1;
 }
+// Safeguards in the case of a desync
+// Otherwise the death menu reads back trailing inputs
+static void
+replay_stop()
+{
+  if (replay_flag) replay_flag = 0;
+  if (input_record_readD < input_record_writeD)
+    input_record_readD = input_record_writeD;
+}
 
 enum { WHITESPACE = 0x20202020 };
 #define WAIT_NONE 0
@@ -14330,7 +14339,6 @@ main(int argc, char** argv)
     panel_update(&panelD, uD.y, uD.x, TRUE);
     py_check_view();
     dungeon();
-    replay_flag = 0;
 
     if (uD.new_level_flag != NL_DEATH) {
       if (platformD.save(globalD.saveslot_class)) {
@@ -14344,6 +14352,7 @@ main(int argc, char** argv)
   }
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) {
+    replay_stop();
     inven_reveal();
     py_death();
   }
