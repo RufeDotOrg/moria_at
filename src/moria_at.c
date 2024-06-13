@@ -13710,7 +13710,7 @@ dungeon()
                 py_actuate(&y, &x, 'i');
                 break;
               case 'M':
-                py_where_on_map();
+                if (dun_level) py_where_on_map();
                 break;
               case 'R':
                 py_rest();
