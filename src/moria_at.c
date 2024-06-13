@@ -12683,7 +12683,8 @@ creature_threat(int* l_act)
 int
 creatures()
 {
-  int seen_threat = 0;
+  // Default threat to ON for draw() calls inside mon_move()
+  int seen_threat = 1;
   int l_act[AL(monD)] = {0};
   int l_wake[AL(monD)] = {0};
   if (TEST_CREATURE && !replay_flag) printf("----turn----\n");
@@ -12703,14 +12704,9 @@ creatures()
       if (mon->mshow) mon->mshow = 0;
 
       int move_count = movement_rate(mon->mspeed + adj_speed);
-      int mlit = mon_lit(it_index);
       int msleep = mon->msleep;
-
-      if (TEST_CREATURE && !replay_flag &&
-          distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
-        printf("local %s #%d | %d msleep | %d mlit", cr_ptr->name, it_index,
-               msleep, mlit);
       if (msleep) {
+        int mlit = mon_lit(it_index);
         int cdis = distance(y, x, mon->fy, mon->fx);
         // Monster area of affect
         if (mlit || cdis <= cr_ptr->aaf) {
@@ -12724,19 +12720,15 @@ creatures()
             if (msleep) --move_count;
           }
         }
+        if (TEST_CREATURE && !replay_flag && cdis < MAX_SIGHT)
+          printf("local %s #%d | %d->%d msleep | %d mlit", cr_ptr->name,
+                 it_index, mon->msleep, msleep, mlit);
         if (TEST_CREATURE && msleep == 0) l_wake[it_index] = 1;
         mon->msleep = msleep;
       }
 
-      if (TEST_CREATURE && !replay_flag &&
-          distance(y, x, mon->fy, mon->fx) < MAX_SIGHT)
-        printf(" | %d msleep final\n", mon->msleep);
-
       // Dance monster dance!
       l_act[it_index] = msleep ? -1 : move_count;
-
-      // Tag potential threat early, mon_move may display messages
-      seen_threat += (mlit && msleep == 0);
     });
   }
 
@@ -12752,7 +12744,7 @@ creatures()
   }
 
   creature_movement(l_act);
-  seen_threat += creature_threat(l_act);
+  seen_threat = creature_threat(l_act);
 
   // only interrupt run on changes in threat
   // this allows the player use run away from a monster
