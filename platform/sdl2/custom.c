@@ -1307,11 +1307,13 @@ draw_menu(mode)
   char* msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
   int is_text;
+  int is_death = 0;
   AUSE(grect, GR_OVERLAY);
 
   if (mode == 1) {
     is_text = 1;
   } else {
+    is_death = (screen_submodeD == 0);
     is_text = (screen_submodeD != 0);
     if (screen_submodeD == 2) {
       grect = grectD[GR_WIDESCREEN];
@@ -1372,6 +1374,11 @@ draw_menu(mode)
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
   if (is_text) rect_innerframe(grect);
+  if (is_death) {
+    AUSE(grect, GR_HISTORY);
+    if (ui_textureD) SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
+    rect_frame(grect, 1);
+  }
 }
 int
 custom_draw()
@@ -1406,7 +1413,7 @@ custom_draw()
         SDL_RenderFillRect(rendererD, &grect);
       }
 
-      if (ui_textureD && mode != 1) {
+      if (ui_textureD && mode == 0) {
         AUSE(grect, GR_HISTORY);
         SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
         rect_frame(grect, 1);
