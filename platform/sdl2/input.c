@@ -466,6 +466,7 @@ sdl_pump()
       }
     } else if ((MOUSE || TOUCH) && event.type == SDL_FINGERUP) {
       finger_countD -= 1;
+      if (!PC && blipD) ret = ' ';
     } else if (KEYBOARD && (event.type == SDL_KEYDOWN)) {
       ret = sdl_keyboard_event(event);
     } else if (event.type == SDL_QUIT) {

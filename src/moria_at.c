@@ -455,6 +455,7 @@ draw(wait)
   AC(screen_usedD);
   AC(overlay_usedD);
   ylookD = xlookD = -1;
+  if (!PC) blipD = 0;
 
   memset(AS(msg_cqD, msg_writeD), WHITESPACE, STRLEN_MSG + 1);
   AS(msglen_cqD, msg_writeD) = 0;
@@ -530,6 +531,7 @@ show_history()
   }
 
   int count = AL(screenD) - line;
+  if (!PC) blipD = 1;
   return CLOBBER_MSG("Message History (%d)", count);
 }
 int
@@ -10668,6 +10670,7 @@ show_character(narrow, is_reroll)
     }
   }
 
+  if (!PC) blipD = 1;
   return CLOBBER_MSG("Name: %-16.16s", heronameD);
 }
 
@@ -13778,6 +13781,7 @@ dungeon()
                 }
               }
               if (maD[MA_BLIND] == 0) {
+                if (!PC) blipD = 1;
                 minimap_enlargeD = TRUE;
                 CLOBBER_MSG("You check your dungeon map.");
                 minimap_enlargeD = FALSE;

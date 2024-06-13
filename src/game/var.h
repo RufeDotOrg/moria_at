@@ -125,6 +125,7 @@ DATA char git_hashD[] = "AbCdEfGhIjKlMnO";
 GAME uint8_t ui_stateD[256];
 DATA int modeD;
 DATA int submodeD;
+DATA int blipD;
 DATA uint8_t finger_rowD;
 DATA uint8_t finger_colD;
 
