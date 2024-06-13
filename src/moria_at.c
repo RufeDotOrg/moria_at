@@ -587,12 +587,14 @@ int* dir;
   // ugh loop
   do {
     c = CLOBBER_MSG("%s", prompt);
-  } while (c == ' ');
-  command = map_roguedir(c);
-  if (command >= '1' && command <= '9' && command != '5') {
-    *dir = command - '0';
-    return 1;
-  }
+
+    command = map_roguedir(c);
+    if (command >= '1' && command <= '9' && command != '5') {
+      *dir = command - '0';
+      return 1;
+    }
+    if (c == 'a') break;
+  } while (!is_ctrl(c));
 
   return 0;
 }
@@ -11816,18 +11818,6 @@ open_object(y, x)
     }
   } else {
     msg_print("You do not see anything you can open there.");
-  }
-}
-static void
-py_open()
-{
-  int y, x, dir;
-
-  y = uD.y;
-  x = uD.x;
-  if (get_dir(0, &dir)) {
-    mmove(dir, &y, &x);
-    open_object(y, x);
   }
 }
 static void
