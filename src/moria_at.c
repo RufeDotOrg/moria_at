@@ -377,14 +377,16 @@ affect_update()
   active_affectD[idx++] = (countD.imagine != 0);
   active_affectD[idx++] = (find_threatD != 0);
 }
-void
+int
 msg_advance()
 {
-  int log_used;
-  log_used = AS(msglen_cqD, msg_writeD);
-  if (log_used) msg_turnD = turnD;
-  msg_writeD += (log_used != 0);
-  AS(msglen_cqD, msg_writeD) = 0;
+  int log_used = AS(msglen_cqD, msg_writeD);
+  int advance = (log_used != 0);
+  USE(msg_write);
+  msg_write += advance;
+  AS(msglen_cqD, msg_write) = 0;
+  msg_writeD = msg_write;
+  return advance;
 }
 // Sorting commands modify GAME simulation
 // Passing a turn is a work-around to ensure input chain is preserved
@@ -417,6 +419,9 @@ draw(wait)
 {
   int flush_draw = !replay_flag;
   char c = 0;
+
+  // Advance gamelog
+  if (wait >= 0 && msg_advance()) msg_turnD = turnD;
 
   // TBD: terrible hacks
   if (replay_flag && wait < 0) {
@@ -451,7 +456,6 @@ draw(wait)
   AC(overlay_usedD);
   ylookD = xlookD = -1;
 
-  if (wait >= 0) msg_advance();
   memset(AS(msg_cqD, msg_writeD), WHITESPACE, STRLEN_MSG + 1);
   AS(msglen_cqD, msg_writeD) = 0;
 
