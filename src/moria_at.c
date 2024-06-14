@@ -7,7 +7,10 @@ enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
 enum { TEST_CREATURE = 0 };
 
+DATA char quit_stringD[] = "quitting";
+
 // #include "src/mod/replay.c"
+// #include "src/mod/cavegen.c"
 
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
@@ -21,7 +24,6 @@ DATA int find_prevdirD;
 // end find state
 DATA jmp_buf restartD;
 DATA int drop_modeD;
-DATA char quit_stringD[] = "quitting";
 #define MSG(x, ...)                                             \
   {                                                             \
     char vtype[STRLEN_MSG + 1];                                 \
@@ -3655,7 +3657,7 @@ place_streamer(fval, treas_chance)
     }
   } while (mmove(dir, &y, &x));
 }
-void
+int
 cave_gen()
 {
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
@@ -3738,45 +3740,7 @@ cave_gen()
   alloc_mon((randint(RND_MALLOC_LEVEL) + MIN_MALLOC_LEVEL + alloc_level), 0,
             TRUE);
   if (dun_level >= WIN_MON_APPEAR) place_win_monster();
-}
-static int checkD[MAX_HEIGHT][MAX_WIDTH];
-static void
-dfs(y, x)
-{
-  if (in_bounds(y, x)) {
-    if (caveD[y][x].fval <= MAX_FLOOR && !checkD[y][x]) {
-      checkD[y][x] = 1;
-      for (int row = y - 1; row <= y + 1; ++row) {
-        for (int col = x - 1; col <= x + 1; ++col) {
-          dfs(row, col);
-        }
-      }
-    }
-  }
-}
-static int
-cave_check(y, x)
-{
-  printf("cave_check %d %d xy\n", x, y);
-  memset(checkD, 0, sizeof(int) * MAX_HEIGHT * MAX_WIDTH);
-  dfs(y, x);
-  int count = 0;
-  int fail = 0;
-  for (int row = 0; row < MAX_HEIGHT; ++row) {
-    for (int col = 0; col < MAX_WIDTH; ++col) {
-      count += caveD[row][col].fval <= MAX_FLOOR;
-      struct caveS* c_ptr = &caveD[row][col];
-      if (c_ptr->fval <= MAX_FLOOR && !checkD[row][col]) {
-        c_ptr->cflag |= CF_PERM_LIGHT;
-        c_ptr->oidx = 1;
-        fail += 1;
-      }
-    }
-  }
-
-  entity_objD[1].tval = TV_GOLD;
-  printf("cave_check dfs fail_count? %d - %d floor tiles\n", fail, count);
-  return fail == 0;
+  return 0;
 }
 static int
 town_night()
@@ -3850,7 +3814,7 @@ py_intown()
   uD.y = i;
   uD.x = j;
 }
-void
+int
 hard_reset()
 {
   // Clear game state
@@ -3868,6 +3832,7 @@ hard_reset()
   // Reset overlay modes
   overlay_submodeD = 0;
   screen_submodeD = 0;
+  return 0;
 }
 void
 panel_bounds(struct panelS* panel)
@@ -14248,29 +14213,7 @@ main(int argc, char** argv)
   int ready = platformD.load(globalD.saveslot_class, 0);
   if (!ready) ready = py_saveslot_select();
 
-  if (TEST_CAVEGEN) {
-    for (int dlev = 0; dlev < 50; ++dlev) {
-      int seed_count = 64 * 1024;
-      for (uint32_t it = 0; it < seed_count; ++it) {
-        hard_reset();
-        dun_level = dlev;
-        rnd_seed = it;
-        cave_gen();
-        if (!cave_check(uD.y, uD.x)) {
-          // Proceed to play for debug
-          hard_reset();
-          platformD.load(globalD.saveslot_class, 0);
-          memset(&objD[0], 0, sizeof(objD[0]));
-          rnd_seed = it;
-          input_resumeD = -1;
-          break;
-        }
-      }
-      printf("test passed; dlev %d seed_count %d\n", dlev, seed_count);
-    }
-    printf("all dlev OK\n");
-    exit(0);
-  }
+  if (TEST_CAVEGEN) ready = test_cavegen();
 
   if (ready) {
     globalD.saveslot_class = uD.clidx;

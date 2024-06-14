@@ -821,6 +821,12 @@ common_text()
       p.x -= (len * FWIDTH) / 2;
       render_monofont_string(renderer, &fontD, tmp, len, p);
 
+      if (PC && TEST_CAVEGEN) {
+        p.y += FHEIGHT;
+        len = snprintf(tmp, AL(tmp), "%d %d x/y", uD.x, uD.y);
+        render_monofont_string(renderer, &fontD, tmp, len, p);
+      }
+
       if (PC && TEST_REPLAY) {
         p.x = grect.x + FWIDTH / 2;
         p.y += FHEIGHT;
