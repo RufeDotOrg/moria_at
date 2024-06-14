@@ -3859,6 +3859,7 @@ hard_reset()
   // Message history
   AC(msglen_cqD);
   AC(msg_cqD);
+  death_descD[0] = 0;
   msg_writeD = 0;
 
   // Replay state
@@ -10943,6 +10944,8 @@ py_saveslot_select()
     }
   } while (c != CTRL('c'));
 
+  memcpy(death_descD, AP(quit_stringD));
+
   return 0;
 }
 #define TOMB(x, ...)                                     \
@@ -14337,7 +14340,7 @@ main(int argc, char** argv)
         strcpy(death_descD, "Device I/O Error");
       }
     }
-  } else {
+  } else if (!death_descD[0]) {
     strcpy(death_descD, "Initialization Error");
   }
 
