@@ -1203,14 +1203,6 @@ protect_floor(y, x, ydir, xdir)
   return ret;
 }
 static int
-cave_corridor(struct caveS* c_ptr)
-{
-  if (c_ptr->fval < MIN_WALL) return 1;
-  // Room interior
-  if (c_ptr->fval == MAGMA_WALL) return 1;
-  return 0;
-}
-static int
 bestdir(row1, col1, row2, col2)
 {
   int dy = row2 - row1;
@@ -1227,6 +1219,7 @@ static void
 build_corridor(row1, col1, row2, col2, iter)
 {
   int tmp_row, tmp_col, i, j;
+  int last_fval = -1;
   struct caveS* c_ptr;
   struct caveS* d_ptr;
   point_t tunstk[1000], wallstk[1000];
@@ -1235,9 +1228,9 @@ build_corridor(row1, col1, row2, col2, iter)
   int door_flag, main_loop_count;
   int start_row, start_col;
 
-  int logidx = 10;
+  int logidx = -1;
   /* Main procedure for Tunnel  		*/
-  door_flag = FALSE;
+  door_flag = 0;
   tunindex = 0;
   wallindex = 0;
   main_loop_count = 0;
@@ -1299,7 +1292,12 @@ build_corridor(row1, col1, row2, col2, iter)
     if (!in_bounds(tmp_row, tmp_col)) continue;
     c_ptr = &caveD[tmp_row][tmp_col];
     int fval = c_ptr->fval;
-    if (!cave_corridor(c_ptr)) continue;
+    // Protected
+    if (fval == QUARTZ_WALL) continue;
+    // Prevent chewing room boundary
+    if (fval == GRANITE_WALL && last_fval == GRANITE_WALL &&
+        same_chunk(tmp_row, tmp_col, row1, col1))
+      continue;
 
     if (c_ptr->fval == FLOOR_NULL) {
       tunstk[tunindex].y = tmp_row;
@@ -1327,6 +1325,7 @@ build_corridor(row1, col1, row2, col2, iter)
       }
     }
 
+    last_fval = fval;
     row1 = tmp_row;
     col1 = tmp_col;
 
