@@ -1203,10 +1203,9 @@ protect_floor(y, x, ydir, xdir)
   return ret;
 }
 static int
-cave_corridor(struct caveS* c_ptr, wall_flag)
+cave_corridor(struct caveS* c_ptr)
 {
   if (c_ptr->fval < MIN_WALL) return 1;
-  if (!wall_flag && c_ptr->fval == GRANITE_WALL) return 1;
   // Room interior
   if (c_ptr->fval == MAGMA_WALL) return 1;
   return 0;
@@ -1233,13 +1232,12 @@ build_corridor(row1, col1, row2, col2, iter)
   point_t tunstk[1000], wallstk[1000];
   point_t* tun_ptr;
   int row_dir, col_dir, tunindex, wallindex;
-  int door_flag, wall_flag, main_loop_count;
+  int door_flag, main_loop_count;
   int start_row, start_col;
 
   int logidx = 10;
   /* Main procedure for Tunnel  		*/
   door_flag = FALSE;
-  wall_flag = FALSE;
   tunindex = 0;
   wallindex = 0;
   main_loop_count = 0;
@@ -1301,8 +1299,7 @@ build_corridor(row1, col1, row2, col2, iter)
     if (!in_bounds(tmp_row, tmp_col)) continue;
     c_ptr = &caveD[tmp_row][tmp_col];
     int fval = c_ptr->fval;
-    if (!cave_corridor(c_ptr, wall_flag)) continue;
-    wall_flag = 0;
+    if (!cave_corridor(c_ptr)) continue;
 
     if (c_ptr->fval == FLOOR_NULL) {
       tunstk[tunindex].y = tmp_row;
@@ -1310,7 +1307,6 @@ build_corridor(row1, col1, row2, col2, iter)
       tunindex++;
       door_flag = FALSE;
     } else if (c_ptr->fval == GRANITE_WALL) {
-      wall_flag = TRUE;
       tun_chg = 0;
       c_ptr->fval = FLOOR_THRESHOLD;
 
@@ -1319,18 +1315,6 @@ build_corridor(row1, col1, row2, col2, iter)
         wallstk[wallindex].x = tmp_col;
         wallindex++;
         door_flag = TRUE;
-      }
-
-      // Adjacent max-size rooms are punctured immediately
-      if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2) {
-        caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
-        // if either room is CF_UNUSUAL it should go on wallstk
-        if (!door_flag) {
-          door_flag = TRUE;
-          wallstk[wallindex].y = tmp_row;
-          wallstk[wallindex].x = tmp_col;
-          wallindex++;
-        }
       }
     } else if (c_ptr->fval == FLOOR_CORR) {
       if (doorindex < AL(doorstk)) {
