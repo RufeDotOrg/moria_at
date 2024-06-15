@@ -1236,7 +1236,7 @@ build_corridor(row1, col1, row2, col2, iter)
   int door_flag, wall_flag, main_loop_count;
   int start_row, start_col;
 
-  int logidx = -1;
+  int logidx = 10;
   /* Main procedure for Tunnel  		*/
   door_flag = FALSE;
   wall_flag = FALSE;
@@ -1251,8 +1251,7 @@ build_corridor(row1, col1, row2, col2, iter)
     printf("from %d %d to %d %d\n", col1, row1, col2, row2);
   }
 
-  // Consider halting when we've found any CF_ROOM within the destination chunk
-  while (tmp_row != row2 || tmp_col != col2) {
+  while (1) {
     /* prevent infinite loops, just in case */
     main_loop_count++;
     if (main_loop_count > 2000) break;
@@ -1260,14 +1259,13 @@ build_corridor(row1, col1, row2, col2, iter)
     if (wallindex >= AL(wallstk)) break;
 
     if (tun_chg) {
-      // TBD: "correct dir sometimes"
-      // randint(4)
       int choice = bestdir(row1, col1, row2, col2);
       if (iter == logidx)
         printf("\nchoice %d from %d %d to %d %d\n", choice, col1, row1, col2,
                row2);
       if (!choice) continue;
 
+      // Sometimes take a random direction
       if (randint(DUN_TUN_RND) == 1) {
         choice = randint(4);
         if (iter == logidx) printf("random choice %d\n", choice);
@@ -1302,6 +1300,7 @@ build_corridor(row1, col1, row2, col2, iter)
 
     if (!in_bounds(tmp_row, tmp_col)) continue;
     c_ptr = &caveD[tmp_row][tmp_col];
+    int fval = c_ptr->fval;
     if (!cave_corridor(c_ptr, wall_flag)) continue;
     wall_flag = 0;
 
@@ -1312,6 +1311,7 @@ build_corridor(row1, col1, row2, col2, iter)
       door_flag = FALSE;
     } else if (c_ptr->fval == GRANITE_WALL) {
       wall_flag = TRUE;
+      tun_chg = 0;
       c_ptr->fval = FLOOR_THRESHOLD;
 
       if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2) {
@@ -1321,19 +1321,15 @@ build_corridor(row1, col1, row2, col2, iter)
         door_flag = TRUE;
       }
 
-      {
-        tmp_row += row_dir;
-        tmp_col += col_dir;
-        if (iter == logidx) printf("%d %d adv | ", tmp_col, tmp_row);
-
+      // Adjacent max-size rooms are punctured immediately
+      if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2) {
         caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
-
-        if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2 &&
-            !door_flag) {
+        // if either room is CF_UNUSUAL it should go on wallstk
+        if (!door_flag) {
+          door_flag = TRUE;
           wallstk[wallindex].y = tmp_row;
           wallstk[wallindex].x = tmp_col;
           wallindex++;
-          door_flag = TRUE;
         }
       }
     } else if (c_ptr->fval == FLOOR_CORR) {
@@ -1349,8 +1345,19 @@ build_corridor(row1, col1, row2, col2, iter)
 
     row1 = tmp_row;
     col1 = tmp_col;
+
+    // check for completion
+    if ((c_ptr->cflag & CF_ROOM) && same_chunk(tmp_row, tmp_col, row2, col2)) {
+      // printf("%d) same chunk %d %d %d %d fval %d->%d\n", iter, tmp_col,
+      // tmp_row,
+      //        col2, row2, fval, c_ptr->fval);
+      break;
+    }
   }
 
+  if (main_loop_count > 2000)
+    printf("main_loop_count break on iteration %d\n", iter);
+  max_loop_count = MAX(max_loop_count, main_loop_count);
   if (iter == logidx) {
     printf("\n");
     printf("%d %d %d door wall tun %d main_loop_count\n", doorindex, wallindex,
@@ -1358,6 +1365,7 @@ build_corridor(row1, col1, row2, col2, iter)
   }
 
   if (caveD[tmp_row][tmp_col].fval == GRANITE_WALL) {
+    printf("final replacement\n");
     caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
     protect_floor(tmp_row, tmp_col, row_dir, col_dir);
   }
@@ -3743,6 +3751,7 @@ cave_gen()
   pick1 = pick2 = 0;
   for (i = 0; i < AL(room_map); i++) {
     for (j = 0; j < AL(room_map[0]); j++) {
+      // printf("%d ", room_map[i][j]);
       if (room_map[i][j]) {
         if (dun_level > randint(DUN_UNUSUAL)) {
           pick2 += 1;
@@ -3762,6 +3771,7 @@ cave_gen()
         k++;
       }
     }
+    // printf("\n");
   }
   cave_debug();
 
@@ -3787,9 +3797,9 @@ cave_gen()
     y2 = yloc[j + 1];
     x2 = xloc[j + 1];
     // connect each room to another
-    int log = j;
-    if (same_chunk(y1, x1, 17, 17) || same_chunk(y2, x2, 17, 17)) log = -1;
-    build_corridor(y2, x2, y1, x1, log);
+    // int log = j;
+    // if (same_chunk(y1, x1, 17, 17) || same_chunk(y2, x2, 17, 17)) log = -1;
+    build_corridor(y2, x2, y1, x1, j);
     cave_debug();
   }
 

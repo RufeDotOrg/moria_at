@@ -3,9 +3,15 @@
 #define MAX_WIDTH 128
 #define SYMMAP_HEIGHT 16
 #define SYMMAP_WIDTH 32
-// (In Quadrants)
+// (4 Quadrants per view area)
+#define CHUNK_WIDTH (SYMMAP_WIDTH / 2)
+#define CHUNK_HEIGHT (SYMMAP_HEIGHT / 2)
+#define CHUNK_COL (MAX_HEIGHT / CHUNK_HEIGHT)
+#define CHUNK_ROW (MAX_WIDTH / CHUNK_WIDTH)
+#define CHUNK_AREA (CHUNK_COL * CHUNK_ROW)
 #define MAX_COL (MAX_WIDTH / SYMMAP_WIDTH * 2)
 #define MAX_ROW (MAX_HEIGHT / SYMMAP_HEIGHT * 2)
+
 #define SCREEN_HEIGHT 23
 #define MAX_MSG 16
 #define MAX_ZOOM 4
@@ -13,16 +19,18 @@
 #define FLOOR_NULL 0
 #define FLOOR_LIGHT 1
 #define FLOOR_DARK 2
-#define FLOOR_THRESHOLD 3 // Transition from corridor to room
+#define FLOOR_THRESHOLD 3  // Transition from corridor to room
 #define FLOOR_CORR 4
-#define MAX_OPEN_SPACE 4 // Open with regard to movement
-#define MIN_CLOSED_SPACE 5 // Closed with regard to movement
-#define FLOOR_OBST 5 /* a corridor space with cl/st/se door or rubble */
-#define MAX_FLOOR 5 // Not a wall during cavegen()
+#define MAX_OPEN_SPACE 4    // Open with regard to movement
+#define MIN_CLOSED_SPACE 5  // Closed with regard to movement
+#define FLOOR_OBST 5        /* a corridor space with cl/st/se door or rubble */
+#define MAX_FLOOR 5         // Not a wall during cavegen()
 #define MIN_WALL 12
 #define GRANITE_WALL 12
-#define MAGMA_WALL 13 // build_room(): Prevents corridor formation; replaced by granite
-#define QUARTZ_WALL 14 // build_corridor(): Corrior+room intersection; replaced by granite
+// build_room(): Prevents corridor formation; replaced by granite
+#define MAGMA_WALL 13
+// build_corridor(): Corrior+room intersection; replaced by granite
+#define QUARTZ_WALL 14
 #define BOUNDARY_WALL 15
 
 // Cave flags
@@ -36,16 +44,10 @@
 #define CF_LIT_ROOM (CF_ROOM | CF_PERM_LIGHT)
 #define CF_VIZ (CF_TEMP_LIGHT | CF_PERM_LIGHT | CF_FIELDMARK)
 
-#define CHUNK_WIDTH 16
-#define CHUNK_HEIGHT 8
-#define CHUNK_COL (MAX_HEIGHT / CHUNK_HEIGHT)
-#define CHUNK_ROW (MAX_WIDTH / CHUNK_WIDTH)
-#define CHUNK_AREA (CHUNK_COL * CHUNK_ROW)
-
 #define DUN_TUN_RND 9  /* 1/Chance of Random direction        */
 #define DUN_TUN_CHG 70 /* Chance of changing direction (99 max) */
 #define DUN_TUN_PEN 25 /* % chance of room doors         */
-#define DUN_TUN_JCT 40  /* % chance of doors at tunnel junctions */
+#define DUN_TUN_JCT 40 /* % chance of doors at tunnel junctions */
 #define DUN_STR_DEN 5  /* Density of streamers          */
 #define DUN_STR_RNG 2  /* Width of streamers          */
 #define DUN_STR_MAG 3  /* Number of magma streamers         */

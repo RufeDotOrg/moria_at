@@ -1,11 +1,12 @@
 
-enum { LOAD_GAME = 1 };
+DATA int max_loop_count;
+enum { LOAD_GAME = 0 };
 enum { DLEV_BEGIN = 1 };
-enum { DLEV_END = 50 };
-enum { SEED_BEGIN = 0   };  // 5:14761
-enum { SEED_RANGE = 1024 };
+enum { DLEV_END = 2 };
+enum { SEED_BEGIN = 91   };  // 5:14761
+enum { SEED_RANGE = 1 };
 
-DATA int cave_pngD = 0;
+DATA int cave_pngD = 1;
 DATA int checkD[MAX_HEIGHT][MAX_WIDTH];
 DATA int imageD[MAX_HEIGHT][MAX_WIDTH];
 DATA int image_usedD;
@@ -145,8 +146,8 @@ test_cavegen()
   }
 
   if (dlev <= DLEV_END) printf("ALL dlev OK\n");
-  printf("%d dlev\n", dlev);
   memcpy(death_descD, AP(quit_stringD));
+  printf("max loop count %d\n", max_loop_count);
 
   return ret && LOAD_GAME;
 }
