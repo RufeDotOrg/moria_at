@@ -1251,13 +1251,13 @@ build_corridor(row1, col1, row2, col2, iter)
     printf("from %d %d to %d %d\n", col1, row1, col2, row2);
   }
 
+  // Consider halting when we've found any CF_ROOM within the destination chunk
   while (tmp_row != row2 || tmp_col != col2) {
     /* prevent infinite loops, just in case */
     main_loop_count++;
     if (main_loop_count > 2000) break;
     if (tunindex >= AL(tunstk)) break;
     if (wallindex >= AL(wallstk)) break;
-    if (doorindex >= AL(doorstk)) break;
 
     if (tun_chg) {
       // TBD: "correct dir sometimes"
@@ -1266,7 +1266,12 @@ build_corridor(row1, col1, row2, col2, iter)
       if (iter == logidx)
         printf("\nchoice %d from %d %d to %d %d\n", choice, col1, row1, col2,
                row2);
-      if (!choice) break;
+      if (!choice) continue;
+
+      if (randint(DUN_TUN_RND) == 1) {
+        choice = randint(4);
+        if (iter == logidx) printf("random choice %d\n", choice);
+      }
 
       switch (choice) {
         case 1:
@@ -1332,11 +1337,13 @@ build_corridor(row1, col1, row2, col2, iter)
         }
       }
     } else if (c_ptr->fval == FLOOR_CORR) {
-      if (!door_flag) {
-        door_flag = TRUE;
-        doorstk[doorindex].y = tmp_row;
-        doorstk[doorindex].x = tmp_col;
-        doorindex++;
+      if (doorindex < AL(doorstk)) {
+        if (!door_flag) {
+          door_flag = TRUE;
+          doorstk[doorindex].y = tmp_row;
+          doorstk[doorindex].x = tmp_col;
+          doorindex++;
+        }
       }
     }
 
@@ -3710,6 +3717,15 @@ place_streamer(fval, treas_chance)
   } while (mmove(dir, &y, &x));
 }
 int
+same_chunk(y1, x1, y2, x2)
+{
+  enum { CHUNK_W = MAX_WIDTH / (SYMMAP_WIDTH / 2) };
+  enum { CHUNK_H = MAX_HEIGHT / (SYMMAP_HEIGHT / 2) };
+  if (x1 / CHUNK_W != x2 / CHUNK_W) return 0;
+  if (y1 / CHUNK_H != y2 / CHUNK_H) return 0;
+  return 1;
+}
+int
 cave_gen()
 {
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
@@ -3764,13 +3780,16 @@ cave_gen()
   /* move zero entry to k, so that can call build_corridor all k times */
   yloc[k] = yloc[0];
   xloc[k] = xloc[0];
+  // fundamental challenge: room goes unconnected
   for (j = 0; j < k; j++) {
     y1 = yloc[j];
     x1 = xloc[j];
     y2 = yloc[j + 1];
     x2 = xloc[j + 1];
     // connect each room to another
-    build_corridor(y2, x2, y1, x1, j);
+    int log = j;
+    if (same_chunk(y1, x1, 17, 17) || same_chunk(y2, x2, 17, 17)) log = -1;
+    build_corridor(y2, x2, y1, x1, log);
     cave_debug();
   }
 
