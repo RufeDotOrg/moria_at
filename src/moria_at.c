@@ -1220,11 +1220,11 @@ build_corridor(row1, col1, row2, col2)
   tunindex = 0;
   wallindex = 0;
   main_loop_count = 0;
-  start_row = row1;
-  start_col = col1;
+  tmp_row = start_row = row1;
+  tmp_col = start_col = col1;
   correct_dir(&row_dir, &col_dir, row1, col1, row2, col2);
 
-  do {
+  while (tmp_row != row2 || tmp_col != col2) {
     /* prevent infinite loops, just in case */
     main_loop_count++;
     if (main_loop_count > 2000) break;
@@ -1301,7 +1301,12 @@ build_corridor(row1, col1, row2, col2)
 
     row1 = tmp_row;
     col1 = tmp_col;
-  } while (((tmp_row != row2) || (tmp_col != col2)));
+  }
+
+  if (caveD[tmp_row][tmp_col].fval == GRANITE_WALL) {
+    caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
+    protect_floor(tmp_row, tmp_col, row_dir, col_dir);
+  }
 
   tun_ptr = &tunstk[0];
   for (i = 0; i < tunindex; i++) {
