@@ -57,7 +57,7 @@ void* result;
   rgb[2] = CLAMP(b, 0.f, 1.f) * 255;
   return !invalid;
 }
-STATIC int
+int
 rgb_by_labr(labr)
 {
   float xyz[3];

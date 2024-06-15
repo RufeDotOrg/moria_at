@@ -1202,8 +1202,30 @@ protect_floor(y, x, ydir, xdir)
   if (c_ptr->fval == GRANITE_WALL) c_ptr->fval = QUARTZ_WALL;
   return ret;
 }
+static int
+cave_corridor(struct caveS* c_ptr, wall_flag)
+{
+  if (c_ptr->fval < MIN_WALL) return 1;
+  if (!wall_flag && c_ptr->fval == GRANITE_WALL) return 1;
+  // Room interior
+  if (c_ptr->fval == MAGMA_WALL) return 1;
+  return 0;
+}
+static int
+bestdir(row1, col1, row2, col2)
+{
+  int dy = row2 - row1;
+  int dx = col2 - col1;
+  if (ABS(dy) > ABS(dx)) {
+    if (dy < 0) return 1;
+    if (dy > 0) return 2;
+  } else {
+    if (dx < 0) return 3;
+    if (dx > 0) return 4;
+  }
+}
 static void
-build_corridor(row1, col1, row2, col2)
+build_corridor(row1, col1, row2, col2, iter)
 {
   int tmp_row, tmp_col, i, j;
   struct caveS* c_ptr;
@@ -1214,6 +1236,7 @@ build_corridor(row1, col1, row2, col2)
   int door_flag, wall_flag, main_loop_count;
   int start_row, start_col;
 
+  int logidx = -1;
   /* Main procedure for Tunnel  		*/
   door_flag = FALSE;
   wall_flag = FALSE;
@@ -1222,39 +1245,60 @@ build_corridor(row1, col1, row2, col2)
   main_loop_count = 0;
   tmp_row = start_row = row1;
   tmp_col = start_col = col1;
-  correct_dir(&row_dir, &col_dir, row1, col1, row2, col2);
+  int tun_chg = 1;
+
+  if (iter == logidx) {
+    printf("from %d %d to %d %d\n", col1, row1, col2, row2);
+  }
 
   while (tmp_row != row2 || tmp_col != col2) {
     /* prevent infinite loops, just in case */
     main_loop_count++;
     if (main_loop_count > 2000) break;
     if (tunindex >= AL(tunstk)) break;
+    if (wallindex >= AL(wallstk)) break;
+    if (doorindex >= AL(doorstk)) break;
 
-    if (randint(100) > DUN_TUN_CHG) {
-      if (randint(DUN_TUN_RND) == 1)
-        rand_dir(&row_dir, &col_dir);
-      else
-        correct_dir(&row_dir, &col_dir, row1, col1, row2, col2);
+    if (tun_chg) {
+      // TBD: "correct dir sometimes"
+      // randint(4)
+      int choice = bestdir(row1, col1, row2, col2);
+      if (iter == logidx)
+        printf("\nchoice %d from %d %d to %d %d\n", choice, col1, row1, col2,
+               row2);
+      if (!choice) break;
+
+      switch (choice) {
+        case 1:
+          row_dir = -1;
+          col_dir = 0;
+          break;
+        case 2:
+          row_dir = 1;
+          col_dir = 0;
+          break;
+        case 3:
+          row_dir = 0;
+          col_dir = -1;
+          break;
+        case 4:
+          row_dir = 0;
+          col_dir = 1;
+          break;
+      }
     }
+    tun_chg = randint(100) > DUN_TUN_CHG;
+
     tmp_row = row1 + row_dir;
     tmp_col = col1 + col_dir;
-    while (!in_bounds(tmp_row, tmp_col)) {
-      if (randint(DUN_TUN_RND) == 1)
-        rand_dir(&row_dir, &col_dir);
-      else
-        correct_dir(&row_dir, &col_dir, row1, col1, row2, col2);
-      tmp_row = row1 + row_dir;
-      tmp_col = col1 + col_dir;
+    if (iter == logidx) {
+      printf("%d %d | ", tmp_col, tmp_row);
     }
+
+    if (!in_bounds(tmp_row, tmp_col)) continue;
     c_ptr = &caveD[tmp_row][tmp_col];
-    if (c_ptr->fval > MAGMA_WALL) continue;
-    // wall_flag prevents repeat penetration (along the perimeter of a room)
-    if (wall_flag) {
-      if (c_ptr->fval <= MAX_FLOOR)
-        wall_flag = 0;
-      else
-        continue;
-    }
+    if (!cave_corridor(c_ptr, wall_flag)) continue;
+    wall_flag = 0;
 
     if (c_ptr->fval == FLOOR_NULL) {
       tunstk[tunindex].y = tmp_row;
@@ -1262,45 +1306,48 @@ build_corridor(row1, col1, row2, col2)
       tunindex++;
       door_flag = FALSE;
     } else if (c_ptr->fval == GRANITE_WALL) {
-      if (wallindex < AL(wallstk)) {
-        wall_flag = TRUE;
-        c_ptr->fval = FLOOR_THRESHOLD;
+      wall_flag = TRUE;
+      c_ptr->fval = FLOOR_THRESHOLD;
 
-        if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2) {
+      if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2) {
+        wallstk[wallindex].y = tmp_row;
+        wallstk[wallindex].x = tmp_col;
+        wallindex++;
+        door_flag = TRUE;
+      }
+
+      {
+        tmp_row += row_dir;
+        tmp_col += col_dir;
+        if (iter == logidx) printf("%d %d adv | ", tmp_col, tmp_row);
+
+        caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
+
+        if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2 &&
+            !door_flag) {
           wallstk[wallindex].y = tmp_row;
           wallstk[wallindex].x = tmp_col;
           wallindex++;
           door_flag = TRUE;
         }
-
-        if (in_bounds(tmp_row + row_dir, tmp_col + col_dir)) {
-          tmp_row += row_dir;
-          tmp_col += col_dir;
-
-          caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
-
-          if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2 &&
-              !door_flag) {
-            wallstk[wallindex].y = tmp_row;
-            wallstk[wallindex].x = tmp_col;
-            wallindex++;
-            door_flag = TRUE;
-          }
-        }
       }
     } else if (c_ptr->fval == FLOOR_CORR) {
       if (!door_flag) {
         door_flag = TRUE;
-        if (doorindex < AL(doorstk)) {
-          doorstk[doorindex].y = tmp_row;
-          doorstk[doorindex].x = tmp_col;
-          doorindex++;
-        }
+        doorstk[doorindex].y = tmp_row;
+        doorstk[doorindex].x = tmp_col;
+        doorindex++;
       }
     }
 
     row1 = tmp_row;
     col1 = tmp_col;
+  }
+
+  if (iter == logidx) {
+    printf("\n");
+    printf("%d %d %d door wall tun %d main_loop_count\n", doorindex, wallindex,
+           tunindex, main_loop_count);
   }
 
   if (caveD[tmp_row][tmp_col].fval == GRANITE_WALL) {
@@ -3723,7 +3770,7 @@ cave_gen()
     y2 = yloc[j + 1];
     x2 = xloc[j + 1];
     // connect each room to another
-    build_corridor(y2, x2, y1, x1);
+    build_corridor(y2, x2, y1, x1, j);
     cave_debug();
   }
 

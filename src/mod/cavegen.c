@@ -1,4 +1,10 @@
 
+enum { LOAD_GAME = 1 };
+enum { DLEV_BEGIN = 1 };
+enum { DLEV_END = 50 };
+enum { SEED_BEGIN = 0   };  // 5:14761
+enum { SEED_RANGE = 1024 };
+
 DATA int cave_pngD = 0;
 DATA int checkD[MAX_HEIGHT][MAX_WIDTH];
 DATA int imageD[MAX_HEIGHT][MAX_WIDTH];
@@ -95,11 +101,6 @@ cave_check(y, x)
   return fail == 0;
 }
 
-enum { LOAD_GAME = 1 };
-enum { DLEV_BEGIN = 1 };
-enum { DLEV_END = 50 };
-enum { SEED_BEGIN = 0 };  // 5:14761
-enum { SEED_RANGE = 10 };
 int
 test_cavegen()
 {
@@ -117,10 +118,6 @@ test_cavegen()
       cave_gen();
       pass = cave_check(uD.y, uD.x);
       if (!pass) {
-        {
-          struct caveS* c_ptr = &caveD[5][96];
-          printf("%d fval\n", c_ptr->fval);
-        }
         if (!LOAD_GAME) {
           hard_reset();
           dun_level = dlev;
@@ -128,8 +125,6 @@ test_cavegen()
           cave_pngD = 1;
           cave_gen();
           printf("PNG output: dlev %d rnd_seed %d\n", dlev, seed);
-          struct caveS* c_ptr = &caveD[5][96];
-          printf("%d fval\n", c_ptr->fval);
 
           exit(1);
         }
