@@ -2,7 +2,7 @@
 
 #include "platform/platform.c"
 
-enum { HACK = 0 };
+enum { HACK = 1 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
 enum { TEST_CREATURE = 0 };
@@ -10,7 +10,7 @@ enum { TEST_CREATURE = 0 };
 DATA char quit_stringD[] = "quitting";
 
 // #include "src/mod/replay.c"
-// #include "src/mod/cavegen.c"
+#include "src/mod/cavegen.c"
 
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
@@ -1182,8 +1182,8 @@ place_door(y, x)
       place_secret_door(y, x);
   }
 }
-DATA point_t doorstk[100];
-DATA int doorindex;
+GAME point_t doorstk[100];
+GAME int doorindex;
 static int
 protect_floor(y, x, ydir, xdir)
 {
@@ -3665,14 +3665,16 @@ cave_gen()
   int y1, x1, y2, x2, pick1, pick2;
   int yloc[CHUNK_AREA + 1], xloc[CHUNK_AREA + 1];
 
+  printf("cave_gen %d dunlevel %d rnd_seed\n", dun_level, rnd_seed);
+
   alloc_level = CLAMP(dun_level / 2, 2, 15);
   k = randnor(DUN_ROOM_MEAN + alloc_level, 2);
   for (i = 0; i < k; i++)
     room_map[randint(AL(room_map)) - 1][randint(AL(room_map[0])) - 1] += 1;
   k = 0;
   pick1 = pick2 = 0;
-  for (i = 0; i < AL(room_map); i++)
-    for (j = 0; j < AL(room_map[0]); j++)
+  for (i = 0; i < AL(room_map); i++) {
+    for (j = 0; j < AL(room_map[0]); j++) {
       if (room_map[i][j]) {
         if (dun_level > randint(DUN_UNUSUAL)) {
           pick2 += 1;
@@ -3685,10 +3687,16 @@ cave_gen()
             build_type1(i, j, &yloc[k], &xloc[k]);
           }
         }
+        if (i == CHUNK_COL - 1 || j == CHUNK_ROW - 1) {
+          // printf("%d %d xy\n", xloc[k], yloc[k]);
+          // exit(0);
+        }
         k++;
       }
+    }
+  }
+  cave_debug();
 
-  doorindex = 0;
   for (j = 0; j < k; j++) {
     pick1 = randint(k) - 1;
     pick2 = randint(k) - 1;
@@ -3711,12 +3719,16 @@ cave_gen()
     x2 = xloc[j + 1];
     // connect each room to another
     build_corridor(y2, x2, y1, x1);
+    cave_debug();
   }
 
   granite_cave();
+  cave_debug();
+
   place_boundary();
   for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL, DUN_STR_MC);
   for (i = 0; i < DUN_STR_QUA; i++) place_streamer(QUARTZ_WALL, DUN_STR_QC);
+  cave_debug();
 
   /* Corridor intersection doors  */
   for (i = 0; i < doorindex; i++) {
@@ -3740,6 +3752,8 @@ cave_gen()
   alloc_mon((randint(RND_MALLOC_LEVEL) + MIN_MALLOC_LEVEL + alloc_level), 0,
             TRUE);
   if (dun_level >= WIN_MON_APPEAR) place_win_monster();
+  // cave_debug();
+  printf("-- end cave_gen %d dunlevel %d rnd_seed\n", dun_level, rnd_seed);
   return 0;
 }
 static int
