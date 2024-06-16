@@ -1198,7 +1198,8 @@ protect_floor(y, x, ydir, xdir)
   if (same_chunk(y + oy, x + ox, y - oy, x - ox)) {
     c_ptr1 = &caveD[y + oy][x + ox];
     c_ptr2 = &caveD[y - oy][x - ox];
-    ret = (c_ptr1->fval == GRANITE_WALL) + (c_ptr2->fval == GRANITE_WALL);
+    ret = (c_ptr1->fval >= GRANITE_WALL) + (c_ptr2->fval >= GRANITE_WALL);
+    ret = (c_ptr1->fval >= QUARTZ_WALL) + (c_ptr2->fval >= QUARTZ_WALL);
 
     if (ret == 2) c_ptr1->fval = QUARTZ_WALL;
     if (ret == 2) c_ptr2->fval = QUARTZ_WALL;
