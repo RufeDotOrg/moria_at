@@ -1296,7 +1296,7 @@ build_corridor(row1, col1, row2, col2, iter)
     if (!in_bounds(tmp_row, tmp_col)) continue;
     c_ptr = &caveD[tmp_row][tmp_col];
     int fval = c_ptr->fval;
-    // Previously marked by protect_floor
+    // previously marked by protect_floor
     if (fval == QUARTZ_WALL) continue;
 
     if (c_ptr->fval == FLOOR_NULL) {
@@ -1308,7 +1308,10 @@ build_corridor(row1, col1, row2, col2, iter)
       // Prevent chewing room boundary
       // Prevent diagonal entrance to rooms
       // (build_corridor does not travel diagonal)
-      if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) != 2) continue;
+      if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) != 2) {
+        tun_chg = 1;
+        continue;
+      }
 
       // Stay the course at least one more square
       tun_chg = 0;
@@ -1366,12 +1369,6 @@ build_corridor(row1, col1, row2, col2, iter)
     printf("\n");
     printf("%d %d %d door wall tun %d main_loop_count\n", doorindex, wallindex,
            tunindex, main_loop_count);
-  }
-
-  if (caveD[tmp_row][tmp_col].fval == GRANITE_WALL) {
-    printf("final replacement %d %d\n", tmp_col, tmp_row);
-    caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
-    protect_floor(tmp_row, tmp_col, row_dir, col_dir);
   }
 
   tun_ptr = &tunstk[0];
