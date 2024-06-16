@@ -1187,19 +1187,23 @@ GAME int doorindex;
 static int
 protect_floor(y, x, ydir, xdir)
 {
-  struct caveS* c_ptr;
+  struct caveS* c_ptr1;
+  struct caveS* c_ptr2;
   // Perpendicular
   int oy = xdir;
   int ox = ydir;
   int ret = 0;
 
-  c_ptr = &caveD[y + oy][x + ox];
-  ret += (c_ptr->fval == GRANITE_WALL);
-  if (c_ptr->fval == GRANITE_WALL) c_ptr->fval = QUARTZ_WALL;
+  // require granite from the same room
+  if (same_chunk(y + oy, x + ox, y - oy, x - ox)) {
+    c_ptr1 = &caveD[y + oy][x + ox];
+    c_ptr2 = &caveD[y - oy][x - ox];
+    ret = (c_ptr1->fval == GRANITE_WALL) + (c_ptr2->fval == GRANITE_WALL);
 
-  c_ptr = &caveD[y - oy][x - ox];
-  ret += (c_ptr->fval == GRANITE_WALL);
-  if (c_ptr->fval == GRANITE_WALL) c_ptr->fval = QUARTZ_WALL;
+    if (ret == 2) c_ptr1->fval = QUARTZ_WALL;
+    if (ret == 2) c_ptr2->fval = QUARTZ_WALL;
+  }
+
   return ret;
 }
 static int
@@ -1247,7 +1251,7 @@ build_corridor(row1, col1, row2, col2, iter)
     main_loop_count++;
     if (main_loop_count > 2000) break;
     if (tunindex >= AL(tunstk)) break;
-    if (wallindex >= AL(wallstk)) break;
+    if (wallindex + 1 >= AL(wallstk)) break;
 
     if (tun_chg) {
       int choice = bestdir(row1, col1, row2, col2);
@@ -1292,12 +1296,8 @@ build_corridor(row1, col1, row2, col2, iter)
     if (!in_bounds(tmp_row, tmp_col)) continue;
     c_ptr = &caveD[tmp_row][tmp_col];
     int fval = c_ptr->fval;
-    // Protected
+    // Previously marked by protect_floor
     if (fval == QUARTZ_WALL) continue;
-    // Prevent chewing room boundary
-    if (fval == GRANITE_WALL && last_fval == GRANITE_WALL &&
-        same_chunk(tmp_row, tmp_col, row1, col1))
-      continue;
 
     if (c_ptr->fval == FLOOR_NULL) {
       tunstk[tunindex].y = tmp_row;
@@ -1305,14 +1305,35 @@ build_corridor(row1, col1, row2, col2, iter)
       tunindex++;
       door_flag = FALSE;
     } else if (c_ptr->fval == GRANITE_WALL) {
+      // Prevent chewing room boundary
+      // Prevent diagonal entrance to rooms
+      // (build_corridor does not travel diagonal)
+      if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) != 2) continue;
+
+      // Stay the course at least one more square
       tun_chg = 0;
       c_ptr->fval = FLOOR_THRESHOLD;
 
-      if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) == 2) {
-        wallstk[wallindex].y = tmp_row;
-        wallstk[wallindex].x = tmp_col;
-        wallindex++;
-        door_flag = TRUE;
+      // Review later for door placement
+      wallstk[wallindex].y = tmp_row;
+      wallstk[wallindex].x = tmp_col;
+      wallindex++;
+      door_flag = TRUE;
+
+      {
+        int nrow = tmp_row + row_dir;
+        int ncol = tmp_col + col_dir;
+        if (!same_chunk(nrow, ncol, tmp_row, tmp_col) &&
+            caveD[nrow][ncol].fval == GRANITE_WALL) {
+          // adjacent granite in next chunk; another room
+          caveD[nrow][ncol].fval = FLOOR_THRESHOLD;
+          // may not get protections on irregular rectangle rooms
+          protect_floor(nrow, ncol, row_dir, col_dir);
+          // reviewed later in case of unusual room
+          wallstk[wallindex].y = tmp_row;
+          wallstk[wallindex].x = tmp_col;
+          wallindex++;
+        }
       }
     } else if (c_ptr->fval == FLOOR_CORR) {
       if (doorindex < AL(doorstk)) {
@@ -1348,7 +1369,7 @@ build_corridor(row1, col1, row2, col2, iter)
   }
 
   if (caveD[tmp_row][tmp_col].fval == GRANITE_WALL) {
-    printf("final replacement\n");
+    printf("final replacement %d %d\n", tmp_col, tmp_row);
     caveD[tmp_row][tmp_col].fval = FLOOR_THRESHOLD;
     protect_floor(tmp_row, tmp_col, row_dir, col_dir);
   }
@@ -3740,12 +3761,13 @@ cave_gen()
           pick2 += 1;
           build_type2(i, j, &yloc[k], &xloc[k], randint(6), randint(8));
         } else {
-          if (room_map[i][j] == 1) {
-            build_room(i, j, &yloc[k], &xloc[k]);
-          } else {
-            pick1 += 1;
-            build_type1(i, j, &yloc[k], &xloc[k]);
-          }
+          // type1 rooms do not play well with protect_floor
+          // if (room_map[i][j] == 1) {
+          build_room(i, j, &yloc[k], &xloc[k]);
+          //} else {
+          //  pick1 += 1;
+          //  build_type1(i, j, &yloc[k], &xloc[k]);
+          //}
         }
         if (i == CHUNK_COL - 1 || j == CHUNK_ROW - 1) {
           // printf("%d %d xy\n", xloc[k], yloc[k]);
