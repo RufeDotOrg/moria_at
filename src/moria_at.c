@@ -3728,10 +3728,8 @@ place_streamer(fval, treas_chance)
 int
 same_chunk(y1, x1, y2, x2)
 {
-  enum { CHUNK_W = MAX_WIDTH / (SYMMAP_WIDTH / 2) };
-  enum { CHUNK_H = MAX_HEIGHT / (SYMMAP_HEIGHT / 2) };
-  if (x1 / CHUNK_W != x2 / CHUNK_W) return 0;
-  if (y1 / CHUNK_H != y2 / CHUNK_H) return 0;
+  if (x1 / CHUNK_WIDTH != x2 / CHUNK_WIDTH) return 0;
+  if (y1 / CHUNK_HEIGHT != y2 / CHUNK_HEIGHT) return 0;
   return 1;
 }
 int
