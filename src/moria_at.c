@@ -1218,6 +1218,7 @@ bestdir(row1, col1, row2, col2)
     if (dx < 0) return 3;
     if (dx > 0) return 4;
   }
+  return 0;
 }
 static void
 build_corridor(row1, col1, row2, col2, iter)
