@@ -1342,14 +1342,14 @@ build_corridor(row1, col1, row2, col2, iter)
       if (!choice) continue;
 
       // Prefer bestdir on map edges
-      // if ((tmp_col > CHUNK_WIDTH && tmp_col + CHUNK_WIDTH < MAX_WIDTH) &&
-      //    (tmp_row > CHUNK_HEIGHT && tmp_row + CHUNK_HEIGHT < MAX_HEIGHT)) {
-      //  // Sometimes take a random direction
-      //  if (randint(DUN_TUN_RND) == 1) {
-      //    choice = randint(4);
-      //    if (iter == logidx) printf("random choice %d\n", choice);
-      //  }
-      //}
+      if ((tmp_col > CHUNK_WIDTH && tmp_col + CHUNK_WIDTH < MAX_WIDTH) &&
+          (tmp_row > CHUNK_HEIGHT && tmp_row + CHUNK_HEIGHT < MAX_HEIGHT)) {
+        // Sometimes take a random direction
+        if (randint(DUN_TUN_RND) == 1) {
+          choice = randint(4);
+          if (iter == logidx) printf("random choice %d\n", choice);
+        }
+      }
 
       switch (choice) {
         case 1:
