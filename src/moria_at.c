@@ -1185,24 +1185,56 @@ place_door(y, x)
 GAME point_t doorstk[100];
 GAME int doorindex;
 static int
-protect_floor(y, x, ydir, xdir)
+protect_floor(y, x, ydir, xdir, log, tmp_row, tmp_col)
+int *tmp_row, *tmp_col;
 {
   struct caveS* c_ptr1;
   struct caveS* c_ptr2;
+  struct caveS* c_ptr3;
   // Perpendicular
   int oy = xdir;
   int ox = ydir;
   int ret = 0;
 
-  // require granite from the same room
-  if (same_chunk(y + oy, x + ox, y - oy, x - ox)) {
-    c_ptr1 = &caveD[y + oy][x + ox];
-    c_ptr2 = &caveD[y - oy][x - ox];
-    ret = (c_ptr1->fval >= GRANITE_WALL) + (c_ptr2->fval >= GRANITE_WALL);
-    ret = (c_ptr1->fval >= QUARTZ_WALL) + (c_ptr2->fval >= QUARTZ_WALL);
+  int try = !tmp_row ? 1 : 2;
+  for (int it = 0; it < try; ++it) {
+    // require granite from the same room
+    int sc = same_chunk(y + oy, x + ox, y - oy, x - ox);
+    if (log)
+      printf("protect floor %d %d & %d %d | same_chunk %d \n", y + oy, x + ox,
+             y - oy, x - ox, sc);
+    if (sc) {
+      c_ptr1 = &caveD[y][x];
+      c_ptr2 = &caveD[y + oy][x + ox];
+      c_ptr3 = &caveD[y - oy][x - ox];
+      // TBD: this or check granite+quartz?
+      ret = (c_ptr2->fval >= MIN_WALL) + (c_ptr3->fval >= MIN_WALL);
 
-    if (ret == 2) c_ptr1->fval = QUARTZ_WALL;
-    if (ret == 2) c_ptr2->fval = QUARTZ_WALL;
+      if (ret == 2) {
+        c_ptr1->fval = FLOOR_THRESHOLD;
+        c_ptr2->fval = QUARTZ_WALL;
+        c_ptr3->fval = QUARTZ_WALL;
+
+        // Write-back movement, if any
+        if (tmp_row) *tmp_row = y;
+        if (tmp_col) *tmp_col = x;
+        break;
+      }
+    }
+
+    if (caveD[y + oy][x + ox].fval >= MIN_WALL &&
+        same_chunk(y, x, y + oy, x + ox)) {
+      // TBD: creates a diagonal step; could patch this up
+      y = y + oy;
+      x = x + ox;
+      printf("shifted %d %d\n", x, y);
+    } else if (caveD[y - oy][x - ox].fval >= MIN_WALL &&
+               same_chunk(y, x, y - oy, x - ox)) {
+      // TBD: creates a diagonal step; could patch this up
+      y = y - oy;
+      x = x - ox;
+      printf("shifted %d %d\n", x, y);
+    }
   }
 
   return ret;
@@ -1221,6 +1253,20 @@ bestdir(row1, col1, row2, col2)
   }
   return 0;
 }
+static int
+build_diag(row, col)
+{
+  int ret = 0;
+  for (int r = 0; r <= 1; ++r) {
+    for (int c = 0; c <= 1; ++c) {
+      if (!caveD[row + r][col + c].fval) {
+        caveD[row + r][col + c].fval = FLOOR_CORR;
+        ret += 1;
+      }
+    }
+  }
+  return ret;
+}
 static void
 build_corridor(row1, col1, row2, col2, iter)
 {
@@ -1234,7 +1280,7 @@ build_corridor(row1, col1, row2, col2, iter)
   int door_flag, main_loop_count;
   int start_row, start_col;
 
-  int logidx = -1;
+  int logidx = 13;
   /* Main procedure for Tunnel  		*/
   door_flag = 0;
   tunindex = 0;
@@ -1262,11 +1308,15 @@ build_corridor(row1, col1, row2, col2, iter)
                row2);
       if (!choice) continue;
 
-      // Sometimes take a random direction
-      if (randint(DUN_TUN_RND) == 1) {
-        choice = randint(4);
-        if (iter == logidx) printf("random choice %d\n", choice);
-      }
+      // Prefer bestdir on map edges
+      // if ((tmp_col > CHUNK_WIDTH && tmp_col + CHUNK_WIDTH < MAX_WIDTH) &&
+      //    (tmp_row > CHUNK_HEIGHT && tmp_row + CHUNK_HEIGHT < MAX_HEIGHT)) {
+      //  // Sometimes take a random direction
+      //  if (randint(DUN_TUN_RND) == 1) {
+      //    choice = randint(4);
+      //    if (iter == logidx) printf("random choice %d\n", choice);
+      //  }
+      //}
 
       switch (choice) {
         case 1:
@@ -1299,25 +1349,35 @@ build_corridor(row1, col1, row2, col2, iter)
     c_ptr = &caveD[tmp_row][tmp_col];
     int fval = c_ptr->fval;
     // previously marked by protect_floor
-    if (fval == QUARTZ_WALL) continue;
+    // TRYING PASS THRU LIKE MAGMA
+    // if (fval == QUARTZ_WALL) continue;
 
     if (c_ptr->fval == FLOOR_NULL) {
       tunstk[tunindex].y = tmp_row;
       tunstk[tunindex].x = tmp_col;
       tunindex++;
       door_flag = FALSE;
+    } else if (c_ptr->fval == MAGMA_WALL) {
+      // pass-thru
     } else if (c_ptr->fval == GRANITE_WALL) {
+      tun_chg = 0;
+
       // Prevent chewing room boundary
       // Prevent diagonal entrance to rooms
       // (build_corridor does not travel diagonal)
-      if (protect_floor(tmp_row, tmp_col, row_dir, col_dir) != 2) {
-        tun_chg = 1;
+      int prot = protect_floor(tmp_row, tmp_col, row_dir, col_dir,
+                               iter == logidx, &tmp_row, &tmp_col);
+      // TBD: unused?
+      if (prot != 2) {
+        if (row_dir) {
+          row_dir = 0;
+          col_dir = randint(2) ? 1 : -1;
+        } else {
+          row_dir = randint(2) ? 1 : -1;
+          col_dir = 0;
+        }
         continue;
       }
-
-      // Stay the course at least one more square
-      tun_chg = 0;
-      c_ptr->fval = FLOOR_THRESHOLD;
 
       // Review later for door placement
       wallstk[wallindex].y = tmp_row;
@@ -1325,20 +1385,51 @@ build_corridor(row1, col1, row2, col2, iter)
       wallindex++;
       door_flag = TRUE;
 
+      // This complexity arises from adjacent rooms;
       {
         int nrow = tmp_row + row_dir;
         int ncol = tmp_col + col_dir;
         if (!same_chunk(nrow, ncol, tmp_row, tmp_col) &&
             caveD[nrow][ncol].fval == GRANITE_WALL) {
-          // adjacent granite in next chunk; another room
-          caveD[nrow][ncol].fval = FLOOR_THRESHOLD;
-          // may not get protections on irregular rectangle rooms
-          protect_floor(nrow, ncol, row_dir, col_dir);
-          // reviewed later in case of unusual room
-          wallstk[wallindex].y = tmp_row;
-          wallstk[wallindex].x = tmp_col;
-          wallindex++;
+          // chop, chop, chop
+          if (protect_floor(nrow, ncol, row_dir, col_dir, iter == logidx,
+                            &tmp_row, &tmp_col) == 2) {
+            // reviewed later in case of unusual room
+            wallstk[wallindex].y = tmp_row;
+            wallstk[wallindex].x = tmp_col;
+            wallindex++;
+          }
         }
+      }
+    } else if (c_ptr->fval == QUARTZ_WALL) {
+      int fill = 0;
+      for (int row = -1; row <= 1; ++row) {
+        for (int col = -1; col <= 1; ++col) {
+          if (!row && !col) continue;
+          if (row && col) continue;
+          struct caveS* c_ptr = &caveD[tmp_row + row][tmp_col + col];
+          if (c_ptr->fval == FLOOR_THRESHOLD) {
+            int mr = MIN(tmp_row, tmp_row + row);
+            int mc = MIN(tmp_col, tmp_col + col);
+            fill = build_diag(mr, mc);
+            if (iter == logidx)
+              printf("adjacent quartz threshold found %d %d fill %d\n",
+                     tmp_col + col, tmp_row + row, fill);
+          }
+        }
+      }
+
+      // couldn't pass the existing puncture
+      if (!fill) {
+        printf("quartz; no fill\n");
+        if (row_dir) {
+          row_dir = 0;
+          col_dir = randint(2) ? 1 : -1;
+        } else {
+          row_dir = randint(2) ? 1 : -1;
+          col_dir = 0;
+        }
+        continue;
       }
     } else if (c_ptr->fval == FLOOR_CORR) {
       if (doorindex < AL(doorstk)) {
@@ -1347,6 +1438,16 @@ build_corridor(row1, col1, row2, col2, iter)
           doorstk[doorindex].y = tmp_row;
           doorstk[doorindex].x = tmp_col;
           doorindex++;
+        }
+      }
+
+      // it's not about this; yet this brings up seeds broken in the prior impl
+      enum { DUN_TUN_CON = 15 };
+      if (randint(100) < DUN_TUN_CON) {
+        int cdis = distance(tmp_row, tmp_col, start_row, start_col);
+        if (cdis > 16) {
+          printf("distance break %d; iteration %d\n", cdis, iter);
+          break;
         }
       }
     }
@@ -1366,7 +1467,8 @@ build_corridor(row1, col1, row2, col2, iter)
 
   if (main_loop_count > 2000)
     printf("main_loop_count break on iteration %d\n", iter);
-  max_loop_count = MAX(max_loop_count, main_loop_count);
+  if (main_loop_count < 2000)
+    max_loop_count = MAX(max_loop_count, main_loop_count);
   if (iter == logidx) {
     printf("\n");
     printf("%d %d %d door wall tun %d main_loop_count\n", doorindex, wallindex,
