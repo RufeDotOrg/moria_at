@@ -1331,8 +1331,8 @@ build_corridor(row1, col1, row2, col2, iter)
     /* prevent infinite loops, just in case */
     main_loop_count++;
     if (main_loop_count > 2000) break;
-    if (tunindex >= AL(tunstk)) break;
-    if (wallindex + 1 >= AL(wallstk)) break;
+    if (tunindex + 4 >= AL(tunstk)) break;
+    if (wallindex >= AL(wallstk)) break;
 
     if (tun_chg) {
       int choice = bestdir(row1, col1, row2, col2);
