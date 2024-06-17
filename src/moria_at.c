@@ -2,7 +2,7 @@
 
 #include "platform/platform.c"
 
-enum { logidx = 17 };
+enum { logidx = -1 };
 enum { HACK = 1 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
@@ -1454,7 +1454,7 @@ build_corridor(row1, col1, row2, col2, iter)
             row_dir = -oy;
             col_dir = -ox;
           }
-          printf("iter %d) quartz; try perp %d %d\n", iter, row_dir, col_dir);
+          if (logidx == iter) printf("iter %d) quartz; try perp %d %d\n", iter, row_dir, col_dir);
           continue;
         }
       }
