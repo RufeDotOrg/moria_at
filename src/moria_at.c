@@ -1263,18 +1263,20 @@ bestdir(row1, col1, row2, col2)
   return 0;
 }
 static int
-build_diag(row, col, tunstk, tunindex)
+build_diag(row1, col1, row2, col2, tunstk, tunindex)
 point_t* tunstk;
 int* tunindex;
 {
+  int mr = MIN(row1, row2);
+  int mc = MIN(col1, col2);
   int ret = 0;
   for (int r = 0; r <= 1; ++r) {
     for (int c = 0; c <= 1; ++c) {
-      if (!caveD[row + r][col + c].fval) {
+      if (!caveD[mr + r][mc + c].fval) {
         // TBD adjust tunnel stack
-        // caveD[row + r][col + c].fval = FLOOR_CORR;
+        // caveD[mr + r][mc + c].fval = FLOOR_CORR;
         // TBD: limit 1k ?
-        tunstk[*tunindex] = (point_t){col + c, row + r};
+        tunstk[*tunindex] = (point_t){mc + c, mr + r};
         *tunindex += 1;
         ret += 1;
       }
@@ -1394,9 +1396,8 @@ build_corridor(row1, col1, row2, col2, iter)
           if (row && col) continue;
           struct caveS* c_ptr = &caveD[tmp_row + row][tmp_col + col];
           if (fval == FLOOR_THRESHOLD) {
-            int mr = MIN(tmp_row, tmp_row + row);
-            int mc = MIN(tmp_col, tmp_col + col);
-            fill = build_diag(mr, mc, tunstk, &tunindex);
+            fill = build_diag(tmp_row, tmp_col, tmp_row + row, tmp_col + col,
+                              tunstk, &tunindex);
             if (iter == logidx)
               printf("adjacent quartz threshold found %d %d fill %d\n",
                      tmp_col + col, tmp_row + row, fill);
