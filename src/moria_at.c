@@ -1060,6 +1060,13 @@ in_bounds(row, col)
   return urow < (MAX_HEIGHT - 2) && ucol < (MAX_WIDTH - 2);
 }
 int
+build_bounds(row, col)
+{
+  uint32_t urow = row - 2;
+  uint32_t ucol = col - 2;
+  return urow < (MAX_HEIGHT - 4) && ucol < (MAX_WIDTH - 4);
+}
+int
 diff_chunk(y1, x1, y2, x2)
 {
   return (y1 / CHUNK_HEIGHT != y2 / CHUNK_HEIGHT ||
@@ -1238,7 +1245,6 @@ int *tmp_row, *tmp_col;
       x = x - ox;
       if (log) printf("shifted %d %d\n", x, y);
     }
-    if (!in_bounds(y, x)) break;
   }
 
   return ret;
@@ -1284,12 +1290,12 @@ int* col_dir;
   int oy = *col_dir;
   int ox = *row_dir;
 
-  if (in_bounds(tmp_row + oy, tmp_col + ox) &&
+  if (build_bounds(tmp_row + oy, tmp_col + ox) &&
       same_chunk(tmp_row, tmp_col, tmp_row + oy, tmp_col + ox)) {
     *row_dir = oy;
     *col_dir = ox;
   }
-  if (in_bounds(tmp_row - oy, tmp_col - ox) &&
+  if (build_bounds(tmp_row - oy, tmp_col - ox) &&
       same_chunk(tmp_row, tmp_col, tmp_row - oy, tmp_col - ox)) {
     *row_dir = -oy;
     *col_dir = -ox;
@@ -1371,7 +1377,13 @@ build_corridor(row1, col1, row2, col2, iter)
       printf("%d %d | ", tmp_col, tmp_row);
     }
 
-    if (!in_bounds(tmp_row, tmp_col)) continue;
+    if (!build_bounds(tmp_row, tmp_col)) {
+      if (tmp_row < 2) tmp_row = 2;
+      if (tmp_row + 2 >= MAX_HEIGHT) tmp_row = MAX_HEIGHT - 2;
+      if (tmp_col < 2) tmp_col = 2;
+      if (tmp_col + 2 >= MAX_WIDTH) tmp_col = MAX_WIDTH - 2;
+      continue;
+    }
     c_ptr = &caveD[tmp_row][tmp_col];
     int fval = c_ptr->fval;
 
@@ -1407,10 +1419,6 @@ build_corridor(row1, col1, row2, col2, iter)
     } else if (fval == MAGMA_WALL) {
       // pass-thru
     } else if (fval == GRANITE_WALL) {
-      // Don't open doorways to nowhere;
-      // TBD can we change build_bounds() to be an extra +/- 1?
-      if (!in_bounds(tmp_row + row_dir, tmp_col + col_dir)) continue;
-
       // TBD: maybe stop N granite_wall of the same chunk in a row?
       tun_chg = 0;
 
