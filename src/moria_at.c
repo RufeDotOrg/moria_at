@@ -1283,11 +1283,13 @@ int* col_dir;
   int oy = *col_dir;
   int ox = *row_dir;
 
-  if (same_chunk(tmp_row, tmp_col, tmp_row + oy, tmp_col + ox)) {
+  if (in_bounds(tmp_row + oy, tmp_col + ox) &&
+      same_chunk(tmp_row, tmp_col, tmp_row + oy, tmp_col + ox)) {
     *row_dir = oy;
     *col_dir = ox;
   }
-  if (same_chunk(tmp_row, tmp_col, tmp_row - oy, tmp_col - ox)) {
+  if (in_bounds(tmp_row - oy, tmp_col - ox) &&
+      same_chunk(tmp_row, tmp_col, tmp_row - oy, tmp_col - ox)) {
     *row_dir = -oy;
     *col_dir = -ox;
   }
@@ -1383,6 +1385,7 @@ build_corridor(row1, col1, row2, col2, iter)
     } else if (c_ptr->fval == MAGMA_WALL) {
       // pass-thru
     } else if (c_ptr->fval == GRANITE_WALL) {
+      // TBD: maybe stop N granite_wall of the same chunk in a row?
       tun_chg = 0;
 
       // Prevent chewing room boundary
@@ -1401,23 +1404,6 @@ build_corridor(row1, col1, row2, col2, iter)
       wallstk[wallindex].x = tmp_col;
       wallindex++;
       door_flag = TRUE;
-
-      // This complexity arises from adjacent rooms;
-      {
-        int nrow = tmp_row + row_dir;
-        int ncol = tmp_col + col_dir;
-        if (!same_chunk(nrow, ncol, tmp_row, tmp_col) &&
-            caveD[nrow][ncol].fval == GRANITE_WALL) {
-          // chop, chop, chop
-          if (protect_floor(nrow, ncol, row_dir, col_dir, iter == logidx,
-                            &tmp_row, &tmp_col) == 2) {
-            // reviewed later in case of unusual room
-            wallstk[wallindex].y = tmp_row;
-            wallstk[wallindex].x = tmp_col;
-            wallindex++;
-          }
-        }
-      }
     } else if (c_ptr->fval == QUARTZ_WALL) {
       int fill = 0;
       for (int row = -1; row <= 1; ++row) {
@@ -1432,6 +1418,7 @@ build_corridor(row1, col1, row2, col2, iter)
             if (iter == logidx)
               printf("adjacent quartz threshold found %d %d fill %d\n",
                      tmp_col + col, tmp_row + row, fill);
+            // TBD: break on fill?
           }
         }
       }
