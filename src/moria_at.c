@@ -1192,9 +1192,8 @@ place_door(y, x)
 }
 GAME point_t doorstk[100];
 GAME int doorindex;
-static int
-protect_floor(y, x, ydir, xdir, log, tmp_row, tmp_col)
-int *tmp_row, *tmp_col;
+static point_t
+protect_floor(y, x, ydir, xdir, log)
 {
   struct caveS* c_ptr1;
   struct caveS* c_ptr2;
@@ -1203,9 +1202,9 @@ int *tmp_row, *tmp_col;
   int oy = xdir;
   int ox = ydir;
   int ret = 0;
+  point_t pt = {0};
 
-  int try = !tmp_row ? 1 : 2;
-  for (int it = 0; it < try; ++it) {
+  for (int it = 0; it < 2; ++it) {
     // require granite from the same room
     int sc = same_chunk(y + oy, x + ox, y - oy, x - ox);
     if (log)
@@ -1225,8 +1224,8 @@ int *tmp_row, *tmp_col;
         c_ptr3->fval = QUARTZ_WALL;
 
         // Write-back movement, if any
-        if (tmp_row) *tmp_row = y;
-        if (tmp_col) *tmp_col = x;
+        pt.x = x;
+        pt.y = y;
         break;
       }
     }
@@ -1247,7 +1246,7 @@ int *tmp_row, *tmp_col;
     }
   }
 
-  return ret;
+  return pt;
 }
 static int
 bestdir(row1, col1, row2, col2)
@@ -1425,12 +1424,18 @@ build_corridor(row1, col1, row2, col2, iter)
       // Prevent chewing room boundary
       // Prevent diagonal entrance to rooms
       // (build_corridor does not travel diagonal)
-      int prot = protect_floor(tmp_row, tmp_col, row_dir, col_dir,
-                               iter == logidx, &tmp_row, &tmp_col);
+      point_t th =
+          protect_floor(tmp_row, tmp_col, row_dir, col_dir, iter == logidx);
       //  otherwise retry following perp
-      if (prot != 2) {
+      if (!th.x) {
         perp_rc_dir(tmp_row, tmp_col, &row_dir, &col_dir);
         continue;
+      }
+
+      if (th.x != tmp_col || th.y != tmp_row) {
+        // TBD: diagonal fill tunstk
+        tmp_col = th.x;
+        tmp_row = th.y;
       }
 
       // Review later for door placement
