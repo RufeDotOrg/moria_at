@@ -1,10 +1,10 @@
 
 DATA int max_loop_count;
 enum { LOAD_GAME = 0 };
-enum { DLEV_BEGIN = 1 };
+enum { DLEV_BEGIN = 1  };
 enum { DLEV_END = 50 };
-enum { SEED_BEGIN = 0 };  // 5:14761
-enum { SEED_RANGE = 64 * 1024 };
+enum { SEED_BEGIN = 0  };  // 5:14761
+enum { SEED_RANGE = 64*1024 };
 
 DATA int cave_pngD = 0;
 DATA int checkD[MAX_HEIGHT][MAX_WIDTH];

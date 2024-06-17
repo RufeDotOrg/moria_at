@@ -1227,6 +1227,7 @@ int *tmp_row, *tmp_col;
     if (caveD[y + oy][x + ox].fval >= MIN_WALL &&
         same_chunk(y, x, y + oy, x + ox)) {
       // TBD: creates a diagonal step; could patch this up
+      // CONFIRMED these feel weird
       y = y + oy;
       x = x + ox;
       if (log) printf("shifted %d %d\n", x, y);
@@ -1385,6 +1386,10 @@ build_corridor(row1, col1, row2, col2, iter)
     } else if (c_ptr->fval == MAGMA_WALL) {
       // pass-thru
     } else if (c_ptr->fval == GRANITE_WALL) {
+      // Don't open doorways to nowhere;
+      // TBD can we change build_bounds() to be an extra +/- 1?
+      if (!in_bounds(tmp_row + row_dir, tmp_col + col_dir)) continue;
+
       // TBD: maybe stop N granite_wall of the same chunk in a row?
       tun_chg = 0;
 
