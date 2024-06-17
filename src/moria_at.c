@@ -1374,18 +1374,39 @@ build_corridor(row1, col1, row2, col2, iter)
     if (!in_bounds(tmp_row, tmp_col)) continue;
     c_ptr = &caveD[tmp_row][tmp_col];
     int fval = c_ptr->fval;
-    // previously marked by protect_floor
-    // TRYING PASS THRU LIKE MAGMA
-    // if (fval == QUARTZ_WALL) continue;
 
-    if (c_ptr->fval == FLOOR_NULL) {
+    if (fval == QUARTZ_WALL) {
+      int fill = 0;
+      for (int row = -1; row <= 1; ++row) {
+        for (int col = -1; col <= 1; ++col) {
+          if (!row && !col) continue;
+          if (row && col) continue;
+          struct caveS* c_ptr = &caveD[tmp_row + row][tmp_col + col];
+          if (fval == FLOOR_THRESHOLD) {
+            int mr = MIN(tmp_row, tmp_row + row);
+            int mc = MIN(tmp_col, tmp_col + col);
+            fill = build_diag(mr, mc, tunstk, &tunindex);
+            if (iter == logidx)
+              printf("adjacent quartz threshold found %d %d fill %d\n",
+                     tmp_col + col, tmp_row + row, fill);
+            // TBD: break on fill?
+            // TBD: assign tmp_row/tmp_col to coord?
+          }
+        }
+      }
+
+      // fallback to granite wall treatment
+      if (!fill) fval = GRANITE_WALL;
+    }
+
+    if (fval == FLOOR_NULL) {
       tunstk[tunindex].y = tmp_row;
       tunstk[tunindex].x = tmp_col;
       tunindex++;
       door_flag = FALSE;
-    } else if (c_ptr->fval == MAGMA_WALL) {
+    } else if (fval == MAGMA_WALL) {
       // pass-thru
-    } else if (c_ptr->fval == GRANITE_WALL) {
+    } else if (fval == GRANITE_WALL) {
       // Don't open doorways to nowhere;
       // TBD can we change build_bounds() to be an extra +/- 1?
       if (!in_bounds(tmp_row + row_dir, tmp_col + col_dir)) continue;
@@ -1409,44 +1430,7 @@ build_corridor(row1, col1, row2, col2, iter)
       wallstk[wallindex].x = tmp_col;
       wallindex++;
       door_flag = TRUE;
-    } else if (c_ptr->fval == QUARTZ_WALL) {
-      int fill = 0;
-      for (int row = -1; row <= 1; ++row) {
-        for (int col = -1; col <= 1; ++col) {
-          if (!row && !col) continue;
-          if (row && col) continue;
-          struct caveS* c_ptr = &caveD[tmp_row + row][tmp_col + col];
-          if (c_ptr->fval == FLOOR_THRESHOLD) {
-            int mr = MIN(tmp_row, tmp_row + row);
-            int mc = MIN(tmp_col, tmp_col + col);
-            fill = build_diag(mr, mc, tunstk, &tunindex);
-            if (iter == logidx)
-              printf("adjacent quartz threshold found %d %d fill %d\n",
-                     tmp_col + col, tmp_row + row, fill);
-            // TBD: break on fill?
-          }
-        }
-      }
-
-      // couldn't pass the existing puncture
-      if (!fill) {
-        // replace quartz with floor if adjacency is met
-        if (protect_floor(tmp_row, tmp_col, row_dir, col_dir, iter == logidx,
-                          &tmp_row, &tmp_col) == 2) {
-          // reviewed later in case of unusual room
-          wallstk[wallindex].y = tmp_row;
-          wallstk[wallindex].x = tmp_col;
-          wallindex++;
-        } else {
-          // otherwise retry following perp
-          tun_chg = 0;
-          perp_rc_dir(tmp_row, tmp_col, &row_dir, &col_dir);
-          if (logidx == iter)
-            printf("iter %d) quartz; try perp %d %d\n", iter, row_dir, col_dir);
-          continue;
-        }
-      }
-    } else if (c_ptr->fval == FLOOR_CORR) {
+    } else if (fval == FLOOR_CORR) {
       if (doorindex < AL(doorstk)) {
         if (!door_flag) {
           door_flag = TRUE;
@@ -1475,7 +1459,7 @@ build_corridor(row1, col1, row2, col2, iter)
     if ((c_ptr->cflag & CF_ROOM) && same_chunk(tmp_row, tmp_col, row2, col2)) {
       // printf("%d) same chunk %d %d %d %d fval %d->%d\n", iter, tmp_col,
       // tmp_row,
-      //        col2, row2, fval, c_ptr->fval);
+      //        col2, row2, fval, fval);
       break;
     }
   }
