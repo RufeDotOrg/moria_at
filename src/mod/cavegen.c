@@ -1,15 +1,17 @@
 
 DATA int max_loop_count;
 enum { LOAD_GAME = 0 };
-enum { DLEV_BEGIN = 1 };
+enum { DLEV_BEGIN = 14 };
 enum { DLEV_END = 50 };
-enum { SEED_BEGIN = 0 };  // 5:14761
-enum { SEED_RANGE = 64 * 1024 };
+enum { SEED_BEGIN = 49201  };  // 5:14761
+enum { SEED_RANGE = 1 };
 
 DATA int cave_pngD = 0;
 DATA int checkD[MAX_HEIGHT][MAX_WIDTH];
 DATA int imageD[MAX_HEIGHT][MAX_WIDTH];
 DATA int image_usedD;
+DATA point_t cave_startD;
+DATA point_t cave_endD;
 static void
 dfs(y, x)
 {
@@ -64,6 +66,9 @@ cave_image()
         }
       }
       imageD[row][col] = rgb_by_labr(color);
+
+      if (row == cave_startD.y && col == cave_startD.x) imageD[row][col] = 0xff0000ff;
+      if (row == cave_endD.y && col == cave_endD.x) imageD[row][col] = 0xffff00ff;
     }
   }
 }

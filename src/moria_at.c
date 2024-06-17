@@ -3921,8 +3921,12 @@ cave_gen()
     // int log = j;
     // if (same_chunk(y1, x1, 17, 17) || same_chunk(y2, x2, 17, 17)) log = -1;
     build_corridor(y2, x2, y1, x1, j);
+    cave_startD = (point_t){x2, y2};
+    cave_endD = (point_t){x1, y1};
     cave_debug();
   }
+  cave_startD = (point_t){0, 0};
+  cave_endD = (point_t){0, 0};
 
   granite_cave();
   cave_debug();
