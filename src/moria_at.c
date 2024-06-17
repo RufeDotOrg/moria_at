@@ -1276,6 +1276,22 @@ int* tunindex;
   }
   return ret;
 }
+static void perp_rc_dir(tmp_row, tmp_col, row_dir, col_dir) int* row_dir;
+int* col_dir;
+{
+  // Perpendicular swap
+  int oy = *col_dir;
+  int ox = *row_dir;
+
+  if (same_chunk(tmp_row, tmp_col, tmp_row + oy, tmp_col + ox)) {
+    *row_dir = oy;
+    *col_dir = ox;
+  }
+  if (same_chunk(tmp_row, tmp_col, tmp_row - oy, tmp_col - ox)) {
+    *row_dir = -oy;
+    *col_dir = -ox;
+  }
+}
 static void
 build_corridor(row1, col1, row2, col2, iter)
 {
@@ -1376,17 +1392,7 @@ build_corridor(row1, col1, row2, col2, iter)
                                iter == logidx, &tmp_row, &tmp_col);
       //  otherwise retry following perp
       if (prot != 2) {
-        int oy = col_dir;
-        int ox = row_dir;
-
-        if (same_chunk(tmp_row, tmp_col, tmp_row + oy, tmp_col + ox)) {
-          row_dir = oy;
-          col_dir = ox;
-        }
-        if (same_chunk(tmp_row, tmp_col, tmp_row - oy, tmp_col - ox)) {
-          row_dir = -oy;
-          col_dir = -ox;
-        }
+        perp_rc_dir(tmp_row, tmp_col, &row_dir, &col_dir);
         continue;
       }
 
@@ -1442,18 +1448,9 @@ build_corridor(row1, col1, row2, col2, iter)
         } else {
           // otherwise retry following perp
           tun_chg = 0;
-          int oy = col_dir;
-          int ox = row_dir;
-
-          if (same_chunk(tmp_row, tmp_col, tmp_row + oy, tmp_col + ox)) {
-            row_dir = oy;
-            col_dir = ox;
-          }
-          if (same_chunk(tmp_row, tmp_col, tmp_row - oy, tmp_col - ox)) {
-            row_dir = -oy;
-            col_dir = -ox;
-          }
-          if (logidx == iter) printf("iter %d) quartz; try perp %d %d\n", iter, row_dir, col_dir);
+          perp_rc_dir(tmp_row, tmp_col, &row_dir, &col_dir);
+          if (logidx == iter)
+            printf("iter %d) quartz; try perp %d %d\n", iter, row_dir, col_dir);
           continue;
         }
       }
