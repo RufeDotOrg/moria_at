@@ -1263,7 +1263,8 @@ build_diag(row, col)
   for (int r = 0; r <= 1; ++r) {
     for (int c = 0; c <= 1; ++c) {
       if (!caveD[row + r][col + c].fval) {
-        caveD[row + r][col + c].fval = FLOOR_CORR;
+        // TBD adjust tunnel stack
+        //caveD[row + r][col + c].fval = FLOOR_CORR;
         ret += 1;
       }
     }
@@ -1463,7 +1464,8 @@ build_corridor(row1, col1, row2, col2, iter)
       if (randint(100) < DUN_TUN_CON) {
         int cdis = distance(tmp_row, tmp_col, start_row, start_col);
         if (cdis > 16) {
-          printf("distance break %d; iteration %d\n", cdis, iter);
+          printf("distance break %d; iteration %d corridor %d %d\n", cdis, iter,
+                 tmp_col, tmp_row);
           break;
         }
       }
