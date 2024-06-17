@@ -1272,13 +1272,11 @@ int* tunindex;
   int ret = 0;
   for (int r = 0; r <= 1; ++r) {
     for (int c = 0; c <= 1; ++c) {
-      if (!caveD[mr + r][mc + c].fval) {
-        // TBD adjust tunnel stack
-        // caveD[mr + r][mc + c].fval = FLOOR_CORR;
-        // TBD: limit 1k ?
+      struct caveS* c_ptr = &caveD[mr + r][mc + c];
+      ret += (c_ptr->fval <= MAX_FLOOR);
+      if (!c_ptr->fval) {
         tunstk[*tunindex] = (point_t){mc + c, mr + r};
         *tunindex += 1;
-        ret += 1;
       }
     }
   }
@@ -1392,10 +1390,9 @@ build_corridor(row1, col1, row2, col2, iter)
       int fill = 0;
       for (int row = -1; row <= 1; ++row) {
         for (int col = -1; col <= 1; ++col) {
-          if (!row && !col) continue;
-          if (row && col) continue;
           struct caveS* c_ptr = &caveD[tmp_row + row][tmp_col + col];
-          if (fval == FLOOR_THRESHOLD) {
+          if (c_ptr->fval == FLOOR_THRESHOLD &&
+              distance(tmp_row + row, tmp_col + col, row1, col1) == 1) {
             fill = build_diag(tmp_row, tmp_col, tmp_row + row, tmp_col + col,
                               tunstk, &tunindex);
             if (iter == logidx)
