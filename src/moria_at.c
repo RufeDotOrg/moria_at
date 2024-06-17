@@ -1280,7 +1280,6 @@ static void
 build_corridor(row1, col1, row2, col2, iter)
 {
   int tmp_row, tmp_col, i, j;
-  int last_fval = -1;
   struct caveS* c_ptr;
   struct caveS* d_ptr;
   point_t tunstk[1000], wallstk[1000];
@@ -1480,7 +1479,6 @@ build_corridor(row1, col1, row2, col2, iter)
       }
     }
 
-    last_fval = fval;
     row1 = tmp_row;
     col1 = tmp_col;
 
