@@ -1434,7 +1434,7 @@ build_corridor(row1, col1, row2, col2, iter)
       }
 
       if (th.x != tmp_col || th.y != tmp_row) {
-        // TBD: diagonal fill tunstk
+        build_diag(tmp_row, tmp_col, th.y, th.x, tunstk, &tunindex);
         tmp_col = th.x;
         tmp_row = th.y;
       }
