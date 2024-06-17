@@ -2,7 +2,7 @@
 
 #include "platform/platform.c"
 
-enum { logidx = 10 };
+enum { logidx = -1 };
 enum { HACK = 1 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
@@ -1423,18 +1423,28 @@ build_corridor(row1, col1, row2, col2, iter)
 
       // couldn't pass the existing puncture
       if (!fill) {
-        if (iter == logidx)
-          printf("iter %d) quartz; new threshold %d %d\n", iter, tmp_col,
-                 tmp_row);
+        // replace quartz with floor if adjacency is met
         if (protect_floor(tmp_row, tmp_col, row_dir, col_dir, iter == logidx,
-                          &tmp_row, &tmp_col) != 2) {
-          if (row_dir) {
-            row_dir = 0;
-            col_dir = randint(2) ? 1 : -1;
-          } else {
-            row_dir = randint(2) ? 1 : -1;
-            col_dir = 0;
+                          &tmp_row, &tmp_col) == 2) {
+          // reviewed later in case of unusual room
+          wallstk[wallindex].y = tmp_row;
+          wallstk[wallindex].x = tmp_col;
+          wallindex++;
+        } else {
+          // otherwise retry following perp
+          tun_chg = 0;
+          int oy = col_dir;
+          int ox = row_dir;
+
+          if (same_chunk(tmp_row, tmp_col, tmp_row + oy, tmp_col + ox)) {
+            row_dir = oy;
+            col_dir = ox;
           }
+          if (same_chunk(tmp_row, tmp_col, tmp_row - oy, tmp_col - ox)) {
+            row_dir = -oy;
+            col_dir = -ox;
+          }
+          printf("iter %d) quartz; try perp %d %d\n", iter, row_dir, col_dir);
           continue;
         }
       }
