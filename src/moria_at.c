@@ -2,7 +2,7 @@
 
 #include "platform/platform.c"
 
-enum { logidx = -1 };
+enum { logidx = 17 };
 enum { HACK = 1 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
@@ -1257,14 +1257,19 @@ bestdir(row1, col1, row2, col2)
   return 0;
 }
 static int
-build_diag(row, col)
+build_diag(row, col, tunstk, tunindex)
+point_t* tunstk;
+int* tunindex;
 {
   int ret = 0;
   for (int r = 0; r <= 1; ++r) {
     for (int c = 0; c <= 1; ++c) {
       if (!caveD[row + r][col + c].fval) {
         // TBD adjust tunnel stack
-        //caveD[row + r][col + c].fval = FLOOR_CORR;
+        // caveD[row + r][col + c].fval = FLOOR_CORR;
+        // TBD: limit 1k ?
+        tunstk[*tunindex] = (point_t){col + c, row + r};
+        *tunindex += 1;
         ret += 1;
       }
     }
@@ -1370,14 +1375,18 @@ build_corridor(row1, col1, row2, col2, iter)
       // (build_corridor does not travel diagonal)
       int prot = protect_floor(tmp_row, tmp_col, row_dir, col_dir,
                                iter == logidx, &tmp_row, &tmp_col);
-      // TBD: unused?
+      //  otherwise retry following perp
       if (prot != 2) {
-        if (row_dir) {
-          row_dir = 0;
-          col_dir = randint(2) ? 1 : -1;
-        } else {
-          row_dir = randint(2) ? 1 : -1;
-          col_dir = 0;
+        int oy = col_dir;
+        int ox = row_dir;
+
+        if (same_chunk(tmp_row, tmp_col, tmp_row + oy, tmp_col + ox)) {
+          row_dir = oy;
+          col_dir = ox;
+        }
+        if (same_chunk(tmp_row, tmp_col, tmp_row - oy, tmp_col - ox)) {
+          row_dir = -oy;
+          col_dir = -ox;
         }
         continue;
       }
@@ -1414,7 +1423,7 @@ build_corridor(row1, col1, row2, col2, iter)
           if (c_ptr->fval == FLOOR_THRESHOLD) {
             int mr = MIN(tmp_row, tmp_row + row);
             int mc = MIN(tmp_col, tmp_col + col);
-            fill = build_diag(mr, mc);
+            fill = build_diag(mr, mc, tunstk, &tunindex);
             if (iter == logidx)
               printf("adjacent quartz threshold found %d %d fill %d\n",
                      tmp_col + col, tmp_row + row, fill);
