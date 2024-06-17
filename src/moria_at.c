@@ -1401,8 +1401,12 @@ build_corridor(row1, col1, row2, col2, iter)
             if (iter == logidx)
               printf("adjacent quartz threshold found %d %d fill %d\n",
                      tmp_col + col, tmp_row + row, fill);
-            // TBD: break on fill?
-            // TBD: assign tmp_row/tmp_col to coord?
+            if (fill) {
+              tmp_row = tmp_row + row;
+              tmp_col = tmp_col + col;
+              // halt
+              col = row = 2;
+            }
           }
         }
       }
