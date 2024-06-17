@@ -2,6 +2,7 @@
 
 #include "platform/platform.c"
 
+enum { logidx = 10 };
 enum { HACK = 1 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
@@ -1207,8 +1208,9 @@ int *tmp_row, *tmp_col;
       c_ptr1 = &caveD[y][x];
       c_ptr2 = &caveD[y + oy][x + ox];
       c_ptr3 = &caveD[y - oy][x - ox];
-      // TBD: this or check granite+quartz?
-      ret = (c_ptr2->fval >= MIN_WALL) + (c_ptr3->fval >= MIN_WALL);
+      // TBD: NOT MAGMA is important
+      ret = (c_ptr2->fval == GRANITE_WALL) + (c_ptr3->fval == GRANITE_WALL);
+      ret += (c_ptr2->fval == QUARTZ_WALL) + (c_ptr3->fval == QUARTZ_WALL);
 
       if (ret == 2) {
         c_ptr1->fval = FLOOR_THRESHOLD;
@@ -1227,14 +1229,15 @@ int *tmp_row, *tmp_col;
       // TBD: creates a diagonal step; could patch this up
       y = y + oy;
       x = x + ox;
-      printf("shifted %d %d\n", x, y);
+      if (log) printf("shifted %d %d\n", x, y);
     } else if (caveD[y - oy][x - ox].fval >= MIN_WALL &&
                same_chunk(y, x, y - oy, x - ox)) {
       // TBD: creates a diagonal step; could patch this up
       y = y - oy;
       x = x - ox;
-      printf("shifted %d %d\n", x, y);
+      if (log) printf("shifted %d %d\n", x, y);
     }
+    if (!in_bounds(y, x)) break;
   }
 
   return ret;
@@ -1280,7 +1283,6 @@ build_corridor(row1, col1, row2, col2, iter)
   int door_flag, main_loop_count;
   int start_row, start_col;
 
-  int logidx = 13;
   /* Main procedure for Tunnel  		*/
   door_flag = 0;
   tunindex = 0;
@@ -1421,15 +1423,20 @@ build_corridor(row1, col1, row2, col2, iter)
 
       // couldn't pass the existing puncture
       if (!fill) {
-        printf("quartz; no fill\n");
-        if (row_dir) {
-          row_dir = 0;
-          col_dir = randint(2) ? 1 : -1;
-        } else {
-          row_dir = randint(2) ? 1 : -1;
-          col_dir = 0;
+        if (iter == logidx)
+          printf("iter %d) quartz; new threshold %d %d\n", iter, tmp_col,
+                 tmp_row);
+        if (protect_floor(tmp_row, tmp_col, row_dir, col_dir, iter == logidx,
+                          &tmp_row, &tmp_col) != 2) {
+          if (row_dir) {
+            row_dir = 0;
+            col_dir = randint(2) ? 1 : -1;
+          } else {
+            row_dir = randint(2) ? 1 : -1;
+            col_dir = 0;
+          }
+          continue;
         }
-        continue;
       }
     } else if (c_ptr->fval == FLOOR_CORR) {
       if (doorindex < AL(doorstk)) {
