@@ -1413,18 +1413,24 @@ build_corridor(row1, col1, row2, col2, iter)
     int fval = c_ptr->fval;
 
     if (fval == QUARTZ_WALL) {
+      int df_heading = dirflag(row1, col1, tmp_row, tmp_col);
+      int df_goal = dirflag(row1, col1, row2, col2);
+      if (logidx == iter)
+        printf("0x%x heading 0x%x goal\n", df_heading, df_goal);
+
       int fill = 0;
       point_t th = find_perp_threshold(tmp_row, tmp_col, row_dir, col_dir);
       if (th.x) {
-        int df_goal = dirflag(row1, col1, row2, col2);
         int df_th = dirflag(row1, col1, th.y, th.x);
 
         // exact: (df_goal ^ df_th) == 0;
-        // accept any threshold within the goal directions
-        int df_align = (df_th & df_goal) == df_th;
+        // any threshold within the goal directions:
+        //   (df_th & df_goal) == df_th;
+        // accept any common direction
+        int df_align = (df_th & df_goal) != 0;
         if (iter == logidx)
-          printf("(goal %x) (threshold %x) : (align %x)\n", df_goal, df_th,
-                 df_align);
+          printf("(goal 0x%x) (threshold 0x%x) : (align 0x%x)\n", df_goal,
+                 df_th, df_align);
 
         if (iter == logidx)
           printf("%d - tmp %d %d quartz threshold %d %d\n", iter, tmp_col,
