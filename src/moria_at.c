@@ -12673,7 +12673,7 @@ creature_threat(int* l_act)
   int threat = 0;
   // Tag relevant threats after movement is complete
   FOR_EACH(mon, {
-    if (l_act[it_index] > 0) {
+    if (l_act[it_index] >= 0) {
       threat += mon_lit(it_index);
     }
   });
