@@ -1355,7 +1355,7 @@ build_corridor(row1, col1, row2, col2, iter)
     /* prevent infinite loops, just in case */
     main_loop_count++;
     if (main_loop_count > 2000) break;
-    if (tunindex + 4 >= AL(tunstk)) break;
+    if (tunindex + 9 >= AL(tunstk)) break;
     if (wallindex >= AL(wallstk)) break;
 
     if (tun_chg) {
