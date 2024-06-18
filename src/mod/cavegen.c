@@ -1,17 +1,18 @@
 
 DATA int max_loop_count;
 enum { LOAD_GAME = 0 };
-enum { DLEV_BEGIN = 1  };
-enum { DLEV_END = 50 };
-enum { SEED_BEGIN = 0   };  // 5:14761
-enum { SEED_RANGE = 64*1024 };
+enum { DLEV_BEGIN = 1 };  // [1, 50] or just N != 1
+enum { SEED_BEGIN = 0 };
+enum { SEED_RANGE = 64 * 1024 };
+// #define logidx 14
 
 DATA int cave_pngD = 0;
 DATA int checkD[MAX_HEIGHT][MAX_WIDTH];
 DATA int imageD[MAX_HEIGHT][MAX_WIDTH];
 DATA int image_usedD;
-DATA point_t cave_startD;
-DATA point_t cave_endD;
+GAME point_t cave_startD;
+GAME point_t cave_endD;
+GAME point_t cave_checkD;
 static void
 dfs(y, x)
 {
@@ -71,6 +72,8 @@ cave_image()
         imageD[row][col] = 0xff0000ff;
       if (row == cave_endD.y && col == cave_endD.x)
         imageD[row][col] = 0xffff00ff;
+      if (row == cave_checkD.y && col == cave_checkD.x)
+        imageD[row][col] = 0xff00ffff;
     }
   }
 }
@@ -104,6 +107,7 @@ cave_check(y, x)
     }
   }
 
+  cave_checkD = first;
   printf("cave_check dfs fail_count? %d - %d floor tiles %d %d\n", fail, count,
          V2i(&first));
   return fail == 0;
@@ -114,11 +118,12 @@ test_cavegen()
 {
   int ret = 0;
   int dlev = DLEV_BEGIN;
-  for (; dlev < DLEV_END; ++dlev) {
+  int dlev_end = dlev == 1 && SEED_BEGIN == 0 ? 50 : dlev;
+  for (; dlev <= dlev_end; ++dlev) {
     int pass = 0;
 
     int begin = SEED_BEGIN;
-    int end = SEED_BEGIN + SEED_RANGE;
+    int end = SEED_BEGIN == 0 ? SEED_BEGIN + SEED_RANGE : SEED_BEGIN + 1;
     for (uint32_t seed = begin; seed < end; ++seed) {
       hard_reset();
       dun_level = dlev;
@@ -132,7 +137,12 @@ test_cavegen()
           rnd_seed = seed;
           cave_pngD = 1;
           cave_gen();
-          printf("PNG output: dlev %d rnd_seed %d\n", dlev, seed);
+          cave_check(uD.y, uD.x);
+          cave_debug();
+          char name[64];
+          int len = snprintf(AP(name), "cave_image%03d.png", image_usedD - 1);
+          printf("PNG output: dlev %d rnd_seed %d last_image %s\n", dlev, seed,
+                 name);
 
           exit(1);
         }
@@ -143,7 +153,7 @@ test_cavegen()
         dun_level = dlev;
         rnd_seed = seed;
         input_resumeD = -1;
-        dlev = DLEV_END + 1;
+        dlev = dlev_end * 2;
         ret = 1;
         break;
       }
@@ -152,7 +162,7 @@ test_cavegen()
            dun_level, SEED_RANGE);
   }
 
-  if (dlev <= DLEV_END) printf("ALL dlev OK\n");
+  if (dlev < dlev_end * 2) printf("ALL dlev OK\n");
   memcpy(death_descD, AP(quit_stringD));
   printf("max loop count %d\n", max_loop_count);
 
