@@ -9,8 +9,12 @@ enum { TEST_REPLAY = 0 };
 enum { TEST_CREATURE = 0 };
 
 // #include "src/mod/replay.c"
-#include "src/mod/cavegen.c"
-#undef TEST_CAVEGEN
+// #include "src/mod/cavegen.c"
+// #undef TEST_CAVEGEN
+static void
+cave_debug()
+{
+}
 
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
@@ -3946,13 +3950,12 @@ cave_gen()
     // int log = j;
     // if (same_chunk(y1, x1, 17, 17) || same_chunk(y2, x2, 17, 17)) log = -1;
     build_corridor(y2, x2, y1, x1, j);
-    cave_startD = (point_t){x2, y2};
-    cave_endD = (point_t){x1, y1};
+    // cave_startD = (point_t){x2, y2};
+    // cave_endD = (point_t){x1, y1};
     cave_debug();
   }
-  cave_startD = (point_t){0, 0};
-  cave_endD = (point_t){0, 0};
-
+  // cave_startD = (point_t){0, 0};
+  // cave_endD = (point_t){0, 0};
   granite_cave();
   cave_debug();
 
@@ -14505,7 +14508,6 @@ main(int argc, char** argv)
 
     // a fresh cave!
     if (dun_level != 0) {
-      cave_pngD = 1;
       cave_gen();
     } else {
       // Store rotation
