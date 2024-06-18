@@ -1,10 +1,10 @@
 
 DATA int max_loop_count;
 enum { LOAD_GAME = 0 };
-enum { DLEV_BEGIN = 36 };  // [1, 50] or just N != 1
-enum { SEED_BEGIN = 33546  };
+enum { DLEV_BEGIN = 1 };  // [1, 50] or just N != 1
+enum { SEED_BEGIN = 0  };
 enum { SEED_RANGE = 64 * 1024 };
-#define logidx 22
+#define logidx -1
 
 DATA int cave_pngD = 0;
 DATA int checkD[MAX_HEIGHT][MAX_WIDTH];
