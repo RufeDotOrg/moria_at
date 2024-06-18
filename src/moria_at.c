@@ -3,13 +3,14 @@
 #include "platform/platform.c"
 
 enum { logidx = -1 };
-enum { HACK = 1 };
+enum { HACK = 0 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
 enum { TEST_CREATURE = 0 };
 
 // #include "src/mod/replay.c"
 #include "src/mod/cavegen.c"
+#undef TEST_CAVEGEN
 
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
@@ -1512,8 +1513,6 @@ build_corridor(row1, col1, row2, col2, iter)
 
   if (main_loop_count > 2000)
     printf("main_loop_count break on iteration %d\n", iter);
-  if (main_loop_count < 2000)
-    max_loop_count = MAX(max_loop_count, main_loop_count);
   if (iter == logidx) {
     printf("\n");
     printf("%d %d %d door wall tun %d main_loop_count\n", doorindex, wallindex,
@@ -1553,8 +1552,7 @@ granite_cave()
   for (i = MAX_HEIGHT - 2; i > 0; i--) {
     c_ptr = &caveD[i][1];
     for (j = MAX_WIDTH - 2; j > 0; j--) {
-      if (c_ptr->fval == FLOOR_NULL)
-        c_ptr->fval = GRANITE_WALL;
+      if (c_ptr->fval == FLOOR_NULL) c_ptr->fval = GRANITE_WALL;
       c_ptr++;
     }
   }
@@ -3985,7 +3983,7 @@ cave_gen()
   alloc_mon((randint(RND_MALLOC_LEVEL) + MIN_MALLOC_LEVEL + alloc_level), 0,
             TRUE);
   if (dun_level >= WIN_MON_APPEAR) place_win_monster();
-  // cave_debug();
+  cave_debug();
   printf("-- end cave_gen %d dunlevel %d rnd_seed\n", dun_level, rnd_seed);
   return 0;
 }
@@ -14507,6 +14505,7 @@ main(int argc, char** argv)
 
     // a fresh cave!
     if (dun_level != 0) {
+      cave_pngD = 1;
       cave_gen();
     } else {
       // Store rotation
