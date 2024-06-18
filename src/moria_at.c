@@ -1437,10 +1437,14 @@ build_corridor(row1, col1, row2, col2, iter)
           if (iter == logidx)
             printf("build_diag %d %d %d %d fill %d\n", col1, row1,
                    th.x + col_dir, th.y + row_dir, fill);
+
+          if (fill) {
+            tmp_row = th.y;
+            tmp_col = th.x;
+            tun_chg = 0;
+          }
         }
       }
-
-      if (fill) tun_chg = 0;
 
       // fallback to granite wall treatment
       if (!fill) fval = GRANITE_WALL;
