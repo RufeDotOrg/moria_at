@@ -1244,6 +1244,7 @@ protect_floor(y, x, ydir, xdir, log)
       x = x - ox;
       if (log) printf("shifted %d %d\n", x, y);
     }
+    if (!build_bounds(y, x)) break;
   }
 
   return pt;
