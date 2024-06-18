@@ -1192,6 +1192,7 @@ place_door(y, x)
 }
 GAME point_t doorstk[100];
 GAME int doorindex;
+
 static point_t
 protect_floor(y, x, ydir, xdir, log)
 {
@@ -1409,23 +1410,19 @@ build_corridor(row1, col1, row2, col2, iter)
     int fval = c_ptr->fval;
 
     if (fval == QUARTZ_WALL) {
-      int df_heading = dirflag(row1, col1, tmp_row, tmp_col);
-      int df_goal = dirflag(row1, col1, row2, col2);
-      if (logidx == iter)
-        printf("0x%x heading 0x%x goal\n", df_heading, df_goal);
-
       int fill = 0;
       point_t th = find_perp_threshold(tmp_row, tmp_col, row_dir, col_dir);
       if (th.x) {
+        int df_heading = dirflag(row1, col1, tmp_row, tmp_col);
         int df_th = dirflag(row1, col1, th.y, th.x);
 
-        // exact: (df_goal ^ df_th) == 0;
-        // any threshold within the goal directions:
-        //   (df_th & df_goal) == df_th;
+        // exact: (df_heading ^ df_th) == 0;
+        // any threshold within the heading directions:
+        //   (df_th & df_heading) == df_th;
         // accept any common direction
-        int df_align = (df_th & df_goal) != 0;
+        int df_align = (df_th & df_heading) != 0;
         if (iter == logidx)
-          printf("(goal 0x%x) (threshold 0x%x) : (align 0x%x)\n", df_goal,
+          printf("(heading 0x%x) (threshold 0x%x) : (align 0x%x)\n", df_heading,
                  df_th, df_align);
 
         if (iter == logidx)
