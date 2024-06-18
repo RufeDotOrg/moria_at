@@ -1248,6 +1248,18 @@ protect_floor(y, x, ydir, xdir, log)
 
   return pt;
 }
+static point_t
+find_perp_threshold(row, col, row_dir, col_dir)
+{
+  point_t pt = {0};
+  int oy = col_dir;
+  int ox = row_dir;
+  if (caveD[row + oy][col + ox].fval == FLOOR_THRESHOLD)
+    pt = (point_t){col + ox, row + oy};
+  else if (caveD[row - oy][col - ox].fval == FLOOR_THRESHOLD)
+    pt = (point_t){col - ox, row - oy};
+  return pt;
+}
 static int
 bestdir(row1, col1, row2, col2)
 {
@@ -1261,6 +1273,19 @@ bestdir(row1, col1, row2, col2)
     if (dx > 0) return 4;
   }
   return 0;
+}
+static int
+dirflag(row1, col1, row2, col2)
+{
+  int ret = 0;
+  int dy = row2 - row1;
+  int dx = col2 - col1;
+  ret |= ((dy < 0) << 0);
+  ret |= ((dy > 0) << 1);
+  ret |= ((dx < 0) << 2);
+  ret |= ((dx > 0) << 3);
+  // ret |= ((ABS(dy) > ABS(dx)) << 4);
+  return ret;
 }
 static int
 build_diag(row1, col1, row2, col2, tunstk, tunindex)
@@ -1388,25 +1413,31 @@ build_corridor(row1, col1, row2, col2, iter)
 
     if (fval == QUARTZ_WALL) {
       int fill = 0;
-      for (int row = -1; row <= 1; ++row) {
-        for (int col = -1; col <= 1; ++col) {
-          struct caveS* c_ptr = &caveD[tmp_row + row][tmp_col + col];
-          if (c_ptr->fval == FLOOR_THRESHOLD &&
-              distance(tmp_row + row, tmp_col + col, row1, col1) == 1) {
-            fill = build_diag(tmp_row, tmp_col, tmp_row + row, tmp_col + col,
-                              tunstk, &tunindex);
-            if (iter == logidx)
-              printf("adjacent quartz threshold found %d %d fill %d\n",
-                     tmp_col + col, tmp_row + row, fill);
-            if (fill) {
-              tmp_row = tmp_row + row;
-              tmp_col = tmp_col + col;
-              // halt
-              col = row = 2;
-            }
-          }
+      point_t th = find_perp_threshold(tmp_row, tmp_col, row_dir, col_dir);
+      if (th.x) {
+        int df_goal = dirflag(row1, col1, row2, col2);
+        int df_th = dirflag(row1, col1, th.y, th.x);
+
+        // exact: (df_goal ^ df_th) == 0;
+        // accept any threshold within the goal directions
+        int df_align = (df_th & df_goal) == df_th;
+        if (iter == logidx)
+          printf("(goal %x) (threshold %x) : (align %x)\n", df_goal, df_th,
+                 df_align);
+
+        if (iter == logidx)
+          printf("%d - tmp %d %d quartz threshold %d %d\n", iter, tmp_col,
+                 tmp_row, th.x, th.y);
+        if (df_align) {
+          fill = build_diag(row1, col1, th.y + row_dir, th.x + col_dir, tunstk,
+                            &tunindex);
+          if (iter == logidx)
+            printf("build_diag %d %d %d %d fill %d\n", col1, row1,
+                   th.x + col_dir, th.y + row_dir, fill);
         }
       }
+
+      if (fill) tun_chg = 0;
 
       // fallback to granite wall treatment
       if (!fill) fval = GRANITE_WALL;
