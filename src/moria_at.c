@@ -1209,8 +1209,8 @@ protect_floor(y, x, ydir, xdir, log)
     // require granite from the same room
     int sc = same_chunk(y + oy, x + ox, y - oy, x - ox);
     if (log)
-      printf("protect floor %d %d & %d %d | same_chunk %d \n", y + oy, x + ox,
-             y - oy, x - ox, sc);
+      printf("protect floor %d %d & %d %d | same_chunk %d \n", x + ox, y + oy,
+             x - ox, y - oy, sc);
     if (sc) {
       c_ptr1 = &caveD[y][x];
       c_ptr2 = &caveD[y + oy][x + ox];
@@ -1233,14 +1233,11 @@ protect_floor(y, x, ydir, xdir, log)
 
     if (caveD[y + oy][x + ox].fval >= MIN_WALL &&
         same_chunk(y, x, y + oy, x + ox)) {
-      // TBD: creates a diagonal step; could patch this up
-      // CONFIRMED these feel weird
       y = y + oy;
       x = x + ox;
       if (log) printf("shifted %d %d\n", x, y);
     } else if (caveD[y - oy][x - ox].fval >= MIN_WALL &&
                same_chunk(y, x, y - oy, x - ox)) {
-      // TBD: creates a diagonal step; could patch this up
       y = y - oy;
       x = x - ox;
       if (log) printf("shifted %d %d\n", x, y);
@@ -1469,8 +1466,11 @@ build_corridor(row1, col1, row2, col2, iter)
         continue;
       }
 
+      if (logidx == iter) printf("%d %d new threshold\n", th.x, th.y);
       if (th.x != tmp_col || th.y != tmp_row) {
-        build_diag(tmp_row, tmp_col, th.y, th.x, tunstk, &tunindex);
+        if (logidx == iter)
+          printf("build_diag %d %d -> %d %d\n", col1, row1, th.x, th.y);
+        build_diag(row1, col1, th.y, th.x, tunstk, &tunindex);
         tmp_col = th.x;
         tmp_row = th.y;
       }
