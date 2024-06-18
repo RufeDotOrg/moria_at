@@ -1557,7 +1557,7 @@ granite_cave()
   for (i = MAX_HEIGHT - 2; i > 0; i--) {
     c_ptr = &caveD[i][1];
     for (j = MAX_WIDTH - 2; j > 0; j--) {
-      if ((c_ptr->fval == FLOOR_NULL) || (c_ptr->fval > GRANITE_WALL))
+      if (c_ptr->fval == FLOOR_NULL)
         c_ptr->fval = GRANITE_WALL;
       c_ptr++;
     }
