@@ -2,7 +2,7 @@
 DATA int max_loop_count;
 enum { LOAD_GAME = 0 };
 enum { DLEV_BEGIN = 1 };  // [1, 50] or just N != 1
-enum { SEED_BEGIN = 0  };
+enum { SEED_BEGIN = 0 };
 enum { SEED_RANGE = 64 * 1024 };
 #define logidx -1
 
@@ -68,12 +68,15 @@ cave_image()
       }
       imageD[row][col] = rgb_by_labr(color);
 
-      if (row == cave_startD.y && col == cave_startD.x)
-        imageD[row][col] = 0xff0000ff;
-      if (row == cave_endD.y && col == cave_endD.x)
-        imageD[row][col] = 0xffff00ff;
-      if (row == cave_checkD.y && col == cave_checkD.x)
-        imageD[row][col] = 0xff00ffff;
+      if (cave_startD.x)
+        if (row == cave_startD.y && col == cave_startD.x)
+          imageD[row][col] = 0xff00ff00;
+      if (cave_endD.x)
+        if (row == cave_endD.y && col == cave_endD.x)
+          imageD[row][col] = 0xff0000ff;
+      if (cave_checkD.x)
+        if (row == cave_checkD.y && col == cave_checkD.x)
+          imageD[row][col] = 0xff00ffff;
     }
   }
 }
