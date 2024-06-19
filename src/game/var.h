@@ -116,6 +116,7 @@ GAME int invenD[MAX_INVEN];
 GAME int storeD[MAX_STORE];
 GAME struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
 
+DATA char quit_stringD[] = "quitting";
 DATA char versionD[] = "XXXX.YYYY.ZZZZ";
 DATA char git_hashD[] = "AbCdEfGhIjKlMnO";
 

@@ -8,8 +8,6 @@ enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
 enum { TEST_CREATURE = 0 };
 
-DATA char quit_stringD[] = "quitting";
-
 // #include "src/mod/replay.c"
 #include "src/mod/cavegen.c"
 
@@ -1273,6 +1271,9 @@ bestdir(row1, col1, row2, col2)
   }
   return 0;
 }
+// exact: (df_dir ^ df_heading) == 0;
+// not away from: (df_dir & df_heading) == df_dir;
+// any common: (df_dir & df_heading) != 0;
 static int
 dirflag(row1, col1, row2, col2)
 {
@@ -1413,19 +1414,15 @@ build_corridor(row1, col1, row2, col2, iter)
         int df_heading = dirflag(row1, col1, tmp_row, tmp_col);
         int df_th = dirflag(row1, col1, th.y, th.x);
 
-        // exact: (df_heading ^ df_th) == 0;
-        // any threshold within the heading directions:
-        //   (df_th & df_heading) == df_th;
-        // accept any common direction
-        int df_align = (df_th & df_heading) != 0;
+        int heading = (df_th & df_heading) != 0;
         if (iter == logidx)
           printf("(heading 0x%x) (threshold 0x%x) : (align 0x%x)\n", df_heading,
-                 df_th, df_align);
+                 df_th, heading);
 
         if (iter == logidx)
           printf("%d - tmp %d %d quartz threshold %d %d\n", iter, tmp_col,
                  tmp_row, th.x, th.y);
-        if (df_align) {
+        if (heading) {
           fill = build_diag(row1, col1, th.y + row_dir, th.x + col_dir, tunstk,
                             &tunindex);
           if (iter == logidx)
@@ -1452,7 +1449,6 @@ build_corridor(row1, col1, row2, col2, iter)
     } else if (fval == MAGMA_WALL) {
       // pass-thru
     } else if (fval == GRANITE_WALL) {
-      // TBD: maybe stop N granite_wall of the same chunk in a row?
       tun_chg = 0;
 
       // Prevent chewing room boundary
@@ -3943,7 +3939,6 @@ cave_gen()
   /* move zero entry to k, so that can call build_corridor all k times */
   yloc[k] = yloc[0];
   xloc[k] = xloc[0];
-  // fundamental challenge: room goes unconnected
   for (j = 0; j < k; j++) {
     y1 = yloc[j];
     x1 = xloc[j];
