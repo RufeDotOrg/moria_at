@@ -2,7 +2,6 @@
 
 #include "platform/platform.c"
 
-enum { logidx = -1 };
 enum { HACK = 0 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
@@ -11,10 +10,6 @@ enum { TEST_CREATURE = 0 };
 // #include "src/mod/replay.c"
 // #include "src/mod/cavegen.c"
 // #undef TEST_CAVEGEN
-static void
-cave_debug()
-{
-}
 
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
@@ -1197,7 +1192,7 @@ GAME point_t doorstk[100];
 GAME int doorindex;
 
 static point_t
-protect_floor(y, x, ydir, xdir, log)
+protect_floor(y, x, ydir, xdir)
 {
   struct caveS* c_ptr1;
   struct caveS* c_ptr2;
@@ -1211,9 +1206,6 @@ protect_floor(y, x, ydir, xdir, log)
   for (int it = 0; it < 2; ++it) {
     // require granite from the same room
     int sc = same_chunk(y + oy, x + ox, y - oy, x - ox);
-    if (log)
-      printf("protect floor %d %d & %d %d | same_chunk %d \n", x + ox, y + oy,
-             x - ox, y - oy, sc);
     if (sc) {
       c_ptr1 = &caveD[y][x];
       c_ptr2 = &caveD[y + oy][x + ox];
@@ -1238,12 +1230,10 @@ protect_floor(y, x, ydir, xdir, log)
         same_chunk(y, x, y + oy, x + ox)) {
       y = y + oy;
       x = x + ox;
-      if (log) printf("shifted %d %d\n", x, y);
     } else if (caveD[y - oy][x - ox].fval >= MIN_WALL &&
                same_chunk(y, x, y - oy, x - ox)) {
       y = y - oy;
       x = x - ox;
-      if (log) printf("shifted %d %d\n", x, y);
     }
     if (!build_bounds(y, x)) break;
   }
@@ -1331,7 +1321,7 @@ int* col_dir;
   }
 }
 static void
-build_corridor(row1, col1, row2, col2, iter)
+build_corridor(row1, col1, row2, col2)
 {
   int tmp_row, tmp_col, i, j;
   struct caveS* c_ptr;
@@ -1351,10 +1341,6 @@ build_corridor(row1, col1, row2, col2, iter)
   tmp_col = start_col = col1;
   int tun_chg = 1;
 
-  if (iter == logidx) {
-    printf("from %d %d to %d %d\n", col1, row1, col2, row2);
-  }
-
   while (1) {
     /* prevent infinite loops, just in case */
     main_loop_count++;
@@ -1364,15 +1350,11 @@ build_corridor(row1, col1, row2, col2, iter)
 
     if (tun_chg) {
       int choice = bestdir(row1, col1, row2, col2);
-      if (iter == logidx)
-        printf("\nchoice %d from %d %d to %d %d\n", choice, col1, row1, col2,
-               row2);
-      if (!choice) continue;
+      if (!choice) break;
 
       // Sometimes take a random direction
       if (randint(DUN_TUN_RND) == 1) {
         choice = randint(4);
-        if (iter == logidx) printf("random choice %d\n", choice);
       }
 
       switch (choice) {
@@ -1398,9 +1380,6 @@ build_corridor(row1, col1, row2, col2, iter)
 
     tmp_row = row1 + row_dir;
     tmp_col = col1 + col_dir;
-    if (iter == logidx) {
-      printf("%d %d | ", tmp_col, tmp_row);
-    }
 
     if (!build_bounds(tmp_row, tmp_col)) {
       if (tmp_row < 2) tmp_row = 2;
@@ -1420,19 +1399,10 @@ build_corridor(row1, col1, row2, col2, iter)
         int df_th = dirflag(row1, col1, th.y, th.x);
 
         int heading = (df_th & df_heading) != 0;
-        if (iter == logidx)
-          printf("(heading 0x%x) (threshold 0x%x) : (align 0x%x)\n", df_heading,
-                 df_th, heading);
 
-        if (iter == logidx)
-          printf("%d - tmp %d %d quartz threshold %d %d\n", iter, tmp_col,
-                 tmp_row, th.x, th.y);
         if (heading) {
           fill = build_diag(row1, col1, th.y + row_dir, th.x + col_dir, tunstk,
                             &tunindex);
-          if (iter == logidx)
-            printf("build_diag %d %d %d %d fill %d\n", col1, row1,
-                   th.x + col_dir, th.y + row_dir, fill);
 
           if (fill) {
             tmp_row = th.y;
@@ -1459,18 +1429,14 @@ build_corridor(row1, col1, row2, col2, iter)
       // Prevent chewing room boundary
       // Prevent diagonal entrance to rooms
       // (build_corridor does not travel diagonal)
-      point_t th =
-          protect_floor(tmp_row, tmp_col, row_dir, col_dir, iter == logidx);
+      point_t th = protect_floor(tmp_row, tmp_col, row_dir, col_dir);
       //  otherwise retry following perp
       if (!th.x) {
         perp_rc_dir(tmp_row, tmp_col, &row_dir, &col_dir);
         continue;
       }
 
-      if (logidx == iter) printf("%d %d new threshold\n", th.x, th.y);
       if (th.x != tmp_col || th.y != tmp_row) {
-        if (logidx == iter)
-          printf("build_diag %d %d -> %d %d\n", col1, row1, th.x, th.y);
         build_diag(row1, col1, th.y, th.x, tunstk, &tunindex);
         tmp_col = th.x;
         tmp_row = th.y;
@@ -1491,15 +1457,10 @@ build_corridor(row1, col1, row2, col2, iter)
         }
       }
 
-      // it's not about this; yet this brings up seeds broken in the prior impl
       enum { DUN_TUN_CON = 15 };
       if (randint(100) < DUN_TUN_CON) {
         int cdis = distance(tmp_row, tmp_col, start_row, start_col);
-        if (cdis > 16) {
-          printf("distance break %d; iteration %d corridor %d %d\n", cdis, iter,
-                 tmp_col, tmp_row);
-          break;
-        }
+        if (cdis > 16) break;
       }
     }
 
@@ -1507,20 +1468,8 @@ build_corridor(row1, col1, row2, col2, iter)
     col1 = tmp_col;
 
     // check for completion
-    if ((c_ptr->cflag & CF_ROOM) && same_chunk(tmp_row, tmp_col, row2, col2)) {
-      // printf("%d) same chunk %d %d %d %d fval %d->%d\n", iter, tmp_col,
-      // tmp_row,
-      //        col2, row2, fval, fval);
+    if ((c_ptr->cflag & CF_ROOM) && same_chunk(tmp_row, tmp_col, row2, col2))
       break;
-    }
-  }
-
-  if (main_loop_count > 2000)
-    printf("main_loop_count break on iteration %d\n", iter);
-  if (iter == logidx) {
-    printf("\n");
-    printf("%d %d %d door wall tun %d main_loop_count\n", doorindex, wallindex,
-           tunindex, main_loop_count);
   }
 
   tun_ptr = &tunstk[0];
@@ -3891,8 +3840,6 @@ cave_gen()
   int y1, x1, y2, x2, pick1, pick2;
   int yloc[CHUNK_AREA + 1], xloc[CHUNK_AREA + 1];
 
-  printf("cave_gen %d dunlevel %d rnd_seed\n", dun_level, rnd_seed);
-
   alloc_level = CLAMP(dun_level / 2, 2, 15);
   k = randnor(DUN_ROOM_MEAN + alloc_level, 2);
   for (i = 0; i < k; i++)
@@ -3901,13 +3848,12 @@ cave_gen()
   pick1 = pick2 = 0;
   for (i = 0; i < AL(room_map); i++) {
     for (j = 0; j < AL(room_map[0]); j++) {
-      // printf("%d ", room_map[i][j]);
       if (room_map[i][j]) {
         if (dun_level > randint(DUN_UNUSUAL)) {
           pick2 += 1;
           build_type2(i, j, &yloc[k], &xloc[k], randint(6), randint(8));
         } else {
-          // type1 rooms do not play well with protect_floor
+          // TBD: type1 rooms do not play well with protect_floor
           // if (room_map[i][j] == 1) {
           build_room(i, j, &yloc[k], &xloc[k]);
           //} else {
@@ -3915,16 +3861,10 @@ cave_gen()
           //  build_type1(i, j, &yloc[k], &xloc[k]);
           //}
         }
-        if (i == CHUNK_COL - 1 || j == CHUNK_ROW - 1) {
-          // printf("%d %d xy\n", xloc[k], yloc[k]);
-          // exit(0);
-        }
         k++;
       }
     }
-    // printf("\n");
   }
-  cave_debug();
 
   for (j = 0; j < k; j++) {
     pick1 = randint(k) - 1;
@@ -3947,22 +3887,13 @@ cave_gen()
     y2 = yloc[j + 1];
     x2 = xloc[j + 1];
     // connect each room to another
-    // int log = j;
-    // if (same_chunk(y1, x1, 17, 17) || same_chunk(y2, x2, 17, 17)) log = -1;
-    build_corridor(y2, x2, y1, x1, j);
-    // cave_startD = (point_t){x2, y2};
-    // cave_endD = (point_t){x1, y1};
-    cave_debug();
+    build_corridor(y2, x2, y1, x1);
   }
-  // cave_startD = (point_t){0, 0};
-  // cave_endD = (point_t){0, 0};
-  granite_cave();
-  cave_debug();
 
+  granite_cave();
   place_boundary();
   for (i = 0; i < DUN_STR_MAG; i++) place_streamer(MAGMA_WALL, DUN_STR_MC);
   for (i = 0; i < DUN_STR_QUA; i++) place_streamer(QUARTZ_WALL, DUN_STR_QC);
-  cave_debug();
 
   /* Corridor intersection doors  */
   for (i = 0; i < doorindex; i++) {
@@ -3986,8 +3917,6 @@ cave_gen()
   alloc_mon((randint(RND_MALLOC_LEVEL) + MIN_MALLOC_LEVEL + alloc_level), 0,
             TRUE);
   if (dun_level >= WIN_MON_APPEAR) place_win_monster();
-  cave_debug();
-  printf("-- end cave_gen %d dunlevel %d rnd_seed\n", dun_level, rnd_seed);
   return 0;
 }
 static int
