@@ -11147,20 +11147,6 @@ py_grave()
   return CLOBBER_MSG("You are dead, sorry!");
 }
 static void
-show_all_inven()
-{
-  int iidx;
-  overlay_submodeD = 'e';
-  do {
-    int show_equip = overlay_submodeD == 'e';
-    iidx = inven_choice("At death", show_equip ? "/*" : "*/");
-
-    if (iidx >= 0) {
-      obj_study(obj_get(invenD[iidx]), 0);
-    }
-  } while (iidx != -1);
-}
-static void
 py_undo()
 {
   int memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
@@ -11197,8 +11183,12 @@ py_menu()
 
     overlay_submodeD = 0;
     line = 0;
-    BufMsg(overlay, death ? "a) All equipment / inventory "
-                          : "a) Await event (health, malady, or recall)");
+    if (death) {
+      line += 1;
+    } else {
+      BufMsg(overlay, "a) Await event (health, malady, or recall)");
+    }
+
     if (HACK) {
       BufMsg(overlay, "b) Undo / Gameplay Rewind (%d) (%d) (%s)", input_action,
              input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
@@ -11221,7 +11211,6 @@ py_menu()
           return 0;
         }
 
-        show_all_inven();
         continue;
 
       case 'b':
@@ -14478,7 +14467,6 @@ main(int argc, char** argv)
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) {
     replay_stop();
-    inven_reveal();
     py_death();
   }
 
