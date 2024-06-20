@@ -8533,7 +8533,7 @@ struct objS* obj;
   return tabil;
 }
 int
-obj_study(obj, for_sale)
+obj_study(obj, town_store)
 struct objS* obj;
 {
   struct treasureS* tr_ptr;
@@ -8550,7 +8550,7 @@ struct objS* obj;
     eqidx = may_equip(obj->tval);
     wheavy = tohit_by_weight(obj->weight);
     number = obj->number;
-    if (for_sale && (STACK_SINGLE & obj->subval)) number = 1;
+    if (town_store && (STACK_SINGLE & obj->subval)) number = 1;
 
     line = 0;
     BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (single)",
@@ -8768,7 +8768,7 @@ struct objS* obj;
     }
 
     obj_desc(obj, number);
-    if (!PC) msg_hint(AP("(RED: drop | GREEN: use)"));
+    if (!PC && !town_store) msg_hint(AP("(RED: drop | GREEN: use)"));
     return CLOBBER_MSG("You study %s.", descD);
   }
 
@@ -8817,7 +8817,7 @@ inven_choice(char* prompt, char* mode_list)
       uint8_t iidx = c - 'A';
       iidx += begin;
       if (iidx < end && invenD[iidx]) {
-        c = obj_study(obj_get(invenD[iidx]), FALSE);
+        c = obj_study(obj_get(invenD[iidx]), 0);
         // Prohibited on the death screen
         if (using_selection && uD.new_level_flag == 0) {
           switch (c) {
@@ -13850,10 +13850,6 @@ dungeon()
                 break;
               case 'R':
                 py_rest();
-                break;
-              case 'S':
-                iidx = inven_choice("Study which item?", "*/");
-                if (iidx >= 0) obj_study(obj_get(invenD[iidx]), 0);
                 break;
             }
           }
