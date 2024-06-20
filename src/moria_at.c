@@ -9729,7 +9729,7 @@ int* x_ptr;
         spidx = last_castD - 1;
       }
 
-      if (spidx <= 0) return;
+      if (spidx < 0) return;
 
       if ((1 << spidx) & spmask) {
         target = spell_prompt(spidx);
@@ -9938,7 +9938,7 @@ int* x_ptr;
         spidx = last_castD - 1;
       }
 
-      if (spidx <= 0) return;
+      if (spidx < 0) return;
 
       if ((1 << spidx) & spmask) {
         target = prayer_prompt(spidx);
