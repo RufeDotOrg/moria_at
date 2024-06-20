@@ -9493,11 +9493,12 @@ gain_spell(spidx)
   return 0;
 }
 int
-spelldir_prompt(spidx)
+spell_prompt(spidx)
 {
-  int dir;
+  int target;
   char tmp[STRLEN_MSG + 1];
 
+  target = 0;
   switch (spidx + 1) {
     case 1:
     case 7:
@@ -9514,20 +9515,25 @@ spelldir_prompt(spidx)
     case 29: {
       snprintf(tmp, AL(tmp), "Which direction will you cast %s?",
                spell_nameD[spidx]);
-      if (!get_dir(tmp, &dir)) dir = -1;
+      if (!get_dir(tmp, &target)) target = -1;
     } break;
-    default:
-      dir = 0;
+    case 21:
+      target = inven_choice("Which item do you wish identified?", "*/");
+      break;
+    case 18:
+    case 26:
+      target = inven_choice("Recharge which item?", "*");
+      break;
   }
 
-  return dir;
+  return target;
 }
-void spell_dir(spidx, y_ptr, x_ptr, dir) int* y_ptr;
+void spell_dir_target(spidx, y_ptr, x_ptr, target) int* y_ptr;
 int* x_ptr;
 {
   switch (spidx + 1) {
     case 1:
-      magic_bolt(GF_MAGIC_MISSILE, dir, uD.y, uD.x, damroll(2, 6),
+      magic_bolt(GF_MAGIC_MISSILE, target, uD.y, uD.x, damroll(2, 6),
                  spell_nameD[0]);
       break;
     case 2:
@@ -9547,19 +9553,20 @@ int* x_ptr;
       detect_obj(oset_hidden, TRUE);
       break;
     case 7:
-      fire_ball(GF_POISON_GAS, dir, uD.y, uD.x, 12, spell_nameD[6]);
+      fire_ball(GF_POISON_GAS, target, uD.y, uD.x, 12, spell_nameD[6]);
       break;
     case 8:
-      confuse_monster(dir, uD.y, uD.x);
+      confuse_monster(target, uD.y, uD.x);
       break;
     case 9:
-      magic_bolt(GF_LIGHTNING, dir, uD.y, uD.x, damroll(4, 8), spell_nameD[8]);
+      magic_bolt(GF_LIGHTNING, target, uD.y, uD.x, damroll(4, 8),
+                 spell_nameD[8]);
       break;
     case 10:
       td_destroy(uD.y, uD.x);
       break;
     case 11:
-      sleep_monster(dir, uD.y, uD.x);
+      sleep_monster(target, uD.y, uD.x);
       break;
     case 12:
       if (countD.poison > 0) {
@@ -9573,50 +9580,49 @@ int* x_ptr;
       equip_remove_curse();
       break;
     case 15:
-      magic_bolt(GF_FROST, dir, uD.y, uD.x, damroll(6, 8), spell_nameD[14]);
+      magic_bolt(GF_FROST, target, uD.y, uD.x, damroll(6, 8), spell_nameD[14]);
       break;
     case 16:
-      wall_to_mud(dir, uD.y, uD.x);
+      wall_to_mud(target, uD.y, uD.x);
       break;
     case 17:
       create_food(uD.y, uD.x);
       break;
     case 18:
-      // TBD: allow to fail without mana cost?
-      inven_recharge(inven_choice("Recharge which item?", "*"), 0);
+      inven_recharge(target, 0);
       break;
     case 19:
       sleep_monster_aoe(1);
       break;
     case 20:
-      poly_monster(dir, uD.y, uD.x);
+      poly_monster(target, uD.y, uD.x);
       break;
     case 21:
-      inven_ident(inven_choice("Which item do you wish identified?", "*/"));
+      inven_ident(target);
       break;
     case 22:
       sleep_monster_aoe(MAX_SIGHT);
       break;
     case 23:
-      magic_bolt(GF_FIRE, dir, uD.y, uD.x, damroll(9, 8), spell_nameD[22]);
+      magic_bolt(GF_FIRE, target, uD.y, uD.x, damroll(9, 8), spell_nameD[22]);
       break;
     case 24:
-      speed_monster(dir, uD.y, uD.x, -1);
+      speed_monster(target, uD.y, uD.x, -1);
       break;
     case 25:
-      fire_ball(GF_FROST, dir, uD.y, uD.x, 48, spell_nameD[24]);
+      fire_ball(GF_FROST, target, uD.y, uD.x, 48, spell_nameD[24]);
       break;
     case 26:
-      inven_recharge(inven_choice("Recharge which item?", "*"), 1);
+      inven_recharge(target, 1);
       break;
     case 27:
-      teleport_monster(dir, uD.y, uD.x);
+      teleport_monster(target, uD.y, uD.x);
       break;
     case 28:
       ma_duration(MA_FAST, randint(20) + uD.lev);
       break;
     case 29:
-      fire_ball(GF_FIRE, dir, uD.y, uD.x, 72, spell_nameD[28]);
+      fire_ball(GF_FIRE, target, uD.y, uD.x, 72, spell_nameD[28]);
       break;
     case 30:
       destroy_area(uD.y, uD.x);
@@ -9696,7 +9702,7 @@ int* x_ptr;
 {
   struct objS* obj;
   uint32_t flags, first_spell;
-  int cmana, sptype, spmask, spidx, dir;
+  int cmana, sptype, spmask, spidx, target;
   struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
@@ -9719,20 +9725,23 @@ int* x_ptr;
 
       if (last_castD == 0) {
         spidx = book_prompt(spell_nameD, spelltable, spmask, flags);
-        last_castD = spidx + 1;
-        if (spidx < 0) return;
       } else {
         spidx = last_castD - 1;
       }
 
-      if ((1 << spidx) & spmask) {
-        dir = spelldir_prompt(spidx);
-        if (dir < 0) return;
+      if (spidx <= 0) return;
 
+      if ((1 << spidx) & spmask) {
+        target = spell_prompt(spidx);
+        if (target < 0) return;
+
+        // Spell Committed
+        last_castD = spidx + 1;
+        turn_flag = TRUE;
         if (randint(100) < spell_chanceD[spidx]) {
           msg_print("You failed to get the spell off!");
         } else {
-          spell_dir(spidx, y_ptr, x_ptr, dir);
+          spell_dir_target(spidx, y_ptr, x_ptr, target);
 
           if ((uD.spell_worked & (1 << spidx)) == 0) {
             uD.spell_worked |= (1 << spidx);
@@ -9754,6 +9763,7 @@ int* x_ptr;
           uD.cmana -= spelltable[spidx].spmana;
         }
       } else {
+        turn_flag = TRUE;
         msg_print("You read the magical runes.");
         if (spelltable[spidx].splevel > uD.lev || !gain_spell(spidx)) {
           MSG("You are unable to retain the knowledge%s.",
@@ -9762,16 +9772,16 @@ int* x_ptr;
           MSG("You learn the spell of %s!", spell_nameD[spidx]);
         }
       }
-      turn_flag = TRUE;
     }
   }
 }
 int
-prayerdir_prompt(pridx)
+prayer_prompt(pridx)
 {
   int dir;
   char tmp[STRLEN_MSG + 1];
 
+  dir = 0;
   switch (pridx + 1) {
     case 9:
     case 18:
@@ -9779,14 +9789,11 @@ prayerdir_prompt(pridx)
                prayer_nameD[pridx]);
       if (!get_dir(tmp, &dir)) dir = -1;
       break;
-    default:
-      dir = 0;
-      break;
   }
   return dir;
 }
 int
-prayer_dir(pridx, y_ptr, x_ptr, dir)
+prayer_dir_target(pridx, y_ptr, x_ptr, dir)
 int* y_ptr;
 int* x_ptr;
 {
@@ -9904,7 +9911,7 @@ int* x_ptr;
 {
   struct objS* obj;
   uint32_t flags, first_spell;
-  int cmana, sptype, spmask, spidx, dir;
+  int cmana, sptype, spmask, spidx, target;
   struct spellS* spelltable;
 
   obj = obj_get(invenD[iidx]);
@@ -9927,20 +9934,23 @@ int* x_ptr;
 
       if (last_castD == 0) {
         spidx = book_prompt(prayer_nameD, spelltable, spmask, flags);
-        last_castD = spidx + 1;
-        if (spidx < 0) return;
       } else {
         spidx = last_castD - 1;
       }
 
-      if ((1 << spidx) & spmask) {
-        dir = prayerdir_prompt(spidx);
-        if (dir < 0) return;
+      if (spidx <= 0) return;
 
+      if ((1 << spidx) & spmask) {
+        target = prayer_prompt(spidx);
+        if (target < 0) return;
+
+        // prayer committed
+        last_castD = spidx + 1;
+        turn_flag = TRUE;
         if (randint(100) < spell_chanceD[spidx]) {
           msg_print("You lost your concentration!");
         } else {
-          prayer_dir(spidx, y_ptr, x_ptr, dir);
+          prayer_dir_target(spidx, y_ptr, x_ptr, target);
 
           if ((uD.spell_worked & (1 << spidx)) == 0) {
             uD.spell_worked |= (1 << spidx);
@@ -9964,7 +9974,6 @@ int* x_ptr;
       } else {
         MSG("You have no belief in the prayer of %s.", prayer_nameD[spidx]);
       }
-      turn_flag = TRUE;
     }
   }
 }
