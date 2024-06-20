@@ -10953,6 +10953,9 @@ py_saveslot_select()
   // No active class
   globalD.saveslot_class = -1;
 
+  // Clear delta visualization
+  last_turnD = 0;
+
   save_count = py_archive_read(in_summary, 0);
   // Assist with import on re-installation
   if (save_count == 0 && has_external) {
