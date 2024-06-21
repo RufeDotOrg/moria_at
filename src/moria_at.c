@@ -11183,7 +11183,11 @@ py_menu()
 
     overlay_submodeD = 0;
     line = 0;
-    BufMsg(overlay, death ? " " : "a) Await event (health, malady, or recall)");
+    if (death) {
+      BufMsg(overlay, "a) Ahh, death comes to us all");
+    } else {
+      BufMsg(overlay, "a) Await event (health, malady, or recall)");
+    }
 
     if (HACK) {
       BufMsg(overlay, "b) Undo / Gameplay Rewind (%d) (%d) (%s)", input_action,
@@ -11202,12 +11206,9 @@ py_menu()
 
     switch (c) {
       case 'a':
-        if (!death) {
-          py_rest();
-          return 0;
-        }
-
-        continue;
+        if (death) continue;
+        py_rest();
+        return 0;
 
       case 'b':
         py_undo();
