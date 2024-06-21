@@ -467,7 +467,6 @@ draw(wait)
 void
 msg_pause()
 {
-  char c;
   int log_used;
 
   log_used = AS(msglen_cqD, msg_writeD);
@@ -662,21 +661,6 @@ cave_floor_near(y, x)
   return FALSE;
 }
 static void
-cave_init()
-{
-  for (int row = 0; row < MAX_HEIGHT; ++row) {
-    for (int col = 0; col < MAX_WIDTH; ++col) {
-      BOOL wall = (row == 0 || row + 1 == MAX_HEIGHT) ||
-                  (col == 0 || col + 1 == MAX_WIDTH);
-      if (wall)
-        caveD[row][col].fval = BOUNDARY_WALL;
-      else
-        caveD[row][col].fval = FLOOR_LIGHT;
-    }
-  }
-  uD.x = uD.y = 1;
-}
-static void
 place_boundary()
 {
   for (int row = 0; row < MAX_HEIGHT; ++row) caveD[row][0].fval = BOUNDARY_WALL;
@@ -688,14 +672,14 @@ place_boundary()
     caveD[MAX_HEIGHT - 1][col].fval = BOUNDARY_WALL;
 }
 
-#define RNG_M 2147483647L /* m = 2^31 - 1 */
-#define RNG_A 16807L
-#define RNG_Q 127773L /* m div a */
-#define RNG_R 2836L   /* m mod a */
+#define RNG_M 2147483647LL /* m = 2^31 - 1 */
+#define RNG_A 16807LL
+#define RNG_Q 127773LL /* m div a */
+#define RNG_R 2836LL   /* m mod a */
 int
 rnd()
 {
-  long low, high, test;
+  int low, high, test;
 
   high = rnd_seed / RNG_Q;
   low = rnd_seed % RNG_Q;
@@ -709,10 +693,7 @@ rnd()
 int
 randint(maxval)
 {
-  long randval;
-
-  randval = rnd();
-  return ((int)(randval % maxval) + 1);
+    return ((rnd() % maxval) + 1);
 }
 int
 randnor(mean, stand)
@@ -1070,40 +1051,6 @@ diff_chunk(y1, x1, y2, x2)
   return (y1 / CHUNK_HEIGHT != y2 / CHUNK_HEIGHT ||
           x1 / CHUNK_WIDTH != x2 / CHUNK_WIDTH);
 }
-static void rand_dir(rdir, cdir) int *rdir, *cdir;
-{
-  int tmp;
-
-  tmp = randint(4);
-  if (tmp < 3) {
-    *cdir = 0;
-    *rdir = -3 + (tmp << 1); /* tmp=1 -> *rdir=-1; tmp=2 -> *rdir=1 */
-  } else {
-    *rdir = 0;
-    *cdir = -7 + (tmp << 1); /* tmp=3 -> *cdir=-1; tmp=4 -> *cdir=1 */
-  }
-}
-static void correct_dir(rdir, cdir, y1, x1, y2, x2) int *rdir, *cdir;
-{
-  if (y1 < y2)
-    *rdir = 1;
-  else if (y1 == y2)
-    *rdir = 0;
-  else
-    *rdir = -1;
-  if (x1 < x2)
-    *cdir = 1;
-  else if (x1 == x2)
-    *cdir = 0;
-  else
-    *cdir = -1;
-  if ((*rdir != 0) && (*cdir != 0)) {
-    if (randint(2) == 1)
-      *rdir = 0;
-    else
-      *cdir = 0;
-  }
-}
 static void
 place_broken_door(broken, y, x)
 {
@@ -1323,7 +1270,7 @@ int* col_dir;
 static void
 build_corridor(row1, col1, row2, col2)
 {
-  int tmp_row, tmp_col, i, j;
+  int tmp_row, tmp_col, i;
   struct caveS* c_ptr;
   struct caveS* d_ptr;
   point_t tunstk[1000], wallstk[1000];
@@ -1499,7 +1446,7 @@ build_corridor(row1, col1, row2, col2)
 static void
 granite_cave()
 {
-  int i, j, fval;
+  int i, j;
   struct caveS* c_ptr;
 
   for (i = MAX_HEIGHT - 2; i > 0; i--) {
@@ -3242,7 +3189,6 @@ int
 place_win_monster()
 {
   int cidx, fy, fx, y, x, k;
-  struct monS* mon;
   struct creatureS* cr_ptr;
 
   k = randint(MAX_WIN_MON);
@@ -4267,6 +4213,7 @@ find_event(y, x)
 
   option = 0;
   option2 = 0;
+  check_dir = 0;
   dir = find_prevdirD;
   max = (dir & 1) + 1;
   /* Look at every newly adjacent square. */
@@ -6010,15 +5957,6 @@ player_saves()
   return (randint(100) <= usave());
 }
 static int
-equip_count()
-{
-  int count = 0;
-  for (int it = INVEN_EQUIP; it < MAX_INVEN; ++it) {
-    count += (invenD[it] != 0);
-  }
-  return count;
-}
-static int
 equip_vibrate(flag)
 {
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
@@ -6190,15 +6128,6 @@ inven_random()
     return tmp[randint(k) - 1];
   else
     return -1;
-}
-static int
-inven_count()
-{
-  int count = 0;
-  for (int it = 0; it < INVEN_EQUIP; ++it) {
-    count += (invenD[it] != 0);
-  }
-  return count;
 }
 static int
 inven_slot()
@@ -10139,15 +10068,6 @@ inven_flask(iidx)
   return FALSE;
 }
 static int
-py_inven_slot()
-{
-  int count = 0;
-  for (int it = 0; it < INVEN_EQUIP; ++it) {
-    count += (invenD[it] == 0);
-  }
-  return count;
-}
-static int
 inven_merge(obj_id, locn)
 int* locn;
 {
@@ -10408,7 +10328,6 @@ inven_throw_dir(iidx, dir)
   int tbth, tpth, tdam, adj, tweight, surprise;
   int wtohit, wtodam, wheavy;
   int y, x, fromy, fromx, cdis;
-  int mlit;
   int flag, drop;
   struct caveS* c_ptr;
   struct objS* obj;
@@ -11104,7 +11023,7 @@ py_saveslot_select()
 }
 #define TOMB(x, ...)                                     \
   {                                                      \
-    int len = snprintf(AP(tmp), x, ##__VA_ARGS__);       \
+    int len = snprintf(tmp, AL(tmp), x, ##__VA_ARGS__);  \
     memcpy(&screenD[line][xcenter - len / 2], tmp, len); \
     line += 1;                                           \
   }
@@ -12103,6 +12022,7 @@ py_objlook_dir(dir)
 
   rect_t zr;
   zoom_rect(&zr);
+  seen = 0;
   point_t limit = {zr.x + zr.w, zr.y + zr.h};
   for (int row = zr.y; row < limit.y; ++row) {
     for (int col = zr.x; col < limit.x; ++col) {
@@ -12220,17 +12140,16 @@ tunnel_tool(y, x, iidx)
     tabil = obj_tabil(obj, TRUE) + wheavy;
 
     wall_chance = 0;
+    wall_min = 10;
     switch (c_ptr->fval) {
       case QUARTZ_WALL:
         wall_min = 80;
         wall_chance = 400;
         break;
       case MAGMA_WALL:
-        wall_min = 10;
         wall_chance = 600;
         break;
       case GRANITE_WALL:
-        wall_min = 10;
         wall_chance = 1200;
         break;
       default:
@@ -12648,13 +12567,11 @@ mon_try_spell(midx, cdis)
             ma_combat(MA_FEAR, randint(5) + 3);
           break;
         case 14: /*Summon Monster*/
-        {
-          int midx = summon_monster(uD.y, uD.x);
-        } break;
+          summon_monster(uD.y, uD.x);
+          break;
         case 15: /*Summon Undead*/
-        {
-          int midx = summon_undead(uD.y, uD.x);
-        } break;
+          summon_undead(uD.y, uD.x);
+          break;
         case 16: /*Slow Person   */
           if (py_tr(TR_FREE_ACT))
             msg_print("You are unaffected.");
@@ -13690,7 +13607,7 @@ fail(char* text)
 void
 dungeon()
 {
-  int y, x, iidx;
+  int y, x;
   uint32_t dir, teleport;
   int town;
   int check_replay;

@@ -123,10 +123,10 @@ art_io()
 }
 
 static SDL_Point
-point_by_spriteid(sprite_idD)
+point_by_spriteid(uint32_t id)
 {
-  int col = sprite_idD % SPRITE_SQ;
-  int row = sprite_idD / SPRITE_SQ;
+  int col = id % SPRITE_SQ;
+  int row = id / SPRITE_SQ;
   return (SDL_Point){
       col * ART_W,
       row * ART_H,
@@ -332,7 +332,7 @@ static void surface_ppfill(surface) SDL_Surface* surface;
     uint8_t* dst = pixels + (surface->pitch * row);
     for (int64_t col = 0; col < surface->w; ++col) {
       int dsq;
-      int cidx = nearest_pp(row, col, &dsq);
+      nearest_pp(row, col, &dsq);
       int labr = CLAMP(65 - sqrt(dsq), 0, 100);
       int color = rgb_by_labr(labr);
       if (pixel_formatD) pixel_convert(&color);
@@ -877,7 +877,6 @@ common_text()
   if (PC) {
     if (msg_moreD || TEST_UI) {
       DATA char spacebar[] = "-press spacebar-";
-      AUSE(grect, GR_PAD);
       SDL_Point p = {0, layout_rect.h};
       p.x += AL(spacebar);
       p.y -= FHEIGHT;
@@ -1243,8 +1242,6 @@ map_draw()
 int
 draw_game()
 {
-  USE(renderer);
-  USE(msg_more);
   USE(minimap_enlarge);
 
   int show_minimap = (maD[MA_BLIND] == 0);
