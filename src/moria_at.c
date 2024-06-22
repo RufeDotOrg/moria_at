@@ -693,7 +693,7 @@ rnd()
 int
 randint(maxval)
 {
-    return ((rnd() % maxval) + 1);
+  return ((rnd() % maxval) + 1);
 }
 int
 randnor(mean, stand)
@@ -14077,6 +14077,8 @@ global_init()
   FT(platform);
   globalD.saveslot_class = -1;
   globalD.zoom_factor = PC ? 0 : 2;
+  globalD.vsync = PC ? 0 : 1;
+  globalD.sprite = 1;
 
   msg_widthD = overlay_widthD = 80;
 }

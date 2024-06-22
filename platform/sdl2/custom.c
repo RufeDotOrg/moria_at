@@ -1041,12 +1041,19 @@ map_draw()
   rect_t dest_rect;
   rect_t sprite_src;
   SDL_Point rp;
+  MUSE(count, imagine);
+  USE(sprite_texture);
+  USE(renderer);
+
+  SDL_SetRenderTarget(renderer, map_textureD);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
+  // Ascii renderer only
+  if (imagine || !globalD.sprite) sprite_texture = 0;
+
   dest_rect.w = ART_W;
   dest_rect.h = ART_H;
-  SDL_SetRenderTarget(rendererD, map_textureD);
-  SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
-  SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_BLEND);
-  int imagine = countD.imagine;
   for (int row = 0; row < SYMMAP_HEIGHT; ++row) {
     dest_rect.y = row * ART_H;
     for (int col = 0; col < SYMMAP_WIDTH; ++col) {
@@ -1075,7 +1082,7 @@ map_draw()
               ART_W,
               ART_H,
           };
-          srct = sprite_textureD;
+          srct = sprite_texture;
         } else if (fidx && fidx <= AL(wart_textureD)) {
           sprite_src = (rect_t){
               XY(point_by_spriteid(wart_textureD[fidx - 1])),
@@ -1083,7 +1090,7 @@ map_draw()
               ART_H,
           };
 
-          srct = sprite_textureD;
+          srct = sprite_texture;
         } else if (tridx && tridx <= AL(tart_textureD)) {
           sprite_src = (rect_t){
               XY(point_by_spriteid(tart_textureD[tridx - 1])),
@@ -1091,7 +1098,7 @@ map_draw()
               ART_H,
           };
 
-          srct = sprite_textureD;
+          srct = sprite_texture;
         } else if (sym == '@') {
           sprite_src = (rect_t){
               XY(point_by_spriteid(part_textureD[0 + (turnD) % 2])),
@@ -1099,7 +1106,7 @@ map_draw()
               ART_H,
           };
 
-          srct = sprite_textureD;
+          srct = sprite_texture;
         }
       }
 
@@ -1109,41 +1116,41 @@ map_draw()
         srct = font_texture_by_char(sym);
       }
 
-      SDL_SetRenderDrawColor(rendererD, V4b(&lightingD[light]));
-      SDL_RenderFillRect(rendererD, &dest_rect);
+      SDL_SetRenderDrawColor(renderer, V4b(&lightingD[light]));
+      SDL_RenderFillRect(renderer, &dest_rect);
 
       if (srct) {
         if (dim) SDL_SetTextureColorMod(srct, 192, 192, 192);
-        SDL_RenderCopy(rendererD, srct, srcr, &dest_rect);
+        SDL_RenderCopy(renderer, srct, srcr, &dest_rect);
         if (dim) SDL_SetTextureColorMod(srct, 255, 255, 255);
       }
       switch (viz->fade) {
         case 0:
           // TBD: configuration on default dimming?
-          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 16);
-          SDL_RenderFillRect(rendererD, &dest_rect);
+          SDL_SetRenderDrawColor(renderer, 0, 0, 0, 16);
+          SDL_RenderFillRect(renderer, &dest_rect);
           break;
         case 1:
-          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 32);
-          SDL_RenderFillRect(rendererD, &dest_rect);
+          SDL_SetRenderDrawColor(renderer, 0, 0, 0, 32);
+          SDL_RenderFillRect(renderer, &dest_rect);
           break;
         case 2:
-          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 64);
-          SDL_RenderFillRect(rendererD, &dest_rect);
+          SDL_SetRenderDrawColor(renderer, 0, 0, 0, 64);
+          SDL_RenderFillRect(renderer, &dest_rect);
           break;
         case 3:
-          SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 98);
-          SDL_RenderFillRect(rendererD, &dest_rect);
+          SDL_SetRenderDrawColor(renderer, 0, 0, 0, 98);
+          SDL_RenderFillRect(renderer, &dest_rect);
           break;
       }
       if (viz->look) {
-        SDL_SetRenderDrawColor(rendererD, V4b(&whiteD));
-        SDL_RenderDrawRect(rendererD, &dest_rect);
+        SDL_SetRenderDrawColor(renderer, V4b(&whiteD));
+        SDL_RenderDrawRect(renderer, &dest_rect);
       }
     }
   }
 
-  if (sprite_textureD) {
+  if (sprite_texture) {
     uint32_t oidx = caveD[uD.y][uD.x].oidx;
     struct objS* obj = &entity_objD[oidx];
     uint32_t tval = obj->tval;
@@ -1156,21 +1163,21 @@ map_draw()
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     } else if (tval == TV_GLYPH) {
       sprite_src = (rect_t){
           XY(point_by_spriteid(part_textureD[3])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     } else if (tval == TV_VIS_TRAP) {
       sprite_src = (rect_t){
           XY(point_by_spriteid(part_textureD[4])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     }
 
     if (countD.paralysis) {
@@ -1179,7 +1186,7 @@ map_draw()
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     }
     if (countD.poison) {
       sprite_src = (rect_t){
@@ -1187,7 +1194,7 @@ map_draw()
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     }
     if (maD[MA_SLOW]) {
       sprite_src = (rect_t){
@@ -1195,7 +1202,7 @@ map_draw()
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     }
     if (maD[MA_BLIND]) {
       sprite_src = (rect_t){
@@ -1203,7 +1210,7 @@ map_draw()
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     }
     if (countD.confusion) {
       sprite_src = (rect_t){
@@ -1211,7 +1218,7 @@ map_draw()
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     }
     if (maD[MA_FEAR]) {
       sprite_src = (rect_t){
@@ -1219,7 +1226,7 @@ map_draw()
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     }
     if (uD.food < PLAYER_FOOD_FAINT) {
       sprite_src = (rect_t){
@@ -1227,14 +1234,14 @@ map_draw()
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     } else if (uD.food <= PLAYER_FOOD_ALERT) {
       sprite_src = (rect_t){
           XY(point_by_spriteid(part_textureD[11])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(rendererD, sprite_textureD, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
     }
   }
   return 0;
@@ -1423,27 +1430,30 @@ custom_draw()
       }
       if (mode == 0) {
         AUSE(grect, GR_LOCK);
-        MUSE(global, orientation_lock);
-        int tridx;
-        if (orientation_lock) {
-          tridx = 48;
-        } else {
-          tridx = 45;
-        }
-        if (tridx <= AL(tart_textureD)) {
-          rect_t sprite_rect = {
-              XY(point_by_spriteid(tart_textureD[tridx - 1])),
-              ART_W,
-              ART_H,
-          };
-          rect_t dest = {
-              grect.x,
-              grect.y,
-              ART_W * 2,
-              ART_H * 2,
-          };
-          dest.x += (grect.w - dest.w) / 2;
-          SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
+        if (sprite_textureD) {
+          MUSE(global, orientation_lock);
+          // TBD: UI Icon?
+          int tridx = 1;
+          if (orientation_lock) {
+            tridx = 48;
+          } else {
+            tridx = 45;
+          }
+          if (tridx <= AL(tart_textureD)) {
+            rect_t sprite_rect = {
+                XY(point_by_spriteid(tart_textureD[tridx - 1])),
+                ART_W,
+                ART_H,
+            };
+            rect_t dest = {
+                grect.x,
+                grect.y,
+                ART_W * 2,
+                ART_H * 2,
+            };
+            dest.x += (grect.w - dest.w) / 2;
+            SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
+          }
         }
         rect_frame(grect, 1);
       }

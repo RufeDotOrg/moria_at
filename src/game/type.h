@@ -296,6 +296,8 @@ struct globalS {
   uint32_t zoom_factor;
   uint32_t orientation_lock;
   char pc_renderer[16];
+  uint32_t vsync;
+  uint32_t sprite;
 };
 // Global data may be cached to disk
 // Does not mutate on a game reset

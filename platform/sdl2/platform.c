@@ -54,14 +54,12 @@ enum { TOUCH = 1 };
 enum { KEYBOARD = 0 };
 enum { MOUSE = 0 };
 enum { PC = 0 };
-enum { VSYNC = 1 };
 #else
 char* SDL_GetCachePath(const char*, const char*);
 enum { TOUCH = 0 };
 enum { KEYBOARD = 1 };
 enum { MOUSE = TOUCH };
 enum { PC = 1 };
-enum { VSYNC = 0 };
 #endif
 
 enum { SDL_EVLOG = 0 };
@@ -407,7 +405,9 @@ platform_pregame()
     // SDL config
     if (SDL_EVLOG) SDL_SetHint(SDL_HINT_EVENT_LOGGING, "1");
     if (BATCHING) SDL_SetHint(SDL_HINT_RENDER_BATCHING, "1");
-    if (VSYNC) SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+    if (!SDL_GetHint(SDL_HINT_RENDER_VSYNC)) {
+      SDL_SetHint(SDL_HINT_RENDER_VSYNC, globalD.vsync ? "1" : "0");
+    }
     if (QUALITY) SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     if (PC) {
