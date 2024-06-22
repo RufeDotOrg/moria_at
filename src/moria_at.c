@@ -12028,7 +12028,7 @@ py_objlook_dir(dir)
     for (int col = zr.x; col < limit.x; ++col) {
       struct caveS* c_ptr = &caveD[row][col];
       struct objS* obj = &entity_objD[c_ptr->oidx];
-      if (obj->tval == TV_INVIS_TRAP) continue;
+      if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_SECRET_DOOR) continue;
       oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
       ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
       if (oy == ly && ox == lx && (CF_VIZ & caveD[obj->fy][obj->fx].cflag) &&
@@ -12082,7 +12082,11 @@ py_look(y, x)
     MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
   } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
     obj = &entity_objD[c_ptr->oidx];
-    if (obj->tval != TV_INVIS_TRAP) {
+    if (obj->tval == TV_INVIS_TRAP) {
+      MSG("You see the dungeon floor.");
+    } else if (obj->tval == TV_SECRET_DOOR) {
+      MSG("You see a %s.", walls[0]);
+    } else {
       obj_desc(obj, obj->number);
       MSG("You see %s.", descD);
     }
