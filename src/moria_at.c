@@ -11074,7 +11074,7 @@ feature_menu()
   char* default_renderer = PC ? "opengl" : "opengles2";
 
   while (1) {
-    overlay_submodeD = 0;
+    overlay_submodeD = 'f';
     line = 0;
     BufMsg(overlay, "a) ascii gameplay renderer (%s)",
            opt[globalD.sprite == 0]);
