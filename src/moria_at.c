@@ -11148,6 +11148,13 @@ py_menu()
   }
   return 0;
 }
+int
+maybe_menu()
+{
+  char c = CLOBBER_MSG("Press escape twice for Advanced Game Options.");
+  if (c == ESCAPE) return py_menu();
+  return 0;
+}
 static void
 py_death()
 {
@@ -13749,7 +13756,7 @@ dungeon()
                 py_help();
                 break;
               case ESCAPE:
-                py_menu();
+                maybe_menu();
                 break;
               case 'e':
                 py_actuate(&y, &x, 'e');
