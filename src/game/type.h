@@ -298,6 +298,7 @@ struct globalS {
   char pc_renderer[16];
   uint32_t vsync;
   uint32_t sprite;
+  uint32_t hand_swap;
 };
 // Global data may be cached to disk
 // Does not mutate on a game reset

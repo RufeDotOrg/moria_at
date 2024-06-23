@@ -632,6 +632,13 @@ landscape_layout()
   return 0;
 }
 
+STATIC int
+swap_layout(SDL_Rect* rect, SDL_Rect* layout_rect)
+{
+  rect->x = layout_rect->w - rect->x - rect->w;
+  return 0;
+}
+
 // Rectangle
 
 // Shrinks w/h of subrect to fit alignrect
@@ -1786,6 +1793,12 @@ custom_orientation(orientation)
   } else {
     layout_rectD = display_rectD;
     text_fnD = 0;
+  }
+
+  if (globalD.hand_swap) {
+    for (int it = 0; it < GR_COUNT; ++it) {
+      swap_layout(&grectD[it], &layout_rectD);
+    }
   }
   return 0;
 }

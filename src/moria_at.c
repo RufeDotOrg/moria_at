@@ -11081,6 +11081,9 @@ feature_menu()
     line = 'g' - 'a';
     BufMsg(overlay, "g) gpu interface (%s)",
            globalD.pc_renderer[0] ? globalD.pc_renderer : default_renderer);
+    line = 'h' - 'a';
+    BufMsg(overlay, "h) hand-swap user interface (%s)",
+           opt[globalD.hand_swap != 0]);
     line = 'm' - 'a';
     BufMsg(overlay, "m) magnification scale (%d x)", 1 << globalD.zoom_factor);
     line = 'r' - 'a';
@@ -11096,6 +11099,10 @@ feature_menu()
     switch (c) {
       case 'a':
         INVERT(globalD.sprite);
+        break;
+      case 'h':
+        INVERT(globalD.hand_swap);
+        platformD.orientation(0);
         break;
       case 'm':
         globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
