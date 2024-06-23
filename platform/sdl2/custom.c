@@ -1391,10 +1391,13 @@ draw_menu(mode)
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
   if (is_text) rect_innerframe(grect);
-  if (is_death) {
-    AUSE(grect, GR_HISTORY);
-    if (ui_textureD) SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
-    rect_frame(grect, 1);
+
+  if (TOUCH) {
+    if (is_death) {
+      AUSE(grect, GR_HISTORY);
+      if (ui_textureD) SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
+      rect_frame(grect, 1);
+    }
   }
 }
 int

@@ -11063,7 +11063,8 @@ py_grave()
   TOMB("%s.", death_descD);
 
   if (PC) msg_hint(AP("(CTRL-z) (c/o/p/ESC)"));
-  return CLOBBER_MSG("You are dead, sorry!");
+  // Centering text; portrait mode+hand_swap will show message history top left
+  return CLOBBER_MSG("                You are dead, sorry!");
 }
 int
 feature_menu()
