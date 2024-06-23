@@ -257,9 +257,11 @@ display_resize(int dw, int dh)
   display_rectD.w = dw;
   display_rectD.h = dh;
 
-  // TBD: Review game utilization of viewport
-  // Disabled the push event in SDL that occurs on another thread
-  SDL_RenderSetViewport(rendererD, &(rect_t){0, 0, dw, dh});
+  if (!PC) {
+    // TBD: Review game utilization of viewport
+    // Disabled the push event in SDL that occurs on another thread
+    SDL_RenderSetViewport(rendererD, &(rect_t){0, 0, dw, dh});
+  }
 }
 
 STATIC int
