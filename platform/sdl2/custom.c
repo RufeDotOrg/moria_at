@@ -1767,7 +1767,7 @@ custom_predraw()
 int
 custom_orientation(orientation)
 {
-  platform_orientation(orientation);
+  orientation = platform_orientation(orientation);
 
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
     layout_rectD = (rect_t){0, 0, PORTRAIT_X, PORTRAIT_Y};

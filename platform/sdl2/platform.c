@@ -265,11 +265,22 @@ display_resize(int dw, int dh)
 }
 
 STATIC int
+orientation_default()
+{
+  if (LANDSCAPE) return SDL_ORIENTATION_LANDSCAPE;
+
+  if (PORTRAIT) return SDL_ORIENTATION_PORTRAIT;
+
+  int dw = display_rectD.w;
+  int dh = display_rectD.h;
+  return dw > dh ? SDL_ORIENTATION_LANDSCAPE : SDL_ORIENTATION_PORTRAIT;
+}
+
+STATIC int
 platform_orientation(orientation)
 {
   USE(display_rect);
-  if (LANDSCAPE) orientation = SDL_ORIENTATION_LANDSCAPE;
-  if (PORTRAIT) orientation = SDL_ORIENTATION_PORTRAIT;
+  if (!orientation) orientation = orientation_default();
 
   USE(layout_rect);
   USE(safe_rect);
@@ -325,7 +336,7 @@ platform_orientation(orientation)
   SDL_FRect view = {xpad, ypad, xuse, yuse};
   view_rectD = view;
 
-  return 0;
+  return orientation;
 }
 
 int
@@ -355,6 +366,8 @@ SDL_Event event;
       display_resize(dw, dh);
       int orientation =
           dw > dh ? SDL_ORIENTATION_LANDSCAPE : SDL_ORIENTATION_PORTRAIT;
+
+      if (LANDSCAPE || PORTRAIT) orientation = 0;
       platformD.orientation(orientation);
 
       // android 11 devices don't render the first frame (e.g. samsung A20)
