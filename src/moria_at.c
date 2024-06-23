@@ -11065,6 +11065,54 @@ py_grave()
   if (PC) msg_hint(AP("(CTRL-z) (c/o/p/v/ESC)"));
   return CLOBBER_MSG("You are dead, sorry!");
 }
+int
+feature_menu()
+{
+  char c;
+  int line;
+  char opt[2][4] = {"off", "on"};
+  char* default_renderer = PC ? "opengl" : "opengles2";
+
+  while (1) {
+    overlay_submodeD = 0;
+    line = 0;
+    BufMsg(overlay, "a) ascii gameplay renderer (%s)",
+           opt[globalD.sprite == 0]);
+    line = 'g' - 'a';
+    BufMsg(overlay, "g) gpu interface (%s)",
+           globalD.pc_renderer[0] ? globalD.pc_renderer : default_renderer);
+    line = 'm' - 'a';
+    BufMsg(overlay, "m) magnification scale (%d x)", 1 << globalD.zoom_factor);
+    line = 'r' - 'a';
+    BufMsg(overlay, "r) refresh / video sync (%s)", opt[globalD.vsync != 0]);
+    line = 'o' - 'a';
+    BufMsg(overlay, "o) orientation lock (%s)",
+           opt[globalD.orientation_lock != 0]);
+    line = 'v' - 'a';
+    BufMsg(overlay, "v) version info");
+
+    c = CLOBBER_MSG("feature menu");
+    if (is_ctrl(c)) break;
+    switch (c) {
+      case 'a':
+        INVERT(globalD.sprite);
+        break;
+      case 'm':
+        globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
+        break;
+      case 'r':
+        INVERT(globalD.vsync);
+        break;
+      case 'o':
+        INVERT(globalD.orientation_lock);
+        break;
+      case 'v':
+        show_version();
+        break;
+    }
+  }
+  return 0;
+}
 static void
 py_undo()
 {
@@ -11117,7 +11165,7 @@ py_menu()
     }
     BufMsg(overlay, "-");
     BufMsg(overlay, "d) Dungeon reset");
-    BufMsg(overlay, "-");
+    BufMsg(overlay, "e) Extra features");
     BufMsg(overlay, "-");
     BufMsg(overlay, "g) Game reset");
 
@@ -11137,6 +11185,10 @@ py_menu()
         // Disable midpoint resume explicitly
         input_resumeD = -1;
         longjmp(restartD, 1);
+        break;
+
+      case 'e':
+        feature_menu();
         break;
 
       case 'g':

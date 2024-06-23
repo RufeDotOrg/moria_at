@@ -184,3 +184,5 @@ DATA struct platformS platformD;
 #define V4i(v) V4(iptr(v))
 #define XY(v) (v).x, (v).y
 #define WH(r) (r).w, (r).h
+
+#define INVERT(x) x = !x;
