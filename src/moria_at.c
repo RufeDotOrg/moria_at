@@ -11062,7 +11062,7 @@ py_grave()
   death_descD[0] |= 0x20;
   TOMB("%s.", death_descD);
 
-  if (PC) msg_hint(AP("(CTRL-z) (c/o/p/v/ESC)"));
+  if (PC) msg_hint(AP("(CTRL-z) (c/o/p/ESC)"));
   return CLOBBER_MSG("You are dead, sorry!");
 }
 int
@@ -11224,8 +11224,6 @@ py_death()
       } else if (c == 'o') {
         // Observe game state at time of death
         c = draw(WAIT_ANY);
-      } else if (c == 'v') {
-        c = show_version();
       } else {
         c = py_grave();
       }
@@ -13857,9 +13855,6 @@ dungeon()
             case 's':
               msg_print("You search the area.");
               py_search(y, x);
-              break;
-            case 'v':
-              show_version();
               break;
             case '<':
               go_up();
