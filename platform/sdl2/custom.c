@@ -1046,7 +1046,7 @@ int
 map_draw()
 {
   rect_t dest_rect;
-  rect_t sprite_src;
+  rect_t src_rect;
   SDL_Point rp;
   MUSE(count, imagine);
   USE(sprite_texture);
@@ -1084,14 +1084,14 @@ map_draw()
 
       if (!imagine) {
         if (cridx && cridx <= AL(art_textureD)) {
-          sprite_src = (rect_t){
+          src_rect = (rect_t){
               XY(point_by_spriteid(art_textureD[cridx - 1])),
               ART_W,
               ART_H,
           };
           srct = sprite_texture;
         } else if (fidx && fidx <= AL(wart_textureD)) {
-          sprite_src = (rect_t){
+          src_rect = (rect_t){
               XY(point_by_spriteid(wart_textureD[fidx - 1])),
               ART_W,
               ART_H,
@@ -1099,7 +1099,7 @@ map_draw()
 
           srct = sprite_texture;
         } else if (tridx && tridx <= AL(tart_textureD)) {
-          sprite_src = (rect_t){
+          src_rect = (rect_t){
               XY(point_by_spriteid(tart_textureD[tridx - 1])),
               ART_W,
               ART_H,
@@ -1107,7 +1107,7 @@ map_draw()
 
           srct = sprite_texture;
         } else if (sym == '@') {
-          sprite_src = (rect_t){
+          src_rect = (rect_t){
               XY(point_by_spriteid(part_textureD[0 + (turnD) % 2])),
               ART_W,
               ART_H,
@@ -1118,9 +1118,11 @@ map_draw()
       }
 
       if (srct) {
-        srcr = &sprite_src;
+        srcr = &src_rect;
       } else {
         srct = font_texture_by_char(sym);
+        src_rect = font_rect_by_char(sym);
+        srcr = &src_rect;
       }
 
       SDL_SetRenderDrawColor(renderer, V4b(&lightingD[light]));
@@ -1165,90 +1167,90 @@ map_draw()
     dest_rect.x = rp.x * ART_W;
 
     if (tval - 1 < TV_MAX_PICK_UP || tval == TV_CHEST) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[2])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     } else if (tval == TV_GLYPH) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[3])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     } else if (tval == TV_VIS_TRAP) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[4])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     }
 
     if (countD.paralysis) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[5])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     }
     if (countD.poison) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[6])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     }
     if (maD[MA_SLOW]) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[7])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     }
     if (maD[MA_BLIND]) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[8])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     }
     if (countD.confusion) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[9])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     }
     if (maD[MA_FEAR]) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[10])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     }
     if (uD.food < PLAYER_FOOD_FAINT) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[12])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     } else if (uD.food <= PLAYER_FOOD_ALERT) {
-      sprite_src = (rect_t){
+      src_rect = (rect_t){
           XY(point_by_spriteid(part_textureD[11])),
           ART_W,
           ART_H,
       };
-      SDL_RenderCopy(renderer, sprite_texture, &sprite_src, &dest_rect);
+      SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     }
   }
   return 0;

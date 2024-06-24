@@ -61,7 +61,7 @@ STATIC point_t
 point_by_glyph(uint32_t index)
 {
   int col = index % FTEX_W;
-  int row = index / FTEX_H;
+  int row = index / FTEX_W;
   return (SDL_Point){
       col * FWIDTH,
       row * FHEIGHT,
@@ -79,25 +79,27 @@ glyph_init()
                                            FHEIGHT * FTEX_H, 0, texture_format);
   texture = 0;
   if (surface) {
+    MUSE(font, left_adjustment);
+
     uint8_t bpp = surface->format->BytesPerPixel;
     uint8_t* pixels = surface->pixels;
-    int64_t pitch = surface->pitch;
+    int pitch = surface->pitch;
     int color = -1;
     if (pixel_formatD) pixel_convert(&color);
 
     for (int i = START_GLYPH; i < END_GLYPH; ++i) {
-      uint64_t glyph_index = i - START_GLYPH;
+      int glyph_index = i - START_GLYPH;
       if (glyph_index < AL(fontD.glyph)) {
         point_t into = point_by_glyph(glyph_index);
         struct glyphS* glyph = &fontD.glyph[glyph_index];
         int ph, pw, ox, oy;
         ph = glyph->pixel_height;
         pw = glyph->pixel_width;
-        ox = into.x glyph->offset_x + fontD.left_adjustment;
+        ox = into.x + glyph->offset_x + left_adjustment;
         oy = into.y + glyph->offset_y;
 
         {
-          uint8_t* src = &fontD.bitmap[glyph->bitmapoffset];
+          uint8_t* src = &fontD.bitmap[glyph->bitmap_offset];
           for (int64_t row = 0; row < ph; ++row) {
             uint8_t* dst = pixels + (pitch * (oy + row)) + (bpp * ox);
             for (int64_t col = 0; col < pw; ++col) {
@@ -129,9 +131,7 @@ font_init()
 STATIC void
 font_color(color)
 {
-  for (int it = 0; it < AL(font_textureD); ++it) {
-    SDL_SetTextureColorMod(font_textureD[it], V3b(&color));
-  }
+  SDL_SetTextureColorMod(font_textureD, V3b(&color));
 }
 
 STATIC void
@@ -139,6 +139,7 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
                        const char* string, int len, SDL_Point origin)
 {
   USE(font_scale);
+  USE(font_texture);
   rect_t target_rect = {
       .x = origin.x,
       .y = origin.y,
@@ -150,8 +151,8 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
     char c = string[it];
     if (char_visible(c)) {
       uint64_t glyph_index = c - START_GLYPH;
-      struct SDL_Texture* texture = font_textureD[glyph_index];
-      SDL_RenderCopy(renderer, texture, NULL, &target_rect);
+      rect_t src = (rect_t){XY(point_by_glyph(glyph_index)), FWIDTH, FHEIGHT};
+      SDL_RenderCopy(renderer, font_texture, &src, &target_rect);
     }
     target_rect.x += FWIDTH * font_scale;
   }
@@ -160,30 +161,31 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
 STATIC void
 font_texture_alphamod(alpha)
 {
-  for (int it = 0; it < AL(font_textureD); ++it) {
-    SDL_SetTextureAlphaMod(font_textureD[it], alpha);
-  }
+  SDL_SetTextureAlphaMod(font_textureD, alpha);
 }
 
 STATIC void
 font_reset()
 {
-  for (int it = 0; it < AL(font_textureD); ++it) {
-    SDL_SetTextureColorMod(font_textureD[it], 255, 255, 255);
-    SDL_SetTextureAlphaMod(font_textureD[it], FALPHA);
-  }
+  SDL_SetTextureColorMod(font_textureD, 255, 255, 255);
+  SDL_SetTextureAlphaMod(font_textureD, FALPHA);
 }
 
+// TBD: maybe '.' should show?
 STATIC SDL_Texture*
 font_texture_by_char(char c)
 {
-  SDL_Texture* t = 0;
-  if (c == '.') return 0;
+  if (char_visible(c) && c != '.') return font_textureD;
+  return 0;
+}
+
+STATIC rect_t
+font_rect_by_char(char c)
+{
   if (char_visible(c)) {
-    uint64_t glyph_index = c - START_GLYPH;
-    t = font_textureD[glyph_index];
+    return (rect_t){XY(point_by_glyph(c - START_GLYPH)), FWIDTH, FHEIGHT};
   }
-  return t;
+  return (rect_t){0};
 }
 
 #define FONT 1
