@@ -1068,11 +1068,11 @@ map_draw()
 
       struct vizS* viz = &vizD[row][col];
       char sym = viz->sym;
-      uint64_t fidx = viz->floor;
-      uint64_t light = viz->light;
-      uint64_t dim = viz->dim;
-      uint64_t cridx = viz->cr;
-      uint64_t tridx = viz->tr;
+      int fidx = viz->floor;
+      int light = viz->light;
+      int dim = viz->dim;
+      int cridx = viz->cr;
+      int tridx = viz->tr;
 
       // Art priority creature, wall, treasure, fallback to symmap ASCII
       SDL_Texture* srct = 0;
@@ -1085,19 +1085,19 @@ map_draw()
       if (sprite_texture) {
         srct = sprite_texture;
         srcr = &src_rect;
-        if (cridx && cridx <= AL(art_textureD)) {
+        if (cridx) {
           src_rect = (rect_t){
               XY(point_by_spriteid(art_textureD[cridx - 1])),
               ART_W,
               ART_H,
           };
-        } else if (fidx && fidx <= AL(wart_textureD)) {
+        } else if (fidx) {
           src_rect = (rect_t){
               XY(point_by_spriteid(wart_textureD[fidx - 1])),
               ART_W,
               ART_H,
           };
-        } else if (tridx && tridx <= AL(tart_textureD)) {
+        } else if (tridx) {
           src_rect = (rect_t){
               XY(point_by_spriteid(tart_textureD[tridx - 1])),
               ART_W,
