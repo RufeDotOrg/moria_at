@@ -6518,11 +6518,6 @@ py_inven_init()
       invenD[iidx++] = obj->id;
   }
 }
-static void*
-ptr_xor(void* a, void* b)
-{
-  return (void*)((uint64_t)a ^ (uint64_t)b);
-}
 void sort(array, len) void* array;
 {
   int i, j;

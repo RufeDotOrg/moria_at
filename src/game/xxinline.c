@@ -85,3 +85,8 @@ iptr(void* ptr)
 {
   return ptr;
 }
+XX void*
+ptr_xor(void* a, void* b)
+{
+  return (void*)XOR(a, b);
+}

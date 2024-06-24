@@ -59,6 +59,7 @@ typedef int (*fn)();
 #define CLAMP(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
+#define XOR(x, y) ((uint64_t)(x) ^ (uint64_t)(y))
 #define OF2(x) (((x - 1) & x) == 0)
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
