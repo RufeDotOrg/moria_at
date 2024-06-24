@@ -113,7 +113,7 @@ glyph_init()
     }
 
     texture = SDL_CreateTextureFromSurface(rendererD, surface);
-    if (texture) SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
+    // SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
     SDL_FreeSurface(surface);
   }
 
@@ -167,25 +167,16 @@ font_texture_alphamod(alpha)
 STATIC void
 font_reset()
 {
-  SDL_SetTextureColorMod(font_textureD, 255, 255, 255);
-  SDL_SetTextureAlphaMod(font_textureD, FALPHA);
+  USE(font_texture);
+  SDL_SetTextureColorMod(font_texture, 255, 255, 255);
+  SDL_SetTextureAlphaMod(font_texture, FALPHA);
 }
 
-// TBD: maybe '.' should show?
-STATIC SDL_Texture*
-font_texture_by_char(char c)
-{
-  if (char_visible(c) && c != '.') return font_textureD;
-  return 0;
-}
-
+// precondition: char_visible(c)
 STATIC rect_t
 font_rect_by_char(char c)
 {
-  if (char_visible(c)) {
-    return (rect_t){XY(point_by_glyph(c - START_GLYPH)), FWIDTH, FHEIGHT};
-  }
-  return (rect_t){0};
+  return (rect_t){XY(point_by_glyph(c - START_GLYPH)), FWIDTH, FHEIGHT};
 }
 
 #define FONT 1

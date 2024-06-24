@@ -1048,8 +1048,8 @@ map_draw()
   rect_t dest_rect;
   rect_t src_rect;
   SDL_Point rp;
-  MUSE(count, imagine);
   USE(sprite_texture);
+  USE(font_texture);
   USE(renderer);
 
   SDL_SetRenderTarget(renderer, map_textureD);
@@ -1057,7 +1057,7 @@ map_draw()
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
   // Ascii renderer only
-  if (imagine || !globalD.sprite) sprite_texture = 0;
+  if (countD.imagine || !globalD.sprite) sprite_texture = 0;
 
   dest_rect.w = ART_W;
   dest_rect.h = ART_H;
@@ -1082,47 +1082,40 @@ map_draw()
         rp = (SDL_Point){col, row};
       }
 
-      if (!imagine) {
+      if (sprite_texture) {
+        srct = sprite_texture;
+        srcr = &src_rect;
         if (cridx && cridx <= AL(art_textureD)) {
           src_rect = (rect_t){
               XY(point_by_spriteid(art_textureD[cridx - 1])),
               ART_W,
               ART_H,
           };
-          srct = sprite_texture;
         } else if (fidx && fidx <= AL(wart_textureD)) {
           src_rect = (rect_t){
               XY(point_by_spriteid(wart_textureD[fidx - 1])),
               ART_W,
               ART_H,
           };
-
-          srct = sprite_texture;
         } else if (tridx && tridx <= AL(tart_textureD)) {
           src_rect = (rect_t){
               XY(point_by_spriteid(tart_textureD[tridx - 1])),
               ART_W,
               ART_H,
           };
-
-          srct = sprite_texture;
         } else if (sym == '@') {
           src_rect = (rect_t){
-              XY(point_by_spriteid(part_textureD[0 + (turnD) % 2])),
+              XY(point_by_spriteid(part_textureD[0 + turnD % 2])),
               ART_W,
               ART_H,
           };
-
-          srct = sprite_texture;
+        } else {
+          srct = 0;
         }
-      }
-
-      if (srct) {
-        srcr = &src_rect;
-      } else {
-        srct = font_texture_by_char(sym);
+      } else if (sym > ' ') {
         src_rect = font_rect_by_char(sym);
         srcr = &src_rect;
+        srct = font_texture;
       }
 
       SDL_SetRenderDrawColor(renderer, V4b(&lightingD[light]));
