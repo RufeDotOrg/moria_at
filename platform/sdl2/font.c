@@ -4,6 +4,9 @@
 enum { FHEIGHT = 32 };
 enum { FWIDTH = 16 };
 enum { FALPHA = 225 };
+// texture width/height
+enum { FTEX_W = 16 };
+enum { FTEX_H = 8 };
 
 #define MAX_FOOTPRINT (32 * 1024)
 #define START_GLYPH 0x21
@@ -40,7 +43,7 @@ struct fontS {
   uint64_t bitmap_used;
 };
 DATA struct fontS fontD;
-DATA struct SDL_Texture* font_textureD[MAX_GLYPH];
+DATA struct SDL_Texture* font_textureD;
 DATA int font_scaleD = 1;
 
 STATIC int
@@ -54,56 +57,67 @@ font_load()
   return rc == 0;
 }
 
+STATIC point_t
+point_by_glyph(uint32_t index)
+{
+  int col = index % FTEX_W;
+  int row = index / FTEX_H;
+  return (SDL_Point){
+      col * FWIDTH,
+      row * FHEIGHT,
+  };
+}
+
 STATIC int
 glyph_init()
 {
-  USE(renderer);
   USE(texture_format);
 
   struct SDL_Surface* surface;
-  surface = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, FWIDTH, FHEIGHT, 0,
-                                           texture_format);
+  struct SDL_Texture* texture;
+  surface = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, FWIDTH * FTEX_W,
+                                           FHEIGHT * FTEX_H, 0, texture_format);
+  texture = 0;
   if (surface) {
     uint8_t bpp = surface->format->BytesPerPixel;
     uint8_t* pixels = surface->pixels;
     int64_t pitch = surface->pitch;
+    int color = -1;
+    if (pixel_formatD) pixel_convert(&color);
+
     for (int i = START_GLYPH; i < END_GLYPH; ++i) {
       uint64_t glyph_index = i - START_GLYPH;
-      memset(surface->pixels, 0, FHEIGHT * pitch);
       if (glyph_index < AL(fontD.glyph)) {
+        point_t into = point_by_glyph(glyph_index);
         struct glyphS* glyph = &fontD.glyph[glyph_index];
-        int ph, pw, oy, ox;
+        int ph, pw, ox, oy;
         ph = glyph->pixel_height;
         pw = glyph->pixel_width;
-        oy = glyph->offset_y;
-        ox = glyph->offset_x + fontD.left_adjustment;
+        ox = into.x glyph->offset_x + fontD.left_adjustment;
+        oy = into.y + glyph->offset_y;
 
         {
-          uint8_t* src = &fontD.bitmap[glyph->bitmap_offset];
+          uint8_t* src = &fontD.bitmap[glyph->bitmapoffset];
           for (int64_t row = 0; row < ph; ++row) {
             uint8_t* dst = pixels + (pitch * (oy + row)) + (bpp * ox);
             for (int64_t col = 0; col < pw; ++col) {
-              if (*src) memset(dst, -1, bpp);
+              if (*src) memset(dst, color, bpp);
               src += 1;
               dst += bpp;
             }
           }
         }
-
-        // Glyph BlendMode is SDL_BLENDMODE_BLEND
-        font_textureD[glyph_index] =
-            SDL_CreateTextureFromSurface(renderer, surface);
       }
     }
+
+    texture = SDL_CreateTextureFromSurface(rendererD, surface);
+    if (texture) SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
     SDL_FreeSurface(surface);
   }
 
-  for (int i = START_GLYPH; i < END_GLYPH; ++i) {
-    uint64_t glyph_index = i - START_GLYPH;
-    if (font_textureD[glyph_index] == 0) return 0;
-  }
+  font_textureD = texture;
 
-  return 1;
+  return texture != 0;
 }
 
 int

@@ -300,6 +300,7 @@ struct globalS {
   uint32_t sprite;
   uint32_t hand_swap;
 };
+_Static_assert(sizeof(struct globalS) <= 64, "keep global data small!");
 // Global data may be cached to disk
 // Does not mutate on a game reset
 DATA struct globalS globalD;
