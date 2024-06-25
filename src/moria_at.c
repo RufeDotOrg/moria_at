@@ -11104,7 +11104,7 @@ feature_menu()
         globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
         break;
       case 'r':
-        INVERT(globalD.vsync);
+        platformD.vsync(INVERT(globalD.vsync));
         break;
       case 'o':
         INVERT(globalD.orientation_lock);

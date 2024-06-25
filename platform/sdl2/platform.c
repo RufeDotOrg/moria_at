@@ -339,6 +339,13 @@ platform_orientation(orientation)
   return orientation;
 }
 
+// 0 on success
+STATIC int
+platform_vsync(vsync)
+{
+  return SDL_RenderSetVSync(rendererD, vsync);
+}
+
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -498,6 +505,7 @@ platform_init()
   platformD.postgame = platform_postgame;
   platformD.draw = platform_draw;
   platformD.orientation = platform_orientation;
+  platformD.vsync = platform_vsync;
   if (platformD.seed == noop) platformD.seed = platform_random;
 
   return 0;

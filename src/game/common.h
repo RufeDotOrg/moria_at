@@ -159,6 +159,7 @@ struct platformS {
   fn predraw;
   fn draw;
   fn orientation;
+  fn vsync;
   // rng
   fn seed;
   // input
@@ -186,4 +187,4 @@ DATA struct platformS platformD;
 #define XY(v) (v).x, (v).y
 #define WH(r) (r).w, (r).h
 
-#define INVERT(x) x = !x;
+#define INVERT(x) x = !x
