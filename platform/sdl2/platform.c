@@ -84,12 +84,15 @@ enum { LANDSCAPE = 0 };
 
 // render.c
 DATA struct SDL_Window* windowD;
-DATA int refresh_rateD;
 DATA rect_t display_rectD;
 DATA rect_t safe_rectD;
 DATA struct SDL_Renderer* rendererD;
 DATA uint32_t texture_formatD;
 DATA SDL_PixelFormat* pixel_formatD;
+
+// Claimed vs. actualized refresh rate
+DATA int refresh_rateD;
+DATA int vsync_rateD;
 
 DATA SDL_Texture* portraitD;
 DATA SDL_Texture* landscapeD;
@@ -343,7 +346,20 @@ platform_orientation(orientation)
 STATIC int
 platform_vsync(vsync)
 {
-  return SDL_RenderSetVSync(rendererD, vsync);
+  int ret = SDL_RenderSetVSync(rendererD, vsync);
+  uint64_t elapsed[8];
+  uint64_t begin = SDL_GetTicks64();
+  for (int it = 0; it < 8; ++it) {
+    platform_draw();
+    elapsed[it] = SDL_GetTicks64() - begin;
+  }
+  // for (int it = 0; it < 8; ++it) {
+  //   printf("%ju elapsed ms\n", elapsed[it]);
+  // }
+  vsync_rateD = 8 * 1000.0 / CLAMP(elapsed[8 - 1], 8 * 1, 8 * 1000);
+  // Log("real refresh rate: %d | stated refresh rate %d", vsync_rateD,
+  //     refresh_rateD);
+  return ret;
 }
 
 int

@@ -11083,7 +11083,13 @@ feature_menu()
     line = 'm' - 'a';
     BufMsg(overlay, "m) magnification scale (%d x)", 1 << globalD.zoom_factor);
     line = 'r' - 'a';
-    BufMsg(overlay, "r) refresh / video sync (%s)", opt[globalD.vsync != 0]);
+    if (!vsync_rateD) {
+      BufMsg(overlay, "r) refresh / video sync (%s)", opt[globalD.vsync != 0]);
+    } else {
+      BufMsg(overlay,
+             "r) refresh / video sync (%s) | %d fps of %d display claimed",
+             opt[globalD.vsync != 0], vsync_rateD, refresh_rateD);
+    }
     line = 'o' - 'a';
     BufMsg(overlay, "o) orientation lock (%s)",
            opt[globalD.orientation_lock != 0]);

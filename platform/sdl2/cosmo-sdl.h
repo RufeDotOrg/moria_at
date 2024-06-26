@@ -17,6 +17,7 @@
 #define SDL_GetRenderDriverInfo abi_SDL_GetRenderDriverInfo
 #define SDL_GetRendererInfo abi_SDL_GetRendererInfo
 #define SDL_GetRendererOutputSize abi_SDL_GetRendererOutputSize
+#define SDL_GetTicks64 abi_SDL_GetTicks64
 #define SDL_GetWindowDisplayIndex abi_SDL_GetWindowDisplayIndex
 #define SDL_GetWindowPixelFormat abi_SDL_GetWindowPixelFormat
 #define SDL_GetWindowSize abi_SDL_GetWindowSize
