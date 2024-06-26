@@ -32,6 +32,7 @@
 #define SDL_RenderFlush abi_SDL_RenderFlush
 #define SDL_RenderPresent abi_SDL_RenderPresent
 #define SDL_RenderSetViewport abi_SDL_RenderSetViewport
+#define SDL_RenderSetVSync abi_SDL_RenderSetVSync
 #define SDL_RWclose abi_SDL_RWclose
 #define SDL_RWFromFile abi_SDL_RWFromFile
 #define SDL_RWread abi_SDL_RWread
