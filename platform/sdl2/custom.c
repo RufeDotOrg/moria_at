@@ -1121,7 +1121,9 @@ map_draw()
         } else {
           srct = 0;
         }
-      } else if (sym > ' ') {
+      }
+
+      if (!srct && sym > ' ') {
         src_rect = font_rect_by_char(sym);
         srcr = &src_rect;
         srct = font_texture;
