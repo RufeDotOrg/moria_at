@@ -442,10 +442,14 @@ custom_pregame()
 
         SDL_SetWindowIcon(windowD, s);
         SDL_FreeSurface(s);
+        Log("SetWindowIcon OK");
       }
     }
   }
-  if (PC && !TOUCH) SDL_ShowCursor(SDL_DISABLE);
+  if (PC && !TOUCH) {
+    Log("ShowCursor -> disable");
+    SDL_ShowCursor(SDL_DISABLE);
+  }
 
   if (TOUCH) ui_init();
   if (TOUCH) tp_init();
@@ -463,16 +467,21 @@ custom_pregame()
 
   text_textureD = SDL_CreateTexture(
       rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET, 2 * 1024, 2 * 1024);
+  Log("texture creation complete: %d OK",
+      (mmtextureD != 0) + (map_textureD != 0) + (text_textureD != 0));
+
+  if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
+  Log("SetWindowResizable");
 
   font_reset();
 
   // Hardware dependent "risky" initialization complete!
   platform_phaseD = PLATFORM_GAME;
+  Log("initialization complete");
 
   // Migration code
   if (platformD.load(-1, 0)) fs_upgrade();
 
-  if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
   return 0;
 }
 
