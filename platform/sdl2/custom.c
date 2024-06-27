@@ -390,7 +390,7 @@ void* in;
 int
 custom_pregame()
 {
-  platform_phaseD = PLATFORM_PREGAME;
+  if (COSMO_CRASH) platform_phase(PLATFORM_PREGAME);
   if (DISK && !disk_init()) return 1;
 
   platform_pregame();
@@ -474,7 +474,7 @@ custom_pregame()
   font_reset();
 
   // Hardware dependent "risky" initialization complete!
-  platform_phaseD = PLATFORM_GAME;
+  if (COSMO_CRASH) platform_phase(PLATFORM_GAME);
   Log("initialization complete");
 
   // Migration code
@@ -487,7 +487,7 @@ int
 custom_postgame(may_exit)
 {
   // Postgame activities should not be called from the crash handler
-  platform_phaseD = PLATFORM_POSTGAME;
+  if (COSMO_CRASH) platform_phase(PLATFORM_POSTGAME);
 
   if (DISK) disk_postgame(may_exit);
   return platform_postgame(may_exit);

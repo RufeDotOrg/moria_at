@@ -26,6 +26,12 @@ static uint16_t
                                                             void*, uint32_t*);
 
 GLOBAL int platform_phaseD;
+STATIC int
+platform_phase(p)
+{
+  platform_phaseD = p;
+  return 0;
+}
 
 static void
 WindowsCrashReport(ucontext_t* ctx)
@@ -149,4 +155,4 @@ crash_init()
   InstallCrashHandler(SIGABRT, SA_RESETHAND);
   InstallCrashHandler(SIGSEGV, SA_RESETHAND | SA_ONSTACK);
 }
-#define MOD_CRASH 1
+#define COSMO_CRASH 1

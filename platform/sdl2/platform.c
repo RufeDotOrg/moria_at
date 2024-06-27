@@ -23,15 +23,14 @@
 #define rect_t SDL_Rect
 #define point_t SDL_Point
 
+enum { COSMO_CRASH = 0 };
 #ifdef __FATCOSMOCC__
-enum { GUI = 1 };
 #include <cosmo.h>
 #include <dlfcn.h>
 #include <libc/nt/dll.h>  // SDL OverrideSO
-void* libD;
-#include "cosmo-sdl.h"
-enum { MOD_CRASH = 0 };
+GLOBAL void* libD;
 #include "cosmo-crash.c"
+#include "cosmo-sdl.h"
 #endif
 
 #include "third_party/zlib/puff.c"
