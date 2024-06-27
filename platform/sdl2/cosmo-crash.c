@@ -25,7 +25,7 @@ static uint16_t
     __attribute__((__ms_abi__)) (*RtlCaptureStackBackTrace)(uint32_t, uint32_t,
                                                             void*, uint32_t*);
 
-extern GLOBAL int platform_phaseD;
+GLOBAL int platform_phaseD;
 
 static void
 WindowsCrashReport(ucontext_t* ctx)
