@@ -106,6 +106,9 @@ DATA char dun_descD[16];
 DATA int ylookD;
 DATA int xlookD;
 
+// Rendering / visualization extensions
+DATA fn viz_hookD;
+
 // Known refers to stackable treasures that are instanced
 // Distinct from identification which is PER object
 GAME uint8_t knownD[7][MAX_SUBVAL];

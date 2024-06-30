@@ -1158,6 +1158,20 @@ map_draw()
         SDL_SetRenderDrawColor(renderer, V4b(&whiteD));
         SDL_RenderDrawRect(renderer, &dest_rect);
       }
+      if (viz->magick) {
+        if (sprite_texture) {
+          srct = sprite_texture;
+          src_rect = (rect_t){
+              XY(point_by_spriteid(tart_textureD[43 - 1])),
+              ART_W,
+              ART_H,
+          };
+        } else {
+          srct = font_texture;
+          src_rect = font_rect_by_char('*');
+        }
+        SDL_RenderCopy(renderer, srct, &src_rect, &dest_rect);
+      }
     }
   }
 

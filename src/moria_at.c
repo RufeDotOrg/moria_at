@@ -23,6 +23,10 @@ DATA int find_prevdirD;
 // end find state
 DATA jmp_buf restartD;
 DATA int drop_modeD;
+// Magick
+DATA int magick_distD;
+DATA point_t magick_locD;
+DATA int magick_hituD;
 #define MSG(x, ...)                                             \
   {                                                             \
     char vtype[STRLEN_MSG + 1];                                 \
@@ -73,6 +77,7 @@ read_input()
   do {
     c = platformD.readansi();
   } while (c == 0);
+  if (c != CTRL('d')) viz_hookD = 0;
   return c;
 }
 
@@ -408,7 +413,40 @@ replay_stop()
   if (input_record_readD < input_record_writeD)
     input_record_readD = input_record_writeD;
 }
+int
+viz_magick()
+{
+  int rmin = panelD.panel_row_min;
+  int rmax = panelD.panel_row_max;
+  int cmin = panelD.panel_col_min;
+  int cmax = panelD.panel_col_max;
+  int magick_dist = magick_distD;
+  MUSE(magick_loc, x);
+  MUSE(magick_loc, y);
+  USE(magick_hitu);
 
+  if (x >= cmin && x < cmax && y >= rmin && y < rmax) {
+    int ox = x - cmin;
+    int oy = y - rmin;
+
+    for (int i = oy - magick_dist; i <= oy + magick_dist; ++i) {
+      for (int j = ox - magick_dist; j <= ox + magick_dist; ++j) {
+        int ay = rmin + i;
+        int ax = cmin + j;
+        if (in_bounds(ay, ax) && distance(y, x, ay, ax) <= magick_dist &&
+            los(y, x, ay, ax)) {
+          if (caveD[ay][ax].fval <= MAX_FLOOR) {
+            if (magick_hitu || ay != uD.y || ax != uD.x) {
+              vizD[i][j].magick = 43;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  return 0;
+}
 enum { WHITESPACE = 0x20202020 };
 #define WAIT_NONE 0
 #define WAIT_ANY -1
@@ -434,6 +472,8 @@ draw(wait)
     affect_update();
 
     platformD.predraw();
+
+    if (viz_hookD) viz_hookD();
   }
 
   while (flush_draw) {
@@ -7018,6 +7058,13 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         descD[0] = descD[0] | 0x20;
         MSG("The %s strikes %s.", bolt_typ, descD);
 
+        {
+          viz_hookD = viz_magick;
+          magick_distD = 0;
+          magick_locD = (point_t){x, y};
+          magick_hituD = 0;
+        }
+
         // draw with temporary visibility
         msg_pause();
         if (mod_light) c_ptr->cflag ^= CF_TEMP_LIGHT;
@@ -7039,10 +7086,11 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
     }
   } while (!flag);
 }
+enum { FIRE_DIST = 2 };
 void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
 {
   int i, j;
-  int dam, max_dis, thit, tkill;
+  int dam, thit, tkill;
   int oldy, oldx, dist, flag, harm_type;
   uint32_t weapon_type;
   int (*destroy)();
@@ -7052,7 +7100,6 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
 
   thit = 0;
   tkill = 0;
-  max_dis = 2;
   get_flags(typ, &weapon_type, &harm_type, &destroy);
   flag = FALSE;
   oldy = y;
@@ -7071,11 +7118,19 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
           y = oldy;
           x = oldx;
         }
+
+        {
+          viz_hookD = viz_magick;
+          magick_distD = FIRE_DIST;
+          magick_locD = (point_t){x, y};
+          magick_hituD = 0;
+        }
+
         /* The ball hits and explodes.  	     */
         /* The explosion.  		     */
-        for (i = y - max_dis; i <= y + max_dis; i++)
-          for (j = x - max_dis; j <= x + max_dis; j++)
-            if (in_bounds(i, j) && (distance(y, x, i, j) <= max_dis) &&
+        for (i = y - FIRE_DIST; i <= y + FIRE_DIST; i++)
+          for (j = x - FIRE_DIST; j <= x + FIRE_DIST; j++)
+            if (in_bounds(i, j) && (distance(y, x, i, j) <= FIRE_DIST) &&
                 los(y, x, i, j)) {
               c_ptr = &caveD[i][j];
               if ((c_ptr->oidx) && (*destroy)(&entity_objD[c_ptr->oidx])) {
@@ -12444,6 +12499,14 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
 
   y = uD.y;
   x = uD.x;
+
+  {
+    viz_hookD = viz_magick;
+    magick_distD = 2;
+    magick_locD = (point_t){x, y};
+    magick_hituD = 1;
+  }
+
   cdis = distance(y, x, fy, fx);
   reduce = 0;
   while (cdis) reduce = bit_pos(&cdis);
@@ -12508,6 +12571,31 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   } else {
     MSG("[-%d hp]", dam);
   }
+
+  char* name = "";
+  switch (breath) {
+    case GF_LIGHTNING:
+      dam = light_dam(dam_hp);
+      name = "lightning";
+      break;
+    case GF_POISON_GAS:
+      dam = poison_gas(dam_hp);
+      name = "gas";
+      break;
+    case GF_ACID:
+      dam = acid_dam(dam_hp, TRUE);
+      name = "acid";
+      break;
+    case GF_FROST:
+      dam = frost_dam(dam_hp);
+      name = "frost";
+      break;
+    case GF_FIRE:
+      dam = fire_dam(dam_hp);
+      name = "fire";
+      break;
+  }
+  MSG("%s breathes %s.", descD, name);
 }
 static void mon_try_multiply(mon) struct monS* mon;
 {
@@ -12670,31 +12758,26 @@ mon_try_spell(midx, cdis)
           break;
         case 20: /*Breath Light */
           if (HACK) MSG("[%d]", mon->hp);
-          MSG("%s breathes lightning.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_LIGHTNING,
                          (mon->hp >> (1 + maxlev)));
           break;
         case 21: /*Breath Gas   */
           if (HACK) MSG("[%d]", mon->hp);
-          MSG("%s breathes gas.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_POISON_GAS,
                          (mon->hp >> (1 + maxlev)));
           break;
         case 22: /*Breath Acid   */
           if (HACK) MSG("[%d]", mon->hp);
-          MSG("%s breathes acid.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_ACID,
                          (mon->hp >> (1 + maxlev)));
           break;
         case 23: /*Breath Frost */
           if (HACK) MSG("[%d]", mon->hp);
-          MSG("%s breathes frost.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_FROST,
                          (mon->hp >> (1 + maxlev)));
           break;
         case 24: /*Breath Fire   */
           if (HACK) MSG("[%d]", mon->hp);
-          MSG("%s breathes fire.", descD);
           mon_breath_dam(midx, mon->fy, mon->fx, GF_FIRE,
                          (mon->hp >> (1 + maxlev)));
           break;
@@ -13938,7 +14021,10 @@ dungeon()
                 earthquake();
               } break;
               case CTRL('f'): {
-                create_food(y, x);
+                viz_hookD = viz_magick;
+                magick_distD = 2;
+                magick_locD = (point_t){uD.x, uD.y};
+                magick_hituD = 0;
               } break;
               case CTRL('h'):
                 uD.chp = uD.mhp;
