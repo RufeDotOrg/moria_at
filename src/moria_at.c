@@ -10942,6 +10942,7 @@ py_saveslot_select()
   uint8_t iidx;
   int has_external = (platformD.saveex != noop);
   int using_external = 0;
+  int using_selection = (platformD.selection != noop);
 
   // Disable midpoint resume explicitly
   input_resumeD = -1;
@@ -11002,7 +11003,8 @@ py_saveslot_select()
     // Deletion
     if (c == ESCAPE) {
       int srow, scol;
-      if (platformD.selection(&scol, &srow)) {
+      if (using_selection) {
+        platformD.selection(&scol, &srow);
         if (srow >= 0 && srow < AL(classD)) {
           if (summary_saveslot_deletion(&summary[srow], srow, using_external))
             extern_count -= (using_external);
