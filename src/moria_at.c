@@ -9693,6 +9693,11 @@ int* x_ptr;
   int cmana, sptype, spmask, spidx, target;
   struct spellS* spelltable;
 
+  if (statD.cur_stat[A_CON] == 3) {
+    msg_print("Your constitution is too weak for spell casting.");
+    return;
+  }
+
   obj = obj_get(invenD[iidx]);
   flags = obj->flags;
   if (py_affect(MA_BLIND))
@@ -9739,14 +9744,10 @@ int* x_ptr;
         }
 
         if (cmana < spelltable[spidx].spmana) {
-          if (statD.cur_stat[A_CON] > 3) {
-            uD.cmana = 0;
-            uD.cmana_frac = 0;
-            msg_print("Your low mana has damaged your health!");
-            dec_stat(A_CON);
-          } else {
-            msg_print("You are out of mana and your body is weak.");
-          }
+          uD.cmana = 0;
+          uD.cmana_frac = 0;
+          dec_stat(A_CON);
+          msg_print("Your low mana has damaged your health!");
         } else {
           uD.cmana -= spelltable[spidx].spmana;
         }
@@ -9911,6 +9912,11 @@ int* x_ptr;
   int cmana, sptype, spmask, spidx, target;
   struct spellS* spelltable;
 
+  if (statD.cur_stat[A_CON] == 3) {
+    msg_print("Your constitution is too weak for prayer.");
+    return;
+  }
+
   obj = obj_get(invenD[iidx]);
   flags = obj->flags;
   if (py_affect(MA_BLIND))
@@ -9957,14 +9963,10 @@ int* x_ptr;
         }
 
         if (cmana < spelltable[spidx].spmana) {
-          if (statD.cur_stat[A_CON] > 3) {
-            uD.cmana = 0;
-            uD.cmana_frac = 0;
-            msg_print("Your low mana has damaged your health!");
-            dec_stat(A_CON);
-          } else {
-            msg_print("You are out of mana and your body is weak.");
-          }
+          uD.cmana = 0;
+          uD.cmana_frac = 0;
+          dec_stat(A_CON);
+          msg_print("Your low mana has damaged your health!");
         } else {
           uD.cmana -= spelltable[spidx].spmana;
         }
