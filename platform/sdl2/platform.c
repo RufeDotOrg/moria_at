@@ -155,6 +155,14 @@ render_init()
       SDL_GetCurrentDisplayMode(it, &mode);
       Log(" -> Refresh Rate %d\n", mode.refresh_rate);
       refresh_rateD = mode.refresh_rate;
+
+      if (PC) {
+        SDL_Event event;
+        event.window.event = SDL_WINDOWEVENT_RESIZED;
+        event.window.data1 = r.w;
+        event.window.data2 = r.h;
+        sdl_window_event(event);
+      }
     }
   }
 
@@ -392,8 +400,9 @@ SDL_Event event;
       if (LANDSCAPE || PORTRAIT) orientation = 0;
       platformD.orientation(orientation);
 
+      // orientation may be set before renderer creation
       // android 11 devices don't render the first frame (e.g. samsung A20)
-      if (ANDROID) SDL_RenderPresent(rendererD);
+      if (ANDROID && rendererD) SDL_RenderPresent(rendererD);
 
       return CTRL('d');
     }
@@ -491,7 +500,7 @@ platform_pregame()
     sdl_window_event(event);
   }
 
-  while (display_rectD.w == 0) {
+  while (!PC && display_rectD.w == 0) {
     SDL_Event event;
     if (SDL_PollEvent(&event)) {
       if (event.type == SDL_WINDOWEVENT) {
