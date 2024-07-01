@@ -9472,10 +9472,12 @@ gain_spell(spidx)
   return 0;
 }
 int
-spell_prompt(spidx)
+spell_prompt(spidx, low_mana)
 {
   int target;
   char tmp[STRLEN_MSG + 1];
+
+  if (low_mana) msg_hint(AP("(LOW MANA)"));
 
   target = 0;
   switch (spidx + 1) {
@@ -9502,6 +9504,13 @@ spell_prompt(spidx)
     case 18:
     case 26:
       target = inven_choice("Recharge which item?", "*");
+      break;
+    default:
+      if (low_mana) {
+        char c = CLOBBER_MSG("Are you sure you want to cast %s?",
+                             spell_nameD[spidx]);
+        if (c == ESCAPE || c == 'a') target = -1;
+      }
       break;
   }
 
@@ -9711,7 +9720,7 @@ int* x_ptr;
       if (spidx < 0) return;
 
       if ((1 << spidx) & spmask) {
-        target = spell_prompt(spidx);
+        target = spell_prompt(spidx, cmana < spelltable[spidx].spmana);
         if (target < 0) return;
 
         // Spell Committed
@@ -9729,7 +9738,7 @@ int* x_ptr;
           }
         }
 
-        if (uD.cmana < spelltable[spidx].spmana) {
+        if (cmana < spelltable[spidx].spmana) {
           if (statD.cur_stat[A_CON] > 3) {
             uD.cmana = 0;
             uD.cmana_frac = 0;
@@ -9755,21 +9764,30 @@ int* x_ptr;
   }
 }
 int
-prayer_prompt(pridx)
+prayer_prompt(pridx, low_mana)
 {
-  int dir;
+  int target;
   char tmp[STRLEN_MSG + 1];
 
-  dir = 0;
+  if (low_mana) msg_hint(AP("(LOW MANA)"));
+
+  target = 0;
   switch (pridx + 1) {
     case 9:
     case 18:
       snprintf(tmp, AL(tmp), "Which direction will you incant %s?",
                prayer_nameD[pridx]);
-      if (!get_dir(tmp, &dir)) dir = -1;
+      if (!get_dir(tmp, &target)) target = -1;
+      break;
+    default:
+      if (low_mana) {
+        char c = CLOBBER_MSG("Are you sure you want to incant %s?",
+                             prayer_nameD[pridx]);
+        if (c == ESCAPE || c == 'a') target = -1;
+      }
       break;
   }
-  return dir;
+  return target;
 }
 int
 prayer_dir_target(pridx, y_ptr, x_ptr, dir)
@@ -9920,7 +9938,7 @@ int* x_ptr;
       if (spidx < 0) return;
 
       if ((1 << spidx) & spmask) {
-        target = prayer_prompt(spidx);
+        target = prayer_prompt(spidx, cmana < spelltable[spidx].spmana);
         if (target < 0) return;
 
         // prayer committed
@@ -9938,7 +9956,7 @@ int* x_ptr;
           }
         }
 
-        if (uD.cmana < spelltable[spidx].spmana) {
+        if (cmana < spelltable[spidx].spmana) {
           if (statD.cur_stat[A_CON] > 3) {
             uD.cmana = 0;
             uD.cmana_frac = 0;
