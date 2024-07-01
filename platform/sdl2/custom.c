@@ -1154,11 +1154,11 @@ map_draw()
           SDL_RenderFillRect(renderer, &dest_rect);
           break;
       }
-      if (viz->look) {
+      if (viz->vflag & VF_LOOK) {
         SDL_SetRenderDrawColor(renderer, V4b(&whiteD));
         SDL_RenderDrawRect(renderer, &dest_rect);
       }
-      if (viz->magick) {
+      if (viz->vflag & VF_MAGICK) {
         if (sprite_texture) {
           srct = sprite_texture;
           src_rect = (rect_t){
@@ -1732,7 +1732,7 @@ viz_update()
   uint32_t vy = ylookD - rmin;
   uint32_t vx = xlookD - cmin;
   if (vy < SYMMAP_HEIGHT && vx < SYMMAP_WIDTH) {
-    vizD[vy][vx].look = 1;
+    vizD[vy][vx].vflag |= VF_LOOK;
   }
 }
 void

@@ -35,9 +35,7 @@ struct vizS {
   uint16_t cr;
   uint8_t tr;
   uint8_t fade;
-  uint8_t look;
-  // TBD: blows out the size
-  uint8_t magick;
+  uint8_t vflag;
 };
 
 // U the player

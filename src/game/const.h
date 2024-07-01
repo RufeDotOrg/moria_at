@@ -44,6 +44,10 @@
 #define CF_LIT_ROOM (CF_ROOM | CF_PERM_LIGHT)
 #define CF_VIZ (CF_TEMP_LIGHT | CF_PERM_LIGHT | CF_FIELDMARK)
 
+// Viz flags
+#define VF_LOOK 0x1
+#define VF_MAGICK 0x2
+
 #define DUN_TUN_RND 9  /* 1/Chance of Random direction        */
 #define DUN_TUN_CHG 70 /* Chance of changing direction (99 max) */
 #define DUN_TUN_PEN 25 /* % chance of room doors         */

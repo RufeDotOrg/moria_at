@@ -437,7 +437,7 @@ viz_magick()
             los(y, x, ay, ax)) {
           if (caveD[ay][ax].fval <= MAX_FLOOR) {
             if (magick_hitu || ay != uD.y || ax != uD.x) {
-              vizD[i][j].magick = 43;
+              vizD[i][j].vflag = VF_MAGICK;
             }
           }
         }
