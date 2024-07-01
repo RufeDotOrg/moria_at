@@ -1,7 +1,7 @@
 
 // 0: nt console app
 // 1: nt window app
-enum { COSMO_WINDOWAPP = 1 };
+enum { COSMO_WINDOWAPP = 0 };
 
 // TBD: dylib name
 DATA char* libnameD[] = {"libSDL2-2.0.so", "SDL2.dll", "libSDL2-2.0.0.dylib"};
