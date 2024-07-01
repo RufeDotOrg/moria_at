@@ -10945,6 +10945,7 @@ py_saveslot_select()
   int has_external = (platformD.saveex != noop);
   int using_external = 0;
   int using_selection = (platformD.selection != noop);
+  int testex = -1;
 
   // Disable midpoint resume explicitly
   input_resumeD = -1;
@@ -10993,6 +10994,19 @@ py_saveslot_select()
         BufMsg(overlay, "i) Import all");
       }
 
+      line = 't' - 'a';
+      if (using_external) {
+        exportpathD[exportpath_usedD] = '/';
+        exportpathD[exportpath_usedD + 1] = 0;
+        if (testex == -1) {
+          BufMsg(overlay, "t) Test %s", exportpathD);
+        } else if (testex == 3) {
+          BufMsg(overlay, "t) Test Pass");
+        } else {
+          BufMsg(overlay, "t) Test Failed (%d)", testex);
+        }
+      }
+
       line = 'v' - 'a';
       BufMsg(overlay, "v) View %s media", other_media);
     }
@@ -11001,7 +11015,7 @@ py_saveslot_select()
       msg_hint(AP(" (SHIFT: delete character)"));
     else
       msg_hint(AP("(RED: delete | GREEN: play)"));
-    c = CLOBBER_MSG("%s Media Archive: Play which class?", media);
+    c = CLOBBER_MSG("Play which class?");
     // Deletion
     if (c == ESCAPE) {
       int srow, scol;
@@ -11048,7 +11062,13 @@ py_saveslot_select()
         c = 'v';
       }
     }
+    if (c == 't') {
+      if (using_external) {
+        testex = platformD.testex();
+      }
+    }
     if (c == 'v') {
+      testex = -1;
       using_external = !using_external;
       if (using_external && extern_count == 0)
         extern_count = py_archive_read(ex_summary, 1);

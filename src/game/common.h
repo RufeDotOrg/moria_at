@@ -171,6 +171,7 @@ struct platformS {
   fn load;
   fn savemidpoint;
   fn saveex;
+  fn testex;
 };
 DATA struct platformS platformD;
 #endif

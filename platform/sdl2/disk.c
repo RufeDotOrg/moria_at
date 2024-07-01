@@ -2,12 +2,9 @@
 #define SAVENAME "savechar"
 #define CACHENAME "moria.cache"
 
-DATA char savepathD[1024];
-DATA int savepath_usedD;
-DATA char exportpathD[1024];
-DATA int exportpath_usedD;
 DATA char cachepathD[1024];
 DATA int cachepath_usedD;
+DATA int checksumD;
 
 char*
 path_append_filename(char* path, int path_len, char* filename)
@@ -32,7 +29,6 @@ file_access(char* filename, char* access)
 }
 
 // Disk I/O
-static int checksumD;
 int
 version_by_savesum(sum)
 {
@@ -102,7 +98,7 @@ path_delete(char* path)
 {
   SDL_RWops* writef = file_access(path, "wb");
   if (writef) SDL_RWclose(writef);
-  return 1;
+  return (writef != 0);
 }
 int
 path_save(char* path)
@@ -284,6 +280,21 @@ platform_saveex()
   return count;
 }
 int
+platform_testex()
+{
+  int ret = 0;
+  char* filename = "tempfile";
+  char* ex_path = path_append_filename(exportpathD, exportpath_usedD, filename);
+
+  ret += (path_save(ex_path) != 0);
+
+  ret += (path_load(ex_path) != 0);
+
+  ret += (path_delete(ex_path) != 0);
+
+  return ret;
+}
+int
 cache_write()
 {
   SDL_RWops* writef = file_access(cachepathD, "wb");
@@ -427,6 +438,7 @@ disk_init()
   platformD.erase = platform_erase;
   platformD.savemidpoint = disk_savemidpoint;
   if (exportpath_usedD) platformD.saveex = platform_saveex;
+  if (exportpath_usedD) platformD.testex = platform_testex;
   return 1;
 }
 

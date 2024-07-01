@@ -20,6 +20,12 @@ DATA int minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
 DATA int save_on_readyD;
 
+// Savechar folder
+DATA char savepathD[1024];
+DATA int savepath_usedD;
+DATA char exportpathD[1024];
+DATA int exportpath_usedD;
+
 // Gameplay messages write to a circular queue
 DATA char msg_cqD[MAX_MSG][98];
 DATA char msglen_cqD[MAX_MSG];
