@@ -7058,7 +7058,7 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         descD[0] = descD[0] | 0x20;
         MSG("The %s strikes %s.", bolt_typ, descD);
 
-        {
+        if (!replay_flag) {
           viz_hookD = viz_magick;
           magick_distD = 0;
           magick_locD = (point_t){x, y};
@@ -7119,7 +7119,7 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
           x = oldx;
         }
 
-        {
+        if (!replay_flag) {
           viz_hookD = viz_magick;
           magick_distD = FIRE_DIST;
           magick_locD = (point_t){x, y};
@@ -12520,7 +12520,7 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   y = uD.y;
   x = uD.x;
 
-  {
+  if (!replay_flag) {
     viz_hookD = viz_magick;
     magick_distD = 2;
     magick_locD = (point_t){x, y};
