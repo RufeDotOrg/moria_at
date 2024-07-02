@@ -60,6 +60,7 @@ typedef int (*fn)();
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define XOR(x, y) ((uint64_t)(x) ^ (uint64_t)(y))
+#define INVERT(x) x = !x
 #define OF2(x) (((x - 1) & x) == 0)
 #define COMMON_DEBUG 1
 #define LOGFMT(...)
@@ -150,32 +151,6 @@ ftable_clear(void* ftable, int size)
   for (int it = 0; it < size; ++it) func[it] = noop;
 }
 
-// Common Interface
-enum { PLATFORM_PREGAME = 1, PLATFORM_GAME = 2, PLATFORM_POSTGAME = 3 };
-struct platformS {
-  fn pregame;
-  fn postgame;
-  // render
-  fn predraw;
-  fn draw;
-  fn orientation;
-  fn vsync;
-  // rng
-  fn seed;
-  // input
-  fn readansi;
-  fn selection;
-  // i/o
-  fn save;
-  fn erase;
-  fn load;
-  fn savemidpoint;
-  fn saveex;
-  fn testex;
-};
-DATA struct platformS platformD;
-#endif
-
 #define V2(v) v[0], v[1]
 #define V3(v) v[0], v[1], v[2]
 #define V4(v) v[0], v[1], v[2], v[3]
@@ -188,4 +163,4 @@ DATA struct platformS platformD;
 #define XY(v) (v).x, (v).y
 #define WH(r) (r).w, (r).h
 
-#define INVERT(x) x = !x
+#endif

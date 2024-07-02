@@ -304,3 +304,26 @@ _Static_assert(sizeof(struct globalS) <= 64, "keep global data small!");
 // Global data may be cached to disk
 // Does not mutate on a game reset
 DATA struct globalS globalD;
+
+struct platformS {
+  fn pregame;
+  fn postgame;
+  // render
+  fn predraw;
+  fn draw;
+  fn orientation;
+  fn vsync;
+  // rng
+  fn seed;
+  // input
+  fn readansi;
+  fn selection;
+  // i/o
+  fn save;
+  fn erase;
+  fn load;
+  fn savemidpoint;
+  fn saveex;
+  fn testex;
+};
+DATA struct platformS platformD;

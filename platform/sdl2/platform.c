@@ -24,10 +24,12 @@
 #define point_t SDL_Point
 
 enum { COSMO_CRASH = 0 };
+enum { PLATFORM_PREGAME = 1, PLATFORM_GAME = 2, PLATFORM_POSTGAME = 3 };
 #ifdef __FATCOSMOCC__
 #include <cosmo.h>
 #include <dlfcn.h>
 #include <libc/nt/dll.h>  // SDL OverrideSO
+#include <math.h>         //sqrt
 GLOBAL void* libD;
 #include "cosmo-crash.c"
 #include "cosmo-sdl.h"
@@ -180,9 +182,7 @@ render_init()
     }
   }
 
-  int ridx = -1;
-  // Prefer to the last used renderer; delete the cache to reset
-  rendererD = SDL_CreateRenderer(windowD, ridx, 0);
+  rendererD = SDL_CreateRenderer(windowD, -1, 0);
   if (!rendererD) return 0;
   // ANDROID fix for SDL Error: BLASTBufferQueue
   if (ANDROID) SDL_RenderPresent(rendererD);
@@ -222,8 +222,7 @@ render_init()
     }
     Log("Texture pixel format 0x%x", texture_formatD);
     if (!RELEASE) {
-      Log("Texture pixel format %s",
-          SDL_GetPixelFormatName(texture_formatD));
+      Log("Texture pixel format %s", SDL_GetPixelFormatName(texture_formatD));
     }
   }
 
