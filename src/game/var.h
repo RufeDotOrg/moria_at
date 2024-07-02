@@ -126,8 +126,8 @@ GAME int storeD[MAX_STORE];
 GAME struct objS store_objD[MAX_STORE][MAX_STORE_INVEN];
 
 DATA char quit_stringD[] = "quitting";
-DATA char versionD[] = "XXXX.YYYY.ZZZZ";
-DATA char git_hashD[] = "AbCdEfGhIjKlMnO";
+GLOBAL char versionD[] = "XXXX.YYYY.ZZZZ";
+GLOBAL char git_hashD[] = "AbCdEfGhIjKlMnO";
 
 // Optional UI state
 GAME uint8_t ui_stateD[256];
