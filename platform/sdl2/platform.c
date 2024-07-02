@@ -552,6 +552,7 @@ custom_init()
   platformD.predraw = custom_predraw;
   platformD.draw = custom_draw;
   platformD.orientation = custom_orientation;
+  return 0;
 }
 #define platform_init custom_init
 #endif
