@@ -220,8 +220,11 @@ render_init()
         texture_formatD = SDL_PIXELFORMAT_ABGR8888;
       }
     }
-    Log("Texture pixel format (%d) %s", texture_formatD,
-        SDL_GetPixelFormatName(texture_formatD));
+    Log("Texture pixel format 0x%x", texture_formatD);
+    if (!RELEASE) {
+      Log("Texture pixel format %s",
+          SDL_GetPixelFormatName(texture_formatD));
+    }
   }
 
   if (texture_formatD != SDL_PIXELFORMAT_ABGR8888) {

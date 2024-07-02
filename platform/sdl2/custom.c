@@ -424,24 +424,12 @@ custom_pregame()
     SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(
         SDL_SWSURFACE, ICO_SZ, ICO_SZ, 0, SDL_PIXELFORMAT_ABGR8888);
     if (s) {
-      if (puff_io(s->pixels, s->h * s->pitch, AP(icoZ))) {
+      if (puff_io(s->pixels, s->h * s->pitch, AP(rgb_icoZ))) {
         Log("puff_io for icon OK\n");
-        int pitch = s->pitch;
-        uint8_t* pixels = s->pixels;
-        for (int row = 0; row < ICO_SZ; ++row) {
-          int* pptr = vptr(pixels + (row * pitch));
-          for (int col = 0; col < ICO_SZ; ++col) {
-            int rgb = rgb_by_labr(*pptr);
-            if (rgb == -1) rgb = 0;
-            *pptr = rgb;
-            pptr += 1;
-          }
-        }
-
         SDL_SetWindowIcon(windowD, s);
-        SDL_FreeSurface(s);
         Log("SetWindowIcon OK");
       }
+      SDL_FreeSurface(s);
     }
   }
   if (PC && !TOUCH) {
