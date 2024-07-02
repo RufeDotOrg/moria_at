@@ -1429,9 +1429,8 @@ int
 custom_draw()
 {
   USE(renderer);
-  USE(layout);
 
-  if (layout) SDL_SetRenderTarget(renderer, layout);
+  SDL_SetRenderTarget(renderer, layoutD);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
   SDL_RenderClear(renderer);
 

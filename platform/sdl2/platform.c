@@ -148,23 +148,17 @@ render_init()
 
   int use_display = SDL_GetWindowDisplayIndex(windowD);
   int num_display = SDL_GetNumVideoDisplays();
+  rect_t bounds_rect = {0};
   for (int it = 0; it < num_display; ++it) {
     rect_t r;
     SDL_GetDisplayBounds(it, &r);
     Log("%d Display) %d %d %d %d\n", it, r.x, r.y, r.w, r.h);
     if (it == use_display) {
+      bounds_rect = r;
       SDL_DisplayMode mode;
       SDL_GetCurrentDisplayMode(it, &mode);
       Log(" -> Refresh Rate %d\n", mode.refresh_rate);
       refresh_rateD = mode.refresh_rate;
-
-      if (PC) {
-        SDL_Event event;
-        event.window.event = SDL_WINDOWEVENT_RESIZED;
-        event.window.data1 = r.w;
-        event.window.data2 = r.h;
-        sdl_window_event(event);
-      }
     }
   }
 
@@ -232,6 +226,21 @@ render_init()
     if (!pixel_formatD) return 0;
 
     if (pixel_formatD->BytesPerPixel != 4) Log("Perf: BytesPerPixel != 4");
+  }
+
+  portraitD =
+      SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+                        PORTRAIT_X, PORTRAIT_Y);
+  landscapeD =
+      SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+                        LANDSCAPE_X, LANDSCAPE_Y);
+
+  if (PC && bounds_rect.w > 0 && bounds_rect.h > 0) {
+    SDL_Event event;
+    event.window.event = SDL_WINDOWEVENT_RESIZED;
+    event.window.data1 = bounds_rect.w;
+    event.window.data2 = bounds_rect.h;
+    sdl_window_event(event);
   }
 
   return 1;
@@ -343,8 +352,10 @@ platform_orientation(orientation)
   float xpad = (float)ar_rect.x / display_rect.w;
   float ypad = (float)ar_rect.y / display_rect.h;
 
-  Log("orientation %d scale %f: %.03f %.03f xuse yuse %.03f %.03f xpad ypad",
-      orientation, scale, xuse, yuse, xpad, ypad);
+  Log("orientation %d scale %f use_layout %d: %.03f %.03f xuse yuse %.03f "
+      "%.03f "
+      "xpad ypad",
+      orientation, scale, layoutD != 0, xuse, yuse, xpad, ypad);
   SDL_FRect view = {xpad, ypad, xuse, yuse};
   view_rectD = view;
 
@@ -485,13 +496,6 @@ platform_pregame()
     SDL_Init(SDL_SCOPE);
 
     if (!render_init()) return 1;
-
-    portraitD =
-        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
-                          PORTRAIT_X, PORTRAIT_Y);
-    landscapeD =
-        SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
-                          LANDSCAPE_X, LANDSCAPE_Y);
   }
 
   if (WINDOW) {
