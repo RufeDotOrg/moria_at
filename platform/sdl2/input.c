@@ -34,6 +34,9 @@ DATA rect_t grectD[GR_COUNT];
 DATA uint8_t finger_countD;
 DATA int last_pressD;
 DATA int quitD;
+DATA float last_dsqD;
+DATA float min_dsqD = 100 * 100.f;
+DATA float max_dsqD;
 
 char
 sym_shift(char c)
@@ -87,6 +90,9 @@ static char
 char_by_dir(dir)
 {
   switch (dir) {
+    case 5:
+    case 0:
+      return ' ';
     case 4:
       return 'h';
     case 7:
@@ -103,11 +109,10 @@ char_by_dir(dir)
       return 'j';
     case 1:
       return 'b';
-    // As a platform choice, prefer ' ' over '.'
-    // The former does not yield the turn to creatures
-    default:
-      return ' ';
   }
+
+  // Display refresh
+  return CTRL('d');
 }
 static char
 gamesym_by_scancode(code, shiftbit)
@@ -117,7 +122,9 @@ gamesym_by_scancode(code, shiftbit)
     switch (code) {
       case SDL_SCANCODE_KP_1 ... SDL_SCANCODE_KP_9: {
         int dir = 1 + (code - SDL_SCANCODE_KP_1);
-        return char_by_dir(dir) ^ shiftbit;
+        char c = char_by_dir(dir);
+        if (c <= ' ') return c;
+        return c ^ shiftbit;
       }
       case SDL_SCANCODE_KP_0:
         return 'm';
@@ -323,7 +330,10 @@ touch_by_xy(x, y)
 
   for (int it = 0; it < MAX_BUTTON; ++it) {
     AUSE(grect, GR_BUTTON1 + it);
-    if (SDL_PointInRect(&tpp, &grect)) return TOUCH_LB + it;
+    if (SDL_PointInRect(&tpp, &grect)) {
+      if (TEST_INPUT) last_dsqD = 0.f;
+      return TOUCH_LB + it;
+    }
   }
 
   {
@@ -332,7 +342,16 @@ touch_by_xy(x, y)
     if (SDL_PointInRect(&tpp, &grect)) {
       SDL_Point rel = {tpp.x - grect.x, tpp.y - grect.y};
 
-      int n = nearest_pp(rel.y, rel.x, 0);
+      int dsq;
+      int n = nearest_pp(rel.y, rel.x, &dsq);
+      if (last_dsqD != 0.f) {
+        min_dsqD = MIN(last_dsqD, min_dsqD);
+        max_dsqD = MAX(last_dsqD, max_dsqD);
+      }
+
+      last_dsqD = dsq;
+      if (dsq > limit_dsqD) return 99;
+
       r = TOUCH_PAD + pp_keyD[n];
     }
 
@@ -377,8 +396,6 @@ fingerdown_xy_mode(x, y, mode)
         case 1:
           if (c == ' ') return '=';
           return c & ~0x20;
-        default:
-          break;
       }
     } else if (touch) {
       switch (touch) {
@@ -399,8 +416,6 @@ fingerdown_xy_mode(x, y, mode)
           return finger ? 'd' : 'a';
         case TOUCH_RB:
           return finger ? '!' : '.';
-        default:
-          break;
       }
     }
   }

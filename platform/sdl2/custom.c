@@ -5,8 +5,13 @@ enum { FONT = 0 };
 enum { INPUT = 0 };
 enum { COLOR = 0 };
 
+enum { TEST_INPUT = 1 };
+enum { INPUT_LIMIT = 75 };
+enum { INPUT_GREYSCALE = 0 };
+DATA float limit_dsqD = (float)INPUT_LIMIT * INPUT_LIMIT;
+
 // Override DISK/FONT/INPUT when included
-// #include "color.c"
+#include "color.c"
 #include "disk.c"
 #include "font.c"
 #include "input.c"
@@ -349,9 +354,31 @@ static void surface_ppfill(surface) SDL_Surface* surface;
     uint8_t* dst = pixels + (surface->pitch * row);
     for (int64_t col = 0; col < surface->w; ++col) {
       int dsq;
-      nearest_pp(row, col, &dsq);
-      int lum = CLAMP(65 - sqrt(dsq), 0, 99);
-      int color = greyscaleD[lum];
+      int n = nearest_pp(row, col, &dsq);
+      int color = lightingD[1];
+      int dark_labr[] = {
+          0x221f361f, 0x2234192b, 0x2041f53e, 0x2337c538,
+          0x2300d93a, 0x20d10826, 0x22c73d1d, 0x22f53c22,
+      };
+
+      int lum = CLAMP(INPUT_LIMIT - sqrt(dsq), 0, 99);
+
+      if (INPUT_GREYSCALE) {
+        color = greyscaleD[lum];
+      } else {
+        if (INPUT_LIMIT > 99) lum = 1;
+        if (n > 0 && lum > 0) {
+          int labr = 0;
+          // flips the diagonals to provide contrast
+          if (n % 2 == 1)
+            labr = dark_labr[n - 1];
+          else
+            labr = dark_labr[(n - 1 + 4) % 8];
+
+          bptr(&labr)[0] += (CLAMP(lum / 4, 0, 31) + 4);
+          color = rgb_by_labr(labr);
+        }
+      }
       if (pixel_formatD) pixel_convert(&color);
 
       memcpy(dst, &color, bpp);
@@ -846,6 +873,19 @@ common_text()
         p.y += FHEIGHT;
         len = snprintf(tmp, AL(tmp), "%d %d x/y", uD.x, uD.y);
         render_monofont_string(renderer, &fontD, tmp, len, p);
+      }
+
+      if (TEST_INPUT) {
+        p.y += FHEIGHT;
+        len = snprintf(tmp, AL(tmp), "%03.f %d [%d,%d]", last_dsqD,
+                       (int)sqrt(last_dsqD), (int)sqrt(min_dsqD),
+                       (int)sqrt(max_dsqD));
+        render_monofont_string(renderer, &fontD, tmp, len, p);
+
+        if (last_dsqD > limit_dsqD) {
+          p.y += FHEIGHT;
+          render_monofont_string(renderer, &fontD, AP("dropped!!"), p);
+        }
       }
 
       if (PC && TEST_REPLAY) {
