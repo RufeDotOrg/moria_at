@@ -168,9 +168,9 @@ render_init()
   SDL_RendererInfo rinfo;
   for (int it = 0; it < num_driver; ++it) {
     if (SDL_GetRenderDriverInfo(it, &rinfo) == 0) {
-      Log("%d) SDL RendererInfo "
-          "[ rinfo.name %s ] "
-          "[ rinfo.flags 0x%08x ] "
+      Log("%d) SDL RendererInfo: "
+          "rinfo.name %s "
+          "rinfo.flags 0x%08x "
           "\n",
           it, rinfo.name, rinfo.flags);
     }
@@ -185,10 +185,10 @@ render_init()
 
   if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return 0;
 
-  Log("SDL RendererInfo "
-      "[ rinfo.name %s ] "
-      "[ rinfo.flags 0x%08x ] "
-      "[ max texture %d %d ] "
+  Log("SDL RendererInfo: "
+      "rinfo.name %s "
+      "rinfo.flags 0x%08x "
+      "max texture %d %d "
       "\n",
       rinfo.name, rinfo.flags, rinfo.max_texture_width,
       rinfo.max_texture_height);

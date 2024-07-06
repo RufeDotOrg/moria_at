@@ -438,19 +438,19 @@ custom_pregame()
     spriteD = 0;
   }
 
-  if (PC) {
-    enum { ICO_SZ = 128 };
-    SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(
-        SDL_SWSURFACE, ICO_SZ, ICO_SZ, 0, SDL_PIXELFORMAT_ABGR8888);
-    if (s) {
-      if (puff_io(s->pixels, s->h * s->pitch, AP(rgb_icoZ))) {
-        Log("puff_io for icon OK\n");
-        SDL_SetWindowIcon(windowD, s);
-        Log("SetWindowIcon OK");
-      }
-      SDL_FreeSurface(s);
-    }
-  }
+  // if (PC) {
+  //   enum { ICO_SZ = 128 };
+  //   SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(
+  //       SDL_SWSURFACE, ICO_SZ, ICO_SZ, 0, SDL_PIXELFORMAT_ABGR8888);
+  //   if (s) {
+  //     if (puff_io(s->pixels, s->h * s->pitch, AP(rgb_icoZ))) {
+  //       Log("puff_io for icon OK\n");
+  //       SDL_SetWindowIcon(windowD, s);
+  //       Log("SetWindowIcon OK");
+  //     }
+  //     SDL_FreeSurface(s);
+  //   }
+  // }
   if (PC && !TOUCH) {
     Log("ShowCursor -> disable");
     SDL_ShowCursor(SDL_DISABLE);
