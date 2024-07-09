@@ -429,8 +429,10 @@ viz_magick()
     int ox = x - cmin;
     int oy = y - rmin;
 
-    for (int i = oy - magick_dist; i <= oy + magick_dist; ++i) {
-      for (int j = ox - magick_dist; j <= ox + magick_dist; ++j) {
+    for (int i = MAX(0, oy - magick_dist);
+         i <= MIN(SYMMAP_HEIGHT - 1, oy + magick_dist); ++i) {
+      for (int j = MAX(0, ox - magick_dist);
+           j <= MIN(SYMMAP_WIDTH - 1, ox + magick_dist); ++j) {
         int ay = rmin + i;
         int ax = cmin + j;
         if (in_bounds(ay, ax) && distance(y, x, ay, ax) <= magick_dist &&
