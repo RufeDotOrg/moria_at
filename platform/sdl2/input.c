@@ -34,9 +34,6 @@ DATA rect_t grectD[GR_COUNT];
 DATA uint8_t finger_countD;
 DATA int last_pressD;
 DATA int quitD;
-DATA float last_dsqD;
-DATA float min_dsqD = 100 * 100.f;
-DATA float max_dsqD;
 
 char
 sym_shift(char c)
@@ -331,7 +328,6 @@ touch_by_xy(x, y)
   for (int it = 0; it < MAX_BUTTON; ++it) {
     AUSE(grect, GR_BUTTON1 + it);
     if (SDL_PointInRect(&tpp, &grect)) {
-      if (TEST_INPUT) last_dsqD = 0.f;
       return TOUCH_LB + it;
     }
   }
@@ -344,12 +340,6 @@ touch_by_xy(x, y)
 
       int dsq;
       int n = nearest_pp(rel.y, rel.x, &dsq);
-      if (last_dsqD != 0.f) {
-        min_dsqD = MIN(last_dsqD, min_dsqD);
-        max_dsqD = MAX(last_dsqD, max_dsqD);
-      }
-
-      last_dsqD = dsq;
       if (dsq > limit_dsqD) return 99;
 
       r = TOUCH_PAD + pp_keyD[n];
@@ -456,7 +446,7 @@ fingerdown_xy_mode(x, y, mode)
     if (touch == TOUCH_RB) return ESCAPE;
     if (touch == TOUCH_STAT) return 'c';
     if (touch == TOUCH_HISTORY) return 'p';
-    if (touch) return ' ';
+    if (touch < 99) return ' ';
   }
 
   return 0;
