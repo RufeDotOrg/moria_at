@@ -11173,6 +11173,10 @@ feature_menu()
     line = 0;
     BufMsg(overlay, "a) ascii gameplay renderer (%s)",
            opt[globalD.sprite == 0]);
+    line = 'c' - 'a';
+    BufMsg(overlay, "c) color dpad (%s)", opt[globalD.dpad_color != 0]);
+    line = 'd' - 'a';
+    BufMsg(overlay, "d) dpad sensitivity (%d)", globalD.dpad_sensitivity);
     line = 'g' - 'a';
     BufMsg(overlay, "g) gpu interface (%s)",
            globalD.pc_renderer[0] ? globalD.pc_renderer : default_renderer);
@@ -11200,6 +11204,17 @@ feature_menu()
     switch (c) {
       case 'a':
         INVERT(globalD.sprite);
+        break;
+      case 'c':
+        INVERT(globalD.dpad_color);
+        platformD.dpad();
+        break;
+      case 'd':
+        if (globalD.dpad_sensitivity >= 99)
+          globalD.dpad_sensitivity = 55;
+        else
+          globalD.dpad_sensitivity += 10;
+        platformD.dpad();
         break;
       case 'h':
         INVERT(globalD.hand_swap);
@@ -14272,6 +14287,8 @@ global_init(int argc, char** argv)
   globalD.zoom_factor = PC ? 0 : 2;
   globalD.vsync = PC ? 0 : 1;
   globalD.sprite = 1;
+  globalD.dpad_sensitivity = 75;
+  globalD.dpad_color = 1;
 
   msg_widthD = overlay_widthD = 80;
 }

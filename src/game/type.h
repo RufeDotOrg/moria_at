@@ -292,13 +292,16 @@ struct ownerS {
 
 // Global options
 struct globalS {
+  // uint32_t ghash;
   int32_t saveslot_class;
   uint32_t zoom_factor;
-  uint32_t orientation_lock;
+  uint8_t orientation_lock;
+  uint8_t vsync;
+  uint8_t sprite;
+  uint8_t hand_swap;
+  uint16_t dpad_sensitivity;
+  uint8_t dpad_color;
   char pc_renderer[16];
-  uint32_t vsync;
-  uint32_t sprite;
-  uint32_t hand_swap;
 };
 _Static_assert(sizeof(struct globalS) <= 64, "keep global data small!");
 // Global data may be cached to disk
@@ -325,5 +328,6 @@ struct platformS {
   fn savemidpoint;
   fn saveex;
   fn testex;
+  fn dpad;
 };
 DATA struct platformS platformD;

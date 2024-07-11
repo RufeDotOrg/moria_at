@@ -5,9 +5,7 @@ enum { FONT = 0 };
 enum { INPUT = 0 };
 enum { COLOR = 0 };
 
-enum { INPUT_LIMIT = 75 };
-enum { INPUT_GREYSCALE = 0 };
-DATA float limit_dsqD = (float)INPUT_LIMIT * INPUT_LIMIT;
+DATA float limit_dsqD;
 
 // Override DISK/FONT/INPUT when included
 #include "color.c"
@@ -334,6 +332,12 @@ sin_lookup(idx)
 }
 static void surface_ppfill(surface) SDL_Surface* surface;
 {
+  MUSE(global, dpad_sensitivity);
+  if (dpad_sensitivity >= 99)
+    limit_dsqD = (float)PADSIZE * PADSIZE;
+  else
+    limit_dsqD = (float)dpad_sensitivity * dpad_sensitivity;
+
   uint8_t bpp = surface->format->BytesPerPixel;
   uint8_t* pixels = surface->pixels;
   for (int64_t row = 0; row < surface->h; ++row) {
@@ -343,12 +347,10 @@ static void surface_ppfill(surface) SDL_Surface* surface;
       int n = nearest_pp(row, col, &dsq);
       int color = lightingD[1];
 
-      int lum = CLAMP(INPUT_LIMIT - sqrt(dsq), 0, 99);
+      int lum = CLAMP(dpad_sensitivity - sqrt(dsq), 0, 99);
 
-      if (INPUT_GREYSCALE) {
-        color = rgb_by_labr(lum);
-      } else {
-        if (INPUT_LIMIT > 99) lum = 1;
+      if (globalD.dpad_color) {
+        if (dpad_sensitivity >= 99) lum = MAX(1, lum);
         if (n > 0 && lum > 0) {
           int labr = 0;
           // flips the diagonals to provide contrast
@@ -360,6 +362,8 @@ static void surface_ppfill(surface) SDL_Surface* surface;
           bptr(&labr)[0] += (CLAMP(lum / 4, 0, 31) + 4);
           color = rgb_by_labr(labr);
         }
+      } else {
+        color = rgb_by_labr(lum);
       }
       if (pixel_formatD) pixel_convert(&color);
 
@@ -467,6 +471,7 @@ custom_pregame()
 
   if (TOUCH) ui_init();
   if (TOUCH) tp_init();
+  if (TOUCH) platformD.dpad = tp_init;
 
   // !!texture_formatD override!! minimapD is streaming abgr8888
   mmtextureD =
