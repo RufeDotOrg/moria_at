@@ -11002,7 +11002,7 @@ py_saveslot_select()
         exportpathD[exportpath_usedD + 1] = 0;
         if (testex == -1) {
           BufMsg(overlay, "t) Test %s", exportpathD);
-        } else if (testex == 3) {
+        } else if (testex == 7) {
           BufMsg(overlay, "t) Test Pass");
         } else {
           BufMsg(overlay, "t) Test Failed (%d)", testex);

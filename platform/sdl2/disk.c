@@ -288,9 +288,9 @@ platform_testex()
 
   ret += (path_save(ex_path) != 0);
 
-  ret += (path_load(ex_path) != 0);
+  ret += (1 << (path_load(ex_path) != 0));
 
-  ret += (path_delete(ex_path) != 0);
+  ret += (2 << (path_delete(ex_path) != 0));
 
   return ret;
 }
