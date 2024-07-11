@@ -14285,7 +14285,7 @@ global_init(int argc, char** argv)
   FT(platform);
   globalD.saveslot_class = -1;
   globalD.zoom_factor = PC ? 0 : 2;
-  globalD.vsync = PC ? 0 : 1;
+  globalD.vsync = 0;
   globalD.sprite = 1;
   globalD.dpad_sensitivity = 75;
   globalD.dpad_color = 1;
