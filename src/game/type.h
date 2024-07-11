@@ -292,7 +292,7 @@ struct ownerS {
 
 // Global options
 struct globalS {
-  // uint32_t ghash;
+  uint32_t ghash;
   int32_t saveslot_class;
   uint32_t zoom_factor;
   uint8_t orientation_lock;

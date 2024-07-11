@@ -90,3 +90,14 @@ ptr_xor(void* a, void* b)
 {
   return (void*)XOR(a, b);
 }
+enum { DJB2 = 5381 };
+XX uint64_t
+djb2(uint64_t value, const void* buffer, uint64_t bytes)
+{
+  const uint8_t* iter = buffer;
+  for (int i = 0; i < bytes; ++i) {
+    uint8_t c = iter[i];
+    value = (value << 5) + value ^ c;
+  }
+  return value;
+}

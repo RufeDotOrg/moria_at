@@ -331,21 +331,35 @@ path_copy_to(char* srcpath, char* dstpath)
   return readf == 0 || writef == 0;
 }
 int
-cache_read()
+cache_version()
 {
-  uint32_t success = 0;
+  int ghash = 0;
   if (cachepath_usedD) {
+    Log("reading..");
     SDL_RWops* readf = file_access(cachepathD, "rb");
     if (readf) {
-      if (SDL_RWread(readf, &globalD, sizeof(globalD), 1))
-        success = sizeof(globalD);
+      int r = SDL_RWread(readf, &ghash, sizeof(ghash), 1);
+      Log("r %d", r);
       SDL_RWclose(readf);
     }
   }
 
+  return ghash;
+}
+int
+cache_read()
+{
+  int success = 0;
+  if (cachepath_usedD) {
+    SDL_RWops* readf = file_access(cachepathD, "rb");
+    if (readf) {
+      uint64_t sz = SDL_RWsize(readf);
+      success = (SDL_RWread(readf, &globalD, sz, 1) != 0);
+      SDL_RWclose(readf);
+    }
+  }
   return success;
 }
-
 int
 disk_postgame(may_exit)
 {
@@ -425,13 +439,11 @@ disk_init()
     Log("Game cache enabled: %s", cachepathD);
   }
 
-  int cache_valid = cache_read();
-  Log("global cache_valid (%d)\n"
-      " %d saveslot_class\n"
-      " %u zoom_factor\n"
-      " %u orientation_lock\n",
-      cache_valid, globalD.saveslot_class, globalD.zoom_factor,
-      globalD.orientation_lock);
+  int cv = cache_version();
+  Log("cache_version; memory 0x%x vs. disk 0x%x", globalD.ghash, cv);
+  if (cv == globalD.ghash && cache_read()) {
+    Log("disk cache_read; saveslot_class %d", globalD.saveslot_class);
+  }
 
   platformD.load = platform_load;
   platformD.save = platform_save;

@@ -14290,6 +14290,8 @@ global_init(int argc, char** argv)
   globalD.dpad_sensitivity = 75;
   globalD.dpad_color = 1;
 
+  globalD.ghash = djb2(DJB2, bptr(&globalD) + sizeof(globalD.ghash),
+                       sizeof(globalD) - sizeof(globalD.ghash));
   msg_widthD = overlay_widthD = 80;
 }
 
