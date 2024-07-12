@@ -38,6 +38,7 @@
 #define SDL_RWFromFile abi_SDL_RWFromFile
 #define SDL_RWread abi_SDL_RWread
 #define SDL_RWseek abi_SDL_RWseek
+#define SDL_RWsize abi_SDL_RWsize
 #define SDL_RWwrite abi_SDL_RWwrite
 #define SDL_SetHint abi_SDL_SetHint
 #define SDL_GetHint abi_SDL_GetHint

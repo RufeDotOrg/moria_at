@@ -335,11 +335,9 @@ cache_version()
 {
   int ghash = 0;
   if (cachepath_usedD) {
-    Log("reading..");
     SDL_RWops* readf = file_access(cachepathD, "rb");
     if (readf) {
       int r = SDL_RWread(readf, &ghash, sizeof(ghash), 1);
-      Log("r %d", r);
       SDL_RWclose(readf);
     }
   }
