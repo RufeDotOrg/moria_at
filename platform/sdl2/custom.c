@@ -817,16 +817,6 @@ common_text()
   USE(renderer);
   char tmp[80];
   int len;
-  {
-    AUSE(grect, GR_VERSION);
-    SDL_Point p = {grect.x, grect.y};
-    render_monofont_string(renderer, &fontD, "moria", AL("moria"), p);
-    p.y += FHEIGHT;
-    render_monofont_string(renderer, &fontD, "version", AL("version"), p);
-    p.y += FHEIGHT;
-    render_monofont_string(renderer, &fontD, versionD + 10, AL(versionD) - 11,
-                           p);
-  }
 
   {
     AUSE(grect, GR_MINIMAP);
@@ -1514,6 +1504,18 @@ custom_draw()
     draw_menu(mode);
 
   if (text_fnD) text_fnD(mode);
+
+  // Render version stamp on all screens
+  {
+    AUSE(grect, GR_VERSION);
+    SDL_Point p = {grect.x, grect.y};
+    render_monofont_string(renderer, &fontD, "moria", AL("moria"), p);
+    p.y += FHEIGHT;
+    render_monofont_string(renderer, &fontD, "version", AL("version"), p);
+    p.y += FHEIGHT;
+    render_monofont_string(renderer, &fontD, versionD + 10, AL(versionD) - 11,
+                           p);
+  }
 
   SDL_RenderFlush(renderer);
   return platform_draw();
