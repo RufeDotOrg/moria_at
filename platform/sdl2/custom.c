@@ -7,6 +7,9 @@ enum { COLOR = 0 };
 
 DATA float limit_dsqD;
 
+// Third party
+#include "third_party/zlib/puff.c"
+
 // Override DISK/FONT/INPUT when included
 #include "color.c"
 #include "disk.c"

@@ -35,8 +35,6 @@ GLOBAL void* libD;
 #include "cosmo-sdl.h"
 #endif
 
-#include "third_party/zlib/puff.c"
-
 #define ORGNAME "org.rufe"
 #define APPNAME "moria.app"
 #ifndef __APPLE__
@@ -100,8 +98,6 @@ DATA SDL_Texture* landscapeD;
 DATA SDL_Texture* layoutD;
 DATA rect_t layout_rectD;
 DATA SDL_FRect view_rectD;
-DATA int max_texture_widthD;
-DATA int max_texture_heightD;
 
 DATA float retina_scaleD;
 
@@ -193,9 +189,6 @@ render_init()
       rinfo.name, rinfo.flags, rinfo.max_texture_width,
       rinfo.max_texture_height);
   Log("vsync %d", (rinfo.flags & SDL_RENDERER_PRESENTVSYNC) != 0);
-
-  max_texture_widthD = rinfo.max_texture_width;
-  max_texture_heightD = rinfo.max_texture_height;
 
   {
     int rw, rh;
