@@ -75,7 +75,7 @@ read_input()
 {
   char c;
   do {
-    c = platformD.readansi();
+    c = platformD.input();
   } while (c == 0);
   if (c != CTRL('d')) viz_hookD = 0;
   return c;

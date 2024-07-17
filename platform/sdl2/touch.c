@@ -1,5 +1,3 @@
-
-
 enum {
   TOUCH_NONE,
   TOUCH_HISTORY,
@@ -28,128 +26,14 @@ enum {
 };
 enum { MAX_BUTTON = 2 };
 
+DATA rect_t grectD[GR_COUNT];
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
-DATA rect_t grectD[GR_COUNT];
 DATA uint8_t finger_countD;
 DATA int last_pressD;
-DATA int quitD;
+DATA float limit_dsqD;
 
-char
-sym_shift(char c)
-{
-  switch (c) {
-    case '`':
-      return '~';
-    case '1':
-      return '!';
-    case '2':
-      return '@';
-    case '3':
-      return '#';
-    case '4':
-      return '$';
-    case '5':
-      return '%';
-    case '6':
-      return '^';
-    case '7':
-      return '&';
-    case '8':
-      return '*';
-    case '9':
-      return '(';
-    case '0':
-      return ')';
-    case '-':
-      return '_';
-    case '=':
-      return '+';
-    case '[':
-      return '{';
-    case ']':
-      return '}';
-    case ';':
-      return ':';
-    case '\'':
-      return '"';
-    case ',':
-      return '<';
-    case '.':
-      return '>';
-    case '/':
-      return '?';
-  }
-
-  return c;
-}
-static char
-char_by_dir(dir)
-{
-  switch (dir) {
-    case 5:
-    case 0:
-      return ' ';
-    case 4:
-      return 'h';
-    case 7:
-      return 'y';
-    case 8:
-      return 'k';
-    case 9:
-      return 'u';
-    case 6:
-      return 'l';
-    case 3:
-      return 'n';
-    case 2:
-      return 'j';
-    case 1:
-      return 'b';
-  }
-
-  // Display refresh
-  return CTRL('d');
-}
-static char
-gamesym_by_scancode(code, shiftbit)
-{
-  USE(mode);
-  if (mode == 0) {
-    switch (code) {
-      case SDL_SCANCODE_KP_1 ... SDL_SCANCODE_KP_9: {
-        int dir = 1 + (code - SDL_SCANCODE_KP_1);
-        char c = char_by_dir(dir);
-        if (c <= ' ') return c;
-        return c ^ shiftbit;
-      }
-      case SDL_SCANCODE_KP_0:
-        return 'm';
-      case SDL_SCANCODE_KP_ENTER:
-        return ' ';
-      case SDL_SCANCODE_KP_PLUS:
-        return '+';
-      case SDL_SCANCODE_KP_MINUS:
-        return '-';
-      case SDL_SCANCODE_KP_PERIOD:
-        return '.';
-    }
-  }
-
-  if (mode > 0) {
-    switch (code) {
-      case SDL_SCANCODE_KP_MINUS:
-        return '-';
-      case SDL_SCANCODE_KP_MULTIPLY:
-        return '*';
-      case SDL_SCANCODE_KP_DIVIDE:
-        return '/';
-    }
-  }
-  return 0;
-}
-
-static int
+STATIC int
 nearest_pp(y, x, po_dsq)
 int* po_dsq;
 {
@@ -170,31 +54,6 @@ int* po_dsq;
   }
   if (po_dsq) *po_dsq = min_dsq;
   return r;
-}
-
-int
-sdl_keyboard_event(event)
-SDL_Event event;
-{
-  int mod = event.key.keysym.mod;
-  int shift = (mod & KMOD_SHIFT) != 0 ? 0x20 : 0;
-
-  if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
-    if (char_alpha(event.key.keysym.sym)) {
-      int ctrl = (mod & KMOD_CTRL);
-      if (ctrl)
-        return CTRL(event.key.keysym.sym);
-      else
-        return event.key.keysym.sym ^ shift;
-    } else {
-      return shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
-    }
-  } else {
-    if (mod & KMOD_NUM) return 0;
-
-    return gamesym_by_scancode(event.key.keysym.scancode, shift);
-  }
-  return 0;
 }
 
 int
@@ -257,7 +116,7 @@ overlay_input(input)
   }
   return row;
 }
-static void
+STATIC void
 overlay_autoselect()
 {
   int row = finger_rowD;
@@ -280,7 +139,7 @@ overlay_autoselect()
   }
 }
 
-static int
+STATIC int
 touch_by_xy(x, y)
 {
   SDL_Point tpp = {x, y};
@@ -350,7 +209,7 @@ touch_by_xy(x, y)
     return r;
   }
 }
-static int
+STATIC int
 orientation_lock_toggle()
 {
   MUSE(global, orientation_lock);
@@ -358,7 +217,7 @@ orientation_lock_toggle()
   globalD.orientation_lock = ~orientation_lock;
   return 0;
 }
-static int
+STATIC int
 column_transition(dx)
 {
   USE(finger_col);
@@ -368,7 +227,7 @@ column_transition(dx)
 
   return (finger_col == 0) ? '*' : '/';
 }
-static int
+STATIC int
 fingerdown_xy_mode(x, y, mode)
 {
   int finger = finger_countD - 1;
@@ -451,96 +310,36 @@ fingerdown_xy_mode(x, y, mode)
 
   return 0;
 }
-char
-sdl_pump()
+
+int
+sdl_touch_event(SDL_Event event)
 {
   USE(view_rect);
   USE(layout_rect);
   USE(mode);
-  SDL_Event event;
   int ret = 0;
 
-  while (ret == 0 && SDL_PollEvent(&event)) {
-    if ((MOUSE || TOUCH) && event.type == SDL_FINGERDOWN) {
-      finger_countD += 1;
-      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-      if (SDL_PointInFRect(&tp, &view_rect)) {
-        int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
-        int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
-        ret = fingerdown_xy_mode(x, y, mode);
-      }
-    } else if ((MOUSE || TOUCH) && event.type == SDL_FINGERUP) {
-      finger_countD -= 1;
-      if (!PC && blipD) ret = ' ';
-    } else if (KEYBOARD && (event.type == SDL_KEYDOWN)) {
-      ret = sdl_keyboard_event(event);
-    } else if (event.type == SDL_QUIT) {
-      quitD = TRUE;
-    } else if (event.type == SDL_WINDOWEVENT) {
-      ret = sdl_window_event(event);
+  if (event.type == SDL_FINGERDOWN) {
+    finger_countD += 1;
+    SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+    if (SDL_PointInFRect(&tp, &view_rect)) {
+      int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
+      int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
+      ret = fingerdown_xy_mode(x, y, mode);
     }
-  }
-
-  if (ret == 0) {
-    nanosleep(&(struct timespec){0, 8e6}, 0);
-    if (PC) ret = CTRL('d');
-  } else {
-    USE(msg_more);
-    // TBD: game option to allow soft ack of -more-?
-    if (!PC && mode == 0 && msg_more && ret != CTRL('d')) ret = ' ';
+  } else if (event.type == SDL_FINGERUP) {
+    finger_countD -= 1;
+    if (!PC && blipD) ret = ' ';
   }
 
   return ret;
 }
-// mode_change is triggered by interactive UI navigation
-// may edit row/col selection to make the interface feel "smart"
-// not utilized by the replay system
-static int
-mode_change(mnext)
-{
-  int subprev = submodeD;
-  int subnext = overlay_submodeD;
-  int mprev = modeD;
-
-  if (mprev != mnext || subprev != subnext) {
-    if (mprev == 1) ui_stateD[subprev] = finger_rowD;
-
-    if (mnext == 1) {
-      finger_rowD = (subnext > 0) ? ui_stateD[subnext] : 0;
-      finger_colD = (subnext == 'e') ? 1 : 0;
-
-      overlay_autoselect();
-    }
-  }
-
-  modeD = mnext;
-  submodeD = subnext;
-
-  return mnext;
-}
-int
-platform_readansi()
-{
-  char c = sdl_pump();
-  if (quitD) return CTRL('c');
-  return c;
-}
 
 // direct access to selection is not deterministic simulation
 int
-platform_selection(int* yptr, int* xptr)
+touch_selection(int* yptr, int* xptr)
 {
   *yptr = finger_colD;
   *xptr = finger_rowD;
   return 0;
 }
-
-int
-input_init()
-{
-  platformD.readansi = platform_readansi;
-  if (TOUCH) platformD.selection = platform_selection;
-  return 1;
-}
-
-#define INPUT 1

@@ -2,25 +2,25 @@
 
 enum { DISK = 0 };
 enum { FONT = 0 };
-enum { INPUT = 0 };
 enum { COLOR = 0 };
-
-DATA float limit_dsqD;
 
 // Third party
 #include "third_party/zlib/puff.c"
 
-// Override DISK/FONT/INPUT when included
+// Override COLOR/DISK/FONT when included
 #include "color.c"
 #include "disk.c"
 #include "font.c"
-#include "input.c"
 
 #include "art.c"
 #include "icon.c"
 #include "player.c"
 #include "treasure.c"
 #include "wall.c"
+
+// Game specific inclusion
+#include "keyboard.c"
+#include "touch.c"
 
 enum { TEST_UI = 0 };
 
@@ -431,7 +431,6 @@ custom_pregame()
   platform_pregame();
 
   if (FONT && !font_init()) return 2;
-  if (INPUT && !input_init()) return 3;
 
   spriteD = SDL_CreateRGBSurfaceWithFormat(
       SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0, texture_formatD);
@@ -475,6 +474,7 @@ custom_pregame()
   if (TOUCH) ui_init();
   if (TOUCH) tp_init();
   if (TOUCH) platformD.dpad = tp_init;
+  if (TOUCH) platformD.selection = touch_selection;
 
   // !!texture_formatD override!! minimapD is streaming abgr8888
   mmtextureD =
@@ -1432,6 +1432,32 @@ draw_menu(mode)
     }
   }
 }
+// mode_change is triggered by interactive UI navigation
+// may edit row/col selection to make the interface feel "smart"
+// not utilized by the replay system
+STATIC int
+mode_change(mnext)
+{
+  int subprev = submodeD;
+  int subnext = overlay_submodeD;
+  int mprev = modeD;
+
+  if (mprev != mnext || subprev != subnext) {
+    if (mprev == 1) ui_stateD[subprev] = finger_rowD;
+
+    if (mnext == 1) {
+      finger_rowD = (subnext > 0) ? ui_stateD[subnext] : 0;
+      finger_colD = (subnext == 'e') ? 1 : 0;
+
+      overlay_autoselect();
+    }
+  }
+
+  modeD = mnext;
+  submodeD = subnext;
+
+  return mnext;
+}
 int
 custom_draw()
 {
@@ -1447,7 +1473,7 @@ custom_draw()
   else if (overlay_usedD[0])
     mode = 1;
 
-  if (INPUT && TOUCH) {
+  if (TOUCH) {
     mode_change(mode);
 
     if (tpsurfaceD) {
@@ -1815,6 +1841,16 @@ custom_predraw()
   viz_update();
   viz_minimap();
   return 1;
+}
+
+int
+custom_input()
+{
+  int ret = platform_input();
+
+  if (!PC && modeD == 0 && msg_moreD && ret != CTRL('d')) ret = ' ';
+
+  return ret;
 }
 
 int

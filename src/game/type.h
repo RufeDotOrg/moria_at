@@ -319,7 +319,7 @@ struct platformS {
   // rng
   fn seed;
   // input
-  fn readansi;
+  fn input;
   fn selection;
   // i/o
   fn save;

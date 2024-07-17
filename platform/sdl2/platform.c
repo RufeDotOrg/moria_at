@@ -96,10 +96,11 @@ DATA int vsync_rateD;
 DATA SDL_Texture* portraitD;
 DATA SDL_Texture* landscapeD;
 DATA SDL_Texture* layoutD;
-DATA rect_t layout_rectD;
+DATA SDL_Rect layout_rectD;
 DATA SDL_FRect view_rectD;
 
 DATA float retina_scaleD;
+DATA int quitD;
 
 int
 check_gl()
@@ -425,6 +426,48 @@ SDL_Event event;
   return 0;
 }
 
+int
+sdl_pump()
+{
+  SDL_Event event;
+  int ret;
+
+  ret = 0;
+  while (ret == 0 && SDL_PollEvent(&event)) {
+    switch (event.type) {
+      case SDL_WINDOWEVENT:
+        sdl_window_event(event);
+        break;
+      case SDL_QUIT:
+        quitD = 1;
+        break;
+      case SDL_FINGERDOWN:
+      case SDL_FINGERUP:
+        if (MOUSE || TOUCH) ret = sdl_touch_event(event);
+        break;
+      case SDL_KEYDOWN:
+        // case SDL_KEYUP: // (optional)
+        if (KEYBOARD) ret = sdl_keyboard_event(event);
+        break;
+    }
+  }
+
+  if (ret == 0) {
+    nanosleep(&(struct timespec){0, 8e6}, 0);
+    if (PC) ret = CTRL('d');
+  }
+
+  return ret;
+}
+
+int
+platform_input()
+{
+  int c = sdl_pump();
+  if (quitD) return CTRL('c');
+  return c;
+}
+
 STATIC int
 rate_of_refresh()
 {
@@ -527,6 +570,7 @@ platform_init()
   platformD.pregame = platform_pregame;
   platformD.postgame = platform_postgame;
   platformD.draw = platform_draw;
+  platformD.input = platform_input;
   platformD.orientation = platform_orientation;
   platformD.vsync = platform_vsync;
   if (platformD.seed == noop) platformD.seed = platform_random;
@@ -544,6 +588,7 @@ custom_init()
   platformD.postgame = custom_postgame;
   platformD.predraw = custom_predraw;
   platformD.draw = custom_draw;
+  if (KEYBOARD || MOUSE || TOUCH) platformD.input = custom_input;
   platformD.orientation = custom_orientation;
   return 0;
 }
