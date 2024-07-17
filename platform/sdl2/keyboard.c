@@ -77,38 +77,29 @@ char_by_dir(dir)
 STATIC char
 gamesym_by_scancode(code, shiftbit)
 {
-  USE(mode);
-  if (mode == 0) {
-    switch (code) {
-      case SDL_SCANCODE_KP_1 ... SDL_SCANCODE_KP_9: {
-        int dir = 1 + (code - SDL_SCANCODE_KP_1);
-        char c = char_by_dir(dir);
-        if (c <= ' ') return c;
-        return c ^ shiftbit;
-      }
-      case SDL_SCANCODE_KP_0:
-        return 'm';
-      case SDL_SCANCODE_KP_ENTER:
-        return ' ';
-      case SDL_SCANCODE_KP_PLUS:
-        return '+';
-      case SDL_SCANCODE_KP_MINUS:
-        return '-';
-      case SDL_SCANCODE_KP_PERIOD:
-        return '.';
+  switch (code) {
+    case SDL_SCANCODE_KP_1 ... SDL_SCANCODE_KP_9: {
+      int dir = 1 + (code - SDL_SCANCODE_KP_1);
+      char c = char_by_dir(dir);
+      if (c <= ' ') return c;
+      return c ^ shiftbit;
     }
+    case SDL_SCANCODE_KP_0:
+      return 'm';
+    case SDL_SCANCODE_KP_ENTER:
+      return ' ';
+    case SDL_SCANCODE_KP_PLUS:
+      return '+';
+    case SDL_SCANCODE_KP_MINUS:
+      return '-';
+    case SDL_SCANCODE_KP_PERIOD:
+      return '.';
+    case SDL_SCANCODE_KP_MULTIPLY:
+      return '*';
+    case SDL_SCANCODE_KP_DIVIDE:
+      return '/';
   }
 
-  if (mode > 0) {
-    switch (code) {
-      case SDL_SCANCODE_KP_MINUS:
-        return '-';
-      case SDL_SCANCODE_KP_MULTIPLY:
-        return '*';
-      case SDL_SCANCODE_KP_DIVIDE:
-        return '/';
-    }
-  }
   return 0;
 }
 

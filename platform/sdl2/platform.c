@@ -48,19 +48,6 @@ int SDL_AndroidGetExternalStorageState();
 char* SDL_AndroidGetExternalStoragePath();
 #endif
 
-#if defined(ANDROID) || defined(__APPLE__)
-enum { TOUCH = 1 };
-enum { KEYBOARD = 0 };
-enum { MOUSE = 0 };
-enum { PC = 0 };
-#else
-char* SDL_GetCachePath(const char*, const char*);
-enum { TOUCH = 0 };
-enum { KEYBOARD = 1 };
-enum { MOUSE = TOUCH };
-enum { PC = 1 };
-#endif
-
 enum { SDL_EVLOG = 0 };
 enum { SDL_VERBOSE = 0 };
 enum { BATCHING = 1 };
@@ -80,6 +67,19 @@ enum { PORTRAIT = 0 };
 enum { LANDSCAPE = 0 };
 #define LANDSCAPE_X 1920
 #define LANDSCAPE_Y 1080
+
+enum { KEYBOARD = 0 };
+#if defined(ANDROID) || defined(__APPLE__)
+enum { TOUCH = 1 };
+enum { MOUSE = 0 };
+enum { PC = 0 };
+#else
+char* SDL_GetCachePath(const char*, const char*);
+enum { TOUCH = 0 };
+enum { MOUSE = TOUCH };
+enum { PC = 1 };
+#include "keyboard.c"
+#endif
 
 // render.c
 DATA struct SDL_Window* windowD;
@@ -588,7 +588,6 @@ custom_init()
   platformD.postgame = custom_postgame;
   platformD.predraw = custom_predraw;
   platformD.draw = custom_draw;
-  if (KEYBOARD || MOUSE || TOUCH) platformD.input = custom_input;
   platformD.orientation = custom_orientation;
   return 0;
 }

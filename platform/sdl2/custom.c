@@ -19,7 +19,6 @@ enum { COLOR = 0 };
 #include "asset/wall.c"
 
 // Game specific inclusion
-#include "keyboard.c"
 #include "touch.c"
 
 enum { TEST_UI = 0 };
@@ -1841,16 +1840,6 @@ custom_predraw()
   viz_update();
   viz_minimap();
   return 1;
-}
-
-int
-custom_input()
-{
-  int ret = platform_input();
-
-  if (!PC && modeD == 0 && msg_moreD && ret != CTRL('d')) ret = ' ';
-
-  return ret;
 }
 
 int
