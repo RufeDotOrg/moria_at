@@ -12,11 +12,11 @@ enum { COLOR = 0 };
 #include "disk.c"
 #include "font.c"
 
-#include "art.c"
-#include "icon.c"
-#include "player.c"
-#include "treasure.c"
-#include "wall.c"
+#include "asset/art.c"
+#include "asset/icon.c"
+#include "asset/player.c"
+#include "asset/treasure.c"
+#include "asset/wall.c"
 
 // Game specific inclusion
 #include "keyboard.c"
