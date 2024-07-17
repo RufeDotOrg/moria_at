@@ -1,5 +1,5 @@
 
-#include "font_zip.c"
+#include "asset/font_zlib.c"
 
 enum { FHEIGHT = 32 };
 enum { FWIDTH = 16 };
@@ -52,8 +52,8 @@ font_load()
   int rc;
   void* bytes = &fontD;
   unsigned long size = sizeof(fontD);
-  unsigned long zsize = sizeof(font_zip);
-  rc = puff(bytes, &size, font_zip, &zsize);
+  unsigned long zsize = font_zlib_len;
+  rc = puff(bytes, &size, font_zlib, &zsize);
   return rc == 0;
 }
 
