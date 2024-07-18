@@ -126,6 +126,70 @@ pixel_convert(void* pio_rgba)
   *color = pf;
 }
 
+STATIC void
+display_resize(int dw, int dh)
+{
+  Log("display_resize %dx%d", dw, dh);
+  display_rectD.w = dw;
+  display_rectD.h = dh;
+
+  if (!PC) {
+    // TBD: Review game utilization of viewport
+    // Disabled the push event in SDL that occurs on another thread
+    SDL_RenderSetViewport(rendererD, &(rect_t){0, 0, dw, dh});
+  }
+}
+
+int
+sdl_window_event(event)
+SDL_Event event;
+{
+  if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
+      event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+    int drw = display_rectD.w;
+    int drh = display_rectD.h;
+    int dw = event.window.data1;
+    int dh = event.window.data2;
+
+    if (__APPLE__) {
+      SDL_GetWindowSafeRect(windowD, &safe_rectD);
+      safe_rectD.x *= retina_scaleD;
+      safe_rectD.y *= retina_scaleD;
+      safe_rectD.w *= retina_scaleD;
+      safe_rectD.h *= retina_scaleD;
+      dw *= retina_scaleD;
+      dh *= retina_scaleD;
+    } else {
+      safe_rectD = (rect_t){0, 0, dw, dh};
+    }
+
+    if (dw != drw || dh != drh) {
+      display_resize(dw, dh);
+      int orientation =
+          dw > dh ? SDL_ORIENTATION_LANDSCAPE : SDL_ORIENTATION_PORTRAIT;
+
+      if (LANDSCAPE || PORTRAIT) orientation = 0;
+      platformD.orientation(orientation);
+
+      // orientation may be set before renderer creation
+      // android 11 devices don't render the first frame (e.g. samsung A20)
+      if (ANDROID && rendererD) SDL_RenderPresent(rendererD);
+
+      return CTRL('d');
+    }
+  } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+    if (display_rectD.w != 0) {
+      // android 11 devices don't render the first frame (e.g. samsung A20)
+      if (ANDROID) SDL_RenderPresent(rendererD);
+
+      return CTRL('d');
+    }
+  } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+    if (ANDROID || __APPLE__) platformD.postgame(0);
+  }
+  return 0;
+}
+
 int
 render_init()
 {
@@ -265,20 +329,6 @@ platform_draw()
   return 0;
 }
 
-STATIC void
-display_resize(int dw, int dh)
-{
-  Log("display_resize %dx%d", dw, dh);
-  display_rectD.w = dw;
-  display_rectD.h = dh;
-
-  if (!PC) {
-    // TBD: Review game utilization of viewport
-    // Disabled the push event in SDL that occurs on another thread
-    SDL_RenderSetViewport(rendererD, &(rect_t){0, 0, dw, dh});
-  }
-}
-
 STATIC int
 orientation_default()
 {
@@ -374,56 +424,6 @@ platform_vsync(vsync)
   // Log("real refresh rate: %d | stated refresh rate %d", vsync_rateD,
   //     refresh_rateD);
   return ret;
-}
-
-int
-sdl_window_event(event)
-SDL_Event event;
-{
-  if (event.window.event == SDL_WINDOWEVENT_RESIZED ||
-      event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
-    int drw = display_rectD.w;
-    int drh = display_rectD.h;
-    int dw = event.window.data1;
-    int dh = event.window.data2;
-
-    if (__APPLE__) {
-      SDL_GetWindowSafeRect(windowD, &safe_rectD);
-      safe_rectD.x *= retina_scaleD;
-      safe_rectD.y *= retina_scaleD;
-      safe_rectD.w *= retina_scaleD;
-      safe_rectD.h *= retina_scaleD;
-      dw *= retina_scaleD;
-      dh *= retina_scaleD;
-    } else {
-      safe_rectD = (rect_t){0, 0, dw, dh};
-    }
-
-    if (dw != drw || dh != drh) {
-      display_resize(dw, dh);
-      int orientation =
-          dw > dh ? SDL_ORIENTATION_LANDSCAPE : SDL_ORIENTATION_PORTRAIT;
-
-      if (LANDSCAPE || PORTRAIT) orientation = 0;
-      platformD.orientation(orientation);
-
-      // orientation may be set before renderer creation
-      // android 11 devices don't render the first frame (e.g. samsung A20)
-      if (ANDROID && rendererD) SDL_RenderPresent(rendererD);
-
-      return CTRL('d');
-    }
-  } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-    if (display_rectD.w != 0) {
-      // android 11 devices don't render the first frame (e.g. samsung A20)
-      if (ANDROID) SDL_RenderPresent(rendererD);
-
-      return CTRL('d');
-    }
-  } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-    if (ANDROID || __APPLE__) platformD.postgame(0);
-  }
-  return 0;
 }
 
 int
