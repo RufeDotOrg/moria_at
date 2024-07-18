@@ -332,7 +332,7 @@ sdl_touch_event(SDL_Event event)
     if (!PC && blipD) ret = ' ';
   }
 
-  if (!PC && ret != CTRL('d') && mode == 0 && msg_moreD) ret = ' ';
+  if (!PC && ret > ' ' && mode == 0 && msg_moreD) ret = ' ';
 
   return ret;
 }
