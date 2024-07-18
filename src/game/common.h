@@ -66,6 +66,10 @@ typedef int (*fn)();
 #define LOGFMT(...)
 //#define LOGFMT(x, ...) printf(x "\n", ##__VA_ARGS__)
 
+// Named noop that can be overridden
+#define WEAK_NOOP(x) \
+  int x() __attribute__((weak)) __attribute__((alias("noop")))
+
 // Use global var
 #define USE(x) typeof(x##D) x = x##D
 // Array Use
