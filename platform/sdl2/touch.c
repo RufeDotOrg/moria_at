@@ -56,7 +56,7 @@ int* po_dsq;
   return r;
 }
 
-int
+STATIC int
 gameplay_tapxy(relx, rely)
 {
   rect_t zr;
@@ -76,12 +76,12 @@ gameplay_tapxy(relx, rely)
   return 0;
 }
 
-int
+STATIC int
 overlay_begin()
 {
   return 0;
 }
-int
+STATIC int
 overlay_end()
 {
   for (int it = AL(overlay_usedD) - 1; it > 0; --it) {
@@ -89,7 +89,7 @@ overlay_end()
   }
   return AL(overlay_usedD) - 1;
 }
-int
+STATIC int
 overlay_bisect(dir)
 {
   int sample[AL(overlay_usedD)];
@@ -107,7 +107,7 @@ overlay_bisect(dir)
 
   return sample[sample_used / 2];
 }
-int
+STATIC int
 overlay_input(input)
 {
   int row = finger_rowD;
@@ -314,31 +314,33 @@ fingerdown_xy_mode(x, y, mode)
 int
 sdl_touch_event(SDL_Event event)
 {
-  USE(view_rect);
-  USE(layout_rect);
-  USE(mode);
   int ret = 0;
+  if (TOUCH) {
+    USE(view_rect);
+    USE(layout_rect);
+    USE(mode);
 
-  if (event.type == SDL_FINGERDOWN) {
-    finger_countD += 1;
-    SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
-    if (SDL_PointInFRect(&tp, &view_rect)) {
-      int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
-      int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
-      ret = fingerdown_xy_mode(x, y, mode);
+    if (event.type == SDL_FINGERDOWN) {
+      finger_countD += 1;
+      SDL_FPoint tp = {event.tfinger.x, event.tfinger.y};
+      if (SDL_PointInFRect(&tp, &view_rect)) {
+        int x = (tp.x - view_rect.x) / view_rect.w * layout_rect.w;
+        int y = (tp.y - view_rect.y) / view_rect.h * layout_rect.h;
+        ret = fingerdown_xy_mode(x, y, mode);
+      }
+    } else if (event.type == SDL_FINGERUP) {
+      finger_countD -= 1;
+      if (!PC && blipD) ret = ' ';
     }
-  } else if (event.type == SDL_FINGERUP) {
-    finger_countD -= 1;
-    if (!PC && blipD) ret = ' ';
-  }
 
-  if (!PC && ret > ' ' && mode == 0 && msg_moreD) ret = ' ';
+    if (!PC && ret > ' ' && mode == 0 && msg_moreD) ret = ' ';
+  }
 
   return ret;
 }
 
 // direct access to selection is not deterministic simulation
-int
+STATIC int
 touch_selection(int* yptr, int* xptr)
 {
   *yptr = finger_colD;
