@@ -436,7 +436,7 @@ sdl_pump()
   while (ret == 0 && SDL_PollEvent(&event)) {
     switch (event.type) {
       case SDL_WINDOWEVENT:
-        sdl_window_event(event);
+        ret = sdl_window_event(event);
         break;
       case SDL_QUIT:
         quitD = 1;
