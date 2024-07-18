@@ -349,7 +349,7 @@ static void surface_ppfill(surface) SDL_Surface* surface;
       int n = nearest_pp(row, col, &dsq);
       int color = lightingD[1];
 
-      int lum = CLAMP(dpad_sensitivity - sqrt(dsq), 0, 99);
+      int lum = CLAMP(dpad_sensitivity - sqrtf(dsq), 0, 99);
 
       if (globalD.dpad_color) {
         if (dpad_sensitivity >= 99) lum = MAX(1, lum);
