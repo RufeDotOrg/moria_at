@@ -47,34 +47,6 @@ sym_shift(char c)
   return c;
 }
 STATIC char
-char_by_dir(dir)
-{
-  switch (dir) {
-    case 5:
-    case 0:
-      return ' ';
-    case 4:
-      return 'h';
-    case 7:
-      return 'y';
-    case 8:
-      return 'k';
-    case 9:
-      return 'u';
-    case 6:
-      return 'l';
-    case 3:
-      return 'n';
-    case 2:
-      return 'j';
-    case 1:
-      return 'b';
-  }
-
-  // Display refresh
-  return CTRL('d');
-}
-STATIC char
 gamesym_by_scancode(code, shiftbit)
 {
   switch (code) {

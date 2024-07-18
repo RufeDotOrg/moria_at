@@ -101,3 +101,31 @@ djb2(uint64_t value, const void* buffer, uint64_t bytes)
   }
   return value;
 }
+XX char
+char_by_dir(dir)
+{
+  switch (dir) {
+    case 5:
+    case 0:
+      return ' ';
+    case 4:
+      return 'h';
+    case 7:
+      return 'y';
+    case 8:
+      return 'k';
+    case 9:
+      return 'u';
+    case 6:
+      return 'l';
+    case 3:
+      return 'n';
+    case 2:
+      return 'j';
+    case 1:
+      return 'b';
+  }
+
+  // Display refresh
+  return CTRL('d');
+}
