@@ -1480,6 +1480,9 @@ custom_draw()
   else if (overlay_usedD[0])
     mode = 1;
 
+  // numpad directions are gameplay only
+  if (KEYBOARD) keyboard_numdir(mode == 0 ? dir_remapD : 0);
+
   if (TOUCH) {
     mode_change(mode);
 

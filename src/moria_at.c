@@ -588,51 +588,28 @@ char* command;
 static char
 map_roguedir(comval)
 {
-  switch (comval) {
-    case 'h':
-      comval = '4';
-      break;
-    case 'y':
-      comval = '7';
-      break;
-    case 'k':
-      comval = '8';
-      break;
-    case 'u':
-      comval = '9';
-      break;
-    case 'l':
-      comval = '6';
-      break;
-    case 'n':
-      comval = '3';
-      break;
-    case 'j':
-      comval = '2';
-      break;
-    case 'b':
-      comval = '1';
-      break;
-    case '.':
-      comval = '5';
-      break;
-  }
-  return (comval);
+  char* iter;
+  int dir;
+
+  dir = -1;
+  iter = strchr(dir_remapD + 1, comval | 0x20);
+  if (iter) dir = iter - dir_remapD;
+  return dir;
 }
 int
 get_dir(prompt, dir)
 char* prompt;
 int* dir;
 {
-  char c, command;
+  char c;
   if (!prompt) prompt = "Which direction?";
   // ugh loop
   do {
     c = CLOBBER_MSG("%s", prompt);
 
-    command = map_roguedir(c);
-    if (command >= '1' && command <= '9' && command != '5') {
-      *dir = command - '0';
+    uint32_t tmp = map_roguedir(c);
+    if (1 <= tmp && tmp <= 9 && tmp != 5) {
+      *dir = tmp;
       return 1;
     }
     if (c == 'a') break;
@@ -13940,13 +13917,11 @@ dungeon()
         }
 
         // [1, 9] + (jhklnbyuJHKLNBYU)
-        dir = c >= '1' ? map_roguedir(c | 0x20) - '1' : -1;
-        if (dir < 9) {
+        dir = map_roguedir(c);
+        if (dir < 10) {
           // 75% random movement
           if (countD.confusion && randint(4) > 1) {
             dir = dir_by_confusion();
-          } else {
-            dir += 1;
           }
 
           if (countD.confusion /* can't run during confusion */

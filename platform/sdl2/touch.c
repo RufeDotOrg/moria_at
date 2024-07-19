@@ -227,6 +227,14 @@ column_transition(dx)
 
   return (finger_col == 0) ? '*' : '/';
 }
+STATIC char
+char_by_dir(dir)
+{
+  int ret = 0;
+  if (dir < AL(dir_remapD)) ret = dir_remapD[dir];
+
+  return ret;
+}
 STATIC int
 fingerdown_xy_mode(x, y, mode)
 {
