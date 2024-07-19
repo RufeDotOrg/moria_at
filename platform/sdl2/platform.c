@@ -80,6 +80,7 @@ enum { MOUSE = TOUCH };
 enum { PC = 1 };
 #include "keyboard.c"
 #endif
+enum { MOTION = 0 };  //(MOUSE || TOUCH) };
 
 // render.c
 DATA struct SDL_Window* windowD;
@@ -448,6 +449,10 @@ sdl_pump()
       case SDL_KEYDOWN:
         // case SDL_KEYUP: // (optional)
         if (KEYBOARD) ret = sdl_keyboard_event(event);
+        break;
+      case SDL_MOUSEMOTION:
+      case SDL_FINGERMOTION:
+        if (MOTION) ret = sdl_motion(event);
         break;
     }
   }

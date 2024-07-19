@@ -11,6 +11,7 @@ typedef struct pointS {
   int x;
   int y;
 } point_t;
+typedef struct pointS vec2;
 static int
 point_in_rect(void* in_point, void* in_rect)
 {

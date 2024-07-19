@@ -155,6 +155,11 @@ ftable_clear(void* ftable, int size)
   for (int it = 0; it < size; ++it) func[it] = noop;
 }
 
+// Vector
+typedef int* vectorT;
+typedef int v2[2];
+typedef int v3[3];
+typedef int v4[4];
 #define V2(v) v[0], v[1]
 #define V3(v) v[0], v[1], v[2]
 #define V4(v) v[0], v[1], v[2], v[3]
@@ -164,6 +169,9 @@ ftable_clear(void* ftable, int size)
 #define V2i(v) V2(iptr(v))
 #define V3i(v) V3(iptr(v))
 #define V4i(v) V4(iptr(v))
+#define V2f(v) V2(fptr(v))
+#define V3f(v) V3(fptr(v))
+#define V4f(v) V4(fptr(v))
 #define XY(v) (v).x, (v).y
 #define WH(r) (r).w, (r).h
 
