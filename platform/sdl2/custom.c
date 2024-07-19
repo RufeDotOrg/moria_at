@@ -909,6 +909,14 @@ common_text()
       p.y -= FHEIGHT;
       render_monofont_string(renderer, &fontD, AP(spacebar), p);
     }
+    int numlock = SDL_GetModState() & KMOD_NUM;
+    if (numlock) {
+      DATA char numlock_warning[] = "-numlock is on-";
+      SDL_Point p = {0, layout_rect.h};
+      p.x += AL(numlock_warning);
+      p.y -= 2 * FHEIGHT;
+      render_monofont_string(renderer, &fontD, AP(numlock_warning), p);
+    }
   }
 
   return 0;
