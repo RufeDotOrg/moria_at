@@ -1661,6 +1661,18 @@ place_stairs(tval, num)
     } while ((!flag) && (j <= 30));
   }
 }
+#define ADJ4(y, x, body)      \
+  {                           \
+    struct caveS* c_ptr;      \
+    c_ptr = &caveD[y - 1][x]; \
+    body;                     \
+    c_ptr = &caveD[y + 1][x]; \
+    body;                     \
+    c_ptr = &caveD[y][x - 1]; \
+    body;                     \
+    c_ptr = &caveD[y][x + 1]; \
+    body;                     \
+  }
 int
 num_adjacent_corridor(y, x)
 {

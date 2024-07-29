@@ -6,6 +6,11 @@ DATA char cachepathD[1024];
 DATA int cachepath_usedD;
 DATA int checksumD;
 
+extern char* SDL_AppleGetDocumentPath(const char*, const char*);
+extern int SDL_AndroidGetExternalStorageState();
+extern char* SDL_AndroidGetExternalStoragePath();
+extern char* SDL_GetCachePath(const char*, const char*);
+
 char*
 path_append_filename(char* path, int path_len, char* filename)
 {
@@ -401,7 +406,7 @@ disk_init()
     int state = SDL_AndroidGetExternalStorageState();
     if (state & 0x3) {
       int len = 0;
-      char* external = (char*)SDL_AndroidGetExternalStoragePath();
+      char* external = SDL_AndroidGetExternalStoragePath();
       if (external) {
         len = snprintf(exportpathD, AL(exportpathD), "%s", external);
         Log("GetExternalStoragePath: %s", external);

@@ -37,16 +37,6 @@ GLOBAL void* libD;
 
 #define ORGNAME "org.rufe"
 #define APPNAME "moria.app"
-#ifndef __APPLE__
-enum { __APPLE__ };
-char* SDL_AppleGetDocumentPath(const char*, const char*);
-#endif
-
-#ifndef ANDROID
-enum { ANDROID };
-int SDL_AndroidGetExternalStorageState();
-char* SDL_AndroidGetExternalStoragePath();
-#endif
 
 enum { SDL_EVLOG = 0 };
 enum { SDL_VERBOSE = 0 };
@@ -74,7 +64,6 @@ enum { TOUCH = 1 };
 enum { MOUSE = 0 };
 enum { PC = 0 };
 #else
-char* SDL_GetCachePath(const char*, const char*);
 enum { TOUCH = 0 };
 enum { MOUSE = TOUCH };
 enum { PC = 1 };

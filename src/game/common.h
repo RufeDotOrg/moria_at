@@ -1,6 +1,18 @@
 #ifndef COMMON
 #define COMMON
 
+#ifndef __APPLE__
+enum { __APPLE__ };
+#endif
+
+#ifndef ANDROID
+enum { ANDROID };
+#endif
+
+#ifndef RELEASE
+enum { RELEASE };
+#endif
+
 // stdint
 typedef __UINT8_TYPE__ uint8_t;
 typedef __UINT16_TYPE__ uint16_t;
@@ -108,14 +120,6 @@ extern unsigned char __start_game[] __attribute__((__weak__));
 extern unsigned char __stop_game[] __attribute__((__weak__));
 #endif
 
-// Game build variants
-#if defined(NDEBUG) || defined(RELEASE)
-#undef RELEASE
-enum { RELEASE = 1 };
-#else
-enum { RELEASE = 0 };
-#endif
-
 #ifndef CTRL
 #define CTRL(x) (x & 0x1f)
 #endif
@@ -127,18 +131,6 @@ enum { RELEASE = 0 };
       if (!type->id) continue;                                   \
       body;                                                      \
     }                                                            \
-  }
-#define ADJ4(y, x, body)      \
-  {                           \
-    struct caveS* c_ptr;      \
-    c_ptr = &caveD[y - 1][x]; \
-    body;                     \
-    c_ptr = &caveD[y + 1][x]; \
-    body;                     \
-    c_ptr = &caveD[y][x - 1]; \
-    body;                     \
-    c_ptr = &caveD[y][x + 1]; \
-    body;                     \
   }
 
 // Function Table
