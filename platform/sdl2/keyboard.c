@@ -1,14 +1,16 @@
-DATA char* numdir_remapD;
+DATA char* scancode_mapD;
 
 int
-keyboard_numdir(remap)
-char* remap;
+keyboard_map(scancode)
+char* scancode;
 {
-  numdir_remapD = remap;
+  scancode_mapD = scancode;
 }
 
-STATIC char
-sym_shift(char c)
+// TBD: table is smaller & faster
+// 0x9d 157 bytes
+int
+sym_shift(c)
 {
   switch (c) {
     case '`':
@@ -41,6 +43,8 @@ sym_shift(char c)
       return '{';
     case ']':
       return '}';
+    case '\\':
+      return '|';
     case ';':
       return ':';
     case '\'':
@@ -55,6 +59,7 @@ sym_shift(char c)
 
   return c;
 }
+// (0x1d 29 bytes) compact switch table
 STATIC char
 gamesym_by_scancode(code)
 {
@@ -84,26 +89,29 @@ int
 sdl_keyboard_event(event)
 SDL_Event event;
 {
-  int ret = 0;
+  int ret = event.key.keysym.sym;
   int mod = event.key.keysym.mod;
-  int shift = (mod & KMOD_SHIFT) != 0 ? 0x20 : 0;
 
-  if (event.key.keysym.sym < SDLK_SCANCODE_MASK) {
-    if (char_alpha(event.key.keysym.sym)) {
-      int ctrl = (mod & KMOD_CTRL);
-      ret = ctrl ? CTRL(event.key.keysym.sym) : (event.key.keysym.sym ^ shift);
-    } else {
-      ret = shift ? sym_shift(event.key.keysym.sym) : event.key.keysym.sym;
-    }
-  } else {  // Scancode
-    int numlock = (mod & KMOD_NUM);
+  if (ret >= SDLK_SCANCODE_MASK) {
+    uint8_t scancode = MIN(event.key.keysym.scancode, 255);
+    if (scancode_mapD)
+      ret = scancode_mapD[scancode];
+    else
+      ret = gamesym_by_scancode(scancode);
+
     // require numlock off (due to Windows Shift+Numlock complexity)
-    if (!numlock) {
-      ret = gamesym_by_scancode(event.key.keysym.scancode);
-      if (char_digit(ret) && numdir_remapD)
-        ret = numdir_remapD[ret - '0'] ^ shift;
-    }
+    if (mod & KMOD_NUM) ret = 0;
+  } else {
+    if (mod & KMOD_SHIFT) ret = sym_shift(ret);
   }
+
+  if (char_alpha(ret)) {
+    if (mod & KMOD_CTRL)
+      ret = CTRL(ret);
+    else if (mod & KMOD_SHIFT)
+      ret ^= 0x20;
+  }
+
   return ret;
 }
 
