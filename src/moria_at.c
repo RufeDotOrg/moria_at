@@ -592,8 +592,10 @@ map_roguedir(comval)
   int dir;
 
   dir = -1;
-  iter = strchr(dir_remapD + 1, comval | 0x20);
-  if (iter) dir = iter - dir_remapD;
+  if (comval > ' ') {
+    iter = strchr(dir_remapD + 1, comval | 0x20);
+    if (iter) dir = iter - dir_remapD;
+  }
   return dir;
 }
 int
@@ -13928,7 +13930,7 @@ dungeon()
           }
         }
 
-        // [1, 9] + (jhklnbyuJHKLNBYU)
+        // (jhklnbyuJHKLNBYU)
         dir = map_roguedir(c);
         if (dir < 10) {
           // 75% random movement
