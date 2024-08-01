@@ -11377,7 +11377,7 @@ py_help()
 
   line += 1;
   BufMsg(screen, "SHIFT: non-combat run & dig");
-  BufMsg(screen, "hljk: movement & combat");
+  BufMsg(screen, "hljk yubn: movement & combat");
 
   BufPad(screen, AL(screenD), 34);
 
@@ -11402,7 +11402,7 @@ py_help()
                                                       //
     line += 1;
     BufMsg(screen, "NUMPAD (Numlock OFF)");
-    BufMsg(screen, "  2468: movement & combat");
+    BufMsg(screen, "  2468 1379: movement & combat");
     BufMsg(screen, "  0: alias to minimap");
     BufMsg(screen, "  .: alias to zoom");
     BufMsg(screen, "  enter: alias to spacebar");
