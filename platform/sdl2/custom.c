@@ -911,7 +911,7 @@ common_text()
     }
     int numlock = SDL_GetModState() & KMOD_NUM;
     if (numlock) {
-      DATA char numlock_warning[] = "-numlock is on-";
+      DATA char numlock_warning[] = "-please disable numlock-";
       SDL_Point p = {0, layout_rect.h};
       p.x += AL(numlock_warning);
       p.y -= 2 * FHEIGHT;
