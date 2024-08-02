@@ -4434,6 +4434,8 @@ detect_mon(int (*valid)(), int known)
   if (flag) {
     // Experimental: snap panel update on detection
     panelD = p;
+    // Attempt to indicate pending user input
+    msg_moreD += 1;
     CLOBBER_MSG("Your senses tingle!");
   } else if (known) {
     msg_print("You detect nothing further.");
@@ -11247,6 +11249,61 @@ py_undo()
     longjmp(restartD, 1);
   }
 }
+static int
+py_help()
+{
+  int line = 1;
+
+  screen_submodeD = 1;
+  BufMsg(screen, "a: actuate inventory item");
+  BufMsg(screen, "c: character screen");
+  BufMsg(screen, "d: drop inventory or equipment");
+  BufMsg(screen, "m: map dungeon");
+  BufMsg(screen, "p: message history");
+  BufMsg(screen, "v: version info");
+  line += 1;
+  BufMsg(screen, "CTRL-c: save and exit");
+  BufMsg(screen, "CTRL-z: undo");
+  line += 1;
+  BufMsg(screen, "ESC: Game Menu");
+  BufMsg(screen, "+/-: zoom in/out");
+  BufMsg(screen, "!: repeat last spell/item");
+
+  line += 1;
+  BufMsg(screen, "SHIFT: non-combat run & dig");
+  BufMsg(screen, "hljk yubn: movement & combat");
+
+  BufPad(screen, AL(screenD), 34);
+
+  line = 1;
+  BufMsg(screen, ".: auto-command. One of the following:");
+  BufMsg(screen, "  <: up stairs");
+  BufMsg(screen, "  >: down stairs");
+  BufMsg(screen, "  ,: pickup object");
+  BufMsg(screen, "  s: search for traps/doors");
+
+  if (KEYBOARD) {
+    line += 1;
+    BufMsg(screen, "KEYBOARD EXTRAS");
+    // deprecate or add mobile UI?
+    // BufMsg(screen, "f: force/bash chest/door/monster");
+    BufMsg(screen, "  i/e: inventory/equipment actuate");
+    BufMsg(screen, "  w: weapon swap with offhand");  // handy
+    BufMsg(screen, "  x: examine objects/monsters");  // show look frame?
+    BufMsg(screen, "  M: Map scan mode");             // useful?
+    BufMsg(screen, "  R: Rest until healed");         // handy
+    BufMsg(screen, "  S: Study an object");           // maybe SHIFT on actuate
+                                                      //
+    line += 1;
+    BufMsg(screen, "NUMPAD (Numlock OFF)");
+    BufMsg(screen, "  2468 1379: movement & combat");
+    BufMsg(screen, "  0: alias to minimap");
+    BufMsg(screen, "  .: alias to auto-command");
+    BufMsg(screen, "  +/-: alias to zoom");
+  }
+
+  return CLOBBER_MSG("keyboard help");
+}
 int
 py_menu()
 {
@@ -11289,6 +11346,7 @@ py_menu()
     BufMsg(overlay, "e) Extra features");
     BufMsg(overlay, "-");
     BufMsg(overlay, "g) Game reset");
+    if (PC) BufMsg(overlay, "h) Help");
 
     if (!in_subcommand(prompt, &c)) break;
 
@@ -11316,6 +11374,10 @@ py_menu()
         if (!death) platformD.savemidpoint();
         globalD.saveslot_class = -1;
         longjmp(restartD, 1);
+        break;
+
+      case 'h':
+        if (PC) py_help();
         break;
     }
   }
@@ -11441,62 +11503,6 @@ py_death()
 
     py_menu();
   } while (1);
-}
-static int
-py_help()
-{
-  int line = 1;
-
-  screen_submodeD = 1;
-  BufMsg(screen, "a: actuate inventory item");
-  BufMsg(screen, "c: character screen");
-  BufMsg(screen, "d: drop inventory or equipment");
-  BufMsg(screen, "m: map dungeon");
-  BufMsg(screen, "p: message history");
-  BufMsg(screen, "v: version info");
-  line += 1;
-  BufMsg(screen, "CTRL-c: save and exit");
-  BufMsg(screen, "CTRL-z: undo");
-  line += 1;
-  BufMsg(screen, "ESC: Game Menu");
-  BufMsg(screen, "+/-: zoom in/out");
-  BufMsg(screen, "!: repeat last spell/item");
-
-  line += 1;
-  BufMsg(screen, "SHIFT: non-combat run & dig");
-  BufMsg(screen, "hljk yubn: movement & combat");
-
-  BufPad(screen, AL(screenD), 34);
-
-  line = 1;
-  BufMsg(screen, ".: auto-command. One of the following:");
-  BufMsg(screen, "  <: up stairs");
-  BufMsg(screen, "  >: down stairs");
-  BufMsg(screen, "  ,: pickup object");
-  BufMsg(screen, "  s: search for traps/doors");
-
-  if (KEYBOARD) {
-    line += 1;
-    BufMsg(screen, "KEYBOARD EXTRAS");
-    // deprecate or add mobile UI?
-    // BufMsg(screen, "f: force/bash chest/door/monster");
-    BufMsg(screen, "  i/e: inventory/equipment actuate");
-    BufMsg(screen, "  w: weapon swap with offhand");  // handy
-    BufMsg(screen, "  x: examine objects/monsters");  // show look frame?
-    BufMsg(screen, "  M: Map scan mode");             // useful?
-    BufMsg(screen, "  R: Rest until healed");         // handy
-    BufMsg(screen, "  S: Study an object");           // maybe SHIFT on actuate
-                                                      //
-    line += 1;
-    BufMsg(screen, "NUMPAD (Numlock OFF)");
-    BufMsg(screen, "  2468 1379: movement & combat");
-    BufMsg(screen, "  0: alias to minimap");
-    BufMsg(screen, "  .: alias to zoom");
-    BufMsg(screen, "  enter: alias to spacebar");
-    BufMsg(screen, "  +/-: alias to zoom");
-  }
-
-  return CLOBBER_MSG("? - help");
 }
 int inven_damage(typ, perc) int (*typ)();
 {
@@ -12268,6 +12274,7 @@ py_monlook_dir(dir)
           if (mon->msleep) msg_hint(AP("(sleeping)"));
           // hack: mon death_descD pronoun is a/an
           death_descD[0] |= 0x20;
+          msg_moreD += 1;
           CLOBBER_MSG("You see %s.", death_descD);
         }
       }
@@ -12302,6 +12309,7 @@ py_objlook_dir(dir)
         ylookD = obj->fy;
         xlookD = obj->fx;
         obj_desc(obj, obj->number);
+        msg_moreD += 1;
         CLOBBER_MSG("You see %s.", descD);
       }
     }
@@ -14036,9 +14044,6 @@ dungeon()
         } else {
           if (KEYBOARD) {
             switch (c) {
-              case '?':
-                py_help();
-                break;
               case ESCAPE:
                 maybe_menu();
                 break;
