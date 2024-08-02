@@ -107,9 +107,6 @@ SDL_Event event;
     sym = event.key.keysym.sym;
     if (sym >= SDLK_SCANCODE_MASK) {
       sym = gamesym_by_scancode(event.key.keysym.scancode);
-    } else {
-      // Map to ASCII
-      if (mod & KMOD_SHIFT) sym = sym_shift(sym);
     }
   }
 
@@ -119,6 +116,8 @@ SDL_Event event;
       sym = CTRL(sym);
     else if (mod & KMOD_SHIFT)
       sym ^= 0x20;
+  } else {
+    if (mod & KMOD_SHIFT) sym = sym_shift(sym);
   }
 
   return sym;
