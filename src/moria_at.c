@@ -11321,6 +11321,93 @@ py_menu()
   }
   return 0;
 }
+STATIC int
+wizard_prompt()
+{
+  int x, y;
+  msg_hint(AP("(aefhltosw)"));
+  char c = CLOBBER_MSG("Enter wizard command:");
+  switch (c) {
+    case 'a': {
+      uD.exp += 1000000;
+      py_experience();
+      dun_level = 0;
+      uD.new_level_flag = NL_DOWN_STAIR;
+      uD.gold = 10000;
+      turn_flag = TRUE;
+    } break;
+    case 'e': {
+      earthquake();
+    } break;
+    case 'f': {
+      viz_hookD = viz_magick;
+      magick_distD = 2;
+      magick_locD = (point_t){uD.x, uD.y};
+      magick_hituD = 0;
+    } break;
+    case 'h':
+      uD.chp = uD.mhp;
+      msg_print("You are healed.");
+      break;
+    case 'l': {
+      static int toggleD;
+      for (int row = 0; row < MAX_HEIGHT; ++row) {
+        for (int col = 0; col < MAX_WIDTH; ++col) {
+          if (caveD[row][col].fval <= MAX_OPEN_SPACE) {
+            if (!toggleD)
+              caveD[row][col].cflag |= (CF_PERM_LIGHT | CF_ROOM);
+            else
+              caveD[row][col].cflag &= ~(CF_PERM_LIGHT | CF_ROOM);
+          }
+        }
+      }
+      toggleD = !toggleD;
+    } break;
+    case 't':
+      msg_print("teleport");
+      do {
+        x = randint(MAX_WIDTH - 2);
+        y = randint(MAX_HEIGHT - 2);
+      } while (caveD[y][x].fval >= MIN_CLOSED_SPACE || caveD[y][x].midx != 0);
+      break;
+    case 'o': {
+      static int y_obj_teleportD;
+      static int x_obj_teleportD;
+      int row, col;
+      int fy, fx;
+      fy = y_obj_teleportD;
+      fx = x_obj_teleportD;
+      for (row = 1; row < MAX_HEIGHT - 1; ++row) {
+        for (col = 1; col < MAX_WIDTH - 1; ++col) {
+          int oidx = caveD[row][col].oidx;
+          if (!oidx) continue;
+          struct objS* obj = &entity_objD[oidx];
+          if (is_door(obj->tval)) continue;
+          if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
+          if (py_teleport_near(row, col, &y, &x)) {
+            MSG("Teleport to obj %d", oidx);
+            y_obj_teleportD = row;
+            x_obj_teleportD = col;
+            row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
+          }
+        }
+      }
+      if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
+        y_obj_teleportD = x_obj_teleportD = 0;
+        msg_print("Reset object teleport");
+      }
+    } break;
+    case 's': {
+      msg_print("Store maintenance.");
+      store_maint();
+    } break;
+    case 'w': {
+      msg_print("The air about you becomes charged.");
+      ma_duration(MA_RECALL, 1);
+    } break;
+  }
+  return 0;
+}
 int
 maybe_menu()
 {
@@ -13991,8 +14078,6 @@ dungeon()
             case '!':
               py_reactuate(&y, &x, last_actuateD);
               break;
-            case ' ':
-              break;
             case ',':
               py_pickup(y, x, TRUE);
               break;
@@ -14052,101 +14137,22 @@ dungeon()
               memcpy(death_descD, AP(quit_stringD));
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game
-            case CTRL('d'):
-              break;
             case 'p':
               show_history();
+              break;
+            case CTRL('w'):
+              if (HACK) wizard_prompt();
+              break;
+            case CTRL('x'):
+              if (HACK) {
+                memcpy(death_descD, AP(quit_stringD));
+                uD.new_level_flag = NL_DEATH;
+                return;  // Interrupt game
+              }
               break;
             case CTRL('z'):
               py_undo();
               break;
-          }
-
-          if (HACK) {
-            switch (c) {
-              case CTRL('a'): {
-                uD.exp += 1000000;
-                py_experience();
-                dun_level = 0;
-                uD.new_level_flag = NL_DOWN_STAIR;
-                uD.gold = 10000;
-                turn_flag = TRUE;
-              } break;
-              case CTRL('e'): {
-                earthquake();
-              } break;
-              case CTRL('f'): {
-                viz_hookD = viz_magick;
-                magick_distD = 2;
-                magick_locD = (point_t){uD.x, uD.y};
-                magick_hituD = 0;
-              } break;
-              case CTRL('h'):
-                uD.chp = uD.mhp;
-                msg_print("You are healed.");
-                break;
-              case CTRL('l'): {
-                static int toggleD;
-                for (int row = 0; row < MAX_HEIGHT; ++row) {
-                  for (int col = 0; col < MAX_WIDTH; ++col) {
-                    if (caveD[row][col].fval <= MAX_OPEN_SPACE) {
-                      if (!toggleD)
-                        caveD[row][col].cflag |= (CF_PERM_LIGHT | CF_ROOM);
-                      else
-                        caveD[row][col].cflag &= ~(CF_PERM_LIGHT | CF_ROOM);
-                    }
-                  }
-                }
-                toggleD = !toggleD;
-              } break;
-              case CTRL('t'):
-                msg_print("teleport");
-                do {
-                  x = randint(MAX_WIDTH - 2);
-                  y = randint(MAX_HEIGHT - 2);
-                } while (caveD[y][x].fval >= MIN_CLOSED_SPACE ||
-                         caveD[y][x].midx != 0);
-                break;
-              case CTRL('o'): {
-                static int y_obj_teleportD;
-                static int x_obj_teleportD;
-                int row, col;
-                int fy, fx;
-                fy = y_obj_teleportD;
-                fx = x_obj_teleportD;
-                for (row = 1; row < MAX_HEIGHT - 1; ++row) {
-                  for (col = 1; col < MAX_WIDTH - 1; ++col) {
-                    int oidx = caveD[row][col].oidx;
-                    if (!oidx) continue;
-                    struct objS* obj = &entity_objD[oidx];
-                    if (is_door(obj->tval)) continue;
-                    if (row * MAX_WIDTH + col <= fy * MAX_WIDTH + fx) continue;
-                    if (py_teleport_near(row, col, &y, &x)) {
-                      MSG("Teleport to obj %d", oidx);
-                      y_obj_teleportD = row;
-                      x_obj_teleportD = col;
-                      row = col = MAX(MAX_HEIGHT, MAX_WIDTH);
-                    }
-                  }
-                }
-                if (row == MAX_HEIGHT - 1 && col == MAX_WIDTH - 1) {
-                  y_obj_teleportD = x_obj_teleportD = 0;
-                  msg_print("Reset object teleport");
-                }
-              } break;
-              case CTRL('s'): {
-                msg_print("Store maintenance.");
-                store_maint();
-              } break;
-              case CTRL('w'): {
-                msg_print("The air about you becomes charged.");
-                ma_duration(MA_RECALL, 1);
-              } break;
-              case CTRL('x'):
-                memcpy(death_descD, AP(quit_stringD));
-                uD.new_level_flag = NL_DEATH;
-                return;  // Interrupt game
-            }
           }
         }
       }
