@@ -64,12 +64,14 @@ STATIC char
 gamesym_by_scancode(code)
 {
   switch (code) {
+    case SDL_SCANCODE_RETURN:
+      return '\n';
     case SDL_SCANCODE_KP_1 ... SDL_SCANCODE_KP_9:
       return '1' + (code - SDL_SCANCODE_KP_1);
     case SDL_SCANCODE_KP_0:
       return '0';
     case SDL_SCANCODE_KP_ENTER:
-      return ' ';
+      return '\n';
     case SDL_SCANCODE_KP_PLUS:
       return '+';
     case SDL_SCANCODE_KP_MINUS:
@@ -89,30 +91,37 @@ int
 sdl_keyboard_event(event)
 SDL_Event event;
 {
-  int ret = event.key.keysym.sym;
+  int sym;
   int mod = event.key.keysym.mod;
 
-  if (ret >= SDLK_SCANCODE_MASK) {
+  // Scancode override:
+  // Gameplay mode raw inputs
+  // Player customization
+  if (scancode_mapD) {
     uint8_t scancode = MIN(event.key.keysym.scancode, 255);
-    if (scancode_mapD)
-      ret = scancode_mapD[scancode];
-    else
-      ret = gamesym_by_scancode(scancode);
-
+    sym = scancode_mapD[scancode];
     // require numlock off (due to Windows Shift+Numlock complexity)
-    if (mod & KMOD_NUM) ret = 0;
+    if (mod & KMOD_NUM) sym = 0;
   } else {
-    if (mod & KMOD_SHIFT) ret = sym_shift(ret);
+    // Common text input
+    sym = event.key.keysym.sym;
+    if (sym >= SDLK_SCANCODE_MASK) {
+      sym = gamesym_by_scancode(event.key.keysym.scancode);
+    } else {
+      // Map to ASCII
+      if (mod & KMOD_SHIFT) sym = sym_shift(sym);
+    }
   }
 
-  if (char_alpha(ret)) {
+  // Compression (TBD customization or mode toggle)
+  if (char_alpha(sym)) {
     if (mod & KMOD_CTRL)
-      ret = CTRL(ret);
+      sym = CTRL(sym);
     else if (mod & KMOD_SHIFT)
-      ret ^= 0x20;
+      sym ^= 0x20;
   }
 
-  return ret;
+  return sym;
 }
 
 #define KEYBOARD 1
