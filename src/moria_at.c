@@ -11324,7 +11324,7 @@ py_menu()
 int
 maybe_menu()
 {
-  char c = CLOBBER_MSG("Press escape twice for Advanced Game Options.");
+  char c = CLOBBER_MSG("Press key twice for Advanced Game Options.");
   if (c == ESCAPE) return py_menu();
   return 0;
 }
@@ -13932,7 +13932,7 @@ dungeon()
 
         // (jhklnbyuJHKLNBYU)
         dir = map_roguedir(c);
-        if (dir < 10) {
+        if (dir < 10 && dir != 5) {
           // 75% random movement
           if (countD.confusion && randint(4) > 1) {
             dir = dir_by_confusion();
