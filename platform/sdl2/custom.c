@@ -18,6 +18,8 @@ enum { COLOR = 0 };
 #include "asset/treasure.c"
 #include "asset/wall.c"
 
+#include "asset/scancode.c"
+
 // Game specific inclusion
 #include "touch.c"
 
@@ -426,6 +428,8 @@ custom_pregame()
 {
   if (COSMO_CRASH) platform_phase(PLATFORM_PREGAME);
   if (DISK && !disk_init()) return 1;
+  if (DISK && KEYBOARD)
+    disk_read_keys(gameplay_inputD, sizeof(gameplay_inputD));
 
   platform_pregame();
 
@@ -1465,8 +1469,6 @@ mode_change(mnext)
 
   return mnext;
 }
-
-#include "asset/scancode.c"
 
 int
 custom_draw()

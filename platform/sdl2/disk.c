@@ -364,6 +364,22 @@ cache_read()
   return success;
 }
 int
+disk_read_keys(keys, len)
+char* keys;
+{
+  int success = 0;
+  if (cachepath_usedD) {
+    char* file = path_append_filename(savepathD, savepath_usedD, "keyconfig");
+    SDL_RWops* readf = file_access(file, "rb");
+    if (readf) {
+      uint64_t sz = SDL_RWsize(readf);
+      if (len == sz) success = (SDL_RWread(readf, keys, len, 1) != 0);
+      SDL_RWclose(readf);
+    }
+  }
+  return success;
+}
+int
 disk_postgame(may_exit)
 {
   if (uD.new_level_flag != NL_DEATH) disk_savemidpoint();
