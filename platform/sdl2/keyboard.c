@@ -78,7 +78,7 @@ SDL_Event event;
   }
 
   if (mod & KMOD_CTRL) {
-    sym = CTRL(sym);
+    if (char_alpha(sym)) sym = CTRL(sym);
   }
 
   return sym;

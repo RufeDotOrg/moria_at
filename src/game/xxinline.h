@@ -1,21 +1,21 @@
 #if defined(__FATCOSMOCC__)
-#define XX inline
+#define XX inline __attribute__((pure))
 #else
-#define XX static
+#define XX static __attribute__((pure))
 #endif
 XX int
-char_visible(char c)
+char_visible(c)
 {
   uint8_t vis = c - 0x21;
   return vis < 0x7f - 0x21;
 }
 XX int
-char_alpha(char c)
+char_alpha(c)
 {
   return ('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z');
 }
 XX int
-char_digit(char c)
+char_digit(c)
 {
   return ('0' <= c && c <= '9');
 }
@@ -80,16 +80,8 @@ vptr(void* ptr)
 {
   return ptr;
 }
-XX uint8_t*
-bptr(void* ptr)
-{
-  return ptr;
-}
-XX int*
-iptr(void* ptr)
-{
-  return ptr;
-}
+XX uint8_t* bptr(void* ptr) __attribute__((alias("vptr")));
+XX int* iptr(void* ptr) __attribute__((alias("vptr")));
 XX void*
 ptr_xor(void* a, void* b)
 {
