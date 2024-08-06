@@ -1,6 +1,7 @@
 #include "game/common.h"
 
 #include "game/const.h"
+#include "game/table.h"
 #include "game/type.h"
 #include "game/var.h"
 #include "game/xxcast.h"
