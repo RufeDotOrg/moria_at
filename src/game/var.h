@@ -2,11 +2,6 @@
 #include "t_mon.c"
 #include "t_obj.c"
 
-// Input
-DATA char dir_remapD[] = {
-    'm', 'b', 'j', 'n', 'h', ' ', 'l', 'y', 'k', 'u', 0,
-};
-
 // Visual info
 DATA struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 DATA int vitalD[8];

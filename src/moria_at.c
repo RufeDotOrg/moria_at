@@ -588,15 +588,8 @@ char* command;
 static char
 map_roguedir(comval)
 {
-  char* iter;
-  int dir;
-
-  dir = -1;
-  if (comval > ' ') {
-    iter = strchr(dir_remapD + 1, comval | 0x20);
-    if (iter) dir = iter - dir_remapD;
-  }
-  return dir;
+  if (comval > ' ') comval |= 0x20;
+  return dir_key(comval);
 }
 int
 get_dir(prompt, dir)
@@ -609,8 +602,8 @@ int* dir;
   do {
     c = CLOBBER_MSG("%s", prompt);
 
-    uint32_t tmp = map_roguedir(c);
-    if (1 <= tmp && tmp <= 9 && tmp != 5) {
+    int tmp = map_roguedir(c);
+    if (tmp > 0 && tmp != 5) {
       *dir = tmp;
       return 1;
     }
@@ -14027,7 +14020,7 @@ dungeon()
 
         // (jhklnbyuJHKLNBYU)
         dir = map_roguedir(c);
-        if (dir < 10 && dir != 5) {
+        if (dir > 0 && dir != 5) {
           // 75% random movement
           if (countD.confusion && randint(4) > 1) {
             dir = dir_by_confusion();

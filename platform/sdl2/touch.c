@@ -227,14 +227,6 @@ column_transition(dx)
 
   return (finger_col == 0) ? '*' : '/';
 }
-STATIC char
-char_by_dir(dir)
-{
-  int ret = 0;
-  if (dir < AL(dir_remapD)) ret = dir_remapD[dir];
-
-  return ret;
-}
 STATIC int
 fingerdown_xy_mode(x, y, mode)
 {
@@ -246,7 +238,7 @@ fingerdown_xy_mode(x, y, mode)
   int touch = touch_by_xy(x, y);
   if (mode == 0) {
     if (touch > TOUCH_PAD) {
-      char c = char_by_dir(touch - TOUCH_PAD);
+      char c = key_dir(touch - TOUCH_PAD);
       switch (finger) {
         case 0:
           return c;
