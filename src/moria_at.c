@@ -12951,7 +12951,8 @@ mon_move(midx)
   flee = FALSE;
   cdis = distance(uD.y, uD.x, m_ptr->fy, m_ptr->fx);
 
-  if (cr_ptr->cmove & CM_MULTIPLY) mon_try_multiply(m_ptr);
+  if ((cr_ptr->cmove & CM_MULTIPLY) && cdis <= cr_ptr->aaf)
+    mon_try_multiply(m_ptr);
   if (cr_ptr->spells & CS_FREQ)
     took_turn = mon_try_spell(midx, cdis) || (cr_ptr->cmove & CM_ONLY_MAGIC);
 
