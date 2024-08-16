@@ -11373,7 +11373,7 @@ STATIC int
 wizard_prompt()
 {
   int x, y;
-  msg_hint(AP("(aefhltosw)"));
+  msg_hint(AP("(adefhltosw)"));
   char c = CLOBBER_MSG("Enter wizard command:");
   switch (c) {
     case 'a': {
@@ -11384,6 +11384,20 @@ wizard_prompt()
       uD.gold = 10000;
       turn_flag = TRUE;
     } break;
+    case 'd':
+      c = CLOBBER_MSG("Detect monster (e/i/m):");
+      int ma_type = 0;
+      if (c == 'e') {
+        ma_type = MA_DETECT_EVIL;
+      } else if (c == 'i') {
+        ma_type = MA_DETECT_INVIS;
+      } else if (c == 'm') {
+        ma_type = MA_DETECT_MON;
+      }
+      detect_mon(ma_type, 1);
+      ma_duration(ma_type, 1 + uD.lev / 5);
+      turn_flag = 1;
+      break;
     case 'e': {
       earthquake();
     } break;
