@@ -26,6 +26,7 @@ main()
   mapping[SDL_SCANCODE_EQUALS] = '=';
   mapping[SDL_SCANCODE_COMMA] = ',';
   mapping[SDL_SCANCODE_PERIOD] = '.';
+  mapping[SDL_SCANCODE_SLASH] = '/';
 
   // Movement
   char dir[] = {

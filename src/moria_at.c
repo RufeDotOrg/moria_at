@@ -11267,7 +11267,7 @@ py_help()
   BufMsg(screen, "!: repeat last spell/item");
 
   line += 1;
-  BufMsg(screen, "SHIFT: non-combat run & dig");
+  BufMsg(screen, "SHIFT: non-combat run");
   BufMsg(screen, "hljk yubn: movement & combat");
 
   BufPad(screen, AL(screenD), 34);
@@ -11289,8 +11289,7 @@ py_help()
     BufMsg(screen, "  x: examine objects/monsters");  // show look frame?
     BufMsg(screen, "  M: Map scan mode");             // useful?
     BufMsg(screen, "  R: Rest until healed");         // handy
-    BufMsg(screen, "  S: Study an object");           // maybe SHIFT on actuate
-                                                      //
+    line += 1;
     line += 1;
     BufMsg(screen, "NUMPAD (Numlock OFF)");
     BufMsg(screen, "  2468 1379: movement & combat");
@@ -14045,6 +14044,9 @@ dungeon()
               case ESCAPE:
                 maybe_menu();
                 break;
+              case '?':
+                py_help();
+                break;
               case 'e':
                 py_actuate(&y, &x, 'e');
                 break;
@@ -14057,6 +14059,9 @@ dungeon()
               case 'i':
                 py_actuate(&y, &x, 'i');
                 break;
+              case 'v':
+                show_version();
+                break;
               case 'M':
                 if (dun_level) py_where_on_map();
                 break;
@@ -14067,19 +14072,19 @@ dungeon()
           }
 
           switch (c) {
-            default:
-              break;
-            case '=':
-              if (!KEYBOARD) py_menu();
-              break;
             case '-':
+            case '_':
               globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
               break;
             case '+':
+            case '=':
               globalD.zoom_factor = (globalD.zoom_factor + 1) % MAX_ZOOM;
               break;
             case '!':
               py_reactuate(&y, &x, last_actuateD);
+              break;
+            case '@':
+              py_menu();
               break;
             case ',':
               py_pickup(y, x, TRUE);

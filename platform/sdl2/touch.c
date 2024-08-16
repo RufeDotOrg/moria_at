@@ -243,7 +243,7 @@ fingerdown_xy_mode(x, y, mode)
         case 0:
           return c;
         case 1:
-          if (c == ' ') return '=';
+          if (c == ' ') return '@';  // menu
           return c & ~0x20;
       }
     } else if (touch) {
