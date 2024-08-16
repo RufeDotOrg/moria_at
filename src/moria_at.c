@@ -4403,33 +4403,18 @@ detect_obj(int (*valid)(), int known)
   return (detect);
 }
 int
-detect_mon(int (*valid)(), int known)
+detect_mon(ma_type, known)
 {
-  struct creatureS* cr_ptr;
   int flag = 0;
-  int drow, dcol;
-  struct panelS p;
-
-  panel_update(&p, uD.y, uD.x, 1);
-
+  int mflag = 1 << ma_type;
   FOR_EACH(mon, {
-    drow = mon->fy - p.panel_row_min;
-    dcol = mon->fx - p.panel_col_min;
-    if ((uint32_t)drow < SYMMAP_HEIGHT && (uint32_t)dcol < SYMMAP_WIDTH) {
-      cr_ptr = &creatureD[mon->cidx];
-      if (valid(cr_ptr)) {
-        mon->mshow = 1;
-        flag = TRUE;
-      }
-    }
+    struct creatureS* cr_ptr = &creatureD[mon->cidx];
+    int df = dflags_by_creature(cr_ptr);
+    if (mflag & df) flag = 1;
   });
 
   if (flag) {
-    // Experimental: snap panel update on detection
-    panelD = p;
-    // Attempt to indicate pending user input
-    msg_moreD += 1;
-    CLOBBER_MSG("Your senses tingle!");
+    msg_print("Your senses tingle!");
   } else if (known) {
     msg_print("You detect nothing further.");
   }
@@ -4462,9 +4447,24 @@ struct creatureS* cr_ptr;
   if (py_affect(MA_BLIND)) return 0;
   return perceive_creature(cr_ptr);
 }
+// Player may use detection flags to light creature up
+int
+dflags_by_creature(struct creatureS* cr_ptr)
+{
+  int dflags = 0;
+  if (CD_EVIL & cr_ptr->cdefense) {
+    dflags |= (1 << MA_DETECT_EVIL);
+  }
+
+  if ((CM_INVISIBLE & cr_ptr->cmove)) {
+    dflags |= (1 << MA_DETECT_INVIS);
+  } else {
+    dflags |= (1 << MA_DETECT_MON);
+  }
+
+  return dflags;
+}
 // dependency on mflag requires ma_tick() to have run
-// note: direct check of MA_BLIND is because sight can change during creatures()
-#define test_bit(mem, bit) (((mem) & (1 << (uint32_t)(bit))) != 0)
 int
 mon_lit(midx)
 {
@@ -4476,37 +4476,33 @@ mon_lit(midx)
   MUSE(u, x);
   MUSE(u, mflag);
   MUSE(u, infra);
-  int blind = (maD[MA_BLIND] != 0);
-  int flag = 0;
+  int lit = 0;
 
   if (midx) {
     m_ptr = &entity_monD[midx];
     cr_ptr = &creatureD[m_ptr->cidx];
 
-    if (test_bit(mflag, MA_DETECT_EVIL) && (CD_EVIL & cr_ptr->cdefense)) {
-      flag = TRUE;
-    } else if (test_bit(mflag, MA_DETECT_MON) &&
-               ((CM_INVISIBLE & cr_ptr->cmove) == 0)) {
-      flag = TRUE;
-    } else if (test_bit(mflag, MA_DETECT_INVIS) &&
-               (CM_INVISIBLE & cr_ptr->cmove)) {
-      flag = TRUE;
-    } else if (!blind) {
+    int df = dflags_by_creature(cr_ptr);
+    if (mflag & df) {
+      lit = 1;
+    } else if (maD[MA_BLIND] == 0)
+    // direct check of MA_BLIND is because sight can change during creatures()
+    {
       fy = m_ptr->fy;
       fx = m_ptr->fx;
       cdis = distance(y, x, fy, fx);
       if (cdis <= MAX_SIGHT && los(y, x, fy, fx)) {
         c_ptr = &caveD[fy][fx];
         if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= infra)) {
-          flag = TRUE;
+          lit = 1;
         } else if (CF_LIT & c_ptr->cflag) {
-          flag = perceive_creature(cr_ptr);
+          lit = perceive_creature(cr_ptr);
         }
       }
     }
   }
 
-  return flag;
+  return lit;
 }
 static int
 mon_multiply(mon)
@@ -9174,10 +9170,8 @@ int *uy, *ux;
             ident |= TRUE;
             break;
           case 20:
-            if (detect_mon(crset_invisible, known)) {
-              ma_duration(MA_DETECT_INVIS, 1);
-              ident |= TRUE;
-            }
+            if (detect_mon(MA_DETECT_INVIS, known)) ident |= TRUE;
+            ma_duration(MA_DETECT_INVIS, 1 + uD.lev / 5);
             break;
           case 21:
             if (aggravate_monster(20)) {
@@ -9515,8 +9509,8 @@ int* x_ptr;
                  spell_nameD[0]);
       break;
     case 2:
-      detect_mon(crset_visible, TRUE);
-      ma_duration(MA_DETECT_MON, 1);
+      detect_mon(MA_DETECT_MON, TRUE);
+      ma_duration(MA_DETECT_MON, 1 + uD.lev / 5);
       break;
     case 3:
       py_teleport(10, y_ptr, x_ptr);
@@ -9789,8 +9783,8 @@ int* x_ptr;
 {
   switch (pridx + 1) {
     case 1:
-      detect_mon(crset_evil, TRUE);
-      ma_duration(MA_DETECT_EVIL, 1);
+      detect_mon(MA_DETECT_EVIL, TRUE);
+      ma_duration(MA_DETECT_EVIL, 1 + uD.lev / 5);
       break;
     case 2:
       py_heal_hit(damroll(3, 3));
@@ -10044,10 +10038,8 @@ int *uy, *ux;
             ident |= py_heal_hit(randint(8));
             break;
           case 16:
-            if (detect_mon(crset_invisible, known)) {
-              ma_duration(MA_DETECT_INVIS, 1);
-              ident |= TRUE;
-            }
+            if (detect_mon(MA_DETECT_INVIS, known)) ident |= TRUE;
+            ma_duration(MA_DETECT_INVIS, 1 + uD.lev / 5);
             break;
           case 17:
             ident |= py_affect(MA_FAST) == 0;
@@ -10064,10 +10056,8 @@ int *uy, *ux;
             ident |= equip_remove_curse();
             break;
           case 21:
-            if (detect_mon(crset_evil, known)) {
-              ma_duration(MA_DETECT_EVIL, 1);
-              ident |= TRUE;
-            }
+            if (detect_mon(MA_DETECT_EVIL, known)) ident |= TRUE;
+            ma_duration(MA_DETECT_EVIL, 1 + uD.lev / 5);
             break;
           case 22:
             if (countD.poison > 0) {
@@ -13049,7 +13039,7 @@ creatures()
   if (TEST_CREATURE && !replay_flag) printf("----turn----\n");
 
   // We calculate monster move_count & msleep prior to mon_move
-  // This enables caching of player state into registers
+  // This enables storing player state into registers
   {
     int adj_speed = py_speed() + pack_heavy;
     MUSE(u, y);
@@ -13059,9 +13049,6 @@ creatures()
 
     FOR_EACH(mon, {
       struct creatureS* cr_ptr = &creatureD[mon->cidx];
-      // Special visibility expires before movement
-      if (mon->mshow) mon->mshow = 0;
-
       int move_count = movement_rate(mon->mspeed + adj_speed);
       int msleep = mon->msleep;
       if (msleep) {

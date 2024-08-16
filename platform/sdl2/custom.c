@@ -1846,7 +1846,7 @@ int
 custom_predraw()
 {
   FOR_EACH(mon, {
-    int draw = mon->mshow ? 1 : mon_lit(it_index);
+    int draw = mon_lit(it_index);
 
     int cidx = 0;
     if (draw) cidx = mon->cidx;

@@ -274,7 +274,7 @@ struct monS {
   int16_t hp;
   uint8_t fy;
   uint8_t fx;
-  uint8_t mshow;  // override visibility rules prior to creatures() update
+  uint8_t munused;
   int8_t mspeed;
   uint8_t mconfused;
   uint8_t msilenced;
