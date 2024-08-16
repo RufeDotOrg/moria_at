@@ -50,8 +50,16 @@ vptr(void* ptr)
 {
   return ptr;
 }
-XX uint8_t* bptr(void* ptr) __attribute__((alias("vptr")));
-XX int* iptr(void* ptr) __attribute__((alias("vptr")));
+XX uint8_t*
+bptr(void* ptr)
+{
+  return ptr;
+}
+XX int*
+iptr(void* ptr)
+{
+  return ptr;
+}
 XX void*
 ptr_xor(void* a, void* b)
 {

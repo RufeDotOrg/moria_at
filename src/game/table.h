@@ -1,5 +1,5 @@
 
-#define T __attribute__((always_inline))
+#define T inline __attribute__((always_inline))
 
 DATA int8_t xdirD[16] = {
     [1] = -1, [4] = -1, [7] = -1, [3] = 1, [6] = 1, [9] = 1};
