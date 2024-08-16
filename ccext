@@ -1,47 +1,25 @@
-function try_gcc_clang() {
-  [ "$CC" == gcc ] && OK=1
-  [ "$CC" == clang ] && OK=1
-  [ -z "$OK" ] && return
-  
-  readlink src/platform | grep 'sdl2'
-  if [ $? -eq 0 ]; then
-    if [ -d sdl2 ]; then
-      LFLAGS+=" -lm "
-      if [ linux == "${OSTYPE::5}" ]; then
-        export LD_LIBRARY_PATH=`realpath sdl2/build/.libs`
-      fi
-      CFLAGS+=" -Isdl2/include "
-  
-      LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
-      LFLAGS+=" -lSDL2 -Lsdl2/build/.libs "
-    elif hash sdl2-config; then
-      SDL2_FLAGS=`sdl2-config --cflags`
-      SDL2_LIBS=`sdl2-config --libs`
-      CFLAGS+=" $SDL2_FLAGS "
-      LFLAGS+=" $SDL2_LIBS "
-    fi
+readlink src/platform | grep 'sdl2'
+[ $? -eq 0 ] || exit 0
+
+DIR=sdl2
+if [ `basename "$CC"` == cosmocc ]; then
+  LINK=0
+elif [ `basename "$CC"` == gcc ]; then
+  LINK=1
+  LFLAGS+=" -lm "
+elif [ `basename "$CC"` == clang ]; then
+  LINK=1
+  LFLAGS+=" -lm "
+fi
+
+if [ -d "$DIR" ]; then
+  CFLAGS+=" -I$DIR/include "
+
+  # run support
+  if [ linux == "${OSTYPE::5}" ]; then
+    export LD_LIBRARY_PATH=`realpath $DIR/build/.libs`
   fi
-}
-
-try_gcc_clang
-
-function try_cosmocc()
-{
-  [ `basename "$CC"` == cosmocc ] && OK=1
-  [ -z "$OK" ] && return
-
-  readlink src/platform | grep 'sdl2'
-  if [ $? -eq 0 ]; then
-    DIR=cosmo-sdl2
-    if [ -d "$DIR" ]; then
-      if [ linux == "${OSTYPE::5}" ]; then
-        # export LD_LIBRARY_PATH=`realpath $DIR/build/.libs`
-        export LD_LIBRARY_PATH=.
-      fi
-      CFLAGS+=" -I$DIR/include "
-      # No linkage
-    fi
+  if [ "$LINK" -ne 0 ]; then
+    LFLAGS+=" -lSDL2 -L$DIR/build/.libs "
   fi
-}
-
-try_cosmocc
+fi

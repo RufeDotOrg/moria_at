@@ -1,5 +1,5 @@
 #if defined(__FATCOSMOCC__)
-#define XX inline __attribute__((pure))
+#define XX static __attribute__((pure)) inline __attribute__((always_inline))
 #else
 #define XX static __attribute__((pure))
 #endif
