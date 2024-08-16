@@ -9494,10 +9494,12 @@ spell_prompt(spidx, low_mana)
       target = inven_choice("Recharge which item?", "*");
       break;
     default:
-      if (low_mana) {
-        char c = CLOBBER_MSG("Are you sure you want to cast %s?",
-                             spell_nameD[spidx]);
-        if (c == ESCAPE || c == 'a') target = -1;
+      if (!PC) {
+        if (low_mana) {
+          char c = CLOBBER_MSG("Are you sure you want to cast %s?",
+                               spell_nameD[spidx]);
+          if (c == ESCAPE || c == 'a') target = -1;
+        }
       }
       break;
   }
@@ -9769,10 +9771,12 @@ prayer_prompt(pridx, low_mana)
       if (!get_dir(tmp, &target)) target = -1;
       break;
     default:
-      if (low_mana) {
-        char c = CLOBBER_MSG("Are you sure you want to incant %s?",
-                             prayer_nameD[pridx]);
-        if (c == ESCAPE || c == 'a') target = -1;
+      if (!PC) {
+        if (low_mana) {
+          char c = CLOBBER_MSG("Are you sure you want to incant %s?",
+                               prayer_nameD[pridx]);
+          if (c == ESCAPE || c == 'a') target = -1;
+        }
       }
       break;
   }
