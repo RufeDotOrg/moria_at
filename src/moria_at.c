@@ -374,7 +374,7 @@ affect_update()
   active_affectD[idx++] = (countD.confusion != 0);
 
   // SeeInvis, paralysis, poison
-  active_affectD[idx++] = (cbD.tflag & TR_SEE_INVIS) != 0;
+  active_affectD[idx++] = py_tr(TR_SEE_INVIS);
   active_affectD[idx++] = (countD.paralysis != 0);
   active_affectD[idx++] = (countD.poison != 0);
 
@@ -11949,7 +11949,7 @@ chest_trap(y, x)
   }
   if (CH_PARALYSED & obj->flags) {
     msg_print("A puff of yellow gas surrounds you!");
-    if (TR_FREE_ACT & cbD.tflag)
+    if (py_tr(TR_FREE_ACT))
       msg_print("You are unaffected.");
     else {
       msg_print("You choke and pass out.");
