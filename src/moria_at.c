@@ -14310,10 +14310,6 @@ global_init(int argc, char** argv)
 
 #include "platform/platform.c"
 
-#ifdef __FATCOSMOCC__
-#include "platform/cosmo-init.h"
-#endif
-
 int
 main(int argc, char** argv)
 {

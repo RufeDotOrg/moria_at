@@ -26,13 +26,7 @@
 enum { COSMO_CRASH = 0 };
 enum { PLATFORM_PREGAME = 1, PLATFORM_GAME = 2, PLATFORM_POSTGAME = 3 };
 #ifdef __FATCOSMOCC__
-#include <cosmo.h>
-#include <dlfcn.h>
-#include <libc/nt/dll.h>  // SDL OverrideSO
-#include <math.h>         //sqrt
-GLOBAL void* libD;
-#include "cosmo-crash.c"
-#include "cosmo-sdl.h"
+#include "cosmo_sdl.c"
 #endif
 
 #define ORGNAME "org.rufe"
@@ -586,4 +580,8 @@ custom_init()
   return 0;
 }
 #define platform_init custom_init
+
+#ifdef __FATCOSMOCC__
+#include "cosmo_sdl.c"
+#endif
 #endif
