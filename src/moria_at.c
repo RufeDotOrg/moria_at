@@ -11082,7 +11082,9 @@ py_saveslot_select()
           return ret;
         }
       }
-    } else if (is_upper(c)) {
+    } else if (PC && is_upper(c))
+    // PC Deletion
+    {
       iidx = c - 'A';
       if (!summary[iidx].invalid) {
         if (summary_saveslot_deletion(&summary[iidx], iidx, using_external))
