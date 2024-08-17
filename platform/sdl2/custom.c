@@ -427,7 +427,7 @@ int
 custom_pregame()
 {
   if (COSMO_CRASH) platform_phase(PLATFORM_PREGAME);
-  if (DISK && !disk_init()) return 1;
+  if (DISK && !disk_pregame()) return 1;
   if (DISK && KEYBOARD)
     disk_read_keys(gameplay_inputD, sizeof(gameplay_inputD));
 

@@ -11,7 +11,7 @@ extern int SDL_AndroidGetExternalStorageState();
 extern char* SDL_AndroidGetExternalStoragePath();
 extern char* SDL_GetCachePath(const char*, const char*);
 
-char*
+STATIC char*
 path_append_filename(char* path, int path_len, char* filename)
 {
   int wridx = path_len;
@@ -25,7 +25,7 @@ path_append_filename(char* path, int path_len, char* filename)
 
   return path;
 }
-SDL_RWops*
+STATIC SDL_RWops*
 file_access(char* filename, char* access)
 {
   SDL_RWops* ret = SDL_RWFromFile(filename, access);
@@ -34,14 +34,14 @@ file_access(char* filename, char* access)
 }
 
 // Disk I/O
-int
+STATIC int
 version_by_savesum(sum)
 {
   for (int it = 0; it < AL(savesumD); ++it)
     if (savesumD[it] == sum) return it;
   return -1;
 }
-int
+STATIC int
 savesum()
 {
   int sum = 0;
@@ -51,7 +51,7 @@ savesum()
   }
   return sum;
 }
-int
+STATIC int
 clear_savebuf()
 {
   for (int it = 0; it < AL(save_bufD); ++it) {
@@ -61,7 +61,7 @@ clear_savebuf()
 
   return 0;
 }
-int checksum(blob, len) void* blob;
+STATIC int checksum(blob, len) void* blob;
 {
   int* iter = blob;
   int count = len / sizeof(int);
@@ -73,7 +73,7 @@ int checksum(blob, len) void* blob;
   return ret;
 }
 // filename unchanged unless a valid classidx is specified
-char*
+STATIC char*
 filename_by_class(char* filename, int classidx)
 {
   if (classidx >= 0 && classidx < AL(classD)) {
@@ -87,7 +87,7 @@ filename_by_class(char* filename, int classidx)
   return filename;
 }
 
-int
+STATIC int
 path_exists(char* path)
 {
   SDL_RWops* readf = file_access(path, "rb");
@@ -98,14 +98,14 @@ path_exists(char* path)
   }
   return save_size != 0;
 }
-int
+STATIC int
 path_delete(char* path)
 {
   SDL_RWops* writef = file_access(path, "wb");
   if (writef) SDL_RWclose(writef);
   return (writef != 0);
 }
-int
+STATIC int
 path_save(char* path)
 {
   int version = AL(savesumD) - 1;
@@ -128,7 +128,7 @@ path_save(char* path)
   }
   return 0;
 }
-int
+STATIC int
 path_load(char* path)
 {
   int save_size = 0;
@@ -193,7 +193,7 @@ path_load(char* path)
 
   return save_size != 0;
 }
-int
+STATIC int
 path_savemidpoint(char* path)
 {
   int save_size = 0;
@@ -222,7 +222,7 @@ path_savemidpoint(char* path)
   }
   return write_ok;
 }
-int
+STATIC int
 platform_load(saveslot, external)
 {
   char filename[16] = SAVENAME;
@@ -236,7 +236,7 @@ platform_load(saveslot, external)
 
   return path_load(path);
 }
-int
+STATIC int
 platform_save(saveslot)
 {
   char filename[16] = SAVENAME;
@@ -244,7 +244,7 @@ platform_save(saveslot)
   char* path = path_append_filename(savepathD, savepath_usedD, filename);
   return path_save(path);
 }
-int
+STATIC int
 platform_erase(saveslot, external)
 {
   char filename[16] = SAVENAME;
@@ -257,7 +257,7 @@ platform_erase(saveslot, external)
   }
   return path_delete(path);
 }
-int
+STATIC int
 disk_savemidpoint()
 {
   MUSE(global, saveslot_class);
@@ -269,7 +269,7 @@ disk_savemidpoint()
   }
   return 0;
 }
-int
+STATIC int
 platform_saveex()
 {
   char filename[16] = SAVENAME;
@@ -284,7 +284,7 @@ platform_saveex()
   }
   return count;
 }
-int
+STATIC int
 platform_testex()
 {
   int ret = 0;
@@ -299,7 +299,7 @@ platform_testex()
 
   return ret;
 }
-int
+STATIC int
 cache_write()
 {
   SDL_RWops* writef = file_access(cachepathD, "wb");
@@ -311,7 +311,7 @@ cache_write()
   return writef != 0;
 }
 
-int
+STATIC int
 path_copy_to(char* srcpath, char* dstpath)
 {
   SDL_RWops *readf, *writef;
@@ -335,7 +335,7 @@ path_copy_to(char* srcpath, char* dstpath)
 
   return readf == 0 || writef == 0;
 }
-int
+STATIC int
 cache_version()
 {
   int ghash = 0;
@@ -349,7 +349,7 @@ cache_version()
 
   return ghash;
 }
-int
+STATIC int
 cache_read()
 {
   int success = 0;
@@ -363,7 +363,7 @@ cache_read()
   }
   return success;
 }
-int
+STATIC int
 disk_read_keys(keys, len)
 char* keys;
 {
@@ -379,15 +379,15 @@ char* keys;
   }
   return success;
 }
-int
+STATIC int
 disk_postgame(may_exit)
 {
   if (uD.new_level_flag != NL_DEATH) disk_savemidpoint();
   if (cachepath_usedD) cache_write();
 }
 
-int
-disk_init()
+STATIC int
+disk_pregame()
 {
   if (__APPLE__) {
     char* prefpath = SDL_GetPrefPath(ORGNAME, APPNAME);
