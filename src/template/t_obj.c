@@ -18,8 +18,7 @@ obj_use()
   objD[it] = eid;
   obj_usedD = next;
   if (COMMON_DEBUG) {
-    LOGFMT(
-        "obj"
+    Log("obj"
         " ALLOC (it %d eid %d) kUsed %d",
         it, eid, obj_usedD);
   }
@@ -52,8 +51,7 @@ obj_unuse(struct objS* ent)
     int swap_eid = objD[swap_it];
     obj_usedD -= 1;
     if (COMMON_DEBUG) {
-      LOGFMT(
-          "obj"
+      Log("obj"
           " FREE (it %d swap_it %d) (eid %d vs swap_eid %d) kUsed %d",
           it, swap_it, eid, swap_eid, obj_usedD);
     }

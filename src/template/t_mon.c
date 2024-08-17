@@ -18,8 +18,7 @@ mon_use()
   monD[it] = eid;
   mon_usedD = next;
   if (COMMON_DEBUG) {
-    LOGFMT(
-        "mon"
+    Log("mon"
         " ALLOC (it %d eid %d) kUsed %d",
         it, eid, mon_usedD);
   }
@@ -52,8 +51,7 @@ mon_unuse(struct monS* ent)
     int swap_eid = monD[swap_it];
     mon_usedD -= 1;
     if (COMMON_DEBUG) {
-      LOGFMT(
-          "mon"
+      Log("mon"
           " FREE (it %d swap_it %d) (eid %d vs swap_eid %d) kUsed %d",
           it, swap_it, eid, swap_eid, mon_usedD);
     }

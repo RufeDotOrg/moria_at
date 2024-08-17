@@ -74,7 +74,6 @@ typedef int (*fn)();
 #define XOR(x, y) ((uint64_t)(x) ^ (uint64_t)(y))
 #define INVERT(x) x = !x
 #define OF2(x) (((x - 1) & x) == 0)
-#define COMMON_DEBUG 1
 #define LOGFMT(...)
 //#define LOGFMT(x, ...) printf(x "\n", ##__VA_ARGS__)
 
@@ -124,6 +123,8 @@ extern unsigned char __stop_game[] __attribute__((__weak__));
 #define CTRL(x) (x & 0x1f)
 #endif
 
+// pool of structs; see codegen.sh
+#define POOL
 #define FOR_EACH(type, body)                                     \
   {                                                              \
     for (int it_index = 0; it_index < AL(type##D); ++it_index) { \
