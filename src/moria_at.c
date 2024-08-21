@@ -8,6 +8,7 @@ enum { HACK = 0 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
 enum { TEST_CREATURE = 0 };
+enum { TEST_CHECKLEN = 0 };
 
 // #include "src/mod/replay.c"
 // #include "src/mod/cavegen.c"
@@ -14316,6 +14317,8 @@ global_init(int argc, char** argv)
 
 #include "platform/platform.c"
 
+// #include "src/mod/checklen.c"
+
 int
 main(int argc, char** argv)
 {
@@ -14325,6 +14328,8 @@ main(int argc, char** argv)
 
   mon_level_init();
   obj_level_init();
+
+  if (TEST_CHECKLEN) return obj_checklen();
 
   setjmp(restartD);
   hard_reset();
