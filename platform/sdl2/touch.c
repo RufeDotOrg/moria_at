@@ -208,6 +208,8 @@ touch_by_xy(x, y)
 
     return r;
   }
+
+  return TOUCH_NONE;
 }
 STATIC int
 orientation_lock_toggle()
