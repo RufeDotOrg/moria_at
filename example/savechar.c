@@ -3,6 +3,9 @@
 #include <sys/types.h>
 
 #include "src/game.c"
+#include "src/template.c"
+
+#include "src/mod/savechar.c"
 
 #define nameof(x) #x
 static char* save_nameD[] = {
@@ -29,8 +32,10 @@ dump_layout(version)
     printf("%jd, ", buf.mem_size);
     sum += buf.mem_size;
   }
+
   printf("\n};\n");
   printf("#define SAVESUM%03d %d\n", version, sum);
+  printf("hash 0x%jx\n", djb2(DJB2, save_bufD, AL(save_bufD)));
 }
 int
 version_by_savesum(sum)
@@ -48,16 +53,20 @@ static void show_character(filename) char* filename;
     int save_size;
     read(fd, &save_size, sizeof(save_size));
     int version = version_by_savesum(save_size);
-    printf("%s: version %d - ", filename, version);
-    int* savefield = savefieldD[version];
-    for (int it = 0; it < 16; ++it) {
-      int size = read(fd, buf, savefield[it]);
-      // printf("read size %d\n", size);
+    if (version >= 0) {
+      printf("%s: version %d - ", filename, version);
+      int* savefield = savefieldD[version];
+      for (int it = 0; it < 16; ++it) {
+        int size = read(fd, buf, savefield[it]);
+        // printf("read size %d\n", size);
+      }
+      struct uS* u = vptr(buf);
+      printf("level %d ", u->lev);
+      printf("%s %s", raceD[uD.ridx].name, classD[uD.clidx].name);
+      printf("\n");
+    } else {
+      printf("version %d", version);
     }
-    struct uS* u = vptr(buf);
-    printf("level %d ", u->lev);
-    printf("%s %s", raceD[uD.ridx].name, classD[uD.clidx].name);
-    printf("\n");
     close(fd);
   }
 }
