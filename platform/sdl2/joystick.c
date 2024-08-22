@@ -24,12 +24,30 @@ joystick_count()
 {
   return SDL_NumJoysticks();
 }
-
 STATIC int
 joystick_assign(jsidx)
 {
   if (joystick_ptrD) SDL_JoystickClose(joystick_ptrD);
   if (jsidx >= 0) joystick_ptrD = SDL_JoystickOpen(jsidx);
+}
+// Enough to walk, independent of touch.c
+// TBD: possibly want selection behaviors in touch.c
+STATIC int
+joystick_dir(button)
+{
+  int scale = 64;
+  int x = jxD * (PADSIZE - scale) + scale / 2;
+  int y = jyD * (PADSIZE - scale) + scale / 2;
+
+  int n = dpad_nearest_pp(y, x, 0);
+  char c = key_dir(pp_keyD[n]);
+  if (button) {
+    if (c == ' ')
+      c = '@';  // menu
+    else
+      c &= ~0x20;  // run
+  }
+  return c;
 }
 
 STATIC int
@@ -75,9 +93,20 @@ sdl_axis_motion(SDL_Event event)
 int
 sdl_joystick_event(SDL_Event event)
 {
-  if (JOYSTICK_VERBOSE) {
+  if (1) {
     char* statename[] = {"release", "press"};
     Log("button %d %s", event.jbutton.button, statename[event.jbutton.state]);
+  }
+  if (JOYSTICK) {
+    switch (event.jbutton.button) {
+      case 0:
+      case 1:  // movement
+        return joystick_dir(event.jbutton.button);
+      case 2:
+        return '.';
+      case 3:
+        return 'a';
+    }
   }
   return 0;
 }
