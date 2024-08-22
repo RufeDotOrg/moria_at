@@ -21,6 +21,8 @@ enum { COLOR = 0 };
 #include "asset/scancode.c"
 
 // Game specific inclusion
+#include "joystick.c"
+
 #include "touch.c"
 
 enum { TEST_UI = 0 };
@@ -377,7 +379,7 @@ static void surface_ppfill(surface) SDL_Surface* surface;
   }
 }
 static int
-tp_init()
+dpad_init()
 {
   int cx = PADSIZE / 2;
   int cy = PADSIZE / 2;
@@ -469,15 +471,16 @@ custom_pregame()
   //     SDL_FreeSurface(s);
   //   }
   // }
-  if (PC && !TOUCH) {
+  if (PC && !MOUSE) {
     Log("ShowCursor -> disable");
     SDL_ShowCursor(SDL_DISABLE);
   }
 
   if (TOUCH) ui_init();
-  if (TOUCH) tp_init();
-  if (TOUCH) platformD.dpad = tp_init;
   if (TOUCH) platformD.selection = touch_selection;
+
+  if (DPAD) dpad_init();
+  if (DPAD) platformD.dpad = dpad_init;
 
   // !!texture_formatD override!! minimapD is streaming abgr8888
   mmtextureD =
@@ -1359,7 +1362,7 @@ draw_game()
   }
 }
 int
-draw_menu(mode)
+draw_menu(mode, using_selection)
 {
   USE(renderer);
   USE(overlay_width);
@@ -1409,7 +1412,7 @@ draw_menu(mode)
         };
         char* text = overlayD[row];
         int tlen = overlay_usedD[row];
-        if (TOUCH && row == finger_rowD) {
+        if (using_selection && row == finger_rowD) {
           font_color(font_rgba(BRIGHT + RED));
           if (tlen <= 1) {
             text = "-";
@@ -1417,7 +1420,7 @@ draw_menu(mode)
           }
         }
         render_monofont_string(renderer, &fontD, text, tlen, p);
-        if (TOUCH && row == finger_rowD) {
+        if (using_selection && row == finger_rowD) {
           font_reset();
         }
       }
@@ -1474,6 +1477,7 @@ int
 custom_draw()
 {
   USE(renderer);
+  int using_selection = (TOUCH || (JOYSTICK && joystick_count() > 0));
 
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
@@ -1488,7 +1492,7 @@ custom_draw()
   // numpad directions are gameplay only
   if (KEYBOARD) keyboard_map(mode == 0 ? gameplay_inputD : 0);
 
-  if (TOUCH) {
+  if (using_selection) {
     mode_change(mode);
 
     if (tpsurfaceD) {
@@ -1498,46 +1502,49 @@ custom_draw()
         rect_frame(grect, 0);
       }
 
-      for (int it = 0; it < MAX_BUTTON; ++it) {
-        AUSE(grect, GR_BUTTON1 + it);
-        int color = rgba_by_palette(it == 0 ? RED : GREEN);
-        SDL_SetRenderDrawColor(rendererD, V4b(&color));
-        SDL_RenderFillRect(rendererD, &grect);
-      }
-
-      if (ui_textureD && mode == 0) {
-        AUSE(grect, GR_HISTORY);
-        SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
-        rect_frame(grect, 1);
-      }
-      if (mode == 0) {
-        AUSE(grect, GR_LOCK);
-        if (sprite_textureD) {
-          MUSE(global, orientation_lock);
-          // TBD: UI Icon?
-          int tridx = 1;
-          if (orientation_lock) {
-            tridx = 48;
-          } else {
-            tridx = 45;
-          }
-          if (tridx <= AL(tart_textureD)) {
-            rect_t sprite_rect = {
-                XY(point_by_spriteid(tart_textureD[tridx - 1])),
-                ART_W,
-                ART_H,
-            };
-            rect_t dest = {
-                grect.x,
-                grect.y,
-                ART_W * 2,
-                ART_H * 2,
-            };
-            dest.x += (grect.w - dest.w) / 2;
-            SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
-          }
+      // TBD: Are we showing buttons with controllers?
+      if (TOUCH) {
+        for (int it = 0; it < MAX_BUTTON; ++it) {
+          AUSE(grect, GR_BUTTON1 + it);
+          int color = rgba_by_palette(it == 0 ? RED : GREEN);
+          SDL_SetRenderDrawColor(rendererD, V4b(&color));
+          SDL_RenderFillRect(rendererD, &grect);
         }
-        rect_frame(grect, 1);
+
+        if (ui_textureD && mode == 0) {
+          AUSE(grect, GR_HISTORY);
+          SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
+          rect_frame(grect, 1);
+        }
+        if (mode == 0) {
+          AUSE(grect, GR_LOCK);
+          if (sprite_textureD) {
+            MUSE(global, orientation_lock);
+            // TBD: UI Icon?
+            int tridx = 1;
+            if (orientation_lock) {
+              tridx = 48;
+            } else {
+              tridx = 45;
+            }
+            if (tridx <= AL(tart_textureD)) {
+              rect_t sprite_rect = {
+                  XY(point_by_spriteid(tart_textureD[tridx - 1])),
+                  ART_W,
+                  ART_H,
+              };
+              rect_t dest = {
+                  grect.x,
+                  grect.y,
+                  ART_W * 2,
+                  ART_H * 2,
+              };
+              dest.x += (grect.w - dest.w) / 2;
+              SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
+            }
+          }
+          rect_frame(grect, 1);
+        }
       }
     }
   }
@@ -1545,7 +1552,7 @@ custom_draw()
   if (mode == 0)
     draw_game();
   else
-    draw_menu(mode);
+    draw_menu(mode, using_selection);
 
   if (text_fnD) text_fnD(mode);
 

@@ -56,14 +56,17 @@ enum { KEYBOARD = 0 };
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
 enum { MOUSE = 0 };
+enum { JOYSTICK = 0 };
 enum { PC = 0 };
 #else
 enum { TOUCH = 0 };
 enum { MOUSE = TOUCH };
+enum { JOYSTICK = 1 };
 enum { PC = 1 };
 #include "keyboard.c"
 #endif
 enum { MOTION = 0 };  //(MOUSE || TOUCH) };
+enum { DPAD = (TOUCH || JOYSTICK) };
 
 // render.c
 DATA struct SDL_Window* windowD;

@@ -11156,15 +11156,16 @@ feature_menu()
   int line;
   char opt[2][4] = {"off", "on"};
   char* default_renderer = PC ? "opengl" : "opengles2";
+  int using_selection = platformD.selection != noop;
 
   while (1) {
     overlay_submodeD = 'f';
     line = 0;
     BufMsg(overlay, "a) ascii gameplay renderer (%s)",
            opt[globalD.sprite == 0]);
-    if (TOUCH) {
+    if (using_selection) {
       line = 'c' - 'a';
-      BufMsg(overlay, "c) color dpad (%s)", opt[globalD.dpad_color != 0]);
+      BufMsg(overlay, "c) colorize dpad (%s)", opt[globalD.dpad_color != 0]);
       line = 'd' - 'a';
       BufMsg(overlay, "d) dpad sensitivity (%d)", globalD.dpad_sensitivity);
     }
@@ -11192,25 +11193,21 @@ feature_menu()
 
     c = CLOBBER_MSG("feature menu");
     if (is_ctrl(c)) break;
-    if (TOUCH) {
-      switch (c) {
-        case 'c':
-          INVERT(globalD.dpad_color);
-          platformD.dpad();
-          break;
-        case 'd':
-          if (globalD.dpad_sensitivity >= 99)
-            globalD.dpad_sensitivity = 55;
-          else
-            globalD.dpad_sensitivity += 10;
-          platformD.dpad();
-          break;
-      }
-    }
 
     switch (c) {
       case 'a':
         INVERT(globalD.sprite);
+        break;
+      case 'c':
+        INVERT(globalD.dpad_color);
+        platformD.dpad();
+        break;
+      case 'd':
+        if (globalD.dpad_sensitivity >= 99)
+          globalD.dpad_sensitivity = 55;
+        else
+          globalD.dpad_sensitivity += 10;
+        platformD.dpad();
         break;
       case 'h':
         INVERT(globalD.hand_swap);
