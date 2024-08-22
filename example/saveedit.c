@@ -2,10 +2,9 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#include "src/game.c"
-#include "src/template.c"
-
-#include "src/mod/savechar.c"
+#define main _game_main
+#include "src/moria_at.c"
+#undef main
 
 #define nameof(x) #x
 static char* save_nameD[] = {
@@ -37,38 +36,25 @@ dump_layout(version)
   printf("#define SAVESUM%03d %d\n", version, sum);
   printf("hash 0x%jx\n", djb2(DJB2, save_bufD, AL(save_bufD)));
 }
-int
-version_by_savesum(sum)
+static void print_savechar(filename) char* filename;
 {
-  for (int it = 0; it < AL(savesumD); ++it)
-    if (savesumD[it] == sum) return it;
-  return -1;
-}
-static void show_character(filename) char* filename;
-{
-  char buf[16 * 1024];
-  int fd = open(filename, O_RDONLY);
+  input_resumeD = -1;
+  path_load(filename);
 
-  if (fd) {
-    int save_size;
-    read(fd, &save_size, sizeof(save_size));
-    int version = version_by_savesum(save_size);
-    if (version >= 0) {
-      printf("%s: version %d - ", filename, version);
-      int* savefield = savefieldD[version];
-      for (int it = 0; it < 16; ++it) {
-        int size = read(fd, buf, savefield[it]);
-        // printf("read size %d\n", size);
-      }
-      struct uS* u = vptr(buf);
-      printf("level %d ", u->lev);
-      printf("%s %s", raceD[uD.ridx].name, classD[uD.clidx].name);
-      printf("\n");
-    } else {
-      printf("version %d", version);
-    }
-    close(fd);
-  }
+  printf("level %d ", uD.lev);
+  printf("%s %s", raceD[uD.ridx].name, classD[uD.clidx].name);
+  printf("\n");
+
+  // statD.max_stat[A_CON] = 10;
+  // statD.cur_stat[A_CON] = 10;
+
+  // struct objS* obj = obj_use();
+  // tr_obj_copy(221, obj);
+  // printf("obj %d\n", obj->tidx);
+  // obj->number = 4;
+
+  // invenD[INVEN_EQUIP - 1] = obj->id;
+  // path_save(filename);
 }
 int
 main(int argc, char** argv)
@@ -77,7 +63,7 @@ main(int argc, char** argv)
 
   if (argc > 1) {
     for (int it = 1; it < argc; ++it) {
-      show_character(argv[it]);
+      print_savechar(argv[it]);
     }
   }
   return 0;
