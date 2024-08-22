@@ -22,8 +22,10 @@ enum { COLOR = 0 };
 
 // Game specific inclusion
 #include "dpad.c"
-#include "joystick.c"
+
 #include "touch.c"
+
+#include "joystick.c"
 
 enum { TEST_UI = 0 };
 

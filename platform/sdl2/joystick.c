@@ -30,17 +30,22 @@ joystick_assign(jsidx)
   if (joystick_ptrD) SDL_JoystickClose(joystick_ptrD);
   if (jsidx >= 0) joystick_ptrD = SDL_JoystickOpen(jsidx);
 }
-// Enough to walk, independent of touch.c
-// TBD: possibly want selection behaviors in touch.c
 STATIC int
-joystick_dir(button)
+joystick_dir()
 {
   int scale = 64;
   int x = jxD * (PADSIZE - scale) + scale / 2;
   int y = jyD * (PADSIZE - scale) + scale / 2;
 
   int n = dpad_nearest_pp(y, x, 0);
-  char c = key_dir(pp_keyD[n]);
+  return (pp_keyD[n]);
+}
+// Enough to walk, independent of touch.c
+// TBD: possibly want selection behaviors in touch.c
+STATIC int
+joystick_button(button)
+{
+  char c = key_dir(joystick_dir());
   if (button) {
     if (c == ' ')
       c = '@';  // menu
@@ -91,6 +96,30 @@ sdl_axis_motion(SDL_Event event)
 }
 
 int
+overlay_dir(dir, finger)
+{
+  int dx = dir_x(dir);
+  int dy = dir_y(dir);
+
+  if (!dx && !dy) {
+    return 'A' + finger_rowD;
+  }
+
+  if (dx && !dy) {
+    if (finger)
+      finger_rowD = dx < 0 ? overlay_begin() : overlay_end();
+    else
+      return column_transition(dx);
+  }
+  if (dy && !dx) {
+    if (finger)
+      finger_rowD = overlay_bisect(dy);
+    else
+      finger_rowD = overlay_input(dy);
+  }
+  return CTRL('d');
+}
+int
 sdl_joystick_event(SDL_Event event)
 {
   if (1) {
@@ -98,14 +127,36 @@ sdl_joystick_event(SDL_Event event)
     Log("button %d %s", event.jbutton.button, statename[event.jbutton.state]);
   }
   if (JOYSTICK) {
-    switch (event.jbutton.button) {
-      case 0:
-      case 1:  // movement
-        return joystick_dir(event.jbutton.button);
-      case 2:
-        return '.';
-      case 3:
-        return 'a';
+    USE(mode);
+    if (mode == 0) {
+      switch (event.jbutton.button) {
+        case 0:
+        case 1:  // movement
+          return joystick_button(event.jbutton.button);
+        case 2:
+          return '.';
+        case 3:
+          return 'a';
+      }
+    } else if (mode == 1) {
+      switch (event.jbutton.button) {
+        case 0:
+        case 1:  // movement
+          return overlay_dir(joystick_dir(), event.jbutton.button);
+        case 2:
+          return 'a' + finger_rowD;
+        case 3:
+          return ESCAPE;
+      }
+    } else if (mode == 2) {
+      switch (event.jbutton.button) {
+        case 1:
+        case 2:
+          return ESCAPE;
+        case 0:
+        case 3:
+          return 'o';
+      }
     }
   }
   return 0;
