@@ -27,34 +27,8 @@ enum {
 enum { MAX_BUTTON = 2 };
 
 DATA rect_t grectD[GR_COUNT];
-DATA SDL_Point ppD[9];
-DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 DATA uint8_t finger_countD;
 DATA int last_pressD;
-DATA float limit_dsqD;
-
-STATIC int
-nearest_pp(y, x, po_dsq)
-int* po_dsq;
-{
-  int r = -1;
-  int64_t min_dsq = INT64_MAX;
-  for (int it = 0; it < AL(ppD); ++it) {
-    int ppx = ppD[it].x;
-    int ppy = ppD[it].y;
-    int dx = ppx - x;
-    int dy = ppy - y;
-    int dsq = dx * dx + dy * dy;
-#define TOUCH_CARDINAL_WEIGHT .43f
-    if (it % 2 == 1) dsq *= TOUCH_CARDINAL_WEIGHT;
-    if (dsq < min_dsq) {
-      min_dsq = dsq;
-      r = it;
-    }
-  }
-  if (po_dsq) *po_dsq = min_dsq;
-  return r;
-}
 
 STATIC int
 gameplay_tapxy(relx, rely)
@@ -198,7 +172,7 @@ touch_by_xy(x, y)
       SDL_Point rel = {tpp.x - grect.x, tpp.y - grect.y};
 
       int dsq;
-      int n = nearest_pp(rel.y, rel.x, &dsq);
+      int n = dpad_nearest_pp(rel.y, rel.x, &dsq);
       if (dsq > limit_dsqD) return 99;
 
       r = TOUCH_PAD + pp_keyD[n];
