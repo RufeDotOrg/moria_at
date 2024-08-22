@@ -1382,11 +1382,24 @@ custom_draw()
   if (using_selection) {
     mode_change(mode);
 
-    if (tpsurfaceD) {
+    if (tptextureD) {
       {
         AUSE(grect, GR_PAD);
         SDL_RenderCopy(rendererD, tptextureD, 0, &grect);
         rect_frame(grect, 0);
+      }
+
+      if (JOYSTICK) {  // dpad joystick
+        SDL_Rect r = {0, 0, 64, 64};
+        float jx, jy;
+        joystick_2f(&jx, &jy);
+        r.x = jx * (PADSIZE - r.w);
+        r.y = jy * (PADSIZE - r.h);
+        // offset into the touchpad zone
+        r.x += grectD[GR_PAD].x;
+        r.y += grectD[GR_PAD].y;
+        SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
+        SDL_RenderFillRect(renderer, &r);
       }
 
       // TBD: Are we showing buttons with controllers?

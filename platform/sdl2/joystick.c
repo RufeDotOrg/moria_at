@@ -1,9 +1,24 @@
 
+enum { JOYSTICK_VERBOSE = 0 };
+
 // game controllers & joysticks
 DATA SDL_Joystick* joystick_ptrD;
 DATA float jxD;
 DATA float jyD;
 
+STATIC int
+joystick_enabled()
+{
+  return joystick_ptrD != 0;
+}
+// TBD: deadzone check?
+STATIC int
+joystick_2f(float* x, float* y)
+{
+  *x = jxD;
+  *y = jyD;
+  return 0;
+}
 STATIC int
 joystick_count()
 {
@@ -40,11 +55,13 @@ joystick_init()
 int
 sdl_axis_motion(SDL_Event event)
 {
-  if (JOYSTICK) {
+  if (JOYSTICK_VERBOSE)
     Log("axis %d value %d", event.jaxis.axis, event.jaxis.value);
+
+  if (JOYSTICK) {
     int ok = event.jaxis.value + 32768;
     float norm = (float)ok / (32767 * 2 + 1);
-    Log("norm %.03f", norm);
+    if (JOYSTICK_VERBOSE) Log("norm %.03f", norm);
     if (event.jaxis.axis == 0) {
       jxD = norm;
     }
@@ -58,7 +75,7 @@ sdl_axis_motion(SDL_Event event)
 int
 sdl_joystick_event(SDL_Event event)
 {
-  if (JOYSTICK) {
+  if (JOYSTICK_VERBOSE) {
     char* statename[] = {"release", "press"};
     Log("button %d %s", event.jbutton.button, statename[event.jbutton.state]);
   }
