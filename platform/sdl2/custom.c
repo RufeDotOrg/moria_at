@@ -366,6 +366,8 @@ custom_pregame()
   if (DPAD) dpad_init();
   if (DPAD) platformD.dpad = dpad_init;
 
+  if (JOYSTICK) joystick_init();
+
   // !!texture_formatD override!! minimapD is streaming abgr8888
   mmtextureD =
       SDL_CreateTexture(rendererD, SDL_PIXELFORMAT_ABGR8888,
@@ -404,6 +406,7 @@ custom_postgame(may_exit)
   if (COSMO_CRASH) platform_phase(PLATFORM_POSTGAME);
 
   if (DISK) disk_postgame(may_exit);
+  if (JOYSTICK) joystick_assign(-1);
   return platform_postgame(may_exit);
 }
 

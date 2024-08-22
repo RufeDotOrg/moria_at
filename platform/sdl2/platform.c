@@ -1,7 +1,5 @@
 //
-// #include platform.c twice for custom code:
-// Custom code comes last, depending on game and platform details in depth.
-// Written to the intersection of the game & platform.
+// #include platform.c twice for custom code.
 //
 // Platform and Game code coexist peacefully:
 //  1) cc game.c
@@ -440,6 +438,17 @@ sdl_pump()
       case SDL_FINGERMOTION:
         if (MOTION) ret = sdl_motion(event);
         break;
+      case SDL_JOYAXISMOTION:
+        if (JOYSTICK) sdl_axis_motion(event);
+        break;
+      case SDL_JOYBUTTONDOWN:
+        // case SDL_JOYBUTTONUP: // (optional)
+        if (JOYSTICK) sdl_joystick_event(event);
+        break;
+      case SDL_JOYDEVICEADDED:
+      case SDL_JOYDEVICEREMOVED:
+        if (JOYSTICK) sdl_joystick_device(event);
+        break;
     }
   }
 
@@ -480,11 +489,13 @@ platform_random()
 }
 
 // Initialization
-#define SDL_SCOPE (SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS)
 int
 platform_pregame()
 {
-  if (!SDL_WasInit(SDL_SCOPE)) {
+  int scope = (SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+  if (JOYSTICK) scope |= SDL_INIT_JOYSTICK;
+
+  if (!SDL_WasInit(scope)) {
     if (!RELEASE) Log("Initializing development build");
     if (SDL_VERBOSE) SDL_LogSetAllPriority(SDL_LOG_PRIORITY_VERBOSE);
 
@@ -520,7 +531,7 @@ platform_pregame()
     // Touch->Mouse
     SDL_SetHint(SDL_HINT_TOUCH_MOUSE_EVENTS, "0");
 
-    SDL_Init(SDL_SCOPE);
+    SDL_Init(scope);
 
     if (!render_init()) return 1;
   }
