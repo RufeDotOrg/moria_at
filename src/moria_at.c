@@ -11379,7 +11379,7 @@ STATIC int
 wizard_prompt()
 {
   int x, y;
-  msg_hint(AP("(adefhltosw)"));
+  msg_hint(AP("(adefhlmtosw)"));
   char c = CLOBBER_MSG("Enter wizard command:");
   switch (c) {
     case 'a': {
@@ -11431,6 +11431,21 @@ wizard_prompt()
       }
       toggleD = !toggleD;
     } break;
+    case 'm':
+      map_area();
+      // Reveal traps too
+      for (int row = 1; row < MAX_HEIGHT; ++row) {
+        for (int col = 1; col < MAX_WIDTH; ++col) {
+          struct caveS* c_ptr = &caveD[row][col];
+          struct objS* obj = &entity_objD[c_ptr->oidx];
+          if (obj->tval == TV_INVIS_TRAP) {
+            obj->tval = TV_VIS_TRAP;
+            obj->tchar = '^';
+            c_ptr->cflag |= CF_FIELDMARK;
+          }
+        }
+      }
+      break;
     case 't':
       msg_print("teleport");
       do {
@@ -14117,20 +14132,6 @@ dungeon()
               show_character(0, 0);
               break;
             case 'm':
-              if (HACK) {
-                map_area();
-                for (int row = 1; row < MAX_HEIGHT; ++row) {
-                  for (int col = 1; col < MAX_WIDTH; ++col) {
-                    struct caveS* c_ptr = &caveD[row][col];
-                    struct objS* obj = &entity_objD[c_ptr->oidx];
-                    if (obj->tval == TV_INVIS_TRAP) {
-                      obj->tval = TV_VIS_TRAP;
-                      obj->tchar = '^';
-                      c_ptr->cflag |= CF_FIELDMARK;
-                    }
-                  }
-                }
-              }
               if (maD[MA_BLIND] == 0) {
                 if (!PC) blipD = 1;
                 minimap_enlargeD = TRUE;
