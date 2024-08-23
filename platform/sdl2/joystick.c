@@ -48,10 +48,11 @@ joystick_button(button)
   char c = key_dir(joystick_dir());
   if (button) {
     if (c == ' ')
-      c = '@';  // menu
+      c = CTRL('w');  // menu
     else
       c &= ~0x20;  // run
   }
+  Log("joystick button %c (%d)", c, c);
   return c;
 }
 
@@ -101,8 +102,11 @@ overlay_dir(dir, finger)
   int dx = dir_x(dir);
   int dy = dir_y(dir);
 
+  // Controller uses center tap as confirm? (or change buttons.. ?)
   if (!dx && !dy) {
-    return 'A' + finger_rowD;
+    char c = (finger ? 'A' : 'a') + finger_rowD;
+    Log("overlay trigger: char %c (%d)", c, c);
+    return c;
   }
 
   if (dx && !dy) {
@@ -122,30 +126,38 @@ overlay_dir(dir, finger)
 int
 sdl_joystick_event(SDL_Event event)
 {
+  USE(mode);
   if (1) {
     char* statename[] = {"release", "press"};
-    Log("button %d %s", event.jbutton.button, statename[event.jbutton.state]);
+    Log("button %d %s mode %d", event.jbutton.button,
+        statename[event.jbutton.state], mode);
   }
   if (JOYSTICK) {
-    USE(mode);
     if (mode == 0) {
       switch (event.jbutton.button) {
         case 0:
         case 1:  // movement
-          return joystick_button(event.jbutton.button);
+          return joystick_button(!event.jbutton.button);
         case 2:
           return '.';
         case 3:
           return 'a';
+        case 7:  // Rtrigger
+          return '!';
+        case 11:  // Press Lstick
+          return 'i';
+        case 12:  // Press Rstick
+          return 'e';
       }
     } else if (mode == 1) {
       switch (event.jbutton.button) {
         case 0:
         case 1:  // movement
-          return overlay_dir(joystick_dir(), event.jbutton.button);
+          return overlay_dir(joystick_dir(), !event.jbutton.button);
         case 2:
-          return 'a' + finger_rowD;
         case 3:
+        case 11:  // Press Lstick
+        case 12:  // Press Rstick
           return ESCAPE;
       }
     } else if (mode == 2) {

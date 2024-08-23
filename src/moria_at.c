@@ -14157,7 +14157,10 @@ dungeon()
               show_history();
               break;
             case CTRL('w'):
-              if (HACK) wizard_prompt();
+              if (HACK)
+                wizard_prompt();
+              else
+                py_menu();
               break;
             case CTRL('x'):
               if (HACK) {
