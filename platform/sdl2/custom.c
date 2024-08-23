@@ -363,7 +363,6 @@ custom_pregame()
   }
 
   if (TOUCH) ui_init();
-  if (TOUCH) platformD.selection = touch_selection;
 
   if (DPAD) dpad_init();
   if (DPAD) platformD.dpad = dpad_init;
@@ -1367,6 +1366,10 @@ custom_draw()
 {
   USE(renderer);
   int using_selection = (TOUCH || (JOYSTICK && joystick_count() > 0));
+
+  // Dynamic assignment of menu selection mode
+  // Controller hotplugging can toggle this feature
+  platformD.selection = using_selection ? touch_selection : noop;
 
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
