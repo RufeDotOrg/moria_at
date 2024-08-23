@@ -142,6 +142,12 @@ sdl_joystick_event(SDL_Event event)
           return '.';
         case 3:
           return 'a';
+        case 4:  // Lbumper
+          return 'c';
+        case 5:  // Rbumper
+          return 'm';
+        case 6:  // Ltrigger
+          return 'd';
         case 7:  // Rtrigger
           return '!';
         case 11:  // Press Lstick
@@ -164,6 +170,8 @@ sdl_joystick_event(SDL_Event event)
       switch (event.jbutton.button) {
         case 1:
         case 2:
+        case 4:  // Lbumper
+        case 5:  // Rbumper
           return ESCAPE;
         case 0:
         case 3:
