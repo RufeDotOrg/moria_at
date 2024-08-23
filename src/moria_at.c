@@ -7822,24 +7822,45 @@ sleep_adjacent(y, x)
     }
   return (sleep);
 }
-void
-create_food(y, x)
+STATIC int
+swap_2i(int* left, int* right)
 {
-  struct objS* obj;
-
-  if (caveD[y][x].oidx) {
-    msg_print("There is already an object under you.");
-    return;
+  int val = *left ^ *right;
+  *left ^= val;
+  *right ^= val;
+}
+STATIC int
+create_food(y, x, known)
+{
+  int dir_list[9];
+  for (int it = 0; it < AL(dir_list); ++it) {
+    dir_list[it] = it + 1;
+  }
+  for (int it = 0; it < AL(dir_list); ++it) {
+    swap_2i(&dir_list[it], &dir_list[randint(AL(dir_list)) - 1]);
   }
 
-  obj = obj_use();
-  if (obj->id) {
-    caveD[y][x].oidx = obj_index(obj);
-    tr_obj_copy(OBJ_MUSH_TIDX, obj);
-    obj->fy = y;
-    obj->fx = x;
-    msg_print("Food rolls beneath your feet.");
+  for (int it = 0; it < AL(dir_list); ++it) {
+    int dir = dir_list[it];
+    int i = dir_y(dir);
+    int j = dir_x(dir);
+    struct caveS* c_ptr = &caveD[y + i][x + j];
+    if (c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) {
+      struct objS* obj = obj_use();
+      if (obj->id) {
+        c_ptr->oidx = obj_index(obj);
+        tr_obj_copy(OBJ_MUSH_TIDX, obj);
+        obj->fy = y;
+        obj->fx = x;
+        msg_print("Food rolls on the ground.");
+        return 1;
+      }
+    }
   }
+
+  if (known) msg_print("There are too many objects nearby.");
+
+  return 0;
 }
 int
 turn_undead()
@@ -9214,8 +9235,7 @@ int *uy, *ux;
             countD.life_prot += randint(25) + uD.lev;
             break;
           case 29:
-            ident |= TRUE;
-            create_food(uD.y, uD.x);
+            ident |= create_food(uD.y, uD.x, known);
             break;
           case 30:
             ident |= dispel_creature(CD_UNDEAD, 60);
@@ -9565,7 +9585,7 @@ int* x_ptr;
       wall_to_mud(target, uD.y, uD.x);
       break;
     case 17:
-      create_food(uD.y, uD.x);
+      create_food(uD.y, uD.x, 1);
       break;
     case 18:
       inven_recharge(target, 0);
@@ -9830,7 +9850,7 @@ int* x_ptr;
       sleep_monster_aoe(1);
       break;
     case 14:
-      create_food(uD.y, uD.x);
+      create_food(uD.y, uD.x, 1);
       break;
     case 15:
       equip_remove_curse();
