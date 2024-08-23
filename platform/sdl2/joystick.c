@@ -48,7 +48,7 @@ joystick_button(button)
   char c = key_dir(joystick_dir());
   if (button) {
     if (c == ' ')
-      c = CTRL('w');  // menu
+      c = 'a';
     else
       c &= ~0x20;  // run
   }
@@ -140,8 +140,8 @@ sdl_joystick_event(SDL_Event event)
           return joystick_button(!event.jbutton.button);
         case 2:
           return '.';
-        case 3:
-          return 'a';
+        case 3:  // show advanced menu
+          return CTRL('w');
         case 4:  // Lbumper
           return 'c';
         case 5:  // Rbumper
@@ -161,6 +161,7 @@ sdl_joystick_event(SDL_Event event)
         case 1:  // movement
           return overlay_dir(joystick_dir(), !event.jbutton.button);
         case 2:
+          return '-';
         case 3:
         case 11:  // Press Lstick
         case 12:  // Press Rstick
