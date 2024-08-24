@@ -8809,14 +8809,16 @@ inven_choice(char* prompt, char* mode_list)
       iidx += begin;
       if (iidx < end && invenD[iidx]) {
         c = obj_study(obj_get(invenD[iidx]), 0);
-        // Prohibited on the death screen
-        if (using_selection && uD.new_level_flag == 0) {
-          switch (c) {
-            case 'o':
-              inven_drop(iidx);
-              return -1;
-            case ESCAPE:
-              return iidx;
+        if (!PC) {
+          // Prohibited on the death screen
+          if (using_selection && uD.new_level_flag == 0) {
+            switch (c) {
+              case 'o':
+                inven_drop(iidx);
+                return -1;
+              case ESCAPE:
+                return iidx;
+            }
           }
         }
       }

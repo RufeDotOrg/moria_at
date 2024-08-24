@@ -150,6 +150,12 @@ sdl_joystick_event(SDL_Event event)
           return 'd';
         case 7:  // Rtrigger
           return '!';
+        case 8:  // LTiny
+          return CTRL('z');
+        case 9:  // RTiny
+          return 'p';
+        case 10:  // Psbutton
+          return '-';
         case 11:  // Press Lstick
           return 'i';
         case 12:  // Press Rstick
@@ -169,12 +175,13 @@ sdl_joystick_event(SDL_Event event)
       }
     } else if (mode == 2) {
       switch (event.jbutton.button) {
+        case 0:
         case 1:
         case 2:
         case 4:  // Lbumper
         case 5:  // Rbumper
+        case 9:  // RTiny
           return ESCAPE;
-        case 0:
         case 3:
           return 'o';
       }
