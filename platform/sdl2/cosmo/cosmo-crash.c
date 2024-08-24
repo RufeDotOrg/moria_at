@@ -1,7 +1,6 @@
 
 #include <libc/limits.h>
 #include <libc/log/internal.h>
-#include <libc/macros.internal.h>
 #include <libc/nt/enum/processaccess.h>
 #include "libc/calls/struct/sigaction.h"
 #include "libc/calls/struct/sigaltstack.h"
