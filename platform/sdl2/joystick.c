@@ -45,11 +45,10 @@ DATA char xboxD[] = {
     JS_LSTICK,  // Ltouchpad
     JS_RSTICK,  // Rtouchpad
     -1,         // Ellipsis
-    JS_SOUTH,    JS_EAST,     JS_NORTH, JS_WEST,  JS_LBUMPER, JS_RBUMPER,
+    JS_SOUTH,    JS_EAST,     JS_WEST,  JS_NORTH, JS_LBUMPER, JS_RBUMPER,
     JS_LTRIGGER, JS_RTRIGGER, JS_LTINY, JS_RTINY, JS_SYSTEM,
 };
-// TBD: Dynamic
-DATA char* button_mapD; // = xboxD;
+DATA int is_xboxD;
 
 STATIC int
 joystick_enabled()
@@ -73,7 +72,19 @@ STATIC int
 joystick_assign(jsidx)
 {
   if (joystick_ptrD) SDL_JoystickClose(joystick_ptrD);
-  if (jsidx >= 0) joystick_ptrD = SDL_JoystickOpen(jsidx);
+
+  void* joystick = 0;
+  if (jsidx >= 0) joystick = SDL_JoystickOpen(jsidx);
+  joystick_ptrD = joystick;
+
+  // Xbox/Steam Deck detection
+  int is_xbox = 0;
+  if (joystick) {
+    const char* name = SDL_JoystickNameForIndex(jsidx);
+    is_xbox = strstr(name, "Xbox") || strstr(name, "Steam Deck");
+    Log("using joystick: %s", name);
+  }
+  is_xboxD = is_xbox;
 }
 STATIC int
 joystick_dir()
@@ -106,17 +117,12 @@ joystick_init()
 {
   jxD = jyD = .5;
 
-  int count = 0;
-  for (int it = 0; it < SDL_NumJoysticks(); ++it) {
-    const char* name;
-    const char* path;
-
-    count++;
-    name = SDL_JoystickNameForIndex(it);
+  int count = SDL_NumJoysticks();
+  if (count) {
+    // TBD: global state preferences?
     // !path may be a unique identifier!
-    path = SDL_JoystickPathForIndex(it);
-    Log("%s %s", name, path);
-    joystick_assign(it);
+    // path = SDL_JoystickPathForIndex(it);
+    joystick_assign(0);
   }
   Log("joystick count %d", count);
 }
@@ -181,9 +187,8 @@ sdl_joystick_event(SDL_Event event)
   if (JOYSTICK) {
     int button = event.jbutton.button;
 
-    if (button_mapD) {
-      button = -1;
-      if (button < JS_COUNT) button = button_mapD[button];
+    if (is_xboxD && (button >= 0 && button < AL(xboxD))) {
+      button = xboxD[button];
     }
 
     if (mode == 0) {
