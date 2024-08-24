@@ -1,6 +1,23 @@
 
 enum { JOYSTICK_VERBOSE = 0 };
 
+// Sony Dualsense button order is default
+enum {
+  JS_SOUTH,
+  JS_EAST,
+  JS_NORTH,
+  JS_WEST,
+  JS_LBUMPER,
+  JS_RBUMPER,
+  JS_LTRIGGER,
+  JS_RTRIGGER,
+  JS_LTINY,
+  JS_RTINY,
+  JS_SYSTEM,
+  JS_LSTICK,
+  JS_RSTICK
+};
+
 // game controllers & joysticks
 DATA SDL_Joystick* joystick_ptrD;
 DATA float jxD;
@@ -132,58 +149,59 @@ sdl_joystick_event(SDL_Event event)
     Log("button %d %s mode %d", event.jbutton.button,
         statename[event.jbutton.state], mode);
   }
+
   if (JOYSTICK) {
     if (mode == 0) {
       switch (event.jbutton.button) {
-        case 0:
-        case 1:  // movement
-          return joystick_button(!event.jbutton.button);
-        case 2:
+        case JS_SOUTH:
+        case JS_EAST:  // movement
+          return joystick_button(event.jbutton.button == JS_SOUTH);
+        case JS_NORTH:
           return '.';
-        case 3:  // show advanced menu
-          return CTRL('w');
-        case 4:  // Lbumper
+        case JS_WEST:
+          return CTRL('w');  // show advanced menu
+        case JS_LBUMPER:
           return 'c';
-        case 5:  // Rbumper
+        case JS_RBUMPER:
           return 'm';
-        case 6:  // Ltrigger
+        case JS_LTRIGGER:
           return 'd';
-        case 7:  // Rtrigger
+        case JS_RTRIGGER:
           return '!';
-        case 8:  // LTiny
+        case JS_LTINY:
           return CTRL('z');
-        case 9:  // RTiny
+        case JS_RTINY:
           return 'p';
-        case 10:  // Psbutton
+        case JS_SYSTEM:
           return '-';
-        case 11:  // Press Lstick
+        case JS_LSTICK:
           return 'i';
-        case 12:  // Press Rstick
+        case JS_RSTICK:
           return 'e';
       }
     } else if (mode == 1) {
       switch (event.jbutton.button) {
-        case 0:
-        case 1:  // movement
+        case JS_SOUTH:
+        case JS_EAST:  // movement
           return overlay_dir(joystick_dir(), !event.jbutton.button);
-        case 2:
-          return '-';
-        case 3:
-        case 11:  // Press Lstick
-        case 12:  // Press Rstick
+        case JS_WEST:
+        case JS_LSTICK:  // Press Lstick
+        case JS_RSTICK:  // Press Rstick
           return ESCAPE;
+        case JS_NORTH:
+          return '-';  // sort shop/inven
       }
     } else if (mode == 2) {
       switch (event.jbutton.button) {
-        case 0:
-        case 1:
-        case 2:
-        case 4:  // Lbumper
-        case 5:  // Rbumper
-        case 9:  // RTiny
+        case JS_SOUTH:
+        case JS_EAST:
+        case JS_WEST:
+        case JS_LBUMPER:
+        case JS_RBUMPER:
+        case JS_RTINY:
           return ESCAPE;
-        case 3:
-          return 'o';
+        case JS_NORTH:
+          return 'o';  // from death screen, go back to last game frame
       }
     }
   }
