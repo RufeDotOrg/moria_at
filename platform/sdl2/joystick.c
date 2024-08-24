@@ -1,6 +1,11 @@
 
 enum { JOYSTICK_VERBOSE = 0 };
 
+// game controllers & joysticks
+DATA SDL_Joystick* joystick_ptrD;
+DATA float jxD;
+DATA float jyD;
+
 // Sony Dualsense button order is default
 enum {
   JS_SOUTH,
@@ -15,13 +20,36 @@ enum {
   JS_RTINY,
   JS_SYSTEM,
   JS_LSTICK,
-  JS_RSTICK
+  JS_RSTICK,
+  JS_COUNT,
 };
-
-// game controllers & joysticks
-DATA SDL_Joystick* joystick_ptrD;
-DATA float jxD;
-DATA float jyD;
+// Xbox remap
+enum {
+  XB_LTOUCHPAD,
+  XB_RTOUCHPAD,
+  XB_ELLIPSIS,
+  XB_SOUTH,
+  XB_EAST,
+  XB_NORTH,
+  XB_WEST,
+  XB_LBUMPER,
+  XB_RBUMPER,
+  XB_LTRIGGER,
+  XB_RTRIGGER,
+  XB_LTINY,
+  XB_RTINY,
+  XB_SYSTEM,
+  XB_COUNT,
+};
+DATA char xboxD[] = {
+    JS_LSTICK,  // Ltouchpad
+    JS_RSTICK,  // Rtouchpad
+    -1,         // Ellipsis
+    JS_SOUTH,    JS_EAST,     JS_NORTH, JS_WEST,  JS_LBUMPER, JS_RBUMPER,
+    JS_LTRIGGER, JS_RTRIGGER, JS_LTINY, JS_RTINY, JS_SYSTEM,
+};
+// TBD: Dynamic
+DATA char* button_mapD; // = xboxD;
 
 STATIC int
 joystick_enabled()
@@ -151,11 +179,18 @@ sdl_joystick_event(SDL_Event event)
   }
 
   if (JOYSTICK) {
+    int button = event.jbutton.button;
+
+    if (button_mapD) {
+      button = -1;
+      if (button < JS_COUNT) button = button_mapD[button];
+    }
+
     if (mode == 0) {
-      switch (event.jbutton.button) {
+      switch (button) {
         case JS_SOUTH:
         case JS_EAST:  // movement
-          return joystick_button(event.jbutton.button == JS_SOUTH);
+          return joystick_button(button == JS_SOUTH);
         case JS_NORTH:
           return '.';
         case JS_WEST:
@@ -180,10 +215,10 @@ sdl_joystick_event(SDL_Event event)
           return 'e';
       }
     } else if (mode == 1) {
-      switch (event.jbutton.button) {
+      switch (button) {
         case JS_SOUTH:
         case JS_EAST:  // movement
-          return overlay_dir(joystick_dir(), !event.jbutton.button);
+          return overlay_dir(joystick_dir(), button == JS_SOUTH);
         case JS_WEST:
         case JS_LSTICK:  // Press Lstick
         case JS_RSTICK:  // Press Rstick
@@ -192,7 +227,7 @@ sdl_joystick_event(SDL_Event event)
           return '-';  // sort shop/inven
       }
     } else if (mode == 2) {
-      switch (event.jbutton.button) {
+      switch (button) {
         case JS_SOUTH:
         case JS_EAST:
         case JS_WEST:
