@@ -11279,7 +11279,7 @@ py_help()
   BufMsg(screen, "CTRL-z: undo");
   line += 1;
   BufMsg(screen, "ESC: Game Menu");
-  BufMsg(screen, "+/-: zoom in/out");
+  BufMsg(screen, "-: observer zoom adjustment");
   BufMsg(screen, "!: repeat last spell/item");
 
   line += 1;
@@ -14115,12 +14115,7 @@ dungeon()
 
           switch (c) {
             case '-':
-            case '_':
               globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
-              break;
-            case '+':
-            case '=':
-              globalD.zoom_factor = (globalD.zoom_factor + 1) % MAX_ZOOM;
               break;
             case '!':
               py_reactuate(&y, &x, last_actuateD);
