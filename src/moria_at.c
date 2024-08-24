@@ -11361,6 +11361,10 @@ py_menu()
     BufMsg(overlay, "-");
     BufMsg(overlay, "g) Game reset");
     if (PC) BufMsg(overlay, "h) Help");
+    if (PC) {
+      line = 'q' - 'a';
+      BufMsg(overlay, "q) quit");
+    }
 
     if (!in_subcommand(prompt, &c)) break;
 
@@ -11392,6 +11396,9 @@ py_menu()
 
       case 'h':
         if (PC) py_help();
+        break;
+      case 'q':
+        quitD = 1;
         break;
     }
   }
