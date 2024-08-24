@@ -82,7 +82,7 @@ joystick_assign(jsidx)
   if (joystick) {
     const char* name = SDL_JoystickNameForIndex(jsidx);
     is_xbox = strstr(name, "Xbox") || strstr(name, "Steam Deck");
-    Log("using joystick: %s", name);
+    Log("joystick_assign: %s", name);
   }
   is_xboxD = is_xbox;
 }
@@ -96,8 +96,6 @@ joystick_dir()
   int n = dpad_nearest_pp(y, x, 0);
   return (pp_keyD[n]);
 }
-// Enough to walk, independent of touch.c
-// TBD: possibly want selection behaviors in touch.c
 STATIC int
 joystick_button(button)
 {
@@ -108,7 +106,6 @@ joystick_button(button)
     else
       c &= ~0x20;  // run
   }
-  Log("joystick button %c (%d)", c, c);
   return c;
 }
 
@@ -119,7 +116,7 @@ joystick_init()
 
   int count = SDL_NumJoysticks();
   if (count) {
-    // TBD: global state preferences?
+    // TBD: global state pref device?
     // !path may be a unique identifier!
     // path = SDL_JoystickPathForIndex(it);
     joystick_assign(0);
@@ -153,11 +150,9 @@ overlay_dir(dir, finger)
   int dx = dir_x(dir);
   int dy = dir_y(dir);
 
-  // Controller uses center tap as confirm? (or change buttons.. ?)
   if (!dx && !dy) {
-    char c = (finger ? 'A' : 'a') + finger_rowD;
-    Log("overlay trigger: char %c (%d)", c, c);
-    return c;
+    // Controller uses center tap as study & confirm
+    return (finger ? 'A' : 'a') + finger_rowD;
   }
 
   if (dx && !dy) {
@@ -178,7 +173,7 @@ int
 sdl_joystick_event(SDL_Event event)
 {
   USE(mode);
-  if (1) {
+  if (JOYSTICK_VERBOSE) {
     char* statename[] = {"release", "press"};
     Log("button %d %s mode %d", event.jbutton.button,
         statename[event.jbutton.state], mode);
@@ -225,8 +220,8 @@ sdl_joystick_event(SDL_Event event)
         case JS_EAST:  // movement
           return overlay_dir(joystick_dir(), button == JS_SOUTH);
         case JS_WEST:
-        case JS_LSTICK:  // Press Lstick
-        case JS_RSTICK:  // Press Rstick
+        case JS_LSTICK:
+        case JS_RSTICK:
           return ESCAPE;
         case JS_NORTH:
           return '-';  // sort shop/inven
@@ -259,6 +254,7 @@ sdl_joystick_device(SDL_Event event)
     if (event.type == SDL_JOYDEVICEREMOVED && joystick_ptrD) {
       SDL_JoystickClose(joystick_ptrD);
       joystick_ptrD = 0;
+      joystick_init();
     }
   }
 }
