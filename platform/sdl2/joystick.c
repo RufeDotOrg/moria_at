@@ -48,7 +48,7 @@ DATA char xboxD[] = {
     JS_SOUTH,    JS_EAST,     JS_WEST,  JS_NORTH, JS_LBUMPER, JS_RBUMPER,
     JS_LTRIGGER, JS_RTRIGGER, JS_LTINY, JS_RTINY, JS_SYSTEM,
 };
-DATA int is_xboxD;
+DATA int xbox_styleD;
 
 STATIC int
 joystick_enabled()
@@ -78,13 +78,13 @@ joystick_assign(jsidx)
   joystick_ptrD = joystick;
 
   // Xbox/Steam Deck detection
-  int is_xbox = 0;
+  int xbox_style = 0;
   if (joystick) {
     const char* name = SDL_JoystickNameForIndex(jsidx);
-    is_xbox = strstr(name, "Xbox") || strstr(name, "Steam Deck");
-    Log("joystick_assign: %s", name);
+    xbox_style = strstr(name, "Xbox") || strstr(name, "Steam Deck");
+    Log("joystick_assign: %s (xbox_style? %d)", name, xbox_style);
   }
-  is_xboxD = is_xbox;
+  xbox_styleD = xbox_style;
 }
 STATIC int
 joystick_dir()
@@ -97,10 +97,10 @@ joystick_dir()
   return (pp_keyD[n]);
 }
 STATIC int
-joystick_button(button)
+joystick_button(alt)
 {
   char c = key_dir(joystick_dir());
-  if (button) {
+  if (alt) {
     if (c == ' ')
       c = 'a';
     else
@@ -170,6 +170,67 @@ overlay_dir(dir, finger)
   return CTRL('d');
 }
 int
+joystick_game_button(button)
+{
+  switch (button) {
+    case JS_SOUTH:
+    case JS_EAST:  // movement
+      return joystick_button(button == JS_SOUTH);
+    case JS_NORTH:
+      return '.';
+    case JS_WEST:
+      return CTRL('w');  // show advanced menu
+    case JS_LBUMPER:
+      return 'c';
+    case JS_RBUMPER:
+      return 'm';
+    case JS_LTRIGGER:
+      return 'd';
+    case JS_RTRIGGER:
+      return '!';
+    case JS_LTINY:
+      return CTRL('z');
+    case JS_RTINY:
+      return 'p';
+    case JS_SYSTEM:
+      return '-';
+    case JS_LSTICK:
+      return 'i';
+    case JS_RSTICK:
+      return 'e';
+  }
+}
+int
+joystick_menu_button(button)
+{
+  switch (button) {
+    case JS_SOUTH:
+    case JS_EAST:  // movement
+      return overlay_dir(joystick_dir(), button == JS_SOUTH);
+    case JS_WEST:
+    case JS_LSTICK:
+    case JS_RSTICK:
+      return ESCAPE;
+    case JS_NORTH:
+      return '-';  // sort shop/inven
+  }
+}
+int
+joystick_popup_button(button)
+{
+  switch (button) {
+    case JS_SOUTH:
+    case JS_EAST:
+    case JS_WEST:
+    case JS_LBUMPER:
+    case JS_RBUMPER:
+    case JS_RTINY:
+      return ESCAPE;
+    case JS_NORTH:
+      return 'o';  // from death screen, go back to last game frame
+  }
+}
+int
 sdl_joystick_event(SDL_Event event)
 {
   USE(mode);
@@ -179,68 +240,24 @@ sdl_joystick_event(SDL_Event event)
         statename[event.jbutton.state], mode);
   }
 
+  int ret = 0;
   if (JOYSTICK) {
     int button = event.jbutton.button;
 
-    if (is_xboxD && (button >= 0 && button < AL(xboxD))) {
+    if (xbox_styleD && (button >= 0 && button < AL(xboxD))) {
       button = xboxD[button];
     }
 
     if (mode == 0) {
-      switch (button) {
-        case JS_SOUTH:
-        case JS_EAST:  // movement
-          return joystick_button(button == JS_SOUTH);
-        case JS_NORTH:
-          return '.';
-        case JS_WEST:
-          return CTRL('w');  // show advanced menu
-        case JS_LBUMPER:
-          return 'c';
-        case JS_RBUMPER:
-          return 'm';
-        case JS_LTRIGGER:
-          return 'd';
-        case JS_RTRIGGER:
-          return '!';
-        case JS_LTINY:
-          return CTRL('z');
-        case JS_RTINY:
-          return 'p';
-        case JS_SYSTEM:
-          return '-';
-        case JS_LSTICK:
-          return 'i';
-        case JS_RSTICK:
-          return 'e';
-      }
+      ret = joystick_game_button(button);
+      if (ret > ' ' && msg_moreD) ret = ' ';
     } else if (mode == 1) {
-      switch (button) {
-        case JS_SOUTH:
-        case JS_EAST:  // movement
-          return overlay_dir(joystick_dir(), button == JS_SOUTH);
-        case JS_WEST:
-        case JS_LSTICK:
-        case JS_RSTICK:
-          return ESCAPE;
-        case JS_NORTH:
-          return '-';  // sort shop/inven
-      }
+      ret = joystick_menu_button(button);
     } else if (mode == 2) {
-      switch (button) {
-        case JS_SOUTH:
-        case JS_EAST:
-        case JS_WEST:
-        case JS_LBUMPER:
-        case JS_RBUMPER:
-        case JS_RTINY:
-          return ESCAPE;
-        case JS_NORTH:
-          return 'o';  // from death screen, go back to last game frame
-      }
+      ret = joystick_popup_button(button);
     }
   }
-  return 0;
+  return ret;
 }
 
 int
@@ -248,8 +265,9 @@ sdl_joystick_device(SDL_Event event)
 {
   if (JOYSTICK) {
     int type = event.type;
+    // int jsidx = event.jdevice.which
     if (event.type == SDL_JOYDEVICEADDED && !joystick_ptrD) {
-      joystick_assign(event.jdevice.which);
+      joystick_init();
     }
     if (event.type == SDL_JOYDEVICEREMOVED && joystick_ptrD) {
       SDL_JoystickClose(joystick_ptrD);
