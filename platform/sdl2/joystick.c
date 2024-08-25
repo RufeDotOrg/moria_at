@@ -119,7 +119,7 @@ joystick_init()
     // TBD: global state pref device?
     // !path may be a unique identifier!
     // path = SDL_JoystickPathForIndex(it);
-    joystick_assign(0);
+    joystick_assign(count - 1);
   }
   Log("joystick count %d", count);
 }
@@ -265,12 +265,11 @@ sdl_joystick_device(SDL_Event event)
 {
   if (JOYSTICK) {
     int type = event.type;
-    // int jsidx = event.jdevice.which
-    if (event.type == SDL_JOYDEVICEADDED && !joystick_ptrD) {
-      joystick_init();
+    if (event.type == SDL_JOYDEVICEADDED) {
+      joystick_assign(event.jdevice.which);
     }
-    if (event.type == SDL_JOYDEVICEREMOVED && joystick_ptrD) {
-      SDL_JoystickClose(joystick_ptrD);
+    if (event.type == SDL_JOYDEVICEREMOVED) {
+      if (joystick_ptrD) SDL_JoystickClose(joystick_ptrD);
       joystick_ptrD = 0;
       joystick_init();
     }
