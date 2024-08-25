@@ -363,6 +363,7 @@ custom_pregame()
   }
 
   if (TOUCH) ui_init();
+  if (TOUCH) platformD.selection = touch_selection;
 
   if (DPAD) dpad_init();
   if (DPAD) platformD.dpad = dpad_init;
