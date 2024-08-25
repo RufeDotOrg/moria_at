@@ -219,15 +219,15 @@ int
 joystick_popup_button(button)
 {
   switch (button) {
-    case JS_SOUTH:
+    case JS_NORTH:
     case JS_EAST:
     case JS_WEST:
     case JS_LBUMPER:
     case JS_RBUMPER:
     case JS_RTINY:
       return ESCAPE;
-    case JS_NORTH:
-      return 'o';  // from death screen, go back to last game frame
+    case JS_SOUTH:
+      return 'o';  // from death screen, go back to last game frame; reroll
   }
 }
 int
