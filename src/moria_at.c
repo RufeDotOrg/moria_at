@@ -8759,7 +8759,6 @@ struct objS* obj;
     }
 
     obj_desc(obj, number);
-    if (!PC && !town_store) msg_hint(AP("(RED: drop | GREEN: use)"));
     return CLOBBER_MSG("You study %s.", descD);
   }
 
@@ -8808,19 +8807,7 @@ inven_choice(char* prompt, char* mode_list)
       uint8_t iidx = c - 'A';
       iidx += begin;
       if (iidx < end && invenD[iidx]) {
-        c = obj_study(obj_get(invenD[iidx]), 0);
-        if (!PC) {
-          // Prohibited on the death screen
-          if (using_selection && uD.new_level_flag == 0) {
-            switch (c) {
-              case 'o':
-                inven_drop(iidx);
-                return -1;
-              case ESCAPE:
-                return iidx;
-            }
-          }
-        }
+        obj_study(obj_get(invenD[iidx]), 0);
       }
     } else if (c == '-') {
       inven_sort();
