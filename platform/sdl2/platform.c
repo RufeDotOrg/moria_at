@@ -332,11 +332,12 @@ platform_orientation(orientation)
   USE(display_rect);
   if (!orientation) orientation = orientation_default();
 
-  USE(layout_rect);
   USE(safe_rect);
   float scale = 1.f;
+  void* layout = 0;
+  SDL_Rect layout_rect = display_rectD;  // default to display
   if (orientation == SDL_ORIENTATION_LANDSCAPE) {
-    layoutD = landscapeD;
+    layout = landscapeD;
     layout_rect = (rect_t){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
 
     {
@@ -350,7 +351,7 @@ platform_orientation(orientation)
           safe_rect.w, display_rect.h);
     }
   } else if (orientation == SDL_ORIENTATION_PORTRAIT) {
-    layoutD = portraitD;
+    layout = portraitD;
     layout_rect = (rect_t){0, 0, PORTRAIT_X, PORTRAIT_Y};
 
     {
@@ -363,11 +364,13 @@ platform_orientation(orientation)
       Log("orientation %d %.03f %.03f %d %d dw sh", orientation, xscale, yscale,
           display_rect.w, safe_rect.h);
     }
-  } else {
-    layoutD = 0;
-    layout_rect = display_rectD;
   }
+  layoutD = layout;
   layout_rectD = layout_rect;
+
+  if (layout && scale != 1.f)
+    SDL_SetTextureScaleMode(layout, SDL_ScaleModeLinear);
+  if (layout && scale != 1.f) Log("layout using ScaleModeLinear");
 
   // Note tension: center of display vs. center of safe area
   //   affects visual aesthetic
