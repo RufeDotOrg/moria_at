@@ -5,6 +5,9 @@ enum { JOYSTICK_VERBOSE = 0 };
 DATA SDL_Joystick* joystick_ptrD;
 DATA float jxD;
 DATA float jyD;
+DATA int joystick_productD;
+#define STEAM_VIRTUAL_GAMEPAD 0x11ff
+#define STEAM_DECK_RAW 0x1205
 
 // Sony Dualsense button order is default
 enum {
@@ -23,32 +26,17 @@ enum {
   JS_RSTICK,
   JS_COUNT,
 };
-// Xbox remap
-enum {
-  XB_LTOUCHPAD,
-  XB_RTOUCHPAD,
-  XB_ELLIPSIS,
-  XB_SOUTH,
-  XB_EAST,
-  XB_NORTH,
-  XB_WEST,
-  XB_LBUMPER,
-  XB_RBUMPER,
-  XB_LTRIGGER,
-  XB_RTRIGGER,
-  XB_LTINY,
-  XB_RTINY,
-  XB_SYSTEM,
-  XB_COUNT,
-};
-DATA char xboxD[] = {
+DATA char rawdeckD[] = {
     JS_LSTICK,  // Ltouchpad
     JS_RSTICK,  // Rtouchpad
     -1,         // Ellipsis
     JS_SOUTH,    JS_EAST,     JS_WEST,  JS_NORTH, JS_LBUMPER, JS_RBUMPER,
     JS_LTRIGGER, JS_RTRIGGER, JS_LTINY, JS_RTINY, JS_SYSTEM,
 };
-DATA int xbox_styleD;
+DATA char steam_virtualD[] = {
+    JS_SOUTH, JS_EAST,  JS_WEST, JS_NORTH,  JS_LBUMPER, JS_RBUMPER,
+    JS_LTINY, JS_RTINY, -1,      JS_LSTICK, JS_RSTICK,
+};
 
 STATIC int
 joystick_enabled()
@@ -77,14 +65,13 @@ joystick_assign(jsidx)
   if (jsidx >= 0) joystick = SDL_JoystickOpen(jsidx);
   joystick_ptrD = joystick;
 
-  // Xbox/Steam Deck detection
-  int xbox_style = 0;
+  int product = 0;
   if (joystick) {
     const char* name = SDL_JoystickNameForIndex(jsidx);
-    xbox_style = strstr(name, "Xbox") || strstr(name, "Steam Deck");
-    Log("joystick_assign: %s (xbox_style? %d)", name, xbox_style);
+    product = SDL_JoystickGetDeviceProduct(jsidx);
+    Log("joystick_assign (product 0x%x): %s", product, name);
   }
-  xbox_styleD = xbox_style;
+  joystick_productD = product;
 }
 STATIC int
 joystick_dir()
@@ -234,7 +221,7 @@ int
 sdl_joystick_event(SDL_Event event)
 {
   USE(mode);
-  if (JOYSTICK_VERBOSE) {
+  if (1) {
     char* statename[] = {"release", "press"};
     Log("button %d %s mode %d", event.jbutton.button,
         statename[event.jbutton.state], mode);
@@ -242,10 +229,21 @@ sdl_joystick_event(SDL_Event event)
 
   int ret = 0;
   if (JOYSTICK) {
-    int button = event.jbutton.button;
+    uint32_t button = event.jbutton.button;
 
-    if (xbox_styleD && (button >= 0 && button < AL(xboxD))) {
-      button = xboxD[button];
+    switch (joystick_productD) {
+      case STEAM_VIRTUAL_GAMEPAD:
+        if (button < AL(steam_virtualD))
+          button = steam_virtualD[button];
+        else
+          button = -1;
+        break;
+      case STEAM_DECK_RAW:
+        if (button < AL(rawdeckD))
+          button = rawdeckD[button];
+        else
+          button = -1;
+        break;
     }
 
     if (mode == 0) {
