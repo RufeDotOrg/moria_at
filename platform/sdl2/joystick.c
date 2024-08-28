@@ -71,6 +71,8 @@ joystick_assign(jsidx)
     const char* name = SDL_JoystickNameForIndex(jsidx);
     product = SDL_JoystickGetDeviceProduct(jsidx);
     Log("joystick_assign (product 0x%x): %s", product, name);
+    // TBD: hack for better play experience on big screens
+    if (globalD.zoom_factor == 0) globalD.zoom_factor = 1;
   }
   joystick_productD = product;
 }
