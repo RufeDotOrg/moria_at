@@ -1776,25 +1776,22 @@ custom_orientation(orientation)
 {
   orientation = platform_orientation(orientation);
 
+  fn text_fn = 0;
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
-    layout_rectD = (rect_t){0, 0, PORTRAIT_X, PORTRAIT_Y};
-    text_fnD = portrait_text;
+    text_fn = portrait_text;
     overlay_widthD = 67;
     overlay_heightD = AL(overlayD) + 1;
     msg_widthD = 63;
-    portrait_layout();
   } else if (orientation == SDL_ORIENTATION_LANDSCAPE) {
-    layout_rectD = (rect_t){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
-    text_fnD = landscape_text;
+    text_fn = landscape_text;
     overlay_widthD = 78;
     overlay_heightD = AL(overlayD) + 2;
     msg_widthD = 92;
-    landscape_layout();
-  } else {
-    layout_rectD = display_rectD;
-    text_fnD = 0;
   }
+  text_fnD = text_fn;
 
+  if (orientation == SDL_ORIENTATION_PORTRAIT) portrait_layout();
+  if (orientation == SDL_ORIENTATION_LANDSCAPE) landscape_layout();
   if (globalD.hand_swap) {
     for (int it = 0; it < GR_COUNT; ++it) {
       swap_layout(&grectD[it], &layout_rectD);
