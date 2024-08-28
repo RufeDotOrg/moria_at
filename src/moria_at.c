@@ -8759,6 +8759,7 @@ struct objS* obj;
     }
 
     obj_desc(obj, number);
+    if (!PC) blipD = 1;
     return CLOBBER_MSG("You study %s.", descD);
   }
 
