@@ -118,14 +118,24 @@ sdl_axis_motion(SDL_Event event)
     Log("axis %d value %d", event.jaxis.axis, event.jaxis.value);
 
   if (JOYSTICK) {
+    int axis = event.jaxis.axis;
+
     int ok = event.jaxis.value + 32768;
     float norm = (float)ok / (32767 * 2 + 1);
     if (JOYSTICK_VERBOSE) Log("norm %.03f", norm);
-    if (event.jaxis.axis == 0) {
+    if (axis == 0) {
       jxD = norm;
     }
-    if (event.jaxis.axis == 1) {
+    if (axis == 1) {
       jyD = norm;
+    }
+    // Ltrigger
+    if (axis == 4) {
+      Log("ltrigger %d", event.jaxis.value);
+    }
+    // Rtrigger
+    if (axis == 5) {
+      Log("rtrigger %d", event.jaxis.value);
     }
   }
   return 0;
