@@ -11300,7 +11300,7 @@ py_help()
     BufMsg(screen, "  2468 1379: movement & combat");
     BufMsg(screen, "  0: alias to minimap");
     BufMsg(screen, "  .: alias to auto-command");
-    BufMsg(screen, "  +/-: alias to zoom");
+    BufMsg(screen, "  -: alias to zoom");
   }
 
   return CLOBBER_MSG("keyboard help");
