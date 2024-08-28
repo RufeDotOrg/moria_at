@@ -6,6 +6,7 @@ DATA SDL_Joystick* joystick_ptrD;
 DATA float jxD;
 DATA float jyD;
 DATA int joystick_productD;
+DATA int triggerD;
 #define STEAM_VIRTUAL_GAMEPAD 0x11ff
 #define STEAM_DECK_RAW 0x1205
 
@@ -114,6 +115,7 @@ joystick_init()
 int
 sdl_axis_motion(SDL_Event event)
 {
+  int ret = 0;
   if (JOYSTICK_VERBOSE)
     Log("axis %d value %d", event.jaxis.axis, event.jaxis.value);
 
@@ -129,16 +131,20 @@ sdl_axis_motion(SDL_Event event)
     if (axis == 1) {
       jyD = norm;
     }
-    // Ltrigger
-    if (axis == 4) {
-      Log("ltrigger %d", event.jaxis.value);
+    if (axis == 2) {
+      // Log("ltrigger %d", event.jaxis.value);
+      int trigger = (event.jaxis.value > 10000);
+      if (trigger && !triggerD) ret = 'd';
+      triggerD = trigger;
     }
-    // Rtrigger
     if (axis == 5) {
-      Log("rtrigger %d", event.jaxis.value);
+      // Log("rtrigger %d", event.jaxis.value);
+      int trigger = (event.jaxis.value > 10000);
+      if (trigger && !triggerD) ret = '!';
+      triggerD = trigger;
     }
   }
-  return 0;
+  return ret;
 }
 
 int
@@ -181,10 +187,6 @@ joystick_game_button(button)
       return 'c';
     case JS_RBUMPER:
       return 'm';
-    case JS_LTRIGGER:
-      return 'd';
-    case JS_RTRIGGER:
-      return '!';
     case JS_LTINY:
       return CTRL('z');
     case JS_RTINY:
