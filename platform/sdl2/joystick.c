@@ -131,13 +131,13 @@ sdl_axis_motion(SDL_Event event)
     if (axis == 1) {
       jyD = norm;
     }
-    if (axis == 2) {
+    if (axis == 2 && joystick_productD == STEAM_VIRTUAL_GAMEPAD) {
       // Log("ltrigger %d", event.jaxis.value);
       int trigger = (event.jaxis.value > 10000);
       if (trigger && !triggerD) ret = 'd';
       triggerD = trigger;
     }
-    if (axis == 5) {
+    if (axis == 5 && joystick_productD == STEAM_VIRTUAL_GAMEPAD) {
       // Log("rtrigger %d", event.jaxis.value);
       int trigger = (event.jaxis.value > 10000);
       if (trigger && !triggerD) ret = '!';
@@ -187,6 +187,10 @@ joystick_game_button(button)
       return 'c';
     case JS_RBUMPER:
       return 'm';
+    case JS_LTRIGGER:
+      return 'd';
+    case JS_RTRIGGER:
+      return '!';
     case JS_LTINY:
       return CTRL('z');
     case JS_RTINY:
