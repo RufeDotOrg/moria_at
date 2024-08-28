@@ -237,7 +237,7 @@ int
 sdl_joystick_event(SDL_Event event)
 {
   USE(mode);
-  if (1) {
+  if (JOYSTICK_VERBOSE) {
     char* statename[] = {"release", "press"};
     Log("button %d %s mode %d", event.jbutton.button,
         statename[event.jbutton.state], mode);
