@@ -520,10 +520,10 @@ msg_pause()
 
   log_used = AS(msglen_cqD, msg_writeD);
   if (log_used) {
-    msg_moreD += 1;
-
     // non-replay mode waits for user to acknowledge buffer text -more-
+    msg_moreD = 1;
     draw(' ');
+    msg_moreD = 0;
   }
 }
 
@@ -608,13 +608,13 @@ int* dir;
   // ugh loop
   do {
     c = CLOBBER_MSG("%s", prompt);
+    if (c == 'a') break;
 
     int tmp = map_roguedir(c);
     if (tmp > 0 && tmp != 5) {
       *dir = tmp;
       return 1;
     }
-    if (c == 'a') break;
   } while (!is_ctrl(c));
 
   return 0;
@@ -12312,7 +12312,7 @@ py_monlook_dir(dir)
           if (mon->msleep) msg_hint(AP("(sleeping)"));
           // hack: mon death_descD pronoun is a/an
           death_descD[0] |= 0x20;
-          msg_moreD += 1;
+          msg_moreD = 1;
           CLOBBER_MSG("You see %s.", death_descD);
         }
       }
@@ -12347,7 +12347,7 @@ py_objlook_dir(dir)
         ylookD = obj->fy;
         xlookD = obj->fx;
         obj_desc(obj, obj->number);
-        msg_moreD += 1;
+        msg_moreD = 1;
         CLOBBER_MSG("You see %s.", descD);
       }
     }
@@ -13692,7 +13692,6 @@ void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
     py_spike(iidx);
   } else if (obj->tval == TV_DIGGING) {
     py_tunnel(iidx);
-    iidx = -1;
   } else if (iidx < INVEN_EQUIP) {
     inven_wear(iidx);
   } else if (iidx == INVEN_WIELD || iidx == INVEN_AUX) {
@@ -13735,7 +13734,7 @@ void py_actuate(y_ptr, x_ptr, submode) int *y_ptr, *x_ptr;
       last_castD = 0;
       yx_autoinven(y_ptr, x_ptr, iidx);
     }
-  } while (!turn_flag && iidx >= 0);
+  } while (!turn_flag);
 
   if (!turn_flag) {
     last_actuateD = last_actuate;
@@ -14015,7 +14014,6 @@ dungeon()
         }
       }
 
-      msg_moreD = 0;
       replay_flag = (input_record_readD < input_record_writeD);
       draw(WAIT_NONE);
 
