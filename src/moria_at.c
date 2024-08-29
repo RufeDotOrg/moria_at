@@ -29,7 +29,6 @@ DATA int find_breakrightD, find_breakleftD;
 DATA int find_prevdirD;
 // end find state
 DATA jmp_buf restartD;
-DATA int drop_modeD;
 // Magick
 DATA int magick_distD;
 DATA point_t magick_locD;
@@ -8280,10 +8279,9 @@ inven_reveal()
 enum { INVEN_DETAIL = 18 };
 enum { DROP_DETAIL = 8 };
 static int
-inven_overlay(begin, end)
+inven_overlay(begin, end, drop_mode)
 {
   USE(overlay_width);
-  USE(drop_mode);
   int line, count;
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
@@ -8765,45 +8763,77 @@ struct objS* obj;
 
   return 0;
 }
+// Precondition: mode_list is at least two characters (counting nullterm)
+enum { INVEN_HINT = 1 };
 static int
 inven_choice(char* prompt, char* mode_list)
 {
   char c;
-  int mode;
-  int begin, end;
   char subprompt[80];
-  char* prefix;
-  int using_selection = platformD.selection != noop;
+  int drop_mode = 0;
 
-  mode = mode_list[0];
+  char hint[2][80];
+  int hint_used[2];
+  if (INVEN_HINT) {
+    int using_selection = (platformD.selection != noop);
+    int mode_len = 0;
+    for (char* iter = mode_list; *iter; ++iter) mode_len += 1;
+    int drop_safe = (mode_len > 2);
+
+    for (int it = 0; it < 2; ++it) {
+      int len = 0;
+      if (using_selection) {
+        switch (mode_list[it]) {
+          case '*':
+            len = snprintf(AP(hint[it]), "(%sRIGHT: equipment)",
+                           drop_safe ? "LEFT: drop toggle | " : "");
+            break;
+          case '/':
+            len = snprintf(AP(hint[it]), "(LEFT: inventory%s)",
+                           drop_safe ? "| RIGHT: drop toggle" : "");
+            break;
+        }
+      } else {
+        len = snprintf(AP(hint[it]), "(%s%s- sort, SHIFT: study)",
+                       mode_list[it] == '*' ? "/ equip, " : "* inven, ",
+                       drop_safe ? "0 drop, " : "");
+      }
+      hint_used[it] = len;
+    }
+  }
+
+  int mode = mode_list[0];
   while (mode) {
-    switch (mode) {
-      case '*':
-        begin = 0;
-        end = INVEN_EQUIP;
-        prefix = "Inventory";
-        break;
-      default:
-      case '/':
-        begin = INVEN_WIELD;
-        end = MAX_INVEN;
-        prefix = "Equipment";
-        break;
+    msg_pause();
+    int begin = 0;
+    int end = INVEN_EQUIP;
+    char* prefix = "Inventory";
+    if (mode == '/') {
+      begin = INVEN_WIELD;
+      end = MAX_INVEN;
+      prefix = "Equipment";
     }
 
-    if (PC)
-      msg_hint(AP("(/ equip, * inven, - sort, SHIFT: study)"));
-    else
-      msg_hint(AP("(LEFT: inventory | RIGHT: equipment)"));
-    snprintf(subprompt, AL(subprompt), "%s: %s", prefix, prompt);
-    inven_overlay(begin, end);
+    if (INVEN_HINT) {
+      for (int it = 0; it < 2; ++it) {
+        if (mode_list[it] == mode) {
+          if (hint_used[it]) msg_hint(hint[it], hint_used[it]);
+        }
+      }
+    }
 
+    snprintf(subprompt, AL(subprompt), "%s: %s", prefix,
+             drop_mode ? "Drop which item?" : prompt);
+    inven_overlay(begin, end, drop_mode);
     if (!in_subcommand(subprompt, &c)) return -1;
 
     if (is_lower(c)) {
       uint8_t iidx = c - 'a';
       iidx += begin;
-      if (iidx < end && invenD[iidx]) return iidx;
+      if (iidx < end && invenD[iidx]) {
+        if (!drop_mode) return iidx;
+        inven_drop(iidx);
+      }
     } else if (is_upper(c)) {
       uint8_t iidx = c - 'A';
       iidx += begin;
@@ -8814,8 +8844,15 @@ inven_choice(char* prompt, char* mode_list)
       inven_sort();
       replay_hack();
     } else {
-      for (int it = 0; it < 2; ++it) {
-        if (mode_list[it] == c) mode = c;
+      int next_mode = mode;
+      for (char* iter = mode_list; *iter; ++iter) {
+        if (*iter == c) next_mode = c;
+      }
+      if (next_mode == '0') {
+        drop_mode = !drop_mode;
+      } else if (next_mode != mode) {
+        drop_mode = 0;
+        mode = next_mode;
       }
     }
   }
@@ -12096,11 +12133,9 @@ static void
 py_drop()
 {
   int iidx;
-  drop_modeD = 1;
-  iidx = inven_choice("Drop which item?", "*/");
+  iidx = inven_choice("Drop one item?", "*/0");
 
   if (iidx >= 0) inven_drop(iidx);
-  drop_modeD = 0;
 }
 static void
 open_object(y, x)
@@ -13719,26 +13754,19 @@ void py_reactuate(y_ptr, x_ptr, obj_id) int *y_ptr, *x_ptr;
 }
 void py_actuate(y_ptr, x_ptr, submode) int *y_ptr, *x_ptr;
 {
-  int iidx;
   USE(last_actuate);
   USE(last_cast);
 
-  overlay_submodeD = submode;
-  do {
-    msg_pause();
-    iidx =
-        inven_choice("Use which item?", overlay_submodeD == 'e' ? "/*" : "*/");
-
-    if (iidx >= 0) {
-      last_actuateD = invenD[iidx];
-      last_castD = 0;
-      yx_autoinven(y_ptr, x_ptr, iidx);
-    }
-  } while (!turn_flag);
-
-  if (!turn_flag) {
+  while (!turn_flag) {
     last_actuateD = last_actuate;
     last_castD = last_cast;
+    int iidx = inven_choice("Use which item?",
+                            overlay_submodeD == 'e' ? "/*0" : "*/0");
+    if (iidx == -1) break;
+
+    last_actuateD = invenD[iidx];
+    last_castD = 0;
+    yx_autoinven(y_ptr, x_ptr, iidx);
   }
 }
 static void

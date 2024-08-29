@@ -164,7 +164,7 @@ overlay_dir(dir, finger)
     if (finger)
       finger_rowD = dx < 0 ? overlay_begin() : overlay_end();
     else
-      return column_transition(dx);
+      return column_transition(finger_colD, dx);
   }
   if (dy && !dx) {
     if (finger)

@@ -194,14 +194,14 @@ orientation_lock_toggle()
   return 0;
 }
 STATIC int
-column_transition(dx)
+column_transition(column, dx)
 {
-  USE(finger_col);
+  uint32_t ret = column + dx;
+  // drop mode
+  if (ret > 1) return '0';
 
-  finger_col = CLAMP(finger_col + dx, 0, 1);
-  finger_colD = finger_col;
-
-  return (finger_col == 0) ? '*' : '/';
+  finger_colD = ret;
+  return (ret == 0) ? '*' : '/';
 }
 STATIC int
 fingerdown_xy_mode(x, y, mode)
@@ -255,10 +255,10 @@ fingerdown_xy_mode(x, y, mode)
       }
 
       if (dx && !dy) {
-        if (finger)
-          finger_rowD = dx < 0 ? overlay_begin() : overlay_end();
-        else
-          return column_transition(dx);
+        if (finger) finger_rowD = dx < 0 ? overlay_begin() : overlay_end();
+        if (!finger) {
+          return column_transition(finger_colD, dx);
+        }
       }
       if (dy && !dx) {
         if (finger)
