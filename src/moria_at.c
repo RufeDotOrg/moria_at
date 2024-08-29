@@ -8764,6 +8764,8 @@ struct objS* obj;
   return 0;
 }
 // Precondition: mode_list is at least two characters (counting nullterm)
+// drop_safe (mode_len > 2) implies all modes (enabled drop_mode)
+// alt_mode (mode_len > 1) toggles between inven/equip
 enum { INVEN_HINT = 1 };
 static int
 inven_choice(char* prompt, char* mode_list)
@@ -8779,23 +8781,28 @@ inven_choice(char* prompt, char* mode_list)
     int mode_len = 0;
     for (char* iter = mode_list; *iter; ++iter) mode_len += 1;
     int drop_safe = (mode_len > 2);
+    int alt_mode = (mode_len > 1);
 
     for (int it = 0; it < 2; ++it) {
       int len = 0;
       if (using_selection) {
-        switch (mode_list[it]) {
-          case '*':
-            len = snprintf(AP(hint[it]), "(%sRIGHT: equipment)",
-                           drop_safe ? "LEFT: drop toggle | " : "");
-            break;
-          case '/':
-            len = snprintf(AP(hint[it]), "(LEFT: inventory%s)",
-                           drop_safe ? "| RIGHT: drop toggle" : "");
-            break;
+        if (alt_mode) {
+          switch (mode_list[it]) {
+            case '*':
+              len = snprintf(AP(hint[it]), "(%sRIGHT: equipment)",
+                             drop_safe ? "LEFT: drop toggle | " : "");
+              break;
+            case '/':
+              len = snprintf(AP(hint[it]), "(LEFT: inventory%s)",
+                             drop_safe ? "| RIGHT: drop toggle" : "");
+              break;
+          }
         }
       } else {
-        len = snprintf(AP(hint[it]), "(%s%s- sort, SHIFT: study)",
-                       mode_list[it] == '*' ? "/ equip, " : "* inven, ",
+        char* other = "";
+        if (alt_mode)
+          other = (mode_list[it] == '*') ? "/ equip, " : "* inven, ";
+        len = snprintf(AP(hint[it]), "(%s%s- sort, SHIFT: study)", other,
                        drop_safe ? "0 drop, " : "");
       }
       hint_used[it] = len;
@@ -13757,6 +13764,7 @@ void py_actuate(y_ptr, x_ptr, submode) int *y_ptr, *x_ptr;
   USE(last_actuate);
   USE(last_cast);
 
+  overlay_submodeD = submode;
   while (!turn_flag) {
     last_actuateD = last_actuate;
     last_castD = last_cast;
