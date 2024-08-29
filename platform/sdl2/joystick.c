@@ -136,7 +136,7 @@ sdl_axis_motion(SDL_Event event)
     if (axis == 2 && joystick_productD == STEAM_VIRTUAL_GAMEPAD) {
       // Log("ltrigger %d", event.jaxis.value);
       int trigger = (event.jaxis.value > 10000);
-      if (trigger && !triggerD) ret = 'd';
+      if (trigger && !triggerD) ret = '#';
       triggerD = trigger;
     }
     if (axis == 5 && joystick_productD == STEAM_VIRTUAL_GAMEPAD) {
@@ -190,7 +190,7 @@ joystick_game_button(button)
     case JS_RBUMPER:
       return 'm';
     case JS_LTRIGGER:
-      return 'd';
+      return '#';
     case JS_RTRIGGER:
       return '!';
     case JS_LTINY:

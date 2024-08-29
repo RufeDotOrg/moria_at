@@ -11509,11 +11509,11 @@ wizard_prompt()
   return 0;
 }
 int
-maybe_menu()
+confirm_transition(prev, trans)
+char* trans;
 {
-  char c = CLOBBER_MSG("Press key twice for Advanced Game Options.");
-  if (c == ESCAPE) return py_menu();
-  return 0;
+  char c = CLOBBER_MSG("Press key twice for %s.", trans);
+  return (c == prev) ? prev : 0;
 }
 static void
 py_death()
@@ -14079,10 +14079,13 @@ dungeon()
           if (KEYBOARD) {
             switch (c) {
               case ESCAPE:
-                maybe_menu();
+                if (confirm_transition(c, "Advanced Game Actions")) c = '@';
                 break;
               case '?':
                 py_help();
+                break;
+              case 'd':
+                c = '#';
                 break;
               case 'e':
                 py_actuate(&y, &x, 'e');
@@ -14118,11 +14121,11 @@ dungeon()
             case '@':
               py_menu();
               break;
+            case '#':
+              py_drop();
+              break;
             case ',':
               py_pickup(y, x, TRUE);
-              break;
-            case 'd':
-              py_drop();
               break;
             case 's':
               msg_print("You search the area.");

@@ -238,7 +238,7 @@ fingerdown_xy_mode(x, y, mode)
         case TOUCH_GAMEPLAY:
           return finger ? '-' : 'O';
         case TOUCH_LB:
-          return finger ? 'd' : 'a';
+          return finger ? '#' : 'a';
         case TOUCH_RB:
           return finger ? '!' : '.';
       }
