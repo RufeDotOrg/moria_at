@@ -8789,11 +8789,11 @@ inven_choice(char* prompt, char* mode_list)
         if (alt_mode) {
           switch (mode_list[it]) {
             case '*':
-              len = snprintf(AP(hint[it]), "(%sRIGHT: equipment)",
+              len = snprintf(hint[it], AL(hint[it]), "(%sRIGHT: equipment)",
                              drop_safe ? "LEFT: drop toggle | " : "");
               break;
             case '/':
-              len = snprintf(AP(hint[it]), "(LEFT: inventory%s)",
+              len = snprintf(hint[it], AL(hint[it]), "(LEFT: inventory%s)",
                              drop_safe ? "| RIGHT: drop toggle" : "");
               break;
           }
@@ -8802,8 +8802,8 @@ inven_choice(char* prompt, char* mode_list)
         char* other = "";
         if (alt_mode)
           other = (mode_list[it] == '*') ? "/ equip, " : "* inven, ";
-        len = snprintf(AP(hint[it]), "(%s%s- sort, SHIFT: study)", other,
-                       drop_safe ? "0 drop, " : "");
+        len = snprintf(hint[it], AL(hint[it]), "(%s%s- sort, SHIFT: study)",
+                       other, drop_safe ? "0 drop, " : "");
       }
       hint_used[it] = len;
     }
