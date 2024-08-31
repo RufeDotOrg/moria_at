@@ -368,8 +368,6 @@ custom_pregame()
   if (DPAD) dpad_init();
   if (DPAD) platformD.dpad = dpad_init;
 
-  if (JOYSTICK) joystick_init();
-
   // !!texture_formatD override!! minimapD is streaming abgr8888
   mmtextureD =
       SDL_CreateTexture(rendererD, SDL_PIXELFORMAT_ABGR8888,
@@ -390,6 +388,8 @@ custom_pregame()
   Log("SetWindowResizable");
 
   font_reset();
+
+  if (JOYSTICK) SDL_Init(SDL_INIT_JOYSTICK);
 
   // Hardware dependent "risky" initialization complete!
   if (COSMO_CRASH) platform_phase(PLATFORM_GAME);

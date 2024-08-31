@@ -496,7 +496,6 @@ int
 platform_pregame()
 {
   int scope = (SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
-  if (JOYSTICK) scope |= SDL_INIT_JOYSTICK;
 
   if (!SDL_WasInit(scope)) {
     if (!RELEASE) Log("Initializing development build");
