@@ -1,3 +1,4 @@
 bin/
 *.swp
 /sdl2
+src/platform
