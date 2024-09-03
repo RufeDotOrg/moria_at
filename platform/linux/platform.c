@@ -11,13 +11,14 @@
 #include <string.h>
 #include <time.h>
 
-FILE* fileoutD;
+DATA FILE* fileoutD;
 #define printf(x, ...) fprintf(fileoutD, x, ##__VA_ARGS__)
 #define Log(x, ...) fprintf(fileoutD, x "\n", ##__VA_ARGS__)
+DATA int quitD;
 
 enum { KEYBOARD = 1 };
 enum { PC = 1 };
-enum { RT = 0 };
+enum { GFX = 0 };
 // Full terminal: No post processing / text output to stdout
 enum { FULLTERM = 1 };
 
@@ -33,6 +34,7 @@ enum { FULLTERM = 1 };
 int
 platform_readansi()
 {
+  if (quitD) return CTRL('c');
   while (1) {
     char text[8] = {0};
     int len = 0;
@@ -49,7 +51,7 @@ platform_readansi()
       return tty_translate(text, len);
     }
   }
-  return -1;
+  return 0;
 }
 
 int
@@ -110,4 +112,15 @@ platform_init()
   platformD.load = platform_load;
   platformD.save = platform_save;
   platformD.erase = platform_erase;
+}
+
+int
+zoom_rect(rect_t* po)
+{
+  *po = (rect_t){
+      panelD.panel_row_min,
+      panelD.panel_col_min,
+      SYMMAP_WIDTH,
+      SYMMAP_HEIGHT,
+  };
 }

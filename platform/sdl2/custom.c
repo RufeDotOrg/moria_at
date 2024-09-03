@@ -1799,3 +1799,84 @@ custom_orientation(orientation)
   }
   return 0;
 }
+
+int
+feature_menu()
+{
+  char c;
+  int line;
+  char opt[2][4] = {"off", "on"};
+  char* default_renderer = PC ? "opengl" : "opengles2";
+  int using_selection = platformD.selection != noop;
+
+  while (1) {
+    overlay_submodeD = 'f';
+    line = 0;
+    BufMsg(overlay, "a) ascii gameplay renderer (%s)",
+           opt[globalD.sprite == 0]);
+    if (using_selection) {
+      line = 'c' - 'a';
+      BufMsg(overlay, "c) colorize dpad (%s)", opt[globalD.dpad_color != 0]);
+      line = 'd' - 'a';
+      BufMsg(overlay, "d) dpad sensitivity (%d)", globalD.dpad_sensitivity);
+    }
+    line = 'g' - 'a';
+    BufMsg(overlay, "g) gpu interface (%s)",
+           globalD.pc_renderer[0] ? globalD.pc_renderer : default_renderer);
+    line = 'h' - 'a';
+    BufMsg(overlay, "h) hand-swap user interface (%s)",
+           opt[globalD.hand_swap != 0]);
+    line = 'm' - 'a';
+    BufMsg(overlay, "m) magnification scale (%d x)", 1 << globalD.zoom_factor);
+    line = 'r' - 'a';
+    if (!vsync_rateD) {
+      BufMsg(overlay, "r) refresh / video sync (%s)", opt[globalD.vsync != 0]);
+    } else {
+      BufMsg(overlay,
+             "r) refresh / video sync (%s) | %d fps of %d display claimed",
+             opt[globalD.vsync != 0], vsync_rateD, refresh_rateD);
+    }
+    line = 'o' - 'a';
+    BufMsg(overlay, "o) orientation lock (%s)",
+           opt[globalD.orientation_lock != 0]);
+    line = 'v' - 'a';
+    BufMsg(overlay, "v) version info");
+
+    c = CLOBBER_MSG("feature menu");
+    if (is_ctrl(c)) break;
+
+    switch (c) {
+      case 'a':
+        INVERT(globalD.sprite);
+        break;
+      case 'c':
+        INVERT(globalD.dpad_color);
+        platformD.dpad();
+        break;
+      case 'd':
+        if (globalD.dpad_sensitivity >= 99)
+          globalD.dpad_sensitivity = 55;
+        else
+          globalD.dpad_sensitivity += 10;
+        platformD.dpad();
+        break;
+      case 'h':
+        INVERT(globalD.hand_swap);
+        platformD.orientation(0);
+        break;
+      case 'm':
+        globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
+        break;
+      case 'r':
+        platformD.vsync(INVERT(globalD.vsync));
+        break;
+      case 'o':
+        INVERT(globalD.orientation_lock);
+        break;
+      case 'v':
+        show_version();
+        break;
+    }
+  }
+  return 0;
+}

@@ -2,7 +2,9 @@
 // Global application memory
 DATA char symmapD[SYMMAP_HEIGHT][SYMMAP_WIDTH];
 DATA char save_termD[128];
+#define SAVENAME "savetty"
 
+enum { SHOW_MINERAL = 0 };
 static char
 get_sym(int row, int col)
 {
@@ -25,14 +27,14 @@ get_sym(int row, int col)
     case FLOOR_LIGHT:
     case FLOOR_DARK:
     case FLOOR_CORR:
+    case FLOOR_THRESHOLD:
       return '.';
     case FLOOR_OBST:
       return ';';
-  }
-  switch (cave_ptr->fval) {
     case MAGMA_WALL:
     case QUARTZ_WALL:
-      return '%';
+      if (SHOW_MINERAL) return '%';
+      break;
   }
   return '#';
 }
@@ -160,6 +162,12 @@ platform_draw()
   buffer_append(SP(tc_move_cursorD));
   char* msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
+
+  if (!msg_used) {
+    msg = AS(msg_cqD, msg_writeD - 1);
+    msg_used = AS(msglen_cqD, msg_writeD - 1);
+  }
+
   if (msg_used) {
     buffer_append(msg, msg_used);
   }
@@ -267,7 +275,7 @@ platform_save()
     struct bufS buf = save_bufD[it];
     byte_count += buf.mem_size;
   }
-  fd = open("savechar", O_CREAT | O_TRUNC | O_WRONLY, 0600);
+  fd = open(SAVENAME, O_CREAT | O_TRUNC | O_WRONLY, 0600);
   if (fd) {
     write(fd, &byte_count, sizeof(byte_count));
     for (int it = 0; it < AL(save_bufD); ++it) {
@@ -275,7 +283,7 @@ platform_save()
       write(fd, buf.mem, buf.mem_size);
     }
     close(fd);
-    Log("platform_save savechar %d byte_count", byte_count);
+    Log("platform_save %d byte_count", byte_count);
     return byte_count;
   }
   return 0;
@@ -291,7 +299,7 @@ platform_load()
     byte_count += buf.mem_size;
   }
 
-  fd = open("savechar", O_RDONLY);
+  fd = open(SAVENAME, O_RDONLY);
   if (fd != -1) {
     read(fd, &save_size, sizeof(save_size));
     if (save_size == byte_count) {
@@ -301,8 +309,7 @@ platform_load()
       }
     }
     close(fd);
-    Log("platform_load savechar %d save_size %d byte_count", save_size,
-        byte_count);
+    Log("platform_load %d save_size %d byte_count", save_size, byte_count);
     return save_size == byte_count;
   }
 
@@ -312,7 +319,7 @@ int
 platform_erase()
 {
   int fd;
-  fd = open("savechar", O_CREAT | O_TRUNC | O_WRONLY, 0600);
+  fd = open(SAVENAME, O_CREAT | O_TRUNC | O_WRONLY, 0600);
   close(fd);
   return fd != -1;
 }

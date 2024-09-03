@@ -65,6 +65,7 @@ enum { PC = 1 };
 #endif
 enum { MOTION = 0 };  //(MOUSE || TOUCH) };
 enum { DPAD = (TOUCH || JOYSTICK) };
+enum { GFX = 1 };
 
 // render.c
 DATA struct SDL_Window* windowD;
