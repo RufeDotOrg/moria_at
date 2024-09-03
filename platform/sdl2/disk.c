@@ -227,6 +227,7 @@ platform_load(saveslot, external)
 {
   char filename[16] = SAVENAME;
   filename_by_class(filename, saveslot);
+  Log("saveslot %d filename %s", saveslot, filename);
   char* path;
   if (external) {
     path = path_append_filename(exportpathD, exportpath_usedD, filename);

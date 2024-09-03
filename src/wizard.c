@@ -130,16 +130,13 @@ main(int argc, char** argv)
   platform_init();
   platformD.pregame();
 
-  char* filename = "savechar";
-  if (argc > 1) filename = argv[1];
-
   mon_level_init();
   obj_level_init();
 
   setjmp(restartD);
   hard_reset();
 
-  if (platformD.load(filename)) {
+  if (platformD.load()) {
     char c;
     int line;
     do {
@@ -157,7 +154,7 @@ main(int argc, char** argv)
       BufMsg(screen, "w) Wizard Mode to disk");
       BufMsg(screen, "x) Exit writing changes to disk");
 
-      c = CLOBBER_MSG("Modify Character (%s)?", filename);
+      c = CLOBBER_MSG("Modify Character?");
       switch (c) {
         case 'a':
           c = hp_editor();
@@ -193,14 +190,14 @@ main(int argc, char** argv)
         case 'w':
           godmode();
         case 'x':
-          platformD.save(filename);
+          platformD.save();
           c = CTRL('c');
           break;
       }
     } while (c != CTRL('c'));
 
   } else {
-    printf("%s: file not found\n", filename);
+    printf("savechar file not found");
   }
 
   platformD.postgame();
