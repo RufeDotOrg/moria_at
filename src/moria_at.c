@@ -1,8 +1,10 @@
 #include "src/game.c"
 
-#include "platform/platform.c"
+// TBD: code branches
+enum { MOD_SAVECHAR = 0 };
+#include "src/mod/savechar.c"
 
-#include "src/template.c"
+#include "platform/platform.c"
 
 enum { HACK = 0 };
 enum { TEST_CAVEGEN = 0 };
@@ -13,10 +15,6 @@ enum { TEST_CHECKLEN = 0 };
 // #include "src/mod/replay.c"
 // #include "src/mod/cavegen.c"
 // #undef TEST_CAVEGEN
-
-// TBD: code branches
-enum { MOD_SAVECHAR = 0 };
-#include "src/mod/savechar.c"
 
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
 DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};

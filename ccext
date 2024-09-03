@@ -1,5 +1,5 @@
 readlink src/platform | grep 'sdl2'
-[ $? -eq 0 ] || exit 0
+[ $? -eq 0 ] || return
 
 DIR=sdl2
 if [ `basename "$CC"` == cosmocc ]; then

@@ -11,9 +11,17 @@
 #include <string.h>
 #include <time.h>
 
-#include "tty.c"
+FILE* fileoutD;
+#define printf(x, ...) fprintf(fileoutD, x, ##__VA_ARGS__)
+#define Log(x, ...) fprintf(fileoutD, x "\n", ##__VA_ARGS__)
 
 enum { KEYBOARD = 1 };
+enum { PC = 1 };
+enum { RT = 0 };
+// Full terminal: No post processing / text output to stdout
+enum { FULLTERM = 1 };
+
+#include "tty.c"
 
 #ifndef TCGETS
 #define TCGETS TIOCGETA
@@ -47,6 +55,8 @@ platform_readansi()
 int
 platform_pregame()
 {
+  if (!fileoutD) fileoutD = fopen("log.txt", "wb");
+
   if (save_termD[1] == 0) {
     fcntl(STDIN_FILENO, F_SETFL, O_NONBLOCK);
 
@@ -55,16 +65,14 @@ platform_pregame()
     struct termios tbuf;
     tcgetattr(STDIN_FILENO, &tbuf);
     tbuf.c_iflag &= ~(ICRNL | IXON);
-    tbuf.c_oflag &= ~(OPOST);
+    if (FULLTERM) tbuf.c_oflag &= ~(OPOST);
     tbuf.c_lflag &= ~(ECHO | ICANON | ISIG);
     tcsetattr(STDIN_FILENO, TCSAFLUSH, &tbuf);
 
     write(STDOUT_FILENO, tc_hide_cursorD, sizeof(tc_hide_cursorD));
   }
 
-  platformD.readansi = platform_readansi;
-  platformD.draw = platform_draw;
-  platformD.predraw = platform_predraw;
+  Log("pregame complete");
 
   return 0;
 }
@@ -72,12 +80,34 @@ platform_pregame()
 int
 platform_postgame()
 {
+  if (fileoutD) {
+    fclose(fileoutD);
+    fileoutD = 0;
+  }
+
   if (save_termD[1]) {
-    write(STDOUT_FILENO, tc_clearD, sizeof(tc_clearD));
+    if (FULLTERM) write(STDOUT_FILENO, tc_clearD, sizeof(tc_clearD));
     write(STDOUT_FILENO, tc_show_cursorD, sizeof(tc_show_cursorD));
 
     ioctl(STDIN_FILENO, TCSETS, save_termD);
   }
 
   return 0;
+}
+
+int
+platform_init()
+{
+  platformD.input = platform_readansi;
+  platformD.draw = platform_draw;
+  platformD.predraw = platform_predraw;
+
+  platformD.pregame = platform_pregame;
+  platformD.postgame = platform_postgame;
+  platformD.draw = platform_draw;
+  platformD.input = platform_readansi;
+  if (platformD.seed == noop) platformD.seed = platform_random;
+  platformD.load = platform_load;
+  platformD.save = platform_save;
+  platformD.erase = platform_erase;
 }

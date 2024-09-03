@@ -12,3 +12,5 @@
 #include "db/grave.c"
 #include "db/mon.c"
 #include "db/obj.c"
+
+#include "src/template.c"

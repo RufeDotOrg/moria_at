@@ -14,7 +14,7 @@ get_sym(int row, int col)
   if (cave_ptr->midx) {
     struct monS* mon = &entity_monD[cave_ptr->midx];
     struct creatureS* creature = &creatureD[mon->cidx];
-    if (mon->mlit) return creature->cchar;
+    if (mon_lit(cave_ptr->midx)) return creature->cchar;
   }
   if (maD[MA_BLIND] || (CF_VIZ & cave_ptr->cflag) == 0) return ' ';
   if (cave_ptr->oidx) {
@@ -267,7 +267,7 @@ platform_save()
     struct bufS buf = save_bufD[it];
     byte_count += buf.mem_size;
   }
-  fd = open("savechar", O_WRONLY);
+  fd = open("savechar", O_CREAT | O_TRUNC | O_WRONLY, 0600);
   if (fd) {
     write(fd, &byte_count, sizeof(byte_count));
     for (int it = 0; it < AL(save_bufD); ++it) {
@@ -275,6 +275,7 @@ platform_save()
       write(fd, buf.mem, buf.mem_size);
     }
     close(fd);
+    Log("platform_save savechar %d byte_count", byte_count);
     return byte_count;
   }
   return 0;
@@ -300,6 +301,8 @@ platform_load()
       }
     }
     close(fd);
+    Log("platform_load savechar %d save_size %d byte_count", save_size,
+        byte_count);
     return save_size == byte_count;
   }
 
@@ -308,7 +311,8 @@ platform_load()
 int
 platform_erase()
 {
-  int fd = open("savechar", O_WRONLY);
+  int fd;
+  fd = open("savechar", O_CREAT | O_TRUNC | O_WRONLY, 0600);
   close(fd);
   return fd != -1;
 }

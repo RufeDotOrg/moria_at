@@ -50,7 +50,7 @@ custom_editor()
     c = read_number(name_list[it], ptr_list[it]);
     if (c == CTRL('c')) break;
   }
-  if (c == AL(name_list)) show_character(0);
+  if (c == AL(name_list)) show_character(0, 0);
   return c;
 }
 
@@ -126,14 +126,15 @@ godmode()
 int
 main(int argc, char** argv)
 {
+  FT(platform);
+  platform_init();
+  platformD.pregame();
+
   char* filename = "savechar";
   if (argc > 1) filename = argv[1];
 
   mon_level_init();
   obj_level_init();
-
-  platform_init();
-  platformD.pregame();
 
   setjmp(restartD);
   hard_reset();
