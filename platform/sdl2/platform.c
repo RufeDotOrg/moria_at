@@ -24,8 +24,7 @@
 #define rect_t SDL_Rect
 #define point_t SDL_Point
 
-enum { COSMO_CRASH = 0 };
-enum { PLATFORM_PREGAME = 1, PLATFORM_GAME = 2, PLATFORM_POSTGAME = 3 };
+enum { COSMO = 0 };
 #ifdef __FATCOSMOCC__
 #include "cosmo_sdl.c"
 #endif

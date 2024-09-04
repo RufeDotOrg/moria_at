@@ -144,10 +144,9 @@ cosmo_init(int argc, char** argv)
     }
   }
 
-  if (COSMO_CRASH) {
-    // TBD: IsXnu() issues with custom handler (does default handler work?)
-    if (IsLinux() || IsWindows()) crash_init();
-  }
+  // TBD: IsXnu() issues with custom handler (does default handler work?)
+  if (IsLinux() || IsWindows()) crash_init();
+
   if (COSMO_WINDOWAPP) enable_windows_gui();
 
   steam_debug();

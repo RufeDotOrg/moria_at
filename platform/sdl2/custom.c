@@ -48,6 +48,9 @@ DATA SDL_Texture* map_textureD;
 DATA SDL_Texture* text_textureD;
 DATA uint16_t mon_drawD[AL(monD)];
 
+enum { PHASE_PREGAME = 1, PHASE_GAME = 2, PHASE_POSTGAME = 3 };
+DATA int phaseD;
+
 enum { STRLEN_MORE = AL(moreD) - 1 };
 
 #define RF(r, framing)                                                    \
@@ -314,7 +317,7 @@ void* in;
 int
 custom_pregame()
 {
-  if (COSMO_CRASH) platform_phase(PLATFORM_PREGAME);
+  if (COSMO) phaseD = PHASE_PREGAME;
   if (DISK && !disk_pregame()) return 1;
   if (DISK && KEYBOARD)
     disk_read_keys(gameplay_inputD, sizeof(gameplay_inputD));
@@ -392,7 +395,7 @@ custom_pregame()
   if (JOYSTICK) SDL_Init(SDL_INIT_JOYSTICK);
 
   // Hardware dependent "risky" initialization complete!
-  if (COSMO_CRASH) platform_phase(PLATFORM_GAME);
+  if (COSMO) phaseD = PHASE_GAME;
   Log("initialization complete");
 
   // Migration code
@@ -405,9 +408,9 @@ int
 custom_postgame(may_exit)
 {
   // Postgame activities should not be called from the crash handler
-  if (COSMO_CRASH) platform_phase(PLATFORM_POSTGAME);
+  if (COSMO) phaseD = PHASE_POSTGAME;
 
-  if (DISK) disk_postgame(may_exit);
+  if (DISK) disk_postgame();
   if (JOYSTICK) joystick_assign(-1);
   return platform_postgame(may_exit);
 }

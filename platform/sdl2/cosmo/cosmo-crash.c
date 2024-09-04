@@ -1,10 +1,6 @@
 
-#include <libc/limits.h>
-#include <libc/log/internal.h>
 #include <libc/nt/enum/processaccess.h>
 #include "libc/calls/struct/sigaction.h"
-#include "libc/calls/struct/sigaltstack.h"
-#include "libc/calls/struct/sigset.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"
 
@@ -20,17 +16,6 @@ struct NtModuleInfo {
 static uint32_t
     __attribute__((__ms_abi__)) (*GetModuleInformation)(int64_t, int64_t, void*,
                                                         uint32_t);
-static uint16_t
-    __attribute__((__ms_abi__)) (*RtlCaptureStackBackTrace)(uint32_t, uint32_t,
-                                                            void*, uint32_t*);
-
-GLOBAL int platform_phaseD;
-STATIC int
-platform_phase(p)
-{
-  platform_phaseD = p;
-  return 0;
-}
 
 static void
 WindowsCrashReport(ucontext_t* ctx)
@@ -61,47 +46,31 @@ WindowsCrashReport(ucontext_t* ctx)
       kprintf("... MODULE_MAX exceeded: some modules are not listed!\n");
   }
 
-  uint64_t pc = 0;
-  if (ctx) {
-    pc = ctx->uc_mcontext.PC;
-    if (pc > UINT32_MAX) {
-      // kprintf("Foreign code backtrace:\n");
-      // enum { STACK_MAX = 64 };
-      // void* stack[STACK_MAX];
-      // uint32_t hash;
-      // int stack_count = RtlCaptureStackBackTrace(0, STACK_MAX, stack, &hash);
-      // for (int it = 0; it < stack_count; ++it) {
-      //   kprintf(" %p\n", stack[it]);
-      // }
-      // kprintf("Hash: 0x%x stack_count %d\n", hash, stack_count);
-    }
-  }
-
   sleep(3);
-}
-
-static void
-CommonCrashReport(ucontext_t* ctx)
-{
-  kprintf("Rufe.org crash augmentation enabled\n");
-
-  switch (platform_phaseD) {
-    case PLATFORM_PREGAME:
-      // Crash during initialization switch to "software" renderer
-      memcpy(globalD.pc_renderer, AP("software"));
-      // Fall-thru; save-to-disk
-    case PLATFORM_GAME:
-      platformD.postgame();
-      break;
-  }
 }
 
 void
 __game_crash(int sig, struct siginfo* si, void* arg)
 {
+  USE(phase);
+  // Crash during initialization; switch to "software" renderer
+  if (DISK && phase == PHASE_PREGAME) {
+    memcpy(globalD.pc_renderer, AP("software"));
+    disk_cache_write();
+  }
+
+  // Crash during play; attempt flush to disk
+  if (DISK && phase == PHASE_GAME) disk_postgame();
+
+  // Crash during postgame; noop
+
+  // Cosmo crash handler
   __oncrash(sig, si, arg);
-  CommonCrashReport(arg);
-  if (IsWindows()) WindowsCrashReport(arg);
+
+  if (IsWindows()) {
+    kprintf("Rufe.org WindowsCrashReport enabled\n");
+    WindowsCrashReport(arg);
+  }
 }
 
 static void
@@ -136,22 +105,13 @@ crash_init()
   if (IsWindows()) {
     void* psapi = cosmo_dlopen("psapi.dll", RTLD_LAZY);
     GetModuleInformation = cosmo_dlsym(psapi, "GetModuleInformation");
-
-    // void* ntdll = cosmo_dlopen("ntdll.dll", RTLD_LAZY);
-    // RtlCaptureStackBackTrace = cosmo_dlsym(ntdll,
-    // "RtlCaptureStackBackTrace");
   }
 
   InstallCrashHandler(SIGQUIT, 0);
-#ifdef __x86_64__
   InstallCrashHandler(SIGTRAP, 0);
-#else
-  InstallCrashHandler(SIGTRAP, SA_RESETHAND);
-#endif
-  InstallCrashHandler(SIGFPE, SA_RESETHAND);
-  InstallCrashHandler(SIGILL, SA_RESETHAND);
-  InstallCrashHandler(SIGBUS, SA_RESETHAND);
-  InstallCrashHandler(SIGABRT, SA_RESETHAND);
-  InstallCrashHandler(SIGSEGV, SA_RESETHAND | SA_ONSTACK);
+  InstallCrashHandler(SIGFPE, 0);
+  InstallCrashHandler(SIGILL, 0);
+  InstallCrashHandler(SIGBUS, 0);
+  InstallCrashHandler(SIGABRT, 0);
+  InstallCrashHandler(SIGSEGV, SA_ONSTACK);
 }
-#define COSMO_CRASH 1

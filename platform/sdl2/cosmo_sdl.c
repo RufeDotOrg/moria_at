@@ -13,8 +13,9 @@ GLOBAL void* libD;
 #include <math.h>
 
 #include "cosmo/cosmo-abi.h"
-#include "cosmo/cosmo-crash.c"
 #include "cosmo/cosmo-sdl.h"
+#define COSMO 1
 #else  // COSMO_SDL
+#include "cosmo/cosmo-crash.c"
 #include "cosmo/cosmo-init.h"
 #endif  // COSMO_SDL

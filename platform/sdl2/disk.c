@@ -29,7 +29,7 @@ STATIC SDL_RWops*
 file_access(char* filename, char* access)
 {
   SDL_RWops* ret = SDL_RWFromFile(filename, access);
-  if (ret != 0) Log("%s file_access %s", access, filename);
+  if (!RELEASE && ret != 0) Log("%s file_access %s", access, filename);
   return ret;
 }
 
@@ -83,7 +83,7 @@ filename_by_class(char* filename, int classidx)
     }
     *dst = 0;
   }
-  Log("filename_by_class %s", filename);
+  if (!RELEASE) Log("filename_by_class %s", filename);
   return filename;
 }
 
@@ -123,7 +123,9 @@ path_save(char* path)
       checksumD ^= ck;
     }
     SDL_RWclose(writef);
-    Log("path_save %s: version %d save checksum %x", path, version, checksumD);
+    if (!RELEASE)
+      Log("path_save %s: version %d save checksum %x", path, version,
+          checksumD);
     return sum;
   }
   return 0;
@@ -227,7 +229,7 @@ platform_load(saveslot, external)
 {
   char filename[16] = SAVENAME;
   filename_by_class(filename, saveslot);
-  Log("saveslot %d filename %s", saveslot, filename);
+  if (!RELEASE) Log("saveslot %d filename %s", saveslot, filename);
   char* path;
   if (external) {
     path = path_append_filename(exportpathD, exportpath_usedD, filename);
@@ -261,14 +263,17 @@ platform_erase(saveslot, external)
 STATIC int
 disk_savemidpoint()
 {
-  MUSE(global, saveslot_class);
-  if (saveslot_class >= 0 && saveslot_class < AL(classD)) {
-    char filename[16] = SAVENAME;
-    filename_by_class(filename, saveslot_class);
-    char* path = path_append_filename(savepathD, savepath_usedD, filename);
-    return path_savemidpoint(path);
+  int ret = 0;
+  if (uD.new_level_flag == 0) {
+    MUSE(global, saveslot_class);
+    if (saveslot_class >= 0 && saveslot_class < AL(classD)) {
+      char filename[16] = SAVENAME;
+      filename_by_class(filename, saveslot_class);
+      char* path = path_append_filename(savepathD, savepath_usedD, filename);
+      ret = path_savemidpoint(path);
+    }
   }
-  return 0;
+  return ret;
 }
 STATIC int
 platform_saveex()
@@ -301,15 +306,18 @@ platform_testex()
   return ret;
 }
 STATIC int
-cache_write()
+disk_cache_write()
 {
-  SDL_RWops* writef = file_access(cachepathD, "wb");
-  if (writef) {
-    int ret = SDL_RWwrite(writef, &globalD, sizeof(globalD), 1);
-    Log("cache_write: %d", ret);
-    SDL_RWclose(writef);
+  int ret = 0;
+  if (cachepath_usedD) {
+    SDL_RWops* writef = file_access(cachepathD, "wb");
+    if (writef) {
+      ret = SDL_RWwrite(writef, &globalD, sizeof(globalD), 1);
+      if (!RELEASE) Log("disk_cache_write: %d", ret);
+      SDL_RWclose(writef);
+    }
   }
-  return writef != 0;
+  return ret;
 }
 
 STATIC int
@@ -381,10 +389,10 @@ char* keys;
   return success;
 }
 STATIC int
-disk_postgame(may_exit)
+disk_postgame()
 {
-  if (uD.new_level_flag != NL_DEATH) disk_savemidpoint();
-  if (cachepath_usedD) cache_write();
+  disk_savemidpoint();
+  disk_cache_write();
 }
 
 STATIC int
