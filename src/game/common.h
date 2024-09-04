@@ -65,7 +65,7 @@ typedef int (*fn)();
 // String Length
 #define SL(str) (AL(str) - 1)
 // String Pair
-#define SP(str) str, SL(str)
+#define S2(str) str, SL(str)
 
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 #define CLAMP(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))

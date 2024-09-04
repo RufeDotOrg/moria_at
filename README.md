@@ -1,8 +1,8 @@
 
 # Recommended C compilers
-* gcc
-* clang
-* cosmocc
+* gcc (11.4)
+* clang (14)
+* cosmocc (3.6.2)
 
 # Building for command line terminal (no dependencies)
 ```

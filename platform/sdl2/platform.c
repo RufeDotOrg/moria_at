@@ -15,6 +15,9 @@
 #include <setjmp.h>
 #include <time.h>
 
+// Skip cpuinfo inclusion
+#define SDL_cpuinfo_h_
+
 #include "SDL.h"
 
 #define Log SDL_Log
