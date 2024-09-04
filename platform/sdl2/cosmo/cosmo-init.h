@@ -1,43 +1,30 @@
 
-// 0: nt console app
-// 1: nt window app
-enum { COSMO_WINDOWAPP = 1 };
-
-// TBD: dylib name
-DATA char* libnameD[] = {"libSDL2-2.0.so", "SDL2.dll", "libSDL2-2.0.0.dylib"};
-void*
-load_lib()
+char*
+cosmo_libname()
 {
-  for (int it = 0; it < AL(libnameD); ++it) {
-    printf("load_lib(): %s\n", libnameD[it]);
-    void* lib = cosmo_dlopen(libnameD[it], RTLD_LAZY);
-    if (lib) return lib;
-  }
-  return 0;
+  if (IsWindows()) return "SDL2.dll";
+  if (IsXnu()) return "libSDL2-2.0.0.dylib";
+  return "libSDL2-2.0.so";
 }
 enum { MAX_PATH = 4 * 1024 };
-#include <sys/stat.h>
-#include <unistd.h>
+#include <libc/calls/struct/stat.h>
 int
 steam_debug()
 {
   char path[MAX_PATH];
   getcwd(path, MAX_PATH);
   printf("env cwd: %s\n", path);
-  struct stat statbuf;
-  for (int it = 0; it < AL(libnameD); ++it) {
-    if (stat(libnameD[it], &statbuf) == 0) {
-      printf("  %s %jd bytes\n", libnameD[it], statbuf.st_size);
-    }
-  }
   printf("env TMPDIR: %s\n", getenv("TMPDIR"));
   printf("env HOME: %s\n", getenv("HOME"));
   printf("env KPRINTF_LOG: %s\n", getenv("KPRINTF_LOG"));
   printf("env SDL_OPENGL_LIBRARY: %s\n", getenv("SDL_OPENGL_LIBRARY"));
   printf("pid %d tid %d\n", getpid(), gettid());
+  struct stat statbuf;
+  if (stat(cosmo_libname(), &statbuf) == 0) {
+    printf("  %s: %jd\n", cosmo_libname(), statbuf.st_size);
+  }
   return 0;
 }
-#include <errno.h>
 STATIC const char*
 get_tmp_dir(void)
 {
@@ -65,7 +52,7 @@ is_file_newer_than(const char* path, const char* other)
   }
   return timespec_cmp(st1.st_mtim, st2.st_mtim) > 0;
 }
-// TBD: aarch64 dlopen-helper
+#include <libc/sysv/consts/o.h>
 STATIC int
 steam_helper(char* exe)
 {
@@ -145,7 +132,7 @@ cosmo_init(int argc, char** argv)
   }
 
   // TBD: IsXnu() issues with custom handler (does default handler work?)
-  if (IsLinux() || IsWindows()) crash_init();
+  if (IsLinux() || IsWindows()) cosmo_crashinit();
 
   if (COSMO_WINDOWAPP) enable_windows_gui();
 
@@ -166,8 +153,6 @@ cosmo_init(int argc, char** argv)
       strlcat(exe, "aarch64-dlopen-helper", PATH_MAX);
 
     steam_helper(exe);
-    int newer = is_file_newer_than(GetProgramExecutableName(), exe);
-    printf("dlopen newer? %d\n", newer);
   }
 
   char path[MAX_PATH] = ":.:";
@@ -188,7 +173,7 @@ cosmo_init(int argc, char** argv)
   setenv("KPRINTF_LOG", "crash.txt", 0);
 
   // Cosmo does not re-init dlopen-helper on an environment change
-  libD = load_lib();
+  libD = cosmo_dlopen(cosmo_libname(), RTLD_LAZY);
   printf("%p libD\n", libD);
 
   if (!libD) exit(1);

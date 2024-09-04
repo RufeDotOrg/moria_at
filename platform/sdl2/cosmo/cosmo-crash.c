@@ -7,46 +7,47 @@
 #include "libc/calls/struct/ucontext.internal.h"
 #include "libc/calls/ucontext.h"
 
+enum { MAX_MODULE = 64 };
 struct NtModuleInfo {
   void* lpBaseOfDll;
   uint32_t SizeOfImage;
   void* EntryPoint;
 };
 
-static uint32_t
-    __attribute__((__ms_abi__)) (*GetModuleInformation)(int64_t, int64_t, void*,
-                                                        uint32_t);
+typedef uint32_t
+    __attribute__((__ms_abi__)) (*GetModuleInformationT)(int64_t, int64_t,
+                                                         void*, uint32_t);
 
 static void
-WindowsCrashReport(ucontext_t* ctx)
+cosmo_moduleinfo(GetModuleInformationT info_fn)
 {
-  enum { MODULE_MAX = 32 };
-  int64_t mod_list[MODULE_MAX];
+  int64_t mlist[MAX_MODULE];
   uint32_t byte_count;
-  int pid = GetCurrentProcessId();
-  int64_t handle =
-      OpenProcess(kNtProcessVmRead | kNtProcessQueryInformation, 0, pid);
-  if (EnumProcessModules(handle, mod_list, sizeof(mod_list), &byte_count)) {
-    int module_count = MIN(byte_count / sizeof(int64_t), MODULE_MAX);
-    kprintf("module_count %d\n", module_count);
-    for (int it = 0; it < module_count; ++it) {
-      struct NtModuleInfo modinfo;
-      if (GetModuleInformation &&
-          GetModuleInformation(handle, mod_list[it], &modinfo,
-                               sizeof(modinfo))) {
-        kprintf(" Address Range %p - %p", modinfo.lpBaseOfDll,
-                modinfo.lpBaseOfDll + modinfo.SizeOfImage);
-      }
-      uint16_t wide_name[PATH_MAX];
-      GetModuleBaseName(handle, mod_list[it], wide_name, PATH_MAX);
-      kprintf(" %hs ", wide_name);
-      kprintf("\n");
-    }
-    if (byte_count > sizeof(mod_list))
-      kprintf("... MODULE_MAX exceeded: some modules are not listed!\n");
-  }
 
-  sleep(3);
+  if (info_fn) {
+    int pid = GetCurrentProcessId();
+    int64_t handle =
+        OpenProcess(kNtProcessVmRead | kNtProcessQueryInformation, 0, pid);
+    if (EnumProcessModules(handle, mlist, sizeof(mlist), &byte_count)) {
+      int module_count = MIN(byte_count / sizeof(int64_t), MAX_MODULE);
+      kprintf("module_count %d\n", module_count);
+      for (int it = 0; it < module_count; ++it) {
+        struct NtModuleInfo modinfo;
+        if (info_fn(handle, mlist[it], &modinfo, sizeof(modinfo))) {
+          kprintf(" Address Range %p - %p", modinfo.lpBaseOfDll,
+                  modinfo.lpBaseOfDll + modinfo.SizeOfImage);
+        }
+        uint16_t wide_name[PATH_MAX];
+        GetModuleBaseName(handle, mlist[it], wide_name, PATH_MAX);
+        kprintf(" %hs ", wide_name);
+        kprintf("\n");
+      }
+      if (byte_count > sizeof(mlist))
+        kprintf("... MAX_MODULE exceeded: some modules are not listed!\n");
+    }
+
+    if (!COSMO_WINDOWAPP) sleep(3);
+  }
 }
 
 void
@@ -69,7 +70,8 @@ __game_crash(int sig, struct siginfo* si, void* arg)
 
   if (IsWindows()) {
     kprintf("Rufe.org WindowsCrashReport enabled\n");
-    WindowsCrashReport(arg);
+    void* psapi = cosmo_dlopen("psapi.dll", RTLD_LAZY);
+    if (psapi) cosmo_moduleinfo(cosmo_dlsym(psapi, "GetModuleInformation"));
   }
 }
 
@@ -92,7 +94,7 @@ InstallCrashHandler(int sig, int flags)
 }
 
 static void
-crash_init()
+cosmo_crashinit()
 {
   struct sigaltstack ss;
   static char crashstack[65536];
@@ -101,11 +103,6 @@ crash_init()
   ss.ss_size = sizeof(crashstack);
   ss.ss_sp = crashstack;
   !sigaltstack(&ss, 0);
-
-  if (IsWindows()) {
-    void* psapi = cosmo_dlopen("psapi.dll", RTLD_LAZY);
-    GetModuleInformation = cosmo_dlsym(psapi, "GetModuleInformation");
-  }
 
   InstallCrashHandler(SIGQUIT, 0);
   InstallCrashHandler(SIGTRAP, 0);
