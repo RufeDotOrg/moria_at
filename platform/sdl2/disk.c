@@ -271,6 +271,7 @@ disk_savemidpoint()
       filename_by_class(filename, saveslot_class);
       char* path = path_append_filename(savepathD, savepath_usedD, filename);
       ret = path_savemidpoint(path);
+      if (!RELEASE) Log("save midpoint %d (%s)", ret, path);
     }
   }
   return ret;

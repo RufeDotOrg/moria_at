@@ -131,12 +131,11 @@ cosmo_init(int argc, char** argv)
     }
   }
 
-  // TBD: IsXnu() issues with custom handler (does default handler work?)
-  if (IsLinux() || IsWindows()) cosmo_crashinit();
-
   if (COSMO_WINDOWAPP) enable_windows_gui();
 
   steam_debug();
+
+  cosmo_crashinit();
 
   if (!IsWindows()) {
     char exe[PATH_MAX];
