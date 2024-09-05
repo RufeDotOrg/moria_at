@@ -361,6 +361,7 @@ custom_pregame()
       SDL_FreeSurface(s);
     }
   }
+  if (PC) SDL_SetWindowTitle(windowD, "moria_at");
   if (PC && !MOUSE) {
     Log("ShowCursor -> disable");
     SDL_ShowCursor(SDL_DISABLE);
