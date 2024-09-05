@@ -201,26 +201,25 @@ render_init()
   for (int it = 0; it < num_display; ++it) {
     rect_t r;
     SDL_GetDisplayBounds(it, &r);
-    Log("%d Display) %d %d %d %d\n", it, r.x, r.y, r.w, r.h);
+    Log("%d Display) %d %d %d %d", it, r.x, r.y, r.w, r.h);
     if (it == use_display) {
       bounds_rect = r;
       SDL_DisplayMode mode;
       SDL_GetCurrentDisplayMode(it, &mode);
-      Log(" -> Refresh Rate %d\n", mode.refresh_rate);
+      Log(" -> Refresh Rate %d", mode.refresh_rate);
       refresh_rateD = mode.refresh_rate;
     }
   }
 
   int num_driver = SDL_GetNumRenderDrivers();
-  Log("%d NumRenderDrivers\n", num_driver);
+  Log("%d NumRenderDrivers", num_driver);
 
   SDL_RendererInfo rinfo;
   for (int it = 0; it < num_driver; ++it) {
     if (SDL_GetRenderDriverInfo(it, &rinfo) == 0) {
       Log("%d) SDL RendererInfo: "
           "rinfo.name %s "
-          "rinfo.flags 0x%08x "
-          "\n",
+          "rinfo.flags 0x%08x ",
           it, rinfo.name, rinfo.flags);
     }
   }
@@ -237,8 +236,7 @@ render_init()
   Log("SDL RendererInfo: "
       "rinfo.name %s "
       "rinfo.flags 0x%08x "
-      "max texture %d %d "
-      "\n",
+      "max texture %d %d ",
       rinfo.name, rinfo.flags, rinfo.max_texture_width,
       rinfo.max_texture_height);
   Log("vsync %d", (rinfo.flags & SDL_RENDERER_PRESENTVSYNC) != 0);
@@ -246,7 +244,7 @@ render_init()
   {
     int rw, rh;
     if (SDL_GetRendererOutputSize(rendererD, &rw, &rh) != 0) return 1;
-    Log("Renderer output size %d %d\n", rw, rh);
+    Log("Renderer output size %d %d", rw, rh);
 
     int ww, wh;
     SDL_GetWindowSize(windowD, &ww, &wh);

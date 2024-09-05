@@ -179,8 +179,6 @@ cosmo_init(int argc, char** argv)
 
   if (IsWindows()) {
     SDL_LogSetOutputFunction(NT2SYSV(gamelog), 0);
-  } else if (IsXnu()) {
-    SDL_LogSetOutputFunction(0, 0);
   } else {
     SDL_LogSetOutputFunction(gamelog, 0);
   }
