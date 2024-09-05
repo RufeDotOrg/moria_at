@@ -29,7 +29,7 @@ apt install libsdl2-dev
 ```
 rm src/platform
 ln -s `realpath platform/sdl2` src/platform
-clang -w -o moria_at -I. `sdl2-config --cflags` `sdl2-config --libs` src/moria_at.c
+clang -w -o moria_at -I. -lm `sdl2-config --cflags` `sdl2-config --libs` src/moria_at.c
 ```
 
 ## Running the Graphical Client

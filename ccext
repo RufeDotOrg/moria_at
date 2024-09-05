@@ -1,15 +1,14 @@
 readlink src/platform | grep 'sdl2'
 [ $? -eq 0 ] || return
 
+export MATH=1
 DIR=sdl2
 if [ `basename "$CC"` == cosmocc ]; then
   LINK=0
 elif [ `basename "$CC"` == gcc ]; then
   LINK=1
-  LFLAGS+=" -lm "
 elif [ `basename "$CC"` == clang ]; then
   LINK=1
-  LFLAGS+=" -lm "
 fi
 
 if [ -d "$DIR" ]; then
