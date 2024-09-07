@@ -206,7 +206,7 @@ static struct raceS raceD[] = {
     },
 };
 
-struct backgroundS backgroundD[] = {
+static struct backgroundS backgroundD[] = {
     {"You are the illegitimate and unacknowledged child ", 10, 1, 2, 25},
     {"You are the illegitimate but acknowledged child ", 20, 1, 2, 35},
     {"You are one of several children ", 95, 1, 2, 45},
@@ -389,7 +389,7 @@ static char* prayer_nameD[] = {
     "Glyph of Warding",
     "Holy Word",
 };
-struct spellS spellD[AL(classD) - 1][SP_MAX] = {
+static struct spellS spellD[AL(classD) - 1][SP_MAX] = {
     {/* Mage     */
      {1, 1, 22, 1},    {1, 1, 23, 1},     {1, 2, 24, 1},    {1, 2, 26, 1},
      {3, 3, 25, 2},    {3, 3, 25, 1},     {3, 3, 27, 2},    {3, 4, 30, 1},
