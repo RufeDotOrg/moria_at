@@ -173,7 +173,7 @@ SDL_Event event;
       return CTRL('d');
     }
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-    if (ANDROID || __APPLE__) platformD.postgame(1);
+    if (ANDROID || __APPLE__) platformD.postgame(0);
   }
   return 0;
 }
@@ -564,7 +564,10 @@ platform_postgame(may_exit)
   // Android return from main does not require the process to exit.
   // exit(...) ensures the process terminates.
   // otherwise main() should handle resume with previous memory contents
-  if (ANDROID && may_exit) exit(0);
+  if (ANDROID && may_exit) {
+    SDL_Quit();
+    exit(0);
+  }
 
   return 0;
 }
