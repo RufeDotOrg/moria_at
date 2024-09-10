@@ -10718,12 +10718,12 @@ show_version()
   BufMsg(screen, "  Robert Alan Koeneke (1958-2022)");
   BufMsg(screen, "  David J. Grabiner");
   BufMsg(screen, "  James E. Wilson");
-  BufMsg(screen, "Source from Cosmopolitan LibC (ISC)");
-  BufMsg(screen, "  Justine Tunney");
   BufMsg(screen, "Source from puff.c (Zlib)");
   BufMsg(screen, "  Mark Adler");
   BufMsg(screen, "Source from SDL2 (Zlib)");
   BufMsg(screen, "  Sam Lantinga");
+  BufMsg(screen, "PC builds by Cosmopolitan Toolchain (ISC)");
+  BufMsg(screen, "  Justine Tunney");
   line += 1;
   BufMsg(screen, "Programming: %s", "Alan Newton");
   BufMsg(screen, "Art: %s", "Nathan Miller");
