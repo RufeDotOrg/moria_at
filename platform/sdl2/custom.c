@@ -386,6 +386,9 @@ custom_pregame()
 
   text_textureD = SDL_CreateTexture(
       rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET, 2 * 1024, 2 * 1024);
+  if (text_textureD)
+    SDL_SetTextureScaleMode(text_textureD, SDL_ScaleModeLinear);
+
   Log("texture creation complete: %d OK",
       (mmtextureD != 0) + (map_textureD != 0) + (text_textureD != 0));
 
