@@ -7,6 +7,7 @@ enum { MOD_SAVECHAR = 0 };
 #include "platform/platform.c"
 
 enum { HACK = 0 };
+enum { RESEED = 0 };
 enum { TEST_CAVEGEN = 0 };
 enum { TEST_REPLAY = 0 };
 enum { TEST_CREATURE = 0 };
@@ -11319,6 +11320,10 @@ py_menu()
         return 0;
 
       case 'd':
+        if (RESEED) {
+          seed_changeD = 1;
+          save_on_readyD = 1;
+        }
         // Disable midpoint resume explicitly
         input_resumeD = -1;
         longjmp(restartD, 1);
@@ -14299,6 +14304,10 @@ main(int argc, char** argv)
 
   if (ready) {
     globalD.saveslot_class = uD.clidx;
+    if (RESEED && seed_changeD) {
+      rnd_seed += 1;
+      seed_changeD = 0;
+    }
     if (save_on_readyD) {
       save_on_readyD = 0;
       platformD.save(globalD.saveslot_class);
