@@ -3386,7 +3386,7 @@ place_gold(y, x)
     obj->cost += (8 * randint(obj->cost)) + randint(8);
   }
 }
-void
+int
 place_object(y, x, must_be_small)
 {
   struct objS* obj;
@@ -3404,8 +3404,9 @@ place_object(y, x, must_be_small)
 
     magic_treasure(obj, dun_level);
   }
+  return obj->id != 0;
 }
-void
+int
 place_trap(y, x, offset)
 {
   struct objS* obj;
@@ -3417,6 +3418,7 @@ place_trap(y, x, offset)
     obj->fy = y;
     obj->fx = x;
   }
+  return obj->id != 0;
 }
 void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
 {
@@ -3475,38 +3477,27 @@ build_chamber(y, x, h, w)
   caveD[y][x + w].fval = MAGMA_WALL;
   caveD[y][x].fval = MAGMA_WALL;
 }
-static void
-chunk_trap(ychunk, xchunk, num)
+enum { RETRY = 9 };
+int
+chunk_obj(ychunk, xchunk, obj_count, func)
+fn func;
 {
-  int ymin, xmin;
-  int y, x;
-  struct caveS* c_ptr;
-
-  xmin = xchunk * CHUNK_WIDTH;
-  ymin = ychunk * CHUNK_HEIGHT;
-
-  do {
-    y = ymin + randint(CHUNK_HEIGHT) - 1;
-    x = xmin + randint(CHUNK_WIDTH) - 1;
-    c_ptr = &caveD[y][x];
-    if (c_ptr->fval != 0 && c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) {
-      place_trap(y, x, randint(MAX_TRAP) - 1);
-      num -= 1;
-    }
-  } while (num);
-}
-static void
-room_object(y, x, chance)
-{
-  struct caveS* c_ptr;
-  for (int i = -1; i <= 1; ++i) {
-    for (int j = -1; j <= 1; ++j) {
-      c_ptr = &caveD[y + i][x + j];
-      if (c_ptr->fval && c_ptr->fval <= MAX_OPEN_SPACE && c_ptr->oidx == 0) {
-        if (randint(chance) == 1) place_object(y + i, x + j, FALSE);
+  int xmin = xchunk * CHUNK_WIDTH - 1;
+  int ymin = ychunk * CHUNK_HEIGHT - 1;
+  int count = 0;
+  for (int it = 0; it < obj_count; ++it) {
+    for (int retry = 0; retry < RETRY; ++retry) {
+      int x = xmin + randint(CHUNK_WIDTH);
+      int y = ymin + randint(CHUNK_HEIGHT);
+      struct caveS* c_ptr = &caveD[y][x];
+      if (c_ptr->fval > 0 && c_ptr->fval <= MAX_OPEN_SPACE &&
+          c_ptr->oidx == 0) {
+        count += func(y, x, 0);
+        retry = RETRY;
       }
     }
   }
+  return count;
 }
 static void
 room_monster(y, x, chance)
@@ -3527,6 +3518,8 @@ int* xcenter;
   int xmin, xmax, ymin, ymax;
   int y, x;
   struct caveS* c_ptr;
+  int obj_count = 0;
+  int trap_count = 0;
 
   rflag = CF_ROOM;
   if (dun_level <= randint(25))
@@ -3654,15 +3647,8 @@ int* xcenter;
         }
       }
       // Maze
-      chunk_trap(ychunk, xchunk, 2);
-      switch (randint(2)) {
-        case 1:
-          room_object(y, x - 5, 4);
-          break;
-        case 2:
-          room_object(y, x + 5, 4);
-          break;
-      }
+      trap_count = 2;
+      obj_count = randint(3);
       room_monster(y, x - 5, 3);
       room_monster(y, x + 5, 3);
       break;
@@ -3693,7 +3679,7 @@ int* xcenter;
         place_secret_door(y, x + randint(CHUNK_WIDTH / 2 - 2));
       }
       // Quadrant
-      room_object(y, x, 4);
+      obj_count = 2 + randint(2);
       room_monster(y + 1, x - 4, 4);
       room_monster(y + 1, x + 4, 4);
       room_monster(y - 1, x - 4, 4);
@@ -3744,9 +3730,13 @@ int* xcenter;
         caveD[y + 2][x - 1].fval = MAGMA_WALL;
         caveD[y + 2][x + 1].fval = MAGMA_WALL;
       }
-      chunk_trap(ychunk, xchunk, 1 + randint(2));
+      trap_count = 1 + randint(2);
       break;
   }
+
+  if (obj_count > 0) chunk_obj(ychunk, xchunk, obj_count, place_object);
+  if (trap_count > 0) chunk_obj(ychunk, xchunk, trap_count, place_trap);
+
   *ycenter = y;
   *xcenter = x;
 }
