@@ -16,6 +16,7 @@ DATA int overlay_submodeD;
 DATA int minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
 DATA int save_on_readyD;
+DATA int seed_changeD;
 
 // Savechar folder
 DATA char savepathD[1024];
