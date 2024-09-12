@@ -1,4 +1,16 @@
 
+#define BUF(x)    \
+  (struct bufS)   \
+  {               \
+    &x, sizeof(x) \
+  }
+// Array Buffer
+#define ABUF(x)  \
+  (struct bufS)  \
+  {              \
+    x, sizeof(x) \
+  }
+
 // load/save
 DATA struct bufS save_bufD[] = {
     BUF(countD),        BUF(dun_level),   ABUF(entity_objD), ABUF(invenD),
