@@ -16,6 +16,7 @@ struct globalS {
   uint8_t hand_swap;
   uint16_t dpad_sensitivity;
   uint8_t dpad_color;
+  uint8_t small_text;
   char pc_renderer[16];
 };
 _Static_assert(sizeof(struct globalS) <= 64, "keep global data small!");

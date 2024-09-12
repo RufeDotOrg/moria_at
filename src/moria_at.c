@@ -14272,6 +14272,7 @@ global_init(int argc, char** argv)
   globalD.sprite = 1;
   globalD.dpad_sensitivity = 75;
   globalD.dpad_color = 1;
+  globalD.small_text = 0;
 
   globalD.ghash = djb2(DJB2, bptr(&globalD) + sizeof(globalD.ghash),
                        sizeof(globalD) - sizeof(globalD.ghash));

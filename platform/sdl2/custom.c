@@ -893,14 +893,18 @@ portrait_text(mode)
 
   return 0;
 }
+#define FHEIGHT (FHEIGHT * font_scaleD)
+#define FWIDTH (FWIDTH * font_scaleD)
 int
 landscape_text(mode)
 {
   USE(msg_more);
   USE(renderer);
   USE(layout_rect);
+  MUSE(global, small_text);
 
   if (mode == 0) {
+    font_scaleD = small_text ? 1.0f : 1.25f;
     char* msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
     int alpha = FALPHA;
@@ -935,13 +939,13 @@ landscape_text(mode)
       font_reset();
 
       SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-      rect_frame(rect, 1);
+      if (small_text) rect_frame(rect, 1);
     }
 
     if (msg_more || TEST_UI) {
       int wlimit = msg_widthD * FWIDTH;
       int mlimit = STRLEN_MORE * FWIDTH;
-      int margin = (layout_rect.w - wlimit - mlimit) / 4;
+      int margin = small_text ? (layout_rect.w - wlimit - mlimit) / 4 : FWIDTH;
 
       rect_t rect2 = {
           margin,
@@ -960,10 +964,11 @@ landscape_text(mode)
       render_monofont_string(renderer, &fontD, AP(moreD), p2);
       SDL_Point p3 = {rect3.x, rect3.y};
       render_monofont_string(renderer, &fontD, AP(moreD), p3);
-      rect_frame(rect2, 1);
-      rect_frame(rect3, 1);
+      if (small_text) rect_frame(rect2, 1);
+      if (small_text) rect_frame(rect3, 1);
     }
 
+    font_scaleD = 1.0f;
     common_text();
   } else {
     vitalstat_text();
@@ -971,6 +976,8 @@ landscape_text(mode)
 
   return 0;
 }
+#undef FONT_HEIGHT
+#undef FONT_WIDTH
 
 // Drawing
 
@@ -1795,7 +1802,7 @@ custom_orientation(orientation)
     text_fn = landscape_text;
     overlay_widthD = 78;
     overlay_heightD = AL(overlayD) + 2;
-    msg_widthD = 92;
+    msg_widthD = globalD.small_text ? 92 : 80;
   }
   text_fnD = text_fn;
 
@@ -1845,6 +1852,9 @@ feature_menu()
              "r) refresh / video sync (%s) | %d fps of %d display claimed",
              opt[globalD.vsync != 0], vsync_rateD, refresh_rateD);
     }
+    line = 't' - 'a';
+    BufMsg(overlay, "t) landscape text size (%s)",
+           globalD.small_text ? "small" : "large");
     line = 'o' - 'a';
     BufMsg(overlay, "o) orientation lock (%s)",
            opt[globalD.orientation_lock != 0]);
@@ -1878,6 +1888,10 @@ feature_menu()
         break;
       case 'r':
         platformD.vsync(INVERT(globalD.vsync));
+        break;
+      case 't':
+        INVERT(globalD.small_text);
+        platformD.orientation(0);
         break;
       case 'o':
         INVERT(globalD.orientation_lock);
