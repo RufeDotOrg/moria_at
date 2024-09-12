@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: ISC License
 #define SDL_CreateThread abi_SDL_CreateThread
 #define SDL_RWFromFP abi_SDL_RWFromFP
 #define SDL_RegisterApp abi_SDL_RegisterApp

@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: ISC License
 STATIC SDL_Thread *abi_SDL_CreateThread(SDL_ThreadFunction a, const char *b, void *c)
 {
     void *addr = cosmo_dlsym(libD, "SDL_CreateThread");

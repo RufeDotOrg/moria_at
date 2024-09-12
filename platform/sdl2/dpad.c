@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: ISC License
 
 enum { PADSIZE = (26 + 2) * 16 };
 

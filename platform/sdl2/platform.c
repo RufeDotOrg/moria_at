@@ -1,5 +1,7 @@
+// Rufe.org LLC 2022-2024: ISC License
 //
-// #include platform.c twice for custom code.
+// #include platform.c twice for custom code:
+// Custom code comes last, using game and platform details in depth.
 //
 // Platform and Game code coexist peacefully:
 //  1) cc game.c
@@ -336,7 +338,7 @@ platform_orientation(orientation)
   USE(safe_rect);
   float scale = 1.f;
   void* layout = 0;
-  SDL_Rect layout_rect = display_rectD;  // default to display
+  SDL_Rect layout_rect = display_rectD;
   if (orientation == SDL_ORIENTATION_LANDSCAPE) {
     layout = landscapeD;
     layout_rect = (rect_t){0, 0, LANDSCAPE_X, LANDSCAPE_Y};

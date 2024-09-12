@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: GPLv3 License
 
 // Visual info
 DATA struct vizS vizD[SYMMAP_HEIGHT][SYMMAP_WIDTH];

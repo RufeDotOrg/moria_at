@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: ISC License
 #ifndef COMMON
 #define COMMON
 

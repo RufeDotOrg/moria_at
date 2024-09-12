@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: GPLv3 License
 
 int
 obj_checklen()

@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: ISC License
 
 #define T inline static __attribute__((always_inline))
 
