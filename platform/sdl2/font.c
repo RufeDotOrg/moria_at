@@ -45,7 +45,7 @@ struct fontS {
 };
 DATA struct fontS fontD;
 DATA struct SDL_Texture* font_textureD;
-DATA int font_scaleD = 1;
+DATA float font_scaleD = 1.f;
 
 STATIC int
 font_load()
@@ -114,6 +114,7 @@ glyph_init()
     }
 
     texture = SDL_CreateTextureFromSurface(rendererD, surface);
+    if (texture) SDL_SetTextureScaleMode(texture, SDL_ScaleModeLinear);
     // SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
     SDL_FreeSurface(surface);
   }
