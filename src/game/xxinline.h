@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: ISC License
 #if defined(__FATCOSMOCC__)
 #define XX static __attribute__((pure)) inline __attribute__((always_inline))
 #else

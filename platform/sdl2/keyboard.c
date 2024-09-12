@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: ISC License
 DATA char* scancode_mapD;
 // Case toggle
 DATA uint8_t toggleD[128] = {

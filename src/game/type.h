@@ -1,4 +1,4 @@
-
+// Rufe.org LLC 2022-2024: ISC License
 // reference to buffer of known length in bytes
 struct bufS {
   void* mem;

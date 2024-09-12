@@ -1,6 +1,6 @@
+// Rufe.org LLC 2022-2024: GPLv3 License
 #include "src/game.c"
 
-// TBD: code branches
 enum { MOD_SAVECHAR = 0 };
 #include "src/mod/savechar.c"
 
@@ -10711,7 +10711,7 @@ show_version()
   BufMsg(screen, "  James E. Wilson");
   BufMsg(screen, "Source from puff.c (Zlib)");
   BufMsg(screen, "  Mark Adler");
-  BufMsg(screen, "Source from SDL2 (Zlib)");
+  BufMsg(screen, "Modified Source from SDL2 (Zlib)");
   BufMsg(screen, "  Sam Lantinga");
   BufMsg(screen, "PC builds by Cosmopolitan Toolchain (ISC)");
   BufMsg(screen, "  Justine Tunney");

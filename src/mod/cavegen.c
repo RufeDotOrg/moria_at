@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: GPLv3 License
 
 DATA int max_loop_count;
 enum { LOAD_GAME = 0 };

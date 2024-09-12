@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2024: ISC License
 
 // int[4]
 typedef struct rectS {
