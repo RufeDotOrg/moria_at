@@ -16,12 +16,12 @@ DATA int color_mapD[] = {
     0xffdbf078, 0xfff19d6e, 0xffed5dbc, 0xffb06af4,
 };
 // lum_color.c: labr dark values
-int dark_labrD[] = {
+DATA int dark_labrD[] = {
     0x221f361f, 0x2234192b, 0x2041f53e, 0x2337c538,
     0x2300d93a, 0x20d10826, 0x22c73d1d, 0x22f53c22,
 };
 
-static int
+STATIC int
 rgba_by_palette(c)
 {
   return color_mapD[c];
