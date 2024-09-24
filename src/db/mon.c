@@ -201,7 +201,7 @@ static struct creatureS creatureD[] = {
      {2, 8},
      {5, 149, 0, 0},
      0},
-    {"Singing, Happy Drunk",
+    {"Singing, Happy Monk",
      0x06120038L,
      0x00000000L,
      0x2030,
