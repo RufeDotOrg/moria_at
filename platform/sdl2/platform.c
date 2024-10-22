@@ -494,6 +494,13 @@ platform_random()
   return ret;
 }
 
+STATIC void
+log_hint(char* name)
+{
+  const char* val = SDL_GetHint(name);
+  if (val) Log("Hint: %s=%s", name, val);
+}
+
 // Initialization
 int
 platform_pregame()
@@ -518,6 +525,14 @@ platform_pregame()
           SDL_SetHint(SDL_HINT_RENDER_DRIVER, globalD.pc_renderer);
         else
           SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+      }
+      if (JOYSTICK) {
+        log_hint(SDL_HINT_GAMECONTROLLERCONFIG);
+        log_hint(SDL_HINT_GAMECONTROLLERCONFIG_FILE);
+        log_hint(SDL_HINT_GAMECONTROLLERTYPE);
+        log_hint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
+        log_hint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
+        log_hint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS);
       }
     } else {
       SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
