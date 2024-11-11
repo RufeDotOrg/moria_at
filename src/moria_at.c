@@ -5596,6 +5596,7 @@ calc_hitpoints()
 
   if (py_affect(MA_HERO)) hitpoints += 10;
   if (py_affect(MA_SUPERHERO)) hitpoints += 20;
+  if (py_tr(TR_REGEN)) hitpoints += PLAYER_REGEN_HPBONUS;
   if (HACK) hitpoints += 1000;
 
   // Scale current hp to the new maximum
@@ -8656,6 +8657,7 @@ struct objS* obj;
         }
         if (obj->flags & TR_REGEN) {
           BufMsg(screen, "increases health regeneration");
+          BufMsg(screen, "+%d Max HP", PLAYER_REGEN_HPBONUS);
         }
         if (obj->flags & TR_SPEED) {
           BufMsg(screen, "increases movement and attack speed");
