@@ -402,6 +402,7 @@
 #define PLAYER_REGEN_HPBASE 1442 /* Min amount hp regen>>16   */
 #define PLAYER_REGEN_MNBASE 524  /* Min amount mana regen>>16  */
 #define MAX_TUNNEL_TURN 5 /* maximum number of turns tunneling into a wall */
+#define PLAYER_REGEN_HPBONUS 40 /* +Max hp granted by TR_REGEN */
 
 /* Class spell types */
 #define SP_MAGE 1
