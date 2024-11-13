@@ -2,7 +2,7 @@
 # Recommended software
 * gcc (11.4)
 * clang (14)
-* cosmocc (3.6.2)
+* cosmocc (3.9.6)
 * SDL2 (2.28.5)
 
 # Build targets
