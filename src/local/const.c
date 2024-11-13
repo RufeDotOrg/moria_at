@@ -254,7 +254,7 @@
 #define TR_FFALL 0x04000000L
 #define TR_SEEING 0x08000000L
 #define TR_HERO 0x10000000L
-// #define TR_TUNNEL 0x20000000L
+#define TR_EZXP 0x20000000L
 #define TR_SLOWNESS 0x40000000L
 #define TR_CURSED 0x80000000L
 // Set of flags dependent on p1 value

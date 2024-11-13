@@ -5687,7 +5687,11 @@ calc_bonuses()
       tflag |= (obj->flags & TR_STATS);
     }
   }
+
+  int calc_exp = (tflag ^ cbD.tflag) == TR_EZXP;
   cbD.tflag = tflag;
+
+  if (calc_exp) expmult_update();
 }
 // uD.mflags && maD are NOT up-to-date at the time of this call
 void
@@ -6763,9 +6767,33 @@ py_heal_hit(num)
   return (res);
 }
 int
+py_expmult()
+{
+  int mult_exp = uD.mult_exp;
+  if (py_tr(TR_EZXP)) mult_exp -= (mult_exp - 100) / 2;
+  return mult_exp;
+}
+int
 lev_exp(lev)
 {
-  return player_exp[lev - 1] * uD.mult_exp / 100;
+  return player_exp[lev - 1] * py_expmult() / 100;
+}
+int
+expmult_update()
+{
+  int exp = uD.exp;
+  int lev = 1;
+  while (lev_exp(lev) <= exp) lev++;
+
+  int change_lev = (lev != uD.lev);
+
+  if (change_lev) {
+    MSG("Welcome to level %d.", lev);
+    uD.lev = lev;
+    calc_hitpoints();
+    calc_mana();
+  }
+  return change_lev;
 }
 void
 py_experience()
@@ -8644,6 +8672,11 @@ struct objS* obj;
               BufMsg(screen, "%s cannot be reduced", stat_nameD[it]);
           }
         }
+        if (obj->flags & TR_EZXP) {
+          BufMsg(screen,
+                 "reduces experience to level multiplier by half (%d%%)",
+                 (uD.mult_exp - 100) / 2);
+        }
         if (obj->flags & TR_SLOW_DIGEST) {
           BufMsg(screen, "slows digestion");
         }
@@ -10299,7 +10332,7 @@ struct objS* obj;
   if ((obj->flags & TR_CURSED) == 0) {
     if (obj->tohit > 0 || obj->todam > 0 || obj->toac > 0) return TRUE;
     if ((TR_P1 & obj->flags) && obj->p1 > 0) return TRUE;
-    if (0x03fff880L & obj->flags) return TRUE;
+    if (0x23fff880L & obj->flags) return TRUE;
   }
 
   return FALSE;
@@ -10774,6 +10807,7 @@ show_character(narrow, is_reroll)
   BufPad(screen, MAX_A, col[1]);
   line = 0;
   BufMsg(screen, "%s: %-6.06s", "Gender", ugender());
+  BufMsg(screen, "%s: %3d", "Exp Mult", py_expmult());
 
   line = MAX_A + 1;
   BufMsg(screen, "%-13.013s: %3d", "+ To Hit", cbD.ptohit - cbD.hide_tohit);
