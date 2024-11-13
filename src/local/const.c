@@ -254,11 +254,11 @@
 #define TR_FFALL 0x04000000L
 #define TR_SEEING 0x08000000L
 #define TR_HERO 0x10000000L
-#define TR_TUNNEL 0x20000000L
+// #define TR_TUNNEL 0x20000000L
 #define TR_SLOWNESS 0x40000000L
 #define TR_CURSED 0x80000000L
 // Set of flags dependent on p1 value
-#define TR_P1 (TR_STATS | TR_SEARCH | TR_STEALTH | TR_TUNNEL)
+#define TR_P1 (TR_STATS | TR_SEARCH | TR_STEALTH)
 
 /* treasure knowledge */
 #define TRK_FULL 0x01

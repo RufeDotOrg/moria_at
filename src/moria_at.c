@@ -8491,17 +8491,18 @@ struct objS* obj;
 {
   int tabil;
   tabil = -1;
-  if (obj->tval == TV_DIGGING || may_equip(obj->tval) == INVEN_WIELD) {
+  int tunnel = (obj->tval == TV_DIGGING);
+  if (tunnel || may_equip(obj->tval) == INVEN_WIELD) {
     tabil = HACK ? 9000 : 0;
     if (truth || (obj->idflag & ID_REVEAL)) {
-      if (TR_TUNNEL & obj->flags)
+      if (tunnel)
         tabil += obj->p1 * 50;
       else {
         tabil += obj->tohit + obj->todam;
       }
     }
 
-    if (TR_TUNNEL & obj->flags)
+    if (tunnel)
       tabil += 25;
     else {
       tabil += obj->damage[0] * obj->damage[1];
@@ -8635,9 +8636,6 @@ struct objS* obj;
         }
         if (obj->flags & TR_STEALTH) {
           if (obj->p1) BufMsg(screen, "%-17.017s: %+d", "Stealth", obj->p1);
-        }
-        if (obj->flags & TR_TUNNEL) {
-          BufMsg(screen, "%-17.017s: %+d", "Digging", obj->p1);
         }
         for (int it = 0; it < MAX_A; ++it) {
           if (obj->flags & (1 << it)) {
