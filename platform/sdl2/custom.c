@@ -902,6 +902,7 @@ landscape_text(mode)
   USE(renderer);
   USE(layout_rect);
   MUSE(global, small_text);
+  if (!PC) small_text = 1;
 
   if (mode == 0) {
     font_scaleD = small_text ? 1.0f : 1.25f;
@@ -1802,7 +1803,7 @@ custom_orientation(orientation)
     text_fn = landscape_text;
     overlay_widthD = 78;
     overlay_heightD = AL(overlayD) + 2;
-    msg_widthD = globalD.small_text ? 92 : 80;
+    msg_widthD = (!PC || globalD.small_text) ? 92 : 80;
   }
   text_fnD = text_fn;
 
@@ -1852,9 +1853,11 @@ feature_menu()
              "r) refresh / video sync (%s) | %d fps of %d display claimed",
              opt[globalD.vsync != 0], vsync_rateD, refresh_rateD);
     }
-    line = 't' - 'a';
-    BufMsg(overlay, "t) landscape text size (%s)",
-           globalD.small_text ? "small" : "large");
+    if (PC) {
+      line = 't' - 'a';
+      BufMsg(overlay, "t) landscape text size (%s)",
+             globalD.small_text ? "small" : "large");
+    }
     line = 'o' - 'a';
     BufMsg(overlay, "o) orientation lock (%s)",
            opt[globalD.orientation_lock != 0]);
