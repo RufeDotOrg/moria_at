@@ -80,18 +80,14 @@ bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
   }
 }
 void
-bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t bitmap_size)
+bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t byte_count)
 {
-  int byte_count = bitmap_size / 8;
   for (int it = 0; it < byte_count; ++it) {
     for (int jt = 0; jt < 8; ++jt) {
       bitmap[it * 8 + jt] = ((bitfield[it] & (1 << jt)) != 0);
     }
   }
 }
-
-// art.c
-DATA int art_textureD;
 
 static SDL_Point
 point_by_spriteid(uint32_t id)
@@ -103,6 +99,10 @@ point_by_spriteid(uint32_t id)
       row * ART_H,
   };
 }
+DATA int art_textureD;
+DATA int tart_textureD;
+DATA int wart_textureD;
+DATA int part_textureD;
 
 enum { DECODE = ART_W * ART_H / 8 };
 int art_decode(buf, len) void* buf;
@@ -111,32 +111,20 @@ int art_decode(buf, len) void* buf;
   int offset = 0;
   int id = 0;
   USE(sprite_id);
-  while (len > 0) {
-    int chunk = MIN(len, DECODE);
-    bitfield_to_bitmap(&buf[offset], vptr(bitmap), DECODE * 8);
-    printf(">> 0x%jx buf hash %d chunk %d image_count\n",
-           djb2(DJB2, &buf[offset], chunk), chunk, chunk / 256);
+  while (len >= DECODE) {
+    bitfield_to_bitmap(&buf[offset], vptr(bitmap), DECODE);
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
                            point_by_spriteid(sprite_id + id), spriteD);
 
     id += 1;
-    len -= chunk;
-    offset += chunk;
+    len -= DECODE;
+    offset += DECODE;
   }
 
   Log("art_decode [%d->%d sprite_id] %d %d offset len", sprite_id,
       sprite_id + id, offset, len);
   sprite_idD = sprite_id + id;
 }
-
-// treasure
-DATA int tart_textureD;
-
-// wall
-DATA int wart_textureD;
-
-// player
-DATA int part_textureD;
 
 int
 ui_init()
