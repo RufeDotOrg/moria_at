@@ -133,84 +133,10 @@ int art_decode(buf, len) void* buf;
 DATA int tart_textureD;
 
 // wall
-#define MAX_WART 6
-DATA uint8_t wartD[4 * 1024];
-DATA uint64_t wart_usedD;
-DATA uint32_t wart_textureD[MAX_WART];
-int
-wart_io()
-{
-  int rc;
-  void* bytes = &wartD;
-  unsigned long size = AL(wartD);
-  unsigned long zsize = sizeof(wallZ);
-  rc = puff(bytes, &size, wallZ, &zsize);
-  wart_usedD = size;
-  return rc == 0;
-}
-
-int
-wart_init()
-{
-  uint8_t bitmap[ART_H][ART_W];
-  uint64_t art_size = (ART_W * ART_H / 8);
-  int byte_count = wart_usedD;
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(wart_textureD); ++it) {
-    int offset = byte_used;
-    byte_used += art_size;
-    if (byte_used > byte_count) break;
-
-    bitfield_to_bitmap(&wartD[offset], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_idD), spriteD);
-    wart_textureD[it] = sprite_idD++;
-  }
-
-  Log("wart_init result %d", byte_used <= byte_count);
-
-  return byte_used <= byte_count;
-}
+DATA int wart_textureD;
 
 // player
-#define MAX_PART 13
-DATA uint8_t partD[4 * 1024];
-DATA uint64_t part_usedD;
-DATA uint32_t part_textureD[MAX_PART];
-int
-part_io()
-{
-  int rc;
-  void* bytes = &partD;
-  unsigned long size = AL(partD);
-  unsigned long zsize = sizeof(playerZ);
-  rc = puff(bytes, &size, playerZ, &zsize);
-  part_usedD = size;
-  return rc == 0;
-}
-
-int
-part_init()
-{
-  uint8_t bitmap[ART_H][ART_W];
-  uint64_t art_size = (ART_W * ART_H / 8);
-  int byte_count = part_usedD;
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(part_textureD); ++it) {
-    int offset = byte_used;
-    byte_used += art_size;
-    if (byte_used > byte_count) break;
-
-    bitfield_to_bitmap(&partD[offset], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_idD), spriteD);
-    part_textureD[it] = sprite_idD++;
-  }
-
-  Log("part_init result %d", byte_used <= byte_count);
-
-  return byte_used <= byte_count;
-}
+DATA int part_textureD;
 
 int
 ui_init()
@@ -280,12 +206,14 @@ custom_pregame()
   spriteD = SDL_CreateRGBSurfaceWithFormat(
       SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0, texture_formatD);
   if (spriteD) {
-    art_textureD = sprite_idD + 1;
+    art_textureD = sprite_idD - 1;
     if (puffex_stream_len(art_decode, AP(artZ)) != 0) return 4;
-    tart_textureD = sprite_idD + 1;
+    tart_textureD = sprite_idD - 1;
     if (puffex_stream_len(art_decode, AP(treasureZ)) != 0) return 4;
-    if (!wart_io() || !wart_init()) return 4;
-    if (!part_io() || !part_init()) return 4;
+    wart_textureD = sprite_idD - 1;
+    if (puffex_stream_len(art_decode, AP(wallZ)) != 0) return 4;
+    part_textureD = sprite_idD;  // no offset
+    if (puffex_stream_len(art_decode, AP(playerZ)) != 0) return 4;
 
     if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
       sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
@@ -986,7 +914,7 @@ map_draw()
           };
         } else if (fidx) {
           src_rect = (rect_t){
-              XY(point_by_spriteid(wart_textureD[fidx - 1])),
+              XY(point_by_spriteid(wart_textureD + fidx)),
               ART_W,
               ART_H,
           };
@@ -998,7 +926,7 @@ map_draw()
           };
         } else if (sym == '@') {
           src_rect = (rect_t){
-              XY(point_by_spriteid(part_textureD[0 + turnD % 2])),
+              XY(point_by_spriteid(part_textureD + turnD % 2)),
               ART_W,
               ART_H,
           };
@@ -1070,21 +998,21 @@ map_draw()
 
     if (tval - 1 < TV_MAX_PICK_UP || tval == TV_CHEST) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[2])),
+          XY(point_by_spriteid(part_textureD + 2)),
           ART_W,
           ART_H,
       };
       SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     } else if (tval == TV_GLYPH) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[3])),
+          XY(point_by_spriteid(part_textureD + 3)),
           ART_W,
           ART_H,
       };
       SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     } else if (tval == TV_VIS_TRAP) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[4])),
+          XY(point_by_spriteid(part_textureD + 4)),
           ART_W,
           ART_H,
       };
@@ -1093,7 +1021,7 @@ map_draw()
 
     if (countD.paralysis) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[5])),
+          XY(point_by_spriteid(part_textureD + 5)),
           ART_W,
           ART_H,
       };
@@ -1101,7 +1029,7 @@ map_draw()
     }
     if (countD.poison) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[6])),
+          XY(point_by_spriteid(part_textureD + 6)),
           ART_W,
           ART_H,
       };
@@ -1109,7 +1037,7 @@ map_draw()
     }
     if (maD[MA_SLOW]) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[7])),
+          XY(point_by_spriteid(part_textureD + 7)),
           ART_W,
           ART_H,
       };
@@ -1117,7 +1045,7 @@ map_draw()
     }
     if (maD[MA_BLIND]) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[8])),
+          XY(point_by_spriteid(part_textureD + 8)),
           ART_W,
           ART_H,
       };
@@ -1125,7 +1053,7 @@ map_draw()
     }
     if (countD.confusion) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[9])),
+          XY(point_by_spriteid(part_textureD + 9)),
           ART_W,
           ART_H,
       };
@@ -1133,7 +1061,7 @@ map_draw()
     }
     if (maD[MA_FEAR]) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[10])),
+          XY(point_by_spriteid(part_textureD + 10)),
           ART_W,
           ART_H,
       };
@@ -1141,14 +1069,14 @@ map_draw()
     }
     if (uD.food < PLAYER_FOOD_FAINT) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[12])),
+          XY(point_by_spriteid(part_textureD + 12)),
           ART_W,
           ART_H,
       };
       SDL_RenderCopy(renderer, sprite_texture, &src_rect, &dest_rect);
     } else if (uD.food <= PLAYER_FOOD_ALERT) {
       src_rect = (rect_t){
-          XY(point_by_spriteid(part_textureD[11])),
+          XY(point_by_spriteid(part_textureD + 11)),
           ART_W,
           ART_H,
       };
