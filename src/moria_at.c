@@ -12301,7 +12301,6 @@ py_monlook_dir(dir)
           if (mon->msleep) msg_hint(AP("(sleeping)"));
           // hack: mon death_descD pronoun is a/an
           death_descD[0] |= 0x20;
-          msg_moreD = 1;
           CLOBBER_MSG("You see %s.", death_descD);
         }
       }
@@ -12336,7 +12335,6 @@ py_objlook_dir(dir)
         ylookD = obj->fy;
         xlookD = obj->fx;
         obj_desc(obj, obj->number);
-        msg_moreD = 1;
         CLOBBER_MSG("You see %s.", descD);
       }
     }
@@ -12355,14 +12353,18 @@ py_examine()
     msg_print("You can't see a thing!");
   else {
     if (get_dir("Which direction will you look?", &dir)) {
+      msg_moreD = 1;
       if (py_monlook_dir(dir))
         type = "monsters";
       else if (py_objlook_dir(dir))
         type = "objects";
-      else
-        msg_print("You see nothing in that direction.");
+      msg_moreD = 0;
 
-      if (type) MSG("That's all the %s you see in that direction", type);
+      if (type) {
+        MSG("That's all the %s you see in that direction", type);
+      } else {
+        msg_print("You see nothing in that direction.");
+      }
     }
   }
 }
