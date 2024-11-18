@@ -130,44 +130,7 @@ int art_decode(buf, len) void* buf;
 }
 
 // treasure
-#define MAX_TART 53
-DATA uint8_t tartD[16 * 1024];
-DATA uint64_t tart_usedD;
-DATA uint32_t tart_textureD[MAX_TART];
-int
-tart_io()
-{
-  int rc;
-  void* bytes = &tartD;
-  unsigned long size = AL(tartD);
-  unsigned long zsize = sizeof(treasureZ);
-  rc = puff(bytes, &size, treasureZ, &zsize);
-  tart_usedD = size;
-  return rc == 0;
-}
-
-int
-tart_init()
-{
-  uint8_t bitmap[ART_H][ART_W];
-  uint64_t art_size = (ART_W * ART_H / 8);
-  int byte_count = tart_usedD;
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(tart_textureD); ++it) {
-    int offset = byte_used;
-    byte_used += art_size;
-    if (byte_used > byte_count) break;
-
-    bitfield_to_bitmap(&tartD[offset], &bitmap[0][0], ART_W * ART_H);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_idD), spriteD);
-    tart_textureD[it] = sprite_idD++;
-  }
-
-  Log("tart_init result %d", byte_used <= byte_count);
-
-  return byte_used <= byte_count;
-}
+DATA int tart_textureD;
 
 // wall
 #define MAX_WART 6
@@ -319,7 +282,8 @@ custom_pregame()
   if (spriteD) {
     art_textureD = sprite_idD + 1;
     if (puffex_stream_len(art_decode, AP(artZ)) != 0) return 4;
-    if (!tart_io() || !tart_init()) return 4;
+    tart_textureD = sprite_idD + 1;
+    if (puffex_stream_len(art_decode, AP(treasureZ)) != 0) return 4;
     if (!wart_io() || !wart_init()) return 4;
     if (!part_io() || !part_init()) return 4;
 
@@ -1028,7 +992,7 @@ map_draw()
           };
         } else if (tridx) {
           src_rect = (rect_t){
-              XY(point_by_spriteid(tart_textureD[tridx - 1])),
+              XY(point_by_spriteid(tart_textureD + tridx)),
               ART_W,
               ART_H,
           };
@@ -1084,7 +1048,7 @@ map_draw()
         if (sprite_texture) {
           srct = sprite_texture;
           src_rect = (rect_t){
-              XY(point_by_spriteid(tart_textureD[43 - 1])),
+              XY(point_by_spriteid(tart_textureD + 42)),
               ART_W,
               ART_H,
           };
@@ -1438,21 +1402,19 @@ custom_draw()
             } else {
               tridx = 45;
             }
-            if (tridx <= AL(tart_textureD)) {
-              rect_t sprite_rect = {
-                  XY(point_by_spriteid(tart_textureD[tridx - 1])),
-                  ART_W,
-                  ART_H,
-              };
-              rect_t dest = {
-                  grect.x,
-                  grect.y,
-                  ART_W * 2,
-                  ART_H * 2,
-              };
-              dest.x += (grect.w - dest.w) / 2;
-              SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
-            }
+            rect_t sprite_rect = {
+                XY(point_by_spriteid(tart_textureD + tridx)),
+                ART_W,
+                ART_H,
+            };
+            rect_t dest = {
+                grect.x,
+                grect.y,
+                ART_W * 2,
+                ART_H * 2,
+            };
+            dest.x += (grect.w - dest.w) / 2;
+            SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
           }
           rect_frame(grect, 1);
         }
