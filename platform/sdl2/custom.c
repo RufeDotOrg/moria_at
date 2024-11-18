@@ -91,9 +91,7 @@ bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t bitmap_size)
 }
 
 // art.c
-#define MAX_ART 279
-DATA int art_usedD;
-DATA uint32_t art_textureD[MAX_ART];  // TBD: could be a single base index ?
+DATA int art_textureD;
 
 static SDL_Point
 point_by_spriteid(uint32_t id)
@@ -111,22 +109,24 @@ int art_decode(buf, len) void* buf;
 {
   uint8_t bitmap[ART_H][ART_W];
   int offset = 0;
-  int id = art_usedD;
+  int id = 0;
+  USE(sprite_id);
   while (len > 0) {
     int chunk = MIN(len, DECODE);
     bitfield_to_bitmap(&buf[offset], vptr(bitmap), DECODE * 8);
     printf(">> 0x%jx buf hash %d chunk %d image_count\n",
            djb2(DJB2, &buf[offset], chunk), chunk, chunk / 256);
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_idD), spriteD);
-    art_textureD[id++] = sprite_idD++;
+                           point_by_spriteid(sprite_id + id), spriteD);
 
+    id += 1;
     len -= chunk;
     offset += chunk;
   }
 
-  Log("art_decode [%d->%d] %d %d offset len", art_usedD, id, offset, len);
-  art_usedD = id;
+  Log("art_decode [%d->%d sprite_id] %d %d offset len", sprite_id,
+      sprite_id + id, offset, len);
+  sprite_idD = sprite_id + id;
 }
 
 // treasure
@@ -317,6 +317,7 @@ custom_pregame()
   spriteD = SDL_CreateRGBSurfaceWithFormat(
       SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0, texture_formatD);
   if (spriteD) {
+    art_textureD = sprite_idD + 1;
     if (puffex_stream_len(art_decode, AP(artZ)) != 0) return 4;
     if (!tart_io() || !tart_init()) return 4;
     if (!wart_io() || !wart_init()) return 4;
@@ -1015,7 +1016,7 @@ map_draw()
         srcr = &src_rect;
         if (cridx) {
           src_rect = (rect_t){
-              XY(point_by_spriteid(art_textureD[cridx - 1])),
+              XY(point_by_spriteid(art_textureD + cridx)),
               ART_W,
               ART_H,
           };
