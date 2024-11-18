@@ -96,6 +96,7 @@ DATA int wart_textureD;
 DATA int part_textureD;
 
 enum { DECODE = ART_W * ART_H / 8 };
+_Static_assert(ART_W / 8 == sizeof(int), "use memcpy below instead");
 int art_decode(buf, len) void* buf;
 {
   int offset = 0;
@@ -107,12 +108,12 @@ int art_decode(buf, len) void* buf;
 
   while (len >= DECODE) {
     rect_t drect = {XY(point_by_spriteid(sprite_id + id)), ART_W, ART_H};
+    // bitfield adjustment
     drect.x /= 8;
     // copy to sprite (no conversion)
     for (int it = 0; it < ART_H; ++it) {
-      int step = ART_W / 8;
-      memcpy(pixels + (drect.y + it) * pitch + drect.x,
-             &buf[offset + step * it], step);
+      int* write = iptr(pixels + (drect.y + it) * pitch + drect.x);
+      *write = *iptr(&buf[offset + 4 * it]);
     }
 
     id += 1;
@@ -211,15 +212,18 @@ custom_pregame()
     if (puffex_stream_len(art_decode, AP(playerZ)) != 0) return 4;
 
     if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
-      // Use SDL_QueryTexture to query the pixel format of the texture created
+      // SDL2 determines texture format
       sprite_textureD = SDL_CreateTextureFromSurface(rendererD, sprite);
-      uint32_t fmt;
-      SDL_QueryTexture(sprite_textureD, &fmt, 0, 0, 0);
-      Log("sprite texture format name: %s", SDL_GetPixelFormatName(fmt));
-      if (sprite_textureD)
+      if (sprite_textureD) {
         SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
-      else
+        uint32_t fmt;
+        SDL_QueryTexture(sprite_textureD, &fmt, 0, 0, 0);
+        Log("sprite_textureD format 0x%x", fmt);
+        if (!RELEASE)
+          Log("sprite_textureD format: %s", SDL_GetPixelFormatName(fmt));
+      } else {
         Log("WARNING: Unable to CreateTextureFromSurface for sprites");
+      }
     } else {
       Log("WARNING: Assets exceed available sprite memory");
     }
