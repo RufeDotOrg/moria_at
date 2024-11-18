@@ -4,14 +4,13 @@
 enum { DISK = 0 };
 enum { FONT = 0 };
 enum { COLOR = 0 };
+enum { PUFF_STREAM = 0 };
 
-// Third party
-#include "third_party/zlib/puff.c"
-
-// Override COLOR/DISK/FONT when included
+// Override COLOR/DISK/FONT/PUFF_STREAM when included
 #include "color.c"
 #include "disk.c"
 #include "font.c"
+#include "puff_stream.c"
 
 #include "asset/art.c"
 #include "asset/icon.c"
@@ -93,20 +92,8 @@ bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t bitmap_size)
 
 // art.c
 #define MAX_ART 279
-DATA uint8_t artD[96 * 1024];
-DATA uint64_t art_usedD;
-DATA uint32_t art_textureD[MAX_ART];
-int
-art_io()
-{
-  int rc;
-  void* bytes = &artD;
-  unsigned long size = AL(artD);
-  unsigned long zsize = sizeof(artZ);
-  rc = puff(bytes, &size, artZ, &zsize);
-  art_usedD = size;
-  return rc == 0;
-}
+DATA int art_usedD;
+DATA uint32_t art_textureD[MAX_ART];  // TBD: could be a single base index ?
 
 static SDL_Point
 point_by_spriteid(uint32_t id)
@@ -119,27 +106,27 @@ point_by_spriteid(uint32_t id)
   };
 }
 
-int
-art_init()
+enum { DECODE = ART_W * ART_H / 8 };
+int art_decode(buf, len) void* buf;
 {
   uint8_t bitmap[ART_H][ART_W];
-  uint64_t art_size = (ART_W * ART_H / 8);
-  int byte_count = art_usedD;
-  uint64_t byte_used = 0;
-  for (int it = 0; it < AL(art_textureD); ++it) {
-    int offset = byte_used;
-    byte_used += art_size;
-    if (byte_used > byte_count) break;
-
-    bitfield_to_bitmap(&artD[offset], &bitmap[0][0], ART_W * ART_H);
+  int offset = 0;
+  int id = art_usedD;
+  while (len > 0) {
+    int chunk = MIN(len, DECODE);
+    bitfield_to_bitmap(&buf[offset], vptr(bitmap), DECODE * 8);
+    printf(">> 0x%jx buf hash %d chunk %d image_count\n",
+           djb2(DJB2, &buf[offset], chunk), chunk, chunk / 256);
     bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
                            point_by_spriteid(sprite_idD), spriteD);
-    art_textureD[it] = sprite_idD++;
+    art_textureD[id++] = sprite_idD++;
+
+    len -= chunk;
+    offset += chunk;
   }
 
-  Log("art_init result %d", byte_used <= byte_count);
-
-  return byte_used <= byte_count;
+  Log("art_decode [%d->%d] %d %d offset len", art_usedD, id, offset, len);
+  art_usedD = id;
 }
 
 // treasure
@@ -330,7 +317,7 @@ custom_pregame()
   spriteD = SDL_CreateRGBSurfaceWithFormat(
       SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0, texture_formatD);
   if (spriteD) {
-    if (!art_io() || !art_init()) return 4;
+    if (puffex_stream_len(art_decode, AP(artZ)) != 0) return 4;
     if (!tart_io() || !tart_init()) return 4;
     if (!wart_io() || !wart_init()) return 4;
     if (!part_io() || !part_init()) return 4;
