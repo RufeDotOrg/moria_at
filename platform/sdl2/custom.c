@@ -79,15 +79,6 @@ bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
     }
   }
 }
-void
-bitfield_to_bitmap(uint8_t* bitfield, uint8_t* bitmap, int64_t byte_count)
-{
-  for (int it = 0; it < byte_count; ++it) {
-    for (int jt = 0; jt < 8; ++jt) {
-      bitmap[it * 8 + jt] = ((bitfield[it] & (1 << jt)) != 0);
-    }
-  }
-}
 
 static SDL_Point
 point_by_spriteid(uint32_t id)
@@ -107,14 +98,22 @@ DATA int part_textureD;
 enum { DECODE = ART_W * ART_H / 8 };
 int art_decode(buf, len) void* buf;
 {
-  uint8_t bitmap[ART_H][ART_W];
   int offset = 0;
   int id = 0;
+  USE(sprite);
   USE(sprite_id);
+  uint8_t* pixels = sprite->pixels;
+  int pitch = sprite->pitch;
+
   while (len >= DECODE) {
-    bitfield_to_bitmap(&buf[offset], vptr(bitmap), DECODE);
-    bitmap_yx_into_surface(&bitmap[0][0], ART_H, ART_W,
-                           point_by_spriteid(sprite_id + id), spriteD);
+    rect_t drect = {XY(point_by_spriteid(sprite_id + id)), ART_W, ART_H};
+    drect.x /= 8;
+    // copy to sprite (no conversion)
+    for (int it = 0; it < ART_H; ++it) {
+      int step = ART_W / 8;
+      memcpy(pixels + (drect.y + it) * pitch + drect.x,
+             &buf[offset + step * it], step);
+    }
 
     id += 1;
     len -= DECODE;
@@ -191,9 +190,17 @@ custom_pregame()
 
   if (FONT && !font_init()) return 2;
 
-  spriteD = SDL_CreateRGBSurfaceWithFormat(
-      SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0, texture_formatD);
-  if (spriteD) {
+  SDL_Surface* sprite = SDL_CreateRGBSurfaceWithFormat(
+      SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0,
+      SDL_PIXELFORMAT_INDEX1LSB);
+  if (sprite) {
+    {
+      SDL_Palette* palette = sprite->format->palette;
+      *(int*)&palette->colors[0] = 0;
+      *(int*)&palette->colors[1] = -1;
+    }
+
+    spriteD = sprite;
     art_textureD = sprite_idD - 1;
     if (puffex_stream_len(art_decode, AP(artZ)) != 0) return 4;
     tart_textureD = sprite_idD - 1;
@@ -204,7 +211,11 @@ custom_pregame()
     if (puffex_stream_len(art_decode, AP(playerZ)) != 0) return 4;
 
     if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
-      sprite_textureD = SDL_CreateTextureFromSurface(rendererD, spriteD);
+      // Use SDL_QueryTexture to query the pixel format of the texture created
+      sprite_textureD = SDL_CreateTextureFromSurface(rendererD, sprite);
+      uint32_t fmt;
+      SDL_QueryTexture(sprite_textureD, &fmt, 0, 0, 0);
+      Log("sprite texture format name: %s", SDL_GetPixelFormatName(fmt));
       if (sprite_textureD)
         SDL_SetTextureBlendMode(sprite_textureD, SDL_BLENDMODE_BLEND);
       else
@@ -212,9 +223,9 @@ custom_pregame()
     } else {
       Log("WARNING: Assets exceed available sprite memory");
     }
-    SDL_FreeSurface(spriteD);
-    spriteD = 0;
+    SDL_FreeSurface(sprite);
   }
+  spriteD = 0;
 
   // Software renderer will skip this; limiting risk on troubled systems
   if (PC && globalD.pc_renderer[0] != 's') {
