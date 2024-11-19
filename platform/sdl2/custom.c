@@ -97,7 +97,7 @@ DATA int part_textureD;
 
 enum { DECODE = ART_W * ART_H / 8 };
 _Static_assert(ART_W / 8 == sizeof(int), "use memcpy below instead");
-int art_decode(buf, len) void* buf;
+int art_decode(buf, len) uint8_t* buf;
 {
   int offset = 0;
   int id = 0;
