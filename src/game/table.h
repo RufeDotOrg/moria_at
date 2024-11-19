@@ -23,6 +23,7 @@ key_dir(dir)
 {
   return kdirD[dir];
 }
+char* strchr(const char* s, int c);
 T int
 dir_key(key)
 {
