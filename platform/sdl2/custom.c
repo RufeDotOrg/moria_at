@@ -60,26 +60,6 @@ enum { STRLEN_MORE = AL(moreD) - 1 };
     .h = r.h + 2 * (framing),                                             \
   }
 
-void
-bitmap_yx_into_surface(void* bitmap, int64_t ph, int64_t pw, SDL_Point into,
-                       struct SDL_Surface* surface)
-{
-  uint8_t bpp = surface->format->BytesPerPixel;
-  uint8_t* pixels = surface->pixels;
-  int64_t pitch = surface->pitch;
-  int color = -1;
-  if (pixel_formatD) pixel_convert(&color);
-  uint8_t* src = bitmap;
-  for (int64_t row = 0; row < ph; ++row) {
-    uint8_t* dst = pixels + (pitch * (into.y + row)) + (bpp * into.x);
-    for (int64_t col = 0; col < pw; ++col) {
-      if (*src) memcpy(dst, &color, bpp);
-      src += 1;
-      dst += bpp;
-    }
-  }
-}
-
 static SDL_Point
 point_by_spriteid(uint32_t id)
 {
@@ -97,7 +77,9 @@ DATA int part_textureD;
 
 enum { DECODE = ART_W * ART_H / 8 };
 _Static_assert(ART_W / 8 == sizeof(int), "use memcpy below instead");
-int art_decode(buf, len) uint8_t* buf;
+int
+art_decode(buf, len)
+uint8_t* buf;
 {
   int offset = 0;
   int id = 0;
@@ -131,32 +113,29 @@ ui_init()
 {
   enum { UI_W = 16 };
   enum { UI_H = 16 };
-  USE(renderer);
-  uint8_t bitmap[UI_H][UI_W];
-  SDL_Surface* icon;
+  enum { UI_CN = 4 };
+  int bitmap[UI_H][UI_W];
 
-  icon = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, UI_W, UI_H, 0,
-                                        texture_formatD);
-  if (icon) {
-    for (int row = 0; row < UI_H; ++row) {
-      for (int col = 0; col < UI_W; ++col) {
-        int rmod = row % 4;
-        if (rmod == 3) {
-          bitmap[row][col] = 0;
-        } else {
-          bitmap[row][col] = 7;
-        }
+  for (int row = 0; row < UI_H; ++row) {
+    for (int col = 0; col < UI_W; ++col) {
+      int rmod = row % 4;
+      if (rmod == 3) {
+        bitmap[row][col] = 0;
+      } else {
+        bitmap[row][col] = whiteD;
       }
     }
-    for (int it = 0; it < 4; ++it) {
-      bitmap[it * 4 + 1][1] = 0;
-    }
-
-    bitmap_yx_into_surface(&bitmap[0][0], UI_H, UI_W, (SDL_Point){0, 0}, icon);
-    ui_textureD = SDL_CreateTextureFromSurface(renderer, icon);
-    SDL_FreeSurface(icon);
   }
-  return icon != 0;
+  for (int it = 0; it < 4; ++it) {
+    bitmap[it * 4 + 1][1] = 0;
+  }
+
+  SDL_Texture* t = SDL_CreateTexture(rendererD, SDL_PIXELFORMAT_ABGR8888,
+                                     SDL_TEXTUREACCESS_STATIC, UI_W, UI_H);
+  if (t) SDL_UpdateTexture(t, 0, bitmap, UI_W * 4);
+  ui_textureD = t;
+
+  return t != 0;
 }
 
 int
