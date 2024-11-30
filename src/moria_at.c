@@ -6,6 +6,7 @@ enum { MOD_SAVECHAR = 0 };
 
 #include "platform/platform.c"
 
+enum { PRIVACY = !KEYBOARD };
 enum { HACK = 0 };
 enum { RESEED = 0 };
 enum { TEST_CAVEGEN = 0 };
@@ -11051,6 +11052,11 @@ py_saveslot_select()
       }
     }
 
+    if (PRIVACY) {
+      line = 'p' - 'a';
+      BufMsg(overlay, "p) Privacy policy (open in browser)");
+    }
+
     if (has_external) {
       if (!using_external) {
         line = 's' - 'a';
@@ -11082,6 +11088,11 @@ py_saveslot_select()
     else
       msg_hint(AP("(RED: delete | GREEN: play)"));
     c = CLOBBER_MSG("Play which class?");
+    // Privacy policy
+    if (c == 'p') {
+      SDL_OpenURL("https://rufe.org/moria/privacy.html");
+      continue;
+    }
     // Deletion
     if (c == ESCAPE) {
       int srow, scol;
