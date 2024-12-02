@@ -234,7 +234,8 @@ custom_pregame()
   if (TOUCH) platformD.selection = touch_selection;
 
   if (DPAD) dpad_init();
-  if (DPAD) platformD.dpad = dpad_init;
+  if (DPAD) dpad_classic();
+  if (DPAD) platformD.dpad = dpad_classic;
 
   // !!texture_formatD override!! minimapD is streaming abgr8888
   mmtextureD =

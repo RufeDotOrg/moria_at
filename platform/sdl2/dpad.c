@@ -6,6 +6,10 @@ DATA SDL_Texture* tptextureD;
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 DATA float limit_dsqD;
+DATA int dpad_colorD[] = {0xff1b0196, 0xff01559d, 0xff089ba4, 0xff109c02,
+                          0xff8c9f0c, 0xffa55906, 0xff9e026d, 0xff62029b};
+DATA int dpad_greyscaleD[] = {0xff303030, 0xff3f3f3f, 0xff525252, 0xff636363,
+                              0xff767676, 0xff888888, 0xff9d9d9d, 0xffb0b0b0};
 
 //  cos of (it * M_PI * 2 / 8);
 DATA float cos_table[] = {1.000,  0.707,  0.000,  -0.707,
@@ -59,6 +63,15 @@ dpad_init()
     ppD[1 + it].y = cy + oy;
   }
 
+  if (pixel_formatD) {
+    for (int it = 0; it < AL(dpad_colorD); ++it) {
+      pixel_convert(&dpad_colorD[it]);
+    }
+    for (int it = 0; it < AL(dpad_greyscaleD); ++it) {
+      pixel_convert(&dpad_greyscaleD[it]);
+    }
+  }
+
   return 0;
 }
 STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
@@ -67,21 +80,7 @@ STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
   MUSE(global, dpad_color);
 
   int bgcolor = lightingD[1];
-  int color[8];
-  if (dpad_color) {
-    for (int it = 0; it < AL(color); ++it) {
-      color[it] = rgb_by_labr(dark_labrD[it]);
-    }
-  } else {
-    for (int it = 0; it < AL(color); ++it) {
-      color[it] = rgb_by_labr(20 + it * 60 / 8);
-    }
-  }
-  if (pixel_formatD) {
-    for (int it = 0; it < AL(color); ++it) {
-      pixel_convert(&color[it]);
-    }
-  }
+  int* color = dpad_color ? dpad_colorD : dpad_greyscaleD;
 
   int limit_dsq = dpad_sensitivity * dpad_sensitivity;
   if (dpad_sensitivity >= 99) limit_dsq = INT32_MAX;
