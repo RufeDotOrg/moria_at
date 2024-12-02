@@ -1290,10 +1290,12 @@ custom_draw()
 
       // TBD: Are we showing buttons with controllers?
       if (TOUCH) {
+        int* color = globalD.dpad_color ? color_mapD : dpad_greyscaleD;
+
         for (int it = 0; it < MAX_BUTTON; ++it) {
           AUSE(grect, GR_BUTTON1 + it);
-          int color = rgba_by_palette(it == 0 ? RED : GREEN);
-          SDL_SetRenderDrawColor(rendererD, V4b(&color));
+          int cidx = it == 0 ? RED : GREEN;
+          SDL_SetRenderDrawColor(rendererD, V4b(&color[cidx]));
           SDL_RenderFillRect(rendererD, &grect);
         }
 
@@ -1694,7 +1696,7 @@ feature_menu()
            opt[globalD.sprite == 0]);
     if (using_selection) {
       line = 'c' - 'a';
-      BufMsg(overlay, "c) colorize dpad (%s)", opt[globalD.dpad_color != 0]);
+      BufMsg(overlay, "c) color interface (%s)", opt[globalD.dpad_color != 0]);
       line = 'd' - 'a';
       BufMsg(overlay, "d) dpad sensitivity (%d)", globalD.dpad_sensitivity);
     }
