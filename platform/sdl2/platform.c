@@ -77,7 +77,6 @@ DATA rect_t display_rectD;
 DATA rect_t safe_rectD;
 DATA struct SDL_Renderer* rendererD;
 DATA uint32_t texture_formatD;
-DATA SDL_PixelFormat* pixel_formatD;
 
 // Claimed vs. actualized refresh rate
 DATA int refresh_rateD;
@@ -104,16 +103,6 @@ check_gl()
     if (hint[it] != gl[it]) return 0;
   }
   return 1;
-}
-
-void
-pixel_convert(void* pio_rgba)
-{
-  SDL_Color* src = pio_rgba;
-  int pf = SDL_MapRGBA(pixel_formatD, src->r, src->g, src->b, src->a);
-
-  int* color = pio_rgba;
-  *color = pf;
 }
 
 STATIC void
@@ -264,14 +253,6 @@ render_init()
     if (!RELEASE) {
       Log("Texture pixel format %s", SDL_GetPixelFormatName(texture_formatD));
     }
-  }
-
-  if (texture_formatD != SDL_PIXELFORMAT_ABGR8888) {
-    Log("Perf: GPU pixelformat");
-    pixel_formatD = SDL_AllocFormat(texture_formatD);
-    if (!pixel_formatD) return 0;
-
-    if (pixel_formatD->BytesPerPixel != 4) Log("Perf: BytesPerPixel != 4");
   }
 
   portraitD =
