@@ -10955,10 +10955,11 @@ int
 saveslot_race_reroll(saveslot, race)
 {
   char c = 'o';
+  int using_selection = (platformD.selection != noop);
   do {
     if (KEYBOARD && c == ' ') c = 'o';
     if (c == 'o') py_race_class_seed_init(race, saveslot, platformD.seed());
-    if (PC)
+    if (PC && !using_selection)
       msg_hint(AP("(SPACEBAR: reroll, ESCAPE: accept)"));
     else
       msg_hint(AP("(RED: reroll | GREEN: accept)"));
@@ -11083,7 +11084,7 @@ py_saveslot_select()
       BufMsg(overlay, "v) View %s media", other_media);
     }
 
-    if (PC)
+    if (PC && !using_selection)
       msg_hint(AP(" (SHIFT: delete character)"));
     else
       msg_hint(AP("(RED: delete | GREEN: play)"));
