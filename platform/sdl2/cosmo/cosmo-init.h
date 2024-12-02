@@ -160,11 +160,11 @@ cosmo_init(int argc, char** argv)
   if (sys_ld) {
     int ldlen = strlen(sys_ld);
     if (ldlen > MAX_PATH - 4) {
-      printf("LD_LIBRARY_PATH is enormous.\n");
-      return 1;
+      printf("LD_LIBRARY_PATH is enormous; ignoring user config\n");
+    } else {
+      memcpy(path, sys_ld, ldlen);
+      memcpy(path + ldlen, ":.:", 4);
     }
-    memcpy(path, sys_ld, ldlen);
-    memcpy(path + ldlen, ":.:", 4);
   }
   printf("setenv LD_LIBRARY_PATH: %s\n", path);
   setenv("LD_LIBRARY_PATH", path, 1);
@@ -176,6 +176,7 @@ cosmo_init(int argc, char** argv)
   libD = cosmo_dlopen(cosmo_libname(), RTLD_LAZY);
   printf("%p libD\n", libD);
 
+  if (!libD) printf("failed to locate SDL2\n");
   if (!libD) exit(1);
 
   if (IsWindows()) {
