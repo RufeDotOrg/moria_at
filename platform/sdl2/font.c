@@ -72,21 +72,21 @@ point_by_glyph(uint32_t index)
 STATIC int
 glyph_init()
 {
-  USE(texture_format);
+  struct SDL_Texture* texture = 0;
+  struct SDL_Surface* surface = SDL_CreateRGBSurfaceWithFormat(
+      SDL_SWSURFACE, FWIDTH * FTEX_W, FHEIGHT * FTEX_H, 0,
+      SDL_PIXELFORMAT_INDEX8);
 
-  struct SDL_Surface* surface;
-  struct SDL_Texture* texture;
-  surface = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, FWIDTH * FTEX_W,
-                                           FHEIGHT * FTEX_H, 0, texture_format);
-  texture = 0;
   if (surface) {
-    MUSE(font, left_adjustment);
+    {
+      SDL_Palette* palette = surface->format->palette;
+      *(int*)&palette->colors[0] = 0;
+      *(int*)&palette->colors[1] = -1;
+    }
 
-    uint8_t bpp = surface->format->BytesPerPixel;
     uint8_t* pixels = surface->pixels;
     int pitch = surface->pitch;
     int color = -1;
-    if (pixel_formatD) pixel_convert(&color);
 
     for (int i = START_GLYPH; i < END_GLYPH; ++i) {
       int glyph_index = i - START_GLYPH;
@@ -96,26 +96,21 @@ glyph_init()
         int ph, pw, ox, oy;
         ph = glyph->pixel_height;
         pw = glyph->pixel_width;
-        ox = into.x + glyph->offset_x + left_adjustment;
+        ox = into.x + glyph->offset_x;
         oy = into.y + glyph->offset_y;
 
-        {
-          uint8_t* src = &fontD.bitmap[glyph->bitmap_offset];
-          for (int64_t row = 0; row < ph; ++row) {
-            uint8_t* dst = pixels + (pitch * (oy + row)) + (bpp * ox);
-            for (int64_t col = 0; col < pw; ++col) {
-              if (*src) memset(dst, color, bpp);
-              src += 1;
-              dst += bpp;
-            }
-          }
+        uint8_t* src = &fontD.bitmap[glyph->bitmap_offset];
+        for (int64_t row = 0; row < ph; ++row) {
+          uint8_t* dst = pixels + (pitch * (oy + row)) + (ox);
+          memcpy(dst, src, pw);
+          src += pw;
         }
       }
     }
 
     texture = SDL_CreateTextureFromSurface(rendererD, surface);
     if (texture) SDL_SetTextureScaleMode(texture, SDL_ScaleModeLinear);
-    // SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+    if (texture) SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
     SDL_FreeSurface(surface);
   }
 
