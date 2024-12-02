@@ -63,15 +63,6 @@ dpad_init()
     ppD[1 + it].y = cy + oy;
   }
 
-  if (pixel_formatD) {
-    for (int it = 0; it < AL(dpad_colorD); ++it) {
-      pixel_convert(&dpad_colorD[it]);
-    }
-    for (int it = 0; it < AL(dpad_greyscaleD); ++it) {
-      pixel_convert(&dpad_greyscaleD[it]);
-    }
-  }
-
   return 0;
 }
 STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
@@ -84,9 +75,8 @@ STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
 
   int limit_dsq = dpad_sensitivity * dpad_sensitivity;
   if (dpad_sensitivity >= 99) limit_dsq = INT32_MAX;
-  uint8_t bpp = pixel_formatD ? pixel_formatD->BytesPerPixel : 4;
   for (int64_t row = 0; row < PADSIZE; ++row) {
-    uint8_t* dst = pixels + row * pitch;
+    int* dst = vptr(pixels + row * pitch);
     for (int64_t col = 0; col < PADSIZE; ++col) {
       int dsq;
       int n = dpad_nearest_pp(row, col, &dsq);
@@ -101,8 +91,7 @@ STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
           c = color[(n - 1 + 4) % 8];
       }
 
-      memcpy(dst, &c, bpp);
-      dst += bpp;
+      *dst++ = c;
     }
   }
 
@@ -114,7 +103,7 @@ dpad_classic()
 {
   SDL_Texture* tp = tptextureD;
   if (!tp)
-    tp = SDL_CreateTexture(rendererD, texture_formatD,
+    tp = SDL_CreateTexture(rendererD, SDL_PIXELFORMAT_ABGR8888,
                            SDL_TEXTUREACCESS_STREAMING, PADSIZE, PADSIZE);
 
   void* pix;
