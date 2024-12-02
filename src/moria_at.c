@@ -10962,7 +10962,7 @@ saveslot_race_reroll(saveslot, race)
     if (PC && !using_selection)
       msg_hint(AP("(SPACEBAR: reroll, ESCAPE: accept)"));
     else
-      msg_hint(AP("(RED: reroll | GREEN: accept)"));
+      msg_hint(AP("(LBUTTON: reroll | RBUTTON: accept)"));
     c = show_character(1, 1);
     if (c == CTRL('c')) break;
   } while (c != ESCAPE);
@@ -11087,7 +11087,7 @@ py_saveslot_select()
     if (PC && !using_selection)
       msg_hint(AP(" (SHIFT: delete character)"));
     else
-      msg_hint(AP("(RED: delete | GREEN: play)"));
+      msg_hint(AP("(LBUTTON: delete | RBUTTON: play)"));
     c = CLOBBER_MSG("Play which class?");
     // Privacy policy
     if (c == 'p') {
