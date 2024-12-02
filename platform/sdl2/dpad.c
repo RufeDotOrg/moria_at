@@ -6,9 +6,6 @@ DATA SDL_Texture* tptextureD;
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 DATA float limit_dsqD;
-// lum: 20,27,35,42,50,57,65,72
-DATA int dpad_greyscaleD[] = {0xff303030, 0xff3f3f3f, 0xff525252, 0xff636363,
-                              0xff767676, 0xff888888, 0xff9d9d9d, 0xffb0b0b0};
 
 //  cos of (it * M_PI * 2 / 8);
 DATA float cos_table[] = {1.000,  0.707,  0.000,  -0.707,
@@ -70,7 +67,7 @@ STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
   MUSE(global, dpad_color);
 
   int bgcolor = lightingD[1];
-  int* color = dpad_color ? color_mapD : dpad_greyscaleD;
+  int* color = dpad_color ? color_mapD : greyscaleD;
 
   int limit_dsq = dpad_sensitivity * dpad_sensitivity;
   if (dpad_sensitivity >= 99) limit_dsq = INT32_MAX;

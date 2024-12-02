@@ -1290,7 +1290,7 @@ custom_draw()
 
       // TBD: Are we showing buttons with controllers?
       if (TOUCH) {
-        int* color = globalD.dpad_color ? color_mapD : dpad_greyscaleD;
+        int* color = globalD.dpad_color ? color_mapD : greyscaleD;
 
         for (int it = 0; it < MAX_BUTTON; ++it) {
           AUSE(grect, GR_BUTTON1 + it);
