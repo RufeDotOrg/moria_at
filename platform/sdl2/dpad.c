@@ -2,9 +2,7 @@
 
 enum { PADSIZE = (26 + 2) * 16 };
 
-DATA SDL_Surface* tpsurfaceD;
 DATA SDL_Texture* tptextureD;
-
 DATA SDL_Point ppD[9];
 DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
 DATA float limit_dsqD;
@@ -46,49 +44,6 @@ int* po_dsq;
   if (po_dsq) *po_dsq = min_dsq;
   return r;
 }
-
-STATIC void surface_ppfill(surface) SDL_Surface* surface;
-{
-  MUSE(global, dpad_sensitivity);
-  if (dpad_sensitivity >= 99)
-    limit_dsqD = (float)PADSIZE * PADSIZE;
-  else
-    limit_dsqD = (float)dpad_sensitivity * dpad_sensitivity;
-
-  uint8_t bpp = surface->format->BytesPerPixel;
-  uint8_t* pixels = surface->pixels;
-  for (int64_t row = 0; row < surface->h; ++row) {
-    uint8_t* dst = pixels + (surface->pitch * row);
-    for (int64_t col = 0; col < surface->w; ++col) {
-      int dsq;
-      int n = dpad_nearest_pp(row, col, &dsq);
-      int color = lightingD[1];
-
-      int lum = CLAMP(dpad_sensitivity - sqrtf(dsq), 0, 99);
-
-      if (globalD.dpad_color) {
-        if (dpad_sensitivity >= 99) lum = MAX(1, lum);
-        if (n > 0 && lum > 0) {
-          int labr = 0;
-          // flips the diagonals to provide contrast
-          if (n % 2 == 1)
-            labr = dark_labrD[n - 1];
-          else
-            labr = dark_labrD[(n - 1 + 4) % 8];
-
-          bptr(&labr)[0] += (CLAMP(lum / 4, 0, 31) + 4);
-          color = rgb_by_labr(labr);
-        }
-      } else {
-        color = rgb_by_labr(lum);
-      }
-      if (pixel_formatD) pixel_convert(&color);
-
-      memcpy(dst, &color, bpp);
-      dst += bpp;
-    }
-  }
-}
 STATIC int
 dpad_init()
 {
@@ -104,15 +59,73 @@ dpad_init()
     ppD[1 + it].y = cy + oy;
   }
 
-  if (tpsurfaceD) SDL_FreeSurface(tpsurfaceD);
-  tpsurfaceD = SDL_CreateRGBSurfaceWithFormat(SDL_SWSURFACE, PADSIZE, PADSIZE,
-                                              0, texture_formatD);
-  if (tptextureD) SDL_DestroyTexture(tptextureD);
-  tptextureD = SDL_CreateTexture(rendererD, texture_formatD,
-                                 SDL_TEXTUREACCESS_STREAMING, PADSIZE, PADSIZE);
-  SDL_SetTextureBlendMode(tptextureD, SDL_BLENDMODE_NONE);
-  surface_ppfill(tpsurfaceD);
-  SDL_UpdateTexture(tptextureD, NULL, tpsurfaceD->pixels, tpsurfaceD->pitch);
+  return 0;
+}
+STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
+{
+  MUSE(global, dpad_sensitivity);
+  MUSE(global, dpad_color);
+
+  int bgcolor = lightingD[1];
+  int color[8];
+  if (dpad_color) {
+    for (int it = 0; it < AL(color); ++it) {
+      color[it] = rgb_by_labr(dark_labrD[it]);
+    }
+  } else {
+    for (int it = 0; it < AL(color); ++it) {
+      color[it] = rgb_by_labr(20 + it * 60 / 8);
+    }
+  }
+  if (pixel_formatD) {
+    for (int it = 0; it < AL(color); ++it) {
+      pixel_convert(&color[it]);
+    }
+  }
+
+  int limit_dsq = dpad_sensitivity * dpad_sensitivity;
+  if (dpad_sensitivity >= 99) limit_dsq = INT32_MAX;
+  uint8_t bpp = pixel_formatD ? pixel_formatD->BytesPerPixel : 4;
+  for (int64_t row = 0; row < PADSIZE; ++row) {
+    uint8_t* dst = pixels + row * pitch;
+    for (int64_t col = 0; col < PADSIZE; ++col) {
+      int dsq;
+      int n = dpad_nearest_pp(row, col, &dsq);
+      int c = bgcolor;
+
+      if (dsq > limit_dsq) n = 0;
+      if (n > 0) {
+        // flips the diagonals to provide contrast
+        if (n % 2 == 1)
+          c = color[n - 1];
+        else
+          c = color[(n - 1 + 4) % 8];
+      }
+
+      memcpy(dst, &c, bpp);
+      dst += bpp;
+    }
+  }
+
+  // Input limiter
+  limit_dsqD = limit_dsq;
+}
+int
+dpad_classic()
+{
+  SDL_Texture* tp = tptextureD;
+  if (!tp)
+    tp = SDL_CreateTexture(rendererD, texture_formatD,
+                           SDL_TEXTUREACCESS_STREAMING, PADSIZE, PADSIZE);
+
+  void* pix;
+  int pitch;
+  if (SDL_LockTexture(tp, 0, &pix, &pitch) == 0) {
+    dpadfill_pixels_pitch(pix, pitch);
+    SDL_UnlockTexture(tp);
+  }
+  SDL_SetTextureBlendMode(tp, SDL_BLENDMODE_NONE);
+  tptextureD = tp;
 
   return 0;
 }
