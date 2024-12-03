@@ -83,7 +83,7 @@ joystick_assign(jsidx)
           fa += 4;
           int kv = *fa - '0';
           Log("a is button %d (%c)", kv, *fa);
-          steam_virtualD[0] = kv;
+          if (kv < AL(steam_virtualD)) steam_virtualD[kv] = 0;
         }
       }
       {
@@ -93,7 +93,7 @@ joystick_assign(jsidx)
           fa += 4;
           int kv = *fa - '0';
           Log("b is button %d (%c)", kv, *fa);
-          steam_virtualD[1] = kv;
+          if (kv < AL(steam_virtualD)) steam_virtualD[kv] = 1;
         }
       }
       {
@@ -103,7 +103,7 @@ joystick_assign(jsidx)
           fa += 4;
           int kv = *fa - '0';
           Log("x is button %d (%c)", kv, *fa);
-          steam_virtualD[2] = kv;
+          if (kv < AL(steam_virtualD)) steam_virtualD[kv] = 2;
         }
       }
       {
@@ -113,7 +113,7 @@ joystick_assign(jsidx)
           fa += 4;
           int kv = *fa - '0';
           Log("y is button %d (%c)", kv, *fa);
-          steam_virtualD[3] = kv;
+          if (kv < AL(steam_virtualD)) steam_virtualD[kv] = 3;
         }
       }
       SDL_free(mapping);
