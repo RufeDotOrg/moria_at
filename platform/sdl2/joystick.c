@@ -73,7 +73,51 @@ joystick_assign(jsidx)
     product = SDL_JoystickGetDeviceProduct(jsidx);
     Log("joystick_assign (product 0x%x): %s", product, name);
     SDL_JoystickGUID guid = SDL_JoystickGetGUID(joystick);
-    Log("GUID mapping: %s", SDL_GameControllerMappingForGUID(guid));
+    char* mapping = SDL_GameControllerMappingForGUID(guid);
+    if (mapping) {
+      Log("GUID mapping: %s", mapping);
+      {
+        char* fa = strstr(mapping, ",a:");
+        Log("%s", fa);
+        if (fa) {
+          fa += 4;
+          int kv = *fa - '0';
+          Log("a is button %d (%c)", kv, *fa);
+          steam_virtualD[0] = kv;
+        }
+      }
+      {
+        char* fa = strstr(mapping, ",b:");
+        Log("%s", fa);
+        if (fa) {
+          fa += 4;
+          int kv = *fa - '0';
+          Log("b is button %d (%c)", kv, *fa);
+          steam_virtualD[1] = kv;
+        }
+      }
+      {
+        char* fa = strstr(mapping, ",x:");
+        Log("%s", fa);
+        if (fa) {
+          fa += 4;
+          int kv = *fa - '0';
+          Log("x is button %d (%c)", kv, *fa);
+          steam_virtualD[2] = kv;
+        }
+      }
+      {
+        char* fa = strstr(mapping, ",y:");
+        Log("%s", fa);
+        if (fa) {
+          fa += 4;
+          int kv = *fa - '0';
+          Log("y is button %d (%c)", kv, *fa);
+          steam_virtualD[3] = kv;
+        }
+      }
+      SDL_free(mapping);
+    }
     // TBD: hack for better play experience on big screens
     if (globalD.zoom_factor == 0) globalD.zoom_factor = 1;
     // Center input
