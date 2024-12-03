@@ -1335,12 +1335,23 @@ custom_draw()
     }
   }
 
-  if (mode == 0)
-    draw_game();
-  else
-    draw_menu(mode, using_selection);
+  int numlock = 0;
+  if (PC) numlock = SDL_GetModState() & KMOD_NUM;
 
-  if (text_fnD) text_fnD(mode);
+  if (PC && numlock) {
+    DATA char numlock_warning[] = "-please disable numlock-";
+    SDL_Point p = {layout_rectD.w / 2, layout_rectD.h / 2};
+    p.x -= FWIDTH * AL(numlock_warning) / 2;
+    p.y -= FHEIGHT / 2;
+    render_monofont_string(renderer, &fontD, AP(numlock_warning), p);
+  } else {
+    if (mode == 0)
+      draw_game();
+    else
+      draw_menu(mode, using_selection);
+
+    if (text_fnD) text_fnD(mode);
+  }
 
   // Render version stamp on all screens
   {
