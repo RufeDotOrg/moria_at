@@ -172,6 +172,10 @@ cosmo_init(int argc, char** argv)
   printf("setenv KPRINTF_LOG (does not override)\n");
   setenv("KPRINTF_LOG", "crash.txt", 0);
 
+  // Override steam's environment
+  setenv("SDL_GAMECONTROLLER_IGNORE_DEVICES", "", 1);
+  // ^ (update this if steaminput is dynamically loaded in the future)
+
   // Cosmo does not re-init dlopen-helper on an environment change
   libD = cosmo_dlopen(cosmo_libname(), RTLD_LAZY);
   printf("%p libD\n", libD);

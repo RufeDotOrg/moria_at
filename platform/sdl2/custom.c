@@ -1727,6 +1727,13 @@ feature_menu()
              "r) refresh / video sync (%s) | %d fps of %d display claimed",
              opt[globalD.vsync != 0], vsync_rateD, refresh_rateD);
     }
+    if (JOYSTICK) {
+      line = 's' - 'a';
+      BufMsg(
+          overlay,
+          "s) stable button order for controllers: %s (requires game restart)",
+          globalD.stable_button_order ? "on" : "off");
+    }
     if (PC) {
       line = 't' - 'a';
       BufMsg(overlay, "t) landscape text size (%s)",
@@ -1765,6 +1772,9 @@ feature_menu()
         break;
       case 'r':
         platformD.vsync(INVERT(globalD.vsync));
+        break;
+      case 's':
+        INVERT(globalD.stable_button_order);
         break;
       case 't':
         INVERT(globalD.small_text);
