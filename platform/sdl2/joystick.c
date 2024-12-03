@@ -72,6 +72,8 @@ joystick_assign(jsidx)
     const char* name = SDL_JoystickNameForIndex(jsidx);
     product = SDL_JoystickGetDeviceProduct(jsidx);
     Log("joystick_assign (product 0x%x): %s", product, name);
+    SDL_JoystickGUID guid = SDL_JoystickGetGUID(joystick);
+    Log("GUID mapping: %s", SDL_GameControllerMappingForGUID(guid));
     // TBD: hack for better play experience on big screens
     if (globalD.zoom_factor == 0) globalD.zoom_factor = 1;
     // Center input
