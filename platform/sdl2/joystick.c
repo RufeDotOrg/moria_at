@@ -6,39 +6,33 @@ enum { JOYSTICK_VERBOSE = 0 };
 DATA SDL_Joystick* joystick_ptrD;
 DATA float jxD;
 DATA float jyD;
-DATA int joystick_productD;
 DATA int triggerD;
-#define STEAM_VIRTUAL_GAMEPAD 0x11ff
-#define STEAM_DECK_RAW 0x1205
 
-// Sony Dualsense button order is default
 enum {
   JS_SOUTH,
   JS_EAST,
   JS_NORTH,
   JS_WEST,
-  JS_LBUMPER,
-  JS_RBUMPER,
-  JS_LTRIGGER,
-  JS_RTRIGGER,
-  JS_LTINY,
-  JS_RTINY,
-  JS_SYSTEM,
-  JS_LSTICK,
-  JS_RSTICK,
+  JS_LSHOULDER,
+  JS_RSHOULDER,
+  JS_LTRIGGER,  // Disabled if AXIS trigger support exists
+  JS_RTRIGGER,  // Disabled if AXIS trigger support exists
+  JS_BACK,
+  JS_START,
   JS_COUNT,
 };
-DATA char rawdeckD[] = {
-    JS_LSTICK,  // Ltouchpad
-    JS_RSTICK,  // Rtouchpad
-    -1,         // Ellipsis
-    JS_SOUTH,    JS_EAST,     JS_WEST,  JS_NORTH, JS_LBUMPER, JS_RBUMPER,
-    JS_LTRIGGER, JS_RTRIGGER, JS_LTINY, JS_RTINY, JS_SYSTEM,
+DATA char mappingD[JS_COUNT];
+
+enum {
+  JA_LX,
+  JA_LY,
+  JA_LTRIGGER,
+  JA_RX,
+  JA_RY,
+  JA_RTRIGGER,
+  JA_COUNT,
 };
-DATA char steam_virtualD[] = {
-    JS_SOUTH, JS_EAST,  JS_WEST, JS_NORTH,  JS_LBUMPER, JS_RBUMPER,
-    JS_LTINY, JS_RTINY, -1,      JS_LSTICK, JS_RSTICK,
-};
+DATA char ja_mappingD[JA_COUNT];
 
 STATIC int
 joystick_enabled()
@@ -58,6 +52,36 @@ joystick_count()
 {
   return SDL_NumJoysticks();
 }
+
+enum { BIND_VERBOSE = 0 };
+#define BUTTON(text, id)                                                   \
+  {                                                                        \
+    char* fa = strstr(mapping, "," text ":");                              \
+    if (BIND_VERBOSE) Log("%s", fa);                                       \
+    if (fa) {                                                              \
+      fa += AL(text) + 2;                                                  \
+      int kv = *fa - '0';                                                  \
+      if (BIND_VERBOSE) Log(text " is button %d (%c) -> %d", kv, *fa, id); \
+      if (kv < AL(mappingD))                                               \
+        mappingD[kv] = id;                                                 \
+      else                                                                 \
+        mappingD[kv] = -1;                                                 \
+    }                                                                      \
+  }
+#define AXIS(text, id)                                                     \
+  {                                                                        \
+    char* fa = strstr(mapping, "," text ":");                              \
+    if (BIND_VERBOSE) Log("%s", fa);                                       \
+    if (fa) {                                                              \
+      fa += AL(text) + 2;                                                  \
+      int kv = *fa - '0';                                                  \
+      if (BIND_VERBOSE) Log(text " is button %d (%c) -> %d", kv, *fa, id); \
+      if (kv < AL(ja_mappingD))                                            \
+        ja_mappingD[kv] = id;                                              \
+      else                                                                 \
+        ja_mappingD[kv] = -1;                                              \
+    }                                                                      \
+  }
 STATIC int
 joystick_assign(jsidx)
 {
@@ -76,46 +100,28 @@ joystick_assign(jsidx)
     char* mapping = SDL_GameControllerMappingForGUID(guid);
     if (mapping) {
       Log("GUID mapping: %s", mapping);
-      {
-        char* fa = strstr(mapping, ",a:");
-        Log("%s", fa);
-        if (fa) {
-          fa += 4;
-          int kv = *fa - '0';
-          Log("a is button %d (%c)", kv, *fa);
-          if (kv < AL(steam_virtualD)) steam_virtualD[kv] = 0;
-        }
-      }
-      {
-        char* fa = strstr(mapping, ",b:");
-        Log("%s", fa);
-        if (fa) {
-          fa += 4;
-          int kv = *fa - '0';
-          Log("b is button %d (%c)", kv, *fa);
-          if (kv < AL(steam_virtualD)) steam_virtualD[kv] = 1;
-        }
-      }
-      {
-        char* fa = strstr(mapping, ",x:");
-        Log("%s", fa);
-        if (fa) {
-          fa += 4;
-          int kv = *fa - '0';
-          Log("x is button %d (%c)", kv, *fa);
-          if (kv < AL(steam_virtualD)) steam_virtualD[kv] = 2;
-        }
-      }
-      {
-        char* fa = strstr(mapping, ",y:");
-        Log("%s", fa);
-        if (fa) {
-          fa += 4;
-          int kv = *fa - '0';
-          Log("y is button %d (%c)", kv, *fa);
-          if (kv < AL(steam_virtualD)) steam_virtualD[kv] = 3;
-        }
-      }
+      BUTTON("a", JS_SOUTH);
+      BUTTON("b", JS_EAST);
+      BUTTON("x", JS_NORTH);
+      BUTTON("y", JS_WEST);
+      BUTTON("lefttrigger", JS_LTRIGGER);
+      BUTTON("righttrigger", JS_RTRIGGER);
+      BUTTON("leftshoulder", JS_LSHOULDER);
+      BUTTON("rightshoulder", JS_RSHOULDER);
+      BUTTON("back", JS_BACK);
+      BUTTON("start", JS_START);
+
+      AXIS("leftx", JA_LX);
+      AXIS("lefty", JA_LY);
+      AXIS("lefttrigger", JA_LTRIGGER);
+      AXIS("rightx", JA_RX);
+      AXIS("righty", JA_RY);
+      AXIS("righttrigger", JA_RTRIGGER);
+
+      // Disable trigger as a button (prefer axis motion)
+      if (ja_mappingD[JA_LTRIGGER] >= 0) mappingD[JS_LTRIGGER] = -1;
+      if (ja_mappingD[JA_RTRIGGER] >= 0) mappingD[JS_RTRIGGER] = -1;
+
       SDL_free(mapping);
     }
     // TBD: hack for better play experience on big screens
@@ -123,7 +129,6 @@ joystick_assign(jsidx)
     // Center input
     jxD = jyD = .5;
   }
-  joystick_productD = product;
 }
 STATIC int
 joystick_dir()
@@ -152,32 +157,42 @@ int
 sdl_axis_motion(SDL_Event event)
 {
   int ret = 0;
-  if (JOYSTICK_VERBOSE)
-    Log("axis %d value %d", event.jaxis.axis, event.jaxis.value);
 
   if (JOYSTICK) {
     int axis = event.jaxis.axis;
 
+    if (JOYSTICK_VERBOSE)
+      Log("axis raw %d value %d", event.jaxis.axis, event.jaxis.value);
+
+    if (axis < AL(ja_mappingD))
+      axis = ja_mappingD[axis];
+    else
+      axis = -1;
+
     int ok = event.jaxis.value + 32768;
     float norm = (float)ok / (32767 * 2 + 1);
     if (JOYSTICK_VERBOSE) Log("norm %.03f", norm);
-    if (axis == 0) {
-      jxD = norm;
-    }
-    if (axis == 1) {
-      jyD = norm;
-    }
-    if (axis == 2 && joystick_productD == STEAM_VIRTUAL_GAMEPAD) {
-      // Log("ltrigger %d", event.jaxis.value);
-      int trigger = (event.jaxis.value > 10000);
-      if (trigger && !triggerD) ret = '#';
-      triggerD = trigger;
-    }
-    if (axis == 5 && joystick_productD == STEAM_VIRTUAL_GAMEPAD) {
-      // Log("rtrigger %d", event.jaxis.value);
-      int trigger = (event.jaxis.value > 10000);
-      if (trigger && !triggerD) ret = '!';
-      triggerD = trigger;
+
+    int trigger = (event.jaxis.value > 10000);
+    switch (axis) {
+      case JA_LX:
+        jxD = norm;
+        break;
+      case JA_LY:
+        jyD = norm;
+        break;
+      case JA_LTRIGGER:
+        if (trigger && !triggerD)
+          ret = '!';  // TBD: document change to repeat actuate
+        triggerD = trigger;
+        break;
+      case JA_RX:
+      case JA_RY:
+        break;
+      case JA_RTRIGGER:
+        if (trigger && !triggerD) ret = '-';  // TBD: document change to zoom
+        triggerD = trigger;
+        break;
     }
   }
   return ret;
@@ -216,27 +231,21 @@ joystick_game_button(button)
     case JS_EAST:  // movement
       return joystick_button(button == JS_SOUTH);
     case JS_NORTH:
-      return '.';
-    case JS_WEST:
       return CTRL('w');  // show advanced menu
-    case JS_LBUMPER:
+    case JS_WEST:
+      return '.';
+    case JS_LSHOULDER:
       return 'c';
-    case JS_RBUMPER:
+    case JS_RSHOULDER:
       return 'm';
     case JS_LTRIGGER:
-      return '#';
-    case JS_RTRIGGER:
       return '!';
-    case JS_LTINY:
-      return CTRL('z');
-    case JS_RTINY:
-      return 'p';
-    case JS_SYSTEM:
+    case JS_RTRIGGER:
       return '-';
-    case JS_LSTICK:
-      return 'i';
-    case JS_RSTICK:
-      return 'e';
+    case JS_BACK:
+      return CTRL('z');
+    case JS_START:
+      return 'p';
   }
 }
 int
@@ -247,9 +256,6 @@ joystick_menu_button(button)
     case JS_EAST:  // movement
       return overlay_dir(joystick_dir(), button == JS_SOUTH);
     case JS_WEST:
-    case JS_LSTICK:
-    case JS_RSTICK:
-      return ESCAPE;
     case JS_NORTH:
       return '-';  // sort shop/inven
   }
@@ -261,9 +267,9 @@ joystick_popup_button(button)
     case JS_NORTH:
     case JS_EAST:
     case JS_WEST:
-    case JS_LBUMPER:
-    case JS_RBUMPER:
-    case JS_RTINY:
+    case JS_LSHOULDER:
+    case JS_RSHOULDER:
+    case JS_START:
       return ESCAPE;
     case JS_SOUTH:
       return 'o';  // from death screen, go back to last game frame; reroll
@@ -282,21 +288,12 @@ sdl_joystick_event(SDL_Event event)
   int ret = 0;
   if (JOYSTICK) {
     uint32_t button = event.jbutton.button;
+    if (JOYSTICK_VERBOSE) Log("button event raw: %d", button);
 
-    switch (joystick_productD) {
-      case STEAM_VIRTUAL_GAMEPAD:
-        if (button < AL(steam_virtualD))
-          button = steam_virtualD[button];
-        else
-          button = -1;
-        break;
-      case STEAM_DECK_RAW:
-        if (button < AL(rawdeckD))
-          button = rawdeckD[button];
-        else
-          button = -1;
-        break;
-    }
+    if (button < AL(mappingD))
+      button = mappingD[button];
+    else
+      button = -1;
 
     if (mode == 0) {
       ret = joystick_game_button(button);
