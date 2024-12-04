@@ -1,12 +1,16 @@
 // Rufe.org LLC 2022-2024: ISC License
 
 enum { JOYSTICK_VERBOSE = 0 };
+enum { BIND_VERBOSE = 0 };
 
 // game controllers & joysticks
 DATA SDL_Joystick* joystick_ptrD;
 DATA float jxD;
 DATA float jyD;
 DATA int triggerD;
+
+enum { CHAR_LTRIGGER = 0 };
+enum { CHAR_RTRIGGER = '-' };  // gameplay: zoom, menu: sort
 
 enum {
   JS_SOUTH,
@@ -53,7 +57,6 @@ joystick_count()
   return SDL_NumJoysticks();
 }
 
-enum { BIND_VERBOSE = 0 };
 #define BUTTON(text, id)                                                   \
   {                                                                        \
     char* fa = strstr(mapping, "," text ":");                              \
@@ -104,10 +107,10 @@ joystick_assign(jsidx)
       BUTTON("b", JS_EAST);
       BUTTON("x", JS_NORTH);
       BUTTON("y", JS_WEST);
-      BUTTON("lefttrigger", JS_LTRIGGER);
-      BUTTON("righttrigger", JS_RTRIGGER);
       BUTTON("leftshoulder", JS_LSHOULDER);
       BUTTON("rightshoulder", JS_RSHOULDER);
+      mappingD[JS_LTRIGGER] = -1;
+      mappingD[JS_RTRIGGER] = -1;
       BUTTON("back", JS_BACK);
       BUTTON("start", JS_START);
 
@@ -118,9 +121,9 @@ joystick_assign(jsidx)
       AXIS("righty", JA_RY);
       AXIS("righttrigger", JA_RTRIGGER);
 
-      // Disable trigger as a button (prefer axis motion)
-      if (ja_mappingD[JA_LTRIGGER] >= 0) mappingD[JS_LTRIGGER] = -1;
-      if (ja_mappingD[JA_RTRIGGER] >= 0) mappingD[JS_RTRIGGER] = -1;
+      // Prefer axis motion; fall back to trigger buttons
+      if (ja_mappingD[JA_LTRIGGER] < 0) BUTTON("lefttrigger", JS_LTRIGGER);
+      if (ja_mappingD[JA_RTRIGGER] < 0) BUTTON("righttrigger", JS_RTRIGGER);
 
       SDL_free(mapping);
     }
@@ -141,15 +144,13 @@ joystick_dir()
   return (pp_keyD[n]);
 }
 STATIC int
-joystick_button(alt)
+joystick_button(button)
 {
   char c = key_dir(joystick_dir());
-  if (alt) {
-    if (c == ' ')
-      c = 'a';
-    else
-      c &= ~0x20;  // run
-  }
+  if (c == ' ')
+    c = (button == JS_SOUTH) ? 'a' : '.';
+  else if (button == JS_SOUTH)
+    c &= ~0x20;  // run
   return c;
 }
 
@@ -182,15 +183,14 @@ sdl_axis_motion(SDL_Event event)
         jyD = norm;
         break;
       case JA_LTRIGGER:
-        if (trigger && !triggerD)
-          ret = '!';  // TBD: document change to repeat actuate
+        if (trigger && !triggerD) ret = CHAR_LTRIGGER;
         triggerD = trigger;
         break;
       case JA_RX:
       case JA_RY:
         break;
       case JA_RTRIGGER:
-        if (trigger && !triggerD) ret = '-';  // TBD: document change to zoom
+        if (trigger && !triggerD) ret = CHAR_RTRIGGER;
         triggerD = trigger;
         break;
     }
@@ -229,23 +229,23 @@ joystick_game_button(button)
   switch (button) {
     case JS_SOUTH:
     case JS_EAST:  // movement
-      return joystick_button(button == JS_SOUTH);
+      return joystick_button(button);
     case JS_NORTH:
-      return CTRL('w');  // show advanced menu
+      return 'p';
     case JS_WEST:
-      return '.';
+      return '!';
     case JS_LSHOULDER:
       return 'c';
     case JS_RSHOULDER:
       return 'm';
     case JS_LTRIGGER:
-      return '!';
+      return CHAR_LTRIGGER;
     case JS_RTRIGGER:
-      return '-';
+      return CHAR_RTRIGGER;
     case JS_BACK:
       return CTRL('z');
     case JS_START:
-      return 'p';
+      return CTRL('w');  // show advanced menu
   }
 }
 int
@@ -255,9 +255,8 @@ joystick_menu_button(button)
     case JS_SOUTH:
     case JS_EAST:  // movement
       return overlay_dir(joystick_dir(), button == JS_SOUTH);
-    case JS_WEST:
-    case JS_NORTH:
-      return '-';  // sort shop/inven
+    default:
+      return ESCAPE;
   }
 }
 int
@@ -279,29 +278,32 @@ int
 sdl_joystick_event(SDL_Event event)
 {
   USE(mode);
+  int button = event.jbutton.button;
+  int state = event.jbutton.state;
+
   if (JOYSTICK_VERBOSE) {
     char* statename[] = {"release", "press"};
-    Log("button %d %s mode %d", event.jbutton.button,
-        statename[event.jbutton.state], mode);
+    Log("button %d %s mode %d", button, statename[state], mode);
   }
 
   int ret = 0;
   if (JOYSTICK) {
-    uint32_t button = event.jbutton.button;
     if (JOYSTICK_VERBOSE) Log("button event raw: %d", button);
 
-    if (button < AL(mappingD))
+    if (button >= 0 && button < AL(mappingD))
       button = mappingD[button];
     else
       button = -1;
 
-    if (mode == 0) {
-      ret = joystick_game_button(button);
-      if (ret > ' ' && msg_moreD) ret = ' ';
-    } else if (mode == 1) {
-      ret = joystick_menu_button(button);
-    } else if (mode == 2) {
-      ret = joystick_popup_button(button);
+    if (button >= 0) {
+      if (mode == 0) {
+        ret = joystick_game_button(button);
+        if (ret > ' ' && msg_moreD) ret = ' ';
+      } else if (mode == 1) {
+        ret = joystick_menu_button(button);
+      } else if (mode == 2) {
+        ret = joystick_popup_button(button);
+      }
     }
   }
   return ret;
