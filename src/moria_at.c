@@ -10959,8 +10959,9 @@ saveslot_race_reroll(saveslot, race)
   do {
     if (KEYBOARD && c == ' ') c = 'o';
     if (c == 'o') py_race_class_seed_init(race, saveslot, platformD.seed());
-    if (PC && !using_selection)
-      msg_hint(AP("(SPACEBAR: reroll, ESCAPE: accept)"));
+    if (PC)
+      using_selection ? msg_hint(AP("(LBUTTON: accept | RBUTTON: reroll)"))
+                      : msg_hint(AP("(SPACEBAR: reroll, ESCAPE: accept)"));
     else
       msg_hint(AP("(LBUTTON: reroll | RBUTTON: accept)"));
     c = show_character(1, 1);
@@ -11084,10 +11085,12 @@ py_saveslot_select()
       BufMsg(overlay, "v) View %s media", other_media);
     }
 
-    if (PC && !using_selection)
-      msg_hint(AP(" (SHIFT: delete character)"));
+    if (PC)
+      using_selection ? msg_hint(AP("(LBUTTON: play | RBUTTON: delete)"))
+                      : msg_hint(AP("(SHIFT: delete character)"));
     else
       msg_hint(AP("(LBUTTON: delete | RBUTTON: play)"));
+
     c = CLOBBER_MSG("Play which class?");
     // Privacy policy
     if (c == 'p') {
