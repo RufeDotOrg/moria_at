@@ -336,4 +336,7 @@ joystick_init(refcount)
               label_button_order ? "1" : "0");
 
   SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+
+  int using_selection = (joystick_count() > 0);
+  platformD.selection = using_selection ? touch_selection : noop;
 }
