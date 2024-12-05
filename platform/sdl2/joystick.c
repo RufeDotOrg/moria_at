@@ -152,7 +152,7 @@ joystick_button(button)
   char c = key_dir(joystick_dir());
   if (c == ' ')
     c = (button == JS_SOUTH) ? 'a' : '.';
-  else if (button == JS_SOUTH)
+  else if (button == JS_EAST)
     c &= ~0x20;  // run
   return c;
 }
@@ -249,6 +249,8 @@ joystick_game_button(button)
       return CTRL('z');
     case JS_START:
       return CTRL('w');  // show advanced menu
+    default:
+      return 0;
   }
 }
 int
@@ -257,24 +259,30 @@ joystick_menu_button(button)
   switch (button) {
     case JS_SOUTH:
     case JS_EAST:  // movement
-      return overlay_dir(joystick_dir(), button == JS_SOUTH);
-    default:
+      return overlay_dir(joystick_dir(), button == JS_EAST);
+    case JS_NORTH:
+    case JS_WEST:
       return ESCAPE;
+    default:
+      return 0;
   }
 }
 int
 joystick_popup_button(button)
 {
   switch (button) {
-    case JS_WEST:
-    case JS_EAST:
-    case JS_NORTH:
-    case JS_LSHOULDER:
-    case JS_RSHOULDER:
-    case JS_START:
-      return ESCAPE;
     case JS_SOUTH:
+      return ESCAPE;
+    case JS_WEST:
+      return 'p';
+    case JS_LSHOULDER:
+      return 'c';
+    case JS_EAST:
       return 'o';  // from death screen, go back to last game frame; reroll
+    case JS_BACK:
+      return CTRL('z');
+    default:
+      return 0;
   }
 }
 int
@@ -298,15 +306,13 @@ sdl_joystick_event(SDL_Event event)
     else
       button = -1;
 
-    if (button >= 0) {
-      if (mode == 0) {
-        ret = joystick_game_button(button);
-        if (ret > ' ' && msg_moreD) ret = ' ';
-      } else if (mode == 1) {
-        ret = joystick_menu_button(button);
-      } else if (mode == 2) {
-        ret = joystick_popup_button(button);
-      }
+    if (mode == 0) {
+      ret = joystick_game_button(button);
+      if (ret > ' ' && msg_moreD) ret = ' ';
+    } else if (mode == 1) {
+      ret = joystick_menu_button(button);
+    } else if (mode == 2) {
+      ret = joystick_popup_button(button);
     }
   }
   return ret;
