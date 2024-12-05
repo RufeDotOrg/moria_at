@@ -325,3 +325,15 @@ sdl_joystick_device(SDL_Event event)
     }
   }
 }
+
+STATIC int
+joystick_init(refcount)
+{
+  MUSE(global, label_button_order);
+  while (refcount--) SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+
+  SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS,
+              label_button_order ? "1" : "0");
+
+  SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+}

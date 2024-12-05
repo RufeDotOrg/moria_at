@@ -514,9 +514,6 @@ platform_pregame()
         log_hint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
         log_hint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
         log_hint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS);
-
-        SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS,
-                    globalD.stable_button_order ? "0" : "1");
       }
     } else {
       SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
