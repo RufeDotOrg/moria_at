@@ -17,8 +17,8 @@ enum { MAX_AXIS = 16 };
 enum {
   JS_SOUTH,
   JS_EAST,
-  JS_NORTH,
   JS_WEST,
+  JS_NORTH,
   JS_LSHOULDER,
   JS_RSHOULDER,
   JS_LTRIGGER,  // Disabled if AXIS trigger support exists
@@ -111,8 +111,8 @@ joystick_assign(jsidx)
       Log("GUID mapping: %s", mapping);
       BUTTON("a", JS_SOUTH);
       BUTTON("b", JS_EAST);
-      BUTTON("x", JS_NORTH);
-      BUTTON("y", JS_WEST);
+      BUTTON("x", JS_WEST);
+      BUTTON("y", JS_NORTH);
       BUTTON("leftshoulder", JS_LSHOULDER);
       BUTTON("rightshoulder", JS_RSHOULDER);
       BUTTON("back", JS_BACK);
@@ -233,9 +233,9 @@ joystick_game_button(button)
     case JS_SOUTH:
     case JS_EAST:  // movement
       return joystick_button(button);
-    case JS_NORTH:
-      return 'p';
     case JS_WEST:
+      return 'p';
+    case JS_NORTH:
       return '!';
     case JS_LSHOULDER:
       return 'c';
@@ -266,9 +266,9 @@ int
 joystick_popup_button(button)
 {
   switch (button) {
-    case JS_NORTH:
-    case JS_EAST:
     case JS_WEST:
+    case JS_EAST:
+    case JS_NORTH:
     case JS_LSHOULDER:
     case JS_RSHOULDER:
     case JS_START:
