@@ -1,7 +1,7 @@
 // Rufe.org LLC 2022-2024: ISC License
 
 enum { JOYSTICK_VERBOSE = 0 };
-enum { BIND_VERBOSE = 0 };
+enum { BIND_VERBOSE = 1 };
 
 // game controllers & joysticks
 DATA SDL_Joystick* joystick_ptrD;
@@ -61,7 +61,7 @@ joystick_count()
 
 #define BUTTON(text, id)                                                   \
   {                                                                        \
-    char* fa = strstr(mapping, "," text ":");                              \
+    char* fa = strstr(mapping, "," text ":b");                             \
     if (BIND_VERBOSE) Log("%s", fa);                                       \
     if (fa) {                                                              \
       fa += AL(text) + 2;                                                  \
@@ -72,7 +72,7 @@ joystick_count()
   }
 #define AXIS(text, id)                                                     \
   {                                                                        \
-    char* fa = strstr(mapping, "," text ":");                              \
+    char* fa = strstr(mapping, "," text ":a");                             \
     if (BIND_VERBOSE) Log("%s", fa);                                       \
     if (fa) {                                                              \
       fa += AL(text) + 2;                                                  \
