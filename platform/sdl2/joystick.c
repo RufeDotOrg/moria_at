@@ -11,6 +11,8 @@ DATA int triggerD;
 
 enum { CHAR_LTRIGGER = 0 };
 enum { CHAR_RTRIGGER = '-' };  // gameplay: zoom, menu: sort
+enum { MAX_MAPPING = 64 };
+enum { MAX_AXIS = 16 };
 
 enum {
   JS_SOUTH,
@@ -25,7 +27,7 @@ enum {
   JS_START,
   JS_COUNT,
 };
-DATA char mappingD[JS_COUNT];
+DATA char mappingD[MAX_MAPPING];
 
 enum {
   JA_LX,
@@ -36,7 +38,7 @@ enum {
   JA_RTRIGGER,
   JA_COUNT,
 };
-DATA char ja_mappingD[JA_COUNT];
+DATA char ja_mappingD[MAX_AXIS];
 
 STATIC int
 joystick_enabled()
@@ -65,10 +67,7 @@ joystick_count()
       fa += AL(text) + 2;                                                  \
       int kv = parse_num(fa);                                              \
       if (BIND_VERBOSE) Log(text " is button %d (%c) -> %d", kv, *fa, id); \
-      if (kv < AL(mappingD))                                               \
-        mappingD[kv] = id;                                                 \
-      else                                                                 \
-        mappingD[kv] = -1;                                                 \
+      if (kv < AL(mappingD)) mappingD[kv] = id;                            \
     }                                                                      \
   }
 #define AXIS(text, id)                                                     \
@@ -79,16 +78,23 @@ joystick_count()
       fa += AL(text) + 2;                                                  \
       int kv = parse_num(fa);                                              \
       if (BIND_VERBOSE) Log(text " is button %d (%c) -> %d", kv, *fa, id); \
-      if (kv < AL(ja_mappingD))                                            \
-        ja_mappingD[kv] = id;                                              \
-      else                                                                 \
-        ja_mappingD[kv] = -1;                                              \
+      if (kv < AL(ja_mappingD)) ja_mappingD[kv] = id;                      \
     }                                                                      \
   }
+STATIC int
+find_axis(ja)
+{
+  for (int it = 0; it < AL(ja_mappingD); ++it)
+    if (ja_mappingD[it] == ja) return 1;
+  return 0;
+}
 STATIC int
 joystick_assign(jsidx)
 {
   if (joystick_ptrD) SDL_JoystickClose(joystick_ptrD);
+
+  memset(mappingD, -1, sizeof(mappingD));
+  memset(ja_mappingD, -1, sizeof(ja_mappingD));
 
   void* joystick = 0;
   if (jsidx >= 0) joystick = SDL_JoystickOpen(jsidx);
@@ -109,8 +115,6 @@ joystick_assign(jsidx)
       BUTTON("y", JS_WEST);
       BUTTON("leftshoulder", JS_LSHOULDER);
       BUTTON("rightshoulder", JS_RSHOULDER);
-      mappingD[JS_LTRIGGER] = -1;
-      mappingD[JS_RTRIGGER] = -1;
       BUTTON("back", JS_BACK);
       BUTTON("start", JS_START);
 
@@ -121,9 +125,8 @@ joystick_assign(jsidx)
       AXIS("righty", JA_RY);
       AXIS("righttrigger", JA_RTRIGGER);
 
-      // Prefer axis motion; fall back to trigger buttons
-      if (ja_mappingD[JA_LTRIGGER] < 0) BUTTON("lefttrigger", JS_LTRIGGER);
-      if (ja_mappingD[JA_RTRIGGER] < 0) BUTTON("righttrigger", JS_RTRIGGER);
+      if (!find_axis(JA_LTRIGGER)) BUTTON("lefttrigger", JS_LTRIGGER);
+      if (!find_axis(JA_RTRIGGER)) BUTTON("righttrigger", JS_RTRIGGER);
 
       SDL_free(mapping);
     }
