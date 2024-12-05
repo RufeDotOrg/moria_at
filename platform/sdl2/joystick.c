@@ -63,7 +63,7 @@ joystick_count()
     if (BIND_VERBOSE) Log("%s", fa);                                       \
     if (fa) {                                                              \
       fa += AL(text) + 2;                                                  \
-      int kv = *fa - '0';                                                  \
+      int kv = parse_num(fa);                                              \
       if (BIND_VERBOSE) Log(text " is button %d (%c) -> %d", kv, *fa, id); \
       if (kv < AL(mappingD))                                               \
         mappingD[kv] = id;                                                 \
@@ -77,7 +77,7 @@ joystick_count()
     if (BIND_VERBOSE) Log("%s", fa);                                       \
     if (fa) {                                                              \
       fa += AL(text) + 2;                                                  \
-      int kv = *fa - '0';                                                  \
+      int kv = parse_num(fa);                                              \
       if (BIND_VERBOSE) Log(text " is button %d (%c) -> %d", kv, *fa, id); \
       if (kv < AL(ja_mappingD))                                            \
         ja_mappingD[kv] = id;                                              \

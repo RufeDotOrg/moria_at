@@ -77,3 +77,20 @@ djb2(uint64_t value, const void* buffer, uint64_t bytes)
   }
   return value;
 }
+XX int
+parse_num(char* str)
+{
+  uint8_t digit[2];
+
+  for (int it = 0; it < AL(digit); ++it) digit[it] = str[it] - '0';
+
+  int ret = 0;
+  for (int it = 0; it < AL(digit); ++it) {
+    int d = digit[it];
+    if (d < 10) {
+      ret *= 10;
+      ret += d;
+    }
+  }
+  return ret;
+}
