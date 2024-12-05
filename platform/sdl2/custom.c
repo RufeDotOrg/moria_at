@@ -261,7 +261,7 @@ custom_pregame()
 
   font_reset();
 
-  if (JOYSTICK) SDL_Init(SDL_INIT_JOYSTICK);
+  if (JOYSTICK) joystick_init(0);
 
   // Hardware dependent "risky" initialization complete!
   if (COSMO) phaseD = PHASE_GAME;
@@ -1709,6 +1709,11 @@ feature_menu()
     line = 'h' - 'a';
     BufMsg(overlay, "h) hand-swap user interface (%s)",
            opt[globalD.hand_swap != 0]);
+    if (JOYSTICK) {
+      line = 'l' - 'a';
+      BufMsg(overlay, "l) label button order for controllers: %d",
+             globalD.label_button_order);
+    }
     line = 'm' - 'a';
     BufMsg(overlay, "m) magnification scale (%d x)", 1 << globalD.zoom_factor);
     line = 'r' - 'a';
@@ -1718,13 +1723,6 @@ feature_menu()
       BufMsg(overlay,
              "r) refresh / video sync (%s) | %d fps of %d display claimed",
              opt[globalD.vsync != 0], vsync_rateD, refresh_rateD);
-    }
-    if (JOYSTICK) {
-      line = 's' - 'a';
-      BufMsg(
-          overlay,
-          "s) stable button order for controllers: %s (requires game restart)",
-          globalD.stable_button_order ? "on" : "off");
     }
     if (PC) {
       line = 't' - 'a';
@@ -1759,14 +1757,15 @@ feature_menu()
         INVERT(globalD.hand_swap);
         platformD.orientation(0);
         break;
+      case 'l':
+        INVERT(globalD.label_button_order);
+        joystick_init(1);
+        break;
       case 'm':
         globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;
         break;
       case 'r':
         platformD.vsync(INVERT(globalD.vsync));
-        break;
-      case 's':
-        INVERT(globalD.stable_button_order);
         break;
       case 't':
         INVERT(globalD.small_text);
