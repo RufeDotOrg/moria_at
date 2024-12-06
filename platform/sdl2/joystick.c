@@ -1,7 +1,7 @@
 // Rufe.org LLC 2022-2024: ISC License
 
 enum { JOYSTICK_VERBOSE = 0 };
-enum { BIND_VERBOSE = 1 };
+enum { BIND_VERBOSE = 0 };
 
 // game controllers & joysticks
 DATA SDL_Joystick* joystick_ptrD;
