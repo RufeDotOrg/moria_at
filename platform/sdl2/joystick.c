@@ -151,7 +151,7 @@ joystick_button(button)
 {
   char c = key_dir(joystick_dir());
   if (c == ' ')
-    c = (button == JS_SOUTH) ? 'a' : '.';
+    c = (button == JS_EAST) ? 'a' : '.';
   else if (button == JS_EAST)
     c &= ~0x20;  // run
   return c;
