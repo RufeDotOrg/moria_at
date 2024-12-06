@@ -14093,6 +14093,7 @@ dungeon()
               case 'w':
                 py_offhand();
                 break;
+              case '0':
               case 'x':
                 py_examine();
                 break;

@@ -9,7 +9,7 @@ DATA float jxD;
 DATA float jyD;
 DATA int triggerD;
 
-enum { CHAR_LTRIGGER = 'x' };
+enum { CHAR_LTRIGGER = '0' };
 enum { CHAR_RTRIGGER = '-' };  // gameplay: zoom, menu: sort
 enum { MAX_MAPPING = 64 };
 enum { MAX_AXIS = 16 };
