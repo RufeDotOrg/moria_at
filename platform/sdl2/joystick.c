@@ -299,20 +299,22 @@ sdl_joystick_event(SDL_Event event)
 
   int ret = 0;
   if (JOYSTICK) {
-    if (JOYSTICK_VERBOSE) Log("button event raw: %d", button);
+    if (state) {
+      if (button >= 0 && button < AL(mappingD))
+        button = mappingD[button];
+      else
+        button = -1;
 
-    if (button >= 0 && button < AL(mappingD))
-      button = mappingD[button];
-    else
-      button = -1;
-
-    if (mode == 0) {
-      ret = joystick_game_button(button);
-      if (ret > ' ' && msg_moreD) ret = ' ';
-    } else if (mode == 1) {
-      ret = joystick_menu_button(button);
-    } else if (mode == 2) {
-      ret = joystick_popup_button(button);
+      if (mode == 0) {
+        ret = joystick_game_button(button);
+        if (ret > ' ' && msg_moreD) ret = ' ';
+      } else if (mode == 1) {
+        ret = joystick_menu_button(button);
+      } else if (mode == 2) {
+        ret = joystick_popup_button(button);
+      }
+    } else {
+      if (blipD) ret = ' ';
     }
   }
   return ret;
