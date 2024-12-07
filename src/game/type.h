@@ -48,3 +48,9 @@ struct platformS {
   fn dpad;
 };
 DATA struct platformS platformD;
+
+struct __attribute__((aligned(4 * 1024))) padS {
+  char fourcc[4];
+  int width;
+  int height;
+};

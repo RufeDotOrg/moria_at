@@ -70,6 +70,7 @@ enum { PC = 1 };
 enum { MOTION = 0 };  //(MOUSE || TOUCH) };
 enum { DPAD = (TOUCH || JOYSTICK) };
 enum { GFX = 1 };
+enum { SCREENSHOT = 0 };
 
 // render.c
 DATA struct SDL_Window* windowD;
@@ -272,6 +273,39 @@ render_init()
 
   return 1;
 }
+STATIC int
+platform_screenshot()
+{
+  int olist[] = {SDL_ORIENTATION_LANDSCAPE, SDL_ORIENTATION_PORTRAIT};
+  char* fname[] = {"landscape.nmg", "portrait.nmg"};
+  USE(renderer);
+
+  for (int it = 0; it < AL(olist); ++it) {
+    platformD.orientation(olist[it]);
+    platformD.draw();
+    SDL_SetRenderTarget(renderer, layoutD);
+    int sz = layout_rectD.w * layout_rectD.h * 1.5f;
+    void* pixels = SDL_malloc(sz);
+    int pitch = layout_rectD.w;
+
+    memset(pixels, 0, sz);
+    Log("layoutD %dx%d", layout_rectD.w, layout_rectD.h);
+    Log("sz %d pixels %p pitch %d", sz, pixels, pitch);
+    if (pixels) {
+      SDL_RenderReadPixels(renderer, 0, SDL_PIXELFORMAT_NV12, pixels, pitch);
+      struct padS header = {"nmg", layout_rectD.w, layout_rectD.h};
+      SDL_RWops* f = SDL_RWFromFile(fname[it], "wb");
+      if (f) {
+        SDL_RWwrite(f, &header, sizeof(header), 1);
+        SDL_RWwrite(f, pixels, sz, 1);
+        SDL_RWclose(f);
+      }
+      SDL_free(pixels);
+    }
+  }
+
+  platformD.orientation(0);
+}
 int
 platform_draw()
 {
@@ -420,6 +454,10 @@ sdl_pump()
       case SDL_KEYDOWN:
         // case SDL_KEYUP: // (optional)
         if (KEYBOARD) ret = sdl_keyboard_event(event);
+        if (SCREENSHOT && (event.key.keysym.mod & KMOD_CTRL) > 0 &&
+            (event.key.keysym.mod & KMOD_ALT) > 0 &&
+            event.key.keysym.sym == 's')
+          platform_screenshot();
         break;
       case SDL_MOUSEMOTION:
       case SDL_FINGERMOTION:
