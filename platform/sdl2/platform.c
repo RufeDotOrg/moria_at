@@ -572,6 +572,9 @@ platform_pregame()
 
     SDL_Init(scope);
 
+    SDL_version sv;
+    SDL_GetVersion(&sv);
+    Log("SDL version %d.%d.%d", V3b(&sv));
     if (!render_init()) return 1;
   }
 
