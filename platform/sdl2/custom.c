@@ -53,13 +53,6 @@ DATA int phaseD;
 
 enum { STRLEN_MORE = AL(moreD) - 1 };
 
-#define RF(r, framing)                                                    \
-  (rect_t)                                                                \
-  {                                                                       \
-    .x = r.x - (framing), .y = r.y - (framing), .w = r.w + 2 * (framing), \
-    .h = r.h + 2 * (framing),                                             \
-  }
-
 static SDL_Point
 point_by_spriteid(uint32_t id)
 {
@@ -510,20 +503,21 @@ rect_t r;
 
   return 0;
 }
-void rect_innerframe(r) rect_t r;
+void
+framing_base_step(rect_t frame, int base, int step)
 {
+  int list[] = {base, base + step, base + step * 3};
   SDL_SetRenderDrawColor(rendererD, V4b(&whiteD));
-  SDL_RenderDrawRect(rendererD, &r);
-  SDL_RenderDrawRect(rendererD, &RF(r, -1));
-  SDL_RenderDrawRect(rendererD, &RF(r, -3));
-}
-void rect_frame(r, scale) rect_t r;
-{
-  int i = scale * 3;
-  SDL_SetRenderDrawColor(rendererD, V4b(&whiteD));
-  SDL_RenderDrawRect(rendererD, &RF(r, i));
-  SDL_RenderDrawRect(rendererD, &RF(r, i + 1));
-  SDL_RenderDrawRect(rendererD, &RF(r, i + 3));
+  for (int it = 0; it < AL(list); ++it) {
+    int sz = list[it];
+    rect_t rect = {
+        .x = frame.x - (sz),
+        .y = frame.y - (sz),
+        .w = frame.w + 2 * (sz),
+        .h = frame.h + 2 * (sz),
+    };
+    SDL_RenderDrawRect(rendererD, &rect);
+  }
 }
 int
 vitalstat_text()
@@ -576,7 +570,7 @@ vitalstat_text()
       if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
     }
 
-    rect_innerframe(grect);
+    framing_base_step(grect, 0, -1);
   }
   return 0;
 }
@@ -795,7 +789,7 @@ landscape_text(mode)
       font_reset();
 
       SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-      if (small_text) rect_frame(rect, 1);
+      if (small_text) framing_base_step(rect, 1, 1);
     }
 
     if (msg_more || TEST_UI) {
@@ -820,8 +814,8 @@ landscape_text(mode)
       render_monofont_string(renderer, &fontD, AP(moreD), p2);
       SDL_Point p3 = {rect3.x, rect3.y};
       render_monofont_string(renderer, &fontD, AP(moreD), p3);
-      if (small_text) rect_frame(rect2, 1);
-      if (small_text) rect_frame(rect3, 1);
+      if (small_text) framing_base_step(rect2, 1, 1);
+      if (small_text) framing_base_step(rect3, 1, 1);
     }
 
     font_scaleD = 1.0f;
@@ -1083,7 +1077,7 @@ draw_game()
           SYMMAP_HEIGHT,
       };
       SDL_RenderCopy(rendererD, mmtexture, &panel, &grect);
-      rect_frame(grect, 3);
+      framing_base_step(grect, 9, 1);
     }
 
     if (show_game) {
@@ -1197,13 +1191,13 @@ draw_menu(mode, using_selection)
 
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
-  if (is_text) rect_innerframe(grect);
+  if (is_text) framing_base_step(grect, 0, -1);
 
   if (TOUCH) {
     if (is_death) {
       AUSE(grect, GR_HISTORY);
       if (ui_textureD) SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
-      rect_frame(grect, 1);
+      framing_base_step(grect, 1, 1);
     }
   }
 }
@@ -1264,7 +1258,7 @@ custom_draw()
       {
         AUSE(grect, GR_PAD);
         SDL_RenderCopy(rendererD, tptextureD, 0, &grect);
-        rect_frame(grect, 0);
+        framing_base_step(grect, 0, 1);
       }
 
       if (JOYSTICK) {  // dpad joystick
@@ -1294,7 +1288,7 @@ custom_draw()
         if (ui_textureD && mode == 0) {
           AUSE(grect, GR_HISTORY);
           SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
-          rect_frame(grect, 1);
+          framing_base_step(grect, 1, 1);
         }
         if (mode == 0) {
           AUSE(grect, GR_LOCK);
@@ -1321,7 +1315,7 @@ custom_draw()
             dest.x += (grect.w - dest.w) / 2;
             SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
           }
-          rect_frame(grect, 1);
+          framing_base_step(grect, 1, 1);
         }
       }
     }
