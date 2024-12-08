@@ -7,6 +7,7 @@ enum { MOD_SAVECHAR = 0 };
 #include "platform/platform.c"
 
 enum { PRIVACY = !KEYBOARD };
+enum { NOTES = !PC };
 enum { HACK = 0 };
 enum { RESEED = 0 };
 enum { TEST_CAVEGEN = 0 };
@@ -11001,6 +11002,23 @@ saveslot_creation(int saveslot)
   return 0;
 }
 int
+py_notes_menu()
+{
+  int line = 0;
+  BufMsg(overlay, "Input: 2nd finger left button changed to text history");
+  BufMsg(overlay, "     | menu button replaces text history button");
+  BufMsg(overlay, "     | inventory dpad left toggles drop mode.");
+  BufMsg(overlay, "     | equipment dpad right toggles drop mode.");
+  BufMsg(overlay,
+         "Gameplay: Ring of Koeneke replaces Ring of Sustain Charisma");
+  BufMsg(overlay, "        | Regeneration adds a bonus of +40 Max HP");
+  BufMsg(overlay, "Interface: dpad is flat shaded");
+  BufMsg(overlay, "         | greyscale option applies dpad and buttons");
+
+  CLOBBER_MSG("~2024~ Patch Q4");
+  return 0;
+}
+int
 py_saveslot_select()
 {
   struct summaryS in_summary[AL(classD)];
@@ -11057,6 +11075,10 @@ py_saveslot_select()
       line = 'p' - 'a';
       BufMsg(overlay, "p) Privacy policy (open in browser)");
     }
+    if (NOTES) {
+      line = 'r' - 'a';
+      BufMsg(overlay, "r) Release notes");
+    }
 
     if (has_external) {
       if (!using_external) {
@@ -11094,6 +11116,10 @@ py_saveslot_select()
     // Privacy policy
     if (c == 'p') {
       SDL_OpenURL("https://rufe.org/moria/privacy.html");
+      continue;
+    }
+    if (c == 'r') {
+      py_notes_menu();
       continue;
     }
     // Deletion
