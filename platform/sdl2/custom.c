@@ -316,14 +316,14 @@ portrait_layout()
       MMSCALE * MAX_WIDTH,
       MMSCALE * MAX_HEIGHT,
   };
-  grectD[GR_HISTORY] = (rect_t){
+  grectD[GR_MENU] = (rect_t){
       layout_rect.w - 128 - margin - 4 * FWIDTH,
       FHEIGHT / 2,
       128,
       128,
   };
-  grectD[GR_LOCK] = grectD[GR_HISTORY];
-  grectD[GR_LOCK].x -= 2 * grectD[GR_HISTORY].w;
+  grectD[GR_LOCK] = grectD[GR_MENU];
+  grectD[GR_LOCK].x -= 2 * grectD[GR_MENU].w;
 
   grectD[GR_STAT] = (rect_t){
       margin,
@@ -391,14 +391,14 @@ landscape_layout()
       MMSCALE * MAX_WIDTH,
       MMSCALE * MAX_HEIGHT,
   };
-  grectD[GR_HISTORY] = (rect_t){
+  grectD[GR_MENU] = (rect_t){
       layout_rect.w - size / 2 - 96 / 2,
       layout_rect.h / 2 - 128 - FHEIGHT,
       96,
       128,
   };
-  grectD[GR_LOCK] = grectD[GR_HISTORY];
-  grectD[GR_LOCK].x -= grectD[GR_HISTORY].w * 2;
+  grectD[GR_LOCK] = grectD[GR_MENU];
+  grectD[GR_LOCK].x -= grectD[GR_MENU].w * 2;
 
   grectD[GR_STAT] = (rect_t){
       0,
@@ -1125,13 +1125,11 @@ draw_menu(mode, using_selection)
   char* msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
   int is_text;
-  int is_death = 0;
   AUSE(grect, GR_OVERLAY);
 
   if (mode == 1) {
     is_text = 1;
   } else {
-    is_death = (screen_submodeD == 0);
     is_text = (screen_submodeD != 0);
     if (screen_submodeD == 2) {
       grect = grectD[GR_WIDESCREEN];
@@ -1192,14 +1190,6 @@ draw_menu(mode, using_selection)
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
   if (is_text) framing_base_step(grect, 0, -1);
-
-  if (TOUCH) {
-    if (is_death) {
-      AUSE(grect, GR_HISTORY);
-      if (ui_textureD) SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
-      framing_base_step(grect, 1, 1);
-    }
-  }
 }
 // mode_change is triggered by interactive UI navigation
 // may edit row/col selection to make the interface feel "smart"
@@ -1286,7 +1276,7 @@ custom_draw()
         }
 
         if (ui_textureD && mode == 0) {
-          AUSE(grect, GR_HISTORY);
+          AUSE(grect, GR_MENU);
           SDL_RenderCopy(renderer, ui_textureD, NULL, &grect);
           framing_base_step(grect, 1, 1);
         }

@@ -579,7 +579,6 @@ show_history()
   }
 
   int count = AL(screenD) - line;
-  blipD = 1;
   return CLOBBER_MSG("Message History (%d)", count);
 }
 int
@@ -14085,7 +14084,7 @@ dungeon()
                 py_help();
                 break;
               case 'd':
-                c = '#';
+                py_drop();
                 break;
               case 'e':
                 py_actuate(&y, &x, 'e');
@@ -14121,9 +14120,6 @@ dungeon()
               break;
             case '@':
               py_menu();
-              break;
-            case '#':
-              py_drop();
               break;
             case ',':
               py_pickup(y, x, TRUE);

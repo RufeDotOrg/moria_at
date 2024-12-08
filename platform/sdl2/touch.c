@@ -1,7 +1,7 @@
 // Rufe.org LLC 2022-2024: ISC License
 enum {
   TOUCH_NONE,
-  TOUCH_HISTORY,
+  TOUCH_MENU,
   TOUCH_LOCK,
   TOUCH_STAT,
   TOUCH_MAP,
@@ -18,7 +18,7 @@ enum {
   GR_BUTTON2,
   GR_GAMEPLAY,
   GR_MINIMAP,
-  GR_HISTORY,
+  GR_MENU,
   GR_LOCK,
   GR_STAT,
   GR_OVERLAY,
@@ -125,9 +125,9 @@ touch_by_xy(x, y)
     }
   }
   {
-    AUSE(grect, GR_HISTORY);
+    AUSE(grect, GR_MENU);
     if (SDL_PointInRect(&tpp, &grect)) {
-      return TOUCH_HISTORY;
+      return TOUCH_MENU;
     }
   }
   {
@@ -225,8 +225,8 @@ fingerdown_xy_mode(x, y, mode)
       }
     } else if (touch) {
       switch (touch) {
-        case TOUCH_HISTORY:
-          return 'p';
+        case TOUCH_MENU:
+          return CTRL('w');
         case TOUCH_LOCK:
           orientation_lock_toggle();
           return CTRL('d');
@@ -239,7 +239,7 @@ fingerdown_xy_mode(x, y, mode)
         case TOUCH_GAMEPLAY:
           return finger ? '-' : 'O';
         case TOUCH_LB:
-          return finger ? '#' : 'a';
+          return finger ? 'p' : 'a';
         case TOUCH_RB:
           return finger ? '!' : '.';
       }
@@ -278,10 +278,9 @@ fingerdown_xy_mode(x, y, mode)
     if (touch == TOUCH_GAMEPLAY && finger) return '-';
   }
   if (mode == 2) {
-    if (touch == TOUCH_LB) return 'o';
+    if (touch == TOUCH_LB) return finger ? 'p' : 'o';
     if (touch == TOUCH_RB) return ESCAPE;
     if (touch == TOUCH_STAT) return 'c';
-    if (touch == TOUCH_HISTORY) return 'p';
     if (touch < 99) return ' ';
   }
 
