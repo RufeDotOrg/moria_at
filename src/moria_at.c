@@ -8298,7 +8298,7 @@ inven_reveal()
 enum { INVEN_DETAIL = 18 };
 enum { DROP_DETAIL = 8 };
 static int
-inven_overlay(begin, end, drop_mode)
+inven_overlay(begin, end, show_weight)
 {
   USE(overlay_width);
   int line, count;
@@ -8307,7 +8307,7 @@ inven_overlay(begin, end, drop_mode)
   int detailw = limitw - INVEN_DETAIL;
   int dropw = limitw - DROP_DETAIL;
 
-  if (drop_mode) {
+  if (show_weight) {
     detailw -= DROP_DETAIL;
   }
 
@@ -8335,7 +8335,7 @@ inven_overlay(begin, end, drop_mode)
         memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
       }
 
-      if (drop_mode) {
+      if (show_weight) {
         int stack_weight = obj->number * obj->weight;
         snprintf(overlayD[line] + dropw, DROP_DETAIL, " %2d.%01dlb",
                  stack_weight / 10, stack_weight % 10);
@@ -8854,7 +8854,7 @@ inven_choice(char* prompt, char* mode_list)
 
     snprintf(subprompt, AL(subprompt), "%s: %s", prefix,
              drop_mode ? "Drop which item?" : prompt);
-    inven_overlay(begin, end, drop_mode);
+    inven_overlay(begin, end, drop_mode || prompt[0] == 'D');
     if (!in_subcommand(subprompt, &c)) return -1;
 
     if (is_lower(c)) {
@@ -12127,7 +12127,7 @@ static void
 py_drop()
 {
   int iidx;
-  iidx = inven_choice("Drop one item?", "*/0");
+  iidx = inven_choice("Drop one item?", "*/");
 
   if (iidx >= 0) inven_drop(iidx);
 }
