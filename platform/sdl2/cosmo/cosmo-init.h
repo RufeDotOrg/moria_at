@@ -7,19 +7,19 @@ cosmo_libname()
   if (IsXnu()) return "libSDL2-2.0.0.dylib";
   return "libSDL2-2.0.so";
 }
-enum { MAX_PATH = 4 * 1024 };
 #include <libc/calls/struct/stat.h>
 int
-steam_debug()
+path_debug(char* path, int pathlen)
 {
-  char path[MAX_PATH];
-  getcwd(path, MAX_PATH);
-  printf("env cwd: %s\n", path);
+  char* cwd = getcwd(path, pathlen);
+  if (cwd) printf("env cwd: %s\n", cwd);
+
   printf("env TMPDIR: %s\n", getenv("TMPDIR"));
   printf("env HOME: %s\n", getenv("HOME"));
   printf("env KPRINTF_LOG: %s\n", getenv("KPRINTF_LOG"));
   printf("env SDL_OPENGL_LIBRARY: %s\n", getenv("SDL_OPENGL_LIBRARY"));
   printf("pid %d tid %d\n", getpid(), gettid());
+
   struct stat statbuf;
   if (stat(cosmo_libname(), &statbuf) == 0) {
     printf("  %s: %jd\n", cosmo_libname(), statbuf.st_size);
@@ -55,30 +55,21 @@ is_file_newer_than(const char* path, const char* other)
 }
 #include <libc/sysv/consts/o.h>
 STATIC int
-steam_helper(char* exe)
+steam_helper(char* exe, int exelen, int errcode)
 {
   int fdin, fdout;
   // Verify source before proceeding to truncate destination
-  if ((fdin = open("dlopen-helper", O_RDONLY)) == -1) {
-    perror("dlopen-helper no source");
-    return 0;
-  }
+  fdin = open("dlopen-helper", O_RDONLY);
+  if (fdin == -1) return errcode;
 
-  if ((fdout = creat(exe, 0755)) == -1) {
-    perror(exe);
-    return 0;
-  }
-  if (copyfd(fdin, fdout, -1) == -1) {
-    perror("dlopen copy");
-    return 0;
-  }
+  fdout = creat(exe, 0744);
+  if (fdout == -1) return errcode + 1;
+
+  if (copyfd(fdin, fdout, -1) == -1) return errcode + 2;
 
   close(fdout);
   close(fdin);
-
-  printf("steam_helper: copy complete\n");
-
-  return 1;
+  return 0;
 }
 
 // Logging fix-up
@@ -94,94 +85,118 @@ gamelog(void* nulldata, int category, SDL_LogPriority p, const char* message)
 
 // This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
 #include <libc/nt/events.h>
-STATIC void
+STATIC int
 enable_windows_gui()
 {
-  printf("%p GetMessage()\n", (fn)GetMessage);
+  return (fn)GetMessage != 0;
 }
 STATIC void
 enable_windows_console()
 {
-  if (IsWindows() && AllocConsole()) {
-    freopen("/dev/tty", "wb", stdout);
+  if (COSMO_WINDOWAPP && IsWindows()) {
+    if (AllocConsole()) freopen("/dev/tty", "wb", stdout);
   }
+}
+
+int
+dlopen_patch(char* pathmem, int pathlen)
+{
+  int rv = strlcpy(pathmem, get_tmp_dir(), pathlen);
+  if (rv >= pathlen) return 1;
+
+  rv = strlcat(pathmem, "/.cosmo/", PATH_MAX);
+  if (rv >= pathlen) return 1;
+
+  if (mkdir(pathmem, 0755) && errno != EEXIST) return 2;
+
+  if (!IsAarch64()) rv = strlcat(pathmem, "dlopen-helper", PATH_MAX);
+  if (IsAarch64()) rv = strlcat(pathmem, "aarch64-dlopen-helper", PATH_MAX);
+  if (rv >= pathlen) return 1;
+
+  return steam_helper(AP(pathmem), 3);
+}
+
+int
+enable_local_library(char* pathmem, int pathlen, int errcode)
+{
+  char* sys_ld = getenv("LD_LIBRARY_PATH");
+  int rv = strlcpy(pathmem, sys_ld, pathlen);
+  if (rv >= pathlen) return errcode;
+
+  rv = strlcat(pathmem, ":.:", pathlen);
+  if (rv >= pathlen) return errcode;
+
+  printf("setenv LD_LIBRARY_PATH: %s\n", pathmem);
+  setenv("LD_LIBRARY_PATH", pathmem, 1);
+  return 0;
+}
+
+int
+verify_init(status)
+{
+  if (status) {
+    if (IsWindows()) enable_windows_console();
+    printf("E-mail support@rufe.org: init status %d\n", status);
+    if (status == 20) printf("libSDL2 is not found\n");
+    if (IsWindows()) Sleep(10);
+
+    exit(status);
+  }
+
+  return 0;
 }
 
 int
 cosmo_init(int argc, char** argv)
 {
+  char pathmem[4 * 1024];
+  int init_status = 0;
   int opt = 0;
+  int debug = 0;
   while (opt != -1) {
     opt = getopt(argc, argv, "lch?");
     switch (opt) {
+      case 'C':
       case 'c':
-        if (COSMO_WINDOWAPP) enable_windows_console();
+        enable_windows_console();
         break;
+      case 'L':
       case 'l':
         freopen("log.txt", "wb", stdout);
         break;
       case '?':
+      case 'H':
       case 'h':
         printf(
-            "%s [-clh]\n"
-            "c: console enabled on Windows\n"
-            "l: write stdout to log.txt\n"
-            "h: help\n",
+            "%s [-CDLH]\n"
+            "C/c: console enabled on Windows\n"
+            "L/l: write stdout to log.txt\n"
+            "H/h: help\n",
             GetProgramExecutableName());
         exit(1);
     }
   }
 
-  if (COSMO_WINDOWAPP) enable_windows_gui();
+  if (COSMO_WINDOWAPP) init_status = enable_windows_gui();
+  verify_init(init_status);
 
-  steam_debug();
-
-  cosmo_crashinit();
-
-  if (!IsWindows()) {
-    char exe[PATH_MAX];
-    strlcpy(exe, get_tmp_dir(), PATH_MAX);
-    if (exe[0] == '.') return 0;
-    strlcat(exe, "/.cosmo/", PATH_MAX);
-    if (mkdir(exe, 0755) && errno != EEXIST) {
-      perror("mkdir");
-      return 0;
-    }
-    if (!IsAarch64())
-      strlcat(exe, "dlopen-helper", PATH_MAX);
-    else
-      strlcat(exe, "aarch64-dlopen-helper", PATH_MAX);
-
-    steam_helper(exe);
+  if (RELEASE && !IsWindows()) {
+    path_debug(AP(pathmem));
+    init_status = dlopen_patch(AP(pathmem));
+    if (!init_status) init_status = enable_local_library(AP(pathmem), 10);
+    verify_init(init_status);
   }
-
-  char path[MAX_PATH] = ":.:";
-  char* sys_ld = getenv("LD_LIBRARY_PATH");
-  if (sys_ld) {
-    int ldlen = strlen(sys_ld);
-    if (ldlen > MAX_PATH - 4) {
-      printf("LD_LIBRARY_PATH is enormous; ignoring user config\n");
-    } else {
-      memcpy(path, sys_ld, ldlen);
-      memcpy(path + ldlen, ":.:", 4);
-    }
-  }
-  printf("setenv LD_LIBRARY_PATH: %s\n", path);
-  setenv("LD_LIBRARY_PATH", path, 1);
-
-  printf("setenv KPRINTF_LOG (does not override)\n");
-  setenv("KPRINTF_LOG", "crash.txt", 0);
 
   // Override steam's environment
   setenv("SDL_GAMECONTROLLER_IGNORE_DEVICES", "", 1);
   // ^ (update this if steaminput is dynamically loaded in the future)
 
   // Cosmo does not re-init dlopen-helper on an environment change
-  libD = cosmo_dlopen(cosmo_libname(), RTLD_LAZY);
-  printf("%p libD\n", libD);
+  void* sdl_lib = cosmo_dlopen(cosmo_libname(), RTLD_LAZY);
+  if (!sdl_lib) init_status = 20;
+  libD = sdl_lib;
 
-  if (!libD) printf("failed to locate SDL2\n");
-  if (!libD) exit(1);
+  verify_init(init_status);
 
   if (IsWindows()) {
     SDL_LogSetOutputFunction(NT2SYSV(gamelog), 0);
@@ -191,5 +206,13 @@ cosmo_init(int argc, char** argv)
 
   global_init(argc, argv);
   platformD.seed = vptr(rdseed);
+
+  if (COSMO_CRASH && RELEASE) cosmo_crashinit(custom_gamecrash_handler);
+
+  if (COSMO_CRASH && !RELEASE) {
+    printf("setenv KPRINTF_LOG (does not override)\n");
+    setenv("KPRINTF_LOG", "crash.txt", 0);
+    ShowCrashReports();
+  }
 }
 #define global_init cosmo_init
