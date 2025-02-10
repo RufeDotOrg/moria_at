@@ -1765,3 +1765,22 @@ feature_menu()
   }
   return 0;
 }
+
+static int
+custom_gamecrash_handler(int sig)
+{
+  USE(phase);
+  // Crash in global_init/cosmo_init; noop
+
+  // Crash during pregame(); switch to "software" renderer
+  if (DISK && phase == PHASE_PREGAME) {
+    memcpy(globalD.pc_renderer, AP("software"));
+    disk_cache_write();
+  }
+
+  // Crash during play; attempt flush to disk
+  if (DISK && phase == PHASE_GAME) disk_postgame();
+
+  // Crash during postgame; noop
+  return 0;
+}

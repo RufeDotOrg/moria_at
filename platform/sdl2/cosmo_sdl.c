@@ -21,7 +21,8 @@ GLOBAL void* libD;
 #else  // COSMO_SDL
 // 0: nt console app
 // 1: nt window app
-enum { COSMO_WINDOWAPP = 1 };
+enum { COSMO_WINDOWAPP = RELEASE };
+enum { COSMO_CRASH = 0 };
 #include "cosmo/cosmo-crash.c"
 #include "cosmo/cosmo-init.h"
 #endif  // COSMO_SDL
