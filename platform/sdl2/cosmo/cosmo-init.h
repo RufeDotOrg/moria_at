@@ -1,5 +1,8 @@
 // Rufe.org LLC 2022-2024: ISC License
 
+#define FAIL_LOG "fail.txt"
+#define VERBOSE_LOG "log.txt"
+
 char*
 cosmo_libname()
 {
@@ -9,7 +12,7 @@ cosmo_libname()
 }
 #include <libc/calls/struct/stat.h>
 int
-path_debug(char* path, int pathlen)
+verify_info(char* path, int pathlen)
 {
   char* cwd = getcwd(path, pathlen);
   if (cwd) printf("env cwd: %s\n", cwd);
@@ -71,6 +74,15 @@ steam_helper(char* exe, int exelen, int errcode)
   close(fdin);
   return 0;
 }
+STATIC int
+steam_runtime()
+{
+  char* appvar_list[] = {"SteamAppId", "STEAM_APPID"};
+  for (int it = 0; it < AL(appvar_list); ++it) {
+    if (getenv(appvar_list[it])) return 1;
+  }
+  return 0;
+}
 
 // Logging fix-up
 // Avoid default SDL behavior of accessing parent console window
@@ -96,6 +108,11 @@ enable_windows_console()
   if (COSMO_WINDOWAPP && IsWindows()) {
     if (AllocConsole()) freopen("/dev/tty", "wb", stdout);
   }
+}
+static int
+wb_print_log(char* name)
+{
+  freopen(name, "wb", stdout);
 }
 
 int
@@ -126,17 +143,18 @@ enable_local_library(char* pathmem, int pathlen, int errcode)
   rv = strlcat(pathmem, ":.:", pathlen);
   if (rv >= pathlen) return errcode;
 
-  printf("setenv LD_LIBRARY_PATH: %s\n", pathmem);
   setenv("LD_LIBRARY_PATH", pathmem, 1);
   return 0;
 }
 
 int
-verify_init(status)
+verify_init(char* path, int pathlen, int status)
 {
   if (status) {
+    if (IsLinux() && steam_runtime()) wb_print_log(FAIL_LOG);
     if (IsWindows()) enable_windows_console();
     printf("E-mail support@rufe.org: init status %d\n", status);
+    verify_info(path, pathlen);
     if (status == 20) printf("libSDL2 is not found\n");
     if (IsWindows()) Sleep(10);
 
@@ -153,16 +171,18 @@ cosmo_init(int argc, char** argv)
   int init_status = 0;
   int opt = 0;
   int debug = 0;
+  int keep_console = 0;
+  int keep_log = 0;
   while (opt != -1) {
-    opt = getopt(argc, argv, "lch?");
+    opt = getopt(argc, argv, "chv?");
     switch (opt) {
       case 'C':
       case 'c':
-        enable_windows_console();
+        if (IsWindows()) keep_console = 1;
         break;
-      case 'L':
-      case 'l':
-        freopen("log.txt", "wb", stdout);
+      case 'V':
+      case 'v':
+        keep_log = 1;
         break;
       case '?':
       case 'H':
@@ -170,21 +190,19 @@ cosmo_init(int argc, char** argv)
         printf(
             "%s [-CDLH]\n"
             "C/c: console enabled on Windows\n"
-            "L/l: write stdout to log.txt\n"
-            "H/h: help\n",
+            "H/h: help\n"
+            "V/v: write stdout to " VERBOSE_LOG "\n",
             GetProgramExecutableName());
         exit(1);
     }
   }
 
-  if (COSMO_WINDOWAPP) init_status = enable_windows_gui();
-  verify_init(init_status);
+  if (COSMO_WINDOWAPP) enable_windows_gui();
 
   if (RELEASE && !IsWindows()) {
-    path_debug(AP(pathmem));
     init_status = dlopen_patch(AP(pathmem));
     if (!init_status) init_status = enable_local_library(AP(pathmem), 10);
-    verify_init(init_status);
+    verify_init(AP(pathmem), init_status);
   }
 
   // Override steam's environment
@@ -196,7 +214,12 @@ cosmo_init(int argc, char** argv)
   if (!sdl_lib) init_status = 20;
   libD = sdl_lib;
 
-  verify_init(init_status);
+  verify_init(AP(pathmem), init_status);
+
+  if (keep_console)
+    enable_windows_console();
+  else if (keep_log)
+    wb_print_log(VERBOSE_LOG);
 
   if (IsWindows()) {
     SDL_LogSetOutputFunction(NT2SYSV(gamelog), 0);
@@ -211,7 +234,7 @@ cosmo_init(int argc, char** argv)
 
   if (COSMO_CRASH && !RELEASE) {
     printf("setenv KPRINTF_LOG (does not override)\n");
-    setenv("KPRINTF_LOG", "crash.txt", 0);
+    setenv("KPRINTF_LOG", FAIL_LOG, 0);
     ShowCrashReports();
   }
 }
