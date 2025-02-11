@@ -3,6 +3,16 @@
 #define FAIL_LOG "fail.txt"
 #define VERBOSE_LOG "log.txt"
 
+#define ENV_STEAMAPP1 "STEAMAPPID"
+#define ENV_STEAMAPP2 "STEAM_APPID"
+#define ENV_TMPDIR "TMPDIR"
+#define ENV_HOME "HOME"
+#define ENV_KPRINTF_LOG "KPRINTF_LOG"
+#define ENV_OPENGL "SDL_OPENGL_LIBRARY"
+#define ENV_LD_LIBRARY_PATH "LD_LIBRARY_PATH"
+#define ENV_SDL_GAMECONTROLLER_IGNORE_DEVICES \
+  "SDL_GAMECONTROLLER_IGNORE_DEVICES"
+
 char*
 cosmo_libname()
 {
@@ -14,14 +24,20 @@ cosmo_libname()
 int
 verify_info(char* path, int pathlen)
 {
+  char* appvar_list[] = {
+      ENV_STEAMAPP1,       ENV_STEAMAPP2,
+      ENV_TMPDIR,          ENV_HOME,
+      ENV_KPRINTF_LOG,     ENV_OPENGL,
+      ENV_LD_LIBRARY_PATH, ENV_SDL_GAMECONTROLLER_IGNORE_DEVICES,
+  };
   char* cwd = getcwd(path, pathlen);
-  if (cwd) printf("env cwd: %s\n", cwd);
 
-  printf("env TMPDIR: %s\n", getenv("TMPDIR"));
-  printf("env HOME: %s\n", getenv("HOME"));
-  printf("env KPRINTF_LOG: %s\n", getenv("KPRINTF_LOG"));
-  printf("env SDL_OPENGL_LIBRARY: %s\n", getenv("SDL_OPENGL_LIBRARY"));
-  printf("pid %d tid %d\n", getpid(), gettid());
+  printf("%s\n", cwd);
+  printf("env\n");
+  for (int it = 0; it < AL(appvar_list); ++it) {
+    char* name = appvar_list[it];
+    printf("  %s: %s\n", name, getenv(name));
+  }
 
   struct stat statbuf;
   if (stat(cosmo_libname(), &statbuf) == 0) {
@@ -33,8 +49,8 @@ STATIC const char*
 get_tmp_dir()
 {
   const char* tmpdir;
-  if (!(tmpdir = getenv("TMPDIR")) || !*tmpdir) {
-    if (!(tmpdir = getenv("HOME")) || !*tmpdir) {
+  if (!(tmpdir = getenv(ENV_TMPDIR)) || !*tmpdir) {
+    if (!(tmpdir = getenv(ENV_HOME)) || !*tmpdir) {
       tmpdir = ".";
     }
   }
@@ -77,7 +93,7 @@ steam_helper(char* exe, int exelen, int errcode)
 STATIC int
 steam_runtime()
 {
-  char* appvar_list[] = {"SteamAppId", "STEAM_APPID"};
+  char* appvar_list[] = {ENV_STEAMAPP1, ENV_STEAMAPP2};
   for (int it = 0; it < AL(appvar_list); ++it) {
     if (getenv(appvar_list[it])) return 1;
   }
@@ -136,7 +152,7 @@ dlopen_patch(char* pathmem, int pathlen)
 int
 enable_local_library(char* pathmem, int pathlen, int errcode)
 {
-  char* sys_ld = getenv("LD_LIBRARY_PATH");
+  char* sys_ld = getenv(ENV_LD_LIBRARY_PATH);
   int rv = 0;
   *pathmem = 0;
   if (sys_ld) strlcpy(pathmem, sys_ld, pathlen);
@@ -145,7 +161,7 @@ enable_local_library(char* pathmem, int pathlen, int errcode)
   rv = strlcat(pathmem, ":.:", pathlen);
   if (rv >= pathlen) return errcode;
 
-  setenv("LD_LIBRARY_PATH", pathmem, 1);
+  setenv(ENV_LD_LIBRARY_PATH, pathmem, 1);
   return 0;
 }
 
@@ -157,7 +173,7 @@ verify_init(char* path, int pathlen, int status)
     if (IsWindows()) enable_windows_console();
     printf("E-mail support@rufe.org: init status %d\n", status);
     verify_info(path, pathlen);
-    if (status == 20) printf("libSDL2 is not found\n");
+    if (status == 20) printf("\nlibSDL2 is not found\n");
     if (IsWindows()) Sleep(10);
 
     exit(status);
@@ -208,7 +224,7 @@ cosmo_init(int argc, char** argv)
   }
 
   // Override steam's environment
-  setenv("SDL_GAMECONTROLLER_IGNORE_DEVICES", "", 1);
+  setenv(ENV_SDL_GAMECONTROLLER_IGNORE_DEVICES, "", 1);
   // ^ (update this if steaminput is dynamically loaded in the future)
 
   // Cosmo does not re-init dlopen-helper on an environment change
@@ -235,8 +251,7 @@ cosmo_init(int argc, char** argv)
   if (COSMO_CRASH && RELEASE) cosmo_crashinit(custom_gamecrash_handler);
 
   if (COSMO_CRASH && !RELEASE) {
-    printf("setenv KPRINTF_LOG (does not override)\n");
-    setenv("KPRINTF_LOG", FAIL_LOG, 0);
+    setenv(ENV_KPRINTF_LOG, FAIL_LOG, 0);
     ShowCrashReports();
   }
 }
