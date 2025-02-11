@@ -30,7 +30,7 @@ verify_info(char* path, int pathlen)
   return 0;
 }
 STATIC const char*
-get_tmp_dir(void)
+get_tmp_dir()
 {
   const char* tmpdir;
   if (!(tmpdir = getenv("TMPDIR")) || !*tmpdir) {
@@ -137,7 +137,9 @@ int
 enable_local_library(char* pathmem, int pathlen, int errcode)
 {
   char* sys_ld = getenv("LD_LIBRARY_PATH");
-  int rv = strlcpy(pathmem, sys_ld, pathlen);
+  int rv = 0;
+  *pathmem = 0;
+  if (sys_ld) strlcpy(pathmem, sys_ld, pathlen);
   if (rv >= pathlen) return errcode;
 
   rv = strlcat(pathmem, ":.:", pathlen);
