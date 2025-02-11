@@ -2,7 +2,7 @@
 # Recommended software
 * gcc (11.4)
 * clang (14)
-* cosmocc (3.9.6)
+* cosmocc (4.0.2)
 * SDL2 (2.28.5)
 
 # Build targets
@@ -15,14 +15,14 @@
 ```
 rm src/platform
 ln -s `realpath platform/linux` src/platform
-clang -w -o moria_at -I. src/moria_at.c
+clang -Wno-implicit-function-declaration -Wno-implicit-int -Wno-return-type -o moria_at -I. src/moria_at.c
 ```
 
 ## Command line wizard mode (character editor) Mac or Linux
 ```
 rm src/platform
 ln -s `realpath platform/linux` src/platform
-clang -w -o wizard -I. src/wizard.c
+clang -Wno-implicit-function-declaration -Wno-implicit-int -Wno-return-type -o wizard -I. src/wizard.c
 ```
 
 # Graphical Client for Linux
@@ -36,7 +36,7 @@ apt install libsdl2-dev
 ```
 rm src/platform
 ln -s `realpath platform/sdl2` src/platform
-clang -w -o moria_at -I. -lm `sdl2-config --cflags` `sdl2-config --libs` src/moria_at.c
+clang -Wno-implicit-function-declaration -Wno-implicit-int -Wno-return-type -o moria_at -I. -lm `sdl2-config --cflags` `sdl2-config --libs` src/moria_at.c
 ```
 
 ## Running the graphical client
