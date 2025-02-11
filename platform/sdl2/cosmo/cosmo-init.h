@@ -200,7 +200,7 @@ cosmo_init(int argc, char** argv)
   if (COSMO_WINDOWAPP) enable_windows_gui();
 
   if (RELEASE && !IsWindows()) {
-    init_status = dlopen_patch(AP(pathmem));
+    if (steam_runtime()) init_status = dlopen_patch(AP(pathmem));
     if (!init_status) init_status = enable_local_library(AP(pathmem), 10);
     verify_init(AP(pathmem), init_status);
   }
