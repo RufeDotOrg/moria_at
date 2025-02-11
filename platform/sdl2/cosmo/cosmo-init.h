@@ -111,12 +111,14 @@ gamelog(void* nulldata, int category, SDL_LogPriority p, const char* message)
   printf("R_ %s: %s\r\n", SDL_priority_prefixes[p], message);
 }
 
-// This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
 #include <libc/nt/events.h>
+// Not static (which would be optimized away)
+// This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
+GLOBAL fn messageD;
 STATIC int
 enable_windows_gui()
 {
-  return (fn)GetMessage != 0;
+  messageD = vptr(GetMessage);
 }
 STATIC void
 enable_windows_console()
@@ -215,8 +217,6 @@ cosmo_init(int argc, char** argv)
     }
   }
 
-  if (COSMO_WINDOWAPP) enable_windows_gui();
-
   if (RELEASE && !IsWindows()) {
     if (steam_runtime()) init_status = dlopen_patch(AP(pathmem));
     if (!init_status) init_status = enable_local_library(AP(pathmem), 10);
@@ -238,6 +238,8 @@ cosmo_init(int argc, char** argv)
     enable_windows_console();
   else if (keep_log)
     wb_print_log(VERBOSE_LOG);
+
+  if (COSMO_WINDOWAPP) enable_windows_gui();
 
   if (IsWindows()) {
     SDL_LogSetOutputFunction(NT2SYSV(gamelog), 0);
