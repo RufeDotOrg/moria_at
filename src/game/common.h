@@ -10,7 +10,10 @@ enum { __APPLE__ };
 enum { ANDROID };
 #endif
 
-#ifndef RELEASE
+#ifdef RELEASE
+#undef RELEASE
+enum { RELEASE = 1 };
+#else
 enum { RELEASE };
 #endif
 
