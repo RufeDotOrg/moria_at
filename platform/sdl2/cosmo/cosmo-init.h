@@ -13,6 +13,8 @@
 #define ENV_SDL_GAMECONTROLLER_IGNORE_DEVICES \
   "SDL_GAMECONTROLLER_IGNORE_DEVICES"
 
+extern custom_gamecrash_handler();
+
 char*
 cosmo_libname()
 {
@@ -111,12 +113,13 @@ gamelog(void* nulldata, int category, SDL_LogPriority p, const char* message)
   printf("R_ %s: %s\r\n", SDL_priority_prefixes[p], message);
 }
 
-// This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
 #include <libc/nt/events.h>
+DATA fn win_messageD;
 STATIC int
 enable_windows_gui()
 {
-  return (fn)GetMessage != 0;
+  // This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
+  if (COSMO_WINDOWAPP) win_messageD = vptr(GetMessage);
 }
 STATIC void
 enable_windows_console()
@@ -125,7 +128,7 @@ enable_windows_console()
     if (AllocConsole()) freopen("/dev/tty", "wb", stdout);
   }
 }
-static int
+STATIC int
 wb_print_log(char* name)
 {
   freopen(name, "wb", stdout);
@@ -188,12 +191,13 @@ cosmo_init(int argc, char** argv)
   char pathmem[4 * 1024];
   int init_status = 0;
   int opt = 0;
-  int debug = 0;
   int keep_console = 0;
   int keep_log = 0;
   while (opt != -1) {
     opt = getopt(argc, argv, "chv?");
     switch (opt) {
+      case '-':
+        break;
       case 'C':
       case 'c':
         if (IsWindows()) keep_console = 1;
@@ -214,8 +218,6 @@ cosmo_init(int argc, char** argv)
         exit(1);
     }
   }
-
-  if (COSMO_WINDOWAPP) enable_windows_gui();
 
   if (RELEASE && !IsWindows()) {
     if (steam_runtime()) init_status = dlopen_patch(AP(pathmem));
@@ -238,6 +240,8 @@ cosmo_init(int argc, char** argv)
     enable_windows_console();
   else if (keep_log)
     wb_print_log(VERBOSE_LOG);
+
+  if (COSMO_WINDOWAPP) enable_windows_gui();
 
   if (IsWindows()) {
     SDL_LogSetOutputFunction(NT2SYSV(gamelog), 0);
