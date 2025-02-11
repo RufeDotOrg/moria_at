@@ -174,7 +174,7 @@ verify_init(char* path, int pathlen, int status)
     printf("E-mail support@rufe.org: init status %d\n", status);
     verify_info(path, pathlen);
     if (status == 20) printf("\nlibSDL2 is not found\n");
-    if (IsWindows()) Sleep(10 * 1000);
+    if (IsWindows() && GetConsoleWindow()) Sleep(10 * 1000);
 
     exit(status);
   }
