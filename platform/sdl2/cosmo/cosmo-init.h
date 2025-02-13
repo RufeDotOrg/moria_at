@@ -114,11 +114,12 @@ gamelog(void* nulldata, int category, SDL_LogPriority p, const char* message)
 }
 
 #include <libc/nt/events.h>
+// Not static (which would be optimized away)
+// This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
 GLOBAL fn win_messageD;
 STATIC int
 enable_windows_gui()
 {
-  // This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
   if (COSMO_WINDOWAPP) win_messageD = vptr(GetMessage);
 }
 STATIC void
