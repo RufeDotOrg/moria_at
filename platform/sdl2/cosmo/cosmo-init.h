@@ -114,7 +114,7 @@ gamelog(void* nulldata, int category, SDL_LogPriority p, const char* message)
 }
 
 #include <libc/nt/events.h>
-DATA fn win_messageD;
+GLOBAL fn win_messageD;
 STATIC int
 enable_windows_gui()
 {
