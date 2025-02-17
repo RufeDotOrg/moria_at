@@ -10756,7 +10756,7 @@ show_version()
   return CLOBBER_MSG("Version %s", versionD);
 }
 char*
-ugender()
+usex()
 {
   if (uD.male)
     return "Male";
@@ -10807,7 +10807,7 @@ show_character(narrow, is_reroll)
 
   BufPad(screen, MAX_A, col[1]);
   line = 0;
-  BufMsg(screen, "%s: %-6.06s", "Gender", ugender());
+  BufMsg(screen, "%s: %-6.06s", "Sex", usex());
   BufMsg(screen, "%s: %3d", "Exp Mult", py_expmult());
 
   line = MAX_A + 1;
