@@ -6948,6 +6948,24 @@ teleport_away(midx, dis)
   m_ptr->fx = xn;
 }
 static int
+is_obj_vulnmelee(obj, vulnmelee)
+struct objS* obj;
+{
+  switch (vulnmelee) {
+    case GF_LIGHTNING:
+      return vuln_lightning(obj);
+    case GF_POISON_GAS:
+      return vuln_gas(obj);
+    case GF_ACID:
+      return vuln_acid(obj);
+    case GF_FROST:
+      return vuln_frost(obj);
+    case GF_FIRE:
+      return vuln_fire(obj);
+  }
+  return 0;
+}
+static int
 is_obj_vulntype(obj, vulntyp)
 struct objS* obj;
 {
@@ -11599,14 +11617,15 @@ py_death()
     py_menu();
   } while (1);
 }
-int inven_damage(typ, perc) int (*typ)();
+static int
+inven_damage(typ, perc)
 {
   int it, j;
 
   j = 0;
   for (it = 0; it < INVEN_EQUIP; it++) {
     struct objS* obj = obj_get(invenD[it]);
-    if ((*typ)(obj) && (randint(100) < perc)) {
+    if (is_obj_vulnmelee(obj, typ) && (randint(100) < perc)) {
       inven_destroy_num(it, 1);
       j++;
     }
@@ -11660,7 +11679,7 @@ fire_dam(dam)
   if (absfire) dam = dam / 2;
   if (resfire) dam = dam / 2;
   py_take_hit(dam);
-  if (!absfire && inven_damage(vuln_fire, 3) > 0)
+  if (!absfire && inven_damage(GF_FIRE, 3) > 0)
     msg_print("There is smoke coming from your pack!");
   return dam;
 }
@@ -11670,7 +11689,7 @@ acid_dam(dam, verbose)
   if (minus_ac(verbose)) dam = dam / 2;
   if (py_tr(TR_RES_ACID)) dam = dam / 2;
   py_take_hit(dam);
-  if (inven_damage(vuln_acid, 3) > 0)
+  if (inven_damage(GF_ACID, 3) > 0)
     msg_print("There is an acrid smell coming from your pack!");
   return dam;
 }
@@ -11684,7 +11703,7 @@ frost_dam(dam)
   if (abscold) dam = dam / 2;
   if (rescold) dam = dam / 2;
   py_take_hit(dam);
-  if (!abscold && inven_damage(vuln_frost, 5) > 0)
+  if (!abscold && inven_damage(GF_FROST, 5) > 0)
     msg_print("Something shatters inside your pack!");
   return dam;
 }
@@ -11693,7 +11712,7 @@ light_dam(dam)
 {
   if (py_tr(TR_RES_LIGHT)) dam = dam / 2;
   py_take_hit(dam);
-  if (inven_damage(vuln_lightning, 3) > 0)
+  if (inven_damage(GF_LIGHTNING, 3) > 0)
     msg_print("There are sparks coming from your pack!");
   return dam;
 }
@@ -11701,7 +11720,7 @@ void
 corrode_gas(verbose)
 {
   if (!minus_ac(verbose)) py_take_hit(randint(8));
-  if (inven_damage(vuln_gas, 5) > 0)
+  if (inven_damage(GF_POISON_GAS, 5) > 0)
     msg_print("There is an acrid smell coming from your pack.");
 }
 void
