@@ -1723,19 +1723,17 @@ set_null()
   return FALSE;
 }
 static int
-set_room(element)
+check_fval_type(fval, ftyp)
 {
-  return (element == FLOOR_DARK || element == FLOOR_LIGHT);
-}
-static int
-set_corr(element)
-{
-  return (element == FLOOR_CORR || element == FLOOR_OBST);
-}
-static int
-set_floor(element)
-{
-  return (element <= MAX_FLOOR);
+  switch (ftyp) {
+    case FT_ANY:
+      return (fval <= MAX_FLOOR);
+    case FT_ROOM:
+      return (fval == FLOOR_DARK || fval == FLOOR_LIGHT);
+    case FT_CORR:
+      return (fval == FLOOR_CORR || fval == FLOOR_OBST);
+  }
+  return 0;
 }
 static void tr_obj_copy(tidx, obj) struct objS* obj;
 {
@@ -3429,7 +3427,8 @@ place_trap(y, x, offset)
   }
   return obj->id != 0;
 }
-void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
+void
+alloc_obj(ftyp, otyp, num)
 {
   for (int it = 0; it < num; it++) {
     int y, x;
@@ -3439,20 +3438,19 @@ void alloc_obj(alloc_set, typ, num) int (*alloc_set)();
     }
     /* don't put an object beneath the player, this could cause problems
        if player is standing under rubble, or on a trap */
-    while ((!(*alloc_set)(caveD[y][x].fval)) || (caveD[y][x].oidx != 0) ||
-           (y == uD.y && x == uD.x));
-    switch (typ) {
+    while (!check_fval_type(caveD[y][x].fval, ftyp) ||
+           (caveD[y][x].oidx != 0) || (y == uD.y && x == uD.x));
+    switch (otyp) {
       case 1:
         place_trap(y, x, randint(MAX_TRAP) - 1);
         break;
-      case 2:  // unused
-      case 3:
+      case 2:
         place_rubble(y, x);
         break;
-      case 4:
+      case 3:
         place_gold(y, x);
         break;
-      case 5:
+      case 4:
         place_object(y, x, FALSE);
         break;
     }
@@ -3876,11 +3874,11 @@ cave_gen()
   // Character co-ords; used by alloc_monster, place_win_monster
   new_spot(&uD.y, &uD.x);
 
-  if (dun_level >= 7) alloc_obj(set_corr, 3, randint(alloc_level));
-  alloc_obj(set_room, 5, randnor(TREAS_ROOM_MEAN, 3));
-  alloc_obj(set_floor, 5, randnor(TREAS_ANY_ALLOC, 3));
-  alloc_obj(set_floor, 4, randnor(TREAS_GOLD_ALLOC, 3));
-  alloc_obj(set_floor, 1, randint(alloc_level));
+  if (dun_level >= 7) alloc_obj(FT_CORR, 2, randint(alloc_level));
+  alloc_obj(FT_ROOM, 4, randnor(TREAS_ROOM_MEAN, 3));
+  alloc_obj(FT_ANY, 4, randnor(TREAS_ANY_ALLOC, 3));
+  alloc_obj(FT_ANY, 3, randnor(TREAS_GOLD_ALLOC, 3));
+  alloc_obj(FT_ANY, 1, randint(alloc_level));
 
   alloc_mon((randint(RND_MALLOC_LEVEL) + MIN_MALLOC_LEVEL + alloc_level), 0,
             TRUE);
@@ -6949,12 +6947,29 @@ teleport_away(midx, dis)
   m_ptr->fy = yn;
   m_ptr->fx = xn;
 }
-void
-get_flags(int typ, uint32_t* weapon_type, int* harm_type, int (**destroy)())
+static int
+is_obj_vulntype(obj, vulntyp)
+struct objS* obj;
 {
-  *destroy = set_null;
-
+  switch (vulntyp) {
+    case GF_LIGHTNING:
+      return vuln_lightning(obj);
+    case GF_ACID:
+      // Distinct from vuln_acid (acid_dam attack)
+      return vuln_acid_breath(obj);
+    case GF_FROST:
+      return vuln_frost(obj);
+    case GF_FIRE:
+      // Distinct from vuln_fire (fire_dam attack)
+      return vuln_fire_breath(obj);
+  }
+  return 0;
+}
+static void
+get_flags(int typ, uint32_t* weapon_type, int* harm_type)
+{
   switch (typ) {
+    default:
     case GF_MAGIC_MISSILE:
       *weapon_type = 0;
       *harm_type = 0;
@@ -6962,7 +6977,6 @@ get_flags(int typ, uint32_t* weapon_type, int* harm_type, int (**destroy)())
     case GF_LIGHTNING:
       *weapon_type = CS_BR_LIGHT;
       *harm_type = CD_LIGHT;
-      *destroy = vuln_lightning;
       break;
     case GF_POISON_GAS:
       *weapon_type = CS_BR_GAS;
@@ -6971,26 +6985,19 @@ get_flags(int typ, uint32_t* weapon_type, int* harm_type, int (**destroy)())
     case GF_ACID:
       *weapon_type = CS_BR_ACID;
       *harm_type = CD_ACID;
-      // Distinct from vuln_acid (acid_dam attack)
-      *destroy = vuln_acid_breath;
       break;
     case GF_FROST:
       *weapon_type = CS_BR_FROST;
       *harm_type = CD_FROST;
-      *destroy = vuln_frost;
       break;
     case GF_FIRE:
       *weapon_type = CS_BR_FIRE;
       *harm_type = CD_FIRE;
-      // Distinct from vuln_fire (fire_dam attack)
-      *destroy = vuln_fire_breath;
       break;
     case GF_HOLY_ORB:
       *weapon_type = 0;
       *harm_type = CD_EVIL;
       break;
-    default:
-      msg_print("ERROR in get_flags()\n");
   }
 }
 void
@@ -7038,13 +7045,12 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
   int dist, flag;
   uint32_t weapon_type;
   int harm_type;
-  int (*dummy)();
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cre;
 
   flag = FALSE;
-  get_flags(typ, &weapon_type, &harm_type, &dummy);
+  get_flags(typ, &weapon_type, &harm_type);
   dist = 0;
   do {
     mmove(dir, &y, &x);
@@ -7102,14 +7108,13 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
   int dam, thit, tkill;
   int oldy, oldx, dist, flag, harm_type;
   uint32_t weapon_type;
-  int (*destroy)();
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
 
   thit = 0;
   tkill = 0;
-  get_flags(typ, &weapon_type, &harm_type, &destroy);
+  get_flags(typ, &weapon_type, &harm_type);
   flag = FALSE;
   oldy = y;
   oldx = x;
@@ -7142,7 +7147,8 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
             if (in_bounds(i, j) && (distance(y, x, i, j) <= FIRE_DIST) &&
                 los(y, x, i, j)) {
               c_ptr = &caveD[i][j];
-              if ((c_ptr->oidx) && (*destroy)(&entity_objD[c_ptr->oidx])) {
+              if ((c_ptr->oidx) &&
+                  is_obj_vulntype(&entity_objD[c_ptr->oidx], typ)) {
                 if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
                 delete_object(i, j);
               }
@@ -12733,7 +12739,6 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   int i, j, y, x;
   int reduce, dam, harm_type;
   uint32_t cdis, weapon_type;
-  int (*destroy)();
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -12755,12 +12760,13 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   if (HACK) MSG("[%d/%d@%d", dam_hp + 1, reduce, distance(y, x, fy, fx));
   /* at least one damage, prevents randint(0) with poison_gas() */
   dam_hp = dam_hp / reduce + 1;
-  get_flags(breath, &weapon_type, &harm_type, &destroy);
+  get_flags(breath, &weapon_type, &harm_type);
   for (i = y - 2; i <= y + 2; i++)
     for (j = x - 2; j <= x + 2; j++)
       if (in_bounds(i, j) && distance(y, x, i, j) <= 2 && los(y, x, i, j)) {
         c_ptr = &caveD[i][j];
-        if ((c_ptr->oidx != 0) && (*destroy)(&entity_objD[c_ptr->oidx])) {
+        if ((c_ptr->oidx != 0) &&
+            is_obj_vulntype(&entity_objD[c_ptr->oidx], breath)) {
           if (c_ptr->fval == FLOOR_OBST) c_ptr->fval = FLOOR_CORR;
           delete_object(i, j);
         }

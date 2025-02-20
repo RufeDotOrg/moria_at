@@ -17,6 +17,8 @@
 #define MAX_MSG 16
 #define MAX_ZOOM 4
 
+// ANY_FLOOR, LIGHT/DARK FLOOR, CORR/OBST FLOOR
+enum { FT_ANY, FT_ROOM, FT_CORR };
 #define FLOOR_NULL 0
 #define FLOOR_LIGHT 1
 #define FLOOR_DARK 2
