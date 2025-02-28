@@ -12793,12 +12793,13 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
             cdis = distance(i, j, y, x);
             dam = dam / (cdis + 1);
 
-            /* can not call mon_take_hit here, since player does not
-               get experience for kill */
+            // Player does not get credit for the kill
+            // - no loot drops
+            // - no exp
+            // - cannot win the game this way
             m_ptr->hp = m_ptr->hp - dam;
             m_ptr->msleep = 0;
             if (m_ptr->hp < 0) {
-              mon_death(m_ptr->fy, m_ptr->fx, cr_ptr->cmove);
               mon_unuse(m_ptr);
               c_ptr->midx = 0;
             }
