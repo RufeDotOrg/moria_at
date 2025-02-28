@@ -12638,31 +12638,24 @@ py_tunnel(iidx)
     tunnel_tool(y, x, iidx);
   }
 }
-static void make_move(midx, mm) int* mm;
+void make_move(midx, mm) int* mm;
 {
-  int fy, fx, newy, newx, do_turn, do_move;
+  int fy, fx, newy, newx, do_move;
+  int py, px;
+  int cmove;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
   struct objS* obj;
 
-  do_turn = FALSE;
   do_move = FALSE;
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
+  cmove = cr_ptr->cmove;
   fy = m_ptr->fy;
   fx = m_ptr->fx;
-  c_ptr = &caveD[fy][fx];
-  if ((cr_ptr->cmove & CM_PHASE) == 0 && c_ptr->fval >= MIN_WALL) {
-    if (mon_take_hit(midx, damroll(8, 8))) {
-      msg_print("You hear a scream muffled by rock!");
-      py_experience();
-    } else {
-      msg_print("A creature digs itself out from the rock!");
-      twall(fy, fx);
-    }
-    return;
-  }
+  py = uD.y;
+  px = uD.x;
 
   for (int i = 0; i < 5; ++i) {
     newy = fy + dir_y(mm[i]);
@@ -12672,17 +12665,16 @@ static void make_move(midx, mm) int* mm;
 
     if (c_ptr->fval == BOUNDARY_WALL)
       continue;
-    else if (cr_ptr->cmove & CM_PHASE)
+    else if (cmove & CM_PHASE)
       do_move = TRUE;
     else if (c_ptr->fval == FLOOR_OBST) {
       if (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR) {
-        do_turn = TRUE;
         do_move = FALSE;
-        if (cr_ptr->cmove & CM_OPEN_DOOR && obj->p1 == 0) {
+        if (cmove & CM_OPEN_DOOR && obj->p1 == 0) {
           obj->tval = TV_OPEN_DOOR;
           obj->tchar = '\'';
           if (c_ptr->cflag & CF_LIT) msg_print("A door creaks open.");
-        } else if (cr_ptr->cmove & CM_OPEN_DOOR && obj->p1 > 0) {
+        } else if (cmove & CM_OPEN_DOOR && obj->p1 > 0) {
           if (randint((m_ptr->hp + 1) * (50 + obj->p1)) <
               40 * (m_ptr->hp - 10 - obj->p1)) {
             msg_print("You hear the click of a lock being opened.");
@@ -12700,9 +12692,10 @@ static void make_move(midx, mm) int* mm;
           }
         }
         if (obj->tval == TV_OPEN_DOOR) c_ptr->fval = FLOOR_CORR;
+        if (!do_move) break;  // do_turn
       } else {
         // permit attack-only against a player
-        do_move = (newy == uD.y && newx == uD.x);
+        do_move = (newy == py && newx == px);
       }
     } else if (c_ptr->fval <= MAX_OPEN_SPACE)
       do_move = TRUE;
@@ -12713,21 +12706,21 @@ static void make_move(midx, mm) int* mm;
         delete_object(newy, newx);
       } else {
         do_move = FALSE;
-        do_turn = (cr_ptr->cmove & CM_ATTACK_ONLY);
+        if (cmove & CM_ATTACK_ONLY) break;  // do_turn
       }
     }
     if (do_move) {
       /* Creature has attempted to move on player?     */
-      if (newy == uD.y && newx == uD.x) {
+      if (newy == py && newx == px) {
         mon_attack(midx);
         do_move = FALSE;
-        do_turn = TRUE;
+        break;  // do_turn
       }
       /* Creature is attempting to move on other creature?     */
       else if (c_ptr->midx && c_ptr->midx != midx) {
         /* Eat it or wait */
-        if ((cr_ptr->cmove & CM_EATS_OTHER) &&
-            creatureD[c_ptr->midx].mexp >= cr_ptr->mexp) {
+        if ((cmove & CM_EATS_OTHER) &&
+            cr_ptr->mexp >= creatureD[c_ptr->midx].mexp) {
           mon_unuse(&entity_monD[c_ptr->midx]);
           c_ptr->midx = 0;
         } else
@@ -12736,8 +12729,8 @@ static void make_move(midx, mm) int* mm;
     }
     /* Creature has been allowed move.   */
     if (do_move) {
-      if (cr_ptr->cmove & CM_PICKS_UP && obj_mon_pickup(obj)) {
-        if (los(uD.y, uD.x, newy, newx)) {
+      if (cmove & CM_PICKS_UP && obj_mon_pickup(obj)) {
+        if (los(py, px, newy, newx)) {
           mon_desc(midx);
           MSG("%s picks up an object.", descD);
         }
@@ -12747,9 +12740,8 @@ static void make_move(midx, mm) int* mm;
       move_rec(fy, fx, newy, newx);
       m_ptr->fy = newy;
       m_ptr->fx = newx;
-      do_turn = TRUE;
+      break;  // do_turn
     }
-    if (do_turn) break;
   }
 }
 void
@@ -13055,23 +13047,35 @@ mon_try_spell(midx, cdis)
   return took_turn;
 }
 // Returns true if make_move() is attempted
-static int
+int
 mon_move(midx)
 {
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
+  struct caveS* c_ptr;
   int mm[9];
   int took_turn, random, flee;
   int cdis;
 
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
+  c_ptr = &caveD[m_ptr->fy][m_ptr->fx];
+  if ((cr_ptr->cmove & CM_PHASE) == 0 && c_ptr->fval >= MIN_WALL) {
+    if (mon_take_hit(midx, damroll(8, 8))) {
+      msg_print("You hear a scream muffled by rock!");
+      py_experience();
+    } else {
+      msg_print("A creature digs itself out from the rock!");
+      twall(m_ptr->fy, m_ptr->fx);
+    }
+    return 1;
+  }
+
   AC(mm);
   took_turn = FALSE;
   random = FALSE;
   flee = FALSE;
   cdis = distance(uD.y, uD.x, m_ptr->fy, m_ptr->fx);
-
   if ((cr_ptr->cmove & CM_MULTIPLY) && cdis <= cr_ptr->aaf)
     mon_try_multiply(m_ptr);
   if (cr_ptr->spells & CS_FREQ)
