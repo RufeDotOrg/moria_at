@@ -2,6 +2,7 @@
 #include "game/table.h"
 #include "game/type.h"
 #include "game/var.h"
+#include "game/xxap.h"
 #include "game/xxcast.h"
 #include "game/xxinline.h"
 

@@ -347,7 +347,7 @@ static struct treasureS treasureD[] = {
      84,
      {0, 0},
      16},
-    {"& Ration~ of Food",
+    {"Ration~ of Food",
      0x00000000L,
      TV_FOOD,
      ',', /*  22*/
@@ -361,7 +361,7 @@ static struct treasureS treasureD[] = {
      90,
      {0, 0},
      0},
-    {"& Ration~ of Food",
+    {"Ration~ of Food",
      0x00000000L,
      TV_FOOD,
      ',', /*  23*/
@@ -375,7 +375,7 @@ static struct treasureS treasureD[] = {
      90,
      {0, 0},
      5},
-    {"& Ration~ of Food",
+    {"Ration~ of Food",
      0x00000000L,
      TV_FOOD,
      ',', /*  24*/
@@ -389,7 +389,7 @@ static struct treasureS treasureD[] = {
      90,
      {0, 0},
      10},
-    {"& Slime Mold~",
+    {"Slime Mold~",
      0x00000000L,
      TV_FOOD,
      ',', /*  25*/
@@ -403,7 +403,7 @@ static struct treasureS treasureD[] = {
      91,
      {0, 0},
      1},
-    {"& Piece~ of Elvish Waybread",
+    {"Piece~ of Elvish Waybread",
      0x02000020L,
      TV_FOOD,
      ',', /*  26*/
@@ -417,7 +417,7 @@ static struct treasureS treasureD[] = {
      92,
      {0, 0},
      6},
-    {"& Piece~ of Elvish Waybread",
+    {"Piece~ of Elvish Waybread",
      0x02000020L,
      TV_FOOD,
      ',', /*  27*/
@@ -431,7 +431,7 @@ static struct treasureS treasureD[] = {
      92,
      {0, 0},
      12},
-    {"& Piece~ of Elvish Waybread",
+    {"Piece~ of Elvish Waybread",
      0x02000020L,
      TV_FOOD,
      ',', /*  28*/
@@ -445,7 +445,7 @@ static struct treasureS treasureD[] = {
      92,
      {0, 0},
      20},
-    {"& Dagger (Main Gauche)",
+    {"Dagger (Main Gauche)",
      0x00000000L,
      TV_SWORD,
      '|', /*  29*/
@@ -459,7 +459,7 @@ static struct treasureS treasureD[] = {
      1,
      {1, 5},
      2},
-    {"& Dagger (Misericorde)",
+    {"Dagger (Misericorde)",
      0x00000000L,
      TV_SWORD,
      '|', /*  30*/
@@ -473,7 +473,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 4},
      0},
-    {"& Dagger (Stiletto)",
+    {"Dagger (Stiletto)",
      0x00000000L,
      TV_SWORD,
      '|', /*  31*/
@@ -487,7 +487,7 @@ static struct treasureS treasureD[] = {
      3,
      {1, 4},
      0},
-    {"& Dagger (Bodkin)",
+    {"Dagger (Bodkin)",
      0x00000000L,
      TV_SWORD,
      '|', /*  32*/
@@ -501,7 +501,7 @@ static struct treasureS treasureD[] = {
      4,
      {1, 4},
      1},
-    {"& Bowl~ of Oatmeal",
+    {"Bowl~ of Oatmeal",
      0x00000000L,
      TV_FOOD,
      ',', /*  33*/
@@ -515,7 +515,7 @@ static struct treasureS treasureD[] = {
      96,
      {0, 0},
      1},
-    {"& Backsword",
+    {"Backsword",
      0x00000000L,
      TV_SWORD,
      '|', /*  34*/
@@ -529,7 +529,7 @@ static struct treasureS treasureD[] = {
      6,
      {1, 9},
      7},
-    {"& Bastard Sword",
+    {"Bastard Sword",
      0x00000000L,
      TV_SWORD,
      '|', /*  35*/
@@ -543,7 +543,7 @@ static struct treasureS treasureD[] = {
      7,
      {3, 4},
      14},
-    {"& Thrusting Sword (Bilbo)",
+    {"Thrusting Sword (Bilbo)",
      0x00000000L,
      TV_SWORD,
      '|', /*  36*/
@@ -557,7 +557,7 @@ static struct treasureS treasureD[] = {
      8,
      {1, 6},
      4},
-    {"& Thrusting Sword (Baselard)",
+    {"Thrusting Sword (Baselard)",
      0x00000000L,
      TV_SWORD,
      '|', /*  37*/
@@ -571,7 +571,7 @@ static struct treasureS treasureD[] = {
      9,
      {1, 7},
      5},
-    {"& Broadsword",
+    {"Broadsword",
      0x00000000L,
      TV_SWORD,
      '|', /*  38*/
@@ -585,7 +585,7 @@ static struct treasureS treasureD[] = {
      10,
      {2, 5},
      9},
-    {"& Two-Handed Sword (Claymore)",
+    {"Two-Handed Sword (Claymore)",
      0x00000000L,
      TV_SWORD,
      '|', /*  39*/
@@ -599,7 +599,7 @@ static struct treasureS treasureD[] = {
      11,
      {3, 6},
      30},
-    {"& Cutlass",
+    {"Cutlass",
      0x00000000L,
      TV_SWORD,
      '|', /*  40*/
@@ -613,7 +613,7 @@ static struct treasureS treasureD[] = {
      12,
      {1, 7},
      7},
-    {"& Two-Handed Sword (Espadon)",
+    {"Two-Handed Sword (Espadon)",
      0x00000000L,
      TV_SWORD,
      '|', /*  41*/
@@ -627,7 +627,7 @@ static struct treasureS treasureD[] = {
      13,
      {3, 6},
      35},
-    {"& Executioner's Sword",
+    {"Executioner's Sword",
      0x00000000L,
      TV_SWORD,
      '|', /*  42*/
@@ -641,7 +641,7 @@ static struct treasureS treasureD[] = {
      14,
      {4, 5},
      40},
-    {"& Two-Handed Sword (Flamberge)",
+    {"Two-Handed Sword (Flamberge)",
      0x00000000L,
      TV_SWORD,
      '|', /*  43*/
@@ -655,7 +655,7 @@ static struct treasureS treasureD[] = {
      15,
      {4, 5},
      45},
-    {"& Foil",
+    {"Foil",
      0x00000000L,
      TV_SWORD,
      '|', /*  44*/
@@ -669,7 +669,7 @@ static struct treasureS treasureD[] = {
      16,
      {1, 5},
      2},
-    {"& Katana",
+    {"Katana",
      0x00000000L,
      TV_SWORD,
      '|', /*  45*/
@@ -683,7 +683,7 @@ static struct treasureS treasureD[] = {
      17,
      {3, 4},
      18},
-    {"& Longsword",
+    {"Longsword",
      0x00000000L,
      TV_SWORD,
      '|', /*  46*/
@@ -697,7 +697,7 @@ static struct treasureS treasureD[] = {
      18,
      {1, 10},
      12},
-    {"& Two-Handed Sword (No-Dachi)",
+    {"Two-Handed Sword (No-Dachi)",
      0x00000000L,
      TV_SWORD,
      '|', /*  47*/
@@ -711,7 +711,7 @@ static struct treasureS treasureD[] = {
      19,
      {4, 4},
      45},
-    {"& Rapier",
+    {"Rapier",
      0x00000000L,
      TV_SWORD,
      '|', /*  48*/
@@ -725,7 +725,7 @@ static struct treasureS treasureD[] = {
      20,
      {1, 6},
      4},
-    {"& Sabre",
+    {"Sabre",
      0x00000000L,
      TV_SWORD,
      '|', /*  49*/
@@ -739,7 +739,7 @@ static struct treasureS treasureD[] = {
      21,
      {1, 7},
      5},
-    {"& Small Sword",
+    {"Small Sword",
      0x00000000L,
      TV_SWORD,
      '|', /*  50*/
@@ -753,7 +753,7 @@ static struct treasureS treasureD[] = {
      22,
      {1, 6},
      5},
-    {"& Two-Handed Sword (Zweihander)",
+    {"Two-Handed Sword (Zweihander)",
      0x00000000L,
      TV_SWORD,
      '|', /*  51*/
@@ -767,7 +767,7 @@ static struct treasureS treasureD[] = {
      23,
      {4, 6},
      50},
-    {"& Sling",
+    {"Sling",
      0x00000000L,
      TV_LAUNCHER,
      '}', /*  52*/
@@ -781,7 +781,7 @@ static struct treasureS treasureD[] = {
      1,
      {0, 2},
      1},
-    {"& Ball and Chain",
+    {"Ball and Chain",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  53*/
@@ -795,7 +795,7 @@ static struct treasureS treasureD[] = {
      1,
      {2, 4},
      20},
-    {"& Cat-o'-Nine-Tails",
+    {"Cat-o'-Nine-Tails",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  54*/
@@ -809,7 +809,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 4},
      3},
-    {"& Wooden Club",
+    {"Wooden Club",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  55*/
@@ -823,7 +823,7 @@ static struct treasureS treasureD[] = {
      3,
      {2, 2},
      0},
-    {"& Flail",
+    {"Flail",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  56*/
@@ -837,7 +837,7 @@ static struct treasureS treasureD[] = {
      4,
      {2, 6},
      12},
-    {"& Two-Handed Great Flail",
+    {"Two-Handed Great Flail",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  57*/
@@ -851,7 +851,7 @@ static struct treasureS treasureD[] = {
      5,
      {3, 6},
      45},
-    {"& Morningstar",
+    {"Morningstar",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  58*/
@@ -865,7 +865,7 @@ static struct treasureS treasureD[] = {
      6,
      {2, 6},
      10},
-    {"& Mace",
+    {"Mace",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  59*/
@@ -879,7 +879,7 @@ static struct treasureS treasureD[] = {
      7,
      {2, 4},
      6},
-    {"& War Hammer",
+    {"War Hammer",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  60*/
@@ -893,7 +893,7 @@ static struct treasureS treasureD[] = {
      8,
      {3, 3},
      5},
-    {"& Lead-Filled Mace",
+    {"Lead-Filled Mace",
      0x00000000L,
      TV_HAFTED,
      '\\', /*  61*/
@@ -907,7 +907,7 @@ static struct treasureS treasureD[] = {
      9,
      {3, 4},
      15},
-    {"& Awl-Pike",
+    {"Awl-Pike",
      0x00000000L,
      TV_POLEARM,
      '/', /*  62*/
@@ -921,7 +921,7 @@ static struct treasureS treasureD[] = {
      1,
      {1, 8},
      8},
-    {"& Beaked Axe",
+    {"Beaked Axe",
      0x00000000L,
      TV_POLEARM,
      '/', /*  63*/
@@ -935,7 +935,7 @@ static struct treasureS treasureD[] = {
      2,
      {2, 6},
      15},
-    {"& Fauchard",
+    {"Fauchard",
      0x00000000L,
      TV_POLEARM,
      '/', /*  64*/
@@ -949,7 +949,7 @@ static struct treasureS treasureD[] = {
      3,
      {1, 10},
      17},
-    {"& Glaive",
+    {"Glaive",
      0x00000000L,
      TV_POLEARM,
      '/', /*  65*/
@@ -963,7 +963,7 @@ static struct treasureS treasureD[] = {
      4,
      {2, 6},
      20},
-    {"& Halberd",
+    {"Halberd",
      0x00000000L,
      TV_POLEARM,
      '/', /*  66*/
@@ -977,7 +977,7 @@ static struct treasureS treasureD[] = {
      5,
      {3, 4},
      22},
-    {"& Lucerne Hammer",
+    {"Lucerne Hammer",
      0x00000000L,
      TV_POLEARM,
      '/', /*  67*/
@@ -991,7 +991,7 @@ static struct treasureS treasureD[] = {
      6,
      {2, 5},
      11},
-    {"& Pike",
+    {"Pike",
      0x00000000L,
      TV_POLEARM,
      '/', /*  68*/
@@ -1005,7 +1005,7 @@ static struct treasureS treasureD[] = {
      7,
      {2, 5},
      15},
-    {"& Spear",
+    {"Spear",
      0x00000000L,
      TV_POLEARM,
      '/', /*  69*/
@@ -1019,7 +1019,7 @@ static struct treasureS treasureD[] = {
      8,
      {1, 6},
      5},
-    {"& Lance",
+    {"Lance",
      0x00000000L,
      TV_POLEARM,
      '/', /*  70*/
@@ -1033,7 +1033,7 @@ static struct treasureS treasureD[] = {
      9,
      {2, 8},
      10},
-    {"& Javelin",
+    {"Javelin",
      0x00000000L,
      TV_POLEARM,
      '/', /*  71*/
@@ -1047,7 +1047,7 @@ static struct treasureS treasureD[] = {
      10,
      {1, 4},
      4},
-    {"& Battle Axe (Balestarius)",
+    {"Battle Axe (Balestarius)",
      0x00000000L,
      TV_POLEARM,
      '/', /*  72*/
@@ -1061,7 +1061,7 @@ static struct treasureS treasureD[] = {
      11,
      {2, 8},
      30},
-    {"& Battle Axe (European)",
+    {"Battle Axe (European)",
      0x00000000L,
      TV_POLEARM,
      '/', /*  73*/
@@ -1075,7 +1075,7 @@ static struct treasureS treasureD[] = {
      12,
      {3, 4},
      13},
-    {"& Broad Axe",
+    {"Broad Axe",
      0x00000000L,
      TV_POLEARM,
      '/', /*  74*/
@@ -1089,7 +1089,7 @@ static struct treasureS treasureD[] = {
      13,
      {2, 6},
      17},
-    {"& Pair of Soft Leather Shoes",
+    {"Pair of Soft Leather Shoes",
      0x00000000L,
      TV_BOOTS,
      ']', /*  75*/
@@ -1103,7 +1103,7 @@ static struct treasureS treasureD[] = {
      1,
      {0, 0},
      3},
-    {"& Pair of Soft Leather Boots",
+    {"Pair of Soft Leather Boots",
      0x00000000L,
      TV_BOOTS,
      ']', /*  76*/
@@ -1117,7 +1117,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 1},
      10},
-    {"& Pair of Hard Leather Boots",
+    {"Pair of Hard Leather Boots",
      0x00000000L,
      TV_BOOTS,
      ']', /*  77*/
@@ -1131,7 +1131,7 @@ static struct treasureS treasureD[] = {
      3,
      {1, 1},
      40},
-    {"& Pick",
+    {"Pick",
      0x20000000L,
      TV_DIGGING,
      '\\', /*  78*/
@@ -1145,7 +1145,7 @@ static struct treasureS treasureD[] = {
      1,
      {1, 3},
      5},
-    {"& Set of Gauntlets",
+    {"Set of Gauntlets",
      0x00000000L,
      TV_GLOVES,
      ']', /*  79*/
@@ -1159,7 +1159,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 1},
      30},
-    {"& Shovel",
+    {"Shovel",
      0x20000000L,
      TV_DIGGING,
      '\\', /*  80*/
@@ -1173,7 +1173,7 @@ static struct treasureS treasureD[] = {
      4,
      {1, 2},
      1},
-    {"& Short Bow",
+    {"Short Bow",
      0x00000000L,
      TV_LAUNCHER,
      '}', /*  81*/
@@ -1187,7 +1187,7 @@ static struct treasureS treasureD[] = {
      2,
      {0, 2},
      3},
-    {"& Long Bow",
+    {"Long Bow",
      0x00000000L,
      TV_LAUNCHER,
      '}', /*  82*/
@@ -1201,7 +1201,7 @@ static struct treasureS treasureD[] = {
      3,
      {0, 3},
      10},
-    {"& Composite Bow",
+    {"Composite Bow",
      0x00000000L,
      TV_LAUNCHER,
      '}', /*  83*/
@@ -1215,7 +1215,7 @@ static struct treasureS treasureD[] = {
      4,
      {0, 4},
      40},
-    {"& Light Crossbow",
+    {"Light Crossbow",
      0x00000000L,
      TV_LAUNCHER,
      '}', /*  84*/
@@ -1229,7 +1229,7 @@ static struct treasureS treasureD[] = {
      5,
      {0, 3},
      15},
-    {"& Heavy Crossbow",
+    {"Heavy Crossbow",
      0x00000000L,
      TV_LAUNCHER,
      '}', /*  85*/
@@ -1243,7 +1243,7 @@ static struct treasureS treasureD[] = {
      6,
      {0, 4},
      30},
-    {"& Brass Lantern",
+    {"Brass Lantern",
      0x00000000L,
      TV_LIGHT,
      '~', /*  86*/
@@ -1257,7 +1257,7 @@ static struct treasureS treasureD[] = {
      1,
      {1, 1},
      1},
-    {"& Wooden Torch",
+    {"Wooden Torch",
      0x00000000L,
      TV_LIGHT,
      '~', /*  87*/
@@ -1271,7 +1271,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 1},
      1},
-    {"& Orcish Pick",
+    {"Orcish Pick",
      0x20000000L,
      TV_DIGGING,
      '\\', /*  88*/
@@ -1285,7 +1285,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 3},
      20},
-    {"& Dwarven Pick",
+    {"Dwarven Pick",
      0x20000000L,
      TV_DIGGING,
      '\\', /*  89*/
@@ -1299,7 +1299,7 @@ static struct treasureS treasureD[] = {
      3,
      {1, 4},
      50},
-    {"& Gnomish Shovel",
+    {"Gnomish Shovel",
      0x20000000L,
      TV_DIGGING,
      '\\', /*  90*/
@@ -1313,7 +1313,7 @@ static struct treasureS treasureD[] = {
      5,
      {1, 2},
      20},
-    {"& Dwarven Shovel",
+    {"Dwarven Shovel",
      0x20000000L,
      TV_DIGGING,
      '\\', /*  91*/
@@ -1327,7 +1327,7 @@ static struct treasureS treasureD[] = {
      6,
      {1, 3},
      40},
-    {"& Pair of Soft Leather Shoes",
+    {"Pair of Soft Leather Shoes",
      0x00000000L,
      TV_BOOTS,
      ']', /*  92*/
@@ -1341,7 +1341,7 @@ static struct treasureS treasureD[] = {
      1,
      {0, 0},
      1},
-    {"& Pair of Soft Leather Boots",
+    {"Pair of Soft Leather Boots",
      0x00000000L,
      TV_BOOTS,
      ']', /*  93*/
@@ -1355,7 +1355,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 1},
      4},
-    {"& Pair of Hard Leather Boots",
+    {"Pair of Hard Leather Boots",
      0x00000000L,
      TV_BOOTS,
      ']', /*  94*/
@@ -1369,7 +1369,7 @@ static struct treasureS treasureD[] = {
      3,
      {1, 1},
      6},
-    {"& Soft Leather Cap",
+    {"Soft Leather Cap",
      0x00000000L,
      TV_HELM,
      ']', /*  95*/
@@ -1383,7 +1383,7 @@ static struct treasureS treasureD[] = {
      1,
      {0, 0},
      2},
-    {"& Hard Leather Cap",
+    {"Hard Leather Cap",
      0x00000000L,
      TV_HELM,
      ']', /*  96*/
@@ -1397,7 +1397,7 @@ static struct treasureS treasureD[] = {
      2,
      {0, 0},
      4},
-    {"& Metal Cap",
+    {"Metal Cap",
      0x00000000L,
      TV_HELM,
      ']', /*  97*/
@@ -1411,7 +1411,7 @@ static struct treasureS treasureD[] = {
      3,
      {1, 1},
      7},
-    {"& Iron Helm",
+    {"Iron Helm",
      0x00000000L,
      TV_HELM,
      ']', /*  98*/
@@ -1425,7 +1425,7 @@ static struct treasureS treasureD[] = {
      4,
      {1, 3},
      20},
-    {"& Steel Helm",
+    {"Steel Helm",
      0x00000000L,
      TV_HELM,
      ']', /*  99*/
@@ -1439,7 +1439,7 @@ static struct treasureS treasureD[] = {
      5,
      {1, 3},
      40},
-    {"& Silver Crown",
+    {"Silver Crown",
      0x00000000L,
      TV_HELM,
      ']', /*  100*/
@@ -1453,7 +1453,7 @@ static struct treasureS treasureD[] = {
      6,
      {1, 1},
      44},
-    {"& Golden Crown",
+    {"Golden Crown",
      0x00000000L,
      TV_HELM,
      ']', /*  101*/
@@ -1467,7 +1467,7 @@ static struct treasureS treasureD[] = {
      7,
      {1, 2},
      47},
-    {"& Jewel-Encrusted Crown",
+    {"Jewel-Encrusted Crown",
      0x00000000L,
      TV_HELM,
      ']', /*  102*/
@@ -1481,7 +1481,7 @@ static struct treasureS treasureD[] = {
      8,
      {1, 3},
      50},
-    {"& Robe",
+    {"Cloth Robes",
      0x00000000L,
      TV_SOFT_ARMOR,
      '(', /*  103*/
@@ -1775,7 +1775,7 @@ static struct treasureS treasureD[] = {
      12,
      {2, 4},
      50},
-    {"& Cloak",
+    {"Cloak",
      0x00000000L,
      TV_CLOAK,
      '(', /*  124*/
@@ -1789,7 +1789,7 @@ static struct treasureS treasureD[] = {
      1,
      {0, 0},
      1},
-    {"& Set of Leather Gloves",
+    {"Set of Leather Gloves",
      0x00000000L,
      TV_GLOVES,
      ']', /*  125*/
@@ -1803,7 +1803,7 @@ static struct treasureS treasureD[] = {
      1,
      {0, 0},
      1},
-    {"& Set of Gauntlets",
+    {"Set of Gauntlets",
      0x00000000L,
      TV_GLOVES,
      ']', /*  126*/
@@ -1817,7 +1817,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 1},
      12},
-    {"& Small Leather Shield",
+    {"Small Leather Shield",
      0x00000000L,
      TV_SHIELD,
      ')', /*  127*/
@@ -1831,7 +1831,7 @@ static struct treasureS treasureD[] = {
      1,
      {1, 1},
      3},
-    {"& Medium Leather Shield",
+    {"Medium Leather Shield",
      0x00000000L,
      TV_SHIELD,
      ')', /*  128*/
@@ -1845,7 +1845,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 2},
      8},
-    {"& Large Leather Shield",
+    {"Large Leather Shield",
      0x00000000L,
      TV_SHIELD,
      ')', /*  129*/
@@ -1859,7 +1859,7 @@ static struct treasureS treasureD[] = {
      3,
      {1, 2},
      15},
-    {"& Small Metal Shield",
+    {"Small Metal Shield",
      0x00000000L,
      TV_SHIELD,
      ')', /*  130*/
@@ -1873,7 +1873,7 @@ static struct treasureS treasureD[] = {
      4,
      {1, 2},
      10},
-    {"& Medium Metal Shield",
+    {"Medium Metal Shield",
      0x00000000L,
      TV_SHIELD,
      ')', /*  131*/
@@ -1887,7 +1887,7 @@ static struct treasureS treasureD[] = {
      5,
      {1, 3},
      20},
-    {"& Large Metal Shield",
+    {"Large Metal Shield",
      0x00000000L,
      TV_SHIELD,
      ')', /*  132*/
@@ -3805,7 +3805,7 @@ static struct treasureS treasureD[] = {
      108,
      {1, 1},
      3},
-    {"& Flask~ of Oil",
+    {"Flask~ of Oil",
      0x00040000L,
      TV_FLASK,
      '!', /*  269*/
@@ -4617,7 +4617,7 @@ static struct treasureS treasureD[] = {
      67,
      {1, 1},
      40},
-    {"& Small Wooden Chest",
+    {"Small Wooden Chest",
      0x13800000L,
      TV_CHEST,
      '&', /*  327*/
@@ -4631,7 +4631,7 @@ static struct treasureS treasureD[] = {
      1,
      {2, 3},
      7},
-    {"& Large Wooden Chest",
+    {"Large Wooden Chest",
      0x17800000L,
      TV_CHEST,
      '&', /*  328*/
@@ -4645,7 +4645,7 @@ static struct treasureS treasureD[] = {
      4,
      {2, 5},
      15},
-    {"& Small Iron Chest",
+    {"Small Iron Chest",
      0x17800000L,
      TV_CHEST,
      '&', /*  329*/
@@ -4659,7 +4659,7 @@ static struct treasureS treasureD[] = {
      7,
      {2, 4},
      25},
-    {"& Large Iron Chest",
+    {"Large Iron Chest",
      0x23800000L,
      TV_CHEST,
      '&', /*  330*/
@@ -4673,7 +4673,7 @@ static struct treasureS treasureD[] = {
      10,
      {2, 6},
      35},
-    {"& Small Steel Chest",
+    {"Small Steel Chest",
      0x1B800000L,
      TV_CHEST,
      '&', /*  331*/
@@ -4687,7 +4687,7 @@ static struct treasureS treasureD[] = {
      13,
      {2, 4},
      45},
-    {"& Large Steel Chest",
+    {"Large Steel Chest",
      0x33800000L,
      TV_CHEST,
      '&', /*  332*/
@@ -4701,7 +4701,7 @@ static struct treasureS treasureD[] = {
      16,
      {2, 6},
      50},
-    {"& Rat Skeleton",
+    {"Rat Skeleton",
      0x00000000L,
      TV_MISC,
      's', /*  333*/
@@ -4715,7 +4715,7 @@ static struct treasureS treasureD[] = {
      1,
      {1, 1},
      1},
-    {"& Giant Centipede Skeleton",
+    {"Giant Centipede Skeleton",
      0x00000000L,
      TV_MISC,
      's', /*  334*/
@@ -4743,7 +4743,7 @@ static struct treasureS treasureD[] = {
      63,
      {0, 0},
      0},
-    {"& Door Spike~",
+    {"Door Spike~",
      0x00000000L,
      TV_SPIKE,
      '~', /*  336*/
@@ -4757,7 +4757,7 @@ static struct treasureS treasureD[] = {
      129,
      {1, 1},
      1},
-    {"& Human Skeleton",
+    {"Human Skeleton",
      0x00000000L,
      TV_MISC,
      's', /*  337*/
@@ -4771,7 +4771,7 @@ static struct treasureS treasureD[] = {
      7,
      {1, 1},
      1},
-    {"& Dwarf Skeleton",
+    {"Dwarf Skeleton",
      0x00000000L,
      TV_MISC,
      's', /*  338*/
@@ -4785,7 +4785,7 @@ static struct treasureS treasureD[] = {
      8,
      {1, 1},
      1},
-    {"& Elf Skeleton",
+    {"Elf Skeleton",
      0x00000000L,
      TV_MISC,
      's', /*  339*/
@@ -4799,7 +4799,7 @@ static struct treasureS treasureD[] = {
      9,
      {1, 1},
      1},
-    {"& Gnome Skeleton",
+    {"Gnome Skeleton",
      0x00000000L,
      TV_MISC,
      's', /*  340*/
@@ -4813,7 +4813,7 @@ static struct treasureS treasureD[] = {
      10,
      {1, 1},
      1},
-    {"& Rounded Pebble~",
+    {"Rounded Pebble~",
      0x00000000L,
      TV_PROJECTILE,
      '{', /*  341*/
@@ -4827,7 +4827,7 @@ static struct treasureS treasureD[] = {
      129,
      {1, 2},
      0},
-    {"& Iron Slag~",
+    {"Iron Slag~",
      0x00000000L,
      TV_PROJECTILE,
      '{', /*  342*/
@@ -4841,7 +4841,7 @@ static struct treasureS treasureD[] = {
      130,
      {1, 3},
      3},
-    {"& Arrow~",
+    {"Arrow~",
      0x00000000L,
      TV_PROJECTILE,
      '{', /*  343*/
@@ -4855,7 +4855,7 @@ static struct treasureS treasureD[] = {
      131,
      {1, 4},
      2},
-    {"& Bolt~",
+    {"Bolt~",
      0x00000000L,
      TV_PROJECTILE,
      '{', /*  344*/
@@ -4870,7 +4870,7 @@ static struct treasureS treasureD[] = {
      {1, 5},
      2},
     // MAX_DUNGEON_OBJ
-    {"& Hard Biscuit~",
+    {"Hard Biscuit~",
      0x00000000L,
      TV_FOOD,
      ',', /*  345*/
@@ -4884,7 +4884,7 @@ static struct treasureS treasureD[] = {
      93,
      {0, 0},
      1},
-    {"& Strip~ of Beef Jerky",
+    {"Strip~ of Beef Jerky",
      0x00000000L,
      TV_FOOD,
      ',', /*  346*/
@@ -4898,7 +4898,7 @@ static struct treasureS treasureD[] = {
      94,
      {0, 0},
      1},
-    {"& Piece~ of Sourdough Bread",
+    {"Piece~ of Sourdough Bread",
      0x00000000L,
      TV_FOOD,
      ',', /*  347*/
@@ -4912,7 +4912,7 @@ static struct treasureS treasureD[] = {
      95,
      {0, 0},
      1},
-    {"& Bowl~ of Oatmeal",
+    {"Bowl~ of Oatmeal",
      0x00000000L,
      TV_FOOD,
      ',', /*  348*/
@@ -4926,7 +4926,7 @@ static struct treasureS treasureD[] = {
      96,
      {0, 0},
      1},
-    {"& Shovel",
+    {"Shovel",
      0x20000000L,
      TV_DIGGING,
      '\\', /*  349*/
@@ -4940,7 +4940,7 @@ static struct treasureS treasureD[] = {
      4,
      {1, 2},
      5},
-    {"& Pick",
+    {"Pick",
      0x20000000L,
      TV_DIGGING,
      '\\', /*  350*/
@@ -4954,7 +4954,7 @@ static struct treasureS treasureD[] = {
      1,
      {1, 3},
      5},
-    {"a glyph of protection",
+    {"glyph of protection",
      0x00000000L,
      TV_GLYPH,
      '^', /*  351*/
@@ -4968,7 +4968,7 @@ static struct treasureS treasureD[] = {
      1,
      {0, 0},
      10},
-    {"& Pint~ of Fine Grade Mush",
+    {"Pint~ of Fine Grade Mush",
      0x00000000L,
      TV_FOOD,
      ',', /*  352*/
@@ -4982,7 +4982,7 @@ static struct treasureS treasureD[] = {
      97,
      {1, 1},
      1},
-    {"an open pit",
+    {"open pit",
      0x00000000L,
      TV_VIS_TRAP,
      ' ', /*  353*/
@@ -4996,7 +4996,7 @@ static struct treasureS treasureD[] = {
      1,
      {2, 6},
      50},
-    {"an arrow trap",
+    {"arrow trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  354*/
@@ -5010,7 +5010,7 @@ static struct treasureS treasureD[] = {
      2,
      {1, 8},
      90},
-    {"a covered pit",
+    {"covered pit",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  355*/
@@ -5024,7 +5024,7 @@ static struct treasureS treasureD[] = {
      3,
      {2, 6},
      60},
-    {"a trap door",
+    {"trap door",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  356*/
@@ -5038,7 +5038,7 @@ static struct treasureS treasureD[] = {
      4,
      {2, 8},
      75},
-    {"a gas trap",
+    {"gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  357*/
@@ -5052,7 +5052,7 @@ static struct treasureS treasureD[] = {
      5,
      {1, 4},
      95},
-    {"a loose rock",
+    {"loose rock",
      0x00000000L,
      TV_INVIS_TRAP,
      ';', /*  358*/
@@ -5066,7 +5066,7 @@ static struct treasureS treasureD[] = {
      6,
      {0, 0},
      10},
-    {"a dart trap",
+    {"dart trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  359*/
@@ -5080,7 +5080,7 @@ static struct treasureS treasureD[] = {
      7,
      {1, 4},
      110},
-    {"a strange rune",
+    {"strange rune",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  360*/
@@ -5108,7 +5108,7 @@ static struct treasureS treasureD[] = {
      9,
      {2, 6},
      90},
-    {"a gas trap",
+    {"gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  362*/
@@ -5122,7 +5122,7 @@ static struct treasureS treasureD[] = {
      10,
      {1, 4},
      105},
-    {"a strange rune",
+    {"strange rune",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  363*/
@@ -5136,7 +5136,7 @@ static struct treasureS treasureD[] = {
      11,
      {0, 0},
      90},
-    {"a blackened spot",
+    {"blackened spot",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  364*/
@@ -5164,7 +5164,7 @@ static struct treasureS treasureD[] = {
      13,
      {4, 6},
      110},
-    {"a gas trap",
+    {"gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  366*/
@@ -5178,7 +5178,7 @@ static struct treasureS treasureD[] = {
      14,
      {4, 6},
      105},
-    {"a gas trap",
+    {"gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  367*/
@@ -5192,7 +5192,7 @@ static struct treasureS treasureD[] = {
      15,
      {1, 4},
      110},
-    {"a gas trap",
+    {"gas trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  368*/
@@ -5206,7 +5206,7 @@ static struct treasureS treasureD[] = {
      16,
      {1, 8},
      105},
-    {"a dart trap",
+    {"dart trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  369*/
@@ -5220,7 +5220,7 @@ static struct treasureS treasureD[] = {
      17,
      {1, 8},
      110},
-    {"a dart trap",
+    {"dart trap",
      0x00000000L,
      TV_INVIS_TRAP,
      '^', /*  370*/
@@ -5368,4 +5368,7 @@ static uint8_t rgold_adjD[AL(raceD)][AL(raceD)] = {
     /* Half-Orc   */ {115, 120, 125, 115, 115, 130, 110, 115},
     /* Half-Troll */ {110, 115, 115, 110, 110, 130, 110, 110},
     /* owner race */
+};
+static int goldD[MAX_GOLD] = {
+    3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 80,
 };
