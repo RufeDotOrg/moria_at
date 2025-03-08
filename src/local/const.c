@@ -195,6 +195,7 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define MAX_OBJ_LEVEL 50
 #define MAX_DUNGEON_OBJ 345
 #define OBJ_GREAT 12  // 1/x treasure is a big surprise!
+#define MAX_GOLD 18
 
 /* Magic Treasure Generation constants    */
 /* Note: Number of special objects, and degree of enchantments  */
@@ -449,6 +450,7 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 
 /* tval sub type */
 #define MAX_SUBVAL 64
+#define MAX_TITLE 16
 #define MASK_SUBVAL (MAX_SUBVAL - 1)
 
 // Potion/Scroll/Food: +/- 1 per interaction

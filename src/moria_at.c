@@ -17,6 +17,7 @@ enum { TEST_CHECKLEN = 0 };
 
 // #include "src/mod/replay.c"
 // #include "src/mod/cavegen.c"
+// #include "src/mod/checklen.c"
 // #undef TEST_CAVEGEN
 
 DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
@@ -2551,7 +2552,7 @@ char** sample;
   int trk = 0;
   if (k) trk = knownD[k - 1][subval];
   *unknown = (trk & TRK_FULL) == 0;
-  *sample = trk & TRK_SAMPLE ? " {sampled}" : "";
+  *sample = trk & TRK_SAMPLE ? "{sampled}" : "";
 }
 int
 tr_is_known(tr_ptr)
@@ -3356,16 +3357,6 @@ place_rubble(y, x)
     obj->number = 1;
   }
 }
-
-#define MAX_GOLD 18
-DATA int goldD[MAX_GOLD] = {
-    3, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 24, 28, 32, 40, 80,
-};
-DATA char* gold_nameD[MAX_GOLD] = {
-    "copper",    "copper",  "copper", "silver",   "silver",   "silver",
-    "garnets",   "garnets", "gold",   "gold",     "gold",     "opals",
-    "sapphires", "gold",    "rubies", "diamonds", "emeralds", "mithril",
-};
 void
 place_gold(y, x)
 {
@@ -5196,41 +5187,6 @@ is_a_vowel(chr)
   }
   return FALSE;
 }
-void
-desc_fixup(number)
-{
-  char obj_name[AL(descD) - 8];
-
-  int offset = 0;
-  for (int it = 0; it < AL(descD); ++it) {
-    if (descD[it] != '~')
-      obj_name[it - offset] = descD[it];
-    else if (number != 1)
-      obj_name[it - offset] = 's';
-    else
-      offset += 1;
-    if (descD[it] == 0) break;
-  }
-
-  /* ampersand is always the first character */
-  if (obj_name[0] == '&') {
-    /* use &obj_name[1], so that & does not appear in output */
-    if (number > 1)
-      snprintf(descD, AL(descD), "%d%s", number, &obj_name[1]);
-    else if (number < 1)
-      snprintf(descD, AL(descD), "%s%s", "no more", &obj_name[1]);
-    else if (is_a_vowel(obj_name[2]))
-      snprintf(descD, AL(descD), "an%s", &obj_name[1]);
-    else
-      snprintf(descD, AL(descD), "a%s", &obj_name[1]);
-  }
-  /* handle 'no more' case specially */
-  else if (number < 1) {
-    /* check for "some" at start */
-    snprintf(descD, AL(descD), "no more %s", obj_name);
-  } else
-    strcpy(descD, obj_name);
-}
 void obj_detail(obj) struct objS* obj;
 {
   char tmp_str[80];
@@ -5285,27 +5241,87 @@ void obj_detail(obj) struct objS* obj;
     }
   }
 }
+// copy src to dst with moria formatting spec
+DATA int oprefixD = 0;
+int64_t
+moria_ocat_num(dst, dstlen, objname, num)
+char* dst;
+char* objname;
+{
+  char* end = dst + dstlen;
+  char* iter = dst;
+  char c = 0;
+  while (*iter) {
+    c = *iter++;
+  }
+
+  if (oprefixD && iter == dst) {
+    int wr = 0;
+    if (num > 1) wr = apcati(iter, dstlen, num);
+    if (num < 1) wr = apcopy(iter, dstlen, S2("no more"));
+    if (num == 1) {
+      if (is_a_vowel(objname[0]))
+        wr = apcopy(iter, dstlen, S2("an"));
+      else
+        wr = apcopy(iter, dstlen, S2("a"));
+    }
+    iter += wr;
+  }
+
+  if (iter < end && iter > dst)
+    if (iter[-1] != ' ') *iter++ = ' ';
+
+  while ((c = *objname++)) {
+    if (c == '~') {
+      if (num == 1) continue;
+      c = 's';
+    }
+    if (iter == end) break;
+    *iter++ = c;
+  }
+  *iter = 0;
+  return iter - dst;
+}
+// p1: range [-9, 9]
+int
+moriap_bonus(dst, dstlen, p1)
+char* dst;
+{
+  if (dstlen >= 5) {
+    *dst++ = '(';
+    *dst++ = p1 >= 0 ? '+' : '-';
+    *dst++ = '0' + ABS(p1);
+    *dst++ = ')';
+    *dst++ = 0;
+  }
+  return dstlen >= 5;
+}
+#define desc(str) moria_ocat_num(AP(descD), str, number)
 void obj_desc(obj, number) struct objS* obj;
 {
-  char* name;
-  char* suffix;
-  char* sample;
-  int indexx, unknown, p1;
-  struct treasureS* tr_ptr;
+  char* prefix = 0;
+  char* name = 0;
+  char* suffix = 0;
+  char* sample = "";
+  char bonus[8];
+  int unknown = 0;
 
-  memset(descD, 0x20202020, AL(descD));
-  tr_ptr = &treasureD[obj->tidx];
-  name = tr_ptr->name;
+  apclear(AP(descD));
+  apclear(AP(bonus));
+  oprefixD = !(obj->tval == TV_SOFT_ARMOR || obj->tval == TV_HARD_ARMOR);
+  if (obj->tidx) {
+    struct treasureS* tr_ptr = &treasureD[obj->tidx];
+    name = tr_ptr->name;
 
-  suffix = 0;
-  p1 = 0;
-  tr_unknown_sample(tr_ptr, &unknown, &sample);
-  if (obj->idflag & ID_REVEAL) {
-    unknown = 0;
-    suffix = special_nameD[obj->sn];
-    p1 = obj->p1;
+    if (obj->idflag & ID_REVEAL) {
+      suffix = special_nameD[obj->sn];
+      if (obj->p1) moriap_bonus(AP(bonus), obj->p1);
+    } else {
+      tr_unknown_sample(tr_ptr, &unknown, &sample);
+    }
   }
-  indexx = mask_subval(obj->subval);
+
+  int indexx = mask_subval(obj->subval);
   switch (obj->tval) {
     case TV_MISC:
     case TV_CHEST:
@@ -5317,6 +5333,8 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_LAUNCHER:
       break;
     case TV_LIGHT:
+      break;
+    case TV_FLASK:
       break;
     case TV_HAFTED:
     case TV_POLEARM:
@@ -5334,140 +5352,123 @@ void obj_desc(obj, number) struct objS* obj;
     case TV_SOFT_ARMOR:
       break;
     case TV_AMULET:
-      if (unknown) {
-        snprintf(descD, AL(descD), "& %s Amulet", amulets[indexx]);
-        name = 0;
-      } else {
-        name = "& Amulet";
-        suffix = tr_ptr->name;
-      }
+      if (unknown)
+        prefix = amulets[indexx];
+      else
+        suffix = name;
+      name = "Amulet";
       break;
     case TV_RING:
-      if (unknown) {
-        name = 0;
-        snprintf(descD, AL(descD), "& %s Ring", rocks[indexx]);
-      } else {
-        name = "& Ring";
-        suffix = tr_ptr->name;
-      }
+      if (unknown)
+        prefix = rocks[indexx];
+      else
+        suffix = name;
+      name = "Ring";
       break;
     case TV_STAFF:
-      if (unknown) {
-        name = 0;
-        snprintf(descD, AL(descD), "& %s Staff%s", woods[indexx], sample);
-      } else {
-        name = "& Staff";
-        suffix = tr_ptr->name;
-        p1 = 0;
-      }
+      if (unknown)
+        prefix = woods[indexx];
+      else
+        suffix = name;
+      name = "Staff";
+      *bonus = 0;
       break;
     case TV_WAND:
-      if (unknown) {
-        name = 0;
-        snprintf(descD, AL(descD), "& %s Wand%s", metals[indexx], sample);
-      } else {
-        name = "& Wand";
-        suffix = tr_ptr->name;
-        p1 = 0;
-      }
+      if (unknown)
+        prefix = metals[indexx];
+      else
+        suffix = name;
+      name = "Wand";
+      *bonus = 0;
       break;
     case TV_SCROLL1:
     case TV_SCROLL2:
       if (unknown) {
+        desc("Scroll~ titled");
+        desc(titleD[indexx]);
         name = 0;
-        snprintf(descD, AL(descD), "& Scroll~ titled \"%s\"%s", titleD[indexx],
-                 sample);
       } else {
-        name = "& Scroll~";
-        suffix = tr_ptr->name;
+        suffix = name;
+        name = "Scroll~";
       }
       break;
     case TV_POTION1:
     case TV_POTION2:
-      if (unknown) {
-        name = 0;
-        snprintf(descD, AL(descD), "& %s Potion~%s", colors[indexx], sample);
-      } else {
-        name = "& Potion~";
-        suffix = tr_ptr->name;
-        p1 = 0;
-      }
-      break;
-    case TV_FLASK:
+      if (unknown)
+        prefix = colors[indexx];
+      else
+        suffix = name;
+      name = "Potion~";
+      *bonus = 0;
       break;
     case TV_FOOD:
+      *bonus = 0;
       if (indexx <= 20) {
-        if (unknown) {
-          if (indexx <= 15)
-            snprintf(descD, AL(descD), "& %s Mushroom~%s", mushrooms[indexx],
-                     sample);
-          else if (indexx <= 20)
-            snprintf(descD, AL(descD), "& Hairy %s Mold~%s", mushrooms[indexx],
-                     sample);
-          name = 0;
-        } else {
-          suffix = tr_ptr->name;
-          p1 = 0;
-          if (indexx <= 15)
-            name = "& Mushroom~";
-          else if (indexx <= 20)
-            name = "& Hairy Mold~";
-        }
+        if (unknown)
+          prefix = mushrooms[indexx];
+        else
+          suffix = name;
+        if (indexx >= 16)
+          name = "Mold~";
+        else
+          name = "Mushroom~";
       }
       break;
     case TV_MAGIC_BOOK:
-      name = "& Book~";
-      suffix = tr_ptr->name;
-      break;
     case TV_PRAYER_BOOK:
-      name = "& Book~";
-      suffix = tr_ptr->name;
+      suffix = name;
+      name = "Book~";
       break;
     case TV_GOLD:
+      oprefixD = 0;
       name = gold_nameD[indexx];
       break;
     case TV_OPEN_DOOR:
-      name = "& open door";
+      name = "open door";
       break;
     case TV_CLOSED_DOOR:
-      name = "& closed door";
+      name = "closed door";
       break;
     case TV_RUBBLE:
       name = "rubble";
       break;
     case TV_SECRET_DOOR:
-      descD[0] = 0;
+      // name = "secret door";
       return;
     case TV_UP_STAIR:
-      name = "& staircase up";
+      name = "staircase up";
       break;
     case TV_DOWN_STAIR:
-      name = "& staircase down";
+      name = "staircase down";
       break;
+    case TV_INVIS_TRAP:
     case TV_VIS_TRAP:
     case TV_GLYPH:
       break;
     case TV_PAWN_DOOR:
-      name = "& pawn shop";
+      name = "pawn shop";
       break;
     case TV_STORE_DOOR:
-      name = "& store entrance";
+      name = "store entrance";
       break;
     default:
-      snprintf(descD, AL(descD), "Error in objdes(): %d", obj->tval);
-      return;
+      name = "unknown object";
+      break;
   }
-  if (suffix) {
-    if (p1)
-      snprintf(descD, AL(descD), "%s of %s (%+d)", name, suffix, p1);
-    else
-      snprintf(descD, AL(descD), "%s of %s", name, suffix);
+  if (prefix) {
+    desc(prefix);
+    desc(name);
+    if (*sample) desc(sample);
+  } else if (suffix) {
+    desc(name);
+    desc("of");
+    desc(suffix);
+    if (*bonus) desc(bonus);
   } else if (name) {
-    strcpy(descD, name);
+    desc(name);
   }
-
-  desc_fixup(number);
 }
+#undef desc
 static void
 mon_desc(midx)
 {
@@ -6559,7 +6560,7 @@ STATIC void sort(array, len) void* array;
 int
 magic_init()
 {
-  int i, j, k, h;
+  int i, j, k, t;
   void* tmp;
 
   store_init();
@@ -6607,19 +6608,20 @@ magic_init()
     mushrooms[i] = mushrooms[j];
     mushrooms[j] = tmp;
   }
-  for (h = 0; h < AL(titleD); h++) {
-    descD[0] = 0;
-    k = randint(2) + 1;
-    for (i = 0; i < k; i++) {
-      for (j = randint(2); j > 0; j--)
-        strcat(descD, syllableD[randint(AL(syllableD)) - 1]);
-      if (i < k - 1) strcat(descD, " ");
+  memset(titleD, 0, sizeof(titleD));
+  for (t = 0; t < AL(titleD); t++) {
+    int64_t len = 0;
+    apcat(AP(titleD[t]), "\"");
+    for (i = randint(2) + 1; i > 0; i--) {
+      for (j = randint(2); j > 0; j--) {
+        int s = randint(AL(syllableD)) - 1;
+        int l = apcat(AP(titleD[t]), syllableD[s]);
+        if (l < MAX_TITLE - 1) len = l;
+      }
+      if (i > 1) apcat(AP(titleD[t]), " ");
     }
-    if (descD[8] == ' ')
-      descD[8] = '\0';
-    else
-      descD[9] = '\0';
-    strcpy(titleD[h], descD);
+    titleD[t][len] = 0;
+    apcat(AP(titleD[t]), "\"");
   }
   return 0;
 }

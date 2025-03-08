@@ -102,6 +102,12 @@ static char* walls[] = {
     "permanent wall",
 };
 
+static char* gold_nameD[MAX_GOLD] = {
+    "copper",    "copper",  "copper", "silver",   "silver",   "silver",
+    "garnets",   "garnets", "gold",   "gold",     "gold",     "opals",
+    "sapphires", "gold",    "rubies", "diamonds", "emeralds", "mithril",
+};
+
 static char* syllableD[] = {
     "a",    "ab",   "ag",   "aks",  "ala",  "an",  "ankh", "app", "arg",
     "arze", "ash",  "aus",  "ban",  "bar",  "bat", "bek",  "bie", "bin",
@@ -121,7 +127,7 @@ static char* syllableD[] = {
     "um",   "un",   "uni",  "ur",   "val",  "viv", "vly",  "vom", "wah",
     "wed",  "werg", "wex",  "whon", "wun",  "x",   "yerg", "yp",  "zun",
 };
-static char titleD[MAX_SUBVAL][10];
+static char titleD[MAX_SUBVAL][MAX_TITLE];
 static char* gutteralD[] = {
     "a",  "as", "be", "e",   "hen", "in",  "j",  "lon", "mu",
     "na", "on", "ry", "shi", "sk",  "ste", "va", "ya",  "zos",
