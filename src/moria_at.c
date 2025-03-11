@@ -60,6 +60,13 @@ DATA int magick_hituD;
     r = snprintf(name##D[line] + used, avail, text, ##__VA_ARGS__); \
     if (r > 0 && r <= avail) name##_usedD[line++] = used + r;       \
   }
+#define BufFixed(name, text)                  \
+  {                                           \
+    struct bufS b = {AP(text)};               \
+    memcpy(name##D[line], b.mem, b.mem_size); \
+    name##_usedD[line] = b.mem_size;          \
+    line += 1;                                \
+  }
 #define BufLineAppend(name, line, text, ...)                             \
   {                                                                      \
     int used, append;                                                    \
@@ -8568,245 +8575,193 @@ struct objS* obj;
   return tabil;
 }
 int
+strip_tail(line)
+{
+  char* text = screenD[line];
+  int end = screen_usedD[line];
+  int it;
+  for (it = end; it > 0; --it) {
+    if (text[it] == ' ') break;
+  }
+  screen_usedD[line] = it;
+  return 0;
+}
+static char* ac_text[] = {"Armor Base", "Armor Modifier", "  Total Armor"};
+int
 obj_study(obj, town_store)
 struct objS* obj;
 {
-  struct treasureS* tr_ptr;
-  int line;
-  int reveal, blows, eqidx;
-  int number, stackweight, stacklimit;
-  int wheavy;
+  int line = 0;
 
-  reveal = obj->idflag & ID_REVEAL;
-  if (obj->tidx) {
-    tr_ptr = &treasureD[obj->tidx];
-    screen_submodeD = 1;
-    if (HACK) obj->idflag = ID_REVEAL;
-    eqidx = may_equip(obj->tval);
-    wheavy = tohit_by_weight(obj->weight);
-    number = obj->number;
+  if (HACK) obj->idflag = ID_REVEAL;
+
+  int known = obj->tidx && tr_is_known(&treasureD[obj->tidx]);
+  if (obj->id) {
+    int number = obj->number;
     if (town_store && (STACK_SINGLE & obj->subval)) number = 1;
 
-    line = 0;
-    BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Weight (single)",
-           obj->weight / 10, obj->weight % 10);
-    if (number > 1) {
-      int sum_weight = obj->number * obj->weight;
-      BufMsg(screen, "%-17.017s: %d.%01d Lbs", "Total Weight", sum_weight / 10,
-             sum_weight % 10);
-    }
+    BufMsg(screen, "Weight %d.%01d Lbs (per)", obj->weight / 10,
+           obj->weight % 10);
     if (STACK_ANY & obj->subval) {
-      stackweight = ustackweight();
-      stacklimit = stacklimit_by_max_weight(stackweight, obj->weight);
-      BufMsg(screen, "%-17.017s: %d", "Stack Limit (STR)", stacklimit);
+      int stacklimit = stacklimit_by_max_weight(ustackweight(), obj->weight);
+      BufMsg(screen, "Stacking %d/%d %d Lbs (stack)", number, stacklimit,
+             number * obj->weight / 10);
     }
 
-    if (tr_is_known(tr_ptr)) {
-      if (obj->tval == TV_WAND || obj->tval == TV_STAFF) {
-        int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
-        BufMsg(screen, "%-17.017s: %d", "Device Level", obj->level);
-        BufMsg(screen, "%-17.017s: %+d", "Device Skill", diff);
-      }
-    } else {
-      BufMsg(screen, "... has unknown effects!");
+    switch (obj->tval) {
+      case TV_LAUNCHER:
+        BufMsg(screen, "Launcher of %s", projectile_nameD[obj->p1]);
+        break;
+      case TV_PROJECTILE:
+        BufMsg(screen, "Projectile for %s", launcher_nameD[obj->p1]);
+        break;
+      case TV_WAND:
+      case TV_STAFF:
+        if (known) {
+          int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
+          BufMsg(screen, "Device Level %d (%+d Chance)", obj->level, diff);
+        }
+        break;
+      case TV_HAFTED:
+      case TV_POLEARM:
+      case TV_SWORD:
+        // TBD: Add attack damage detail to character screen
+        {
+          int blows = attack_blows(obj->weight);
+          BufMsg(screen, "Damage per Blow [ %d - %d ]", (obj->damage[0]),
+                 (obj->damage[0] * obj->damage[1]));
+          BufMsg(screen, "x%d Attack Blows", blows);
+        }
+        break;
     }
 
-    if (obj->tval == TV_DIGGING) {
-      if (wheavy) BufMsg(screen, "%-17.017s: %+d", "Too Heavy Penalty", wheavy);
-      BufMsg(screen, "%-17.017s: %+d", "+ To Digging", obj_tabil(obj, reveal));
-    }
-    if (obj->tval == TV_LAUNCHER) {
-      if (wheavy) BufMsg(screen, "%-17.017s: %+d", "Too Heavy Penalty", wheavy);
-      BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-      BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
-      if (obj->p1 < AL(projectile_nameD)) {
-        BufMsg(screen, "%-17.017s: %s", "Projectile",
-               projectile_nameD[obj->p1]);
+    if (!known) BufFixed(screen, "  has unknown affects!");
+    int eqidx = may_equip(obj->tval);
+    int reveal = (obj->idflag & ID_REVEAL);
+    if (reveal && eqidx > 0) {
+      if (obj->tohit || obj->todam || eqidx == INVEN_WIELD)
+        BufMsg(screen, "  %+d ToHit %+d ToDam", obj->tohit, obj->todam);
+
+      // Any non-zero value (total may be zero)
+      if (obj->ac || obj->toac)
+        BufMsg(screen, "  Armor %d%+d = %d AC", obj->ac, obj->toac,
+               obj->ac + obj->toac);
+
+      int i = obj->flags;
+      while (i != 0) {
+        uint32_t flag = i & -i;
+        i ^= flag;
+        char* text = 0;
+        switch (flag) {
+          case TR_STR:
+            text = "Modifies Strength";
+            break;
+          case TR_INT:
+            text = "Modifies Intelligence";
+            break;
+          case TR_WIS:
+            text = "Modifies Wisdom";
+            break;
+          case TR_DEX:
+            text = "Modifies Dexterity";
+            break;
+          case TR_CON:
+            text = "Modifies Constitution";
+            break;
+          case TR_CHR:
+            text = "Modifies Charisma";
+            break;
+          case TR_SEARCH:
+            text = "Improves Searching and Perception";
+            break;
+          case TR_SLOW_DIGEST:
+            text = "Slows food consumption";
+            break;
+          case TR_STEALTH:
+            text = "Improves Stealth";
+            break;
+          case TR_AGGRAVATE:
+            text = "Aggravates monsters";
+            break;
+          case TR_TELEPORT:
+            text = "Causes random teleportation";
+            break;
+          case TR_REGEN:
+            text = "Speeds regeneration and increases health";
+            break;
+          case TR_SPEED:
+            text = "Increases player speed";
+            break;
+          case TR_SLAY_DRAGON:
+            text = "Effective against dragons (400%)";
+            break;
+          case TR_SLAY_ANIMAL:
+            text = "Effective against animals (200%)";
+            break;
+          case TR_SLAY_EVIL:
+            text = "Effective against evil creatures (200%)";
+            break;
+          case TR_SLAY_UNDEAD:
+            text =
+                "Effective against undead (300%) and Protection from XP drain";
+            break;
+          case TR_FROST_BRAND:
+            text = "Does cold damage (150% vs fire)";
+            break;
+          case TR_FLAME_TONGUE:
+            text = "Does fire damage (150% vs cold)";
+            break;
+          case TR_RES_FIRE:
+            text = "Provides fire resistance (50%)";
+            break;
+          case TR_RES_ACID:
+            text = "Provides acid resistance (50%)";
+            break;
+          case TR_RES_COLD:
+            text = "Provides cold resistance (50%)";
+            break;
+          case TR_SUST_STAT:
+            text = "Sustains modified stats from reduction";
+            break;
+          case TR_FREE_ACT:
+            text = "Provides free action (immune to paralysis)";
+            break;
+          case TR_SEE_INVIS:
+            text = "Allows seeing invisible creatures";
+            break;
+          case TR_RES_LIGHT:
+            text = "Provides light resistance (50%)";
+            break;
+          case TR_FFALL:
+            text = "Prevents falling through trap doors";
+            break;
+          case TR_SEEING:
+            text = "Provides enhanced sight (immune to blind)";
+            break;
+          case TR_HERO:
+            text = "Grants heroism (immune to fear)";
+            break;
+          case TR_EZXP:
+            text = "Increases level gain per experience";
+            break;
+          case TR_SLOWNESS:
+            text = "Reduces player speed";
+            break;
+          case TR_CURSED:
+            text = "Item is cursed (cannot remove)";
+            break;
+        }
+        BufMsg(screen, "  %s (%+d)", text, obj->p1);
+        if ((flag & TR_P1) == 0) strip_tail(line - 1);
       }
-    }
-    if (obj->tval == TV_PROJECTILE) {
-      if (obj->p1 < AL(launcher_nameD)) {
-        BufMsg(screen, "%-17.017s: %s", "Launcher", launcher_nameD[obj->p1]);
-      }
-    }
-    if (eqidx == INVEN_WIELD) {
-      if (wheavy) BufMsg(screen, "%-17.017s: %+d", "Too Heavy Penalty", wheavy);
-      BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-      BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
 
-      BufMsg(screen, "%-17.017s: (%dd%d)", "Damage Dice", obj->damage[0],
-             obj->damage[1]);
-
-      BufMsg(screen, "%-17.017s: [%d - %d]", "Damage per Blow",
-             (obj->damage[0]), (obj->damage[0] * obj->damage[1]));
-
-      if (obj->idflag & ID_REVEAL) {
-        if (obj->todam >= 0) {
-          BufLineAppend(screen, line - 1, " + %d", obj->todam);
-        } else {
-          BufLineAppend(screen, line - 1, " - %d", -obj->todam);
-        }
-      } else {
-        BufLineAppend(screen, line - 1, "?");
-      }
-
-      blows = attack_blows(obj->weight);
-      BufMsg(screen, "%-17.017s: %d", "Number of Blows", blows);
-      if (obj->idflag & ID_REVEAL) {
-        BufMsg(screen, "%-17.017s: [%d - %d]", "Total Damage",
-               blows * MAX(obj->damage[0] + obj->todam, 1),
-               blows * MAX((obj->damage[0] * obj->damage[1] + obj->todam), 1));
-      } else {
-        BufMsg(screen, "%-17.017s: [%d - %d]?", "Total Damage",
-               blows * MAX(obj->damage[0], 1),
-               blows * MAX((obj->damage[0] * obj->damage[1]), 1));
-      }
-    } else if (eqidx > INVEN_WIELD) {
-      if (eqidx == INVEN_BODY) {
-        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-      } else if (reveal && oset_tohitdam(obj)) {
-        BufMsg(screen, "%-17.017s: %+d", "+ To Hit", obj->tohit);
-        BufMsg(screen, "%-17.017s: %+d", "+ To Damage", obj->todam);
-      }
-    }
-
-    if (eqidx >= INVEN_EQUIP) {
-      if (reveal && (obj->ac || obj->toac)) {
-        line += 1;
-        if (obj->ac) BufMsg(screen, "%-17.017s: %d", "Base Armor", obj->ac);
-        if (obj->toac)
-          BufMsg(screen, "%-17.017s: %+d", "+ To Armor", obj->toac);
-        BufMsg(screen, "%-17.017s: %+d", "Total Armor", obj->ac + obj->toac);
-      }
-    }
-
-    if (eqidx >= INVEN_EQUIP) {
-      line += 1;
-      if (obj->idflag & ID_REVEAL) {
-        if (obj->flags & TR_SEARCH) {
-          if (obj->p1) {
-            BufMsg(screen, "%-17.017s: %+d", "Search", obj->p1);
-            BufMsg(screen, "%-17.017s: %+d", "Perception", obj->p1);
-          }
-        }
-        if (obj->flags & TR_STEALTH) {
-          if (obj->p1) BufMsg(screen, "%-17.017s: %+d", "Stealth", obj->p1);
-        }
-        for (int it = 0; it < MAX_A; ++it) {
-          if (obj->flags & (1 << it)) {
-            BufMsg(screen, "%-17.017s: %+d", stat_nameD[it], obj->p1);
-            if (obj->flags & TR_SUST_STAT)
-              BufMsg(screen, "%s cannot be reduced", stat_nameD[it]);
-          }
-        }
-        if (obj->flags & TR_EZXP) {
-          BufMsg(screen,
-                 "reduces experience to level multiplier by half (%d%%)",
-                 (uD.mult_exp - 100) / 2);
-        }
-        if (obj->flags & TR_SLOW_DIGEST) {
-          BufMsg(screen, "slows digestion");
-        }
-        if (obj->flags & TR_AGGRAVATE) {
-          BufMsg(screen, "aggravates monsters");
-        }
-        if (obj->flags & TR_TELEPORT) {
-          BufMsg(screen, "randomly teleports you");
-        }
-        if (obj->flags & TR_REGEN) {
-          BufMsg(screen, "increases health regeneration");
-          BufMsg(screen, "+%d Max HP", PLAYER_REGEN_HPBONUS);
-        }
-        if (obj->flags & TR_SPEED) {
-          BufMsg(screen, "increases movement and attack speed");
-        }
-
-        if (obj->flags & TR_EGO_WEAPON) {
-          BufMsg(screen, "one of the following damage multipliers:");
-        }
-        if (obj->flags & TR_SLAY_DRAGON) {
-          BufMsg(screen, "  x4 vs dragons");
-        }
-        if (obj->flags & TR_SLAY_UNDEAD) {
-          BufMsg(screen, "  x3 vs undead");
-        }
-        if (obj->flags & TR_SLAY_ANIMAL) {
-          BufMsg(screen, "  x2 vs animals");
-        }
-        if (obj->flags & TR_SLAY_EVIL) {
-          BufMsg(screen, "  x2 vs evil");
-        }
-        if (obj->flags & TR_FROST_BRAND) {
-          BufMsg(screen, "  x1.5 vs vulnerable to cold");
-        }
-        if (obj->flags & TR_FLAME_TONGUE) {
-          BufMsg(screen, "  x1.5 vs vulnerable to fire");
-        }
-
-        if (obj->flags & TR_RES_FIRE) {
-          BufMsg(screen, "grants resistence to fire damage");
-        }
-        if (obj->flags & TR_RES_ACID) {
-          BufMsg(screen, "grants resistence to acid damage");
-        }
-        if (obj->flags & TR_RES_COLD) {
-          BufMsg(screen, "grants resistence to cold damage");
-        }
-        if (obj->flags & TR_RES_LIGHT) {
-          BufMsg(screen, "grants resistence to lightning damage");
-        }
-        if (obj->flags & TR_SEEING) {
-          BufMsg(screen, "grants immunity to blindness");
-        }
-        if (obj->flags & TR_HERO) {
-          BufMsg(screen, "grants immunity to fear");
-        }
-        if (obj->flags & TR_FREE_ACT) {
-          BufMsg(screen, "grants immunity to paralysis");
-        }
-        if (obj->flags & TR_SEE_INVIS) {
-          BufMsg(screen, "grants sight of invisible monsters");
-        }
-        if (obj->flags & TR_FFALL) {
-          BufMsg(screen, "prevents falling through trap doors");
-        }
-        if (obj->flags & TR_SLOWNESS) {
-          BufMsg(screen, "slows movement and attack speed");
-        }
-        if (obj->flags & TR_CURSED) {
-          BufMsg(screen, "... is known to be cursed!");
-        }
-        if (obj->sn == SN_SU) {
-          BufMsg(screen, "grants resistence to life drain");
-        }
-        if (obj->sn == SN_INFRAVISION) {
-          BufMsg(screen, "grants infra-vision up to %+d feet", obj->p1 * 10);
-        }
-        if (obj->sn == SN_LORDLINESS) {
-          BufMsg(screen, "improves skill with magic devices by %+d",
-                 obj->p1 * 10);
-        }
-      } else {
-        if (obj->idflag & ID_CORRODED) {
-          BufMsg(screen, "... is corroded, providing no protection from acid.");
-        }
-
-        if (obj->idflag & ID_PLAIN) {
-          BufMsg(screen, "... is known to be plain.");
-        } else if (obj->idflag & ID_DAMD) {
-          BufMsg(screen, "... is known to be cursed!");
-        } else if (obj->idflag & ID_MAGIK) {
-          BufMsg(screen, "... is known to be magical!");
-        } else if (obj->idflag & ID_RARE) {
-          BufMsg(screen, "... is known to be rare!");
-        } else {
-          BufMsg(screen, "... is unidentified!");
-        }
-      }
+      if (obj->sn == SN_LORDLINESS)
+        BufFixed(screen, "  Increases success with wands & staves");
     }
 
-    obj_desc(obj, number);
+    obj_desc(obj, obj->number);
     blipD = 1;
+    screen_submodeD = 1;
     return CLOBBER_MSG("You study %s.", descD);
   }
 
