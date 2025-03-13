@@ -8361,7 +8361,7 @@ inven_overlay(begin, end, show_weight)
 
       memcpy(overlayD[line] + descw, AP(descD));
       if (detailD[1] != ' ') {
-        if (descD[detailw - descw - 1] != ' ') {
+        if (descD[detailw - descw - 1]) {
           memcpy(overlayD[line] + detailw - 3, AP("..."));
         }
 
@@ -13537,7 +13537,7 @@ pawn_display()
         memcpy(overlayD[line] + descw, AP(descD));
 
         if (detailD[1] != ' ') {
-          if (descD[detailw - descw - 1] != ' ') {
+          if (descD[detailw - descw - 1]) {
             memcpy(overlayD[line] + detailw - 3, AP("..."));
           }
           memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
@@ -13580,7 +13580,7 @@ store_display(sidx)
       memcpy(overlayD[line] + descw, AP(descD));
 
       if (detailD[1] != ' ') {
-        if (descD[detailw - descw - 1] != ' ') {
+        if (descD[detailw - descw - 1]) {
           memcpy(overlayD[line] + detailw - 3, AP("..."));
         }
         memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
