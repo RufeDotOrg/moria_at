@@ -6,6 +6,12 @@ char* dst;
 {
   memset(dst, 0, dlen);
 }
+STATIC int
+apspace(dst, dlen)
+char* dst;
+{
+  memset(dst, 0x20202020, dlen);
+}
 
 STATIC int
 apcopy(dst, dlen, src, slen)
