@@ -8382,7 +8382,7 @@ inven_overlay(begin, end, show_weight)
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
 
-  apspace(AP(overlayD));
+  apspace(AB(overlayD));
   line = count = 0;
   overlay_submodeD = begin == 0 ? 'i' : 'e';
   for (int it = begin; it < end; ++it) {
@@ -8403,8 +8403,6 @@ inven_overlay(begin, end, show_weight)
 
       len = limitw;
       count += 1;
-    } else {
-      overlayD[line][0] = 0;
     }
 
     overlay_usedD[line] = len;
@@ -13540,7 +13538,7 @@ pawn_display()
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
 
-  apspace(AP(overlayD));
+  apspace(AB(overlayD));
   int line = 0;
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     int len = 1;
@@ -13574,7 +13572,7 @@ store_display(sidx)
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
 
-  apspace(AP(overlayD));
+  apspace(AB(overlayD));
   int line = 0;
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     int len = 1;

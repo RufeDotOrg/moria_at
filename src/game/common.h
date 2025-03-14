@@ -58,8 +58,10 @@ typedef int (*fn)();
 #define AC(x) memset(x, 0, sizeof(x))
 // Array Length
 #define AL(x) (sizeof(x) / sizeof(x[0]))
+// Array Binary
+#define AB(x) ((void*)x), sizeof(x)
 // Array Pair
-#define AP(x) ((void*)x), AL(x)
+#define AP(x) x, AL(x)
 // Array Modulus
 #define AM(arr, id) ((id) % AL(arr))
 // Array Slot
