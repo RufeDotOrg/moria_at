@@ -13571,18 +13571,15 @@ static void
 store_display(sidx)
 {
   USE(overlay_width);
-  int line, cost;
-  struct objS* obj;
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
 
-  line = 0;
+  apspace(AP(overlayD));
+  int line = 0;
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     int len = 1;
-    overlayD[line][0] = ' ';
-
-    obj = &store_objD[sidx][it];
-    cost = store_value(sidx, obj_value(obj), 1);
+    struct objS* obj = &store_objD[sidx][it];
+    int cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
       len = limitw;
       obj_desc(obj, obj->subval & STACK_PROJECTILE ? obj->number : 1);
