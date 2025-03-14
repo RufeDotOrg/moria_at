@@ -8389,11 +8389,12 @@ inven_overlay(begin, end, show_weight)
     int len = 1;
     int obj_id = invenD[it];
 
-    overlayD[line][0] = '(';
-    overlayD[line][1] = 'a' + it - begin;
-    overlayD[line][2] = ')';
-    overlayD[line][3] = ' ';
     if (obj_id) {
+      overlayD[line][0] = '(';
+      overlayD[line][1] = 'a' + it - begin;
+      overlayD[line][2] = ')';
+      overlayD[line][3] = ' ';
+
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, obj->number);
       int dlen = obj_detail(obj, show_weight ? FMT_WEIGHT : 0);
