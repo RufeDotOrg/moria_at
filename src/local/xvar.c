@@ -8,12 +8,14 @@ DATA int vital_usedD;
 DATA int active_affectD[15];
 
 // Full-screen & overlay (choice)
+// display buffers are NOT null terminated
 DATA char screenD[22][98];
 GAME int screen_usedD[AL(screenD)];
 DATA int screen_submodeD;
 DATA char overlayD[22][80];
 GAME int overlay_usedD[AL(overlayD)];
 DATA int overlay_submodeD;
+
 DATA int minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
 DATA int save_on_readyD;
@@ -104,10 +106,12 @@ GAME int pack_heavy;
 GAME int last_actuateD;
 GAME int last_castD;
 
+// null terminated
 DATA char descD[80 - 4];
 DATA char detailD[80 - 4];
 DATA char death_descD[80];
 DATA char dun_descD[16];
+
 DATA int ylookD;
 DATA int xlookD;
 

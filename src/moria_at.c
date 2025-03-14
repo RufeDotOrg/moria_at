@@ -5315,7 +5315,7 @@ char* objname;
     if (iter == end) break;
     *iter++ = c;
   }
-  *iter = 0;
+  if (iter < end) *iter = 0;
   return iter - dst;
 }
 // p1: range [-9, 9]
