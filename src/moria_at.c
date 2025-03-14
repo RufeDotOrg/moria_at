@@ -2888,6 +2888,19 @@ struct objS* obj;
   return 0;
 }
 static int
+oset_dammult(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+    case TV_LAUNCHER:
+      return 1;
+  }
+  return 0;
+}
+static int
 oset_armor(obj)
 struct objS* obj;
 {
@@ -5211,8 +5224,8 @@ is_a_vowel(chr)
 }
 enum {
   FMT_HITDAM = 0x01,
-  FMT_DAMMULT = 0x02,
-  FMT_DICE = 0x04,
+  FMT_DICE = 0x02,
+  FMT_DAMMULT = 0x04,
   FMT_AC = 0x08,
   FMT_ACC = 0x10,
   FMT_CHARGES = 0x20,
@@ -5234,13 +5247,13 @@ struct objS* obj;
       case FMT_HITDAM:
         used = snprintf(iter, flen, "(%+d,%+d)", obj->tohit, obj->todam);
         break;
-      case FMT_DAMMULT:
-        used = snprintf(iter, flen, "%dx",
-                        obj->tval != TV_LAUNCHER ? attack_blows(obj->weight)
-                                                 : obj->damage[1]);
-        break;
       case FMT_DICE:
         used = snprintf(iter, flen, "(%dd%d)", obj->damage[0], obj->damage[1]);
+        break;
+      case FMT_DAMMULT:
+        used = snprintf(iter, flen, "x%d",
+                        obj->tval != TV_LAUNCHER ? attack_blows(obj->weight)
+                                                 : obj->damage[1]);
         break;
       case FMT_AC:
         used = snprintf(iter, flen, "[%d AC]", obj->ac);
@@ -5278,6 +5291,7 @@ struct objS* obj;
   // if (reveal && obj->toac) fmt |= FMT_ACC;
   if (oset_armor(obj)) fmt |= reveal ? FMT_ACC : FMT_AC;
   if (oset_dice(obj)) fmt |= FMT_DICE;
+  if (oset_dammult(obj)) fmt |= FMT_DAMMULT;
 
   return moriap_fmt_obj(AP(detailD), fmt, obj);
 }
