@@ -59,13 +59,13 @@ typedef int (*fn)();
 // Array Length
 #define AL(x) (sizeof(x) / sizeof(x[0]))
 // Array Pair
-#define AP(x) x, AL(x)
+#define AP(x) ((void*)x), AL(x)
 // Array Modulus
 #define AM(arr, id) ((id) % AL(arr))
 // Array Slot
 #define AS(arr, id) arr[(id) % AL(arr)]
 // Array End
-#define AE(arr) ((uint8_t*)arr + sizeof(arr))
+#define AE(arr) (arr + AL(arr))
 // String Length
 #define SL(str) (AL(str) - 1)
 // String Pair

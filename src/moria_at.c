@@ -1501,11 +1501,6 @@ delete_object(y, x)
   cave_ptr->oidx = 0;
   cave_ptr->cflag &= ~CF_FIELDMARK;
 }
-static char*
-detail_nosp()
-{
-  return detailD + 1;
-}
 char*
 describe_use(iidx)
 {
@@ -5215,12 +5210,14 @@ is_a_vowel(chr)
   return FALSE;
 }
 enum {
-  FMT_HITDAM = 0x01,   // 1
-  FMT_DAMMULT = 0x02,  // 2
-  FMT_DICE = 0x04,     // 4
-  FMT_AC = 0x08,       // 8
-  FMT_ACC = 0x10,      // 16
-  FMT_CHARGES = 0x20   // 32
+  FMT_HITDAM = 0x01,
+  FMT_DAMMULT = 0x02,
+  FMT_DICE = 0x04,
+  FMT_AC = 0x08,
+  FMT_ACC = 0x10,
+  FMT_CHARGES = 0x20,
+  FMT_WEIGHT = 0x40,
+  FMT_COST = 0x80,
 };
 int
 moriap_fmt_obj(fmt, flen, fflag, obj)
@@ -5254,6 +5251,14 @@ struct objS* obj;
       case FMT_CHARGES:
         used = snprintf(iter, flen, "(%d charges)", obj->p1);
         break;
+      case FMT_WEIGHT: {
+        int stack_weight = obj->number * obj->weight;
+        used = snprintf(iter, flen, "%2d.%01dlb", stack_weight / 10,
+                        stack_weight % 10);
+      } break;
+      case FMT_COST:
+        used = snprintf(iter, flen, "%5dg", obj->cost);
+        break;
     }
     if (used < 0 || used >= flen) break;
     fflag ^= flag;
@@ -5264,11 +5269,10 @@ struct objS* obj;
   return iter - fmt;
 }
 int
-obj_detail(obj)
+obj_detail(obj, fmt)
 struct objS* obj;
 {
   int reveal = (obj->idflag & ID_REVEAL);
-  int fmt = 0;
   if (reveal && oset_tohitdam(obj)) fmt |= FMT_HITDAM;
   if (reveal && oset_charges(obj)) fmt |= FMT_CHARGES;
   // if (reveal && obj->toac) fmt |= FMT_ACC;
@@ -6002,7 +6006,7 @@ inven_drop(iidx)
         c_ptr->oidx = obj_index(obj);
 
         obj_desc(obj, obj->number);
-        obj_detail(obj);
+        obj_detail(obj, 0);
         MSG("You drop %s%s.", descD, detailD);
         turn_flag = TRUE;
       }
@@ -6256,7 +6260,7 @@ inven_ident(iidx)
       obj->idflag = ID_REVEAL;
     }
     obj_desc(obj, obj->number);
-    obj_detail(obj);
+    obj_detail(obj, 0);
     if (iidx >= INVEN_EQUIP) {
       calc_bonuses();
     }
@@ -8358,7 +8362,6 @@ inven_reveal()
   return flag;
 }
 enum { INVEN_DETAIL = 18 };
-enum { DROP_DETAIL = 8 };
 static int
 inven_overlay(begin, end, show_weight)
 {
@@ -8366,12 +8369,6 @@ inven_overlay(begin, end, show_weight)
   int line, count;
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
-  int detailw = limitw - INVEN_DETAIL;
-  int dropw = limitw - DROP_DETAIL;
-
-  if (show_weight) {
-    detailw -= DROP_DETAIL;
-  }
 
   apspace(AP(overlayD));
   line = count = 0;
@@ -8387,17 +8384,10 @@ inven_overlay(begin, end, show_weight)
     if (obj_id) {
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, obj->number);
-      int dlen = obj_detail(obj);
+      int dlen = obj_detail(obj, show_weight ? FMT_WEIGHT : 0);
 
       memcpy(overlayD[line] + descw, AP(descD));
-      // TBD: roll show_weight into obj_detail()
-      if (show_weight) {
-        int stack_weight = obj->number * obj->weight;
-        snprintf(overlayD[line] + dropw, DROP_DETAIL, " %2d.%01dlb",
-                 stack_weight / 10, stack_weight % 10);
-      } else {
-        memcpy(overlayD[line] + limitw - dlen - 1, AP(detailD));
-      }
+      memcpy(overlayD[line] + limitw - dlen - 1, detailD, dlen);
 
       len = limitw;
       count += 1;
@@ -8668,7 +8658,7 @@ struct objS* obj;
         BufMsg(screen, "  %+d ToHit %+d ToDam", obj->tohit, obj->todam);
 
       // Any non-zero value (total may be zero)
-      // includes weapons that may not display bonus on obj_detail()
+      // includes weapons that may not display bonus on obj_detail
       if (obj->ac || obj->toac)
         BufMsg(screen, "  Armor %d%+d = %d AC", obj->ac, obj->toac,
                obj->ac + obj->toac);
@@ -10491,7 +10481,7 @@ inven_throw_dir(iidx, dir)
   if (bowid) {
     obj = obj_get(bowid);
     obj_desc(obj, 1);
-    obj_detail(obj);
+    obj_detail(obj, 0);
 
     wtohit += obj->tohit;
     wtodam += obj->todam;
@@ -12324,7 +12314,7 @@ py_pickup(y, x, pickup)
     if (!merge && pickup) locn = inven_carry(obj->id);
 
     obj_desc(obj, obj->number);
-    obj_detail(obj);
+    obj_detail(obj, 0);
     if (locn >= 0) {
       obj->fy = 0;
       obj->fx = 0;
@@ -13529,46 +13519,35 @@ inven_pawn(iidx)
     msg_pause();
   }
 }
-enum { COST_DETAIL = 8 };
 static void
 pawn_display()
 {
   USE(overlay_width);
-  int line;
   int cost, sidx;
   struct objS* obj;
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
-  int detailw = limitw - INVEN_DETAIL - COST_DETAIL;
-  int costw = limitw - COST_DETAIL;
 
-  line = 0;
+  apspace(AP(overlayD));
+  int line = 0;
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     int len = 1;
-    overlayD[line][0] = ' ';
-
     obj = obj_get(invenD[it]);
     if (obj->id) {
+      // Can this fail?
       sidx = obj_store_index(obj);
       if (sidx >= 0) {
         len = limitw;
         cost = store_value(sidx, obj_value(obj), -1);
         obj_desc(obj, obj->number);
-        obj_detail(obj);
+        int dlen = obj_detail(obj, FMT_COST);
 
         overlayD[line][0] = '(';
         overlayD[line][1] = 'a' + it;
         overlayD[line][2] = ')';
         overlayD[line][3] = ' ';
         memcpy(overlayD[line] + descw, AP(descD));
-
-        if (detailD[1] != ' ') {
-          if (descD[detailw - descw - 1]) {
-            memcpy(overlayD[line] + detailw - 3, AP("..."));
-          }
-          memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
-        }
-        snprintf(overlayD[line] + costw, COST_DETAIL, " %6d", cost);
+        memcpy(overlayD[line] + limitw - dlen - 1, detailD, dlen);
       }
     }
 
@@ -13584,8 +13563,6 @@ store_display(sidx)
   struct objS* obj;
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
-  int detailw = limitw - INVEN_DETAIL - COST_DETAIL;
-  int costw = limitw - COST_DETAIL;
 
   line = 0;
   for (int it = 0; it < AL(store_objD[0]); ++it) {
@@ -13597,21 +13574,14 @@ store_display(sidx)
     if (obj->tidx) {
       len = limitw;
       obj_desc(obj, obj->subval & STACK_PROJECTILE ? obj->number : 1);
-      obj_detail(obj);
+      int dlen = obj_detail(obj, FMT_COST);
 
       overlayD[line][0] = '(';
       overlayD[line][1] = 'a' + it;
       overlayD[line][2] = ')';
       overlayD[line][3] = ' ';
       memcpy(overlayD[line] + descw, AP(descD));
-
-      if (detailD[1] != ' ') {
-        if (descD[detailw - descw - 1]) {
-          memcpy(overlayD[line] + detailw - 3, AP("..."));
-        }
-        memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
-      }
-      snprintf(overlayD[line] + costw, COST_DETAIL, " %6d", cost);
+      memcpy(overlayD[line] + limitw - dlen - 1, detailD, dlen);
     }
 
     overlay_usedD[line] = len;
