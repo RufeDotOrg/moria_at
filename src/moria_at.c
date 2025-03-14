@@ -8374,7 +8374,6 @@ inven_reveal()
   }
   return flag;
 }
-enum { INVEN_DETAIL = 18 };
 static int
 inven_overlay(begin, end, show_weight)
 {
