@@ -6576,7 +6576,6 @@ py_inven_init()
     struct objS* obj = obj_use();
     tr_make_known(tr_ptr);
     tr_obj_copy(tidx, obj);
-    obj->idflag = ID_REVEAL;
 
     switch (tidx) {
       case 22:  // More Food rations
