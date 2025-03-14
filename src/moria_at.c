@@ -8622,177 +8622,172 @@ struct objS* obj;
   if (HACK) obj->idflag = ID_REVEAL;
 
   int known = obj->tidx && tr_is_known(&treasureD[obj->tidx]);
-  if (obj->id) {
-    int number = obj->number;
-    if (town_store && (STACK_SINGLE & obj->subval)) number = 1;
+  int number = obj->number;
+  if (town_store && (STACK_SINGLE & obj->subval)) number = 1;
 
-    BufMsg(screen, "Weight %d.%01d Lbs (per)", obj->weight / 10,
-           obj->weight % 10);
-    if (STACK_ANY & obj->subval) {
-      int stacklimit = stacklimit_by_max_weight(ustackweight(), obj->weight);
-      BufMsg(screen, "Stacking %d/%d %d Lbs (stack)", number, stacklimit,
-             number * obj->weight / 10);
-    }
-
-    switch (obj->tval) {
-      case TV_LAUNCHER:
-        BufMsg(screen, "Launcher of %s", projectile_nameD[obj->p1]);
-        break;
-      case TV_PROJECTILE:
-        BufMsg(screen, "Projectile for %s", launcher_nameD[obj->p1]);
-        break;
-      case TV_WAND:
-      case TV_STAFF:
-        if (known) {
-          int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
-          BufMsg(screen, "Device Level %d (%+d Chance)", obj->level, diff);
-        }
-        break;
-      case TV_HAFTED:
-      case TV_POLEARM:
-      case TV_SWORD:
-        // TBD: Add attack damage detail to character screen
-        {
-          int blows = attack_blows(obj->weight);
-          BufMsg(screen, "Damage per Blow [ %d - %d ]", (obj->damage[0]),
-                 (obj->damage[0] * obj->damage[1]));
-          BufMsg(screen, "x%d Attack Blows", blows);
-        }
-        break;
-    }
-
-    if (!known) BufFixed(screen, "  has unknown affects!");
-    int eqidx = may_equip(obj->tval);
-    int reveal = (obj->idflag & ID_REVEAL);
-    if (reveal && eqidx > 0) {
-      if (obj->tohit || obj->todam || eqidx == INVEN_WIELD)
-        BufMsg(screen, "  %+d ToHit %+d ToDam", obj->tohit, obj->todam);
-
-      // Any non-zero value (total may be zero)
-      // includes weapons that may not display bonus on obj_detail
-      if (obj->ac || obj->toac)
-        BufMsg(screen, "  Armor %d%+d = %d AC", obj->ac, obj->toac,
-               obj->ac + obj->toac);
-
-      int i = obj->flags;
-      while (i != 0) {
-        uint32_t flag = i & -i;
-        i ^= flag;
-        char* text = 0;
-        switch (flag) {
-          case TR_STR:
-            text = "Modifies Strength";
-            break;
-          case TR_INT:
-            text = "Modifies Intelligence";
-            break;
-          case TR_WIS:
-            text = "Modifies Wisdom";
-            break;
-          case TR_DEX:
-            text = "Modifies Dexterity";
-            break;
-          case TR_CON:
-            text = "Modifies Constitution";
-            break;
-          case TR_CHR:
-            text = "Modifies Charisma";
-            break;
-          case TR_SEARCH:
-            text = "Improves Searching and Perception";
-            break;
-          case TR_SLOW_DIGEST:
-            text = "Slows food consumption";
-            break;
-          case TR_STEALTH:
-            text = "Improves Stealth";
-            break;
-          case TR_AGGRAVATE:
-            text = "Aggravates monsters";
-            break;
-          case TR_TELEPORT:
-            text = "Causes random teleportation";
-            break;
-          case TR_REGEN:
-            text = "Speeds regeneration and increases health";
-            break;
-          case TR_SPEED:
-            text = "Increases player speed";
-            break;
-          case TR_SLAY_DRAGON:
-            text = "Effective against dragons (400%)";
-            break;
-          case TR_SLAY_ANIMAL:
-            text = "Effective against animals (200%)";
-            break;
-          case TR_SLAY_EVIL:
-            text = "Effective against evil creatures (200%)";
-            break;
-          case TR_SLAY_UNDEAD:
-            text =
-                "Effective against undead (300%) and Protection from XP drain";
-            break;
-          case TR_FROST_BRAND:
-            text = "Does cold damage (150% vs fire)";
-            break;
-          case TR_FLAME_TONGUE:
-            text = "Does fire damage (150% vs cold)";
-            break;
-          case TR_RES_FIRE:
-            text = "Provides fire resistance (50%)";
-            break;
-          case TR_RES_ACID:
-            text = "Provides acid resistance (50%)";
-            break;
-          case TR_RES_COLD:
-            text = "Provides cold resistance (50%)";
-            break;
-          case TR_SUST_STAT:
-            text = "Sustains modified stats from reduction";
-            break;
-          case TR_FREE_ACT:
-            text = "Provides free action (immune to paralysis)";
-            break;
-          case TR_SEE_INVIS:
-            text = "Allows seeing invisible creatures";
-            break;
-          case TR_RES_LIGHT:
-            text = "Provides light resistance (50%)";
-            break;
-          case TR_FFALL:
-            text = "Prevents falling through trap doors";
-            break;
-          case TR_SEEING:
-            text = "Provides enhanced sight (immune to blind)";
-            break;
-          case TR_HERO:
-            text = "Grants heroism (immune to fear)";
-            break;
-          case TR_EZXP:
-            text = "Increases level gain per experience";
-            break;
-          case TR_SLOWNESS:
-            text = "Reduces player speed";
-            break;
-          case TR_CURSED:
-            text = "Item is cursed (cannot remove)";
-            break;
-        }
-        BufMsg(screen, "  %s (%+d)", text, obj->p1);
-        if ((flag & TR_P1) == 0) strip_tail(line - 1);
-      }
-
-      if (obj->sn == SN_LORDLINESS)
-        BufFixed(screen, "  Increases success with wands & staves");
-    }
-
-    obj_desc(obj, obj->number);
-    blipD = 1;
-    screen_submodeD = 1;
-    return CLOBBER_MSG("You study %s.", descD);
+  BufMsg(screen, "Weight %d.%01d Lbs (per)", obj->weight / 10,
+         obj->weight % 10);
+  if (STACK_ANY & obj->subval) {
+    int stacklimit = stacklimit_by_max_weight(ustackweight(), obj->weight);
+    BufMsg(screen, "Stacking %d/%d %d Lbs (stack)", number, stacklimit,
+           number * obj->weight / 10);
   }
 
-  return 0;
+  switch (obj->tval) {
+    case TV_LAUNCHER:
+      BufMsg(screen, "Launcher of %s", projectile_nameD[obj->p1]);
+      break;
+    case TV_PROJECTILE:
+      BufMsg(screen, "Projectile for %s", launcher_nameD[obj->p1]);
+      break;
+    case TV_WAND:
+    case TV_STAFF:
+      if (known) {
+        int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
+        BufMsg(screen, "Device Level %d (%+d Chance)", obj->level, diff);
+      }
+      break;
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+      // TBD: Add attack damage detail to character screen
+      {
+        int blows = attack_blows(obj->weight);
+        BufMsg(screen, "Damage per Blow [ %d - %d ]", (obj->damage[0]),
+               (obj->damage[0] * obj->damage[1]));
+        BufMsg(screen, "x%d Attack Blows", blows);
+      }
+      break;
+  }
+
+  if (!known) BufFixed(screen, "  has unknown affects!");
+  int eqidx = may_equip(obj->tval);
+  int reveal = (obj->idflag & ID_REVEAL);
+  if (reveal && eqidx > 0) {
+    if (obj->tohit || obj->todam || eqidx == INVEN_WIELD)
+      BufMsg(screen, "  %+d ToHit %+d ToDam", obj->tohit, obj->todam);
+
+    // Any non-zero value (total may be zero)
+    // includes weapons that may not display bonus on obj_detail
+    if (obj->ac || obj->toac)
+      BufMsg(screen, "  Armor %d%+d = %d AC", obj->ac, obj->toac,
+             obj->ac + obj->toac);
+
+    int i = obj->flags;
+    while (i != 0) {
+      uint32_t flag = i & -i;
+      i ^= flag;
+      char* text = 0;
+      switch (flag) {
+        case TR_STR:
+          text = "Modifies Strength";
+          break;
+        case TR_INT:
+          text = "Modifies Intelligence";
+          break;
+        case TR_WIS:
+          text = "Modifies Wisdom";
+          break;
+        case TR_DEX:
+          text = "Modifies Dexterity";
+          break;
+        case TR_CON:
+          text = "Modifies Constitution";
+          break;
+        case TR_CHR:
+          text = "Modifies Charisma";
+          break;
+        case TR_SEARCH:
+          text = "Improves Searching and Perception";
+          break;
+        case TR_SLOW_DIGEST:
+          text = "Slows food consumption";
+          break;
+        case TR_STEALTH:
+          text = "Improves Stealth";
+          break;
+        case TR_AGGRAVATE:
+          text = "Aggravates monsters";
+          break;
+        case TR_TELEPORT:
+          text = "Causes random teleportation";
+          break;
+        case TR_REGEN:
+          text = "Speeds regeneration and increases health";
+          break;
+        case TR_SPEED:
+          text = "Increases player speed";
+          break;
+        case TR_SLAY_DRAGON:
+          text = "Effective against dragons (400%)";
+          break;
+        case TR_SLAY_ANIMAL:
+          text = "Effective against animals (200%)";
+          break;
+        case TR_SLAY_EVIL:
+          text = "Effective against evil creatures (200%)";
+          break;
+        case TR_SLAY_UNDEAD:
+          text = "Effective against undead (300%) and Protection from XP drain";
+          break;
+        case TR_FROST_BRAND:
+          text = "Does cold damage (150% vs fire)";
+          break;
+        case TR_FLAME_TONGUE:
+          text = "Does fire damage (150% vs cold)";
+          break;
+        case TR_RES_FIRE:
+          text = "Provides fire resistance (50%)";
+          break;
+        case TR_RES_ACID:
+          text = "Provides acid resistance (50%)";
+          break;
+        case TR_RES_COLD:
+          text = "Provides cold resistance (50%)";
+          break;
+        case TR_SUST_STAT:
+          text = "Sustains modified stats from reduction";
+          break;
+        case TR_FREE_ACT:
+          text = "Provides free action (immune to paralysis)";
+          break;
+        case TR_SEE_INVIS:
+          text = "Allows seeing invisible creatures";
+          break;
+        case TR_RES_LIGHT:
+          text = "Provides light resistance (50%)";
+          break;
+        case TR_FFALL:
+          text = "Prevents falling through trap doors";
+          break;
+        case TR_SEEING:
+          text = "Provides enhanced sight (immune to blind)";
+          break;
+        case TR_HERO:
+          text = "Grants heroism (immune to fear)";
+          break;
+        case TR_EZXP:
+          text = "Increases level gain per experience";
+          break;
+        case TR_SLOWNESS:
+          text = "Reduces player speed";
+          break;
+        case TR_CURSED:
+          text = "Item is cursed (cannot remove)";
+          break;
+      }
+      BufMsg(screen, "  %s (%+d)", text, obj->p1);
+      if ((flag & TR_P1) == 0) strip_tail(line - 1);
+    }
+
+    if (obj->sn == SN_LORDLINESS)
+      BufFixed(screen, "  Increases success with wands & staves");
+  }
+
+  obj_desc(obj, obj->number);
+  blipD = 1;
+  screen_submodeD = 1;
+  return CLOBBER_MSG("You study %s.", descD);
 }
 // Precondition: mode_list is at least two characters (counting nullterm)
 // drop_safe (mode_len > 2) implies all modes (enabled drop_mode)
