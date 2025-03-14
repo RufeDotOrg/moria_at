@@ -2831,19 +2831,26 @@ struct objS* obj;
 {
   switch (obj->tval) {
     case TV_LAUNCHER:
-      return TRUE;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
-      return TRUE;
+      return 1;
     case TV_GLOVES:
-      return (obj->tohit || obj->todam);
     case TV_RING:
       return (obj->tohit || obj->todam);
-    case TV_LIGHT:
-      return TRUE;
   }
-  return FALSE;
+  return 0;
+}
+static int
+oset_charges(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_WAND:
+    case TV_STAFF:
+      return 1;
+  }
+  return 0;
 }
 static int
 oset_enchant(obj)
@@ -2871,6 +2878,19 @@ struct objS* obj;
       return TRUE;
   }
   return FALSE;
+}
+static int
+oset_dice(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+    case TV_PROJECTILE:
+      return 1;
+  }
+  return 0;
 }
 static int
 oset_armor(obj)
@@ -5194,61 +5214,70 @@ is_a_vowel(chr)
   }
   return FALSE;
 }
-void obj_detail(obj) struct objS* obj;
+enum {
+  FMT_HITDAM = 0x01,   // 1
+  FMT_DAMMULT = 0x02,  // 2
+  FMT_DICE = 0x04,     // 4
+  FMT_AC = 0x08,       // 8
+  FMT_ACC = 0x10,      // 16
+  FMT_CHARGES = 0x20   // 32
+};
+int
+moriap_fmt_obj(fmt, flen, fflag, obj)
+char* fmt;
+struct objS* obj;
 {
-  char tmp_str[80];
-  int eqidx, reveal;
-
-  memset(detailD, 0x20202020, AL(detailD));
-
-  eqidx = may_equip(obj->tval);
-  reveal = (obj->idflag & ID_REVEAL) != 0;
-  tmp_str[0] = 0;
-  detailD[0] = 0;
-
-  if (reveal) {
-    if (eqidx > INVEN_WIELD && TR_CURSED & obj->flags)
-      strcat(detailD, " {cursed}");
-
-    if ((obj->tval == TV_STAFF || obj->tval == TV_WAND)) {
-      snprintf(tmp_str, AL(tmp_str), " (%d charges)", obj->p1);
-      strcat(detailD, tmp_str);
+  char* iter = fmt;
+  while (fflag != 0 && flen > 0) {
+    uint32_t flag = fflag & -fflag;
+    int used = -1;
+    *iter++ = ' ';
+    flen -= 1;
+    switch (flag) {
+      case FMT_HITDAM:
+        used = snprintf(iter, flen, "(%+d,%+d)", obj->tohit, obj->todam);
+        break;
+      case FMT_DAMMULT:
+        used = snprintf(iter, flen, "%dx",
+                        obj->tval != TV_LAUNCHER ? attack_blows(obj->weight)
+                                                 : obj->damage[1]);
+        break;
+      case FMT_DICE:
+        used = snprintf(iter, flen, "(%dd%d)", obj->damage[0], obj->damage[1]);
+        break;
+      case FMT_AC:
+        used = snprintf(iter, flen, "[%d AC]", obj->ac);
+        break;
+      case FMT_ACC:
+        used = snprintf(iter, flen, "[%d%+d AC]", obj->ac, obj->toac);
+        break;
+      case FMT_CHARGES:
+        used = snprintf(iter, flen, "(%d charges)", obj->p1);
+        break;
     }
-
-    if (oset_tohitdam(obj)) {
-      snprintf(tmp_str, AL(tmp_str), " (%+d,%+d)", obj->tohit, obj->todam);
-      strcat(detailD, tmp_str);
-    }
-  } else {
-    if (obj->idflag & ID_MAGIK) strcat(detailD, " {magik}");
-    if (obj->idflag & ID_DAMD) strcat(detailD, " {cursed}");
-    if (obj->idflag & ID_EMPTY) strcat(detailD, " {empty}");
-    if (obj->idflag & ID_CORRODED) strcat(detailD, " {corroded}");
-    if (obj->idflag & ID_PLAIN) strcat(detailD, " {plain}");
-    if (obj->idflag & ID_RARE) strcat(detailD, " {rare}");
+    if (used < 0 || used >= flen) break;
+    fflag ^= flag;
+    flen -= used;
+    iter += used;
   }
-
-  if (obj->tval == TV_PROJECTILE) {
-    snprintf(tmp_str, AL(tmp_str), " (%dd%d)", obj->damage[0], obj->damage[1]);
-    strcat(detailD, tmp_str);
-  } else if (obj->tval == TV_LAUNCHER) {
-    snprintf(tmp_str, AL(tmp_str), " (%dx)", obj->damage[1]);
-    strcat(detailD, tmp_str);
-  } else if (eqidx == INVEN_WIELD) {
-    snprintf(tmp_str, AL(tmp_str), " (%dx %dd%d)", attack_blows(obj->weight),
-             obj->damage[0], obj->damage[1]);
-    strcat(detailD, tmp_str);
-  } else if (eqidx > INVEN_WIELD) {
-    if (reveal && (oset_armor(obj) || obj->toac)) {
-      snprintf(tmp_str, AL(tmp_str), " [%d%+d AC]", obj->ac, obj->toac);
-      strcat(detailD, tmp_str);
-    } else if (oset_armor(obj)) {
-      snprintf(tmp_str, AL(tmp_str), " [%d AC]", obj->ac);
-      strcat(detailD, tmp_str);
-    }
-  }
+  if (flen > 0) *iter = 0;
+  return iter - fmt;
 }
-// copy src to dst with moria formatting spec
+int
+obj_detail(obj)
+struct objS* obj;
+{
+  int reveal = (obj->idflag & ID_REVEAL);
+  int fmt = 0;
+  if (reveal && oset_tohitdam(obj)) fmt |= FMT_HITDAM;
+  if (reveal && oset_charges(obj)) fmt |= FMT_CHARGES;
+  // if (reveal && obj->toac) fmt |= FMT_ACC;
+  if (oset_armor(obj)) fmt |= reveal ? FMT_ACC : FMT_AC;
+  if (oset_dice(obj)) fmt |= FMT_DICE;
+
+  return moriap_fmt_obj(AP(detailD), fmt, obj);
+}
+//  copy src to dst with moria formatting spec
 DATA int oprefixD = 0;
 int64_t
 moria_ocat_num(dst, dstlen, objname, num)
@@ -8344,6 +8373,7 @@ inven_overlay(begin, end, show_weight)
     detailw -= DROP_DETAIL;
   }
 
+  apspace(AP(overlayD));
   line = count = 0;
   overlay_submodeD = begin == 0 ? 'i' : 'e';
   for (int it = begin; it < end; ++it) {
@@ -8357,21 +8387,16 @@ inven_overlay(begin, end, show_weight)
     if (obj_id) {
       struct objS* obj = obj_get(obj_id);
       obj_desc(obj, obj->number);
-      obj_detail(obj);
+      int dlen = obj_detail(obj);
 
       memcpy(overlayD[line] + descw, AP(descD));
-      if (detailD[1] != ' ') {
-        if (descD[detailw - descw - 1]) {
-          memcpy(overlayD[line] + detailw - 3, AP("..."));
-        }
-
-        memcpy(overlayD[line] + detailw, detail_nosp(), INVEN_DETAIL);
-      }
-
+      // TBD: roll show_weight into obj_detail()
       if (show_weight) {
         int stack_weight = obj->number * obj->weight;
         snprintf(overlayD[line] + dropw, DROP_DETAIL, " %2d.%01dlb",
                  stack_weight / 10, stack_weight % 10);
+      } else {
+        memcpy(overlayD[line] + limitw - dlen - 1, AP(detailD));
       }
 
       len = limitw;
@@ -8643,6 +8668,7 @@ struct objS* obj;
         BufMsg(screen, "  %+d ToHit %+d ToDam", obj->tohit, obj->todam);
 
       // Any non-zero value (total may be zero)
+      // includes weapons that may not display bonus on obj_detail()
       if (obj->ac || obj->toac)
         BufMsg(screen, "  Armor %d%+d = %d AC", obj->ac, obj->toac,
                obj->ac + obj->toac);
