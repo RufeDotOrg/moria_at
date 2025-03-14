@@ -2,6 +2,7 @@
 
 #define SAVENAME "savechar"
 #define CACHENAME "moria.cache"
+enum { RESUME = 1 };
 
 DATA char cachepathD[1024];
 DATA int cachepath_usedD;
@@ -161,7 +162,7 @@ path_load(char* path)
       save_size = 0;
     }
 
-    if (input_resumeD == 0) {
+    if (RESUME && input_resumeD == 0) {
       if (save_size) {
         char gh[AL(git_hashD)];
         if (SDL_RWread(readf, gh, sizeof(gh), 1)) {
