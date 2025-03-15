@@ -139,6 +139,7 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define TV_MISC 1
 #define TV_SPIKE 3
 #define TV_PROJECTILE 5
+#define TV_MIN_EQUIP 10
 #define TV_LIGHT 15
 /* items tested for enchantments, i.e. the MAGIK inscription, see the
    sense_magik() procedure */
@@ -159,6 +160,7 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define TV_MAX_ENCHANT 39
 #define TV_AMULET 40
 #define TV_RING 45
+#define TV_MAX_EQUIP 50
 #define TV_STAFF 55
 #define TV_WAND 65
 #define TV_SCROLL1 70

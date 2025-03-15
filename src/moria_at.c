@@ -2816,9 +2816,23 @@ struct objS* obj;
   switch (obj->tval) {
     case TV_WAND:
     case TV_STAFF:
-      return TRUE;
+      return 1;
   }
-  return FALSE;
+  return 0;
+}
+static int
+oset_weightcheck(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_LAUNCHER:
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+    case TV_DIGGING:
+      return 1;
+  }
+  return 0;
 }
 static int
 oset_tohitdam(obj)
@@ -2829,6 +2843,7 @@ struct objS* obj;
     case TV_HAFTED:
     case TV_POLEARM:
     case TV_SWORD:
+    case TV_LIGHT:
       return 1;
     case TV_GLOVES:
     case TV_RING:
@@ -2837,15 +2852,12 @@ struct objS* obj;
   return 0;
 }
 static int
-oset_charges(obj)
+oset_equip(obj)
 struct objS* obj;
 {
-  switch (obj->tval) {
-    case TV_WAND:
-    case TV_STAFF:
-      return 1;
-  }
-  return 0;
+  uint32_t tv = obj->tval;
+  tv -= TV_MIN_EQUIP;
+  return tv <= (TV_MAX_EQUIP - TV_MIN_EQUIP);
 }
 static int
 oset_enchant(obj)
@@ -2873,6 +2885,18 @@ struct objS* obj;
       return TRUE;
   }
   return FALSE;
+}
+static int
+oset_melee(obj)
+struct objS* obj;
+{
+  switch (obj->tval) {
+    case TV_HAFTED:
+    case TV_POLEARM:
+    case TV_SWORD:
+      return 1;
+  }
+  return 0;
 }
 static int
 oset_dice(obj)
@@ -5287,7 +5311,7 @@ struct objS* obj;
 {
   int reveal = (obj->idflag & ID_REVEAL);
   if (reveal && oset_tohitdam(obj)) fmt |= FMT_HITDAM;
-  if (reveal && oset_charges(obj)) fmt |= FMT_CHARGES;
+  if (reveal && oset_zap(obj)) fmt |= FMT_CHARGES;
   // if (reveal && obj->toac) fmt |= FMT_ACC;
   if (oset_armor(obj)) fmt |= reveal ? FMT_ACC : FMT_AC;
   if (oset_dice(obj)) fmt |= FMT_DICE;
@@ -5341,14 +5365,14 @@ int
 moriap_bonus(dst, dstlen, p1)
 char* dst;
 {
-  if (dstlen >= 5) {
-    *dst++ = '(';
-    *dst++ = p1 >= 0 ? '+' : '-';
-    *dst++ = '0' + ABS(p1);
-    *dst++ = ')';
-    *dst++ = 0;
+  int used = apcati(dst + 2, dstlen - 2, p1);
+  if (used + 4 <= dstlen) {
+    dst[0] = '(';
+    dst[1] = p1 >= 0 ? '+' : '-';
+    dst[used + 2] = ')';
+    dst[used + 3] = 0;
   }
-  return dstlen >= 5;
+  return used + 3;
 }
 #define desc(str) moria_ocat_num(AP(descD), str, number)
 void obj_desc(obj, number) struct objS* obj;
@@ -8612,67 +8636,120 @@ strip_tail(line)
   screen_usedD[line] = it;
   return 0;
 }
-static char* ac_text[] = {"Armor Base", "Armor Modifier", "  Total Armor"};
+enum {
+  SCRY_WEIGHT = 0x0001,
+  SCRY_STACK = 0x0002,
+  SCRY_HIT = 0x0004,
+  SCRY_DAM = 0x0008,
+  // SCRY_ACBASE = 0x0010,
+  // SCRY_ACPLUS = 0x0020,
+  SCRY_AC = 0x0040,
+  SCRY_PLAUNCHER = 0x0080,
+  SCRY_WEAPON = 0x0100,
+  SCRY_BLOWS = 0x0200,
+  SCRY_DIGGING = 0x0400,
+  SCRY_ZAP = 0x0800,
+  SCRY_HEAVY = 0x1000,
+};
+int
+screen_scry_obj(sflag, obj)
+struct objS* obj;
+{
+  int line = 0;
+  for (; line < AL(screenD); ++line) {
+    if (!sflag) break;
+    uint32_t flag = sflag & -sflag;
+    int used = -1;
+    switch (flag) {
+      case SCRY_WEIGHT:
+        used = snprintf(AP(screenD[line]), "Weight %d.%01d Lbs (per)",
+                        obj->weight / 10, obj->weight % 10);
+        break;
+      case SCRY_STACK: {
+        int stacklimit = stacklimit_by_max_weight(ustackweight(), obj->weight);
+        used = snprintf(AP(screenD[line]), "Stacking %d/%d", obj->number,
+                        stacklimit);
+      } break;
+      case SCRY_HIT:
+        used =
+            snprintf(AP(screenD[line]), "Modifies Hit Chance %+d", obj->tohit);
+        break;
+      case SCRY_DAM:
+        used = snprintf(AP(screenD[line]), "Modifies Damage %+d", obj->todam);
+        break;
+      case SCRY_AC:
+        used = snprintf(AP(screenD[line]), "Modifies Armor %+d [%d%+d]",
+                        obj->toac + obj->ac, obj->ac, obj->toac);
+        break;
+      case SCRY_PLAUNCHER:
+        used = snprintf(AP(screenD[line]), "%s uses %s",
+                        launcher_nameD[obj->p1], projectile_nameD[obj->p1]);
+        break;
+      case SCRY_WEAPON: {
+        int lo = obj->damage[0];
+        int hi = obj->damage[0] * obj->damage[1];
+        int td = obj->todam;
+        used = snprintf(AP(screenD[line]), "Damage per Blow [ %d - %d ] %+d",
+                        lo, hi, td);
+      } break;
+      case SCRY_BLOWS: {
+        int bl = attack_blows(obj->weight);
+        int lo = obj->damage[0];
+        int hi = obj->damage[0] * obj->damage[1];
+        int td = obj->todam;
+        lo *= bl;
+        hi *= bl;
+        td *= bl;
+        used = snprintf(AP(screenD[line]), "x%d Blows [ %d - %d ] %+d", bl, lo,
+                        hi, td);
+      } break;
+      case SCRY_DIGGING:
+        used = snprintf(AP(screenD[line]), "Modifies digging %+d",
+                        obj_tabil(obj, tr_is_known(&treasureD[obj->tidx])));
+        break;
+      case SCRY_ZAP:
+        if (tr_is_known(&treasureD[obj->tidx])) {
+          int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
+          used = snprintf(AP(screenD[line]), "Device Level %d (%+d Chance)",
+                          obj->level, diff);
+        }
+        break;
+      case SCRY_HEAVY:
+        used = snprintf(AP(screenD[line]), "Too heavy for proper use");
+        break;
+    }
+    if (used < 1) break;
+    screen_usedD[line] = used;
+    sflag ^= flag;
+  }
+  return line;
+}
 int
 obj_study(obj, town_store)
 struct objS* obj;
 {
-  int line = 0;
-
   if (HACK) obj->idflag = ID_REVEAL;
 
+  int reveal = obj->idflag & ID_REVEAL;
   int known = obj->tidx && tr_is_known(&treasureD[obj->tidx]);
-  int number = obj->number;
-  if (town_store && (STACK_SINGLE & obj->subval)) number = 1;
 
-  BufMsg(screen, "Weight %d.%01d Lbs (per)", obj->weight / 10,
-         obj->weight % 10);
-  if (STACK_ANY & obj->subval) {
-    int stacklimit = stacklimit_by_max_weight(ustackweight(), obj->weight);
-    BufMsg(screen, "Stacking %d/%d %d Lbs (stack)", number, stacklimit,
-           number * obj->weight / 10);
-  }
+  apspace(AB(screenD));
+  int sflag = SCRY_WEIGHT;
+  if (!town_store && (STACK_ANY & obj->subval)) sflag |= SCRY_STACK;
+  if (obj->tval == TV_LAUNCHER || obj->tval == TV_PROJECTILE)
+    sflag |= SCRY_PLAUNCHER;
+  if (oset_melee(obj)) sflag |= (SCRY_WEAPON | SCRY_BLOWS);
+  if (oset_tohitdam(obj) && obj->tohit) sflag |= SCRY_HIT;
+  if (oset_tohitdam(obj) && obj->todam) sflag |= SCRY_DAM;
+  if (obj->tval == TV_DIGGING) sflag |= SCRY_DIGGING;
+  if (obj->tval == TV_WAND || obj->tval == TV_STAFF) sflag |= SCRY_ZAP;
+  if (obj->ac || obj->toac) sflag |= SCRY_AC;
+  if (oset_weightcheck(obj) && tohit_by_weight(obj->weight))
+    sflag |= SCRY_HEAVY;
 
-  switch (obj->tval) {
-    case TV_LAUNCHER:
-      BufMsg(screen, "Launcher of %s", projectile_nameD[obj->p1]);
-      break;
-    case TV_PROJECTILE:
-      BufMsg(screen, "Projectile for %s", launcher_nameD[obj->p1]);
-      break;
-    case TV_WAND:
-    case TV_STAFF:
-      if (known) {
-        int diff = udevice() - obj->level - ((obj->tval == TV_STAFF) * 5);
-        BufMsg(screen, "Device Level %d (%+d Chance)", obj->level, diff);
-      }
-      break;
-    case TV_HAFTED:
-    case TV_POLEARM:
-    case TV_SWORD:
-      // TBD: Add attack damage detail to character screen
-      {
-        int blows = attack_blows(obj->weight);
-        BufMsg(screen, "Damage per Blow [ %d - %d ]", (obj->damage[0]),
-               (obj->damage[0] * obj->damage[1]));
-        BufMsg(screen, "x%d Attack Blows", blows);
-      }
-      break;
-  }
+  int line = screen_scry_obj(sflag, obj);
 
-  if (!known) BufFixed(screen, "  has unknown affects!");
-  int eqidx = may_equip(obj->tval);
-  int reveal = (obj->idflag & ID_REVEAL);
-  if (reveal && eqidx > 0) {
-    if (obj->tohit || obj->todam || eqidx == INVEN_WIELD)
-      BufMsg(screen, "  %+d ToHit %+d ToDam", obj->tohit, obj->todam);
-
-    // Any non-zero value (total may be zero)
-    // includes weapons that may not display bonus on obj_detail
-    if (obj->ac || obj->toac)
-      BufMsg(screen, "  Armor %d%+d = %d AC", obj->ac, obj->toac,
-             obj->ac + obj->toac);
-
+  if (oset_equip(obj) && reveal) {
     int i = obj->flags;
     while (i != 0) {
       uint32_t flag = i & -i;
@@ -8782,6 +8859,7 @@ struct objS* obj;
 
     if (obj->sn == SN_LORDLINESS)
       BufFixed(screen, "  Increases success with wands & staves");
+    if (obj->sn == SN_INFRAVISION) BufFixed(screen, "  Provides Infra-vision");
   }
 
   obj_desc(obj, obj->number);
