@@ -3737,16 +3737,16 @@ int* xcenter;
       ymax = ymin + CHUNK_HEIGHT - 1;
       xmin = x - 2;
       xmax = x + 2;
+      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM, floor, 0);
+
+      ymin = y - 1;
+      ymax = y + 2;
+      xmin = x - 2;
+      xmax = x + 2;
       for (int i = ymin; i <= ymax; ++i) {
         for (int j = xmin; j <= xmax; ++j) {
-          struct caveS* c_ptr = &caveD[i][j];
-          c_ptr->cflag |= CF_ROOM;
-          if (i == ymin || i == ymax)
-            c_ptr->fval = (c_ptr->fval == 0) ? GRANITE_WALL : c_ptr->fval;
-          else if (j == xmin || j == xmax)
-            c_ptr->fval = (c_ptr->fval == 0) ? GRANITE_WALL : c_ptr->fval;
-          else
-            c_ptr->fval = floor;
+          if (i != ymin && i != ymax) caveD[i][j].fval = floor;
+          if (j != xmin && j != xmax) caveD[i][j].fval = floor;
         }
       }
 
