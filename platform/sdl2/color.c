@@ -25,6 +25,11 @@ rgba_by_palette(c)
 {
   return color_mapD[c];
 }
+STATIC int
+rgba_by_grey(c)
+{
+  return greyscaleD[c];
+}
 #define font_rgba rgba_by_palette
 
 #define COLOR 1

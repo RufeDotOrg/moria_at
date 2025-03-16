@@ -1,7 +1,12 @@
 // Rufe.org LLC 2022-2024: GPLv3 License
 
+STATIC int in_bounds(int row, int col);
+STATIC int hard_reset();
+STATIC int rgba_by_grey(int c);
+
 DATA int max_loop_count;
 enum { LOAD_GAME = 0 };
+enum { INTERRUPT = 1 };
 enum { DLEV_BEGIN = 1 };  // [1, 50] or just N != 1
 enum { SEED_BEGIN = 0 };
 enum { SEED_RANGE = 64 * 1024 };
@@ -43,31 +48,29 @@ image_write()
 static int
 cave_image()
 {
+  int color;
+
   for (int row = 0; row < MAX_HEIGHT; ++row) {
     for (int col = 0; col < MAX_WIDTH; ++col) {
       struct caveS* c_ptr = &caveD[row][col];
-      int color = 0;
-      if (!c_ptr->fval) {
-        color = 0;
-      } else if (c_ptr->fval <= MAX_FLOOR) {
-        color = 50;
-      } else {
-        switch (c_ptr->fval) {
-          case BOUNDARY_WALL:
-            color = 100;
-            break;
-          case GRANITE_WALL:
-            color = 90;
-            break;
-          case MAGMA_WALL:
-            color = 80;
-            break;
-          case QUARTZ_WALL:
-            color = 70;
-            break;
-        }
+      switch (c_ptr->fval) {
+        case BOUNDARY_WALL:
+          color = 7;
+          break;
+        case GRANITE_WALL:
+          color = 6;
+          break;
+        case MAGMA_WALL:
+          color = 5;
+          break;
+        case QUARTZ_WALL:
+          color = 4;
+          break;
+        default:
+          color = c_ptr->fval ? 2 : 0;
+          break;
       }
-      imageD[row][col] = rgb_by_labr(color);
+      imageD[row][col] = rgba_by_grey(color);
 
       if (cave_startD.x)
         if (row == cave_startD.y && col == cave_startD.x)
@@ -78,6 +81,7 @@ cave_image()
       if (cave_checkD.x)
         if (row == cave_checkD.y && col == cave_checkD.x)
           imageD[row][col] = 0xff00ffff;
+      if (c_ptr->fval == FLOOR_OBST) imageD[row][col] = 0xffff0000;
     }
   }
 }
@@ -129,6 +133,10 @@ test_cavegen()
     int begin = SEED_BEGIN;
     int end = SEED_BEGIN == 0 ? SEED_BEGIN + SEED_RANGE : SEED_BEGIN + 1;
     for (uint32_t seed = begin; seed < end; ++seed) {
+      char c;
+      while (INTERRUPT && (c = platformD.input()) != CTRL('d'))
+        if (c == CTRL('c')) exit(1);
+
       hard_reset();
       dun_level = dlev;
       rnd_seed = seed;
