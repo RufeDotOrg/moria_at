@@ -3567,18 +3567,54 @@ room_monster(y, x, chance)
     }
   }
 }
+// fills a rectangular area with walls and floor tiles
+void fill_rectangle(xmin, xmax, ymin, ymax, rflag, floor,
+                    setup_func) fn setup_func;
+{
+  struct caveS* c_ptr;
+
+  for (int i = ymin; i <= ymax; ++i) {
+    for (int j = xmin; j <= xmax; ++j) {
+      c_ptr = &caveD[i][j];
+      c_ptr->cflag |= rflag;
+
+      if (i == ymin || i == ymax || j == xmin || j == xmax) {
+        c_ptr->fval = GRANITE_WALL;
+      } else {
+        if (setup_func)
+          setup_func(c_ptr, i, j, floor);
+        else
+          c_ptr->fval = floor;
+      }
+    }
+  }
+}
+int
+checkered_setup(struct caveS* c_ptr, int i, int j, int floor)
+{
+  if ((i ^ j) & 0x1) {
+    c_ptr->fval = MAGMA_WALL;
+  } else {
+    c_ptr->fval = floor;
+  }
+}
+int
+preserve_setup(struct caveS* c_ptr, int i, int j, int floor)
+{
+  if (c_ptr->fval == 0) {
+    c_ptr->fval = floor;
+  }
+}
 static void build_type2(ychunk, xchunk, ycenter, xcenter, type1,
                         type2) int* ycenter;
 int* xcenter;
 {
-  int rflag, floor, ydoor;
+  int floor, ydoor;
   int xmin, xmax, ymin, ymax;
   int y, x;
-  struct caveS* c_ptr;
   int obj_count = 0;
   int trap_count = 0;
 
-  rflag = CF_ROOM;
   if (dun_level <= randint(25))
     floor = FLOOR_LIGHT;
   else
@@ -3594,19 +3630,7 @@ int* xcenter;
   switch (type1) {
     case 1:
       ymax -= 1;
-      for (int i = ymin; i <= ymax; ++i) {
-        for (int j = xmin; j <= xmax; ++j) {
-          c_ptr = &caveD[i][j];
-          c_ptr->cflag |= rflag;
-          if (i == ymin || i == ymax)
-            c_ptr->fval = GRANITE_WALL;
-          else if (j == xmin || j == xmax)
-            c_ptr->fval = GRANITE_WALL;
-          else
-            c_ptr->fval = floor;
-        }
-      }
-
+      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM, floor, 0);
       build_chamber(y, x, 1, 3);
       place_secret_door(y - 3 + (randint(2) << 1), x + randint(2));
       place_secret_door(y - 3 + (randint(2) << 1), x - randint(2));
@@ -3632,34 +3656,12 @@ int* xcenter;
       ymax = y + 3;
       xmin = x - 3;
       xmax = x + 3;
-      for (int i = ymin; i <= ymax; ++i) {
-        for (int j = xmin; j <= xmax; ++j) {
-          c_ptr = &caveD[i][j];
-          c_ptr->cflag |= rflag;
-          if (i == ymin || i == ymax)
-            c_ptr->fval = GRANITE_WALL;
-          else if (j == xmin || j == xmax)
-            c_ptr->fval = GRANITE_WALL;
-          else if (c_ptr->fval == 0)
-            c_ptr->fval = floor;
-        }
-      }
+      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM, floor, preserve_setup);
       break;
     case 3:
       xmax -= 1;
       ymax -= 1;
-      for (int i = ymin; i <= ymax; ++i) {
-        for (int j = xmin; j <= xmax; ++j) {
-          c_ptr = &caveD[i][j];
-          c_ptr->cflag |= rflag;
-          if (i == ymin || i == ymax)
-            c_ptr->fval = GRANITE_WALL;
-          else if (j == xmin || j == xmax)
-            c_ptr->fval = GRANITE_WALL;
-          else
-            c_ptr->fval = floor;
-        }
-      }
+      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM, floor, 0);
 
       if (type2 & 0x1) {
         build_pillar(y, x - 4);
@@ -3688,21 +3690,8 @@ int* xcenter;
       }
       break;
     case 4:
-      rflag |= CF_UNUSUAL;
-      for (int i = ymin; i <= ymax; ++i) {
-        for (int j = xmin; j <= xmax; ++j) {
-          c_ptr = &caveD[i][j];
-          c_ptr->cflag |= rflag;
-          if (i == ymin || i == ymax)
-            c_ptr->fval = GRANITE_WALL;
-          else if (j == xmin || j == xmax)
-            c_ptr->fval = GRANITE_WALL;
-          else if ((i ^ j) & 0x1)
-            c_ptr->fval = MAGMA_WALL;
-          else
-            c_ptr->fval = floor;
-        }
-      }
+      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM | CF_UNUSUAL, floor,
+                     checkered_setup);
       // Maze
       trap_count = 2;
       obj_count = randint(3);
@@ -3710,24 +3699,10 @@ int* xcenter;
       room_monster(y, x + 5, 3);
       break;
     case 5:
-      rflag |= CF_UNUSUAL;
       ymax -= 1;
-      for (int i = ymin; i <= ymax; ++i) {
-        for (int j = xmin; j <= xmax; ++j) {
-          c_ptr = &caveD[i][j];
-          c_ptr->cflag |= rflag;
-          if (i == ymin || i == ymax)
-            c_ptr->fval = GRANITE_WALL;
-          else if (j == xmin || j == xmax)
-            c_ptr->fval = GRANITE_WALL;
-          else if (i == y)
-            c_ptr->fval = MAGMA_WALL;
-          else if (j == x)
-            c_ptr->fval = MAGMA_WALL;
-          else
-            c_ptr->fval = floor;
-        }
-      }
+      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM | CF_UNUSUAL, floor, 0);
+      for (int i = ymin + 1; i < ymax; ++i) caveD[i][x].fval = MAGMA_WALL;
+      for (int j = xmin + 1; j < xmax; ++j) caveD[y][j].fval = MAGMA_WALL;
 
       ydoor = ymin + randint(ymax - ymin);
       place_secret_door(ydoor, x);
@@ -3747,18 +3722,7 @@ int* xcenter;
       ymax = y + 2;
       xmin = xchunk * CHUNK_WIDTH;
       xmax = xmin + CHUNK_WIDTH - 2;
-      for (int i = ymin; i <= ymax; ++i) {
-        for (int j = xmin; j <= xmax; ++j) {
-          c_ptr = &caveD[i][j];
-          c_ptr->cflag |= rflag;
-          if (i == ymin || i == ymax)
-            c_ptr->fval = GRANITE_WALL;
-          else if (j == xmin || j == xmax)
-            c_ptr->fval = GRANITE_WALL;
-          else
-            c_ptr->fval = floor;
-        }
-      }
+      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM, floor, 0);
 
       ymin = ychunk * CHUNK_HEIGHT;
       ymax = ymin + CHUNK_HEIGHT - 1;
@@ -3766,8 +3730,8 @@ int* xcenter;
       xmax = x + 2;
       for (int i = ymin; i <= ymax; ++i) {
         for (int j = xmin; j <= xmax; ++j) {
-          c_ptr = &caveD[i][j];
-          c_ptr->cflag |= rflag;
+          struct caveS* c_ptr = &caveD[i][j];
+          c_ptr->cflag |= CF_ROOM;
           if (i == ymin || i == ymax)
             c_ptr->fval = (c_ptr->fval == 0) ? GRANITE_WALL : c_ptr->fval;
           else if (j == xmin || j == xmax)
