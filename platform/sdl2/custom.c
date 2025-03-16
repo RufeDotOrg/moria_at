@@ -1666,15 +1666,6 @@ custom_orientation(orientation)
   }
   return 0;
 }
-
-int
-char_bit(c)
-{
-  int b = c - 'a';
-  printf("%c char 0x%x flag\n", c, 1u << b);
-  if (b <= 'z' - 'a') return (1u << b);
-  return 0;
-}
 int
 feature_menutext(mflag)
 {
