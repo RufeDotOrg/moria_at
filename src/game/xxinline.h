@@ -21,6 +21,13 @@ char_digit(c)
   return ('0' <= c && c <= '9');
 }
 XX int
+char_bit(c)
+{
+  int b = c - 'a';
+  if (b <= 'z' - 'a') return (1u << b);
+  return 0;
+}
+XX int
 is_ctrl(c)
 {
   return c <= 0x1f;
