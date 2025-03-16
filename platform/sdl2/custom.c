@@ -1668,58 +1668,108 @@ custom_orientation(orientation)
 }
 
 int
-feature_menu()
+char_bit(c)
 {
-  char c;
-  int line;
+  int b = c - 'a';
+  printf("%c char 0x%x flag\n", c, 1u << b);
+  if (b <= 'z' - 'a') return (1u << b);
+  return 0;
+}
+int
+feature_menutext(mflag)
+{
   char opt[2][4] = {"off", "on"};
   char* default_renderer = PC ? "opengl" : "opengles2";
+  char *text, *value;
+
+  while (mflag) {
+    char tmp[32];
+    tmp[0] = 0;
+
+    uint32_t flag = mflag & -mflag;
+    int line = __builtin_ffs(flag) - 1;
+    char c = 'a' + line;
+    switch (c) {
+      case 'a':
+        text = "ascii gameplay renderer";
+        value = opt[globalD.sprite == 0];
+        break;
+      case 'c':
+        text = "color interface";
+        value = opt[globalD.dpad_color != 0];
+        break;
+      case 'd':
+        text = "dpad sensitivity";
+        apcati(AP(tmp), globalD.dpad_sensitivity);
+        break;
+      case 'g':
+        text = "gpu interface";
+        value = globalD.pc_renderer[0] ? globalD.pc_renderer : default_renderer;
+        break;
+      case 'h':
+        text = "hand-swap user interface";
+        value = opt[globalD.hand_swap != 0];
+        break;
+      case 'l':
+        text = "label button order for controllers:";
+        value = opt[globalD.label_button_order != 0];
+        break;
+      case 'm':
+        text = "magnification scale";
+        apcati(AP(tmp), 1 << globalD.zoom_factor);
+        break;
+      case 'r':
+        text = "refresh / video sync";
+        value = opt[globalD.vsync != 0];
+        // vsync_rateD, refresh_rateD;
+        break;
+      case 't':
+        text = "landscape text size";
+        value = globalD.small_text ? "small" : "large";
+        break;
+      case 'o':
+        text = "orientation lock";
+        value = opt[globalD.orientation_lock != 0];
+        break;
+      case 'v':
+        text = "version detail";
+        value = versionD;
+        break;
+      default:
+        text = 0;
+        value = 0;
+        break;
+    }
+    if (tmp[0]) value = tmp;
+    int used = snprintf(AP(overlayD[line]), "%c) %s (%s)", c, text, value);
+    if (used < 1) break;
+    overlay_usedD[line] = used;
+    mflag ^= flag;
+  }
+  return CLOBBER_MSG("feature menu");
+}
+int
+feature_menu()
+{
   int using_selection = platformD.selection != noop;
 
   while (1) {
     overlay_submodeD = 'f';
-    line = 0;
-    BufMsg(overlay, "a) ascii gameplay renderer (%s)",
-           opt[globalD.sprite == 0]);
-    if (using_selection) {
-      line = 'c' - 'a';
-      BufMsg(overlay, "c) color interface (%s)", opt[globalD.dpad_color != 0]);
-      line = 'd' - 'a';
-      BufMsg(overlay, "d) dpad sensitivity (%d)", globalD.dpad_sensitivity);
-    }
-    line = 'g' - 'a';
-    BufMsg(overlay, "g) gpu interface (%s)",
-           globalD.pc_renderer[0] ? globalD.pc_renderer : default_renderer);
-    line = 'h' - 'a';
-    BufMsg(overlay, "h) hand-swap user interface (%s)",
-           opt[globalD.hand_swap != 0]);
-    if (JOYSTICK) {
-      line = 'l' - 'a';
-      BufMsg(overlay, "l) label button order for controllers: %d",
-             globalD.label_button_order);
-    }
-    line = 'm' - 'a';
-    BufMsg(overlay, "m) magnification scale (%d x)", 1 << globalD.zoom_factor);
-    line = 'r' - 'a';
-    if (!vsync_rateD) {
-      BufMsg(overlay, "r) refresh / video sync (%s)", opt[globalD.vsync != 0]);
-    } else {
-      BufMsg(overlay,
-             "r) refresh / video sync (%s) | %d fps of %d display claimed",
-             opt[globalD.vsync != 0], vsync_rateD, refresh_rateD);
-    }
-    if (PC) {
-      line = 't' - 'a';
-      BufMsg(overlay, "t) landscape text size (%s)",
-             globalD.small_text ? "small" : "large");
-    }
-    line = 'o' - 'a';
-    BufMsg(overlay, "o) orientation lock (%s)",
-           opt[globalD.orientation_lock != 0]);
-    line = 'v' - 'a';
-    BufMsg(overlay, "v) version info");
+    int flag = 0;
 
-    c = CLOBBER_MSG("feature menu");
+    flag |= char_bit('a');
+    if (using_selection) flag |= char_bit('c');
+    if (using_selection) flag |= char_bit('d');
+    flag |= char_bit('g');
+    flag |= char_bit('h');
+    if (JOYSTICK) flag |= char_bit('l');
+    flag |= char_bit('m');
+    flag |= char_bit('o');
+    flag |= char_bit('r');
+    if (PC) flag |= char_bit('t');
+    flag |= char_bit('v');
+
+    char c = feature_menutext(flag);
     if (is_ctrl(c)) break;
 
     switch (c) {
