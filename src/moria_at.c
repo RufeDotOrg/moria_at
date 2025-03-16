@@ -10786,8 +10786,6 @@ show_version()
 {
   int line;
 
-  versionD[AL(versionD) - 1] = 0;
-
   screen_submodeD = 1;
   line = 0;
   BufMsg(screen, "Git Hash: %s", git_hashD);
