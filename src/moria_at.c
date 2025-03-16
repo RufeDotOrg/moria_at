@@ -3599,6 +3599,16 @@ checkered_setup(struct caveS* c_ptr, int i, int j, int floor)
   }
 }
 int
+quadrant_setup(struct caveS* c_ptr, int i, int j, int floor)
+{
+  if (i % CHUNK_HEIGHT == (CHUNK_HEIGHT - 1) / 2)
+    c_ptr->fval = MAGMA_WALL;
+  else if (j % CHUNK_WIDTH == (CHUNK_WIDTH - 1) / 2)
+    c_ptr->fval = MAGMA_WALL;
+  else
+    c_ptr->fval = floor;
+}
+int
 preserve_setup(struct caveS* c_ptr, int i, int j, int floor)
 {
   if (c_ptr->fval == 0) {
@@ -3700,9 +3710,8 @@ int* xcenter;
       break;
     case 5:
       ymax -= 1;
-      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM | CF_UNUSUAL, floor, 0);
-      for (int i = ymin + 1; i < ymax; ++i) caveD[i][x].fval = MAGMA_WALL;
-      for (int j = xmin + 1; j < xmax; ++j) caveD[y][j].fval = MAGMA_WALL;
+      fill_rectangle(xmin, xmax, ymin, ymax, CF_ROOM | CF_UNUSUAL, floor,
+                     quadrant_setup);
 
       ydoor = ymin + randint(ymax - ymin);
       place_secret_door(ydoor, x);
@@ -3710,7 +3719,7 @@ int* xcenter;
         place_secret_door(y, xmin + randint(CHUNK_WIDTH / 2 - 2));
         place_secret_door(y, x + randint(CHUNK_WIDTH / 2 - 2));
       }
-      // Quadrant
+
       obj_count = 2 + randint(2);
       room_monster(y + 1, x - 4, 4);
       room_monster(y + 1, x + 4, 4);
