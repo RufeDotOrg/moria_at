@@ -1097,6 +1097,7 @@ draw_menu(mode, using_selection)
   point_t anchor = {XY(grect)};
   anchor.x += FWIDTH / 2;
   if (msg_used) render_monofont_string(renderer, &fontD, msg, msg_used, anchor);
+  anchor.y += FHEIGHT * 2;
 
   char* textlist = 0;
   int* lenlist = 0;
@@ -1115,14 +1116,14 @@ draw_menu(mode, using_selection)
   }
 
   for (int row = 0; row < AL(screenD); ++row) {
-    SDL_Point p = {anchor.x, anchor.y + row * FHEIGHT + FHEIGHT};
+    SDL_Point p = {anchor.x, anchor.y + row * FHEIGHT};
     render_monofont_string(renderer, &fontD, &textlist[row * step],
                            lenlist[row], p);
   }
 
   if (using_selection && finger_rowD >= 0) {
     int row = finger_rowD;
-    SDL_Point p = {anchor.x, anchor.y + row * FHEIGHT + FHEIGHT};
+    SDL_Point p = {anchor.x, anchor.y + row * FHEIGHT};
     font_color(font_rgba(BRIGHT + RED));
     font_alpha(255);
     if (lenlist[row] <= 1) {
