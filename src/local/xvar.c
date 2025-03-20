@@ -33,7 +33,6 @@ DATA char msglen_cqD[MAX_MSG];
 DATA uint32_t msg_writeD;
 DATA uint32_t msg_moreD;
 DATA int overlay_widthD;
-DATA int overlay_heightD;
 DATA int msg_widthD;
 DATA int msg_turnD;
 DATA int last_turnD;

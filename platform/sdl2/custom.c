@@ -326,9 +326,9 @@ portrait_layout()
   int olimit = overlay_widthD * FWIDTH;
   grectD[GR_OVERLAY] = (rect_t){
       (layout_rect.w - olimit) / 2,
-      0,  // grectD[GR_GAMEPLAY].y,
+      grectD[GR_GAMEPLAY].y,
       olimit,
-      layout_rect.h - PADSIZE - FHEIGHT,  // overlay_heightD*FHEIGHT
+      (2 + AL(overlayD)) * FHEIGHT,
   };
   grectD[GR_WIDESCREEN] = grectD[GR_OVERLAY];
 
@@ -402,13 +402,13 @@ landscape_layout()
       xmargin,
       0,
       overlay_widthD * FWIDTH,
-      overlay_heightD * FHEIGHT,
+      (2 + AL(overlayD)) * FHEIGHT,
   };
   grectD[GR_WIDESCREEN] = (rect_t){
       xmargin,
       0,
       layout_rect.w - xmargin,
-      overlay_heightD * FHEIGHT,
+      (2 + AL(overlayD)) * FHEIGHT,
   };
 
   return 0;
@@ -627,33 +627,6 @@ common_text()
     }
   }
 
-  if (TOUCH) {
-    if (msg_moreD || TEST_UI) {
-      static int tapD;
-      tapD = (tapD + 1) % 4;
-      switch (tapD) {
-        case 0:
-          font_color(font_rgba(BRIGHT + RED));
-          break;
-        case 1:
-          font_color(font_rgba(BRIGHT + GREEN));
-          break;
-        case 2:
-          font_color(font_rgba(BRIGHT + BLUE));
-          break;
-        case 3:
-          font_reset();
-          break;
-      }
-
-      AUSE(grect, GR_PAD);
-      SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h / 2};
-      p.x -= STRLEN_MORE * FWIDTH / 2;
-      p.y -= FHEIGHT / 2;
-      render_monofont_string(renderer, &fontD, AP(moreD), p);
-      font_reset();
-    }
-  }
   if (PC) {
     if (msg_moreD || TEST_UI) {
       DATA char spacebar[] = "-press spacebar-";
@@ -701,7 +674,7 @@ portrait_text(mode)
       SDL_SetRenderDrawColor(rendererD, 0, 0, 0, 0);
       SDL_RenderFillRect(renderer, &fill);
 
-      font_texture_alphamod(alpha);
+      font_alpha(alpha);
       render_monofont_string(renderer, &fontD, msg, msg_used, p);
       font_reset();
     }
@@ -729,6 +702,8 @@ portrait_text(mode)
     }
 
     common_text();
+  } else {
+    vitalstat_text();
   }
 
   return 0;
@@ -770,7 +745,7 @@ landscape_text(mode)
     }
 
     if (msg_used) {
-      font_texture_alphamod(alpha);
+      font_alpha(alpha);
       render_monofont_string(renderer, &fontD, msg, msg_used, p);
       font_reset();
 
@@ -808,8 +783,6 @@ landscape_text(mode)
 
   return 0;
 }
-#undef FONT_HEIGHT
-#undef FONT_WIDTH
 
 // Drawing
 
@@ -1102,8 +1075,6 @@ int
 draw_menu(mode, using_selection)
 {
   USE(renderer);
-  USE(overlay_width);
-  USE(overlay_height);
   char* msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
   int is_text;
@@ -1115,23 +1086,16 @@ draw_menu(mode, using_selection)
     is_text = (screen_submodeD != 0);
     if (screen_submodeD == 2) {
       grect = grectD[GR_WIDESCREEN];
-      overlay_width = msg_widthD;
     }
   }
 
-  rect_t src_rect = {
-      PADSIZE,
-      0,
-      overlay_width * FWIDTH,
-      overlay_height * FHEIGHT,
-  };
-  SDL_RenderFillRect(renderer, &src_rect);
-  if (is_text) rect_altfill(src_rect);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+  SDL_RenderFillRect(renderer, &grect);
+  if (is_text) rect_altfill(grect);
 
-  int left = PADSIZE + FWIDTH / 2;
-  if (msg_used)
-    render_monofont_string(renderer, &fontD, msg, msg_used,
-                           (SDL_Point){left, 0});
+  point_t anchor = {XY(grect)};
+  anchor.x += FWIDTH / 2;
+  if (msg_used) render_monofont_string(renderer, &fontD, msg, msg_used, anchor);
 
   char* textlist = 0;
   int* lenlist = 0;
@@ -1150,15 +1114,16 @@ draw_menu(mode, using_selection)
   }
 
   for (int row = 0; row < AL(screenD); ++row) {
-    SDL_Point p = {left, row * FHEIGHT + FHEIGHT};
+    SDL_Point p = {anchor.x, anchor.y + row * FHEIGHT + FHEIGHT};
     render_monofont_string(renderer, &fontD, &textlist[row * step],
                            lenlist[row], p);
   }
 
   if (using_selection && finger_rowD >= 0) {
     int row = finger_rowD;
-    SDL_Point p = {left, row * FHEIGHT + FHEIGHT};
+    SDL_Point p = {anchor.x, anchor.y + row * FHEIGHT + FHEIGHT};
     font_color(font_rgba(BRIGHT + RED));
+    font_alpha(255);
     if (lenlist[row] <= 1) {
       render_monofont_string(renderer, &fontD, "-", 1, p);
     } else {
@@ -1626,12 +1591,10 @@ custom_orientation(orientation)
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
     text_fn = portrait_text;
     overlay_widthD = 67;
-    overlay_heightD = AL(overlayD) + 1;
     msg_widthD = 63;
   } else if (orientation == SDL_ORIENTATION_LANDSCAPE) {
     text_fn = landscape_text;
     overlay_widthD = 78;
-    overlay_heightD = AL(overlayD) + 2;
     msg_widthD = 92;
   }
   text_fnD = text_fn;

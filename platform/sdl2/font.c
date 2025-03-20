@@ -65,12 +65,6 @@ font_init()
   return glyph_init();
 }
 
-STATIC void
-font_color(color)
-{
-  SDL_SetTextureColorMod(font_textureD, V3b(&color));
-}
-
 int yoffsetD[] = {0,  0,  0,  0,  0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                   0,  0,  0,  0,  0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
                   0,  7,  5,  7,  5, 7,  7,  5,  3,  3,  7,  11, 21, 16, 20, 5,
@@ -105,7 +99,13 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
 }
 
 STATIC void
-font_texture_alphamod(alpha)
+font_color(color)
+{
+  SDL_SetTextureColorMod(font_textureD, V3b(&color));
+}
+
+STATIC void
+font_alpha(alpha)
 {
   SDL_SetTextureAlphaMod(font_textureD, alpha);
 }
