@@ -913,6 +913,7 @@ map_draw()
     }
   }
 
+  if (!sprite_texture) font_reset();
   if (sprite_texture) {
     uint32_t oidx = caveD[uD.y][uD.x].oidx;
     struct objS* obj = &entity_objD[oidx];

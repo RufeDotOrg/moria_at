@@ -65,15 +65,6 @@ font_init()
   return glyph_init();
 }
 
-int yoffsetD[] = {0,  0,  0,  0,  0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                  0,  0,  0,  0,  0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
-                  0,  7,  5,  7,  5, 7,  7,  5,  3,  3,  7,  11, 21, 16, 20, 5,
-                  7,  7,  7,  7,  7, 7,  7,  7,  7,  7,  11, 11, 11, 12, 11, 7,
-                  7,  7,  7,  7,  7, 7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,
-                  7,  7,  7,  7,  7, 7,  7,  7,  7,  7,  7,  5,  5,  5,  7,  27,
-                  4,  11, 4,  11, 4, 11, 5,  11, 4,  5,  5,  4,  5,  11, 11, 11,
-                  11, 11, 11, 11, 6, 11, 11, 11, 11, 11, 11, 5,  5,  5,  15};
-
 STATIC void
 render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
                        const char* string, int len, SDL_Point origin)
@@ -90,9 +81,7 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
     char c = string[it];
     if (char_visible(c)) {
       rect_t src = (rect_t){XY(point_by_glyph(c)), FWIDTH, FHEIGHT};
-      rect_t dst = target_rect;
-      dst.y += yoffsetD[c];
-      SDL_RenderCopy(renderer, font_texture, &src, &dst);
+      SDL_RenderCopy(renderer, font_texture, &src, &target_rect);
     }
     target_rect.x += FWIDTH;
   }
@@ -118,7 +107,6 @@ font_reset()
   SDL_SetTextureAlphaMod(font_texture, FALPHA);
 }
 
-// precondition: char_visible(c)
 STATIC rect_t
 font_rect_by_char(char c)
 {
