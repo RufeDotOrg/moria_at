@@ -437,10 +437,10 @@ static struct spellS spellD[AL(classD) - 1][SP_MAX] = {
      {35, 32, 70, 38}, {37, 36, 90, 50}, {39, 38, 90, 100}}};
 
 static char stat_abbrD[MAX_A][5] = {
-    "STR ", "INT ", "WIS ", "DEX ", "CON ", "CHR ",
+    "Str ", "Int ", "Wis ", "Dex ", "Con ", "Chr ",
 };
 static char vital_nameD[8][5] = {
-    "LEV ", "EXP ", "MANA", "MHP ", "CHP ", "AC  ", "GOLD", "",
+    "Lev ", "Exp ", "Mana", "Mhp ", "Chp ", "Ac  ", "Gold", "",
 };
 static char* stat_lossD[] = {
     "You feel weaker",      "You have trouble thinking clearly",

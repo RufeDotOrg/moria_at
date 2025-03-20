@@ -45,7 +45,6 @@ DATA SDL_Texture* sprite_textureD;
 DATA SDL_Texture* mmtextureD;
 DATA SDL_Texture* ui_textureD;
 DATA SDL_Texture* map_textureD;
-DATA SDL_Texture* text_textureD;
 DATA uint16_t mon_drawD[AL(monD)];
 
 enum { PHASE_PREGAME = 1, PHASE_GAME = 2, PHASE_POSTGAME = 3 };
@@ -240,14 +239,6 @@ custom_pregame()
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, MAP_W, MAP_H);
   SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
-
-  text_textureD = SDL_CreateTexture(
-      rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET, 2 * 1024, 2 * 1024);
-  if (text_textureD)
-    SDL_SetTextureScaleMode(text_textureD, SDL_ScaleModeLinear);
-
-  Log("texture creation complete: %d OK",
-      (mmtextureD != 0) + (map_textureD != 0) + (text_textureD != 0));
 
   if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
   Log("SetWindowResizable");
@@ -742,19 +733,14 @@ portrait_text(mode)
 
   return 0;
 }
-#define FHEIGHT (FHEIGHT * font_scaleD)
-#define FWIDTH (FWIDTH * font_scaleD)
 int
 landscape_text(mode)
 {
   USE(msg_more);
   USE(renderer);
   USE(layout_rect);
-  MUSE(global, small_text);
-  if (!PC) small_text = 1;
 
   if (mode == 0) {
-    font_scaleD = small_text ? 1.0f : 1.25f;
     char* msg = AS(msg_cqD, msg_writeD);
     int msg_used = AS(msglen_cqD, msg_writeD);
     int alpha = FALPHA;
@@ -789,13 +775,12 @@ landscape_text(mode)
       font_reset();
 
       SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-      if (small_text) framing_base_step(rect, 1, 1);
     }
 
     if (msg_more || TEST_UI) {
       int wlimit = msg_widthD * FWIDTH;
       int mlimit = STRLEN_MORE * FWIDTH;
-      int margin = small_text ? (layout_rect.w - wlimit - mlimit) / 4 : FWIDTH;
+      int margin = FWIDTH;
 
       rect_t rect2 = {
           margin,
@@ -814,11 +799,8 @@ landscape_text(mode)
       render_monofont_string(renderer, &fontD, AP(moreD), p2);
       SDL_Point p3 = {rect3.x, rect3.y};
       render_monofont_string(renderer, &fontD, AP(moreD), p3);
-      if (small_text) framing_base_step(rect2, 1, 1);
-      if (small_text) framing_base_step(rect3, 1, 1);
     }
 
-    font_scaleD = 1.0f;
     common_text();
   } else {
     vitalstat_text();
@@ -1138,58 +1120,55 @@ draw_menu(mode, using_selection)
   }
 
   rect_t src_rect = {
-      0,
+      PADSIZE,
       0,
       overlay_width * FWIDTH,
       overlay_height * FHEIGHT,
   };
-  SDL_SetRenderTarget(renderer, text_textureD);
-  if (is_text) {
-    rect_altfill(src_rect);
-  } else {
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderFillRect(renderer, &src_rect);
-  }
+  SDL_RenderFillRect(renderer, &src_rect);
+  if (is_text) rect_altfill(src_rect);
 
-  int left = FWIDTH / 2;
+  int left = PADSIZE + FWIDTH / 2;
   if (msg_used)
     render_monofont_string(renderer, &fontD, msg, msg_used,
                            (SDL_Point){left, 0});
 
+  char* textlist = 0;
+  int* lenlist = 0;
+  int step = 0;
   switch (mode) {
-    case 1: {
-      for (int row = 0; row < AL(overlayD); ++row) {
-        SDL_Point p = {
-            left,
-            row * FHEIGHT + FHEIGHT,
-        };
-        char* text = overlayD[row];
-        int tlen = overlay_usedD[row];
-        if (using_selection && row == finger_rowD) {
-          font_color(font_rgba(BRIGHT + RED));
-          if (tlen <= 1) {
-            text = "-";
-            tlen = 1;
-          }
-        }
-        render_monofont_string(renderer, &fontD, text, tlen, p);
-        if (using_selection && row == finger_rowD) {
-          font_reset();
-        }
-      }
-    } break;
-    case 2: {
-      for (int row = 0; row < AL(screenD); ++row) {
-        SDL_Point p = {left, row * FHEIGHT + FHEIGHT};
-        render_monofont_string(renderer, &fontD, screenD[row],
-                               screen_usedD[row], p);
-      }
-    } break;
+    case 1:
+      textlist = &overlayD[0][0];
+      lenlist = overlay_usedD;
+      step = AL(overlayD[0]);
+      break;
+    case 2:
+      textlist = &screenD[0][0];
+      lenlist = screen_usedD;
+      step = AL(screenD[0]);
+      break;
   }
 
-  SDL_SetRenderTarget(renderer, layoutD);
-  SDL_RenderCopy(renderer, text_textureD, &src_rect, &grect);
-  if (is_text) framing_base_step(grect, 0, -1);
+  for (int row = 0; row < AL(screenD); ++row) {
+    SDL_Point p = {left, row * FHEIGHT + FHEIGHT};
+    render_monofont_string(renderer, &fontD, &textlist[row * step],
+                           lenlist[row], p);
+  }
+
+  if (using_selection && finger_rowD >= 0) {
+    int row = finger_rowD;
+    SDL_Point p = {left, row * FHEIGHT + FHEIGHT};
+    font_color(font_rgba(BRIGHT + RED));
+    if (lenlist[row] <= 1) {
+      render_monofont_string(renderer, &fontD, "-", 1, p);
+    } else {
+      render_monofont_string(renderer, &fontD, &textlist[row * step],
+                             lenlist[row], p);
+    }
+    font_reset();
+  }
+
+  if (is_text) framing_base_step(grect, -1, 1);
 }
 // mode_change is triggered by interactive UI navigation
 // may edit row/col selection to make the interface feel "smart"
@@ -1653,7 +1632,7 @@ custom_orientation(orientation)
     text_fn = landscape_text;
     overlay_widthD = 78;
     overlay_heightD = AL(overlayD) + 2;
-    msg_widthD = (!PC || globalD.small_text) ? 92 : 80;
+    msg_widthD = 92;
   }
   text_fnD = text_fn;
 
@@ -1713,10 +1692,6 @@ feature_menutext(mflag)
         text = "refresh / video sync";
         value = opt[globalD.vsync != 0];
         // vsync_rateD, refresh_rateD;
-        break;
-      case 't':
-        text = "landscape text size";
-        value = globalD.small_text ? "small" : "large";
         break;
       case 'o':
         text = "orientation lock";
@@ -1791,10 +1766,6 @@ feature_menu()
         break;
       case 'r':
         platformD.vsync(INVERT(globalD.vsync));
-        break;
-      case 't':
-        INVERT(globalD.small_text);
-        platformD.orientation(0);
         break;
       case 'o':
         INVERT(globalD.orientation_lock);
