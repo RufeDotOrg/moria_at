@@ -12,7 +12,6 @@ enum { FTEX_H = 8 };
 struct fontS {
 } fontD;
 DATA struct SDL_Texture* font_textureD;
-DATA float font_scaleD = 1.f;
 
 STATIC point_t
 point_by_glyph(uint32_t index)
@@ -72,26 +71,36 @@ font_color(color)
   SDL_SetTextureColorMod(font_textureD, V3b(&color));
 }
 
+int yoffsetD[] = {0,  0,  0,  0,  0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                  0,  0,  0,  0,  0, 0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
+                  0,  7,  5,  7,  5, 7,  7,  5,  3,  3,  7,  11, 21, 16, 20, 5,
+                  7,  7,  7,  7,  7, 7,  7,  7,  7,  7,  11, 11, 11, 12, 11, 7,
+                  7,  7,  7,  7,  7, 7,  7,  7,  7,  7,  7,  7,  7,  7,  7,  7,
+                  7,  7,  7,  7,  7, 7,  7,  7,  7,  7,  7,  5,  5,  5,  7,  27,
+                  4,  11, 4,  11, 4, 11, 5,  11, 4,  5,  5,  4,  5,  11, 11, 11,
+                  11, 11, 11, 11, 6, 11, 11, 11, 11, 11, 11, 5,  5,  5,  15};
+
 STATIC void
 render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
                        const char* string, int len, SDL_Point origin)
 {
-  USE(font_scale);
   USE(font_texture);
   rect_t target_rect = {
       .x = origin.x,
       .y = origin.y,
-      .w = FWIDTH * font_scale,
-      .h = FHEIGHT * font_scale,
+      .w = FWIDTH,
+      .h = FHEIGHT,
   };
 
   for (int it = 0; it < len; ++it) {
     char c = string[it];
     if (char_visible(c)) {
       rect_t src = (rect_t){XY(point_by_glyph(c)), FWIDTH, FHEIGHT};
-      SDL_RenderCopy(renderer, font_texture, &src, &target_rect);
+      rect_t dst = target_rect;
+      dst.y += yoffsetD[c];
+      SDL_RenderCopy(renderer, font_texture, &src, &dst);
     }
-    target_rect.x += FWIDTH * font_scale;
+    target_rect.x += FWIDTH;
   }
 }
 
