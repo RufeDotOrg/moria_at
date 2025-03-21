@@ -11042,17 +11042,18 @@ int
 py_notes_menu()
 {
   int line = 0;
-  BufMsg(overlay, "Input: 2nd finger left button changed to text history");
-  BufMsg(overlay, "     | menu button replaces text history button");
-  BufMsg(overlay, "     | inventory dpad left toggles drop mode.");
-  BufMsg(overlay, "     | equipment dpad right toggles drop mode.");
-  BufMsg(overlay,
-         "Gameplay: Ring of Koeneke replaces Ring of Sustain Charisma");
-  BufMsg(overlay, "        | Regeneration adds a bonus of +40 Max HP");
-  BufMsg(overlay, "Interface: dpad is flat shaded");
-  BufMsg(overlay, "         | greyscale option applies dpad and buttons");
+  BufMsg(overlay, "Font Changes");
+  BufMsg(overlay, "     | greyscale glyphs");
+  BufMsg(overlay, "     | larger glyphs w/ bold styling");
+  BufMsg(overlay, "     | optimize away per-glyph logic");
+  BufMsg(overlay, "     | remove intermediate text render target");
+  BufMsg(overlay, "Unknown Scroll names preserve syllables");
+  BufMsg(overlay, "Rewrite study object & inventory object descriptions");
+  BufMsg(overlay, "Optimizations to monster movement");
+  BufMsg(overlay, "Fix monster behavior relating to eating lesser creatures");
+  BufMsg(overlay, "Monster breath AoE no longer gives player credit for kills");
 
-  CLOBBER_MSG("~2024~ Patch Q4");
+  CLOBBER_MSG("~2025~ Patch Q1");
   return 0;
 }
 int
