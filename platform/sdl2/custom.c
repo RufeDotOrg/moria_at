@@ -753,7 +753,6 @@ landscape_text(mode)
     }
 
     if (msg_more || TEST_UI) {
-      int wlimit = msg_widthD * FWIDTH;
       int mlimit = STRLEN_MORE * FWIDTH;
       int margin = FWIDTH;
 
@@ -1594,7 +1593,7 @@ custom_orientation(orientation)
   if (orientation == SDL_ORIENTATION_PORTRAIT) {
     text_fn = portrait_text;
     overlay_widthD = 67;
-    msg_widthD = 63;
+    msg_widthD = 63;  // (MAP_W / FWIDTH) - 1;
   } else if (orientation == SDL_ORIENTATION_LANDSCAPE) {
     text_fn = landscape_text;
     overlay_widthD = 78;
