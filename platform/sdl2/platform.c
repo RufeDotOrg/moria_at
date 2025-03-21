@@ -54,6 +54,10 @@ enum { LANDSCAPE = 0 };
 #define LANDSCAPE_X 1920
 #define LANDSCAPE_Y 1080
 
+#if __APPLE__
+#undef snprintf
+#endif
+
 enum { KEYBOARD = 0 };
 #if defined(ANDROID) || defined(__APPLE__)
 enum { TOUCH = 1 };
