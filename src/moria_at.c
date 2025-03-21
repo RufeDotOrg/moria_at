@@ -10816,29 +10816,14 @@ usex()
     return "Female";
 }
 int
-show_character(narrow, is_reroll)
+show_character()
 {
-  USE(msg_width);
-  int line;
   int xbth, xbowth;
   int sptype;
-  line = 0;
-  int col[2];
+  int col[2] = {20, 44};
+  int line = 0;
 
-  if (msg_width < 80) narrow = 1;
-
-  if (narrow) {
-    screen_submodeD = 1;
-    col[0] = 20;
-    col[1] = 44;
-    // Portrait col2 63
-  } else {
-    // Widescreen
-    screen_submodeD = 2;
-    col[0] = 25;
-    col[1] = 53;
-    // Landscape col2 92
-  }
+  screen_submodeD = 1;
 
   BufMsg(screen, "%-13.013s: %3d", "Age", uD.age);
   BufMsg(screen, "%-13.013s: %3d", "Height", uD.ht);
@@ -11016,7 +11001,7 @@ saveslot_race_reroll(saveslot, race)
                       : msg_hint(AP("(SPACEBAR: reroll, ESCAPE: accept)"));
     else
       msg_hint(AP("(LBUTTON: reroll | RBUTTON: accept)"));
-    c = show_character(1, 1);
+    c = show_character();
     if (c == CTRL('c')) break;
   } while (c != ESCAPE);
   return 1;
@@ -11631,7 +11616,7 @@ py_death()
       } else if (c == CTRL('z')) {
         py_undo();
       } else if (c == 'c') {
-        c = show_character(1, 0);
+        c = show_character();
       } else if (c == 'o') {
         // Observe game state at time of death
         c = draw(WAIT_ANY);
@@ -14200,7 +14185,7 @@ dungeon()
               py_actuate(&y, &x, 'i');
               break;
             case 'c':
-              show_character(0, 0);
+              show_character();
               break;
             case 'm':
               if (maD[MA_BLIND] == 0) {
