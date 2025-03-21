@@ -1102,6 +1102,7 @@ draw_menu(mode, using_selection)
   char* textlist = 0;
   int* lenlist = 0;
   int step = 0;
+  USE(finger_row);
   switch (mode) {
     case 1:
       textlist = &overlayD[0][0];
@@ -1112,6 +1113,7 @@ draw_menu(mode, using_selection)
       textlist = &screenD[0][0];
       lenlist = screen_usedD;
       step = AL(screenD[0]);
+      finger_row = -1;
       break;
   }
 
@@ -1121,16 +1123,15 @@ draw_menu(mode, using_selection)
                            lenlist[row], p);
   }
 
-  if (using_selection && finger_rowD >= 0) {
-    int row = finger_rowD;
-    SDL_Point p = {anchor.x, anchor.y + row * FHEIGHT};
+  if (using_selection && finger_row >= 0) {
+    SDL_Point p = {anchor.x, anchor.y + finger_row * FHEIGHT};
     font_color(font_rgba(BRIGHT + RED));
     font_alpha(255);
-    if (lenlist[row] <= 1) {
+    if (lenlist[finger_row] <= 1) {
       render_monofont_string(renderer, &fontD, "-", 1, p);
     } else {
-      render_monofont_string(renderer, &fontD, &textlist[row * step],
-                             lenlist[row], p);
+      render_monofont_string(renderer, &fontD, &textlist[finger_row * step],
+                             lenlist[finger_row], p);
     }
     font_reset();
   }
