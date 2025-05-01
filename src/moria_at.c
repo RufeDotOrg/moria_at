@@ -5227,7 +5227,8 @@ enum {
   FMT_ACC = 0x10,
   FMT_CHARGES = 0x20,
   FMT_WEIGHT = 0x40,
-  FMT_COST = 0x80,
+  FMT_SHOP = 0x80,
+  FMT_PAWN = 0x100,
 };
 int
 moriap_fmt_obj(fmt, flen, fflag, obj)
@@ -5266,9 +5267,12 @@ struct objS* obj;
         used = snprintf(iter, flen, "%2d.%01dlb", stack_weight / 10,
                         stack_weight % 10);
       } break;
-      case FMT_COST:
-        used = snprintf(iter, flen, "%5dg", obj->cost);
-        break;
+      case FMT_PAWN:
+      case FMT_SHOP: {
+        int sidx = obj_store_index(obj);
+        used = snprintf(iter, flen, "%5dg",
+                        store_value(sidx, obj_value(obj), flag == FMT_PAWN));
+      } break;
     }
     if (used < 0 || used >= flen) break;
     fflag ^= flag;
@@ -13413,7 +13417,7 @@ static void hit_trap(y, x, uy, ux) int *uy, *ux;
       break;
   }
 }
-static int
+int
 obj_value(obj)
 struct objS* obj;
 {
@@ -13465,9 +13469,8 @@ struct objS* obj;
   return (value);
 }
 // Object Value * Chrisma Adjustment * Racial Adjustment * Inflation
-// factor 1 or -1
-static int
-store_value(sidx, obj_value, factor)
+int
+store_value(sidx, obj_value, pawn)
 {
   int cadj, radj, iadj;
   struct ownerS* owner;
@@ -13478,16 +13481,16 @@ store_value(sidx, obj_value, factor)
   radj = rgold_adjD[owner->owner_race][uD.ridx];
   iadj = owner->min_inflate;
 
-  if (factor < 0) {
+  if (pawn) {
     cadj = (200 - chr_adj());
     radj = (200 - radj);
     iadj = MAX(200 - iadj, 1);
   }
 
   // Use a 64-bit range when scaling; narrow to int on return
-  return MAX((int64_t)obj_value * cadj * radj * iadj / 1e6, 0LL);
+  return MAX((int64_t)obj_value * cadj * radj * iadj / (int)1e6, 0LL);
 }
-static int
+int
 obj_store_index(obj)
 struct objS* obj;
 {
@@ -13532,6 +13535,9 @@ struct objS* obj;
     case TV_MAGIC_BOOK:
       return 5;
   }
+  // TV_NONE (0)
+  // TV_MISC
+  // TV_CHEST
   return -1;
 }
 static void
@@ -13545,7 +13551,7 @@ inven_pawn(iidx)
   tr_ptr = &treasureD[obj->tidx];
   sidx = obj_store_index(obj);
   if (sidx >= 0) {
-    cost = store_value(sidx, obj_value(obj), -1);
+    cost = store_value(sidx, obj_value(obj), 1);
     count = (cost == 0 || STACK_PROJECTILE & obj->subval) ? obj->number : 1;
     tr_make_known(tr_ptr);
     obj->idflag = ID_REVEAL;
@@ -13564,8 +13570,8 @@ static void
 pawn_display()
 {
   USE(overlay_width);
-  int cost, sidx;
   struct objS* obj;
+  int sidx;
   int limitw = MIN(overlay_width, 80);
   int descw = 4;
 
@@ -13574,22 +13580,19 @@ pawn_display()
   for (int it = 0; it < INVEN_EQUIP; ++it) {
     int len = 1;
     obj = obj_get(invenD[it]);
-    if (obj->id) {
-      // Can this fail?
-      sidx = obj_store_index(obj);
-      if (sidx >= 0) {
-        len = limitw;
-        cost = store_value(sidx, obj_value(obj), -1);
-        obj_desc(obj, obj->number);
-        int dlen = obj_detail(obj, FMT_COST);
+    sidx = obj_store_index(obj);
+    if (sidx >= 0) {
+      len = limitw;
+      obj_desc(obj, obj->number);
+      int dlen = obj_detail(obj, FMT_PAWN);
 
-        overlayD[line][0] = '(';
-        overlayD[line][1] = 'a' + it;
-        overlayD[line][2] = ')';
-        overlayD[line][3] = ' ';
-        memcpy(overlayD[line] + descw, AP(descD));
-        memcpy(overlayD[line] + limitw - dlen - 1, detailD, dlen);
-      }
+      overlayD[line][0] = '(';
+      overlayD[line][1] = 'a' + it;
+      overlayD[line][2] = ')';
+      overlayD[line][3] = ' ';
+      memcpy(overlayD[line] + descw, AP(descD));
+      memcpy(overlayD[line] + limitw - dlen - 1, detailD, dlen);
+
     }
 
     overlay_usedD[line] = len;
@@ -13608,11 +13611,10 @@ store_display(sidx)
   for (int it = 0; it < AL(store_objD[0]); ++it) {
     int len = 1;
     struct objS* obj = &store_objD[sidx][it];
-    int cost = store_value(sidx, obj_value(obj), 1);
     if (obj->tidx) {
       len = limitw;
       obj_desc(obj, obj->subval & STACK_PROJECTILE ? obj->number : 1);
-      int dlen = obj_detail(obj, FMT_COST);
+      int dlen = obj_detail(obj, FMT_SHOP);
 
       overlayD[line][0] = '(';
       overlayD[line][1] = 'a' + it;
@@ -13637,7 +13639,7 @@ store_item_purchase(sidx, item)
   obj = &store_objD[sidx][item];
   if (obj->tidx) {
     count = obj->subval & STACK_PROJECTILE ? obj->number : 1;
-    cost = store_value(sidx, obj_value(obj), 1);
+    cost = store_value(sidx, obj_value(obj), 0);
     if (HACK) cost = 0;
     if (uD.gold >= cost) {
       if ((iidx = inven_obj_mergecount(obj, count)) >= 0) {
