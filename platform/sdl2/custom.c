@@ -203,7 +203,7 @@ custom_pregame()
   spriteD = 0;
 
   // Software renderer will skip this; limiting risk on troubled systems
-  if (0) {
+  if (PC && !IsWindows()) {
     enum { ICO_SZ = 128 };
     SDL_Surface* s = SDL_CreateRGBSurfaceWithFormat(
         SDL_SWSURFACE, ICO_SZ, ICO_SZ, 0, SDL_PIXELFORMAT_ARGB8888);

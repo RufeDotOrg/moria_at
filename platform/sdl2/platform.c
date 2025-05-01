@@ -29,6 +29,8 @@
 enum { COSMO = 0 };
 #ifdef __FATCOSMOCC__
 #include "cosmo_sdl.c"
+#else
+STATIC int IsWindows() { return 0; }
 #endif
 
 #define ORGNAME "org.rufe"
