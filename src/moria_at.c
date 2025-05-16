@@ -49,7 +49,7 @@ DATA int magick_hituD;
     int len = STRLEN_MSG + 1;                    \
     snprintf(msg, len, x, ##__VA_ARGS__);        \
     AS(msglen_cqD, msg_writeD) = STRLEN_MSG + 1; \
-    draw(WAIT_ANY);                              \
+    draw(DRAW_WAIT);                              \
   })
 
 #define BufMsg(name, text, ...)                                     \
@@ -473,8 +473,8 @@ viz_magick()
   return 0;
 }
 enum { WHITESPACE = 0x20202020 };
-#define WAIT_NONE 0
-#define WAIT_ANY -1
+enum { DRAW_NOW = 0 };
+enum { DRAW_WAIT = -1 };
 // wait 0: don't wait
 // wait -1: any key (REPLAY includes key)
 // wait non-zero: pedantic mode wait for exact input (REPLAY excludes input)
@@ -11624,7 +11624,7 @@ py_death()
         c = show_character();
       } else if (c == 'o') {
         // Observe game state at time of death
-        c = draw(WAIT_ANY);
+        c = draw(DRAW_WAIT);
       } else {
         c = py_grave();
       }
@@ -14063,7 +14063,7 @@ dungeon()
       }
 
       replay_flag = (input_record_readD < input_record_writeD);
-      draw(WAIT_NONE);
+      draw(DRAW_NOW);
 
       y = uD.y;
       x = uD.x;
