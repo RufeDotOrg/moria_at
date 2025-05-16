@@ -61,7 +61,7 @@ enum { LANDSCAPE = 0 };
 #endif
 
 enum { KEYBOARD = 0 };
-#if defined(ANDROID) || defined(__APPLE__)
+#if defined(ANDROID) || (TARGET_OS_IPHONE)
 enum { TOUCH = 1 };
 enum { MOUSE = 0 };
 enum { JOYSTICK = 0 };
@@ -137,7 +137,7 @@ SDL_Event event;
     int dw = event.window.data1;
     int dh = event.window.data2;
 
-    if (__APPLE__) {
+    if (TARGET_OS_IPHONE) {
       SDL_GetWindowSafeRect(windowD, &safe_rectD);
       safe_rectD.x *= retina_scaleD;
       safe_rectD.y *= retina_scaleD;

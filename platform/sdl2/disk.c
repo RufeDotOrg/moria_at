@@ -412,7 +412,8 @@ disk_pregame()
       SDL_free(prefpath);
     }
 
-    char* external = SDL_AppleGetDocumentPath(ORGNAME, APPNAME);
+    char* external = 0;
+    if (TARGET_OS_IPHONE) external = SDL_AppleGetDocumentPath(ORGNAME, APPNAME);
     if (external) {
       int len = snprintf(exportpathD, AL(exportpathD), "%s", external);
       if (len < 0 || len >= AL(exportpathD)) {

@@ -2,7 +2,11 @@
 #ifndef COMMON
 #define COMMON
 
-#ifndef __APPLE__
+#ifdef __APPLE__
+#include <TargetConditionals.h>
+#else
+#define TARGET_OS_IPHONE 0
+#define TARGET_OS_MAC 0
 enum { __APPLE__ };
 #endif
 
