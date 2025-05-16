@@ -12,6 +12,10 @@
 #include <string.h>
 #include <time.h>
 
+#if __APPLE__
+#undef snprintf
+#endif
+
 DATA FILE* fileoutD;
 #define printf(x, ...) fprintf(fileoutD, x, ##__VA_ARGS__)
 #define Log(x, ...) fprintf(fileoutD, x "\n", ##__VA_ARGS__)

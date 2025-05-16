@@ -11157,7 +11157,7 @@ py_saveslot_select()
     c = CLOBBER_MSG("Play which class?");
     // Privacy policy
     if (c == 'p') {
-      SDL_OpenURL("https://rufe.org/moria/privacy.html");
+      if (PRIVACY) SDL_OpenURL("https://rufe.org/moria/privacy.html");
       continue;
     }
     if (c == 'r') {
