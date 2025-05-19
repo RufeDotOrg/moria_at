@@ -11620,6 +11620,7 @@ py_death()
         c = show_history();
       } else if (c == CTRL('z')) {
         py_undo();
+        c = ESCAPE;
       } else if (c == 'c') {
         c = show_character();
       } else if (c == 'o') {
