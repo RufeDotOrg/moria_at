@@ -6,7 +6,7 @@ LOCAL_MODULE := main
 
 SDL_PATH := ../SDL
 
-LOCAL_CFLAGS := -Wno-return-type -Wno-implicit-function-declaration
+LOCAL_CFLAGS := -Wno-implicit-function-declaration -Wno-implicit-int -Wno-return-type
 
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/$(SDL_PATH)/include
 
