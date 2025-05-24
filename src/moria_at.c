@@ -5269,7 +5269,7 @@ struct objS* obj;
       case FMT_PAWN:
       case FMT_SHOP: {
         int sidx = obj_store_index(obj);
-        used = snprintf(iter, flen, "%5dg",
+        used = snprintf(iter, flen, "%5dgp",
                         store_value(sidx, obj_value(obj), flag == FMT_PAWN));
       } break;
     }
@@ -13515,7 +13515,7 @@ store_value(sidx, obj_value, pawn)
   }
 
   // Use a 64-bit range when scaling; narrow to int on return
-  return MAX((int64_t)obj_value * cadj * radj * iadj / (int)1e6, 0LL);
+  return CLAMP((int64_t)obj_value * cadj * radj * iadj / (int)1e6, 0LL, 99999);
 }
 int
 obj_store_index(obj)
