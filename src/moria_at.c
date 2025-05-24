@@ -11518,6 +11518,7 @@ wizard_prompt()
   int x, y;
   msg_hint(AP("(adefhlmtosw)"));
   char c = CLOBBER_MSG("Enter wizard command:");
+  turn_flag = TRUE;
   switch (c) {
     case 'a': {
       uD.exp += 1000000;
@@ -11525,8 +11526,10 @@ wizard_prompt()
       dun_level = 0;
       uD.new_level_flag = NL_DOWN_STAIR;
       uD.gold = 10000;
-      turn_flag = TRUE;
     } break;
+    case 'b':
+      uD.total_winner = 1;
+      break;
     case 'd':
       c = CLOBBER_MSG("Detect monster (e/i/m):");
       int ma_type = 0;
@@ -11539,7 +11542,6 @@ wizard_prompt()
       }
       detect_mon(ma_type, 1);
       ma_duration(ma_type, 1 + uD.lev / 5);
-      turn_flag = 1;
       break;
     case 'e': {
       earthquake();
