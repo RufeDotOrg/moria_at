@@ -68,7 +68,7 @@ struct uS {
   uint16_t ht;
   uint8_t age;
   uint8_t sc;
-  int32_t unused;
+  int32_t total_winner;
 };
 GAME struct uS uD;
 

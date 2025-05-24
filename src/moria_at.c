@@ -3289,14 +3289,13 @@ place_win_monster()
   struct creatureS* cr_ptr;
 
   k = randint(MAX_WIN_MON);
-  if (k == MAX_WIN_MON)
-    msg_print("You hear a low rumble echo through the caverns.");
   cidx = k + m_level[MAX_MON_LEVEL];
   cr_ptr = &creatureD[cidx];
   y = uD.y;
   x = uD.x;
 
-  if (!total_winner) {
+  if (k == MAX_WIN_MON && !uD.total_winner) {
+    msg_print("You hear a low rumble echo through the caverns.");
     do {
       fy = randint(MAX_HEIGHT - 2);
       fx = randint(MAX_WIDTH - 2);
@@ -5609,11 +5608,8 @@ mon_death(y, x, flags)
   if (number > 0) summon_object(y, x, number, i);
 
   if (flags & CM_WIN) {
-    if (uD.new_level_flag == 0) /* maybe the player died in mid-turn */
-    {
-      total_winner = TRUE;
-      msg_print("*** CONGRATULATIONS *** You have won the game.");
-    }
+    // Player may be dead; check for level transition
+    uD.total_winner = (uD.new_level_flag == 0);
   }
 }
 static int
@@ -11417,27 +11413,18 @@ py_help()
 int
 py_menu()
 {
-  char c;
-  int line, input_action, memory_ok;
-  char* prompt;
-  int death;
+  char c = 0;
+  char* prompt = "Advanced Game Actions";
+  int death = (uD.new_level_flag == NL_DEATH);
 
-  death = (uD.new_level_flag == NL_DEATH);
-  input_action = input_action_usedD;
-
-  if (death) {
-    prompt = "You are dead.";
-  } else {
-    prompt = "Advanced Game Actions";
-  }
-
+  if (death) prompt = "You are dead.";
   while (1) {
     // One command may be written ahead (e.g. py_look) and is invalid for replay
-    memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
-                 input_action_usedD <= AL(input_actionD) - 1);
+    int memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
+                     input_action_usedD <= AL(input_actionD) - 1);
 
     overlay_submodeD = 0;
-    line = 0;
+    int line = 0;
     if (death) {
       BufMsg(overlay, "a) Ahh, death comes to us all");
     } else {
@@ -11445,8 +11432,9 @@ py_menu()
     }
 
     if (HACK) {
-      BufMsg(overlay, "b) Undo / Gameplay Rewind (%d) (%d) (%s)", input_action,
-             input_record_writeD, memory_ok ? "memory OK" : "memory FAIL");
+      BufMsg(overlay, "b) Undo / Gameplay Rewind (%d) (%d) (%s)",
+             input_action_usedD, input_record_writeD,
+             memory_ok ? "memory OK" : "memory FAIL");
     } else {
       BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
              memory_ok ? "memory OK" : "memory FAIL");
@@ -11502,7 +11490,7 @@ py_menu()
         break;
     }
   }
-  return 0;
+  return c;
 }
 static int
 py_teleport_near(y, x, uy, ux)
@@ -11647,33 +11635,30 @@ char* trans;
   char c = CLOBBER_MSG("Press key twice for %s.", trans);
   return (c == prev) ? prev : 0;
 }
-static void
-py_death()
+static int
+py_endgame(fn endtype)
 {
-  char c;
-
+  char c = 0;
+  int reset_input = input_record_writeD;
   do {
-    c = 0;
-    do {
-      if (c == 'p') {
-        c = show_history();
-      } else if (c == CTRL('z')) {
-        py_undo();
-        c = ESCAPE;
-      } else if (c == 'c') {
-        c = show_character();
-      } else if (c == 'o') {
-        // Observe game state at time of death
-        c = draw(DRAW_WAIT);
-      } else {
-        c = py_grave();
-      }
+    if (c == 'p') {
+      c = show_history();
+    } else if (c == CTRL('z')) {
+      py_undo();
+      c = ESCAPE;
+    } else if (c == 'c') {
+      c = show_character();
+    } else if (c == 'o') {
+      // Observe game state
+      c = draw(DRAW_WAIT);
+    } else {
+      c = endtype();
+    }
 
-      if (c == CTRL('c')) return;
-    } while (c != ESCAPE);
-
-    py_menu();
-  } while (1);
+    input_record_readD = input_record_writeD = reset_input;
+    if (c == CTRL('c')) break;
+  } while (c != ESCAPE);
+  return c;
 }
 static int
 inven_damage(typ, perc)
@@ -14344,6 +14329,10 @@ dungeon()
     if (turn_flag && last_action != input_record_readD) {
       AS(input_actionD, input_action_usedD++) = input_record_readD;
     }
+    if (uD.total_winner == 1) {
+      if (!replay_flag) py_endgame(py_king);
+      uD.total_winner = 2;
+    }
 
     ma_tick();  // rising
     if (!uD.new_level_flag) {
@@ -14517,7 +14506,10 @@ main(int argc, char** argv)
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) {
     replay_stop();
-    py_death();
+    while (1) {
+      py_endgame(py_grave);
+      if (py_menu() == CTRL('c')) break;
+    }
   }
 
   return platformD.postgame(1);
