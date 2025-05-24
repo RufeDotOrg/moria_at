@@ -49,7 +49,7 @@ DATA int magick_hituD;
     int len = STRLEN_MSG + 1;                    \
     snprintf(msg, len, x, ##__VA_ARGS__);        \
     AS(msglen_cqD, msg_writeD) = STRLEN_MSG + 1; \
-    draw(DRAW_WAIT);                              \
+    draw(DRAW_WAIT);                             \
   })
 
 #define BufMsg(name, text, ...)                                     \
@@ -11271,6 +11271,45 @@ py_saveslot_select()
   }
 
 static int
+py_king()
+{
+  char tmp[STRLEN_MSG + 1];
+  screen_submodeD = 0;
+  int xleft = 19;
+  int xcenter = 19 + 12;
+  int col = 0;
+  USE(msg_width);
+  apclear(AB(screenD));
+  for (int it = 0; it < AL(screenD); ++it) screen_usedD[it] = msg_width;
+
+  int line = 0;
+  TOMB("All Hail the Might King!");
+  TOMB("%s", heronameD);
+  TOMB("%s %s", raceD[uD.ridx].name, classD[uD.clidx].name);
+
+  line += 1;
+  for (int it = 0; it < AL(crown); ++it) {
+    if (crown[it] == '\n') {
+      screen_usedD[line] = col + xleft;
+      line += 1;
+      col = 0;
+    } else {
+      screenD[line][col + xleft] = crown[it];
+      col += 1;
+    }
+  }
+  line += 1;
+
+  TOMB("Level : %d", uD.lev);
+  TOMB("Exp : %d", uD.exp);
+  TOMB("Gold : %d", uD.gold);
+  TOMB("Depth : %d", dun_level * 50);
+  TOMB("Killed by Ripe Old Age.");
+
+  if (PC) msg_hint(AP("(CTRL-z) (c/o/p/ESC)"));
+  return CLOBBER_MSG("                       Veni, Vidi, Vici!");
+}
+static int
 py_grave()
 {
   screen_submodeD = 0;
@@ -13593,7 +13632,6 @@ pawn_display()
       overlayD[line][3] = ' ';
       memcpy(overlayD[line] + descw, AP(descD));
       memcpy(overlayD[line] + limitw - dlen - 1, detailD, dlen);
-
     }
 
     overlay_usedD[line] = len;

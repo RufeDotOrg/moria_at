@@ -11,6 +11,7 @@
 #include "local/xvar.c"
 
 #include "db/char.c"
+#include "db/crown.c"
 #include "db/desc.c"
 #include "db/grave.c"
 #include "db/mon.c"
