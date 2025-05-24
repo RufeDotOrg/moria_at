@@ -1629,6 +1629,10 @@ feature_menutext(mflag)
         text = "ascii gameplay renderer";
         value = opt[globalD.sprite == 0];
         break;
+      case 'b':
+        text = "balrog victory";
+        value = opt[uD.total_winner != 0];
+        break;
       case 'c':
         text = "color interface";
         value = opt[globalD.dpad_color != 0];
@@ -1689,6 +1693,7 @@ feature_menu()
     int flag = 0;
 
     flag |= char_bit('a');
+    flag |= char_bit('b');
     if (using_selection) flag |= char_bit('c');
     if (using_selection) flag |= char_bit('d');
     flag |= char_bit('g');
@@ -1706,6 +1711,9 @@ feature_menu()
     switch (c) {
       case 'a':
         INVERT(globalD.sprite);
+        break;
+      case 'b':
+        if (uD.total_winner) uD.total_winner = 0;
         break;
       case 'c':
         INVERT(globalD.dpad_color);
