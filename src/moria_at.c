@@ -8577,23 +8577,17 @@ struct objS* obj;
   int tabil;
   tabil = -1;
   int tunnel = (obj->tval == TV_DIGGING);
+  if (obj->idflag & ID_REVEAL) truth = 1;
   if (tunnel || may_equip(obj->tval) == INVEN_WIELD) {
     tabil = HACK ? 9000 : 0;
-    if (truth || (obj->idflag & ID_REVEAL)) {
-      if (tunnel)
-        tabil += obj->p1 * 50;
-      else {
-        tabil += obj->tohit + obj->todam;
-      }
-    }
+    int mod = tunnel ? obj->p1 * 50 : obj->tohit + obj->todam;
+    if (truth) tabil += mod;
 
-    if (tunnel)
-      tabil += 25;
-    else {
-      tabil += obj->damage[0] * obj->damage[1];
-      /* divide by two so that digging without shovel isn't too easy */
-      tabil >>= 1;
-    }
+    int base = tunnel ? 25 : obj->damage[0] * obj->damage[1];
+    tabil += base;
+
+    // digging without tool isn't too easy
+    if (!tunnel) tabil /= 2;
   }
   return tabil;
 }
@@ -12540,8 +12534,7 @@ tunnel_tool(y, x, iidx)
 {
   struct caveS* c_ptr;
   struct objS* obj;
-  int tabil, wall_chance, wall_min, turn_count;
-  int wheavy;
+  int wall_chance, wall_min, turn_count;
 
   c_ptr = &caveD[y][x];
   obj = obj_get(invenD[iidx]);
@@ -12562,18 +12555,11 @@ tunnel_tool(y, x, iidx)
     msg_print("You dig with your hands, making no progress.");
   } else {
     obj_desc(obj, 1);
-    wheavy = tohit_by_weight(obj->weight);
     countD.paralysis = 1;
 
-    if (wheavy) {
-      MSG("You have trouble digging with %s, it is very heavy.", descD);
-    } else {
-      MSG("You begin tunneling with %s.", descD);
-    }
-
-    /* If this weapon is too heavy for the player to wield properly, then
-       also make it harder to dig with it. tabil may be negative.  */
-    tabil = obj_tabil(obj, TRUE) + wheavy;
+    MSG("You begin tunneling with %s.", descD);
+    // tabil may be negative
+    int tabil = obj_tabil(obj, TRUE);
 
     wall_chance = 0;
     wall_min = 10;
@@ -12613,7 +12599,6 @@ tunnel_tool(y, x, iidx)
       } while (turn_count < MAX_TUNNEL_TURN);
     } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
       msg_print("You dig in the rubble.");
-
       do {
         turn_count += 1;
         if (tabil > randint(180)) {
