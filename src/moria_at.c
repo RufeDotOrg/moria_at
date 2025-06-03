@@ -8580,16 +8580,21 @@ struct objS* obj;
   if (obj->idflag & ID_REVEAL) truth = 1;
   if (tunnel || may_equip(obj->tval) == INVEN_WIELD) {
     tabil = HACK ? 9000 : 0;
-    int mod = tunnel ? obj->p1 * 50 : obj->tohit + obj->todam;
+    int mod = tunnel ? obj->p1 * 50 : (obj->tohit + obj->todam) / 2;
     if (truth) tabil += mod;
 
     int base = tunnel ? 25 : obj->damage[0] * obj->damage[1];
     tabil += base;
-
-    // digging without tool isn't too easy
-    if (!tunnel) tabil /= 2;
   }
   return tabil;
+}
+STATIC int
+obj_tbonus(obj)
+struct objS* obj;
+{
+  int tb = statD.use_stat[A_STR] / 4;
+  if (obj->tval != TV_DIGGING) tb /= 4;
+  return tb;
 }
 int
 strip_tail(line)
@@ -12529,20 +12534,42 @@ py_look(y, x)
     }
   }
 }
+STATIC int
+objdig_wall_plus(obj, wall_chance, wall_min)
+struct objS* obj;
+int wall_chance;
+int wall_min;
+{
+  int tabil = obj_tabil(obj, TRUE);
+  int tbonus = obj_tbonus(obj);
+  for (int it = 0; it < MAX_TUNNEL_TURN; ++it) {
+    int treq = randint(wall_chance) + wall_min;
+    if (tabil > treq) return it;
+    tabil += tbonus;
+  }
+  return MAX_TUNNEL_TURN;
+}
 static int
 tunnel_tool(y, x, iidx)
 {
   struct caveS* c_ptr;
   struct objS* obj;
-  int wall_chance, wall_min, turn_count;
+  int c_tval;
+  int turn_count = 0;
 
   c_ptr = &caveD[y][x];
+  c_tval = entity_objD[c_ptr->oidx].tval;
   obj = obj_get(invenD[iidx]);
-
-  turn_count = 0;
-
-  if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) {
+  obj_desc(obj, 1);
+  if (c_tval == TV_CLOSED_DOOR) {
     msg_print("You can't tunnel through a door!");
+  } else if (c_tval == TV_SECRET_DOOR) {
+    MSG("You tunnel into the granite wall using %s.", descD);
+    do {
+      turn_count += 1;
+      py_search(uD.y, uD.x);
+      if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
+    } while (turn_count < MAX_TUNNEL_TURN);
   } else if (c_ptr->midx) {
     msg_print("Something is in your way!");
     // Prevent the player from abusing digging for invis detection
@@ -12554,68 +12581,49 @@ tunnel_tool(y, x, iidx)
   } else if (!obj->id) {
     msg_print("You dig with your hands, making no progress.");
   } else {
-    obj_desc(obj, 1);
-    countD.paralysis = 1;
-
-    MSG("You begin tunneling with %s.", descD);
-    // tabil may be negative
-    int tabil = obj_tabil(obj, TRUE);
-
-    wall_chance = 0;
-    wall_min = 10;
+    int wall_chance = 0;
+    int wall_min = 10;
     switch (c_ptr->fval) {
-      case QUARTZ_WALL:
+      case GRANITE_WALL:
         wall_min = 80;
-        wall_chance = 400;
+        wall_chance = 1200;
         break;
       case MAGMA_WALL:
         wall_chance = 600;
         break;
-      case GRANITE_WALL:
-        wall_chance = 1200;
+      case QUARTZ_WALL:
+        wall_chance = 400;
         break;
       default:
         break;
     }
 
-    int wall_idx = c_ptr->fval - MIN_WALL;
-    if (wall_idx < AL(walls)) MSG("You tunnel into the %s.", walls[wall_idx]);
-
     if (wall_chance) {
-      do {
-        turn_count += 1;
-        if (tabil > randint(wall_chance) + wall_min) {
-          twall(y, x);
-          msg_print("You have finished the tunnel.");
-          break;
+      turn_count = objdig_wall_plus(obj, wall_chance, wall_min);
+      if (turn_count < MAX_TUNNEL_TURN) {
+        twall(y, x);
+        msg_print("You have finished the tunnel.");
+      } else {
+        unsigned wall_idx = c_ptr->fval - MIN_WALL;
+        if (wall_idx < AL(walls))
+          MSG("You tunnel into the %s using %s.", walls[wall_idx], descD);
+      }
+    } else if (c_tval == TV_RUBBLE) {
+      MSG("You dig in the rubble using %s.", descD);
+      turn_count = objdig_wall_plus(obj, 180, 0);
+      if (turn_count < MAX_TUNNEL_TURN) {
+        c_ptr->fval = FLOOR_CORR;
+        delete_object(y, x);
+        int new_obj = (randint(10) == 1);
+        if (new_obj) place_object(y, x, FALSE);
+        if (new_obj && (CF_LIT & c_ptr->cflag)) {
+          msg_print("You found something in the rubble!");
+        } else {
+          msg_print("You have removed the rubble.");
         }
-      } while (turn_count < MAX_TUNNEL_TURN);
-    } else if (entity_objD[c_ptr->oidx].tval == TV_SECRET_DOOR) {
-      msg_print("You tunnel into the granite wall.");
-      do {
-        turn_count += 1;
-        py_search(uD.y, uD.x);
-        if (entity_objD[c_ptr->oidx].tval == TV_CLOSED_DOOR) break;
-      } while (turn_count < MAX_TUNNEL_TURN);
-    } else if (entity_objD[c_ptr->oidx].tval == TV_RUBBLE) {
-      msg_print("You dig in the rubble.");
-      do {
-        turn_count += 1;
-        if (tabil > randint(180)) {
-          c_ptr->fval = FLOOR_CORR;
-          delete_object(y, x);
-          if (randint(10) == 1) {
-            place_object(y, x, FALSE);
-            if (CF_LIT & c_ptr->cflag) {
-              msg_print("You have found something!");
-            }
-          } else {
-            msg_print("You have removed the rubble.");
-          }
-          break;
-        }
-      } while (turn_count < MAX_TUNNEL_TURN);
+      }
     }
+    if (turn_count < MAX_TUNNEL_TURN) turn_count += 1;
   }
 
   if (turn_count) {
