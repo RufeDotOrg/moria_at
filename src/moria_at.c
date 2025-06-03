@@ -12581,36 +12581,25 @@ tunnel_tool(y, x, iidx)
   } else if (!obj->id) {
     msg_print("You dig with your hands, making no progress.");
   } else {
-    int wall_chance = 0;
-    int wall_min = 10;
-    switch (c_ptr->fval) {
-      case GRANITE_WALL:
-        wall_min = 80;
-        wall_chance = 1200;
-        break;
-      case MAGMA_WALL:
-        wall_chance = 600;
-        break;
-      case QUARTZ_WALL:
-        wall_chance = 400;
-        break;
-      default:
-        break;
-    }
-
-    if (wall_chance) {
-      turn_count = objdig_wall_plus(obj, wall_chance, wall_min);
+    int wall_chance[] = {1200, 600, 400, 180};
+    int wall_min[] = {80, 10, 10, 0};
+    char* wall_name[] = {
+        "granite",
+        "magma",
+        "quartz",
+        "rubble",
+    };
+    unsigned wall_idx = c_ptr->fval - MIN_WALL;
+    if (wall_idx > 2) wall_idx = 3;
+    MSG("You dig into the %s using %s.", wall_name[wall_idx], descD);
+    turn_count =
+        objdig_wall_plus(obj, wall_chance[wall_idx], wall_min[wall_idx]);
+    if (wall_idx < 3) {
       if (turn_count < MAX_TUNNEL_TURN) {
         twall(y, x);
         msg_print("You have finished the tunnel.");
-      } else {
-        unsigned wall_idx = c_ptr->fval - MIN_WALL;
-        if (wall_idx < AL(walls))
-          MSG("You tunnel into the %s using %s.", walls[wall_idx], descD);
       }
-    } else if (c_tval == TV_RUBBLE) {
-      MSG("You dig in the rubble using %s.", descD);
-      turn_count = objdig_wall_plus(obj, 180, 0);
+    } else {
       if (turn_count < MAX_TUNNEL_TURN) {
         c_ptr->fval = FLOOR_CORR;
         delete_object(y, x);
