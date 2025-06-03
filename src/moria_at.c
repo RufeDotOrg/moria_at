@@ -12582,7 +12582,7 @@ tunnel_tool(y, x, iidx)
     msg_print("You dig with your hands, making no progress.");
   } else {
     int wall_chance[] = {1200, 600, 400, 180};
-    int wall_min[] = {80, 10, 10, 0};
+    int wall_min[] = {80, 16, 10, 0};
     char* wall_name[] = {
         "granite",
         "magma",
