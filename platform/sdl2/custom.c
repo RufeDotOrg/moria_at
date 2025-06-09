@@ -14,6 +14,8 @@ enum { PUFF_STREAM = 0 };
 
 #include "asset/art.c"
 #include "asset/icon.c"
+#include "asset/lamp_run.c"
+#include "asset/lamp_walk.c"
 #include "asset/player.c"
 #include "asset/treasure.c"
 #include "asset/wall.c"
@@ -42,6 +44,8 @@ DATA fn text_fnD;
 DATA uint32_t sprite_idD;
 DATA SDL_Surface* spriteD;
 DATA SDL_Texture* sprite_textureD;
+DATA SDL_Texture* lwtextureD;
+DATA SDL_Texture* lrtextureD;
 DATA SDL_Texture* mmtextureD;
 DATA SDL_Texture* ui_textureD;
 DATA SDL_Texture* map_textureD;
@@ -201,6 +205,35 @@ custom_pregame()
     SDL_FreeSurface(sprite);
   }
   spriteD = 0;
+
+  if (TOUCH) {
+    SDL_Surface* sprite = SDL_CreateRGBSurfaceWithFormat(
+        SDL_SWSURFACE, 64, 64, 0, SDL_PIXELFORMAT_INDEX1LSB);
+    if (sprite) {
+      {
+        SDL_Palette* palette = sprite->format->palette;
+        *(int*)&palette->colors[0] = 0;
+        *(int*)&palette->colors[1] = -1;
+      }
+      memcpy(sprite->pixels, lamp_walk_mmg, 64 * 64 / 8);
+      lwtextureD = SDL_CreateTextureFromSurface(rendererD, sprite);
+      SDL_FreeSurface(sprite);
+    }
+  }
+  if (TOUCH) {
+    SDL_Surface* sprite = SDL_CreateRGBSurfaceWithFormat(
+        SDL_SWSURFACE, 64, 64, 0, SDL_PIXELFORMAT_INDEX1LSB);
+    if (sprite) {
+      {
+        SDL_Palette* palette = sprite->format->palette;
+        *(int*)&palette->colors[0] = 0;
+        *(int*)&palette->colors[1] = -1;
+      }
+      memcpy(sprite->pixels, lamp_run_mmg, 64 * 64 / 8);
+      lrtextureD = SDL_CreateTextureFromSurface(rendererD, sprite);
+      SDL_FreeSurface(sprite);
+    }
+  }
 
   // Software renderer will skip this; limiting risk on troubled systems
   if (PC && !IsWindows()) {
@@ -1228,29 +1261,8 @@ custom_draw()
         }
         if (mode == 0) {
           AUSE(grect, GR_LOCK);
-          if (sprite_textureD) {
-            MUSE(global, orientation_lock);
-            // TBD: UI Icon?
-            int tridx = 1;
-            if (orientation_lock) {
-              tridx = 48;
-            } else {
-              tridx = 45;
-            }
-            rect_t sprite_rect = {
-                XY(point_by_spriteid(tart_textureD + tridx)),
-                ART_W,
-                ART_H,
-            };
-            rect_t dest = {
-                grect.x,
-                grect.y,
-                ART_W * 2,
-                ART_H * 2,
-            };
-            dest.x += (grect.w - dest.w) / 2;
-            SDL_RenderCopy(renderer, sprite_textureD, &sprite_rect, &dest);
-          }
+          SDL_Texture* tex = force_runD ? lrtextureD : lwtextureD;
+          SDL_RenderCopy(renderer, tex, 0, &grect);
           framing_base_step(grect, 1, 1);
         }
       }

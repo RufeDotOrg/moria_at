@@ -30,6 +30,7 @@ enum { MAX_BUTTON = 2 };
 DATA rect_t grectD[GR_COUNT];
 DATA uint8_t finger_countD;
 DATA int last_pressD;
+DATA int force_runD;
 
 STATIC int
 gameplay_tapxy(relx, rely)
@@ -214,6 +215,7 @@ fingerdown_xy_mode(x, y, mode)
 
   int touch = touch_by_xy(x, y);
   if (mode == 0) {
+    if (force_runD) finger = 1;
     if (touch > TOUCH_PAD) {
       char c = key_dir(touch - TOUCH_PAD);
       switch (finger) {
@@ -228,7 +230,7 @@ fingerdown_xy_mode(x, y, mode)
         case TOUCH_MENU:
           return CTRL('w');
         case TOUCH_LOCK:
-          orientation_lock_toggle();
+          INVERT(force_runD);
           return CTRL('d');
         case TOUCH_STAT:
           return 'c';
