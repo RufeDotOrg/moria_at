@@ -1712,9 +1712,8 @@ feature_menu()
     flag |= char_bit('h');
     if (JOYSTICK) flag |= char_bit('l');
     flag |= char_bit('m');
-    flag |= char_bit('o');
+    if (!PC) flag |= char_bit('o');
     flag |= char_bit('r');
-    if (PC) flag |= char_bit('t');
     flag |= char_bit('v');
 
     char c = feature_menutext(flag);
