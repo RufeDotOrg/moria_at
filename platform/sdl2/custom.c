@@ -273,9 +273,6 @@ custom_pregame()
                                    SDL_TEXTUREACCESS_TARGET, MAP_W, MAP_H);
   SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
 
-  if (globalD.orientation_lock) SDL_SetWindowResizable(windowD, 0);
-  Log("SetWindowResizable");
-
   font_reset();
 
   if (JOYSTICK) joystick_init(0);
@@ -1753,6 +1750,7 @@ feature_menu()
         break;
       case 'o':
         INVERT(globalD.orientation_lock);
+        platformD.orientation(0);
         break;
       case 'v':
         show_version();

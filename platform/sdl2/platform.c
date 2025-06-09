@@ -30,7 +30,11 @@ enum { COSMO = 0 };
 #ifdef __FATCOSMOCC__
 #include "cosmo_sdl.c"
 #else
-STATIC int IsWindows() { return 0; }
+STATIC int
+IsWindows()
+{
+  return 0;
+}
 #endif
 
 #define ORGNAME "org.rufe"
@@ -355,6 +359,9 @@ platform_orientation(orientation)
 {
   USE(display_rect);
   if (!orientation) orientation = orientation_default();
+
+  if (REORIENTATION)
+    SDL_SetWindowResizable(windowD, globalD.orientation_lock == 0);
 
   USE(safe_rect);
   float scale = 1.f;
