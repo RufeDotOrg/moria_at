@@ -116,20 +116,6 @@ check_gl()
   return 1;
 }
 
-STATIC void
-display_resize(int dw, int dh)
-{
-  Log("display_resize %dx%d", dw, dh);
-  display_rectD.w = dw;
-  display_rectD.h = dh;
-
-  if (!PC) {
-    // TBD: Review game utilization of viewport
-    // Disabled the push event in SDL that occurs on another thread
-    SDL_RenderSetViewport(rendererD, &(rect_t){0, 0, dw, dh});
-  }
-}
-
 int
 sdl_window_event(event)
 SDL_Event event;
@@ -154,12 +140,16 @@ SDL_Event event;
     }
 
     if (dw != drw || dh != drh) {
-      display_resize(dw, dh);
-      int orientation =
-          dw > dh ? SDL_ORIENTATION_LANDSCAPE : SDL_ORIENTATION_PORTRAIT;
+      Log("display_resize %dx%d", dw, dh);
+      display_rectD.w = dw;
+      display_rectD.h = dh;
 
-      if (LANDSCAPE || PORTRAIT) orientation = 0;
-      platformD.orientation(orientation);
+      // TBD: Review game utilization of viewport
+      // Disabled the push event in SDL that occurs on another thread
+      if (!PC) SDL_RenderSetViewport(rendererD, &display_rectD);
+
+      // auto-detect orientation
+      platformD.orientation(0);
 
       // orientation may be set before renderer creation
       // android 11 devices don't render the first frame (e.g. samsung A20)
@@ -170,7 +160,7 @@ SDL_Event event;
   } else if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
     if (display_rectD.w != 0) {
       // android 11 devices don't render the first frame (e.g. samsung A20)
-      if (ANDROID) SDL_RenderPresent(rendererD);
+      if (ANDROID && rendererD) SDL_RenderPresent(rendererD);
 
       return CTRL('d');
     }

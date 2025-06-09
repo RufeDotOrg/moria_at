@@ -188,14 +188,6 @@ touch_by_xy(x, y)
   return TOUCH_NONE;
 }
 STATIC int
-orientation_lock_toggle()
-{
-  MUSE(global, orientation_lock);
-  SDL_SetWindowResizable(windowD, orientation_lock);
-  globalD.orientation_lock = ~orientation_lock;
-  return 0;
-}
-STATIC int
 column_transition(column, dx)
 {
   uint32_t ret = column + dx;
