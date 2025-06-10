@@ -11041,18 +11041,26 @@ int
 py_notes_menu()
 {
   int line = 0;
-  BufMsg(overlay, "Font Changes");
-  BufMsg(overlay, "     | greyscale glyphs");
-  BufMsg(overlay, "     | larger glyphs w/ bold styling");
-  BufMsg(overlay, "     | optimize away per-glyph logic");
-  BufMsg(overlay, "     | remove intermediate text render target");
-  BufMsg(overlay, "Unknown Scroll names preserve syllables");
-  BufMsg(overlay, "Rewrite study object & inventory object descriptions");
-  BufMsg(overlay, "Optimizations to monster movement");
-  BufMsg(overlay, "Fix monster behavior relating to eating lesser creatures");
-  BufMsg(overlay, "Monster breath AoE no longer gives player credit for kills");
+  // clang-format off
+BufMsg(overlay, "* Victory Screen");
+BufMsg(overlay, "  Extra Feature: balrog reset (balrog spawning is otherwise disabled)");
+BufMsg(overlay, "* gp suffix for shop/pawn price (previously g)");
+BufMsg(overlay, "* digging tunnel rewrite");
+BufMsg(overlay, "  str bonus added per turn of digging tool (up to 5/4)");
+BufMsg(overlay, "  str bonus added per turn of non-digging tool (up to 5/16)");
+BufMsg(overlay, "  heavy weapon penalty removed (it's hard enough to carry tools when weak)");
+BufMsg(overlay, "  digging tools provide base 25; non-digging tools provide max dice roll");
+BufMsg(overlay, "  base/dice requirement: 80 granite, 16 magma, 10 quartz, 0 rubble");
+BufMsg(overlay, "");
+BufMsg(overlay, "## Mobile features");
+BufMsg(overlay, "* orientation lock option moves to Extra Features submenu");
+BufMsg(overlay, "  orientation lock supports toggle at runtime");
+BufMsg(overlay, "* new run/walk button with 2 icons");
+BufMsg(overlay, "  some users play exclusive with one hand");
+BufMsg(overlay, "  run mode is equivalent to holding one finger against the touch screen");
+  // clang-format on
 
-  CLOBBER_MSG("~2025~ Patch Q1");
+  CLOBBER_MSG("~2025~ Patch Q2");
   return 0;
 }
 int
