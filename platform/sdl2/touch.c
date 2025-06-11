@@ -9,6 +9,7 @@ enum {
   TOUCH_GAMEPLAY,
   TOUCH_LB,
   TOUCH_RB,
+  TOUCH_B3,
   TOUCH_PAD
 };
 enum {
@@ -16,6 +17,7 @@ enum {
   GR_PAD,
   GR_BUTTON1,
   GR_BUTTON2,
+  GR_BUTTON3,
   GR_GAMEPLAY,
   GR_MINIMAP,
   GR_MENU,
@@ -25,7 +27,7 @@ enum {
   GR_WIDESCREEN,  // show_history() in landscape orientation
   GR_COUNT
 };
-enum { MAX_BUTTON = 2 };
+enum { MAX_BUTTON = 3 };
 
 DATA rect_t grectD[GR_COUNT];
 DATA uint8_t finger_countD;
@@ -221,6 +223,7 @@ fingerdown_xy_mode(x, y, mode)
       switch (touch) {
         case TOUCH_MENU:
           return CTRL('w');
+        case TOUCH_B3:
         case TOUCH_LOCK:
           INVERT(force_runD);
           return CTRL('d');

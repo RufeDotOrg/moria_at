@@ -324,6 +324,9 @@ portrait_layout()
                                 grectD[GR_PAD].y + size, size, size};
   grectD[GR_BUTTON2] =
       (rect_t){layout_rect.w - margin - size, grectD[GR_PAD].y, size, size};
+  grectD[GR_BUTTON3] =
+      (rect_t){layout_rect.w - margin - size * 2 + size / 4,
+               grectD[GR_PAD].y + size / 4, size / 2, size / 2};
 
   grectD[GR_GAMEPLAY] = (rect_t){
       margin,
@@ -398,6 +401,12 @@ landscape_layout()
       grectD[GR_PAD].y,
       size,
       size,
+  };
+  grectD[GR_BUTTON3] = (rect_t){
+      layout_rect.w - size * 2 + size / 4,
+      grectD[GR_PAD].y + size / 4,
+      size / 2,
+      size / 2,
   };
 
   grectD[GR_GAMEPLAY] = (rect_t){
@@ -1244,10 +1253,14 @@ custom_draw()
       if (TOUCH) {
         int* color = globalD.dpad_color ? color_mapD : greyscaleD;
 
-        for (int it = 0; it < MAX_BUTTON; ++it) {
-          AUSE(grect, GR_BUTTON1 + it);
-          int cidx = it == 0 ? RED : GREEN;
-          SDL_SetRenderDrawColor(rendererD, V4b(&color[cidx]));
+        {
+          AUSE(grect, GR_BUTTON1);
+          SDL_SetRenderDrawColor(rendererD, V4b(&color[RED]));
+          SDL_RenderFillRect(rendererD, &grect);
+        }
+        {
+          AUSE(grect, GR_BUTTON2);
+          SDL_SetRenderDrawColor(rendererD, V4b(&color[GREEN]));
           SDL_RenderFillRect(rendererD, &grect);
         }
 
@@ -1257,10 +1270,18 @@ custom_draw()
           framing_base_step(grect, 1, 1);
         }
         if (mode == 0) {
-          AUSE(grect, GR_LOCK);
-          SDL_Texture* tex = force_runD ? lrtextureD : lwtextureD;
-          SDL_RenderCopy(renderer, tex, 0, &grect);
-          framing_base_step(grect, 1, 1);
+          {
+            AUSE(grect, GR_LOCK);
+            SDL_Texture* tex = force_runD ? lrtextureD : lwtextureD;
+            SDL_RenderCopy(renderer, tex, 0, &grect);
+            framing_base_step(grect, 1, 1);
+          }
+          {
+            AUSE(grect, GR_BUTTON3);
+            fn draw_b3 = force_runD ? SDL_RenderFillRect : SDL_RenderDrawRect;
+            SDL_SetRenderDrawColor(rendererD, V4b(&color[BLUE]));
+            draw_b3(rendererD, &grect);
+          }
         }
       }
     }
