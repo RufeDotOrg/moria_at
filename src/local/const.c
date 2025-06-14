@@ -486,7 +486,7 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 // Color
 enum { RED = 0, ORANGE, YELLOW, GREEN, TEAL, BLUE, PURPLE, PINK, BRIGHT };
 // Longest single message (may be concatenated with other messages)
-#define STRLEN_MSG 79
+#define STRLEN_MSG 92
 // Art
 enum { ART_W = 32 };
 enum { ART_H = 64 };

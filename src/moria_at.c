@@ -35,12 +35,11 @@ DATA jmp_buf restartD;
 DATA int magick_distD;
 DATA point_t magick_locD;
 DATA int magick_hituD;
-#define MSG(x, ...)                                             \
-  {                                                             \
-    char vtype[STRLEN_MSG + 1];                                 \
-    int len = snprintf(vtype, sizeof(vtype), x, ##__VA_ARGS__); \
-    len = CLAMP(len, 0, sizeof(vtype) - 1);                     \
-    msg_game(vtype, len);                                       \
+DATA char vtypeD[STRLEN_MSG + 1];
+#define MSG(x, ...)                                   \
+  {                                                   \
+    int len = snprintf(AP(vtypeD), x, ##__VA_ARGS__); \
+    msg_game(vtypeD, len, msg_widthD);                \
   }
 // This clobbers unflushed messages, draws, and does not persist to history
 #define CLOBBER_MSG(x, ...)                      \
@@ -550,20 +549,16 @@ static void msg_hint(hint, hintlen) char* hint;
   char* msg_end = AS(msg_cqD, msg_writeD) + overlay_widthD;
   memcpy(msg_end - hintlen - 1, hint, hintlen);
 }
-static void msg_game(msg, msglen) char* msg;
+static void msg_write(msg, msglen, msg_width) char* msg;
 {
-  char* log;
-  int log_used, msg_used;
-  USE(msg_width);
-
-  log_used = AS(msglen_cqD, msg_writeD);
+  int log_used = AS(msglen_cqD, msg_writeD);
   if (log_used + msglen >= msg_width) {
     msg_pause();
     log_used = 0;
   }
 
-  log = AS(msg_cqD, msg_writeD);
-  msg_used = snprintf(log + log_used, msg_width - log_used, "%s ", msg);
+  char* log = AS(msg_cqD, msg_writeD);
+  int msg_used = snprintf(log + log_used, msg_width - log_used, "%s ", msg);
 
   if (msg_used > 0)
     AS(msglen_cqD, msg_writeD) = MIN(log_used + msg_used, msg_width);
@@ -571,7 +566,14 @@ static void msg_game(msg, msglen) char* msg;
   if (countD.rest) countD.rest = 0;
   if (find_flagD) find_flagD = 0;
 }
-#define msg_print(x) msg_game(x, AL(x) - 1)
+static void msg_game(msg, msglen, msg_width) char* msg;
+{
+  msglen = CLAMP(msglen, 0, msg_width);
+  msg[msglen] = 0;
+
+  msg_write(msg, msglen, msg_width);
+}
+#define msg_print(x) msg_write(S2(x), msg_widthD)
 #define see_print(x) \
   if (maD[MA_BLIND] == 0) msg_print(x)
 static int

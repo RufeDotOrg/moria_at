@@ -12,7 +12,7 @@ DATA int active_affectD[15];
 DATA char screenD[22][98];
 GAME int screen_usedD[AL(screenD)];
 DATA int screen_submodeD;
-DATA char overlayD[22][80];
+DATA char overlayD[22][98];
 GAME int overlay_usedD[AL(overlayD)];
 DATA int overlay_submodeD;
 
