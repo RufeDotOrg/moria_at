@@ -490,3 +490,35 @@ enum { RED = 0, ORANGE, YELLOW, GREEN, TEAL, BLUE, PURPLE, PINK, BRIGHT };
 // Art
 enum { ART_W = 32 };
 enum { ART_H = 64 };
+
+// Game
+enum { WHITESPACE = 0x20202020 };
+enum { DRAW_NOW = 0 };
+enum { DRAW_WAIT = -1 };
+enum { RETRY = 9 };
+enum {
+  FMT_HITDAM = 0x01,
+  FMT_DICE = 0x02,
+  FMT_DAMMULT = 0x04,
+  FMT_AC = 0x08,
+  FMT_ACC = 0x10,
+  FMT_CHARGES = 0x20,
+  FMT_WEIGHT = 0x40,
+  FMT_SHOP = 0x80,
+  FMT_PAWN = 0x100,
+};
+enum { FIRE_DIST = 2 };
+enum {
+  SCRY_WEIGHT = 0x0001,
+  SCRY_STACK = 0x0002,
+  SCRY_HIT = 0x0004,
+  SCRY_DAM = 0x0008,
+  SCRY_AC = 0x0040,
+  SCRY_PLAUNCHER = 0x0080,
+  SCRY_WEAPON = 0x0100,
+  SCRY_BLOWS = 0x0200,
+  SCRY_DIGGING = 0x0400,
+  SCRY_ZAP = 0x0800,
+  SCRY_HEAVY = 0x1000,
+};
+enum { INVEN_HINT = 1 };

@@ -146,3 +146,28 @@ DATA int input_resumeD;
 // Could optimize to uint8_t using record count
 DATA int16_t input_actionD[2 * 1024];
 DATA int input_action_usedD;
+
+// Run
+GAME int find_threatD;
+GAME int find_flagD;
+// Cavegen
+GAME point_t doorstk[100];
+GAME int doorindex;
+
+// Misc
+DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
+DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
+DATA int find_directionD;
+DATA int find_openareaD;
+DATA int find_breakrightD, find_breakleftD;
+DATA int find_prevdirD;
+DATA int magick_distD;
+DATA point_t magick_locD;
+DATA int magick_hituD;
+DATA char vtypeD[STRLEN_MSG + 1];
+DATA int oprefixD = 0;
+DATA char* mon_spell_nameD[] = {
+    "phase door",     "teleport",       "summon",        "wounds",
+    "serious wounds", "paralysis",      "blindness",     "confusion",
+    "fear",           "summon monster", "summon undead", "slow",
+};

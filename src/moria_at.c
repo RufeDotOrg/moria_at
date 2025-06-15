@@ -1,4 +1,7 @@
 // Rufe.org LLC 2022-2024: GPLv3 License
+enum { HACK = 0 };
+enum { RESEED = 0 };
+
 #include "src/game.c"
 
 enum { MOD_SAVECHAR = 0 };
@@ -7,84 +10,21 @@ enum { MOD_SAVECHAR = 0 };
 #include "platform/platform.c"
 
 enum { PRIVACY = !KEYBOARD };
-enum { NOTES = !PC };
-enum { HACK = 0 };
-enum { RESEED = 0 };
-enum { TEST_CAVEGEN = 0 };
-enum { TEST_REPLAY = 0 };
+enum { NOTES = !KEYBOARD };
+
 enum { TEST_CREATURE = 0 };
-enum { TEST_CHECKLEN = 0 };
-
+enum { TEST_REPLAY = 0 };
 // #include "src/mod/replay.c"
+enum { TEST_CAVEGEN = 0 };
 // #include "src/mod/cavegen.c"
+enum { TEST_CHECKLEN = 0 };
 // #include "src/mod/checklen.c"
-// #undef TEST_CAVEGEN
 
-DATA int cycle[] = {1, 2, 3, 6, 9, 8, 7, 4, 1, 2, 3, 6, 9, 8, 7, 4, 1};
-DATA int chome[] = {-1, 8, 9, 10, 7, -1, 11, 6, 5, 4};
-GAME int find_threatD;
-GAME int find_flagD;
-// find state
-DATA int find_directionD;
-DATA int find_openareaD;
-DATA int find_breakrightD, find_breakleftD;
-DATA int find_prevdirD;
-// end find state
+// Replay System
 DATA jmp_buf restartD;
-// Magick
-DATA int magick_distD;
-DATA point_t magick_locD;
-DATA int magick_hituD;
-DATA char vtypeD[STRLEN_MSG + 1];
-#define MSG(x, ...)                                   \
-  {                                                   \
-    int len = snprintf(AP(vtypeD), x, ##__VA_ARGS__); \
-    msg_game(vtypeD, len, msg_widthD);                \
-  }
-// This clobbers unflushed messages, draws, and does not persist to history
-#define CLOBBER_MSG(x, ...)                      \
-  ({                                             \
-    char* msg = AS(msg_cqD, msg_writeD);         \
-    int len = STRLEN_MSG + 1;                    \
-    snprintf(msg, len, x, ##__VA_ARGS__);        \
-    AS(msglen_cqD, msg_writeD) = STRLEN_MSG + 1; \
-    draw(DRAW_WAIT);                             \
-  })
-
-#define BufMsg(name, text, ...)                                     \
-  {                                                                 \
-    int used = name##_usedD[line];                                  \
-    int avail = AL(name##D[0]) - used;                              \
-    int r;                                                          \
-    r = snprintf(name##D[line] + used, avail, text, ##__VA_ARGS__); \
-    if (r > 0 && r <= avail) name##_usedD[line++] = used + r;       \
-  }
-#define BufFixed(name, text)                  \
-  {                                           \
-    struct bufS b = {AP(text)};               \
-    memcpy(name##D[line], b.mem, b.mem_size); \
-    name##_usedD[line] = b.mem_size;          \
-    line += 1;                                \
-  }
-#define BufLineAppend(name, line, text, ...)                             \
-  {                                                                      \
-    int used, append;                                                    \
-    used = name##_usedD[line];                                           \
-    append = snprintf(name##D[line] + used, AL(name##D[0]) - used, text, \
-                      ##__VA_ARGS__);                                    \
-    if (append > 0) name##_usedD[line] += append;                        \
-  }
-
-#define BufPad(name, line, len)            \
-  for (int it = 0; it < line; ++it) {      \
-    while (name##_usedD[it] < len) {       \
-      name##D[it][name##_usedD[it]] = ' '; \
-      name##_usedD[it] += 1;               \
-    }                                      \
-  }
 
 // Platform input without recording
-static int
+STATIC int
 read_input()
 {
   char c;
@@ -97,7 +37,7 @@ read_input()
 
 // If a recording is loaded, read from the buffer
 // Otherwise read platform input, and keep record of it
-static char
+STATIC char
 game_input()
 {
   char c;
@@ -116,7 +56,7 @@ game_input()
 
   return c;
 }
-static void
+STATIC void
 vital_update()
 {
   int used = 0;
@@ -148,7 +88,7 @@ vital_update()
 
 /* Because this function uses (short) ints for all calculations, overflow
    may occur if deltaX and deltaY exceed 90. */
-int
+STATIC int
 los(fromY, fromX, toY, toX)
 {
   int tmp, deltaX, deltaY;
@@ -280,24 +220,24 @@ los(fromY, fromX, toY, toX)
   }
 }
 // Match single index
-static int
+STATIC int
 py_affect(maid)
 {
   return (uD.mflag & (1 << maid)) != 0;
 }
 // Match ALL trflag
-static int
+STATIC int
 py_tr(trflag)
 {
   return (cbD.tflag & trflag) == trflag;
 }
-static int
+STATIC int
 py_speed()
 {
   return (py_affect(MA_SLOW) + py_tr(TR_SLOWNESS)) -
          (py_affect(MA_FAST) + py_tr(TR_SPEED));
 }
-static int
+STATIC int
 think_adj(stat)
 {
   int value;
@@ -320,7 +260,7 @@ think_adj(stat)
   else
     return (0);
 }
-static int
+STATIC int
 uspellcount()
 {
   int splev, tadj, sptype;
@@ -337,7 +277,7 @@ uspellcount()
   }
   return 0;
 }
-int
+STATIC int
 uspellmask()
 {
   int spcount;
@@ -351,7 +291,7 @@ uspellmask()
   }
   return spmask;
 }
-static struct spellS*
+STATIC struct spellS*
 uspelltable()
 {
   int clidx = uD.clidx;
@@ -360,7 +300,7 @@ uspelltable()
   }
   return 0;
 }
-void
+STATIC void
 affect_update()
 {
   int idx = 0;
@@ -397,7 +337,7 @@ affect_update()
   active_affectD[idx++] = (countD.imagine != 0);
   active_affectD[idx++] = (find_threatD != 0);
 }
-static int
+STATIC int
 msg_advance()
 {
   int log_used = AS(msglen_cqD, msg_writeD);
@@ -411,7 +351,7 @@ msg_advance()
 // Sorting commands modify GAME simulation
 // Passing a turn is a work-around to ensure input chain is preserved
 // This turn cost can be merged with useful actions (purchase/sell/actuate)
-static void
+STATIC void
 replay_hack()
 {
   // TBD: save replay_action():
@@ -420,7 +360,7 @@ replay_hack()
 }
 // Safeguards in the case of a desync
 // Otherwise the death menu reads back trailing inputs
-static void
+STATIC void
 replay_stop()
 {
   if (replay_flag) replay_flag = 0;
@@ -435,7 +375,7 @@ in_bounds(row, col)
 
   return urow < (MAX_HEIGHT - 2) && ucol < (MAX_WIDTH - 2);
 }
-int
+STATIC int
 viz_magick()
 {
   int rmin = panelD.panel_row_min;
@@ -471,13 +411,10 @@ viz_magick()
 
   return 0;
 }
-enum { WHITESPACE = 0x20202020 };
-enum { DRAW_NOW = 0 };
-enum { DRAW_WAIT = -1 };
 // wait 0: don't wait
 // wait -1: any key (REPLAY includes key)
 // wait non-zero: pedantic mode wait for exact input (REPLAY excludes input)
-int
+STATIC int
 draw(wait)
 {
   int flush_draw = !replay_flag;
@@ -528,7 +465,7 @@ draw(wait)
   return c;
 }
 
-static void
+STATIC void
 msg_pause()
 {
   int log_used;
@@ -544,12 +481,12 @@ msg_pause()
 
 // Use before CLOBBER_MSG macro
 // Adds right-justified text to the title text
-static void msg_hint(hint, hintlen) char* hint;
+STATIC void msg_hint(hint, hintlen) char* hint;
 {
   char* msg_end = AS(msg_cqD, msg_writeD) + overlay_widthD;
   memcpy(msg_end - hintlen - 1, hint, hintlen);
 }
-static void msg_write(msg, msglen, msg_width) char* msg;
+STATIC void msg_write(msg, msglen, msg_width) char* msg;
 {
   int log_used = AS(msglen_cqD, msg_writeD);
   if (log_used + msglen >= msg_width) {
@@ -566,17 +503,14 @@ static void msg_write(msg, msglen, msg_width) char* msg;
   if (countD.rest) countD.rest = 0;
   if (find_flagD) find_flagD = 0;
 }
-static void msg_game(msg, msglen, msg_width) char* msg;
+STATIC void msg_game(msg, msglen, msg_width) char* msg;
 {
   msglen = CLAMP(msglen, 0, msg_width);
   msg[msglen] = 0;
 
   msg_write(msg, msglen, msg_width);
 }
-#define msg_print(x) msg_write(S2(x), msg_widthD)
-#define see_print(x) \
-  if (maD[MA_BLIND] == 0) msg_print(x)
-static int
+STATIC int
 show_history()
 {
   char* log;
@@ -600,7 +534,7 @@ show_history()
   int count = AL(screenD) - line;
   return CLOBBER_MSG("Message History (%d)", count);
 }
-static int
+STATIC int
 in_subcommand(prompt, command)
 char* prompt;
 char* command;
@@ -609,13 +543,13 @@ char* command;
   *command = c;
   return is_ctrl(c) ? 0 : 1;
 }
-static char
+STATIC char
 map_roguedir(comval)
 {
   if (comval > ' ') comval |= 0x20;
   return dir_key(comval);
 }
-static int
+STATIC int
 get_dir(prompt, dir)
 char* prompt;
 int* dir;
@@ -637,7 +571,7 @@ int* dir;
   return 0;
 }
 // Undefined if called on a pointer to zero
-static int
+STATIC int
 bit_pos(test)
 uint32_t* test;
 {
@@ -646,7 +580,7 @@ uint32_t* test;
 
   return i;
 }
-static void
+STATIC void
 go_up()
 {
   struct caveS* c_ptr;
@@ -667,7 +601,7 @@ go_up()
     msg_print("You see no up staircase here.");
   }
 }
-static void
+STATIC void
 go_down()
 {
   struct caveS* c_ptr;
@@ -688,7 +622,7 @@ go_down()
     msg_print("You see no down staircase here.");
   }
 }
-static int
+STATIC int
 cave_floor_near(y, x)
 {
   for (int row = y - 1; row <= y + 1; ++row) {
@@ -698,7 +632,7 @@ cave_floor_near(y, x)
   }
   return FALSE;
 }
-static void
+STATIC void
 place_boundary()
 {
   for (int row = 0; row < MAX_HEIGHT; ++row) caveD[row][0].fval = BOUNDARY_WALL;
@@ -710,11 +644,7 @@ place_boundary()
     caveD[MAX_HEIGHT - 1][col].fval = BOUNDARY_WALL;
 }
 
-#define RNG_M 2147483647LL /* m = 2^31 - 1 */
-#define RNG_A 16807LL
-#define RNG_Q 127773LL /* m div a */
-#define RNG_R 2836LL   /* m mod a */
-static int
+STATIC int
 rnd()
 {
   int low, high, test;
@@ -728,12 +658,12 @@ rnd()
     rnd_seed = test + RNG_M - (test == 0);
   return rnd_seed;
 }
-static int
+STATIC int
 randint(maxval)
 {
   return ((rnd() % maxval) + 1);
 }
-int
+STATIC int
 randnor(mean, stand)
 {
   int offset, low, iindex, high;
@@ -773,7 +703,7 @@ randnor(mean, stand)
 
   return mean + offset;
 }
-static void
+STATIC void
 seed_init(prng)
 {
   uint32_t seed;
@@ -793,7 +723,9 @@ seed_init(prng)
   // Burn randomness after seeding
   for (int it = randint(100); it != 0; --it) rnd();
 }
-static int fixed_seed_func(seed, func) int (*func)();
+STATIC int
+fixed_seed_func(seed, func)
+fn func;
 {
   uint32_t keep_seed;
 
@@ -803,7 +735,7 @@ static int fixed_seed_func(seed, func) int (*func)();
   rnd_seed = keep_seed;
   return ret;
 }
-static int
+STATIC int
 damroll(num, sides)
 {
   int i, sum = 0;
@@ -811,13 +743,13 @@ damroll(num, sides)
   for (i = 0; i < num; i++) sum += randint(sides);
   return (sum);
 }
-static int
+STATIC int
 pdamroll(array)
 uint8_t* array;
 {
   return damroll(array[0], array[1]);
 }
-int
+STATIC int
 critical_blow(weight, plus, lev_adj, dam)
 {
   int critical;
@@ -847,7 +779,7 @@ critical_blow(weight, plus, lev_adj, dam)
   }
   return (critical);
 }
-int
+STATIC int
 tot_dam(obj, tdam, cidx)
 struct objS* obj;
 {
@@ -884,7 +816,7 @@ struct objS* obj;
   }
   return (tdam);
 }
-static void build_type1(ychunk, xchunk, ycenter, xcenter) int* ycenter;
+STATIC void build_type1(ychunk, xchunk, ycenter, xcenter) int* ycenter;
 int* xcenter;
 {
   int x, y;
@@ -928,7 +860,7 @@ int* xcenter;
   *ycenter = y;
   *xcenter = x;
 }
-static void build_room(ychunk, xchunk, ycenter, xcenter) int *ycenter, *xcenter;
+STATIC void build_room(ychunk, xchunk, ycenter, xcenter) int *ycenter, *xcenter;
 {
   int x, xmax, y, ymax;
   int wroom, hroom;
@@ -981,7 +913,7 @@ static void build_room(ychunk, xchunk, ycenter, xcenter) int *ycenter, *xcenter;
     d_ptr++;
   }
 }
-static void
+STATIC void
 build_store(sidx, y, x)
 {
   int yval, y_height, y_depth;
@@ -1025,7 +957,7 @@ build_store(sidx, y, x)
   caveD[i][j].oidx = obj_index(obj);
   caveD[i][j].fval = FLOOR_CORR;
 }
-static void
+STATIC void
 build_pawn()
 {
   int tmp, i, j, y, x, x_left, x_right;
@@ -1056,7 +988,7 @@ build_pawn()
   caveD[y][x].oidx = obj_index(obj);
   caveD[y][x].fval = FLOOR_CORR;
 }
-static int
+STATIC int
 near_light(y, x)
 {
   if ((caveD[y][x].cflag & CF_LIT_ROOM) == CF_ROOM) {
@@ -1068,20 +1000,20 @@ near_light(y, x)
   }
   return FALSE;
 }
-static int
+STATIC int
 build_bounds(row, col)
 {
   uint32_t urow = row - 2;
   uint32_t ucol = col - 2;
   return urow < (MAX_HEIGHT - 4) && ucol < (MAX_WIDTH - 4);
 }
-static int
+STATIC int
 diff_chunk(y1, x1, y2, x2)
 {
   return (y1 / CHUNK_HEIGHT != y2 / CHUNK_HEIGHT ||
           x1 / CHUNK_WIDTH != x2 / CHUNK_WIDTH);
 }
-static void
+STATIC void
 place_broken_door(broken, y, x)
 {
   struct objS* obj;
@@ -1101,7 +1033,7 @@ place_broken_door(broken, y, x)
   cave_ptr->oidx = obj_index(obj);
   cave_ptr->fval = FLOOR_CORR;
 }
-static void
+STATIC void
 place_closed_door(locked, y, x)
 {
   struct objS* obj;
@@ -1123,7 +1055,7 @@ place_closed_door(locked, y, x)
     cave_ptr->fval = FLOOR_OBST;
   }
 }
-static void
+STATIC void
 place_secret_door(y, x)
 {
   struct objS* obj;
@@ -1142,7 +1074,7 @@ place_secret_door(y, x)
   cave_ptr->oidx = obj_index(obj);
   cave_ptr->fval = FLOOR_OBST;
 }
-static void
+STATIC void
 place_door(y, x)
 {
   int tmp;
@@ -1165,8 +1097,6 @@ place_door(y, x)
       place_secret_door(y, x);
   }
 }
-GAME point_t doorstk[100];
-GAME int doorindex;
 
 STATIC int
 same_chunk(y1, x1, y2, x2)
@@ -1175,7 +1105,7 @@ same_chunk(y1, x1, y2, x2)
   if (y1 / CHUNK_HEIGHT != y2 / CHUNK_HEIGHT) return 0;
   return 1;
 }
-static point_t
+STATIC point_t
 protect_floor(y, x, ydir, xdir)
 {
   struct caveS* c_ptr1;
@@ -1224,7 +1154,7 @@ protect_floor(y, x, ydir, xdir)
 
   return pt;
 }
-static point_t
+STATIC point_t
 find_perp_threshold(row, col, row_dir, col_dir)
 {
   point_t pt = {0};
@@ -1236,7 +1166,7 @@ find_perp_threshold(row, col, row_dir, col_dir)
     pt = (point_t){col - ox, row - oy};
   return pt;
 }
-static int
+STATIC int
 bestdir(row1, col1, row2, col2)
 {
   int dy = row2 - row1;
@@ -1253,7 +1183,7 @@ bestdir(row1, col1, row2, col2)
 // exact: (df_dir ^ df_heading) == 0;
 // not away from: (df_dir & df_heading) == df_dir;
 // any common: (df_dir & df_heading) != 0;
-static int
+STATIC int
 dirflag(row1, col1, row2, col2)
 {
   int ret = 0;
@@ -1266,7 +1196,7 @@ dirflag(row1, col1, row2, col2)
   // ret |= ((ABS(dy) > ABS(dx)) << 4);
   return ret;
 }
-static int
+STATIC int
 build_diag(row1, col1, row2, col2, tunstk, tunindex)
 point_t* tunstk;
 int* tunindex;
@@ -1286,7 +1216,7 @@ int* tunindex;
   }
   return ret;
 }
-static void perp_rc_dir(tmp_row, tmp_col, row_dir, col_dir) int* row_dir;
+STATIC void perp_rc_dir(tmp_row, tmp_col, row_dir, col_dir) int* row_dir;
 int* col_dir;
 {
   // Perpendicular swap
@@ -1304,7 +1234,7 @@ int* col_dir;
     *col_dir = -ox;
   }
 }
-static void
+STATIC void
 build_corridor(row1, col1, row2, col2)
 {
   int tmp_row, tmp_col, i;
@@ -1480,7 +1410,7 @@ build_corridor(row1, col1, row2, col2)
     }
   }
 }
-static void
+STATIC void
 granite_cave()
 {
   int i, j;
@@ -1494,7 +1424,7 @@ granite_cave()
     }
   }
 }
-static void
+STATIC void
 delete_object(y, x)
 {
   struct caveS* cave_ptr;
@@ -1503,7 +1433,7 @@ delete_object(y, x)
   cave_ptr->oidx = 0;
   cave_ptr->cflag &= ~CF_FIELDMARK;
 }
-char*
+STATIC char*
 describe_use(iidx)
 {
   char* p;
@@ -1552,14 +1482,14 @@ describe_use(iidx)
   }
   return p;
 }
-static void
+STATIC void
 inven_destroy(iidx)
 {
   struct objS* obj = obj_get(invenD[iidx]);
   obj_unuse(obj);
   invenD[iidx] = 0;
 }
-static void
+STATIC void
 inven_destroy_num(iidx, number)
 {
   struct objS* obj = obj_get(invenD[iidx]);
@@ -1568,7 +1498,7 @@ inven_destroy_num(iidx, number)
   else
     obj->number -= number;
 }
-static int
+STATIC int
 inven_copy_num(iidx, copy, num)
 struct objS* copy;
 {
@@ -1586,7 +1516,7 @@ struct objS* copy;
 
   return id != 0;
 }
-static void
+STATIC void
 place_stair_tval(y, x, tval)
 {
   struct objS* obj;
@@ -1612,7 +1542,7 @@ place_stair_tval(y, x, tval)
     if (x < 1 || x + 2 > MAX_WIDTH) exit(1);
   }
 }
-static void new_spot(y, x) int *y, *x;
+STATIC void new_spot(y, x) int *y, *x;
 {
   int i, j;
   struct caveS* c_ptr;
@@ -1626,7 +1556,7 @@ static void new_spot(y, x) int *y, *x;
   *y = i;
   *x = j;
 }
-static int
+STATIC int
 next_to_object(y1, x1)
 {
   for (int row = y1 - 1; row <= y1 + 1; ++row) {
@@ -1636,7 +1566,7 @@ next_to_object(y1, x1)
   }
   return FALSE;
 }
-static void
+STATIC void
 place_stairs(tval, num)
 {
   struct caveS* cave_ptr;
@@ -1673,20 +1603,8 @@ place_stairs(tval, num)
       j++;
     } while ((!flag) && (j <= 30));
   }
-}
-#define ADJ4(y, x, body)      \
-  {                           \
-    struct caveS* c_ptr;      \
-    c_ptr = &caveD[y - 1][x]; \
-    body;                     \
-    c_ptr = &caveD[y + 1][x]; \
-    body;                     \
-    c_ptr = &caveD[y][x - 1]; \
-    body;                     \
-    c_ptr = &caveD[y][x + 1]; \
-    body;                     \
   }
-static int
+STATIC int
 num_adjacent_corridor(y, x)
 {
   int i;
@@ -1697,7 +1615,7 @@ num_adjacent_corridor(y, x)
   });
   return (i);
 }
-static int
+STATIC int
 is_corridor(y, x)
 {
   int ret;
@@ -1715,19 +1633,19 @@ is_corridor(y, x)
   }
   return ret;
 }
-static void
+STATIC void
 try_door(y, x)
 {
   if (caveD[y][x].fval == FLOOR_CORR && randint(100) <= DUN_TUN_JCT) {
     if (is_corridor(y, x)) place_door(y, x);
   }
 }
-static int
+STATIC int
 set_null()
 {
   return FALSE;
 }
-static int
+STATIC int
 check_fval_type(fval, ftyp)
 {
   switch (ftyp) {
@@ -1740,7 +1658,7 @@ check_fval_type(fval, ftyp)
   }
   return 0;
 }
-static void tr_obj_copy(tidx, obj) struct objS* obj;
+STATIC void tr_obj_copy(tidx, obj) struct objS* obj;
 {
   struct treasureS* tr_ptr = &treasureD[tidx];
   obj->flags = tr_ptr->flags;
@@ -1763,12 +1681,12 @@ static void tr_obj_copy(tidx, obj) struct objS* obj;
   obj->idflag = 0;
   obj->sn = 0;
 }
-int
+STATIC int
 magik(chance)
 {
   return (randint(100) <= chance);
 }
-int
+STATIC int
 m_bonus(base, max_std, level)
 {
   int x, stand_dev, tmp;
@@ -1780,7 +1698,7 @@ m_bonus(base, max_std, level)
   x = (ABS(tmp) / 10) + base;
   return (x);
 }
-static int
+STATIC int
 light_adj(p1)
 {
   int bonus;
@@ -1795,12 +1713,12 @@ light_adj(p1)
   }
   return bonus;
 }
-static int
+STATIC int
 ustackweight()
 {
   return 10 * statD.use_stat[A_STR];
 }
-static int
+STATIC int
 stacklimit_by_max_weight(max, weight)
 {
   int stacklimit = 1;
@@ -1809,7 +1727,7 @@ stacklimit_by_max_weight(max, weight)
   }
   return MIN(stacklimit, 255);
 }
-int
+STATIC int
 number_by_weight_roll(weight, num, sides)
 {
   int k, tmp;
@@ -1823,7 +1741,7 @@ number_by_weight_roll(weight, num, sides)
   }
   return MAX(1, tmp);
 }
-void magic_treasure(obj, level) struct objS* obj;
+STATIC void magic_treasure(obj, level) struct objS* obj;
 {
   int chance, special, cursed;
   int tmp;
@@ -2510,12 +2428,12 @@ void magic_treasure(obj, level) struct objS* obj;
       break;
   }
 }
-static int
+STATIC int
 mask_subval(sv)
 {
   return MASK_SUBVAL & sv;
 }
-static int
+STATIC int
 knowable_tval_subval(tval, sv)
 {
   int k;
@@ -2547,7 +2465,7 @@ knowable_tval_subval(tval, sv)
   }
   return k;
 }
-static void tr_unknown_sample(tr_ptr, unknown, sample) struct treasureS* tr_ptr;
+STATIC void tr_unknown_sample(tr_ptr, unknown, sample) struct treasureS* tr_ptr;
 int* unknown;
 char** sample;
 {
@@ -2558,7 +2476,7 @@ char** sample;
   *unknown = (trk & TRK_FULL) == 0;
   *sample = trk & TRK_SAMPLE ? "{sampled}" : "";
 }
-int
+STATIC int
 tr_is_known(tr_ptr)
 struct treasureS* tr_ptr;
 {
@@ -2567,12 +2485,12 @@ struct treasureS* tr_ptr;
   if (k == 0) return TRUE;
   return knownD[k - 1][subval] & TRK_FULL;
 }
-static void tr_discovery(tr_ptr) struct treasureS* tr_ptr;
+STATIC void tr_discovery(tr_ptr) struct treasureS* tr_ptr;
 {
   // TDB: xp tuning
   uD.exp += (tr_ptr->level + (uD.lev >> 1)) / uD.lev;
 }
-int
+STATIC int
 tr_make_known(tr_ptr)
 struct treasureS* tr_ptr;
 {
@@ -2583,13 +2501,13 @@ struct treasureS* tr_ptr;
   knownD[k - 1][subval] = TRK_FULL;
   return current == 0;
 }
-void tr_sample(tr_ptr) struct treasureS* tr_ptr;
+STATIC void tr_sample(tr_ptr) struct treasureS* tr_ptr;
 {
   int subval = mask_subval(tr_ptr->subval);
   int k = knowable_tval_subval(tr_ptr->tval, subval);
   if (k) knownD[k - 1][subval] = TRK_SAMPLE;
 }
-static int
+STATIC int
 vuln_fire(obj)
 struct objS* obj;
 {
@@ -2616,7 +2534,7 @@ struct objS* obj;
   }
   return (FALSE);
 }
-static int
+STATIC int
 vuln_fire_breath(obj)
 struct objS* obj;
 {
@@ -2647,7 +2565,7 @@ struct objS* obj;
   }
   return (FALSE);
 }
-static int
+STATIC int
 vuln_acid(obj)
 struct objS* obj;
 {
@@ -2671,7 +2589,7 @@ struct objS* obj;
   }
   return (FALSE);
 }
-static int
+STATIC int
 vuln_acid_breath(obj)
 struct objS* obj;
 {
@@ -2702,20 +2620,20 @@ struct objS* obj;
   }
   return (FALSE);
 }
-static int
+STATIC int
 vuln_frost(obj)
 struct objS* obj;
 {
   return ((obj->tval == TV_POTION1) || (obj->tval == TV_POTION2) ||
           (obj->tval == TV_FLASK));
 }
-static int
+STATIC int
 vuln_lightning(obj)
 struct objS* obj;
 {
   return ((obj->tval == TV_RING) || (obj->tval == TV_WAND));
 }
-static int
+STATIC int
 vuln_gas(obj)
 struct objS* obj;
 {
@@ -2730,7 +2648,7 @@ struct objS* obj;
   }
   return (FALSE);
 }
-static int
+STATIC int
 is_door(tval)
 {
   switch (tval) {
@@ -2741,31 +2659,31 @@ is_door(tval)
   }
   return FALSE;
 }
-static int
+STATIC int
 crset_evil(cre)
 struct creatureS* cre;
 {
   return (cre->cdefense & CD_EVIL);
 }
-static int
+STATIC int
 crset_visible(cre)
 struct creatureS* cre;
 {
   return (cre->cmove & CM_INVISIBLE) == 0;
 }
-static int
+STATIC int
 crset_invisible(cre)
 struct creatureS* cre;
 {
   return (cre->cmove & CM_INVISIBLE);
 }
-static int
+STATIC int
 oset_sightfm(obj)
 struct objS* obj;
 {
   return (obj->tval >= TV_MIN_VISIBLE && obj->tval <= TV_MAX_VISIBLE);
 }
-static int
+STATIC int
 oset_mon_pickup(obj)
 struct objS* obj;
 {
@@ -2773,7 +2691,7 @@ struct objS* obj;
   uint8_t tval = obj->tval - 1;
   return (tval < TV_MON_PICK_UP);
 }
-static int
+STATIC int
 oset_pickup(obj)
 struct objS* obj;
 {
@@ -2781,7 +2699,7 @@ struct objS* obj;
   uint8_t tval = obj->tval - 1;
   return (tval < TV_MAX_PICK_UP);
 }
-static int
+STATIC int
 obj_mon_pickup(obj)
 struct objS* obj;
 {
@@ -2789,21 +2707,21 @@ struct objS* obj;
   uint8_t tval = obj->tval - 1;
   return (tval < TV_MON_PICK_UP);
 }
-static int
+STATIC int
 oset_trap(obj)
 struct objS* obj;
 {
   return (obj->tval == TV_VIS_TRAP || obj->tval == TV_INVIS_TRAP ||
           obj->tval == TV_CHEST);
 }
-static int
+STATIC int
 oset_doorstair(obj)
 struct objS* obj;
 {
   return (obj->tval == TV_SECRET_DOOR || obj->tval == TV_UP_STAIR ||
           obj->tval == TV_DOWN_STAIR);
 }
-static int
+STATIC int
 oset_hidden(obj)
 struct objS* obj;
 {
@@ -2811,7 +2729,7 @@ struct objS* obj;
           obj->tval == TV_CHEST || obj->tval == TV_CLOSED_DOOR ||
           obj->tval == TV_SECRET_DOOR);
 }
-static int
+STATIC int
 oset_zap(obj)
 struct objS* obj;
 {
@@ -2822,7 +2740,7 @@ struct objS* obj;
   }
   return 0;
 }
-static int
+STATIC int
 oset_weightcheck(obj)
 struct objS* obj;
 {
@@ -2836,7 +2754,7 @@ struct objS* obj;
   }
   return 0;
 }
-static int
+STATIC int
 oset_tohitdam(obj)
 struct objS* obj;
 {
@@ -2853,7 +2771,7 @@ struct objS* obj;
   }
   return 0;
 }
-static int
+STATIC int
 oset_equip(obj)
 struct objS* obj;
 {
@@ -2861,7 +2779,7 @@ struct objS* obj;
   tv -= TV_MIN_EQUIP;
   return tv <= (TV_MAX_EQUIP - TV_MIN_EQUIP);
 }
-static int
+STATIC int
 oset_enchant(obj)
 struct objS* obj;
 {
@@ -2869,7 +2787,7 @@ struct objS* obj;
   tv -= TV_MIN_ENCHANT;
   return tv <= (TV_MAX_ENCHANT - TV_MIN_ENCHANT);
 }
-static int
+STATIC int
 oset_rare(obj)
 struct objS* obj;
 {
@@ -2888,7 +2806,7 @@ struct objS* obj;
   }
   return FALSE;
 }
-static int
+STATIC int
 oset_melee(obj)
 struct objS* obj;
 {
@@ -2900,7 +2818,7 @@ struct objS* obj;
   }
   return 0;
 }
-static int
+STATIC int
 oset_dice(obj)
 struct objS* obj;
 {
@@ -2913,7 +2831,7 @@ struct objS* obj;
   }
   return 0;
 }
-static int
+STATIC int
 oset_dammult(obj)
 struct objS* obj;
 {
@@ -2926,7 +2844,7 @@ struct objS* obj;
   }
   return 0;
 }
-static int
+STATIC int
 oset_armor(obj)
 struct objS* obj;
 {
@@ -2942,19 +2860,19 @@ struct objS* obj;
   }
   return FALSE;
 }
-static int
+STATIC int
 oset_gold(obj)
 struct objS* obj;
 {
   return obj->tval == TV_GOLD;
 }
-static int
+STATIC int
 oset_obj(obj)
 struct objS* obj;
 {
   return obj->id != 0;
 }
-static int
+STATIC int
 set_large(item)         /* Items too large to fit in chests   -DJG- */
 struct treasureS* item; /* Use treasure_type since item not yet created */
 {
@@ -2975,7 +2893,7 @@ struct treasureS* item; /* Use treasure_type since item not yet created */
   }
   return FALSE;
 }
-static int
+STATIC int
 may_equip(tval)
 {
   int slot = -1;
@@ -3019,7 +2937,7 @@ may_equip(tval)
   }
   return slot;
 }
-static int
+STATIC int
 may_enchant_ac(tval)
 {
   switch (tval) {
@@ -3034,7 +2952,7 @@ may_enchant_ac(tval)
   }
   return FALSE;
 }
-static int
+STATIC int
 ring_slot()
 {
   int slot = INVEN_RING;
@@ -3043,7 +2961,7 @@ ring_slot()
   }
   return -1;
 }
-static void
+STATIC void
 store_init()
 {
   int i, j;
@@ -3058,7 +2976,7 @@ store_init()
     }
   }
 }
-static int
+STATIC int
 store_item_destroy(sidx, item, count)
 {
   struct objS* obj;
@@ -3074,7 +2992,7 @@ store_item_destroy(sidx, item, count)
   }
   return consume;
 }
-int
+STATIC int
 store_tr_stack(sidx, tr_index, stack)
 {
   struct treasureS* tr_ptr;
@@ -3107,7 +3025,7 @@ store_tr_stack(sidx, tr_index, stack)
 
   return FALSE;
 }
-static void
+STATIC void
 store_sort(sidx)
 {
   struct objS tmp_obj;
@@ -3122,7 +3040,7 @@ store_sort(sidx)
     }
   }
 }
-void
+STATIC void
 store_maint()
 {
   int i, j, k, store_ctr;
@@ -3164,7 +3082,7 @@ store_maint()
     store_sort(i);
   }
 }
-void
+STATIC void
 map_area()
 {
   struct caveS* c_ptr;
@@ -3182,7 +3100,7 @@ map_area()
     }
   }
 }
-int
+STATIC int
 get_obj_num(level, must_be_small)
 {
   int i, j;
@@ -3223,7 +3141,7 @@ get_obj_num(level, must_be_small)
   }
   return (i);
 }
-int
+STATIC int
 get_mon_num(level)
 {
   int i, j, num;
@@ -3253,7 +3171,7 @@ get_mon_num(level)
   }
   return i;
 }
-int
+STATIC int
 place_monster(y, x, z, slp)
 {
   struct monS* mon;
@@ -3284,7 +3202,7 @@ place_monster(y, x, z, slp)
 
   return 0;
 }
-int
+STATIC int
 place_win_monster()
 {
   int cidx, fy, fx, y, x, k;
@@ -3309,7 +3227,7 @@ place_win_monster()
 
   return 0;
 }
-int
+STATIC int
 summon_monster(y, x)
 {
   int j, k;
@@ -3331,7 +3249,7 @@ summon_monster(y, x)
   }
   return summon;
 }
-int
+STATIC int
 summon_undead(y, x)
 {
   int j, k, cidx;
@@ -3366,7 +3284,7 @@ summon_undead(y, x)
 
   return summon;
 }
-void
+STATIC void
 alloc_townmon(num)
 {
   int y, x;
@@ -3382,7 +3300,7 @@ alloc_townmon(num)
     place_monster(y, x, z, 1);
   }
 }
-void
+STATIC void
 alloc_mon(num, dis, slp)
 {
   int y, x, i;
@@ -3399,7 +3317,7 @@ alloc_mon(num, dis, slp)
     place_monster(y, x, z, slp);
   }
 }
-static void
+STATIC void
 place_rubble(y, x)
 {
   struct objS* obj;
@@ -3417,7 +3335,7 @@ place_rubble(y, x)
     obj->number = 1;
   }
 }
-void
+STATIC void
 place_gold(y, x)
 {
   int i;
@@ -3444,7 +3362,7 @@ place_gold(y, x)
     obj->cost += (8 * randint(obj->cost)) + randint(8);
   }
 }
-int
+STATIC int
 place_object(y, x, must_be_small)
 {
   struct objS* obj;
@@ -3464,7 +3382,7 @@ place_object(y, x, must_be_small)
   }
   return obj->id != 0;
 }
-int
+STATIC int
 place_trap(y, x, offset)
 {
   struct objS* obj;
@@ -3478,7 +3396,7 @@ place_trap(y, x, offset)
   }
   return obj->id != 0;
 }
-void
+STATIC void
 alloc_obj(ftyp, otyp, num)
 {
   for (int it = 0; it < num; it++) {
@@ -3507,7 +3425,7 @@ alloc_obj(ftyp, otyp, num)
     }
   }
 }
-static void
+STATIC void
 build_vault(y, x)
 {
   if (!TEST_CAVEGEN) {
@@ -3518,13 +3436,13 @@ build_vault(y, x)
     }
   }
 }
-static void
+STATIC void
 build_pillar(y, x)
 {
   build_vault(y, x);
   caveD[y][x].fval = MAGMA_WALL;
 }
-static void
+STATIC void
 build_chamber(y, x, h, w)
 {
   for (int j = -w; j <= w; ++j) {
@@ -3535,8 +3453,7 @@ build_chamber(y, x, h, w)
   caveD[y][x + w].fval = MAGMA_WALL;
   caveD[y][x].fval = MAGMA_WALL;
 }
-enum { RETRY = 9 };
-static int
+STATIC int
 chunk_obj(ychunk, xchunk, obj_count, func)
 fn func;
 {
@@ -3557,7 +3474,7 @@ fn func;
   }
   return count;
 }
-static void
+STATIC void
 room_monster(y, x, chance)
 {
   for (int i = -1; i <= 1; ++i) {
@@ -3569,7 +3486,7 @@ room_monster(y, x, chance)
   }
 }
 // fills a rectangular area with walls and floor tiles
-void fill_rectangle(xmin, xmax, ymin, ymax, rflag, floor,
+STATIC void fill_rectangle(xmin, xmax, ymin, ymax, rflag, floor,
                     setup_func) fn setup_func;
 {
   struct caveS* c_ptr;
@@ -3590,7 +3507,7 @@ void fill_rectangle(xmin, xmax, ymin, ymax, rflag, floor,
     }
   }
 }
-int
+STATIC int
 checkered_setup(struct caveS* c_ptr, int i, int j, int floor)
 {
   if ((i ^ j) & 0x1) {
@@ -3599,7 +3516,7 @@ checkered_setup(struct caveS* c_ptr, int i, int j, int floor)
     c_ptr->fval = floor;
   }
 }
-int
+STATIC int
 quadrant_setup(struct caveS* c_ptr, int i, int j, int floor)
 {
   if (i % CHUNK_HEIGHT == (CHUNK_HEIGHT - 1) / 2)
@@ -3609,14 +3526,14 @@ quadrant_setup(struct caveS* c_ptr, int i, int j, int floor)
   else
     c_ptr->fval = floor;
 }
-int
+STATIC int
 preserve_setup(struct caveS* c_ptr, int i, int j, int floor)
 {
   if (c_ptr->fval == 0) {
     c_ptr->fval = floor;
   }
 }
-static void build_type2(ychunk, xchunk, ycenter, xcenter, type1,
+STATIC void build_type2(ychunk, xchunk, ycenter, xcenter, type1,
                         type2) int* ycenter;
 int* xcenter;
 {
@@ -3771,7 +3688,7 @@ int* xcenter;
   *ycenter = y;
   *xcenter = x;
 }
-static int
+STATIC int
 mmove(dir, y, x)
 int *y, *x;
 {
@@ -3791,7 +3708,7 @@ int *y, *x;
   }
   return (b);
 }
-static void
+STATIC void
 place_streamer(fval, treas_chance)
 {
   int i, tx, ty;
@@ -3822,7 +3739,7 @@ place_streamer(fval, treas_chance)
     }
   } while (mmove(dir, &y, &x));
 }
-int
+STATIC int
 cave_gen()
 {
   int room_map[CHUNK_COL][CHUNK_ROW] = {0};
@@ -3909,12 +3826,12 @@ cave_gen()
   if (dun_level >= WIN_MON_APPEAR) place_win_monster();
   return 0;
 }
-static int
+STATIC int
 town_night()
 {
   return ((turnD / (1 << 12)) & 0x1);
 }
-int
+STATIC int
 town_gen()
 {
   int i, j, k;
@@ -3966,7 +3883,7 @@ town_gen()
   caveD[i][j].cflag |= CF_FIELDMARK;
   return 0;
 }
-static int
+STATIC int
 py_intown()
 {
   int i, j;
@@ -3981,7 +3898,7 @@ py_intown()
   uD.y = i;
   uD.x = j;
 }
-static int
+STATIC int
 hard_reset()
 {
   // Clear game state
@@ -4001,7 +3918,7 @@ hard_reset()
   screen_submodeD = 0;
   return 0;
 }
-static void
+STATIC void
 panel_bounds(struct panelS* panel)
 {
   int panel_row = panel->panel_row;
@@ -4012,7 +3929,7 @@ panel_bounds(struct panelS* panel)
   panel->panel_col_max = panel->panel_col_min + SYMMAP_WIDTH;
 }
 
-static void
+STATIC void
 panel_update(struct panelS* panel, int y, int x, int force)
 {
   if (dun_level != 0) {
@@ -4034,7 +3951,7 @@ panel_update(struct panelS* panel, int y, int x, int force)
 
   panel_bounds(panel);
 }
-static void get_moves(midx, mm) int* mm;
+STATIC void get_moves(midx, mm) int* mm;
 {
   int y, ay, x, ax, move_val;
 
@@ -4177,7 +4094,7 @@ static void get_moves(midx, mm) int* mm;
       break;
   }
 }
-static int
+STATIC int
 see_wall(dir, y, x)
 {
   if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
@@ -4187,7 +4104,7 @@ see_wall(dir, y, x)
   else
     return FALSE;
 }
-void find_init(dir, y_ptr, x_ptr) int *y_ptr, *x_ptr;
+STATIC void find_init(dir, y_ptr, x_ptr) int *y_ptr, *x_ptr;
 {
   if (!mmove(dir, y_ptr, x_ptr))
     find_flagD = FALSE;
@@ -4238,7 +4155,7 @@ void find_init(dir, y_ptr, x_ptr) int *y_ptr, *x_ptr;
     }
   }
 }
-static int
+STATIC int
 see_nothing(dir, y, x)
 {
   if (!mmove(dir, &y, &x)) /* check to see if movement there possible */
@@ -4248,7 +4165,7 @@ see_nothing(dir, y, x)
   else
     return FALSE;
 }
-int
+STATIC int
 find_event(y, x)
 {
   int dir, newdir, t, check_dir, row, col;
@@ -4374,7 +4291,7 @@ find_event(y, x)
 
   return 0;
 }
-int
+STATIC int
 detect_obj(int (*valid)(), int known)
 {
   int detect;
@@ -4437,7 +4354,7 @@ dflags_by_creature(struct creatureS* cr_ptr)
 
   return dflags;
 }
-int
+STATIC int
 detect_mon(ma_type, known)
 {
   int flag = 0;
@@ -4456,14 +4373,14 @@ detect_mon(ma_type, known)
 
   return flag;
 }
-static void
+STATIC void
 move_rec(y1, x1, y2, x2)
 {
   int tmp = caveD[y1][x1].midx;
   caveD[y1][x1].midx = 0;
   caveD[y2][x2].midx = tmp;
 }
-static int
+STATIC int
 perceive_creature(cr_ptr)
 struct creatureS* cr_ptr;
 {
@@ -4475,7 +4392,7 @@ struct creatureS* cr_ptr;
     return FALSE;
 }
 // 2) Additional check for player blindness
-static int
+STATIC int
 perceive_creature2(cr_ptr)
 struct creatureS* cr_ptr;
 {
@@ -4483,7 +4400,7 @@ struct creatureS* cr_ptr;
   return perceive_creature(cr_ptr);
 }
 // dependency on mflag requires ma_tick() to have run
-int
+STATIC int
 mon_lit(midx)
 {
   int fy, fx, cdis;
@@ -4522,7 +4439,7 @@ mon_lit(midx)
 
   return lit;
 }
-static int
+STATIC int
 mon_multiply(mon)
 struct monS* mon;
 {
@@ -4562,7 +4479,7 @@ struct monS* mon;
   } while (i <= 18);
   return FALSE;
 }
-static void
+STATIC void
 light_room(y, x)
 {
   int i, j, start_col, end_col;
@@ -4584,7 +4501,7 @@ light_room(y, x)
       }
     }
 }
-int
+STATIC int
 illuminate(y, x)
 {
   if (caveD[y][x].cflag & CF_ROOM) light_room(y, x);
@@ -4618,7 +4535,7 @@ unlight_room(y, x)
       }
     }
 }
-int
+STATIC int
 unlight_area(y, x)
 {
   int known;
@@ -4642,7 +4559,7 @@ unlight_area(y, x)
 
   return known;
 }
-static void
+STATIC void
 py_light_off(y, x)
 {
   int row, col;
@@ -4652,7 +4569,7 @@ py_light_off(y, x)
     }
   }
 }
-static void
+STATIC void
 py_light_on(y, x)
 {
   int row, col;
@@ -4682,7 +4599,7 @@ py_check_view()
     py_light_on(uD.y, uD.x);
   }
 }
-int
+STATIC int
 enchant(int16_t* bonus, int16_t limit)
 {
   int chance, res;
@@ -4748,7 +4665,7 @@ attack_blows(weight)
     str_index = 6;
   return blows_table[str_index][dex_index];
 }
-int
+STATIC int
 bth_adj(attype)
 {
   switch (attype) {
@@ -4805,7 +4722,7 @@ bth_adj(attype)
   }
   return -60;
 }
-char*
+STATIC char*
 attack_string(adesc)
 {
   switch (adesc) {
@@ -5138,7 +5055,7 @@ udevice()
   if (countD.confusion) xdev /= 2;
   return xdev;
 }
-int
+STATIC int
 udisarm()
 {
   int xdis = uD.disarm + 2 * todis_adj() + think_adj(A_INT) +
@@ -5147,7 +5064,7 @@ udisarm()
   if (countD.confusion) xdis /= 8;
   return xdis;
 }
-int
+STATIC int
 gain_prayer()
 {
   int spcount = uspellcount();
@@ -5206,7 +5123,7 @@ test_hit(bth, level_adj, pth, ac)
   else
     return FALSE;
 }
-static int
+STATIC int
 is_a_vowel(chr)
 {
   char c = chr | 0x20;
@@ -5220,18 +5137,7 @@ is_a_vowel(chr)
   }
   return FALSE;
 }
-enum {
-  FMT_HITDAM = 0x01,
-  FMT_DICE = 0x02,
-  FMT_DAMMULT = 0x04,
-  FMT_AC = 0x08,
-  FMT_ACC = 0x10,
-  FMT_CHARGES = 0x20,
-  FMT_WEIGHT = 0x40,
-  FMT_SHOP = 0x80,
-  FMT_PAWN = 0x100,
-};
-int
+STATIC int
 moriap_fmt_obj(fmt, flen, fflag, obj)
 char* fmt;
 struct objS* obj;
@@ -5283,7 +5189,7 @@ struct objS* obj;
   if (flen > 0) *iter = 0;
   return iter - fmt;
 }
-int
+STATIC int
 obj_detail(obj, fmt)
 struct objS* obj;
 {
@@ -5298,8 +5204,7 @@ struct objS* obj;
   return moriap_fmt_obj(AP(detailD), fmt, obj);
 }
 //  copy src to dst with moria formatting spec
-DATA int oprefixD = 0;
-int64_t
+STATIC int64_t
 moria_ocat_num(dst, dstlen, objname, num)
 char* dst;
 char* objname;
@@ -5339,7 +5244,7 @@ char* objname;
   return iter - dst;
 }
 // p1: range [-9, 9]
-int
+STATIC int
 moriap_bonus(dst, dstlen, p1)
 char* dst;
 {
@@ -5353,7 +5258,7 @@ char* dst;
   return used + 3;
 }
 #define desc(str) moria_ocat_num(AP(descD), str, number)
-void obj_desc(obj, number) struct objS* obj;
+STATIC void obj_desc(obj, number) struct objS* obj;
 {
   char* prefix = 0;
   char* name = 0;
@@ -5525,7 +5430,7 @@ void obj_desc(obj, number) struct objS* obj;
   }
 }
 #undef desc
-static void
+STATIC void
 mon_desc(midx)
 {
   struct monS* mon = &entity_monD[midx];
@@ -5542,7 +5447,7 @@ mon_desc(midx)
     snprintf(death_descD, AL(death_descD), "A %s", cre->name);
 }
 // TBD: rewrite
-static void
+STATIC void
 summon_object(y, x, num, typ)
 {
   int i, j, k;
@@ -5589,7 +5494,7 @@ summon_object(y, x, num, typ)
     num--;
   } while (num != 0);
 }
-void
+STATIC void
 mon_death(y, x, flags)
 {
   int i, number;
@@ -5614,7 +5519,7 @@ mon_death(y, x, flags)
     uD.total_winner = (uD.new_level_flag == 0);
   }
 }
-static int
+STATIC int
 mon_take_hit(midx, dam)
 {
   struct monS* mon = &entity_monD[midx];
@@ -5658,7 +5563,7 @@ calc_hitpoints()
   uD.chp_frac = value & 0xFFFF;
   uD.mhp = hitpoints;
 }
-void
+STATIC void
 calc_mana()
 {
   int new_mana = umana_by_level(uD.lev);
@@ -5691,7 +5596,7 @@ calc_mana()
     }
   }
 }
-void
+STATIC void
 calc_bonuses()
 {
   int tflag;
@@ -5747,7 +5652,7 @@ calc_bonuses()
   if (calc_exp) expmult_update();
 }
 // uD.mflags && maD are NOT up-to-date at the time of this call
-void
+STATIC void
 ma_bonuses(maffect, factor)
 {
   switch (maffect) {
@@ -5845,7 +5750,7 @@ ma_bonuses(maffect, factor)
   }
 }
 // Effects are ticked twice per turn (rising/falling edge)
-static void
+STATIC void
 add_ma_count(maidx, count)
 {
   if (maidx == MA_BLIND && py_tr(TR_SEEING)) {
@@ -5864,21 +5769,21 @@ add_ma_count(maidx, count)
 
   maD[maidx] += count;
 }
-static void
+STATIC void
 ma_duration(maidx, nturn)
 {
   add_ma_count(maidx, nturn * 2);
 }
 // Combat affects result in an odd tick count
 // Such that the player recovers from an affect before their turn
-static void
+STATIC void
 ma_combat(maidx, nturn)
 {
   int tick_count;
   tick_count = maD[maidx];
   add_ma_count(maidx, nturn * 2 + (tick_count % 2 == 0));
 }
-static int
+STATIC int
 ma_clear(maidx)
 {
   int turn;
@@ -5886,7 +5791,7 @@ ma_clear(maidx)
   maD[maidx] = 0;
   return turn != 0;
 }
-static int8_t
+STATIC int8_t
 modify_stat(tmp_stat, amount)
 {
   int loop, i;
@@ -5911,7 +5816,7 @@ modify_stat(tmp_stat, amount)
   }
   return tmp_stat;
 }
-void
+STATIC void
 set_use_stat(stat)
 {
   statD.use_stat[stat] =
@@ -5927,7 +5832,7 @@ set_use_stat(stat)
     calc_mana();
   }
 }
-void py_bonuses(obj, factor) struct objS* obj;
+STATIC void py_bonuses(obj, factor) struct objS* obj;
 {
   int amount;
 
@@ -5952,7 +5857,7 @@ void py_bonuses(obj, factor) struct objS* obj;
   if (obj->sn == SN_INFRAVISION) uD.infra += amount;
   if (obj->sn == SN_LORDLINESS) uD.save += (amount * 10);
 }
-int
+STATIC int
 equip_swap_into(iidx, into_slot)
 {
   struct objS* obj;
@@ -5977,7 +5882,7 @@ equip_swap_into(iidx, into_slot)
 
   return FALSE;
 }
-void
+STATIC void
 inven_drop(iidx)
 {
   int y, x, ok;
@@ -6028,12 +5933,12 @@ inven_drop(iidx)
     }
   }
 }
-static int
+STATIC int
 player_saves()
 {
   return (randint(100) <= usave());
 }
-static int
+STATIC int
 equip_vibrate(flag)
 {
   for (int it = INVEN_EQUIP; it < INVEN_EQUIP_END; ++it) {
@@ -6047,7 +5952,7 @@ equip_vibrate(flag)
   }
   return 0;
 }
-static int
+STATIC int
 equip_random()
 {
   int slot[] = {
@@ -6058,7 +5963,7 @@ equip_random()
   k = slot[randint(AL(slot) - 1)];
   return invenD[k] ? k : -1;
 }
-static int
+STATIC int
 equip_enchant(iidx, amount)
 {
   struct objS* i_ptr;
@@ -6088,7 +5993,7 @@ equip_enchant(iidx, amount)
 
   return FALSE;
 }
-static int
+STATIC int
 equip_curse()
 {
   struct objS* i_ptr;
@@ -6114,7 +6019,7 @@ equip_curse()
 
   return FALSE;
 }
-static int
+STATIC int
 equip_remove_curse()
 {
   int flag;
@@ -6133,7 +6038,7 @@ equip_remove_curse()
 
   return flag;
 }
-static int
+STATIC int
 equip_disenchant()
 {
   int flag, i;
@@ -6191,7 +6096,7 @@ equip_disenchant()
 
   return flag;
 }
-static int
+STATIC int
 inven_random()
 {
   int k, tmp[INVEN_EQUIP];
@@ -6206,7 +6111,7 @@ inven_random()
   else
     return -1;
 }
-static int
+STATIC int
 inven_slot()
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
@@ -6214,7 +6119,7 @@ inven_slot()
   }
   return -1;
 }
-static void inven_used_obj(obj) struct objS* obj;
+STATIC void inven_used_obj(obj) struct objS* obj;
 {
   obj->number -= 1;
   if (obj->number < 1) {
@@ -6224,7 +6129,7 @@ static void inven_used_obj(obj) struct objS* obj;
     obj_unuse(obj);
   }
 }
-static int
+STATIC int
 inven_obj_mergecount(obj, number)
 struct objS* obj;
 {
@@ -6247,7 +6152,7 @@ struct objS* obj;
   }
   return -1;
 }
-static int
+STATIC int
 inven_food()
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
@@ -6256,7 +6161,7 @@ inven_food()
   }
   return -1;
 }
-static int
+STATIC int
 inven_ident(iidx)
 {
   struct objS* obj;
@@ -6281,7 +6186,7 @@ inven_ident(iidx)
   }
   return used;
 }
-static int
+STATIC int
 weapon_enchant(iidx, tohit, todam)
 {
   int affect, limit;
@@ -6316,7 +6221,7 @@ weapon_enchant(iidx, tohit, todam)
 
   return limit != 0;
 }
-static int
+STATIC int
 make_special_type(iidx, lev, weapon_enchant)
 {
   int is_weapon;
@@ -6353,7 +6258,7 @@ rest_affect()
   return py_affect(MA_BLIND) + countD.confusion + py_affect(MA_FEAR) +
          py_affect(MA_RECALL);
 }
-static void
+STATIC void
 py_rest()
 {
   if (uD.chp < uD.mhp || rest_affect())
@@ -6362,7 +6267,7 @@ py_rest()
     countD.rest = -9999;
   turn_flag = TRUE;
 }
-static int
+STATIC int
 py_take_hit(damage)
 {
   int death_blow;
@@ -6373,7 +6278,7 @@ py_take_hit(damage)
   if (death_blow) uD.new_level_flag = NL_DEATH;
   return death_blow;
 }
-static void py_stats(stats, len) int8_t* stats;
+STATIC void py_stats(stats, len) int8_t* stats;
 {
   int i, tot;
   int dice[18];
@@ -6389,7 +6294,7 @@ static void py_stats(stats, len) int8_t* stats;
   for (i = 0; i < len; i++)
     stats[i] = 5 + dice[3 * i] + dice[3 * i + 1] + dice[3 * i + 2];
 }
-int
+STATIC int
 heroname_init()
 {
   int i, j, k;
@@ -6409,7 +6314,7 @@ heroname_init()
   descD[i] = 0;
   strcpy(heronameD, descD);
 }
-int
+STATIC int
 social_bonus()
 {
   int hist_ptr = uD.ridx * 3 + 1;
@@ -6465,7 +6370,7 @@ clamp(val, min, max)
   if (val > max) return max;
   return val;
 }
-void
+STATIC void
 py_race_class_seed_init(rsel, csel, prng)
 {
   int hitdie;
@@ -6556,7 +6461,7 @@ py_race_class_seed_init(rsel, csel, prng)
   py_gold_init();
   calc_bonuses();
 }
-void
+STATIC void
 py_inven_init()
 {
   int start_equip[] = {30, 87, 22, 0, 0};
@@ -6609,7 +6514,7 @@ STATIC void sort(array, len) void* array;
     }
   }
 }
-int
+STATIC int
 magic_init()
 {
   int i, j, k, t;
@@ -6677,7 +6582,7 @@ magic_init()
   }
   return 0;
 }
-int
+STATIC int
 dec_stat(stat)
 {
   int tmp_stat, loss;
@@ -6700,7 +6605,7 @@ dec_stat(stat)
 
   return FALSE;
 }
-int
+STATIC int
 inc_stat(stat)
 {
   int tmp_stat, gain;
@@ -6724,7 +6629,7 @@ inc_stat(stat)
   } else
     return FALSE;
 }
-void
+STATIC void
 lose_stat(sidx)
 {
   uint32_t sustain = sustain_stat(sidx);
@@ -6735,7 +6640,7 @@ lose_stat(sidx)
     MSG("%s.", stat_lossD[sidx]);
   }
 }
-int
+STATIC int
 res_stat(stat)
 {
   if (statD.max_stat[stat] != statD.cur_stat[stat]) {
@@ -6746,7 +6651,7 @@ res_stat(stat)
   }
   return FALSE;
 }
-static void
+STATIC void
 py_where_on_map()
 {
   int restore_zoom;
@@ -6763,7 +6668,7 @@ py_where_on_map()
   panel_update(&panelD, uD.y, uD.x, TRUE);
   globalD.zoom_factor = restore_zoom;
 }
-void
+STATIC void
 py_add_food(num)
 {
   int food, extra, penalty;
@@ -6790,7 +6695,7 @@ py_add_food(num)
     msg_print("You are full.");
   uD.food = food;
 }
-static int
+STATIC int
 py_heal_hit(num)
 {
   int res;
@@ -6831,7 +6736,7 @@ lev_exp(lev)
 {
   return player_exp[lev - 1] * py_expmult() / 100;
 }
-int
+STATIC int
 expmult_update()
 {
   int exp = uD.exp;
@@ -6848,7 +6753,7 @@ expmult_update()
   }
   return change_lev;
 }
-void
+STATIC void
 py_experience()
 {
   int exp = uD.exp;
@@ -6877,7 +6782,7 @@ py_experience()
   calc_hitpoints();
   calc_mana();
 }
-int
+STATIC int
 restore_level()
 {
   int restore, lev, exp;
@@ -6897,7 +6802,7 @@ restore_level()
   }
   return (restore);
 }
-int
+STATIC int
 py_lose_experience(amount)
 {
   int lev, exp;
@@ -6923,7 +6828,7 @@ py_lose_experience(amount)
 
   return FALSE;
 }
-void
+STATIC void
 teleport_to(ny, nx)
 {
   int dis, ctr, y, x;
@@ -6952,7 +6857,7 @@ teleport_to(ny, nx)
 }
 // TBD: We may loop infinitely with the added restriction of oidx != 0
 // Phase door (short range) teleport runs a higher risk
-void py_teleport(dis, uy, ux) int *uy, *ux;
+STATIC void py_teleport(dis, uy, ux) int *uy, *ux;
 {
   int ty, tx, y, x;
 
@@ -6971,7 +6876,7 @@ void py_teleport(dis, uy, ux) int *uy, *ux;
   *uy = ty;
   *ux = tx;
 }
-void
+STATIC void
 teleport_away(midx, dis)
 {
   int fy, fx, yn, xn, ctr, cdis;
@@ -7001,7 +6906,7 @@ teleport_away(midx, dis)
   m_ptr->fy = yn;
   m_ptr->fx = xn;
 }
-static int
+STATIC int
 is_obj_vulnmelee(obj, vulnmelee)
 struct objS* obj;
 {
@@ -7019,7 +6924,7 @@ struct objS* obj;
   }
   return 0;
 }
-static int
+STATIC int
 is_obj_vulntype(obj, vulntyp)
 struct objS* obj;
 {
@@ -7037,7 +6942,7 @@ struct objS* obj;
   }
   return 0;
 }
-static void
+STATIC void
 get_flags(int typ, uint32_t* weapon_type, int* harm_type)
 {
   switch (typ) {
@@ -7072,7 +6977,7 @@ get_flags(int typ, uint32_t* weapon_type, int* harm_type)
       break;
   }
 }
-void
+STATIC void
 light_line(dir, y, x)
 {
   struct caveS* c_ptr;
@@ -7112,7 +7017,7 @@ light_line(dir, y, x)
     mmove(dir, &y, &x);
   } while (!flag);
 }
-void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
+STATIC void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
 {
   int dist, flag;
   uint32_t weapon_type;
@@ -7173,8 +7078,7 @@ void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
     }
   } while (!flag);
 }
-enum { FIRE_DIST = 2 };
-void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
+STATIC void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
 {
   int i, j;
   int dam, thit, tkill;
@@ -7258,7 +7162,7 @@ void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
     }
   } while (!flag);
 }
-int
+STATIC int
 twall(y, x)
 {
   int i, j;
@@ -7288,7 +7192,7 @@ twall(y, x)
 
   return (res);
 }
-int
+STATIC int
 wall_to_mud(dir, y, x)
 {
   int rubble, door, dist, lit;
@@ -7353,7 +7257,7 @@ wall_to_mud(dir, y, x)
 
   return known != 0;
 }
-int
+STATIC int
 poly_monster(dir, y, x)
 {
   int dist, flag, poly, midx;
@@ -7389,7 +7293,7 @@ poly_monster(dir, y, x)
   } while (!flag);
   return (poly);
 }
-int
+STATIC int
 hp_monster(dir, y, x, dam)
 {
   int flag, dist, monster;
@@ -7420,7 +7324,7 @@ hp_monster(dir, y, x, dam)
   } while (!flag);
   return (monster);
 }
-int
+STATIC int
 confuse_monster(dir, y, x)
 {
   int flag, dist, confuse;
@@ -7462,7 +7366,7 @@ confuse_monster(dir, y, x)
   } while (!flag);
   return (confuse);
 }
-int
+STATIC int
 sleep_monster(dir, y, x)
 {
   int flag, dist, sleep, seen;
@@ -7503,7 +7407,7 @@ sleep_monster(dir, y, x)
   } while (!flag);
   return seen != 0;
 }
-int
+STATIC int
 sleep_monster_aoe(maxdis)
 {
   int y, x, sleep, cdis, seen;
@@ -7534,7 +7438,7 @@ sleep_monster_aoe(maxdis)
   });
   return seen != 0;
 }
-int
+STATIC int
 mass_poly()
 {
   int cdis, y, x, fy, fx, mass;
@@ -7563,7 +7467,7 @@ mass_poly()
   });
   return (mass);
 }
-int
+STATIC int
 drain_life(dir, y, x)
 {
   int flag, dist, drain;
@@ -7598,7 +7502,7 @@ drain_life(dir, y, x)
   } while (!flag);
   return (drain);
 }
-int
+STATIC int
 td_destroy_bolt(dir, y, x)
 {
   int destroy2, dist, exp;
@@ -7642,7 +7546,7 @@ td_destroy_bolt(dir, y, x)
 
   return (destroy2);
 }
-int
+STATIC int
 build_wall(dir, y, x)
 {
   int build, damage, dist, flag;
@@ -7737,7 +7641,7 @@ teleport_monster(dir, y, x)
   } while (!flag);
   return (result);
 }
-int
+STATIC int
 disarm_all(dir, y, x)
 {
   struct caveS* c_ptr;
@@ -7775,7 +7679,7 @@ disarm_all(dir, y, x)
   if (disarm) msg_print("Click!");
   return (disarm);
 }
-int
+STATIC int
 dispel_creature(cflag, damage)
 {
   int y, x, dispel;
@@ -7817,7 +7721,7 @@ genocide(cidx)
   });
   return count != 0;
 }
-int
+STATIC int
 mass_genocide(y, x)
 {
   int count;
@@ -7836,7 +7740,7 @@ mass_genocide(y, x)
   });
   return count > 0;
 }
-int
+STATIC int
 inven_recharge(iidx, rigor)
 {
   int chance, amount;
@@ -7888,7 +7792,7 @@ inven_recharge(iidx, rigor)
   }
   return res;
 }
-int
+STATIC int
 sleep_adjacent(y, x)
 {
   int i, j;
@@ -7918,14 +7822,14 @@ sleep_adjacent(y, x)
     }
   return (sleep);
 }
-static int
+STATIC int
 swap_2i(int* left, int* right)
 {
   int val = *left ^ *right;
   *left ^= val;
   *right ^= val;
 }
-static int
+STATIC int
 create_food(y, x, known)
 {
   int dir_list[9];
@@ -7958,7 +7862,7 @@ create_food(y, x, known)
 
   return 0;
 }
-int
+STATIC int
 turn_undead()
 {
   int py, px, cdis, turn_und;
@@ -7992,7 +7896,7 @@ turn_undead()
   });
   return (turn_und);
 }
-void
+STATIC void
 warding_glyph(y, x)
 {
   struct objS* obj;
@@ -8005,7 +7909,7 @@ warding_glyph(y, x)
     obj->fx = x;
   }
 }
-int
+STATIC int
 trap_creation(y, x)
 {
   int i, j, trap;
@@ -8025,7 +7929,7 @@ trap_creation(y, x)
     }
   return (trap);
 }
-int
+STATIC int
 td_destroy(y, x)
 {
   int i, j, destroy, exp;
@@ -8064,7 +7968,7 @@ td_destroy(y, x)
 
   return (destroy);
 }
-int
+STATIC int
 aggravate_monster(dis_affect)
 {
   int y, x, count;
@@ -8082,7 +7986,7 @@ aggravate_monster(dis_affect)
   if (count) msg_print("You hear a sudden stirring in the distance!");
   return (count > 0);
 }
-int
+STATIC int
 door_creation()
 {
   int y, x, i, j, door;
@@ -8103,7 +8007,7 @@ door_creation()
       }
   return (door);
 }
-int
+STATIC int
 speed_monster_aoe(spd)
 {
   int y, x, see_count;
@@ -8139,7 +8043,7 @@ speed_monster_aoe(spd)
   return (see_count);
 }
 // TBD: very similar bolt()
-int
+STATIC int
 speed_monster(dir, y, x, spd)
 {
   int flag, dist, see_count;
@@ -8177,7 +8081,7 @@ speed_monster(dir, y, x, spd)
   } while (!flag);
   return (see_count);
 }
-static void
+STATIC void
 replace_spot(y, x, typ)
 {
   struct caveS* c_ptr;
@@ -8212,7 +8116,7 @@ replace_spot(y, x, typ)
     c_ptr->midx = 0;
   }
 }
-void
+STATIC void
 earthquake()
 {
   int y, x, i, j;
@@ -8266,7 +8170,7 @@ earthquake()
         c_ptr->cflag &= ~(CF_PERM_LIGHT | CF_FIELDMARK);
       }
 }
-void
+STATIC void
 destroy_area(y, x)
 {
   int i, j, k;
@@ -8288,14 +8192,14 @@ destroy_area(y, x)
   ma_duration(MA_BLIND, 10 + randint(10));
   py_light_off(uD.y, uD.x);
 }
-void
+STATIC void
 starlite(y, x)
 {
   see_print("The end of the staff bursts into a blue shimmering light.");
   for (int it = 1; it <= 9; it++)
     if (it != 5) light_line(it, y, x);
 }
-static int
+STATIC int
 obj_cmp(a, b)
 struct objS *a, *b;
 {
@@ -8333,7 +8237,7 @@ struct objS *a, *b;
 
   return known ? mask_subval(b->subval) - mask_subval(a->subval) : 0;
 }
-static int
+STATIC int
 inven_sort()
 {
   int i, j;
@@ -8354,7 +8258,7 @@ inven_sort()
   for (i = 0; i < INVEN_EQUIP; ++i) invenD[i] = obj[i]->id;
   return 1;
 }
-static int
+STATIC int
 inven_reveal()
 {
   int flag = 0;
@@ -8373,7 +8277,7 @@ inven_reveal()
   }
   return flag;
 }
-static int
+STATIC int
 inven_overlay(begin, end, show_weight)
 {
   USE(overlay_width);
@@ -8410,7 +8314,7 @@ inven_overlay(begin, end, show_weight)
   }
   return count;
 }
-int
+STATIC int
 weapon_curse()
 {
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
@@ -8433,7 +8337,7 @@ weapon_curse()
 
   return FALSE;
 }
-int
+STATIC int
 inven_eat(iidx)
 {
   uint32_t i;
@@ -8598,7 +8502,7 @@ struct objS* obj;
   if (obj->tval != TV_DIGGING) tb /= 4;
   return tb;
 }
-int
+STATIC int
 strip_tail(line)
 {
   char* text = screenD[line];
@@ -8610,22 +8514,7 @@ strip_tail(line)
   screen_usedD[line] = it;
   return 0;
 }
-enum {
-  SCRY_WEIGHT = 0x0001,
-  SCRY_STACK = 0x0002,
-  SCRY_HIT = 0x0004,
-  SCRY_DAM = 0x0008,
-  // SCRY_ACBASE = 0x0010,
-  // SCRY_ACPLUS = 0x0020,
-  SCRY_AC = 0x0040,
-  SCRY_PLAUNCHER = 0x0080,
-  SCRY_WEAPON = 0x0100,
-  SCRY_BLOWS = 0x0200,
-  SCRY_DIGGING = 0x0400,
-  SCRY_ZAP = 0x0800,
-  SCRY_HEAVY = 0x1000,
-};
-int
+STATIC int
 screen_scry_obj(sflag, obj)
 struct objS* obj;
 {
@@ -8698,7 +8587,7 @@ struct objS* obj;
   }
   return line;
 }
-int
+STATIC int
 obj_study(obj, town_store)
 struct objS* obj;
 {
@@ -8844,8 +8733,7 @@ struct objS* obj;
 // Precondition: mode_list is at least two characters (counting nullterm)
 // drop_safe (mode_len > 2) implies all modes (enabled drop_mode)
 // alt_mode (mode_len > 1) toggles between inven/equip
-enum { INVEN_HINT = 1 };
-static int
+STATIC int
 inven_choice(char* prompt, char* mode_list)
 {
   char c;
@@ -8944,7 +8832,7 @@ inven_choice(char* prompt, char* mode_list)
 
   return -1;
 }
-int
+STATIC int
 inven_quaff(iidx)
 {
   int ident;
@@ -9195,7 +9083,7 @@ inven_quaff(iidx)
 
   return FALSE;
 }
-int
+STATIC int
 inven_read(iidx, uy, ux)
 int *uy, *ux;
 {
@@ -9426,7 +9314,7 @@ int *uy, *ux;
 
   return FALSE;
 }
-int
+STATIC int
 inven_try_wand_dir(iidx, dir)
 {
   uint32_t flags, j;
@@ -9565,7 +9453,7 @@ inven_try_wand_dir(iidx, dir)
 
   return FALSE;
 }
-void
+STATIC void
 py_zap(iidx)
 {
   int dir;
@@ -9580,7 +9468,7 @@ py_zap(iidx)
     inven_try_wand_dir(iidx, dir);
   }
 }
-int
+STATIC int
 gain_spell(spidx)
 {
   int spcount = uspellcount();
@@ -9592,7 +9480,7 @@ gain_spell(spidx)
   }
   return 0;
 }
-int
+STATIC int
 spell_prompt(spidx, low_mana)
 {
   int target;
@@ -9639,7 +9527,7 @@ spell_prompt(spidx, low_mana)
 
   return target;
 }
-void spell_dir_target(spidx, y_ptr, x_ptr, target) int* y_ptr;
+STATIC void spell_dir_target(spidx, y_ptr, x_ptr, target) int* y_ptr;
 int* x_ptr;
 {
   switch (spidx + 1) {
@@ -9746,7 +9634,7 @@ int* x_ptr;
       break;
   }
 }
-int
+STATIC int
 book_prompt(names, spelltable, spmask, bookflags)
 char** names;
 struct spellS* spelltable;
@@ -9808,7 +9696,7 @@ uint32_t bookflags;
   } while (!turn_flag);
   return -1;
 }
-void py_magic(iidx, y_ptr, x_ptr) int* y_ptr;
+STATIC void py_magic(iidx, y_ptr, x_ptr) int* y_ptr;
 int* x_ptr;
 {
   struct objS* obj;
@@ -9887,7 +9775,7 @@ int* x_ptr;
     }
   }
 }
-int
+STATIC int
 prayer_prompt(pridx, low_mana)
 {
   int target;
@@ -9915,7 +9803,7 @@ prayer_prompt(pridx, low_mana)
   }
   return target;
 }
-int
+STATIC int
 prayer_dir_target(pridx, y_ptr, x_ptr, dir)
 int* y_ptr;
 int* x_ptr;
@@ -10029,7 +9917,7 @@ int* x_ptr;
   }
   return 1;
 }
-void py_prayer(iidx, y_ptr, x_ptr) int* y_ptr;
+STATIC void py_prayer(iidx, y_ptr, x_ptr) int* y_ptr;
 int* x_ptr;
 {
   struct objS* obj;
@@ -10101,7 +9989,7 @@ int* x_ptr;
     }
   }
 }
-int
+STATIC int
 inven_try_staff(iidx, uy, ux)
 int *uy, *ux;
 {
@@ -10240,7 +10128,7 @@ int *uy, *ux;
 
   return FALSE;
 }
-int
+STATIC int
 inven_flask(iidx)
 {
   struct objS* flask;
@@ -10258,7 +10146,7 @@ inven_flask(iidx)
   }
   return FALSE;
 }
-static int
+STATIC int
 inven_merge(obj_id, locn)
 int* locn;
 {
@@ -10297,7 +10185,7 @@ weight_limit()
   if (weight_cap > 3000) weight_cap = 3000;
   return (weight_cap);
 }
-void
+STATIC void
 inven_check_weight()
 {
   int iwt, ilimit, penalty;
@@ -10331,7 +10219,7 @@ inven_consume_flask()
 
   return FALSE;
 }
-void
+STATIC void
 inven_check_light()
 {
   struct objS* obj;
@@ -10352,7 +10240,7 @@ inven_check_light()
     }
   }
 }
-static int
+STATIC int
 inven_carry(obj_id)
 {
   for (int it = 0; it < INVEN_EQUIP; ++it) {
@@ -10363,7 +10251,7 @@ inven_carry(obj_id)
   }
   return -1;
 }
-static int
+STATIC int
 obj_sense(obj)
 struct objS* obj;
 {
@@ -10372,7 +10260,7 @@ struct objS* obj;
     return FALSE;
   return TRUE;
 }
-static int
+STATIC int
 obj_rare(obj)
 struct objS* obj;
 {
@@ -10381,7 +10269,7 @@ struct objS* obj;
   }
   return FALSE;
 }
-static int
+STATIC int
 obj_magik(obj)
 struct objS* obj;
 {
@@ -10393,7 +10281,7 @@ struct objS* obj;
 
   return FALSE;
 }
-void
+STATIC void
 inven_wear(iidx)
 {
   int eqidx;
@@ -10456,7 +10344,7 @@ bow_by_projectile(pidx)
 
   return (obj->p1 == objp->p1) ? invenD[INVEN_LAUNCHER] : 0;
 }
-static int
+STATIC int
 obj_dupe_num(obj, num)
 struct objS* obj;
 {
@@ -10471,7 +10359,7 @@ struct objS* obj;
 
   return 0;
 }
-static int
+STATIC int
 obj_thrown(obj, y, x)
 struct objS* obj;
 {
@@ -10513,7 +10401,7 @@ struct monS* m_ptr;
   if (!mlit) ret /= 2;
   return ret;
 }
-void
+STATIC void
 inven_throw_dir(iidx, dir)
 {
   int tbth, tpth, tdam, adj, tweight, surprise;
@@ -10635,7 +10523,7 @@ inven_throw_dir(iidx, dir)
     turn_flag = TRUE;
   }
 }
-void
+STATIC void
 py_throw(iidx)
 {
   int dir;
@@ -10649,7 +10537,7 @@ py_throw(iidx)
     inven_throw_dir(iidx, dir);
   }
 }
-static void
+STATIC void
 py_offhand()
 {
   struct objS* obj;
@@ -10682,7 +10570,7 @@ py_offhand()
     turn_flag = TRUE;
   }
 }
-static int
+STATIC int
 door_try_close(y, x)
 {
   struct caveS* c_ptr;
@@ -10704,7 +10592,7 @@ door_try_close(y, x)
 
   return flag;
 }
-static int
+STATIC int
 door_try_jam(y, x)
 {
   struct caveS* c_ptr;
@@ -10726,7 +10614,7 @@ door_try_jam(y, x)
 
   return flag;
 }
-static int
+STATIC int
 try_spike_dir(dir)
 {
   struct caveS* c_ptr;
@@ -10760,7 +10648,7 @@ try_spike_dir(dir)
   }
   return ret;
 }
-void
+STATIC void
 py_spike(iidx)
 {
   struct objS* obj;
@@ -10782,7 +10670,7 @@ py_spike(iidx)
     }
   }
 }
-int
+STATIC int
 show_version()
 {
   int line;
@@ -10808,7 +10696,7 @@ show_version()
 
   return CLOBBER_MSG("Version %s", versionD);
 }
-static char*
+STATIC char*
 usex()
 {
   if (uD.male)
@@ -10816,7 +10704,7 @@ usex()
   else
     return "Female";
 }
-int
+STATIC int
 show_character()
 {
   int xbth, xbowth;
@@ -10958,7 +10846,7 @@ struct summaryS* summary;
   }
   return save_count;
 }
-int
+STATIC int
 summary_saveslot_deletion(struct summaryS* summary, int saveslot, int external)
 {
   char* media = external ? "External" : "Internal";
@@ -11007,7 +10895,7 @@ saveslot_race_reroll(saveslot, race)
   } while (c != ESCAPE);
   return 1;
 }
-int
+STATIC int
 saveslot_creation(int saveslot)
 {
   int line;
@@ -11039,7 +10927,7 @@ saveslot_creation(int saveslot)
   } while (c != ESCAPE);
   return 0;
 }
-int
+STATIC int
 py_notes_menu()
 {
   int line = 0;
@@ -11065,7 +10953,7 @@ BufMsg(overlay, "  run mode is equivalent to holding one finger against the touc
   CLOBBER_MSG("~2025~ Patch Q2");
   return 0;
 }
-int
+STATIC int
 py_saveslot_select()
 {
   struct summaryS in_summary[AL(classD)];
@@ -11268,14 +11156,8 @@ py_saveslot_select()
 
   return 0;
 }
-#define TOMB(x, ...)                                     \
-  {                                                      \
-    int len = snprintf(tmp, AL(tmp), x, ##__VA_ARGS__);  \
-    memcpy(&screenD[line][xcenter - len / 2], tmp, len); \
-    line += 1;                                           \
-  }
 
-static int
+STATIC int
 py_king()
 {
   char tmp[STRLEN_MSG + 1];
@@ -11314,7 +11196,7 @@ py_king()
   if (PC) msg_hint(AP("(CTRL-z) (c/o/p/ESC)"));
   return CLOBBER_MSG("                       Veni, Vidi, Vici!");
 }
-static int
+STATIC int
 py_grave()
 {
   screen_submodeD = 0;
@@ -11352,7 +11234,7 @@ py_grave()
   // Centering text; portrait mode+hand_swap will show message history top left
   return CLOBBER_MSG("                You are dead, sorry!");
 }
-static void
+STATIC void
 py_undo()
 {
   int memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
@@ -11365,7 +11247,7 @@ py_undo()
     longjmp(restartD, 1);
   }
 }
-static int
+STATIC int
 py_help()
 {
   int line = 1;
@@ -11419,7 +11301,7 @@ py_help()
 
   return CLOBBER_MSG("keyboard help");
 }
-int
+STATIC int
 py_menu()
 {
   char c = 0;
@@ -11501,7 +11383,7 @@ py_menu()
   }
   return c;
 }
-static int
+STATIC int
 py_teleport_near(y, x, uy, ux)
 int *uy, *ux;
 {
@@ -11521,7 +11403,7 @@ int *uy, *ux;
 
   return FALSE;
 }
-static int
+STATIC int
 wizard_prompt()
 {
   int x, y;
@@ -11646,7 +11528,7 @@ char* trans;
   char c = CLOBBER_MSG("Press key twice for %s.", trans);
   return (c == prev) ? prev : 0;
 }
-static int
+STATIC int
 py_endgame(fn endtype)
 {
   char c = 0;
@@ -11671,7 +11553,7 @@ py_endgame(fn endtype)
   } while (c != ESCAPE);
   return c;
 }
-static int
+STATIC int
 inven_damage(typ, perc)
 {
   int it, j;
@@ -11686,7 +11568,7 @@ inven_damage(typ, perc)
   }
   return (j);
 }
-int
+STATIC int
 minus_ac(verbose)
 {
   int j;
@@ -11722,7 +11604,7 @@ poison_gas(dam)
   countD.poison += 12 + dam / 2;
   return dam;
 }
-int
+STATIC int
 fire_dam(dam)
 {
   int absfire, resfire;
@@ -11737,7 +11619,7 @@ fire_dam(dam)
     msg_print("There is smoke coming from your pack!");
   return dam;
 }
-int
+STATIC int
 acid_dam(dam, verbose)
 {
   if (minus_ac(verbose)) dam = dam / 2;
@@ -11747,7 +11629,7 @@ acid_dam(dam, verbose)
     msg_print("There is an acrid smell coming from your pack!");
   return dam;
 }
-int
+STATIC int
 frost_dam(dam)
 {
   int abscold, rescold;
@@ -11761,7 +11643,7 @@ frost_dam(dam)
     msg_print("Something shatters inside your pack!");
   return dam;
 }
-int
+STATIC int
 light_dam(dam)
 {
   if (py_tr(TR_RES_LIGHT)) dam = dam / 2;
@@ -11770,14 +11652,14 @@ light_dam(dam)
     msg_print("There are sparks coming from your pack!");
   return dam;
 }
-void
+STATIC void
 corrode_gas(verbose)
 {
   if (!minus_ac(verbose)) py_take_hit(randint(8));
   if (inven_damage(GF_POISON_GAS, 5) > 0)
     msg_print("There is an acrid smell coming from your pack.");
 }
-void
+STATIC void
 py_attack(y, x)
 {
   int k, blows, surprise, hit_count;
@@ -11887,7 +11769,7 @@ py_attack(y, x)
       msg_print("You have trouble wielding such a heavy weapon.");
   }
 }
-static void
+STATIC void
 mon_attack(midx)
 {
   int bth, flag;
@@ -12100,7 +11982,7 @@ mon_attack(midx)
     }
   }
 }
-void
+STATIC void
 chest_trap(y, x)
 {
   int i;
@@ -12141,7 +12023,7 @@ chest_trap(y, x)
     py_take_hit(damroll(5, 8));
   }
 }
-void
+STATIC void
 try_disarm_trap(y, x)
 {
   int chance;
@@ -12164,7 +12046,7 @@ try_disarm_trap(y, x)
     }
   }
 }
-void
+STATIC void
 try_disarm_chest(y, x)
 {
   struct caveS* c_ptr;
@@ -12193,7 +12075,7 @@ try_disarm_chest(y, x)
     }
   }
 }
-static void
+STATIC void
 door_bash(y, x)
 {
   int tmp;
@@ -12222,7 +12104,7 @@ door_bash(y, x)
       msg_print("The door holds firm.");
   }
 }
-static void
+STATIC void
 py_drop()
 {
   int iidx;
@@ -12230,7 +12112,7 @@ py_drop()
 
   if (iidx >= 0) inven_drop(iidx);
 }
-static void
+STATIC void
 open_object(y, x)
 {
   int chance, flag;
@@ -12319,7 +12201,7 @@ open_object(y, x)
     msg_print("You do not see anything you can open there.");
   }
 }
-static void
+STATIC void
 py_search(y, x)
 {
   int i, j, chance;
@@ -12359,7 +12241,7 @@ py_search(y, x)
       }
   turn_flag = TRUE;
 }
-static void
+STATIC void
 py_pickup(y, x, pickup)
 {
   struct caveS* c_ptr;
@@ -12410,7 +12292,7 @@ py_pickup(y, x, pickup)
     }
   }
 }
-int
+STATIC int
 py_monlook_dir(dir)
 {
   int y, x, oy, ox, ly, lx, seen;
@@ -12447,7 +12329,7 @@ py_monlook_dir(dir)
   }
   return seen;
 }
-int
+STATIC int
 py_objlook_dir(dir)
 {
   int y, x, oy, ox, ly, lx, seen;
@@ -12481,7 +12363,7 @@ py_objlook_dir(dir)
 
   return seen;
 }
-static void
+STATIC void
 py_examine()
 {
   int dir;
@@ -12507,7 +12389,7 @@ py_examine()
     }
   }
 }
-static void
+STATIC void
 py_look(y, x)
 {
   struct caveS* c_ptr;
@@ -12559,7 +12441,7 @@ int wall_min;
   }
   return MAX_TUNNEL_TURN;
 }
-static int
+STATIC int
 tunnel_tool(y, x, iidx)
 {
   struct caveS* c_ptr;
@@ -12633,7 +12515,7 @@ tunnel_tool(y, x, iidx)
 
   return turn_count;
 }
-static int
+STATIC int
 tunnel(y, x)
 {
   int max_tabil;
@@ -12659,7 +12541,7 @@ tunnel(y, x)
 
   return tunnel_tool(y, x, iidx);
 }
-void
+STATIC void
 py_tunnel(iidx)
 {
   int dir;
@@ -12675,7 +12557,7 @@ py_tunnel(iidx)
     tunnel_tool(y, x, iidx);
   }
 }
-void make_move(midx, mm) int* mm;
+STATIC void make_move(midx, mm) int* mm;
 {
   int fy, fx, newy, newx, do_move;
   int py, px;
@@ -12781,7 +12663,7 @@ void make_move(midx, mm) int* mm;
     }
   }
 }
-void
+STATIC void
 mon_breath_dam(midx, fy, fx, breath, dam_hp)
 {
   int i, j, y, x;
@@ -12893,7 +12775,7 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   }
   MSG("%s breathes %s.", descD, name);
 }
-static void mon_try_multiply(mon) struct monS* mon;
+STATIC void mon_try_multiply(mon) struct monS* mon;
 {
   int i, j, k;
 
@@ -12904,12 +12786,7 @@ static void mon_try_multiply(mon) struct monS* mon;
 
   if ((k < 4) && (randint((k + 1) * MON_MULT_ADJ) == 1)) mon_multiply(mon);
 }
-DATA char* mon_spell_nameD[] = {
-    "phase door",     "teleport",       "summon",        "wounds",
-    "serious wounds", "paralysis",      "blindness",     "confusion",
-    "fear",           "summon monster", "summon undead", "slow",
-};
-static int
+STATIC int
 mon_try_spell(midx, cdis)
 {
   uint32_t i, maxlev;
@@ -13085,7 +12962,7 @@ mon_try_spell(midx, cdis)
   return took_turn;
 }
 // Returns true if make_move() is attempted
-int
+STATIC int
 mon_move(midx)
 {
   struct monS* m_ptr;
@@ -13162,7 +13039,7 @@ mon_move(midx)
   }
   return 0;
 }
-static int
+STATIC int
 movement_rate(speed)
 {
   if (speed <= 0) {
@@ -13171,7 +13048,7 @@ movement_rate(speed)
 
   return speed;
 }
-int
+STATIC int
 creature_movement(int* l_act)
 {
   FOR_EACH(mon, {
@@ -13199,7 +13076,7 @@ creature_threat(int* l_act)
 
   return threat;
 }
-int
+STATIC int
 creatures()
 {
   // Default threat to ON for draw() calls inside mon_move()
@@ -13270,7 +13147,7 @@ creatures()
 
   return seen_threat;
 }
-static void hit_trap(y, x, uy, ux) int *uy, *ux;
+STATIC void hit_trap(y, x, uy, ux) int *uy, *ux;
 {
   int num, dam;
   struct caveS* c_ptr;
@@ -13436,7 +13313,7 @@ static void hit_trap(y, x, uy, ux) int *uy, *ux;
       break;
   }
 }
-int
+STATIC int
 obj_value(obj)
 struct objS* obj;
 {
@@ -13488,7 +13365,7 @@ struct objS* obj;
   return (value);
 }
 // Object Value * Chrisma Adjustment * Racial Adjustment * Inflation
-int
+STATIC int
 store_value(sidx, obj_value, pawn)
 {
   int cadj, radj, iadj;
@@ -13509,7 +13386,7 @@ store_value(sidx, obj_value, pawn)
   // Use a 64-bit range when scaling; narrow to int on return
   return CLAMP((int64_t)obj_value * cadj * radj * iadj / (int)1e6, 0LL, 99999);
 }
-int
+STATIC int
 obj_store_index(obj)
 struct objS* obj;
 {
@@ -13559,7 +13436,7 @@ struct objS* obj;
   // TV_CHEST
   return -1;
 }
-static void
+STATIC void
 inven_pawn(iidx)
 {
   struct objS* obj;
@@ -13585,7 +13462,7 @@ inven_pawn(iidx)
     msg_pause();
   }
 }
-static void
+STATIC void
 pawn_display()
 {
   USE(overlay_width);
@@ -13617,7 +13494,7 @@ pawn_display()
     line += 1;
   }
 }
-static void
+STATIC void
 store_display(sidx)
 {
   USE(overlay_width);
@@ -13646,7 +13523,7 @@ store_display(sidx)
     line += 1;
   }
 }
-static void
+STATIC void
 store_item_purchase(sidx, item)
 {
   int iidx, count, cost, flag;
@@ -13687,7 +13564,7 @@ store_item_purchase(sidx, item)
 }
 // entering a store or pawn shop passes a turn
 // this eliminates replay_hack() calls on sort, purchase, and sell
-static void
+STATIC void
 pawn_entrance()
 {
   char c;
@@ -13713,7 +13590,7 @@ pawn_entrance()
 
   turn_flag = 1;
 }
-static void
+STATIC void
 store_entrance(sidx)
 {
   char c;
@@ -13739,7 +13616,7 @@ store_entrance(sidx)
 
   turn_flag = 1;
 }
-void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
+STATIC void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
 {
   struct objS* obj = obj_get(invenD[iidx]);
   if (obj->tval == TV_PROJECTILE) {
@@ -13777,7 +13654,7 @@ void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
     }
   }
 }
-void py_reactuate(y_ptr, x_ptr, obj_id) int *y_ptr, *x_ptr;
+STATIC void py_reactuate(y_ptr, x_ptr, obj_id) int *y_ptr, *x_ptr;
 {
   if (obj_id) {
     for (int it = 0; it < MAX_INVEN; ++it) {
@@ -13807,7 +13684,7 @@ STATIC void py_actuate(y_ptr, x_ptr, submode) int *y_ptr, *x_ptr;
     yx_autoinven(y_ptr, x_ptr, iidx);
   }
 }
-static void
+STATIC void
 regenhp(percent)
 {
   uint32_t new_value;
@@ -13824,7 +13701,7 @@ regenhp(percent)
     uD.chp_frac = (new_value & 0xFFFF);
   }
 }
-static void
+STATIC void
 regenmana(percent)
 {
   uint32_t new_value;
@@ -13841,7 +13718,7 @@ regenmana(percent)
     uD.cmana_frac = new_value & 0xFFFF;
   }
 }
-void
+STATIC void
 player_maint()
 {
   int flag;
@@ -13872,7 +13749,7 @@ player_maint()
     }
   }
 }
-void
+STATIC void
 ma_tick()
 {
   uint32_t active, delta;
@@ -13908,7 +13785,7 @@ ma_tick()
     if (MA_VIEW & delta) py_check_view();
   }
 }
-void
+STATIC void
 tick()
 {
   int regen_amount, tmp;
@@ -13979,7 +13856,7 @@ tick()
 
   if (countD.imagine) countD.imagine -= 1;
 }
-int
+STATIC int
 dir_by_confusion()
 {
   struct caveS* c_ptr;
@@ -14004,13 +13881,13 @@ dir_by_confusion()
   msg_print("You are confused.");
   return dir;
 }
-static void
+STATIC void
 fail(char* text)
 {
   puts(text);
   exit(0);
 }
-void
+STATIC void
 dungeon()
 {
   int y, x;
@@ -14397,11 +14274,7 @@ global_init(int argc, char** argv)
                        sizeof(globalD) - sizeof(globalD.ghash));
   msg_widthD = overlay_widthD = 80;
 }
-
 #include "platform/platform.c"
-
-// #include "src/mod/checklen.c"
-
 int
 main(int argc, char** argv)
 {
