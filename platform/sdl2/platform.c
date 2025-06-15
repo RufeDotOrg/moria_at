@@ -12,6 +12,10 @@
 // 1) Iterative development (access all APIs until deps are known)
 // 2) Release build (isolate platform DLL/SO + game code)
 //
+#define Log SDL_Log
+#define rect_t SDL_Rect
+#define point_t SDL_Point
+
 #ifndef PLATFORM
 #define PLATFORM
 #include <setjmp.h>
@@ -21,10 +25,6 @@
 #define SDL_cpuinfo_h_
 
 #include "SDL.h"
-
-#define Log SDL_Log
-#define rect_t SDL_Rect
-#define point_t SDL_Point
 
 enum { COSMO = 0 };
 #ifdef __FATCOSMOCC__
@@ -647,3 +647,7 @@ custom_init()
 #include "cosmo_sdl.c"
 #endif
 #endif
+
+#undef Log
+#undef rect_t
+#undef point_t
