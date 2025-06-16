@@ -1603,7 +1603,7 @@ place_stairs(tval, num)
       j++;
     } while ((!flag) && (j <= 30));
   }
-  }
+}
 STATIC int
 num_adjacent_corridor(y, x)
 {
@@ -3487,7 +3487,7 @@ room_monster(y, x, chance)
 }
 // fills a rectangular area with walls and floor tiles
 STATIC void fill_rectangle(xmin, xmax, ymin, ymax, rflag, floor,
-                    setup_func) fn setup_func;
+                           setup_func) fn setup_func;
 {
   struct caveS* c_ptr;
 
@@ -11404,10 +11404,12 @@ int *uy, *ux;
   return FALSE;
 }
 STATIC int
-wizard_prompt()
+wizard_prompt(yptr, xptr)
+int* yptr;
+int* xptr;
 {
-  int x, y;
-  msg_hint(AP("(adefhlmtosw)"));
+  int x = 0, y = 0;
+  msg_hint(AP("adefhlmtosw<>"));
   char c = CLOBBER_MSG("Enter wizard command:");
   turn_flag = TRUE;
   switch (c) {
@@ -11420,6 +11422,10 @@ wizard_prompt()
     } break;
     case 'b':
       uD.total_winner = 1;
+      FOR_EACH(mon, {
+        if (mon->cidx == MAX_WIN_MON + m_level[MAX_MON_LEVEL])
+          mon_take_hit(mon->id, 10000);
+      });
       break;
     case 'd':
       c = CLOBBER_MSG("Detect monster (e/i/m):");
@@ -11518,7 +11524,17 @@ wizard_prompt()
       msg_print("The air about you becomes charged.");
       ma_duration(MA_RECALL, 1);
     } break;
+    case '<':
+      dun_level -= 1;
+      uD.new_level_flag = NL_UP_STAIR;
+      break;
+    case '>':
+      dun_level += 1;
+      uD.new_level_flag = NL_DOWN_STAIR;
+      break;
   }
+  if (x) *xptr = x;
+  if (y) *yptr = y;
   return 0;
 }
 STATIC int
@@ -14112,7 +14128,7 @@ dungeon()
               break;
             case CTRL('w'):
               if (HACK)
-                wizard_prompt();
+                wizard_prompt(&y, &x);
               else
                 py_menu();
               break;
