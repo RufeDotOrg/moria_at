@@ -252,7 +252,7 @@ custom_pregame()
   if (PC) SDL_SetWindowTitle(windowD, "moria_at");
   if (PC && !MOUSE) {
     Log("ShowCursor -> disable");
-    SDL_ShowCursor(SDL_DISABLE);
+    SDL_ShowCursor(0);
   }
 
   if (TOUCH) ui_init();
