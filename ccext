@@ -2,7 +2,8 @@ readlink src/platform | grep 'sdl2'
 [ $? -eq 0 ] || return
 
 export MATH=1
-DIR=sdl2
+CFLAGS+=" -Ithird_party/SDL2/ "
+
 if [ `basename "$CC"` == cosmocc ]; then
   LINK=0
 elif [ `basename "$CC"` == gcc ]; then
@@ -11,14 +12,13 @@ elif [ `basename "$CC"` == clang ]; then
   LINK=1
 fi
 
-if [ -d "$DIR" ]; then
-  CFLAGS+=" -I$DIR/include "
-
-  # run support
-  if [ linux == "${OSTYPE::5}" ]; then
-    export LD_LIBRARY_PATH=`realpath $DIR/build/.libs`
-  fi
-  if [ "$LINK" -ne 0 ]; then
-    LFLAGS+=" -lSDL2 -L$DIR/build/.libs "
+if [ "$LINK" -ne 0 ]; then
+  DIR=sdl2
+  if [ -d "$DIR" ]; then
+    # run support
+    if [ linux == "${OSTYPE::5}" ]; then
+      export LD_LIBRARY_PATH=`realpath $DIR/build/.libs`
+    fi
+      LFLAGS+=" -lSDL2 -L$DIR/build/.libs "
   fi
 fi
