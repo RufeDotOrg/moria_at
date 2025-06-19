@@ -15,10 +15,12 @@ fi
 if [ "$LINK" -ne 0 ]; then
   DIR=sdl2
   if [ -d "$DIR" ]; then
-    # run support
-    if [ linux == "${OSTYPE::5}" ]; then
-      export LD_LIBRARY_PATH=`realpath $DIR/build/.libs`
-    fi
-      LFLAGS+=" -lSDL2 -L$DIR/build/.libs "
+    LFLAGS+=" -lSDL2 -L$DIR/build/.libs "
+    echo ${OSTYPE::5}
+    case "${OSTYPE::5}" in
+        linux*)     export LD_LIBRARY_PATH=`realpath $DIR/build/.libs`;;
+        darwi*)    export DYLD_LIBRARY_PATH=`realpath $DIR/build/.libs`;;
+        *)          echo "unknown system";;
+    esac
   fi
 fi
