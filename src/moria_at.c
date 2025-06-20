@@ -12431,15 +12431,15 @@ py_look(y, x)
     }
   } else if (y == uD.y && x == uD.x) {
     MSG("Looking good, hero.");
-  } else {
+  } else if (c_ptr->cflag & CF_SEEN) {
     if (c_ptr->fval >= MIN_WALL) {
       int wall_idx = c_ptr->fval - MIN_WALL;
       if (wall_idx < AL(walls)) MSG("You see a %s.", walls[wall_idx]);
-    } else if (c_ptr->cflag & CF_SEEN) {
-      MSG("You see the dungeon floor.");
     } else {
-      MSG("You don't see anything.");
+      MSG("You see the dungeon floor.");
     }
+  } else {
+    MSG("You don't see anything.");
   }
 }
 STATIC int
