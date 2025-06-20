@@ -23,6 +23,9 @@ enum { PUFF_STREAM = 0 };
 #include "asset/scancode.c"
 
 // Game specific inclusion
+enum { MAP_W = SYMMAP_WIDTH * ART_W };
+enum { MAP_H = SYMMAP_HEIGHT * ART_H };
+
 #include "dpad.c"
 
 #include "touch.c"
@@ -34,8 +37,6 @@ enum { TEST_UI = 0 };
 enum { AFF_X = 3 };
 enum { AFF_Y = AL(active_affectD) / AFF_X };
 enum { SPRITE_SQ = 32 };
-enum { MAP_W = SYMMAP_WIDTH * ART_W };
-enum { MAP_H = SYMMAP_HEIGHT * ART_H };
 enum { MMSCALE = 2 };
 
 DATA char moreD[] = "-more-";
@@ -832,7 +833,7 @@ map_draw()
   rect_t src_rect;
   SDL_Point rp;
   USE(sprite_texture);
-  USE(font_texture);
+  USE(pixel_texture);
   USE(renderer);
 
   SDL_SetRenderTarget(renderer, map_textureD);
@@ -900,7 +901,7 @@ map_draw()
       if (!srct && sym > ' ') {
         src_rect = font_rect_by_char(sym);
         srcr = &src_rect;
-        srct = font_texture;
+        srct = pixel_texture;
       }
 
       SDL_SetRenderDrawColor(renderer, V4b(&lightingD[light]));
@@ -943,7 +944,7 @@ map_draw()
               ART_H,
           };
         } else {
-          srct = font_texture;
+          srct = pixel_texture;
           src_rect = font_rect_by_char('*');
         }
         SDL_RenderCopy(renderer, srct, &src_rect, &dest_rect);
@@ -1087,25 +1088,37 @@ draw_game()
       } else {
         map_draw();
 
-        rect_t zr;
-        zoom_rect(&zr);
+        if (globalD.sprite) {
+          rect_t zr;
+          zoom_rect(&zr);
 
-        rect_t vr;
-        view_rect(&vr);
+          rect_t vr;
+          view_rect(&vr);
 
-        rect_t source = {zr.x - vr.x, zr.y - vr.y, zr.w, zr.h};
-        source.x *= ART_W;
-        source.w *= ART_W;
-        source.y *= ART_H;
-        source.h *= ART_H;
+          rect_t source = {zr.x - vr.x, zr.y - vr.y, zr.w, zr.h};
+          source.x *= ART_W;
+          source.w *= ART_W;
+          source.y *= ART_H;
+          source.h *= ART_H;
 
-        SDL_SetRenderDrawColor(rendererD, V4b(&whiteD));
-        SDL_RenderDrawRect(rendererD, &source);
+          float arscale = (float)MAP_H / source.h;
+          SDL_Rect target = {0, 0, source.w * arscale, source.h * arscale};
+          target.x = grect.x + (grect.w - target.w) / 2;
+          target.y = grect.y;
 
-        SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
-        SDL_SetRenderTarget(rendererD, layoutD);
+          SDL_SetRenderDrawColor(rendererD, V4b(&whiteD));
+          SDL_RenderDrawRect(rendererD, &source);
 
-        SDL_RenderCopy(rendererD, map_textureD, &source, &grect);
+          SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+          SDL_SetRenderTarget(rendererD, layoutD);
+
+          SDL_RenderCopy(rendererD, map_textureD, &source, &target);
+        } else {
+          SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
+          SDL_SetRenderTarget(rendererD, layoutD);
+
+          SDL_RenderCopy(rendererD, map_textureD, 0, &grect);
+        }
       }
     }
   }

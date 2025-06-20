@@ -40,16 +40,21 @@ gameplay_tapxy(relx, rely)
   rect_t zr;
   zoom_rect(&zr);
 
-  int try = (float)rely * zr.h;
-  try /= SYMMAP_HEIGHT;
-  try /= ART_H;
+  float invy = (float)zr.h / MAP_H;
+  int try = rely;
+  try *= invy;
+  try -= (try == zr.h);
 
-  int trx = (float)relx * zr.w;
-  trx /= SYMMAP_WIDTH;
-  trx /= ART_W;
+  float invx = (zr.h * ART_H) / (float)(MAP_H * ART_W);
+  int xwidth = (float)zr.w / zr.h * (float)ART_W / ART_H * MAP_H;
+  int edgew = (MAP_W - xwidth) / 2;
+  int trx = relx - edgew;
+  trx *= invx;
 
-  ylookD = zr.y + CLAMP(try, 0, zr.h - 1);
-  xlookD = zr.x + CLAMP(trx, 0, zr.w - 1);
+  if (trx >= 0 && trx < zr.w) {
+    ylookD = zr.y + try;
+    xlookD = zr.x + trx;
+  }
 
   return 0;
 }

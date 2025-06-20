@@ -2,8 +2,8 @@
 
 #include "asset/font_zlib.c"
 
-enum { FHEIGHT = 32 };
 enum { FWIDTH = 16 };
+enum { FHEIGHT = 32 };
 enum { FALPHA = 225 };
 // texture width/height
 enum { FTEX_W = 16 };
@@ -12,6 +12,7 @@ enum { FTEX_H = 8 };
 struct fontS {
 } fontD;
 DATA struct SDL_Texture* font_textureD;
+DATA struct SDL_Texture* pixel_textureD;
 
 STATIC point_t
 point_by_glyph(uint32_t index)
@@ -48,6 +49,18 @@ glyph_init()
     Log("glyph_init puff rc %d\n", rc);
 
     if (rc == 0) texture = SDL_CreateTextureFromSurface(rendererD, surface);
+
+    if (rc == 0) {
+      SDL_Palette* palette = surface->format->palette;
+      for (int it = 0; it < 256; ++it) {
+        int alpha = it > 16 ? 255 : 0;
+        int c = it < 128 ? 0 : 255;
+        palette->colors[it] = (SDL_Color){c, c, c, alpha};
+      }
+      pixel_textureD = SDL_CreateTextureFromSurface(rendererD, surface);
+      if (pixel_textureD) SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_BLEND);
+    }
+
     SDL_FreeSurface(surface);
   }
 
