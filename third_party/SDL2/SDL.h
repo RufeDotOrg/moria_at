@@ -2,7 +2,6 @@
 // version 2.28.5
 // 15ead9a40d09a1eb9972215cceac2bf29c9b77f6
 // origin	https://github.com/libsdl-org/SDL.git
-//
 // clang-format off
 #define SDL_INIT_AUDIO 0x00000010u
 #define SDL_INIT_EVENTS 0x00004000u
@@ -3394,3 +3393,5 @@ extern int SDL_InitSubSystem(Uint32 flags);
 extern void SDL_QuitSubSystem(Uint32 flags);
 extern Uint32 SDL_WasInit(Uint32 flags);
 extern void SDL_Quit(void);
+
+#include "sdlinline.c"
