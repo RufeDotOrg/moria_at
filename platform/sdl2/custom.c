@@ -494,6 +494,7 @@ int
 zoom_rect(rect_t* po_rect)
 {
   int zoom_factor = globalD.zoom_factor;
+  if (globalD.sprite == 0) zoom_factor = 0;
   int cellh = SYMMAP_HEIGHT >> zoom_factor;
   int cellw = SYMMAP_WIDTH >> zoom_factor;
 
