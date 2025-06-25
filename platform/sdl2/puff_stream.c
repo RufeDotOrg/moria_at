@@ -2,7 +2,7 @@
 // Third party
 #include "third_party/zlib/puff.c"
 
-enum { CHUNK = 32 * 1024 };
+enum { CHUNK = 4 * 1024 };
 DATA uint8_t puff_buffD[2 * CHUNK];
 
 int

@@ -12,13 +12,10 @@ enum { PUFF_STREAM = 0 };
 #include "font.c"
 #include "puff_stream.c"
 
-#include "asset/art.c"
 #include "asset/icon.c"
 #include "asset/lamp_run.c"
 #include "asset/lamp_walk.c"
-#include "asset/player.c"
-#include "asset/treasure.c"
-#include "asset/wall.c"
+#include "asset/sprite.c"
 
 #include "asset/scancode.c"
 
@@ -178,14 +175,12 @@ custom_pregame()
     }
 
     spriteD = sprite;
-    art_textureD = sprite_idD - 1;
-    if (puffex_stream_len(art_decode, AP(artZ)) != 0) return 4;
-    tart_textureD = sprite_idD - 1;
-    if (puffex_stream_len(art_decode, AP(treasureZ)) != 0) return 4;
-    wart_textureD = sprite_idD - 1;
-    if (puffex_stream_len(art_decode, AP(wallZ)) != 0) return 4;
-    part_textureD = sprite_idD;  // no offset
-    if (puffex_stream_len(art_decode, AP(playerZ)) != 0) return 4;
+    if (puffex_stream_len(art_decode, AP(sprite_mmgz)) != 0) return 4;
+    // TBD: encoding
+    art_textureD = 0 - 1;
+    tart_textureD = 279 - 1;
+    wart_textureD = 332 - 1;
+    part_textureD = 338;  // no offset
 
     if (sprite_idD < SPRITE_SQ * SPRITE_SQ) {
       // SDL2 determines texture format
