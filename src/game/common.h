@@ -16,7 +16,7 @@ enum { ANDROID };
 
 #ifdef RELEASE
 #undef RELEASE
-enum { RELEASE = 1 };
+#define RELEASE 1
 #else
 enum { RELEASE };
 #endif
@@ -32,7 +32,8 @@ typedef __INT16_TYPE__ int16_t;
 typedef __INT32_TYPE__ int32_t;
 typedef __INT64_TYPE__ int64_t;
 
-typedef int (*fn)();
+typedef __PTRDIFF_TYPE__ ptrsize;
+typedef ptrsize (*fn)();
 
 #ifndef UINT64_MAX
 #define UINT64_MAX __UINT64_MAX__
@@ -80,8 +81,11 @@ typedef int (*fn)();
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 #define CLAMP(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
+#define ST_MAX(wv, rv) \
+  if (rv > wv) wv = rv
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
-#define XOR(x, y) ((uint64_t)(x) ^ (uint64_t)(y))
+#define ST_MIN(wv, rv) \
+  if (rv < wv) wv = rv
 #define INVERT(x) x = !x
 #define OF2(x) (((x - 1) & x) == 0)
 #define LOGFMT(...)
@@ -89,7 +93,7 @@ typedef int (*fn)();
 
 // Named noop that can be overridden
 #define WEAK_NOOP(x) \
-  int x() __attribute__((weak)) __attribute__((alias("noop")))
+  ptrsize x() __attribute__((weak)) __attribute__((alias("noop")))
 
 // Use global var
 #define USE(x) typeof(x##D) x = x##D
@@ -146,7 +150,7 @@ extern unsigned char __stop_game[] __attribute__((__weak__));
 
 // Function Table
 #define FT(x) ftable_clear(&x##D, sizeof(x##D) / sizeof(fn))
-int
+ptrsize
 noop()
 {
   return 0;
@@ -156,6 +160,7 @@ ftable_clear(void* ftable, int size)
 {
   fn* func = ftable;
   for (int it = 0; it < size; ++it) func[it] = noop;
+  return 0;
 }
 
 // Vector
@@ -166,6 +171,9 @@ typedef int v4[4];
 #define V2(v) v[0], v[1]
 #define V3(v) v[0], v[1], v[2]
 #define V4(v) v[0], v[1], v[2], v[3]
+#define V2c(v) V2(cptr(v))
+#define V3c(v) V3(cptr(v))
+#define V4c(v) V4(cptr(v))
 #define V2b(v) V2(bptr(v))
 #define V3b(v) V3(bptr(v))
 #define V4b(v) V4(bptr(v))

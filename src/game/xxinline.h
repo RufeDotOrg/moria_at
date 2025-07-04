@@ -58,20 +58,15 @@ vptr(void* ptr)
 {
   return ptr;
 }
-XX uint8_t*
-bptr(void* ptr)
-{
-  return ptr;
-}
-XX int*
-iptr(void* ptr)
-{
-  return ptr;
-}
+XX uint8_t* bptr(void* ptr) __attribute__((alias("vptr")));
+XX int8_t* cptr(void* ptr) __attribute__((alias("vptr")));
+XX int* iptr(void* ptr) __attribute__((alias("vptr")));
+XX float* fptr(void* ptr) __attribute__((alias("vptr")));
+XX fn fnptr(void* ptr) __attribute__((alias("vptr")));
 XX void*
 ptr_xor(void* a, void* b)
 {
-  return (void*)XOR(a, b);
+  return (void*)((ptrsize)a ^ (ptrsize)b);
 }
 enum { DJB2 = 5381 };
 XX uint64_t

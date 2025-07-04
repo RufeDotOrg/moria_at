@@ -1220,7 +1220,7 @@ custom_draw()
 
   // Dynamic assignment of menu selection mode
   // Controller hotplugging can toggle this feature
-  platformD.selection = using_selection ? touch_selection : noop;
+  platformD.selection = using_selection ? fnptr(touch_selection) : noop;
 
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);

@@ -388,7 +388,7 @@ STATIC void FDECL(py_undo, ());
 STATIC int FDECL(py_help, ());
 STATIC int FDECL(py_menu, ());
 STATIC int FDECL(py_teleport_near, (int y, int x, int* uy, int* ux));
-STATIC int FDECL(wizard_prompt, ());
+STATIC int FDECL(wizard_prompt, (int* yptr, int* xptr));
 STATIC int FDECL(confirm_transition, (int prev, char* trans));
 STATIC int FDECL(py_endgame, (fn endtype));
 STATIC int FDECL(inven_damage, (int typ, int perc));

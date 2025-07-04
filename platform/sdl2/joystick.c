@@ -346,5 +346,5 @@ joystick_init(refcount)
   SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 
   int using_selection = (joystick_count() > 0);
-  platformD.selection = using_selection ? touch_selection : noop;
+  platformD.selection = using_selection ? fnptr(touch_selection) : noop;
 }
