@@ -1,4 +1,12 @@
 #define FDECL(f, p) f p
+#define FOR_EACH(type, body)                                     \
+  {                                                              \
+    for (int it_index = 0; it_index < AL(type##D); ++it_index) { \
+      struct type##S* type = &entity_##type##D[it_index];        \
+      if (!type->id) continue;                                   \
+      body;                                                      \
+    }                                                            \
+  }
 #define MSG(x, ...)                                   \
   {                                                   \
     int len = snprintf(AP(vtypeD), x, ##__VA_ARGS__); \
@@ -74,4 +82,3 @@
     memcpy(&screenD[line][xcenter - len / 2], tmp, len); \
     line += 1;                                           \
   }
-

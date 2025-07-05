@@ -14277,7 +14277,7 @@ obj_level_init()
 STATIC int
 global_init(int argc, char** argv)
 {
-  FT(platform);
+  INIT(platformD);
   globalD.saveslot_class = -1;
   globalD.zoom_factor = PC ? 0 : 2;
   globalD.vsync = 0;

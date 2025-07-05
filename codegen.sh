@@ -1,7 +1,7 @@
 #!/bin/bash
 SCRIPTNAME=`basename $0`
 SOURCE_LIST=(`find . -name type.[ch]`)
-TYPE_LIST=(`grep 'POOL' ${SOURCE_LIST[@]} | cut -d ' ' -f 3`)
+TYPE_LIST=(`grep 'CODEGEN' ${SOURCE_LIST[@]} | cut -d ' ' -f 3`)
 BASEFILE=src/template.c
 DIR=src/template
 mkdir -p $DIR

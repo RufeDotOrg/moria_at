@@ -204,7 +204,7 @@ struct treasureS {
   uint8_t level;     /* Level item first found */
 };
 
-POOL struct objS {
+CODEGEN struct objS {
   int32_t id;
   uint32_t flags;
   uint8_t fy;
@@ -250,7 +250,7 @@ struct attackS {
   uint8_t attack_sides;
 };
 
-POOL struct monS {
+CODEGEN struct monS {
   int32_t id;
   uint16_t cidx;  // creature definition
   uint16_t msleep;

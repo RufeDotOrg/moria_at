@@ -1,5 +1,8 @@
-
-
+GLOBAL ptrsize
+noop()
+{
+  return 0;
+}
 STATIC int
 apclear(dst, dlen)
 char* dst;

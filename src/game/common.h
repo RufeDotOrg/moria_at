@@ -56,9 +56,6 @@ typedef ptrsize (*fn)();
 // stdbool
 #define BOOL int
 
-// Default Type init
-#define DFT(x) ((x){0})
-
 // Array Clear
 #define AC(x) memset(x, 0, sizeof(x))
 // Array Length
@@ -78,6 +75,7 @@ typedef ptrsize (*fn)();
 // String Pair
 #define S2(str) str, SL(str)
 
+// Mathy
 #define ABS(x) ((x) > 0 ? (x) : -(x))
 #define CLAMP(x, min, max) ((x) < (min) ? (min) : (x) > (max) ? (max) : (x))
 #define MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -88,12 +86,14 @@ typedef ptrsize (*fn)();
   if (rv < wv) wv = rv
 #define INVERT(x) x = !x
 #define OF2(x) (((x - 1) & x) == 0)
-#define LOGFMT(...)
-//#define LOGFMT(x, ...) printf(x "\n", ##__VA_ARGS__)
 
-// Named noop that can be overridden
-#define WEAK_NOOP(x) \
-  ptrsize x() __attribute__((weak)) __attribute__((alias("noop")))
+// Default Type init
+#define INIT(x, ...) x = (typeof(x)) { __VA_ARGS__ }
+#define DFT(x) ((x){0})
+
+// Log
+#define show(x) printf("[%s] %s: %ld\n", __func__, #x, x)
+#define showsize(x) printf("sizeof %s: %d\n", #x, sizeof(x));
 
 // Use global var
 #define USE(x) typeof(x##D) x = x##D
@@ -138,30 +138,7 @@ extern unsigned char __stop_game[] __attribute__((__weak__));
 #endif
 
 // pool of structs; see codegen.sh
-#define POOL
-#define FOR_EACH(type, body)                                     \
-  {                                                              \
-    for (int it_index = 0; it_index < AL(type##D); ++it_index) { \
-      struct type##S* type = &entity_##type##D[it_index];        \
-      if (!type->id) continue;                                   \
-      body;                                                      \
-    }                                                            \
-  }
-
-// Function Table
-#define FT(x) ftable_clear(&x##D, sizeof(x##D) / sizeof(fn))
-ptrsize
-noop()
-{
-  return 0;
-}
-STATIC int
-ftable_clear(void* ftable, int size)
-{
-  fn* func = ftable;
-  for (int it = 0; it < size; ++it) func[it] = noop;
-  return 0;
-}
+#define CODEGEN
 
 // Vector
 typedef int* vectorT;
