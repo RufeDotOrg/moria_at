@@ -1,10 +1,4 @@
-#include "game/common.h"
-#include "game/table.h"
-#include "game/type.h"
-#include "game/var.h"
-#include "game/xxcast.h"
-#include "game/xxfn.h"
-#include "game/xxinline.h"
+#include "game/bulk.c"
 
 #include "local/const.c"
 #include "local/macro.c"

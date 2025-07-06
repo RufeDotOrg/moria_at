@@ -1,6 +1,6 @@
 // Rufe.org LLC 2022-2024: ISC License
-#ifndef COMMON
-#define COMMON
+#ifndef COMMON_H
+#define COMMON_H
 
 #ifdef __APPLE__
 #include <TargetConditionals.h>
@@ -21,20 +21,6 @@ enum { ANDROID };
 enum { RELEASE };
 #endif
 
-// stdint
-typedef __UINT8_TYPE__ uint8_t;
-typedef __UINT16_TYPE__ uint16_t;
-typedef __UINT32_TYPE__ uint32_t;
-typedef __UINT64_TYPE__ uint64_t;
-
-typedef __INT8_TYPE__ int8_t;
-typedef __INT16_TYPE__ int16_t;
-typedef __INT32_TYPE__ int32_t;
-typedef __INT64_TYPE__ int64_t;
-
-typedef __PTRDIFF_TYPE__ ptrsize;
-typedef ptrsize (*fn)();
-
 #ifndef UINT64_MAX
 #define UINT64_MAX __UINT64_MAX__
 #define UINT32_MAX __UINT32_MAX__
@@ -52,9 +38,6 @@ typedef ptrsize (*fn)();
 #define INT16_MIN ((int16_t)~0x7fff)
 #define INT8_MIN ((int8_t)~0x7f)
 #endif
-
-// stdbool
-#define BOOL int
 
 // Array Clear
 #define AC(x) memset(x, 0, sizeof(x))
@@ -140,11 +123,7 @@ extern unsigned char __stop_game[] __attribute__((__weak__));
 // pool of structs; see codegen.sh
 #define CODEGEN
 
-// Vector
-typedef int* vectorT;
-typedef int v2[2];
-typedef int v3[3];
-typedef int v4[4];
+// Vector & Tuple
 #define V2(v) v[0], v[1]
 #define V3(v) v[0], v[1], v[2]
 #define V4(v) v[0], v[1], v[2], v[3]
@@ -163,4 +142,4 @@ typedef int v4[4];
 #define XY(v) (v).x, (v).y
 #define WH(r) (r).w, (r).h
 
-#endif
+#endif // COMMON_H
