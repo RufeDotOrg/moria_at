@@ -1,3 +1,4 @@
+// Rufe.org LLC 2022-2025: ISC License
 // const.c
 enum { DJB2 = 5381 };
 
