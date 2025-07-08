@@ -527,7 +527,7 @@ log_hint(char* name)
 int
 platform_pregame()
 {
-  int scope = (SDL_INIT_TIMER | SDL_INIT_VIDEO | SDL_INIT_EVENTS);
+  int scope = (SDL_INIT_VIDEO | SDL_INIT_EVENTS);
 
   if (!SDL_WasInit(scope)) {
     if (!RELEASE) Log("Initializing development build");
