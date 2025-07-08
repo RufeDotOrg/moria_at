@@ -870,9 +870,8 @@
 // #define SDL_snprintf abi_SDL_snprintf
 
 // Elipsis call
-typedef void (*elipsis)(SDL_PRINTF_FORMAT_STRING const char* a, ...);
-typedef void __attribute__((__ms_abi__)) (*win_elipsis)(
-    SDL_PRINTF_FORMAT_STRING const char* a, ...);
+typedef void (*elipsis)(const char* a, ...);
+typedef void __attribute__((__ms_abi__)) (*win_elipsis)(const char* a, ...);
 #define SDL_Log(x, ...)                                            \
   if (IsWindows())                                                 \
     ((win_elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__); \

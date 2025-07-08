@@ -74,6 +74,7 @@ typedef struct pointS {
 // decl.c
 char* strchr(const char* s, int c);
 _Static_assert(sizeof(struct globalS) <= 64, "keep global data small!");
+_Static_assert(sizeof(ptrsize) == sizeof(void*), "ptrsize check");
 static __attribute__((pure)) uint8_t* bptr(void* ptr)
     __attribute__((alias("vptr")));
 static __attribute__((pure)) int8_t* cptr(void* ptr)
