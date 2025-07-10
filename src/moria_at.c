@@ -14273,11 +14273,18 @@ obj_level_init()
     tmp[l]++;
   }
 }
+STATIC int
+ftable_clear(void* ftable, int size)
+{
+  fn* func = ftable;
+  for (int it = 0; it < size; ++it) func[it] = noop;
+  return 0;
+}
 // try to be FUN on the platform with defaults
 STATIC int
 global_init(int argc, char** argv)
 {
-  INIT(platformD);
+  ftable_clear(&platformD, sizeof(platformD) / sizeof(fn));
   globalD.saveslot_class = -1;
   globalD.zoom_factor = PC ? 0 : 2;
   globalD.vsync = 0;
