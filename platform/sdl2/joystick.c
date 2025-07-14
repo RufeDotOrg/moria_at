@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: ISC License
+// Rufe.org LLC 2022-2025: ISC License
 
 enum { JOYSTICK_VERBOSE = 0 };
 enum { BIND_VERBOSE = 0 };

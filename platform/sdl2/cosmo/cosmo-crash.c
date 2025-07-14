@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: ISC License
+// Rufe.org LLC 2022-2025: ISC License
 #include "libc/calls/struct/sigaction.h"
 #include "libc/sysv/consts/sa.h"
 #include "libc/sysv/consts/sig.h"

@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: ISC License
+// Rufe.org LLC 2022-2025: ISC License
 //
 // #include platform.c twice for custom code:
 // Custom code comes last, using game and platform details in depth.

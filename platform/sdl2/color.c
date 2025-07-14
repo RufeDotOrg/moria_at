@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: ISC License
+// Rufe.org LLC 2022-2025: ISC License
 
 // lum_white.c: 94
 DATA int whiteD = 0xffededed;

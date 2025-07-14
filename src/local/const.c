@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: GPLv3 License
+// Rufe.org LLC 2022-2025: GPLv3 License
 
 #define MAX_HEIGHT 64
 #define MAX_WIDTH 128

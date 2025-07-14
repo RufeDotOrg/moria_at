@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: ISC License
+// Rufe.org LLC 2022-2025: ISC License
 // #include cosmo_sdl.c twice
 // First overrides names to rewrite code written against SDL2
 // Second provides bootstrapping within steam's runtime

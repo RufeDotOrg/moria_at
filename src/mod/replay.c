@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: GPLv3 License
+// Rufe.org LLC 2022-2025: GPLv3 License
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <sys/types.h>

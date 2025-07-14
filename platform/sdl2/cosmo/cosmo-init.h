@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: ISC License
+// Rufe.org LLC 2022-2025: ISC License
 
 #define FAIL_LOG "fail.txt"
 #define VERBOSE_LOG "log.txt"

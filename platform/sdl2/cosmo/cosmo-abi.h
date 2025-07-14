@@ -1,4 +1,4 @@
-// Rufe.org LLC 2022-2024: ISC License
+// Rufe.org LLC 2022-2025: ISC License
 #define SDLCALL
 #define SDL_IN_BYTECAP(x)
 #define SDL_OUT_BYTECAP(x)
