@@ -193,7 +193,7 @@ cosmo_init(int argc, char** argv)
   int init_status = 0;
   int opt = 0;
   int keep_console = 0;
-  int keep_log = 0;
+  int keep_log = COSMO_LOG;
   while (opt != -1) {
     opt = getopt(argc, argv, "chv?");
     switch (opt) {
