@@ -14,28 +14,39 @@ custom_gamecrash_handler(int sig)
 }
 #include "platform/sdl2/platform.c"
 
+#define Log(x, ...) printf(x "\n", ##__VA_ARGS__)
 // #include "platform/sdl2/platform.c"
 // 0: nt console app
 // 1: nt window app
 enum { COSMO_WINDOWAPP = RELEASE };
 enum { COSMO_CRASH = 0 };
 enum { COSMO_LOG = 1 };
+#include "platform/sdl2/asset/icon.c"
 #include "platform/sdl2/cosmo/cosmo-crash.c"
 #include "platform/sdl2/cosmo/cosmo-init.h"
+enum { DISK = 0 };
+#include "platform/sdl2/disk.c"
+#define noop(x) int x() __attribute__((alias("noop")))
+noop(dpad_nearest_pp);
+noop(touch_selection);
+noop(overlay_begin);
+noop(overlay_end);
+noop(column_transition);
+noop(overlay_bisect);
+noop(overlay_input);
+enum { PADSIZE = (26 + 2) * 16 };
+DATA int pp_keyD[9] = {5, 6, 3, 2, 1, 4, 7, 8, 9};
+#include "platform/sdl2/joystick.c"
+#include "platform/sdl2/puff_stream.c"
 
 #include <libc/nt/dll.h>
 
-int
-sdl_joystick_event()
+int puff_io(out, outmax, in, insize) void* out;
+void* in;
 {
-}
-int
-sdl_axis_motion()
-{
-}
-int
-sdl_joystick_device()
-{
+  unsigned long size = outmax;
+  if (puff(out, &size, in, &(unsigned long){insize}) == 0) return size;
+  return 0;
 }
 int
 main(int argc, char** argv)
@@ -43,9 +54,41 @@ main(int argc, char** argv)
   global_init(argc, argv);
   platform_init();
   if (platformD.pregame() == 0) {
+    printf("polling test\n");
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       printf("  %x\n", event.type);
+    }
+
+    printf("testing puff+longjmp ");
+    char pixel[128 * 128 * 4];
+    printf(puff_io(AP(pixel), AP(rgb_icoZ)) ? "ok\n" : "fail\n");
+
+    // TBD: texture tests:
+    //   SDL_PIXELFORMAT_INDEX1LSB
+    //   SDL_PIXELFORMAT_INDEX8
+    //   SDL_PIXELFORMAT_ABGR8888
+    //   texture_formatD
+
+    // SDL i/o test
+    // review locale && disk path buffer length checks
+    if (DISK) {
+      printf("testing disk cache for global settings ");
+      printf(disk_pregame() ? "ok\n" : "fail\n");
+    }
+
+    if (JOYSTICK) {
+      printf("testing joystick_init ");
+      printf(joystick_init() ? "ok\n" : "fail\n");
+
+      printf("polling w/ joystick test\n");
+      SDL_Event event;
+      while (SDL_PollEvent(&event)) {
+        printf("  %x\n", event.type);
+      }
+
+      globalD.use_joystick = 0;
+      joystick_update();
     }
   }
 

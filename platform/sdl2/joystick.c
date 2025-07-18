@@ -341,10 +341,12 @@ joystick_init()
   SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS,
               label_button_order ? "1" : "0");
 
-  joystick_refcountD += (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0);
+  int ok = (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0);
+  joystick_refcountD += ok;
 
   int using_selection = (joystick_count() > 0);
   platformD.selection = using_selection ? fnptr(touch_selection) : noop;
+  return ok;
 }
 
 STATIC int
