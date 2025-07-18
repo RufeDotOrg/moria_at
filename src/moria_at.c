@@ -12680,17 +12680,41 @@ STATIC void make_move(midx, mm) int* mm;
   }
 }
 STATIC void
-mon_breath_dam(midx, fy, fx, breath, dam_hp)
+mon_breath_msg(breath)
 {
-  int i, j, y, x;
-  int reduce, dam, harm_type;
+  char* name = "";
+  switch (breath) {
+    case GF_LIGHTNING:
+      name = "lightning";
+      break;
+    case GF_POISON_GAS:
+      name = "gas";
+      break;
+    case GF_ACID:
+      name = "acid";
+      break;
+    case GF_FROST:
+      name = "frost";
+      break;
+    case GF_FIRE:
+      name = "fire";
+      break;
+  }
+  MSG("%s breathes %s.", descD, name);
+}
+STATIC void
+mon_breath_dam(midx, fy, fx, breath, breath_maxdam)
+{
+  int reduce, harm_type;
   uint32_t cdis, weapon_type;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
 
-  y = uD.y;
-  x = uD.x;
+  mon_breath_msg(breath);
+
+  int y = uD.y;
+  int x = uD.x;
 
   if (!replay_flag) {
     viz_hookD = viz_magick;
@@ -12703,12 +12727,12 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
   reduce = 0;
   while (cdis) reduce = bit_pos(&cdis);
   reduce += 1;
-  if (HACK) MSG("[%d/%d@%d", dam_hp + 1, reduce, distance(y, x, fy, fx));
-  /* at least one damage, prevents randint(0) with poison_gas() */
-  dam_hp = dam_hp / reduce + 1;
+  breath_maxdam /= reduce;
+  breath_maxdam += (breath_maxdam == 0);
+
   get_flags(breath, &weapon_type, &harm_type);
-  for (i = y - 2; i <= y + 2; i++)
-    for (j = x - 2; j <= x + 2; j++)
+  for (int i = y - 2; i <= y + 2; i++) {
+    for (int j = x - 2; j <= x + 2; j++) {
       if (in_bounds(i, j) && distance(y, x, i, j) <= 2 && los(y, x, i, j)) {
         c_ptr = &caveD[i][j];
         if ((c_ptr->oidx != 0) &&
@@ -12720,19 +12744,17 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
           if (c_ptr->midx != midx) {
             m_ptr = &entity_monD[c_ptr->midx];
             cr_ptr = &creatureD[m_ptr->cidx];
-            dam = dam_hp;
+            int blast_dam = breath_maxdam;
             if (harm_type & cr_ptr->cdefense)
-              dam = dam * 2;
+              blast_dam *= 2;
             else if (weapon_type & cr_ptr->spells)
-              dam = dam / 4;
-            cdis = distance(i, j, y, x);
-            dam = dam / (cdis + 1);
+              blast_dam /= 4;
+            m_ptr->hp = m_ptr->hp - blast_dam;
 
             // Player does not get credit for the kill
             // - no loot drops
             // - no exp
             // - cannot win the game this way
-            m_ptr->hp = m_ptr->hp - dam;
             m_ptr->msleep = 0;
             if (m_ptr->hp < 0) {
               mon_unuse(m_ptr);
@@ -12741,55 +12763,28 @@ mon_breath_dam(midx, fy, fx, breath, dam_hp)
           }
         }
       }
-
-  /* let's do at least one point of damage to the player */
-  switch (breath) {
-    case GF_LIGHTNING:
-      dam = light_dam(dam_hp);
-      break;
-    case GF_POISON_GAS:
-      dam = poison_gas(dam_hp);
-      break;
-    case GF_ACID:
-      dam = acid_dam(dam_hp, TRUE);
-      break;
-    case GF_FROST:
-      dam = frost_dam(dam_hp);
-      break;
-    case GF_FIRE:
-      dam = fire_dam(dam_hp);
-      break;
-  }
-  if (HACK) {
-    MSG("-%d]", dam);
-  } else {
-    MSG("[-%d hp]", dam);
+    }
   }
 
-  char* name = "";
+  int dam = 0;
   switch (breath) {
     case GF_LIGHTNING:
-      dam = light_dam(dam_hp);
-      name = "lightning";
+      dam = light_dam(breath_maxdam);
       break;
     case GF_POISON_GAS:
-      dam = poison_gas(dam_hp);
-      name = "gas";
+      dam = poison_gas(breath_maxdam);
       break;
     case GF_ACID:
-      dam = acid_dam(dam_hp, TRUE);
-      name = "acid";
+      dam = acid_dam(breath_maxdam, TRUE);
       break;
     case GF_FROST:
-      dam = frost_dam(dam_hp);
-      name = "frost";
+      dam = frost_dam(breath_maxdam);
       break;
     case GF_FIRE:
-      dam = fire_dam(dam_hp);
-      name = "fire";
+      dam = fire_dam(breath_maxdam);
       break;
   }
-  MSG("%s breathes %s.", descD, name);
+  if (HACK) MSG("Breath Damage (-%d)", dam);
 }
 STATIC void mon_try_multiply(mon) struct monS* mon;
 {
