@@ -5973,13 +5973,14 @@ equip_enchant(iidx, amount)
     i_ptr = obj_get(invenD[iidx]);
     if (may_enchant_ac(i_ptr->tval)) {
       obj_desc(i_ptr, 1);
+      descD[0] &= ~0x20;
       affect = 0;
       for (int it = 0; it < amount; ++it) {
         affect += (enchant(&i_ptr->toac, 10));
       }
 
       if (affect) {
-        MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
+        MSG("%s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
         i_ptr->flags &= ~TR_CURSED;
         i_ptr->idflag &= ~ID_CORRODED;
         calc_bonuses();
@@ -6003,7 +6004,8 @@ equip_curse()
   if (l >= 0) {
     i_ptr = obj_get(invenD[l]);
     obj_desc(i_ptr, 1);
-    MSG("Your %s glows black, fades.", descD);
+    descD[0] &= ~0x20;
+    MSG("%s glows black, fades.", descD);
     i_ptr->tohit = 0;
     i_ptr->todam = 0;
     i_ptr->toac = -randint(5) - randint(5);
@@ -6178,6 +6180,7 @@ inven_ident(iidx)
       obj->idflag = ID_REVEAL;
     }
     obj_desc(obj, obj->number);
+    descD[0] &= ~0x20;
     obj_detail(obj, 0);
     if (iidx >= INVEN_EQUIP) {
       calc_bonuses();
@@ -6212,7 +6215,8 @@ weapon_enchant(iidx, tohit, todam)
 
     if (affect) {
       obj_desc(i_ptr, 1);
-      MSG("Your %s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
+      descD[0] &= ~0x20;
+      MSG("%s glows %s!", descD, affect > 1 ? "brightly" : "faintly");
       i_ptr->flags &= ~TR_CURSED;
       calc_bonuses();
     } else
@@ -6243,7 +6247,8 @@ make_special_type(iidx, lev, weapon_enchant)
         if (iidx >= INVEN_EQUIP) py_bonuses(obj, 1);
 
         obj_desc(obj, 1);
-        MSG("Your %s glows brightly.", descD);
+        descD[0] &= ~0x20;
+        MSG("%s glows brightly.", descD);
 
         return TRUE;
       }
@@ -8320,7 +8325,8 @@ weapon_curse()
   struct objS* i_ptr = obj_get(invenD[INVEN_WIELD]);
   if (i_ptr->tval != TV_NOTHING) {
     obj_desc(i_ptr, 1);
-    MSG("Your %s glows black, fades.", descD);
+    descD[0] &= ~0x20;
+    MSG("%s glows black, fades.", descD);
     i_ptr->tohit = -randint(5) - randint(5);
     i_ptr->todam = -randint(5) - randint(5);
     i_ptr->toac = 0;
@@ -11596,11 +11602,12 @@ minus_ac(verbose)
   if (j >= 0) {
     obj = obj_get(invenD[j]);
     obj_desc(obj, 1);
+    descD[0] &= ~0x20;
     if (obj->flags & TR_RES_ACID) {
-      MSG("Your %s resists damage.", descD);
+      MSG("%s resists damage.", descD);
       minus = TRUE;
     } else if ((obj->ac + obj->toac) > 0) {
-      MSG("Your %s is damaged.", descD);
+      MSG("%s is damaged.", descD);
       obj->toac--;
       calc_bonuses();
       minus = TRUE;
