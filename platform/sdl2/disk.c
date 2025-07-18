@@ -63,17 +63,6 @@ clear_savebuf()
 
   return 0;
 }
-STATIC int checksum(blob, len) void* blob;
-{
-  int* iter = blob;
-  int count = len / sizeof(int);
-  int* end = iter + count;
-  int ret = 0;
-  for (; iter < end; ++iter) {
-    ret ^= *iter;
-  }
-  return ret;
-}
 // filename unchanged unless a valid classidx is specified
 STATIC char*
 filename_by_class(char* filename, int classidx)
@@ -116,18 +105,13 @@ path_save(char* path)
 
   SDL_RWops* writef = file_access(path, "wb");
   if (writef) {
-    checksumD = 0;
     SDL_RWwrite(writef, &sum, sizeof(sum), 1);
     for (int it = 0; it < AL(save_bufD); ++it) {
       struct bufS buf = save_bufD[it];
       SDL_RWwrite(writef, buf.mem, savefield[it], 1);
-      int ck = checksum(buf.mem, savefield[it]);
-      checksumD ^= ck;
     }
     SDL_RWclose(writef);
-    if (!RELEASE)
-      Log("path_save %s: version %d save checksum %x", path, version,
-          checksumD);
+    if (!RELEASE) Log("path_save %s: version %d", path, version);
     return sum;
   }
   return 0;
@@ -148,15 +132,11 @@ path_load(char* path)
       for (int it = 0; it < AL(save_bufD); ++it) {
         struct bufS buf = save_bufD[it];
         SDL_RWread(readf, buf.mem, savefield[it], 1);
-        int ck = checksum(buf.mem, savefield[it]);
-        checksumD ^= ck;
       }
     } else if (save_size == savesum()) {
       for (int it = 0; it < AL(save_bufD); ++it) {
         struct bufS buf = save_bufD[it];
         SDL_RWread(readf, buf.mem, buf.mem_size, 1);
-        int ck = checksum(buf.mem, buf.mem_size);
-        checksumD ^= ck;
       }
     } else {
       save_size = 0;
