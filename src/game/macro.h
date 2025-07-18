@@ -142,4 +142,6 @@ extern unsigned char __stop_game[] __attribute__((__weak__));
 #define XY(v) (v).x, (v).y
 #define WH(r) (r).w, (r).h
 
+#define ENV_STEAMDECK "STEAMDECK"
+
 #endif // COMMON_H

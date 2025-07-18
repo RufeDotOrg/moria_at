@@ -8,6 +8,7 @@ DATA SDL_Joystick* joystick_ptrD;
 DATA float jxD;
 DATA float jyD;
 DATA int triggerD;
+DATA int joystick_refcountD;
 
 enum { CHAR_LTRIGGER = '0' };
 enum { CHAR_RTRIGGER = '-' };  // gameplay: zoom, menu: sort
@@ -130,8 +131,6 @@ joystick_assign(jsidx)
 
       SDL_free(mapping);
     }
-    // TBD: hack for better play experience on big screens
-    if (globalD.zoom_factor == 0) globalD.zoom_factor = 1;
     // Center input
     jxD = jyD = .5;
   }
@@ -335,16 +334,22 @@ sdl_joystick_device(SDL_Event event)
 }
 
 STATIC int
-joystick_init(refcount)
+joystick_init()
 {
   MUSE(global, label_button_order);
-  while (refcount--) SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 
   SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS,
               label_button_order ? "1" : "0");
 
-  SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+  joystick_refcountD += (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0);
 
   int using_selection = (joystick_count() > 0);
   platformD.selection = using_selection ? fnptr(touch_selection) : noop;
+}
+
+STATIC int
+joystick_update()
+{
+  while (joystick_refcountD--) SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+  if (globalD.use_joystick) joystick_init();
 }

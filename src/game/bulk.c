@@ -33,6 +33,7 @@ struct globalS {
   uint8_t dpad_color;
   uint8_t small_text;
   uint8_t label_button_order;
+  uint8_t use_joystick;
   char pc_renderer[16];
 };
 static struct globalS globalD;

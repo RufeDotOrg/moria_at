@@ -271,7 +271,7 @@ custom_pregame()
 
   font_reset();
 
-  if (JOYSTICK) joystick_init(0);
+  if (JOYSTICK && globalD.use_joystick) joystick_init();
 
   // Hardware dependent "risky" initialization complete!
   if (COSMO) phaseD = PHASE_GAME;
@@ -1688,6 +1688,10 @@ feature_menutext(mflag)
         text = "hand-swap user interface";
         value = opt[globalD.hand_swap != 0];
         break;
+      case 'j':
+        text = "joystick";
+        value = opt[globalD.use_joystick];
+        break;
       case 'l':
         text = "label button order for controllers:";
         value = opt[globalD.label_button_order != 0];
@@ -1737,6 +1741,7 @@ feature_menu()
     if (using_selection) flag |= char_bit('d');
     flag |= char_bit('g');
     flag |= char_bit('h');
+    if (JOYSTICK) flag |= char_bit('j');
     if (JOYSTICK) flag |= char_bit('l');
     flag |= char_bit('m');
     if (!PC) flag |= char_bit('o');
@@ -1768,9 +1773,13 @@ feature_menu()
         INVERT(globalD.hand_swap);
         platformD.orientation(0);
         break;
+      case 'j':
+        INVERT(globalD.use_joystick);
+        joystick_update();
+        break;
       case 'l':
         INVERT(globalD.label_button_order);
-        joystick_init(1);
+        joystick_update();
         break;
       case 'm':
         globalD.zoom_factor = (globalD.zoom_factor - 1) % MAX_ZOOM;

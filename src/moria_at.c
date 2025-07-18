@@ -14284,14 +14284,23 @@ ftable_clear(void* ftable, int size)
 STATIC int
 global_init(int argc, char** argv)
 {
+  int steamdeck = 0;
+  if (PC) {
+    char* sd = 0;
+    if ((sd = getenv(ENV_STEAMDECK))) {
+      steamdeck = (sd[0] == '1');
+    }
+  }
+
   ftable_clear(&platformD, sizeof(platformD) / sizeof(fn));
   globalD.saveslot_class = -1;
-  globalD.zoom_factor = PC ? 0 : 2;
+  globalD.zoom_factor = PC ? (steamdeck == 1) : 2;
   globalD.vsync = 0;
   globalD.sprite = 1;
   globalD.dpad_sensitivity = 75;
   globalD.dpad_color = 1;
   globalD.small_text = 0;
+  globalD.use_joystick = PC ? (steamdeck == 1) : 0;
 
   globalD.ghash = djb2(DJB2, bptr(&globalD) + sizeof(globalD.ghash),
                        sizeof(globalD) - sizeof(globalD.ghash));
