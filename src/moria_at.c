@@ -765,16 +765,16 @@ critical_blow(weight, plus, lev_adj, dam)
 
     if (weight < 400) {
       critical = 2 * dam + 5;
-      msg_print("It was a good hit! (x2 damage)");
+      msg_print("Good hit! (x2 damage)");
     } else if (weight < 700) {
       critical = 3 * dam + 10;
-      msg_print("It was an excellent hit! (x3 damage)");
+      msg_print("Excellent hit! (x3 damage)");
     } else if (weight < 900) {
       critical = 4 * dam + 15;
-      msg_print("It was a superb hit! (x4 damage)");
+      msg_print("Superb hit! (x4 damage)");
     } else {
       critical = 5 * dam + 20;
-      msg_print("It was a *GREAT* hit! (x5 damage)");
+      msg_print("Legendary hit! (x5 damage)");
     }
   }
   return (critical);
@@ -4201,7 +4201,6 @@ find_event(y, x)
 
       if (c_ptr->fval <= MAX_OPEN_SPACE) {
         if (find_openareaD) {
-          /* Have we found a break? */
           if (i < 0) {
             if (find_breakrightD) {
               return 3;
@@ -5863,7 +5862,8 @@ equip_swap_into(iidx, into_slot)
   struct objS* obj;
   obj = obj_get(invenD[iidx]);
   if (obj->flags & TR_CURSED) {
-    MSG("Hmm, the item you are %s seems to be cursed.", describe_use(iidx));
+    MSG("The item you are %s is cursed, you can't take it off.",
+        describe_use(iidx));
   } else {
     if (into_slot >= 0) {
       invenD[into_slot] = obj->id;
@@ -7172,11 +7172,11 @@ twall(y, x)
 {
   int i, j;
   struct caveS* c_ptr;
-  int res, found;
+  int res, room;
 
   c_ptr = &caveD[y][x];
   res = FALSE;
-  found = FALSE;
+  room = FALSE;
   if (c_ptr->cflag & CF_ROOM) {
     // room: LIGHT_FLOOR or DARK_FLOOR
     for (i = y - 1; i <= y + 1; i++)
@@ -7184,15 +7184,14 @@ twall(y, x)
         if (caveD[i][j].fval < FLOOR_THRESHOLD) {
           c_ptr->fval = caveD[i][j].fval;
           c_ptr->cflag |= (CF_PERM_LIGHT & caveD[i][j].cflag);
-          found = TRUE;
+          room = TRUE;
           break;
         }
   }
 
-  if (!found) c_ptr->fval = FLOOR_CORR;
+  if (!room) c_ptr->fval = FLOOR_CORR;
 
-  if (CF_LIT & c_ptr->cflag && c_ptr->oidx)
-    msg_print("You have found something!");
+  if (CF_LIT & c_ptr->cflag && c_ptr->oidx) msg_print("You find something!");
   res = TRUE;
 
   return (res);
@@ -7988,7 +7987,7 @@ aggravate_monster(dis_affect)
       if (mon->mspeed < 2) mon->mspeed += 1;
     }
   });
-  if (count) msg_print("You hear a sudden stirring in the distance!");
+  if (count) msg_print("You hear a stirring in the distance!");
   return (count > 0);
 }
 STATIC int
@@ -8326,7 +8325,7 @@ weapon_curse()
   if (i_ptr->tval != TV_NOTHING) {
     obj_desc(i_ptr, 1);
     descD[0] &= ~0x20;
-    MSG("%s glows black, fades.", descD);
+    MSG("%s pulses black.", descD);
     i_ptr->tohit = -randint(5) - randint(5);
     i_ptr->todam = -randint(5) - randint(5);
     i_ptr->toac = 0;
@@ -9339,7 +9338,7 @@ inven_try_wand_dir(iidx, dir)
       chance = USE_DEVICE; /* Give everyone a slight chance */
     if (chance <= 0) chance = 1;
     if (randint(chance) < USE_DEVICE)
-      msg_print("You failed to use the wand properly.");
+      msg_print("You fail to use the wand properly.");
     else if (i_ptr->p1 > 0) {
       flags = i_ptr->flags;
       (i_ptr->p1)--;
@@ -9749,7 +9748,7 @@ int* x_ptr;
         last_castD = spidx + 1;
         turn_flag = TRUE;
         if (randint(100) < spell_chanceD[spidx]) {
-          msg_print("You failed to get the spell off!");
+          msg_print("You fail to get the spell off!");
         } else {
           spell_dir_target(spidx, y_ptr, x_ptr, target);
 
@@ -9764,7 +9763,7 @@ int* x_ptr;
           uD.cmana = 0;
           uD.cmana_frac = 0;
           dec_stat(A_CON);
-          msg_print("Your low mana has damaged your health!");
+          msg_print("Your low mana damages your health!");
         } else {
           uD.cmana -= spelltable[spidx].spmana;
         }
@@ -9985,7 +9984,7 @@ int* x_ptr;
           uD.cmana = 0;
           uD.cmana_frac = 0;
           dec_stat(A_CON);
-          msg_print("Your low mana has damaged your health!");
+          msg_print("Your low mana damages your health!");
         } else {
           uD.cmana -= spelltable[spidx].spmana;
         }
@@ -10013,7 +10012,7 @@ int *uy, *ux;
       chance = USE_DEVICE; /* Give everyone a slight chance */
     if (chance <= 0) chance = 1;
     if (randint(chance) < USE_DEVICE)
-      msg_print("You failed to use the staff properly.");
+      msg_print("You fail to use the staff properly.");
     else if (i_ptr->p1 > 0) {
       flags = i_ptr->flags;
       ident = FALSE;
@@ -10146,7 +10145,7 @@ inven_flask(iidx)
       flask->tval == TV_FLASK) {
     inven_destroy_num(iidx, 1);
     light->p1 = CLAMP(light->p1 + 7500, 0, 15000);
-    msg_print("Your lantern's light is renewed by pouring in a flask of oil.");
+    msg_print("You renew the lantern's light by pouring oil from a flask.");
     turn_flag = TRUE;
     return TRUE;
   }
@@ -10553,7 +10552,7 @@ py_offhand()
   if (invenD[INVEN_WIELD]) {
     obj = obj_get(invenD[INVEN_WIELD]);
     if (obj->flags & TR_CURSED) {
-      MSG("Hmm, the item you are %s seems to be cursed.",
+      MSG("The item you are %s is cursed, you can't take it off.",
           describe_use(INVEN_WIELD));
       swap = FALSE;
     } else {
@@ -11861,7 +11860,7 @@ mon_attack(midx)
           acid_dam(damage, FALSE);
           break;
         case 7: /*Frost attack  */
-          msg_print("You are covered with frost!");
+          msg_print("You are chilled with frost!");
           frost_dam(damage);
           break;
         case 8: /*Lightning attack*/
@@ -12013,13 +12012,13 @@ chest_trap(y, x)
 
   obj = &entity_objD[caveD[y][x].oidx];
   if (CH_LOSE_STR & obj->flags) {
-    msg_print("A small needle has pricked you!");
+    msg_print("A small needle pricks you!");
     strcpy(death_descD, "a poison needle");
     py_take_hit(damroll(1, 4));
     lose_stat(A_STR);
   }
   if (CH_POISON & obj->flags) {
-    msg_print("A small needle has pricked you!");
+    msg_print("A small needle pricks you!");
     strcpy(death_descD, "a poison needle");
     py_take_hit(damroll(1, 6));
     countD.poison += 10 + randint(20);
@@ -12060,7 +12059,7 @@ try_disarm_trap(y, x)
     obj_desc(obj, 1);
     chance = udisarm();
     if (chance + 100 - obj->level > randint(100)) {
-      MSG("You have disarmed %s.", descD);
+      MSG("You disarm %s.", descD);
       uD.exp += obj->p1;
       delete_object(y, x);
       py_experience();
@@ -12089,12 +12088,12 @@ try_disarm_chest(y, x)
         obj->sn = SN_LOCKED;
       else
         obj->sn = SN_DISARMED;
-      msg_print("You have disarmed the chest.");
+      msg_print("You disarm the chest.");
       obj->idflag = ID_REVEAL;
       uD.exp += obj->level;
       py_experience();
     } else {
-      msg_print("You failed to disarm the chest.");
+      msg_print("You fail to disarm the chest.");
     }
   }
 }
@@ -12157,12 +12156,12 @@ open_object(y, x)
         if (countD.confusion)
           msg_print("You are too confused to pick the lock.");
         else if ((chance - obj->p1) > randint(100)) {
-          msg_print("You have picked the lock.");
+          msg_print("You pick the lock.");
           uD.exp += 1;
           py_experience();
           obj->p1 = 0;
         } else
-          msg_print("You failed to pick the lock.");
+          msg_print("You fail to pick the lock.");
       } else if (obj->p1 > 0) {
         msg_print("The door is locked.");
         obj->idflag |= ID_REVEAL;
@@ -12189,12 +12188,12 @@ open_object(y, x)
         if (countD.confusion)
           msg_print("You are too confused to pick the lock.");
         else if ((chance - obj->level) > randint(100)) {
-          msg_print("You have picked the lock.");
+          msg_print("You pick the lock.");
           flag = TRUE;
           uD.exp += obj->level;
           py_experience();
         } else
-          msg_print("You failed to pick the lock.");
+          msg_print("You fail to pick the lock.");
       else
         flag = TRUE;
       if (flag) {
@@ -12242,7 +12241,7 @@ py_search(y, x)
         obj = &entity_objD[c_ptr->oidx];
 
         if (obj->tval == TV_SECRET_DOOR) {
-          msg_print("You have found a secret door.");
+          msg_print("You find a secret door.");
           obj->tval = TV_CLOSED_DOOR;
           obj->tchar = '+';
           c_ptr->cflag |= CF_FIELDMARK;
@@ -12253,7 +12252,7 @@ py_search(y, x)
             obj->tchar = '^';
             c_ptr->cflag |= CF_FIELDMARK;
             obj_desc(obj, 1);
-            MSG("You have found %s.", descD);
+            MSG("You find %s.", descD);
           }
         } else if (obj->tval == TV_CHEST) {
           if (CH_TRAPPED & obj->flags) {
@@ -12290,7 +12289,7 @@ py_pickup(y, x, pickup)
   /* There's GOLD in them thar hills!      */
   else if (obj->tval == TV_GOLD) {
     uD.gold += obj->cost;
-    MSG("You found %d gold pieces worth of %s.", obj->cost,
+    MSG("You find %d gold pieces worth of %s.", obj->cost,
         gold_nameD[obj->subval]);
     delete_object(y, x);
     turn_flag = TRUE;
@@ -12512,7 +12511,7 @@ tunnel_tool(y, x, iidx)
     if (wall_idx < 3) {
       if (turn_count < MAX_TUNNEL_TURN) {
         twall(y, x);
-        msg_print("You have finished the tunnel.");
+        msg_print("You finish the tunnel.");
       }
     } else {
       if (turn_count < MAX_TUNNEL_TURN) {
@@ -12521,9 +12520,9 @@ tunnel_tool(y, x, iidx)
         int new_obj = (randint(10) == 1);
         if (new_obj) place_object(y, x, FALSE);
         if (new_obj && (CF_LIT & c_ptr->cflag)) {
-          msg_print("You found something in the rubble!");
+          msg_print("You find something in the rubble!");
         } else {
-          msg_print("You have removed the rubble.");
+          msg_print("You remove the rubble.");
         }
       }
     }
@@ -13186,7 +13185,7 @@ STATIC void hit_trap(y, x, uy, ux) int *uy, *ux;
   strcpy(death_descD, descD);
   switch (obj->subval) {
     case 1: /* Open pit*/
-      msg_print("You fell into a pit!");
+      msg_print("You fall into a pit!");
       if (py_tr(TR_FFALL))
         msg_print("You gently float down.");
       else {
@@ -13201,7 +13200,7 @@ STATIC void hit_trap(y, x, uy, ux) int *uy, *ux;
         msg_print("An arrow barely misses you.");
       break;
     case 3: /* Covered pit*/
-      msg_print("You fell into a covered pit.");
+      msg_print("You fall into a covered pit.");
       if (py_tr(TR_FFALL))
         msg_print("You gently float down.");
       else {
@@ -13475,7 +13474,7 @@ inven_pawn(iidx)
       MSG("You donate %s.", descD);
     } else {
       uD.gold += cost;
-      MSG("You sold %s for %d gold.", descD, cost);
+      MSG("You sell %s for %d gold.", descD, cost);
     }
     msg_pause();
   }
@@ -13573,7 +13572,7 @@ store_item_purchase(sidx, item)
       tr_make_known(tr_ptr);
       obj_desc(obj, count);
       uD.gold -= cost;
-      MSG("You bought %s for %d gold (%c).", descD, cost, iidx + 'a');
+      MSG("You buy %s for %d gold (%c).", descD, cost, iidx + 'a');
       if (obj->number != count) MSG("You have %d.", obj->number);
       store_item_destroy(sidx, item, count);
     }
@@ -13760,7 +13759,7 @@ player_maint()
   for (int sidx = 0; sidx < MAX_STORE; ++sidx) {
     for (int it = 0; it < MAX_STORE_INVEN; ++it) {
       if (store_objD[sidx][it].sn) {
-        MSG("Rumor has it, a rare item being sold by (%d) %s.", sidx + 1,
+        MSG("Rumor has it, a rare item is for sale by (%d) %s.", sidx + 1,
             ownerD[storeD[sidx]].name);
         break;
       }
@@ -13933,9 +13932,9 @@ dungeon()
       break;
     case NL_RECALL:
       if (town) {
-        msg_print("You feel yourself yanked upwards!");
+        msg_print("You are yanked upwards!");
       } else {
-        msg_print("You feel yourself yanked downwards!");
+        msg_print("You are yanked downwards!");
       }
       break;
     case NL_TRAP:
