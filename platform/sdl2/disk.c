@@ -6,7 +6,6 @@ enum { RESUME = 1 };
 
 DATA char cachepathD[1024];
 DATA int cachepath_usedD;
-DATA int checksumD;
 
 extern char* SDL_AppleGetDocumentPath(const char*, const char*);
 extern int SDL_AndroidGetExternalStorageState();
@@ -62,6 +61,16 @@ clear_savebuf()
   }
 
   return 0;
+}
+uint64_t
+midpoint_hash()
+{
+  uint64_t hash = DJB2;
+  for (int it = 0; it < AL(midpoint_bufD); ++it) {
+    struct bufS buf = midpoint_bufD[it];
+    hash = djb2(hash, buf.mem, buf.mem_size);
+  }
+  return hash;
 }
 // filename unchanged unless a valid classidx is specified
 STATIC char*
@@ -124,7 +133,6 @@ path_load(char* path)
 
   SDL_RWops* readf = file_access(path, "rb");
   if (readf) {
-    checksumD = 0;
     SDL_RWread(readf, &save_size, sizeof(save_size), 1);
     int version = version_by_savesum(save_size);
     if (version >= 0) {
@@ -145,9 +153,14 @@ path_load(char* path)
     if (RESUME && input_resumeD == 0) {
       if (save_size) {
         char gh[AL(git_hashD)];
+        uint64_t midhash = 0;
+
         if (SDL_RWread(readf, gh, sizeof(gh), 1)) {
-          int sum = 0;
-          if (memcmp(gh, git_hashD, sizeof(gh)) == 0) {
+          int disk_fault = 0;
+          disk_fault += !SDL_RWread(readf, &midhash, sizeof(midhash), 1);
+
+          if (!disk_fault) {
+            int sum = 0;
             for (int it = 0; it < AL(midpoint_bufD); ++it) {
               sum += midpoint_bufD[it].mem_size;
             }
@@ -157,17 +170,26 @@ path_load(char* path)
               SDL_RWseek(readf, offset, RW_SEEK_SET);
               for (int it = 0; it < AL(midpoint_bufD); ++it) {
                 struct bufS buf = midpoint_bufD[it];
-                if (!SDL_RWread(readf, buf.mem, buf.mem_size, 1)) sum = 0;
+                disk_fault += !SDL_RWread(readf, buf.mem, buf.mem_size, 1);
               }
+            } else {
+              disk_fault += 1;
             }
           }
 
-          if (sum) {
-            input_resumeD = input_action_usedD;
-          } else {
-            input_resumeD = 0;
+          int errflag = 0;
+          errflag |= (memcmp(gh, git_hashD, sizeof(gh)) != 0) << 0;
+          errflag |= (disk_fault != 0) << 1;
+          errflag |= (midpoint_hash() != midhash) << 2;
+          if (errflag) {
+            mplostD = errflag;
+            for (int it = 0; it < AL(midpoint_bufD); ++it) {
+              struct bufS buf = midpoint_bufD[it];
+              memset(buf.mem, 0, buf.mem_size);
+            }
             uD.new_level_flag = NL_MIDPOINT_LOST;
           }
+          input_resumeD = errflag ? 0 : input_action_usedD;
         }
       }
     }
@@ -188,6 +210,7 @@ path_savemidpoint(char* path)
                input_action_usedD <= AL(input_actionD) - 1);
 
   if (memory_ok) {
+    uint64_t midhash = midpoint_hash();
     SDL_RWops* rwfile = file_access(path, "rb+");
     if (rwfile) {
       SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
@@ -195,6 +218,7 @@ path_savemidpoint(char* path)
       int64_t offset = SDL_RWseek(rwfile, save_size, RW_SEEK_CUR);
       if (offset > 0) {
         write_ok = SDL_RWwrite(rwfile, &git_hashD, sizeof(git_hashD), 1);
+        write_ok += SDL_RWwrite(rwfile, &midhash, sizeof(midhash), 1);
         for (int it = 0; it < AL(midpoint_bufD); ++it) {
           struct bufS buf = midpoint_bufD[it];
           if (!SDL_RWwrite(rwfile, buf.mem, buf.mem_size, 1)) write_ok = 0;
@@ -204,7 +228,7 @@ path_savemidpoint(char* path)
       SDL_RWclose(rwfile);
     }
   }
-  return write_ok;
+  return write_ok >= 2;
 }
 STATIC int
 platform_load(saveslot, external)

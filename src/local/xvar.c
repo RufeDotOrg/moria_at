@@ -137,6 +137,7 @@ DATA uint8_t finger_rowD;
 DATA uint8_t finger_colD;
 
 // Replay
+DATA int mplostD;
 DATA int replay_flag;
 DATA int replay_desync;
 DATA char input_recordD[4 * 1024];

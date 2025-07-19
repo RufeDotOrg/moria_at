@@ -13941,7 +13941,13 @@ dungeon()
       msg_print("You fall, landing hard on the ground!");
       break;
     case NL_MIDPOINT_LOST:
-      msg_print("Game version updated, dungeon reset.");
+      if (mplostD == 1)
+        msg_print("Game version updated, dungeon reset.");
+      else
+        MSG("Midpoint resume flags: 0x%x"
+            " send a screenshot to moria@rufe.org",
+            mplostD);
+      mplostD = 0;
       break;
   }
   uD.new_level_flag = 0;
