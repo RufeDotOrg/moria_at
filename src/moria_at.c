@@ -13941,7 +13941,7 @@ dungeon()
       msg_print("You fall, landing hard on the ground!");
       break;
     case NL_MIDPOINT_LOST:
-      if (mplostD == 1)
+      if (mplostD & 1)
         msg_print("Game version updated, dungeon reset.");
       else
         MSG("Midpoint resume flags: 0x%x"
