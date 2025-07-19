@@ -92,15 +92,6 @@ steam_helper(char* exe, int exelen, int errcode)
   close(fdin);
   return 0;
 }
-STATIC int
-steam_runtime()
-{
-  char* appvar_list[] = {ENV_STEAMAPP1, ENV_STEAMAPP2};
-  for (int it = 0; it < AL(appvar_list); ++it) {
-    if (getenv(appvar_list[it])) return 1;
-  }
-  return 0;
-}
 
 // Logging fix-up
 // Avoid default SDL behavior of accessing parent console window
@@ -173,7 +164,6 @@ int
 verify_init(char* path, int pathlen, int status)
 {
   if (status) {
-    if (IsLinux() && steam_runtime()) wb_print_log(FAIL_LOG);
     if (IsWindows()) enable_windows_console();
     printf("E-mail support@rufe.org: init status %d\n", status);
     verify_info(path, pathlen);
@@ -221,7 +211,7 @@ cosmo_init(int argc, char** argv)
   }
 
   if (RELEASE && !IsWindows()) {
-    if (steam_runtime()) init_status = dlopen_patch(AP(pathmem));
+    if (STEAM) init_status = dlopen_patch(AP(pathmem));
     if (!init_status) init_status = enable_local_library(AP(pathmem), 10);
     verify_init(AP(pathmem), init_status);
   }

@@ -24,6 +24,9 @@ GLOBAL void* libD;
 enum { COSMO_WINDOWAPP = RELEASE };
 enum { COSMO_CRASH = 0 };
 enum { COSMO_LOG = 0 };
+#ifndef STEAM
+enum { STEAM = 0 };
+#endif
 #include "cosmo/cosmo-crash.c"
 #include "cosmo/cosmo-init.h"
 #endif  // COSMO_SDL
