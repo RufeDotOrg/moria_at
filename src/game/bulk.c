@@ -76,15 +76,6 @@ typedef struct pointS {
 char* strchr(const char* s, int c);
 _Static_assert(sizeof(struct globalS) <= 64, "keep global data small!");
 _Static_assert(sizeof(ptrsize) == sizeof(void*), "ptrsize check");
-static __attribute__((pure)) uint8_t* bptr(void* ptr)
-    __attribute__((alias("vptr")));
-static __attribute__((pure)) int8_t* cptr(void* ptr)
-    __attribute__((alias("vptr")));
-static __attribute__((pure)) int* iptr(void* ptr)
-    __attribute__((alias("vptr")));
-static __attribute__((pure)) float* fptr(void* ptr)
-    __attribute__((alias("vptr")));
-static __attribute__((pure)) fn fnptr(void* ptr) __attribute__((alias("vptr")));
 
 // var.c
 static int8_t xdirD[16] = {
@@ -248,8 +239,33 @@ distance(y1, x1, y2, x2)
   dx = ((x1 - x2) > 0 ? (x1 - x2) : -(x1 - x2));
   return ((((dy + dx) << 1) - (dy > dx ? dx : dy)) >> 1);
 }
-static __attribute__((pure)) void*
+inline static __attribute__((pure)) __attribute__((always_inline)) void*
 vptr(void* ptr)
+{
+  return ptr;
+}
+inline static __attribute__((pure)) __attribute__((always_inline)) uint8_t*
+bptr(void* ptr)
+{
+  return ptr;
+}
+inline static __attribute__((pure)) __attribute__((always_inline)) int8_t*
+cptr(void* ptr)
+{
+  return ptr;
+}
+inline static __attribute__((pure)) __attribute__((always_inline)) int*
+iptr(void* ptr)
+{
+  return ptr;
+}
+inline static __attribute__((pure)) __attribute__((always_inline)) float*
+fptr(void* ptr)
+{
+  return ptr;
+}
+inline static __attribute__((pure)) __attribute__((always_inline)) fn
+fnptr(void* ptr)
 {
   return ptr;
 }
@@ -284,4 +300,3 @@ parse_num(char* str)
   }
   return ret;
 }
-
