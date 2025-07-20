@@ -73,17 +73,22 @@ main(int argc, char** argv)
     //   texture_formatD
 
     // SDL i/o test
-    printf("i/o test\n");
+    printf("SDL i/o test\n");
     if (DISK) {
       uint64_t bufsz = 2 * 1024 * 1024;
       uint8_t* buf = malloc(bufsz);
-      SDL_RWops* readf = file_access("SDL2.dll", "rb");
-      uint64_t sz = SDL_RWsize(readf);
-      int success = 0;
-      if (sz < bufsz) success = (SDL_RWread(readf, &buf, sz, 1) != 0);
-      uint64_t sdl2_hash = djb2(DJB2, buf, sz);
-      printf("%d success 0x%jx sdl2_hash\n", success, sdl2_hash);
-      printf("free()\n");
+      int disk = 0;
+      uint64_t sdl2_hash = 0;
+      if (buf) {
+        SDL_RWops* readf = file_access("SDL2.dll", "rb");
+        if (readf) {
+          uint64_t sz = SDL_RWsize(readf);
+          if (sz < bufsz) disk = SDL_RWread(readf, &buf, sz, 1);
+          if (disk) sdl2_hash = djb2(DJB2, buf, sz);
+          SDL_RWclose(readf);
+        }
+      }
+      printf("buf 0xjx disk %d sdl2_hash 0x%jx\n", buf, disk, sdl2_hash);
       free(buf);
     }
 
