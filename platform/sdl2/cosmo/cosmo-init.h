@@ -164,6 +164,7 @@ int
 verify_init(char* path, int pathlen, int status)
 {
   if (status) {
+    if (IsLinux() && STEAM) wb_print_log(FAIL_LOG);
     if (IsWindows()) enable_windows_console();
     printf("E-mail support@rufe.org: init status %d\n", status);
     verify_info(path, pathlen);
