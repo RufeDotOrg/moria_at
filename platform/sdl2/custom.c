@@ -1216,11 +1216,7 @@ int
 custom_draw()
 {
   USE(renderer);
-  int using_selection = (TOUCH || (JOYSTICK && joystick_count() > 0));
-
-  // Dynamic assignment of menu selection mode
-  // Controller hotplugging can toggle this feature
-  platformD.selection = using_selection ? fnptr(touch_selection) : noop;
+  int using_selection = (TOUCH || (JOYSTICK && joystick_active()));
 
   SDL_SetRenderTarget(renderer, layoutD);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);

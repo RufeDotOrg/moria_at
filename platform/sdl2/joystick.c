@@ -99,41 +99,55 @@ joystick_assign(jsidx)
 
   void* joystick = 0;
   if (jsidx >= 0) joystick = SDL_JoystickOpen(jsidx);
-  joystick_ptrD = joystick;
 
+  char* mapping = 0;
   int product = 0;
   if (joystick) {
     const char* name = SDL_JoystickNameForIndex(jsidx);
     product = SDL_JoystickGetDeviceProduct(jsidx);
     Log("joystick_assign (product 0x%x): %s", product, name);
     SDL_JoystickGUID guid = SDL_JoystickGetGUID(joystick);
-    char* mapping = SDL_GameControllerMappingForGUID(guid);
-    if (mapping) {
-      Log("GUID mapping: %s", mapping);
-      BUTTON("a", JS_SOUTH);
-      BUTTON("b", JS_EAST);
-      BUTTON("x", JS_WEST);
-      BUTTON("y", JS_NORTH);
-      BUTTON("leftshoulder", JS_LSHOULDER);
-      BUTTON("rightshoulder", JS_RSHOULDER);
-      BUTTON("back", JS_BACK);
-      BUTTON("start", JS_START);
-
-      AXIS("leftx", JA_LX);
-      AXIS("lefty", JA_LY);
-      AXIS("lefttrigger", JA_LTRIGGER);
-      AXIS("rightx", JA_RX);
-      AXIS("righty", JA_RY);
-      AXIS("righttrigger", JA_RTRIGGER);
-
-      if (!find_axis(JA_LTRIGGER)) BUTTON("lefttrigger", JS_LTRIGGER);
-      if (!find_axis(JA_RTRIGGER)) BUTTON("righttrigger", JS_RTRIGGER);
-
-      SDL_free(mapping);
+    mapping = SDL_GameControllerMappingForGUID(guid);
+    if (!mapping) {
+      if (BIND_VERBOSE) Log("no mapping for joystick");
+      SDL_JoystickClose(joystick);
+      joystick = 0;
     }
-    // Center input
-    jxD = jyD = .5;
   }
+  joystick_ptrD = joystick;
+  // Dynamic assignment of menu selection mode
+  // Controller hotplugging can toggle this feature
+  platformD.selection = joystick ? fnptr(touch_selection) : noop;
+
+  if (mapping) {
+    // TBD: hacky zoom adjustment for devices using a controller
+    globalD.zoom_factor = 1;
+
+    Log("GUID mapping: %s", mapping);
+    BUTTON("a", JS_SOUTH);
+    BUTTON("b", JS_EAST);
+    BUTTON("x", JS_WEST);
+    BUTTON("y", JS_NORTH);
+    BUTTON("leftshoulder", JS_LSHOULDER);
+    BUTTON("rightshoulder", JS_RSHOULDER);
+    BUTTON("back", JS_BACK);
+    BUTTON("start", JS_START);
+
+    AXIS("leftx", JA_LX);
+    AXIS("lefty", JA_LY);
+    AXIS("lefttrigger", JA_LTRIGGER);
+    AXIS("rightx", JA_RX);
+    AXIS("righty", JA_RY);
+    AXIS("righttrigger", JA_RTRIGGER);
+
+    if (!find_axis(JA_LTRIGGER)) BUTTON("lefttrigger", JS_LTRIGGER);
+    if (!find_axis(JA_RTRIGGER)) BUTTON("righttrigger", JS_RTRIGGER);
+
+    SDL_free(mapping);
+  }
+
+  // Center input
+  jxD = jyD = .5;
 }
 STATIC int
 joystick_dir()
@@ -337,7 +351,6 @@ STATIC int
 joystick_init()
 {
   int init = 0;
-  int using_selection = 0;
   if (globalD.use_joystick) {
     MUSE(global, label_button_order);
     SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS,
@@ -345,12 +358,7 @@ joystick_init()
 
     init = (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0);
     joystick_refcountD += init;
-
-    using_selection = (joystick_count() > 0);
-    // TBD: hacky zoom adjustment for devices using a controller
-    if (using_selection) globalD.zoom_factor = 1;
   }
-  platformD.selection = using_selection ? fnptr(touch_selection) : noop;
   return init;
 }
 
@@ -360,4 +368,10 @@ joystick_update()
   joystick_assign(-1);
   while (joystick_refcountD--) SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
   joystick_init();
+}
+
+STATIC int
+joystick_active()
+{
+  return joystick_ptrD != 0;
 }
