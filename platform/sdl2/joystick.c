@@ -336,22 +336,28 @@ sdl_joystick_device(SDL_Event event)
 STATIC int
 joystick_init()
 {
-  MUSE(global, label_button_order);
+  int init = 0;
+  int using_selection = 0;
+  if (globalD.use_joystick) {
+    MUSE(global, label_button_order);
+    SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS,
+                label_button_order ? "1" : "0");
 
-  SDL_SetHint(SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS,
-              label_button_order ? "1" : "0");
+    init = (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0);
+    joystick_refcountD += init;
 
-  int ok = (SDL_InitSubSystem(SDL_INIT_JOYSTICK) == 0);
-  joystick_refcountD += ok;
-
-  int using_selection = (joystick_count() > 0);
+    using_selection = (joystick_count() > 0);
+    // TBD: hacky zoom adjustment for devices using a controller
+    if (using_selection) globalD.zoom_factor = 1;
+  }
   platformD.selection = using_selection ? fnptr(touch_selection) : noop;
-  return ok;
+  return init;
 }
 
 STATIC int
 joystick_update()
 {
+  joystick_assign(-1);
   while (joystick_refcountD--) SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-  if (globalD.use_joystick) joystick_init();
+  joystick_init();
 }

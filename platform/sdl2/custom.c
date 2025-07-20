@@ -271,7 +271,7 @@ custom_pregame()
 
   font_reset();
 
-  if (JOYSTICK && globalD.use_joystick) joystick_init();
+  if (JOYSTICK) joystick_init();
 
   // Hardware dependent "risky" initialization complete!
   if (COSMO) phaseD = PHASE_GAME;

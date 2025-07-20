@@ -7,6 +7,7 @@ enum { TEST_CAVEGEN = 0 };
 int
 global_init(int argc, char** argv)
 {
+  globalD.ghash = -1;
 }
 int
 custom_gamecrash_handler(int sig)
@@ -21,6 +22,7 @@ custom_gamecrash_handler(int sig)
 enum { COSMO_WINDOWAPP = RELEASE };
 enum { COSMO_CRASH = 0 };
 enum { COSMO_LOG = 1 };
+enum { STEAM = 0 };
 #include "platform/sdl2/asset/icon.c"
 #include "platform/sdl2/cosmo/cosmo-crash.c"
 #include "platform/sdl2/cosmo/cosmo-init.h"
@@ -71,6 +73,20 @@ main(int argc, char** argv)
     //   texture_formatD
 
     // SDL i/o test
+    printf("i/o test\n");
+    if (DISK) {
+      uint64_t bufsz = 2 * 1024 * 1024;
+      uint8_t* buf = malloc(bufsz);
+      SDL_RWops* readf = file_access("SDL2.dll", "rb");
+      uint64_t sz = SDL_RWsize(readf);
+      int success = 0;
+      if (sz < bufsz) success = (SDL_RWread(readf, &buf, sz, 1) != 0);
+      uint64_t sdl2_hash = djb2(DJB2, buf, sz);
+      printf("%d success 0x%jx sdl2_hash\n", success, sdl2_hash);
+      printf("free()\n");
+      free(buf);
+    }
+
     // review locale && disk path buffer length checks
     if (DISK) {
       printf("testing disk cache for global settings ");
@@ -78,15 +94,30 @@ main(int argc, char** argv)
     }
 
     if (JOYSTICK) {
+      globalD.use_joystick = 1;
       printf("testing joystick_init ");
       printf(joystick_init() ? "ok\n" : "fail\n");
 
       printf("polling w/ joystick test\n");
-      SDL_Event event;
-      while (SDL_PollEvent(&event)) {
-        printf("  %x\n", event.type);
+      SDL_Event event[8];
+      int used = 0;
+      while (SDL_PollEvent(&event[used])) {
+        printf("  %x\n", event[used].type);
+        used += (event[used].type == SDL_JOYDEVICEADDED);
       }
 
+      while (used) {
+        used -= 1;
+        printf("assign joystick %d\n", used);
+        sdl_joystick_device(event[used]);
+      }
+
+      printf("polling w/ joystick assignment\n");
+      for (int it = 0; it < 8; ++it) {
+        if (SDL_PollEvent(&event[0])) printf("  %x\n", event[0].type);
+      }
+
+      printf("joystick unassign, release\n");
       globalD.use_joystick = 0;
       joystick_update();
     }
