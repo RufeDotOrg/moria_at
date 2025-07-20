@@ -50,12 +50,44 @@ void* in;
   if (puff(out, &size, in, &(unsigned long){insize}) == 0) return size;
   return 0;
 }
+ptrsize
+foo()
+{
+  puts(__func__);
+  return -1;
+}
+int
+ifoo()
+{
+  puts(__func__);
+  return 1;
+}
+DATA int memD;
+int
+skipret()
+{
+  memD = 1;
+  puts(__func__);
+}
+int
+undefined_behavior()
+{
+  fn a = foo;
+  fn b = ifoo;
+  skipret();
+  int64_t hmmval = 0;
+  a();
+  hmmval = b();
+  printf("%s memD %d hmmval %jd\n", __func__, memD, hmmval);
+}
 int
 main(int argc, char** argv)
 {
   global_init(argc, argv);
   platform_init();
   if (platformD.pregame() == 0) {
+    undefined_behavior();
+
     printf("polling test\n");
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
@@ -88,7 +120,7 @@ main(int argc, char** argv)
           SDL_RWclose(readf);
         }
       }
-      printf("buf 0xjx disk %d sdl2_hash 0x%jx\n", buf, disk, sdl2_hash);
+      printf("buf 0x%jx disk %d sdl2_hash 0x%jx\n", buf, disk, sdl2_hash);
       free(buf);
     }
 
