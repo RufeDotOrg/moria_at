@@ -22,7 +22,9 @@ cosmo_libname()
   if (IsXnu()) return "libSDL2-2.0.0.dylib";
   return "libSDL2-2.0.so";
 }
+#include <libc/calls/calls.h>
 #include <libc/calls/struct/stat.h>
+#include <libc/sysv/consts/ok.h>
 int
 verify_info(char* path, int pathlen)
 {
@@ -76,17 +78,23 @@ is_file_newer_than(const char* path, const char* other)
 }
 #include <libc/sysv/consts/o.h>
 STATIC int
-steam_helper(char* exe, int exelen, int errcode)
+steam_helper(char* exe, int errcode)
 {
-  int fdin, fdout;
-  // Verify source before proceeding to truncate destination
-  fdin = open("dlopen-helper", O_RDONLY);
+  char* source = IsAarch64() ? "/zip/dlopen_aarch64" : "/zip/dlopen_x86";
+  printf("%s->%s\n", source, exe);
+  int fdin = open(source, O_RDONLY);
   if (fdin == -1) return errcode;
 
-  fdout = creat(exe, 0744);
+  int fdout = open(exe, O_WRONLY | O_CREAT | O_TRUNC, 0644);
   if (fdout == -1) return errcode + 1;
 
-  if (copyfd(fdin, fdout, -1) == -1) return errcode + 2;
+  char buf[4 * 1024];
+  int count;
+  while ((count = read(fdin, AP(buf))) > 0) {
+    int wr_count = write(fdout, buf, count);
+    if (wr_count != count) return errcode + 2;
+  }
+  if (count == -1) return errcode + 3;
 
   close(fdout);
   close(fdin);
@@ -136,12 +144,9 @@ dlopen_patch(char* pathmem, int pathlen)
   if (rv >= pathlen) return 1;
 
   if (mkdir(pathmem, 0755) && errno != EEXIST) return 2;
+  rv = strlcat(pathmem, "dlopen-helper", PATH_MAX);
 
-  if (!IsAarch64()) rv = strlcat(pathmem, "dlopen-helper", PATH_MAX);
-  if (IsAarch64()) rv = strlcat(pathmem, "aarch64-dlopen-helper", PATH_MAX);
-  if (rv >= pathlen) return 1;
-
-  return steam_helper(AP(pathmem), 3);
+  return steam_helper(pathmem, 3);
 }
 
 int
@@ -211,6 +216,7 @@ cosmo_init(int argc, char** argv)
     }
   }
 
+  pathmem[0] = 0;
   if (RELEASE && !IsWindows()) {
     if (STEAM) init_status = dlopen_patch(AP(pathmem));
     if (!init_status) init_status = enable_local_library(AP(pathmem), 10);
