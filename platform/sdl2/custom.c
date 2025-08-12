@@ -116,7 +116,7 @@ ui_init()
       if (rmod == 3) {
         bitmap[row][col] = 0;
       } else {
-        bitmap[row][col] = whiteD;
+        bitmap[row][col] = greyD[5];
       }
     }
   }
@@ -514,8 +514,8 @@ rect_t r;
   int ry = r.y;
   int rh = r.h;
   int rw = r.w;
-  uint32_t even = lightingD[1];
-  uint32_t odd = lightingD[2];
+  uint32_t even = greyD[1];
+  uint32_t odd = greyD[2];
   for (int row = 0; row * FHEIGHT < rh; ++row) {
     int color = row % 2 ? odd : even;
     SDL_SetRenderDrawColor(rendererD, V4b(&color));
@@ -534,7 +534,7 @@ void
 framing_base_step(rect_t frame, int base, int step)
 {
   int list[] = {base, base + step, base + step * 3};
-  SDL_SetRenderDrawColor(rendererD, V4b(&whiteD));
+  SDL_SetRenderDrawColor(rendererD, V4b(&greyD[5]));
   for (int it = 0; it < AL(list); ++it) {
     int sz = list[it];
     rect_t rect = {
@@ -900,7 +900,7 @@ map_draw()
         srct = pixel_texture;
       }
 
-      SDL_SetRenderDrawColor(renderer, V4b(&lightingD[light]));
+      SDL_SetRenderDrawColor(renderer, V4b(&greyD[light]));
       SDL_RenderFillRect(renderer, &dest_rect);
 
       if (srct) {
@@ -928,7 +928,7 @@ map_draw()
           break;
       }
       if (viz->vflag & VF_LOOK) {
-        SDL_SetRenderDrawColor(renderer, V4b(&whiteD));
+        SDL_SetRenderDrawColor(renderer, V4b(&greyD[5]));
         SDL_RenderDrawRect(renderer, &dest_rect);
       }
       if (viz->vflag & VF_MAGICK) {
@@ -1102,7 +1102,7 @@ draw_game()
           target.x = grect.x + (grect.w - target.w) / 2;
           target.y = grect.y;
 
-          SDL_SetRenderDrawColor(rendererD, V4b(&whiteD));
+          SDL_SetRenderDrawColor(rendererD, V4b(&greyD[5]));
           SDL_RenderDrawRect(rendererD, &source);
 
           SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
@@ -1211,7 +1211,12 @@ mode_change(mnext)
 
   return mnext;
 }
-
+STATIC int*
+button_colorptr(c)
+{
+  if (globalD.dpad_color) return &color_mapD[c];
+  return &greyD[2];
+}
 int
 custom_draw()
 {
@@ -1256,16 +1261,14 @@ custom_draw()
 
       // TBD: Are we showing buttons with controllers?
       if (TOUCH) {
-        int* color = globalD.dpad_color ? color_mapD : greyscaleD;
-
         {
           AUSE(grect, GR_BUTTON1);
-          SDL_SetRenderDrawColor(rendererD, V4b(&color[RED]));
+          SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(RED)));
           SDL_RenderFillRect(rendererD, &grect);
         }
         {
           AUSE(grect, GR_BUTTON2);
-          SDL_SetRenderDrawColor(rendererD, V4b(&color[GREEN]));
+          SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(GREEN)));
           SDL_RenderFillRect(rendererD, &grect);
         }
 
@@ -1284,7 +1287,7 @@ custom_draw()
           {
             AUSE(grect, GR_BUTTON3);
             fn draw_b3 = force_runD ? SDL_RenderFillRect : SDL_RenderDrawRect;
-            SDL_SetRenderDrawColor(rendererD, V4b(&color[BLUE]));
+            SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(BLUE)));
             draw_b3(rendererD, &grect);
           }
         }
@@ -1439,8 +1442,8 @@ cave_color(row, col)
   struct caveS* c_ptr;
   struct objS* obj;
   int color = 0;
-  int grey = lightingD[2];
-  USE(white);
+  int grey = greyD[2];
+  int white = greyD[5];
 
   c_ptr = &caveD[row][col];
   if (mon_drawD[c_ptr->midx]) {
@@ -1591,7 +1594,7 @@ viz_minimap()
       uint32_t drow = row - panel_row_min;
       uint32_t dcol = col - panel_col_min;
       if (!color && (drow < SYMMAP_HEIGHT && dcol < SYMMAP_WIDTH)) {
-        color = lightingD[0];
+        color = greyD[0];
       }
 
       minimapD[row][col] = color;
@@ -1733,7 +1736,7 @@ feature_menu()
 
     flag |= char_bit('a');
     flag |= char_bit('b');
-    if (using_selection) flag |= char_bit('c');
+    if (TOUCH || using_selection) flag |= char_bit('c');
     if (using_selection) flag |= char_bit('d');
     flag |= char_bit('g');
     flag |= char_bit('h');

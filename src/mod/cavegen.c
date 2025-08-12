@@ -2,7 +2,6 @@
 
 STATIC int in_bounds(int row, int col);
 STATIC int hard_reset();
-STATIC int rgba_by_grey(int c);
 
 DATA int max_loop_count;
 enum { LOAD_GAME = 0 };
@@ -55,22 +54,22 @@ cave_image()
       struct caveS* c_ptr = &caveD[row][col];
       switch (c_ptr->fval) {
         case BOUNDARY_WALL:
-          color = 7;
-          break;
-        case GRANITE_WALL:
-          color = 6;
-          break;
-        case MAGMA_WALL:
           color = 5;
           break;
-        case QUARTZ_WALL:
+        case GRANITE_WALL:
           color = 4;
           break;
+        case MAGMA_WALL:
+          color = 3;
+          break;
+        case QUARTZ_WALL:
+          color = 2;
+          break;
         default:
-          color = c_ptr->fval ? 2 : 0;
+          color = c_ptr->fval != 0;
           break;
       }
-      imageD[row][col] = rgba_by_grey(color);
+      imageD[row][col] = greyD[color];
 
       if (cave_startD.x)
         if (row == cave_startD.y && col == cave_startD.x)

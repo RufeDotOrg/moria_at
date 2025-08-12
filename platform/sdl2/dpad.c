@@ -61,14 +61,23 @@ dpad_init()
 
   return 0;
 }
+STATIC int
+dpad_color(c)
+{
+  if (globalD.dpad_color) {
+    // flips the diagonals to provide contrast
+    if (c % 2 == 1)
+      c = c - 1;
+    else
+      c = (c - 1 + 4) % 8;
+    return color_mapD[c];
+  }
+  return greyD[3 - c % 2];
+}
 STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
 {
   MUSE(global, dpad_sensitivity);
-  MUSE(global, dpad_color);
-
-  int bgcolor = lightingD[1];
-  int* color = dpad_color ? color_mapD : greyscaleD;
-
+  int bgcolor = greyD[1];
   int limit_dsq = dpad_sensitivity * dpad_sensitivity;
   if (dpad_sensitivity >= 99) limit_dsq = INT32_MAX;
   for (int64_t row = 0; row < PADSIZE; ++row) {
@@ -79,13 +88,7 @@ STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
       int c = bgcolor;
 
       if (dsq > limit_dsq) n = 0;
-      if (n > 0) {
-        // flips the diagonals to provide contrast
-        if (n % 2 == 1)
-          c = color[n - 1];
-        else
-          c = color[(n - 1 + 4) % 8];
-      }
+      if (n > 0) c = dpad_color(n);
 
       *dst++ = c;
     }
