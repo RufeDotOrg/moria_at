@@ -116,7 +116,7 @@ ui_init()
       if (rmod == 3) {
         bitmap[row][col] = 0;
       } else {
-        bitmap[row][col] = greyD[5];
+        bitmap[row][col] = -1;
       }
     }
   }
@@ -127,6 +127,7 @@ ui_init()
   SDL_Texture* t = SDL_CreateTexture(rendererD, SDL_PIXELFORMAT_ABGR8888,
                                      SDL_TEXTUREACCESS_STATIC, UI_W, UI_H);
   if (t) SDL_UpdateTexture(t, 0, bitmap, UI_W * 4);
+  if (t) SDL_SetTextureColorMod(t, V3b(&greyD[3]));
   ui_textureD = t;
 
   return t != 0;
@@ -213,6 +214,7 @@ custom_pregame()
       }
       memcpy(sprite->pixels, lamp_walk_mmg, 64 * 64 / 8);
       lwtextureD = SDL_CreateTextureFromSurface(rendererD, sprite);
+      SDL_SetTextureColorMod(lwtextureD, V3b(&greyD[3]));
       SDL_FreeSurface(sprite);
     }
   }
@@ -227,6 +229,8 @@ custom_pregame()
       }
       memcpy(sprite->pixels, lamp_run_mmg, 64 * 64 / 8);
       lrtextureD = SDL_CreateTextureFromSurface(rendererD, sprite);
+      SDL_SetTextureColorMod(lrtextureD, V3b(&greyD[3]));
+
       SDL_FreeSurface(sprite);
     }
   }
@@ -534,7 +538,7 @@ void
 framing_base_step(rect_t frame, int base, int step)
 {
   int list[] = {base, base + step, base + step * 3};
-  SDL_SetRenderDrawColor(rendererD, V4b(&greyD[5]));
+  SDL_SetRenderDrawColor(rendererD, V4b(&greyD[4]));
   for (int it = 0; it < AL(list); ++it) {
     int sz = list[it];
     rect_t rect = {
@@ -928,7 +932,7 @@ map_draw()
           break;
       }
       if (viz->vflag & VF_LOOK) {
-        SDL_SetRenderDrawColor(renderer, V4b(&greyD[5]));
+        SDL_SetRenderDrawColor(renderer, V4b(&greyD[4]));
         SDL_RenderDrawRect(renderer, &dest_rect);
       }
       if (viz->vflag & VF_MAGICK) {
@@ -1102,7 +1106,7 @@ draw_game()
           target.x = grect.x + (grect.w - target.w) / 2;
           target.y = grect.y;
 
-          SDL_SetRenderDrawColor(rendererD, V4b(&greyD[5]));
+          SDL_SetRenderDrawColor(rendererD, V4b(&greyD[4]));
           SDL_RenderDrawRect(rendererD, &source);
 
           SDL_SetRenderDrawBlendMode(rendererD, SDL_BLENDMODE_NONE);
