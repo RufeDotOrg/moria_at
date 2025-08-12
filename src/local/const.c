@@ -406,8 +406,8 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define PLAYER_REGEN_NORMAL 197  /* Regen factor>>16 when full  */
 #define PLAYER_REGEN_HPBASE 1442 /* Min amount hp regen>>16   */
 #define PLAYER_REGEN_MNBASE 524  /* Min amount mana regen>>16  */
-#define MAX_TUNNEL_TURN 5 /* stop tunneling by turn N */
-#define PLAYER_REGEN_HPBONUS 40 /* +Max hp granted by TR_REGEN */
+#define MAX_TUNNEL_TURN 5        /* stop tunneling by turn N */
+#define PLAYER_REGEN_HPBONUS 40  /* +Max hp granted by TR_REGEN */
 
 /* Class spell types */
 #define SP_MAGE 1
@@ -483,8 +483,6 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define RETURN 13
 #define CTRL(x) (x & 0x1f)
 
-// Color
-enum { RED = 0, ORANGE, YELLOW, GREEN, TEAL, BLUE, PURPLE, PINK, BRIGHT };
 // Longest single message (may be concatenated with other messages)
 #define STRLEN_MSG 92
 // Art

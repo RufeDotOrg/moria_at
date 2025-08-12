@@ -626,9 +626,9 @@ common_text()
       if (delta) {
         p.x += len * FWIDTH + 1;
         if (delta > 0)
-          font_color(font_rgba(BRIGHT + GREEN));
+          font_color(font_rgba(GREEN));
         else
-          font_color(font_rgba(BRIGHT + RED));
+          font_color(font_rgba(RED));
 
         len = snprintf(tmp, AL(tmp), "%+d", delta);
         render_monofont_string(renderer, &fontD, tmp, len, p);
@@ -660,7 +660,7 @@ common_text()
 
         p.y += FHEIGHT;
         if (replay_desync) {
-          font_color(font_rgba(BRIGHT + RED));
+          font_color(font_rgba(RED));
           render_monofont_string(renderer, &fontD, AP("REPLAY DESYNC!!!"), p);
           font_reset();
         }
@@ -1177,7 +1177,7 @@ draw_menu(mode, using_selection)
 
   if (using_selection && finger_row >= 0) {
     SDL_Point p = {anchor.x, anchor.y + finger_row * FHEIGHT};
-    font_color(font_rgba(BRIGHT + RED));
+    font_color(font_rgba(RED));
     font_alpha(255);
     if (lenlist[finger_row] <= 1) {
       render_monofont_string(renderer, &fontD, "-", 1, p);
@@ -1446,12 +1446,12 @@ cave_color(row, col)
   struct caveS* c_ptr;
   struct objS* obj;
   int color = 0;
-  int grey = greyD[2];
-  int white = greyD[4];
+  int grey = greyD[1];
+  int white = greyD[3];
 
   c_ptr = &caveD[row][col];
   if (mon_drawD[c_ptr->midx]) {
-    color = rgba_by_palette(BRIGHT + PINK);
+    color = rgba_by_palette(ORANGE);
   } else if (c_ptr->fval == BOUNDARY_WALL) {
     color = white;
   } else if (CF_LIT & c_ptr->cflag && c_ptr->fval >= MIN_WALL) {
@@ -1467,22 +1467,23 @@ cave_color(row, col)
         color = rgba_by_palette(BLUE);
       } else if (obj->tval == TV_DOWN_STAIR) {
         color = rgba_by_palette(RED);
-      } else if (obj->tval == TV_VIS_TRAP || obj->tval == TV_RUBBLE) {
+      } else if (obj->tval == TV_VIS_TRAP || obj->tval == TV_RUBBLE ||
+                 obj->tval == TV_CLOSED_DOOR || obj->tval == TV_OPEN_DOOR ||
+                 obj->tval == TV_GLYPH) {
         color = rgba_by_palette(YELLOW);
       } else if (obj->tval == TV_SECRET_DOOR) {
         color = white;
-      } else if (obj->tval == TV_CLOSED_DOOR) {
-        color = grey;
-      } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP) {
-        color = rgba_by_palette(BRIGHT + BLUE);
+      } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP ||
+                 obj->tval == TV_CHEST) {
+        color = rgba_by_palette(PINK);
       } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
-        color = rgba_by_palette(BRIGHT + PURPLE);
+        color = rgba_by_palette(GREEN);
       }
     }
   }
 
   if ((!color || color == grey) && (CF_TEMP_LIGHT & c_ptr->cflag)) {
-    color = rgba_by_palette(BRIGHT + GREEN);
+    color = greyD[4];
   }
 
   return color;
@@ -1576,8 +1577,8 @@ viz_minimap_stair(row, col, rgba)
   minimapD[row][col - 1] = rgba;
   minimapD[row - 1][col] = rgba;
   minimapD[row - 1][col + 1] = rgba;
-  minimapD[row - 2][col + 1] = rgba;
-  minimapD[row - 2][col + 2] = rgba;
+  // minimapD[row - 2][col + 1] = rgba;
+  // minimapD[row - 2][col + 2] = rgba;
 }
 void
 viz_minimap()
