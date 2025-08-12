@@ -127,7 +127,7 @@ ui_init()
   SDL_Texture* t = SDL_CreateTexture(rendererD, SDL_PIXELFORMAT_ABGR8888,
                                      SDL_TEXTUREACCESS_STATIC, UI_W, UI_H);
   if (t) SDL_UpdateTexture(t, 0, bitmap, UI_W * 4);
-  if (t) SDL_SetTextureColorMod(t, V3b(&greyD[3]));
+  if (t) SDL_SetTextureColorMod(t, V3b(&greyD[4]));
   ui_textureD = t;
 
   return t != 0;
@@ -164,6 +164,7 @@ custom_pregame()
   platform_pregame();
 
   if (FONT && !font_init()) return 2;
+  if (FONT) font_default(greyD[5]);
 
   SDL_Surface* sprite = SDL_CreateRGBSurfaceWithFormat(
       SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0,
@@ -214,7 +215,7 @@ custom_pregame()
       }
       memcpy(sprite->pixels, lamp_walk_mmg, 64 * 64 / 8);
       lwtextureD = SDL_CreateTextureFromSurface(rendererD, sprite);
-      SDL_SetTextureColorMod(lwtextureD, V3b(&greyD[3]));
+      SDL_SetTextureColorMod(lwtextureD, V3b(&greyD[4]));
       SDL_FreeSurface(sprite);
     }
   }
@@ -229,7 +230,7 @@ custom_pregame()
       }
       memcpy(sprite->pixels, lamp_run_mmg, 64 * 64 / 8);
       lrtextureD = SDL_CreateTextureFromSurface(rendererD, sprite);
-      SDL_SetTextureColorMod(lrtextureD, V3b(&greyD[3]));
+      SDL_SetTextureColorMod(lrtextureD, V3b(&greyD[4]));
 
       SDL_FreeSurface(sprite);
     }
@@ -1447,7 +1448,7 @@ cave_color(row, col)
   struct objS* obj;
   int color = 0;
   int grey = greyD[2];
-  int white = greyD[5];
+  int white = greyD[4];
 
   c_ptr = &caveD[row][col];
   if (mon_drawD[c_ptr->midx]) {

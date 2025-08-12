@@ -72,7 +72,7 @@ dpad_color(c)
       c = (c - 1 + 4) % 8;
     return color_mapD[c];
   }
-  return greyD[3 - c % 2];
+  return greyD[4 - 2 * (c % 2)];
 }
 STATIC void dpadfill_pixels_pitch(pixels, pitch) uint8_t* pixels;
 {

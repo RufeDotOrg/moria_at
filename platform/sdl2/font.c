@@ -13,6 +13,7 @@ struct fontS {
 } fontD;
 DATA struct SDL_Texture* font_textureD;
 DATA struct SDL_Texture* pixel_textureD;
+DATA int font_colorD;
 
 STATIC point_t
 point_by_glyph(uint32_t index)
@@ -77,6 +78,11 @@ font_init()
 {
   return glyph_init();
 }
+int
+font_default(int color)
+{
+  font_colorD = color;
+}
 
 STATIC void
 render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
@@ -116,7 +122,7 @@ STATIC void
 font_reset()
 {
   USE(font_texture);
-  SDL_SetTextureColorMod(font_texture, 255, 255, 255);
+  SDL_SetTextureColorMod(font_texture, V3b(&font_colorD));
   SDL_SetTextureAlphaMod(font_texture, FALPHA);
 }
 
