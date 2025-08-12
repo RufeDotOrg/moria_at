@@ -67,10 +67,10 @@ dpad_color(c)
   if (globalD.dpad_color) {
     // flips the diagonals to provide contrast
     if (c % 2 == 1)
-      c = c - 1;
+      c = (c - 1) / 2;
     else
-      c = (c - 1 + 4) % 8;
-    return color_mapD[c];
+      c = 4 + (c - 1) / 2;
+    return colorD[c];
   }
   return greyD[4 - 2 * (c % 2)];
 }

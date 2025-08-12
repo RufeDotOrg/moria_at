@@ -1219,7 +1219,7 @@ mode_change(mnext)
 STATIC int*
 button_colorptr(c)
 {
-  if (globalD.dpad_color) return &color_mapD[c];
+  if (globalD.dpad_color) return &colorD[c];
   return &greyD[2];
 }
 int
@@ -1260,20 +1260,19 @@ custom_draw()
         // offset into the touchpad zone
         r.x += grectD[GR_PAD].x;
         r.y += grectD[GR_PAD].y;
-        SDL_SetRenderDrawColor(renderer, 150, 150, 150, 255);
+        SDL_SetRenderDrawColor(renderer, V4b(&greyD[4]));
         SDL_RenderFillRect(renderer, &r);
       }
 
-      // TBD: Are we showing buttons with controllers?
       if (TOUCH) {
         {
           AUSE(grect, GR_BUTTON1);
-          SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(RED)));
+          SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(0)));
           SDL_RenderFillRect(rendererD, &grect);
         }
         {
           AUSE(grect, GR_BUTTON2);
-          SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(GREEN)));
+          SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(2)));
           SDL_RenderFillRect(rendererD, &grect);
         }
 
@@ -1292,7 +1291,7 @@ custom_draw()
           {
             AUSE(grect, GR_BUTTON3);
             fn draw_b3 = force_runD ? SDL_RenderFillRect : SDL_RenderDrawRect;
-            SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(BLUE)));
+            SDL_SetRenderDrawColor(rendererD, V4b(button_colorptr(1)));
             draw_b3(rendererD, &grect);
           }
         }
