@@ -282,6 +282,7 @@ fingerdown_xy_mode(x, y, mode)
   if (mode == 2) {
     if (touch == TOUCH_LB) return finger ? 'p' : 'o';
     if (touch == TOUCH_RB) return ESCAPE;
+    if (touch == TOUCH_GAMEPLAY) return ESCAPE;
     if (touch == TOUCH_STAT) return 'c';
     if (touch < 99) return ' ';
   }
