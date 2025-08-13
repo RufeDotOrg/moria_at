@@ -1,4 +1,4 @@
-#ifdef DEV_H
+#ifndef DEV_H
 #define DEV_H
 // first pass
 //
