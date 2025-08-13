@@ -20,6 +20,10 @@ enum { TEST_CAVEGEN = 0 };
 enum { TEST_CHECKLEN = 0 };
 // #include "src/mod/checklen.c"
 
+#ifndef RELEASE
+#include "dev.h"
+#endif
+
 // Replay System
 DATA jmp_buf restartD;
 

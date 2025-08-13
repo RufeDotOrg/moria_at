@@ -82,6 +82,10 @@ enum { DPAD = (TOUCH || JOYSTICK) };
 enum { GFX = 1 };
 enum { SCREENSHOT = 0 };
 
+#ifndef RELEASE
+#include "dev.h"
+#endif
+
 // render.c
 DATA struct SDL_Window* windowD;
 DATA rect_t display_rectD;
