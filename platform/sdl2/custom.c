@@ -1464,7 +1464,7 @@ cave_color(row, col)
     obj = &entity_objD[c_ptr->oidx];
     if (CF_VIZ & c_ptr->cflag) {
       if (obj->tval == TV_UP_STAIR) {
-        color = rgba_by_palette(BLUE);
+        color = rgba_by_palette(TEAL);
       } else if (obj->tval == TV_DOWN_STAIR) {
         color = rgba_by_palette(RED);
       } else if (obj->tval == TV_VIS_TRAP || obj->tval == TV_RUBBLE ||
@@ -1477,7 +1477,7 @@ cave_color(row, col)
                  obj->tval == TV_CHEST) {
         color = rgba_by_palette(PINK);
       } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
-        color = rgba_by_palette(GREEN);
+        color = rgba_by_palette(YELLOW);
       }
     }
   }
@@ -1603,7 +1603,7 @@ viz_minimap()
       }
 
       minimapD[row][col] = color;
-      if (color == rgba_by_palette(BLUE) || color == rgba_by_palette(RED))
+      if (color == rgba_by_palette(TEAL) || color == rgba_by_palette(RED))
         viz_minimap_stair(row, col, color);
     }
   }
