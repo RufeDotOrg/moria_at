@@ -554,6 +554,7 @@ framing_base_step(rect_t frame, int base, int step)
 int
 vitalstat_text()
 {
+  USE(renderer);
   char tmp[80];
   int len = 0;
   AUSE(grect, GR_STAT);
@@ -568,11 +569,10 @@ vitalstat_text()
                      grect.y + it * FHEIGHT + 1};
       if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
     }
+    char stattext[13][32] = {0};
     for (int it = 0; it < MAX_A; ++it) {
-      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
-                     vitalD[it], stat_abbrD[it], vital_statD[it]);
-      SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
+      snprintf(AP(stattext[it]), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
+               vitalD[it], stat_abbrD[it], vital_statD[it]);
     }
     {
       int it = MAX_A;
@@ -580,7 +580,8 @@ vitalstat_text()
       SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
       if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
     }
-
+    for (int it = MAX_A + 1; it <= AL(stattext); ++it) {
+    }
     char* affstr[AFF_X];
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
@@ -593,21 +594,26 @@ vitalstat_text()
           affstr[jt] = "";
       }
 
-      len = snprintf(tmp, AL(tmp), "%-8.08s %-8.08s %-8.08s", affstr[0],
-                     affstr[1], affstr[2]);
-      SDL_Point p = {
-          grect.x + FWIDTH / 2,
-          grect.y + AL(vital_nameD) * FHEIGHT + it * FHEIGHT,
-      };
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
+      snprintf(AP(stattext[it + MAX_A + 1]), "%-8.08s %-8.08s %-8.08s",
+               affstr[0], affstr[1], affstr[2]);
     }
 
+    {
+    }
+
+    rect_t tr = {
+        grect.x + FWIDTH / 2,
+        grect.y + FHEIGHT,
+        AL(stattext[0]) * FWIDTH,
+        AL(stattext) * FHEIGHT,
+    };
+    render_monofont_block_text(renderer, 0, &tr, stattext, 32);
     framing_base_step(grect, 0, -1);
   }
   return 0;
 }
 int
-common_text()
+game_text()
 {
   USE(layout_rect);
   USE(renderer);
@@ -742,10 +748,10 @@ portrait_text(mode)
                              (SDL_Point){r2.x, r2.y});
     }
 
-    common_text();
-  } else {
-    vitalstat_text();
+    game_text();
   }
+
+  vitalstat_text();
 
   return 0;
 }
@@ -816,10 +822,10 @@ landscape_text(mode)
       render_monofont_string(renderer, &fontD, AP(moreD), p3);
     }
 
-    common_text();
-  } else {
-    vitalstat_text();
+    game_text();
   }
+
+  vitalstat_text();
 
   return 0;
 }
@@ -1057,8 +1063,6 @@ draw_game()
 
   int show_minimap = (maD[MA_BLIND] == 0);
   int show_game = 1;
-
-  vitalstat_text();
 
   {
     USE(mmtexture);

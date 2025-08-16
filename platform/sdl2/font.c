@@ -2,8 +2,8 @@
 
 #include "asset/font_zlib.c"
 
-enum { FWIDTH = 16 };
 enum { FHEIGHT = 32 };
+enum { FWIDTH = 16 };
 enum { FALPHA = 225 };
 // texture width/height
 enum { FTEX_W = 16 };
@@ -14,6 +14,7 @@ struct fontS {
 DATA struct SDL_Texture* font_textureD;
 DATA struct SDL_Texture* pixel_textureD;
 DATA int font_colorD;
+DATA point_t font_scaleD = {FWIDTH, FHEIGHT};
 
 STATIC point_t
 point_by_glyph(uint32_t index)
@@ -89,11 +90,12 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
                        const char* string, int len, SDL_Point origin)
 {
   USE(font_texture);
+  USE(font_scale);
   rect_t target_rect = {
       .x = origin.x,
       .y = origin.y,
-      .w = FWIDTH,
-      .h = FHEIGHT,
+      .w = font_scale.x,
+      .h = font_scale.y,
   };
 
   for (int it = 0; it < len; ++it) {
@@ -102,8 +104,41 @@ render_monofont_string(struct SDL_Renderer* renderer, struct fontS* font,
       rect_t src = (rect_t){XY(point_by_glyph(c)), FWIDTH, FHEIGHT};
       SDL_RenderCopy(renderer, font_texture, &src, &target_rect);
     }
-    target_rect.x += FWIDTH;
+    target_rect.x += font_scale.x;
   }
+}
+
+STATIC int
+render_monofont_block_text(struct SDL_Renderer* renderer, struct fontS* font,
+                           SDL_Rect* block, void* text, int pitch)
+{
+  USE(font_texture);
+  USE(font_scale);
+  rect_t target_rect;
+  point_t limit = {block->x + block->w, block->y + block->h};
+  int count = 0;
+  char* line = text;
+
+  target_rect.w = font_scale.x;
+  target_rect.h = font_scale.y;
+  target_rect.y = block->y;
+  for (int row = 0; target_rect.y < limit.y; ++row) {
+    target_rect.x = block->x;
+    for (int col = 0; col < pitch; ++col) {
+      if (target_rect.x < limit.x) {
+        char c = line[col];
+        if (char_visible(c)) {
+          count += 1;
+          rect_t src = (rect_t){XY(point_by_glyph(c)), FWIDTH, FHEIGHT};
+          SDL_RenderCopy(renderer, font_texture, &src, &target_rect);
+        }
+        target_rect.x += target_rect.w;
+      }
+    }
+    target_rect.y += target_rect.h;
+    line += pitch;
+  }
+  return count;
 }
 
 STATIC void
