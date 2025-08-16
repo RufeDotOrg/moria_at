@@ -552,36 +552,30 @@ framing_base_step(rect_t frame, int base, int step)
   }
 }
 int
-vitalstat_text()
+vitalstat_layout()
 {
-  USE(renderer);
-  char tmp[80];
-  int len = 0;
-  AUSE(grect, GR_STAT);
-
+  apclear(AB(stattextD));
   if (uD.lev) {
-    rect_altfill(grect);
+    int line = 0;
+    int pitch = AL(stattextD[0]);
+
     if (uD.ridx < AL(raceD) && uD.clidx < AL(classD)) {
-      int it = 0;
-      len = snprintf(tmp, AL(tmp), "%s %s", raceD[uD.ridx].name,
-                     classD[uD.clidx].name);
-      SDL_Point p = {grect.x + grect.w / 2 - (len * FWIDTH) / 2,
-                     grect.y + it * FHEIGHT + 1};
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
+      int len = strlen(raceD[uD.ridx].name) + strlen(classD[uD.clidx].name) + 1;
+      int wscount = pitch - len;
+      snprintf(&stattextD[line][wscount / 2], pitch, "%s %s",
+               raceD[uD.ridx].name, classD[uD.clidx].name);
     }
-    char stattext[13][32] = {0};
+    ++line;
+
     for (int it = 0; it < MAX_A; ++it) {
-      snprintf(AP(stattext[it]), "%-4.04s: %7d %-4.04s: %6d", vital_nameD[it],
-               vitalD[it], stat_abbrD[it], vital_statD[it]);
+      snprintf(stattextD[line++], pitch, "%-4.04s: %7d %-4.04s: %6d",
+               vital_nameD[it], vitalD[it], stat_abbrD[it], vital_statD[it]);
     }
     {
-      int it = MAX_A;
-      len = snprintf(tmp, AL(tmp), "%-4.04s: %7d", vital_nameD[it], vitalD[it]);
-      SDL_Point p = {grect.x + FWIDTH / 2, grect.y + it * FHEIGHT + FHEIGHT};
-      if (len > 0) render_monofont_string(rendererD, &fontD, tmp, len, p);
+      snprintf(stattextD[line++], pitch, "%-4.04s: %7d", vital_nameD[MAX_A],
+               vitalD[MAX_A]);
     }
-    for (int it = MAX_A + 1; it <= AL(stattext); ++it) {
-    }
+
     char* affstr[AFF_X];
     for (int it = 0; it < AFF_Y; ++it) {
       for (int jt = 0; jt < AL(affstr); ++jt) {
@@ -594,22 +588,27 @@ vitalstat_text()
           affstr[jt] = "";
       }
 
-      snprintf(AP(stattext[it + MAX_A + 1]), "%-8.08s %-8.08s %-8.08s",
-               affstr[0], affstr[1], affstr[2]);
+      snprintf(stattextD[line++], pitch, "%-8.08s %-8.08s %-8.08s", affstr[0],
+               affstr[1], affstr[2]);
     }
-
-    {
-    }
-
-    rect_t tr = {
-        grect.x + FWIDTH / 2,
-        grect.y + FHEIGHT,
-        AL(stattext[0]) * FWIDTH,
-        AL(stattext) * FHEIGHT,
-    };
-    render_monofont_block_text(renderer, 0, &tr, stattext, 32);
-    framing_base_step(grect, 0, -1);
   }
+}
+int
+vitalstat_text()
+{
+  USE(renderer);
+  AUSE(grect, GR_STAT);
+
+  rect_altfill(grect);
+  rect_t tr = {
+      grect.x + FWIDTH / 2,
+      grect.y,
+      grect.w - FWIDTH,
+      grect.h,
+  };
+  render_monofont_block_text(renderer, 0, &tr, AP(stattextD[0]));
+  framing_base_step(grect, 0, -1);
+
   return 0;
 }
 int
@@ -1628,6 +1627,7 @@ custom_predraw()
 
   viz_update();
   viz_minimap();
+  vitalstat_layout();
   return 1;
 }
 

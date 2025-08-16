@@ -15,6 +15,7 @@ DATA int screen_submodeD;
 DATA char overlayD[22][98];
 GAME int overlay_usedD[AL(overlayD)];
 DATA int overlay_submodeD;
+DATA char stattextD[14][28];
 
 DATA int minimapD[MAX_HEIGHT][MAX_WIDTH];
 DATA int minimap_enlargeD;
