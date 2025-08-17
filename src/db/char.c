@@ -476,3 +476,7 @@ static char* affectD[][3] = {
     {"Imagine"},
     {"Threat"},
 };
+static char* color_nameD[] = {
+    "white",  "red",  "blue", "green",  "purple",
+    "orange", "teal", "pink", "yellow",
+};

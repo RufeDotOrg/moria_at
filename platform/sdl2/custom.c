@@ -153,6 +153,17 @@ void* in;
   if (puff(out, &size, in, &(unsigned long){insize}) == 0) return size;
   return 0;
 }
+void
+apply_font()
+{
+  if (FONT) {
+    MUSE(global, font_color);
+    if (!font_color) font_default(greyD[5]);
+    font_color -= 1;
+    if (font_color < COLOR_COUNT) font_default(colorD[font_color]);
+    font_reset();
+  }
+}
 int
 custom_pregame()
 {
@@ -164,7 +175,7 @@ custom_pregame()
   platform_pregame();
 
   if (FONT && !font_init()) return 2;
-  if (FONT) font_default(greyD[5]);
+  apply_font();
 
   SDL_Surface* sprite = SDL_CreateRGBSurfaceWithFormat(
       SDL_SWSURFACE, ART_W * SPRITE_SQ, ART_H * SPRITE_SQ, 0,
@@ -273,8 +284,6 @@ custom_pregame()
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, MAP_W, MAP_H);
   SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
-
-  font_reset();
 
   if (JOYSTICK) joystick_init();
 
@@ -1689,6 +1698,10 @@ feature_menutext(mflag)
         text = "dpad sensitivity";
         apcati(AP(tmp), globalD.dpad_sensitivity);
         break;
+      case 'f':
+        text = "font color";
+        value = color_nameD[globalD.font_color];
+        break;
       case 'g':
         text = "gpu interface";
         value = globalD.pc_renderer[0] ? globalD.pc_renderer : default_renderer;
@@ -1748,6 +1761,7 @@ feature_menu()
     flag |= char_bit('b');
     if (TOUCH || using_selection) flag |= char_bit('c');
     if (using_selection) flag |= char_bit('d');
+    if (FONT) flag |= char_bit('f');
     flag |= char_bit('g');
     flag |= char_bit('h');
     if (JOYSTICK) flag |= char_bit('j');
@@ -1777,6 +1791,11 @@ feature_menu()
         else
           globalD.dpad_sensitivity += 10;
         platformD.dpad();
+        break;
+      case 'f':
+        // range [0, COLOR_COUNT+1]
+        globalD.font_color = (globalD.font_color % COLOR_COUNT) + 1;
+        apply_font();
         break;
       case 'h':
         INVERT(globalD.hand_swap);
