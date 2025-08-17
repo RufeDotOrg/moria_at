@@ -1189,8 +1189,8 @@ draw_menu(mode, using_selection)
 
   if (using_selection && finger_row >= 0) {
     SDL_Point p = {anchor.x, anchor.y + finger_row * FHEIGHT};
-    font_color(font_rgba(RED));
-    font_alpha(255);
+    int c = globalD.font_color ? greyD[5] : font_rgba(RED);
+    font_color(c);
     if (lenlist[finger_row] <= 1) {
       render_monofont_string(renderer, &fontD, "-", 1, p);
     } else {
@@ -1794,7 +1794,7 @@ feature_menu()
         break;
       case 'f':
         // range [0, COLOR_COUNT+1]
-        globalD.font_color = (globalD.font_color % COLOR_COUNT) + 1;
+        globalD.font_color = (globalD.font_color + 1) % (COLOR_COUNT + 1);
         apply_font();
         break;
       case 'h':
