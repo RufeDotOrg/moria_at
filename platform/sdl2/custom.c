@@ -1451,6 +1451,7 @@ cave_color(row, col)
   int color = 0;
   int grey = greyD[1];
   int white = greyD[3];
+  int you = greyD[5];
 
   c_ptr = &caveD[row][col];
   if (mon_drawD[c_ptr->midx]) {
@@ -1486,7 +1487,7 @@ cave_color(row, col)
   }
 
   if ((!color || color == grey) && (CF_TEMP_LIGHT & c_ptr->cflag)) {
-    color = greyD[4];
+    color = you;
   }
 
   return color;
