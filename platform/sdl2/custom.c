@@ -700,7 +700,7 @@ portrait_text(mode)
     if (!msg_used) {
       msg = AS(msg_cqD, msg_writeD - 1);
       msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = msg_turnD == turnD ? FALPHA : 150;
+      alpha = (msg_turnD == turnD) ? FALPHA : PREV_ALPHA;
     }
 
     SDL_Point p = {
@@ -769,7 +769,7 @@ landscape_text(mode)
     if (!msg_used) {
       msg = AS(msg_cqD, msg_writeD - 1);
       msg_used = AS(msglen_cqD, msg_writeD - 1);
-      alpha = msg_turnD == turnD ? FALPHA : 128;
+      alpha = (msg_turnD == turnD) ? FALPHA : PREV_ALPHA;
     }
 
     SDL_Point p = {layout_rect.w / 2 - msg_used * FWIDTH / 2, 0};

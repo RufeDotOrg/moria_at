@@ -4,7 +4,8 @@
 
 enum { FHEIGHT = 32 };
 enum { FWIDTH = 16 };
-enum { FALPHA = 225 };
+enum { FALPHA = 0xff };
+enum { PREV_ALPHA = 0x88 };
 // texture width/height
 enum { FTEX_W = 16 };
 enum { FTEX_H = 8 };
