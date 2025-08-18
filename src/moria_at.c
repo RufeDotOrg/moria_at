@@ -9,9 +9,6 @@ enum { MOD_SAVECHAR = 0 };
 
 #include "platform/platform.c"
 
-enum { PRIVACY = !KEYBOARD };
-enum { NOTES = !KEYBOARD };
-
 enum { TEST_CREATURE = 0 };
 enum { TEST_REPLAY = 0 };
 // #include "src/mod/replay.c"
@@ -19,6 +16,9 @@ enum { TEST_CAVEGEN = 0 };
 // #include "src/mod/cavegen.c"
 enum { TEST_CHECKLEN = 0 };
 // #include "src/mod/checklen.c"
+
+enum { PRIVACY = !KEYBOARD };
+enum { MOBILE = !KEYBOARD };
 
 #ifndef RELEASE
 #include "dev.h"
@@ -11019,7 +11019,7 @@ py_saveslot_select()
       line = 'p' - 'a';
       BufMsg(overlay, "p) Privacy policy (open in browser)");
     }
-    if (NOTES) {
+    if (MOBILE) {
       line = 'r' - 'a';
       BufMsg(overlay, "r) Release notes");
     }
@@ -12810,7 +12810,7 @@ mon_look(midx)
     screen_submodeD = 1;
 
     AC(monmemD);
-    roff_recall(mon->cidx, 2);
+    roff_recall(mon->cidx, 0);
 
     enum { LINE = 64 };
     int offset = 0;
@@ -12838,7 +12838,7 @@ py_look(y, x)
   struct objS* obj;
   struct monS* mon;
 
-  if (!KEYBOARD) {
+  if (MOBILE) {
     c_ptr = &caveD[y][x];
     if (py_affect(MA_BLIND)) {
       MSG("You can't see a thing!");
