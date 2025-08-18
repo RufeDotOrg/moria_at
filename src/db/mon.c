@@ -3830,3 +3830,44 @@ static struct attackS attackD[] = {
 };
 
 static int m_level[MAX_MON_LEVEL + 1];
+
+DATA struct recallS recallD[AL(creatureD)];
+DATA char* desc_move[] = {"move invisibly",     "open doors",
+                          "pass through walls", "kill weaker creatures",
+                          "pick up objects",    "breed explosively"};
+DATA char* desc_howmuch[] = {" not at all", " a bit", "",        " quite",
+                             " very",       " most",  " highly", " extremely"};
+DATA char* desc_weakness[] = {"frost", "fire",         "poison",
+                              "acid",  "bright light", "rock remover"};
+DATA char* desc_breath[] = {"lightning", "poison gases", "acid", "frost",
+                            "fire"};
+DATA char* desc_atype[] = {"",
+                           "attack",
+                           "weaken",
+                           "confuse",
+                           "terrify",
+                           "shoot flames",
+                           "shoot acid",
+                           "freeze",
+                           "shoot lightning",
+                           "corrode",
+                           "blind",
+                           "paralyse",
+                           "steal money",
+                           "steal things",
+                           "poison",
+                           "reduce dexterity",
+                           "reduce constitution",
+                           "drain intelligence",
+                           "drain wisdom",
+                           "lower experience",
+                           "call for help",
+                           "disenchant",
+                           "eat your food",
+                           "absorb light",
+                           "absorb charges"};
+DATA char* desc_amethod[] = {
+    "",          "hit",     "bite",         "claw",           "sting",
+    "touch",     "kick",    "gaze",         "breathe",        "spit",
+    "wail",      "embrace", "crawl on you", "release spores", "beg",
+    "slime you", "crush",   "trample",      "drool",          "insult"};

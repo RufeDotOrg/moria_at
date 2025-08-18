@@ -40,6 +40,7 @@ DATA int last_turnD;
 
 // Character social class history text
 DATA char historyD[256];
+DATA char monmemD[1024];
 
 // Magic affect counters & names
 GAME int32_t maD[MA_COUNT];
@@ -169,7 +170,7 @@ DATA int magick_hituD;
 DATA char vtypeD[STRLEN_MSG + 1];
 DATA int oprefixD = 0;
 DATA char* mon_spell_nameD[] = {
-    "phase door",     "teleport",       "summon",        "wounds",
-    "serious wounds", "paralysis",      "blindness",     "confusion",
-    "fear",           "summon monster", "summon undead", "slow",
+    "phase door",    "teleport",  "summon",     "wounds", "serious wounds",
+    "paralysis",     "blindness", "confusion",  "fear",   "summon monster",
+    "summon undead", "slow",      "drain mana",
 };

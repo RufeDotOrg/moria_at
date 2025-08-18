@@ -12415,6 +12415,422 @@ py_examine()
     }
   }
 }
+int
+roff_recall(mon_num, reveal)
+{
+  int i, k, j;
+  char temp[128];
+  struct recallS* recall = &recallD[mon_num];
+  struct creatureS* cr_ptr = &creatureD[mon_num];
+
+  uint32_t rspells = recall->r_spells & cr_ptr->spells & ~CS_FREQ;
+  uint32_t rcmove = recall->r_cmove & cr_ptr->cmove;
+  uint16_t rcdefense = recall->r_cdefense & cr_ptr->cdefense;
+  int ulev = uD.lev;
+
+  if (reveal) {
+    recall->r_kills = 255;
+    rcmove = cr_ptr->cmove;
+    rcdefense = cr_ptr->cdefense;
+    for (int it = 0; it < 4; ++it)
+      recall->r_attacks[it] = cr_ptr->attack_list[it];
+  }
+  if (reveal > 1) {
+    rcmove = -1;
+    rcdefense = -1;
+  }
+
+  snprintf(AP(temp), "'%c' The %s:\n", cr_ptr->cchar, cr_ptr->name);
+  roff(temp);
+  if (recall->r_deaths) {
+    snprintf(AP(temp), "%d of the contributors to your monster memory %s",
+             recall->r_deaths, ((recall->r_deaths) == 1 ? "has" : "have"));
+    roff(temp);
+    roff(" been killed by this creature, and ");
+    if (recall->r_kills == 0)
+      roff("it is not ever known to have been defeated.");
+    else {
+      snprintf(AP(temp), "at least %d of the beasts %s been exterminated.",
+               recall->r_kills, ((recall->r_kills) == 1 ? "has" : "have"));
+      roff(temp);
+    }
+  } else if (recall->r_kills) {
+    snprintf(AP(temp), "At least %d of these creatures %s", recall->r_kills,
+             ((recall->r_kills) == 1 ? "has" : "have"));
+    roff(temp);
+    roff(" been killed by contributors to your monster memory.");
+  } else
+    roff("No known battles to the death are recalled.");
+
+  k = FALSE;
+  if (cr_ptr->level == 0) {
+    roff(" It lives in the town");
+    k = TRUE;
+  } else if (recall->r_kills) {
+    /* The Balrog is a level 100 monster, but appears at 50 feet.  */
+    i = cr_ptr->level;
+    if (i > WIN_MON_APPEAR) i = WIN_MON_APPEAR;
+    snprintf(AP(temp), " It is normally found at depths of %d feet", i * 50);
+    roff(temp);
+    k = TRUE;
+  }
+
+  /* the c_list speed value is 10 greater, so that it can be a int8u */
+  int mspeed = cr_ptr->speed - 10;
+  if (rcmove & CM_ALL_MV_FLAGS) {
+    if (k)
+      roff(", and");
+    else {
+      roff(" It");
+      k = TRUE;
+    }
+    roff(" moves");
+    if (rcmove & CM_RANDOM_MOVE) {
+      int hm = (rcmove & CM_RANDOM_MOVE) >> 3;
+      roff(desc_howmuch[hm]);
+      roff(" erratically");
+    }
+    if (mspeed == 1)
+      roff(" at normal speed");
+    else {
+      if (rcmove & CM_RANDOM_MOVE) roff(", and");
+      if (mspeed <= 0) {
+        if (mspeed == -1)
+          roff(" very");
+        else if (mspeed < -1)
+          roff(" incredibly");
+        roff(" slowly");
+      } else {
+        if (mspeed == 3)
+          roff(" very");
+        else if (mspeed > 3)
+          roff(" unbelievably");
+        roff(" quickly");
+      }
+    }
+  }
+  if (rcmove & CM_ATTACK_ONLY) {
+    if (k)
+      roff(", but");
+    else {
+      roff(" It");
+      k = TRUE;
+    }
+    roff(" does not deign to chase intruders");
+  }
+  if (rcmove & CM_ONLY_MAGIC) {
+    if (k)
+      roff(", but");
+    else {
+      roff(" It");
+      k = TRUE;
+    }
+    roff(" always moves and attacks by using magic");
+  }
+  if (k) roff(".");
+
+  /* Kill it once to know experience, and quality (evil, undead, monsterous).
+     The quality of being a dragon is obvious. */
+  if (recall->r_kills) {
+    roff(" A kill of this");
+    if (cr_ptr->cdefense & CD_ANIMAL) roff(" natural");
+    if (cr_ptr->cdefense & CD_EVIL) roff(" evil");
+    if (cr_ptr->cdefense & CD_UNDEAD) roff(" undead");
+    /* calculate the integer exp part, can be larger than 64K when first
+       level character looks at Balrog info, so must store in long */
+    int tempxp = (long)cr_ptr->mexp * cr_ptr->level / ulev;
+    /* calculate the fractional exp part scaled by 100,
+       must use long arithmetic to avoid overflow */
+    j = (((long)cr_ptr->mexp * cr_ptr->level % ulev) * (long)1000 / ulev + 5) /
+        10;
+    snprintf(AP(temp), " creature is worth %d.%02d point%s", tempxp, j,
+             (tempxp == 1 && j == 0 ? "" : "s"));
+    roff(temp);
+    char* p = "";
+    if (ulev / 10 == 1)
+      p = "th";
+    else {
+      i = ulev % 10;
+      if (i == 1)
+        p = "st";
+      else if (i == 2)
+        p = "nd";
+      else if (i == 3)
+        p = "rd";
+      else
+        p = "th";
+    }
+    char* q = "";
+    if (ulev == 8 || ulev == 11 || ulev == 18) q = "n";
+    snprintf(AP(temp), " for a%s %d%s level character.", q, ulev, p);
+    roff(temp);
+  }
+
+  /* Spells known, if have been used against us.
+     Breath weapons or resistance might be known only because we cast spells
+     at it. */
+  k = TRUE;
+  j = rspells;
+  for (i = 0; j & CS_BREATHE; i++) {
+    if (j & (CS_BR_LIGHT << i)) {
+      j &= ~(CS_BR_LIGHT << i);
+      if (k) {
+        if (recall->r_spells & CS_FREQ)
+          roff(" It can breathe ");
+        else
+          roff(" It is resistant to ");
+        k = FALSE;
+      } else if (j & CS_BREATHE)
+        roff(", ");
+      else
+        roff(" and ");
+      roff(desc_breath[i]);
+    }
+  }
+  k = TRUE;
+  for (i = 0; j & CS_SPELLS; i++) {
+    if (j & (CS_TEL_SHORT << i)) {
+      j &= ~(CS_TEL_SHORT << i);
+      if (k) {
+        if (rspells & CS_BREATHE)
+          roff(", and is also");
+        else
+          roff(" It is");
+        roff(" magical, casting spells which ");
+        k = FALSE;
+      } else if (j & CS_SPELLS)
+        roff(", ");
+      else
+        roff(" or ");
+      roff(mon_spell_nameD[i]);
+    }
+  }
+  if (rspells & (CS_BREATHE | CS_SPELLS)) {
+    if ((recall->r_spells & CS_FREQ) > 5) { /* Could offset by level */
+      snprintf(AP(temp), "; 1 time in %lu", cr_ptr->spells & CS_FREQ);
+      roff(temp);
+    }
+    roff(".");
+  }
+
+  /* Do we know how hard they are to kill? Armor class, hit die. */
+  if (((recall->r_kills) > 304 / (4 + (cr_ptr->level)))) {
+    snprintf(AP(temp), " It has an armor rating of %d", cr_ptr->ac);
+    roff(temp);
+    snprintf(AP(temp), " and a%s life rating of %dd%d.",
+             ((cr_ptr->cdefense & CD_MAX_HP) ? " maximized" : ""),
+             cr_ptr->hd[0], cr_ptr->hd[1]);
+    roff(temp);
+  }
+
+  /* Do we know how clever they are? Special abilities. */
+  k = TRUE;
+  j = rcmove;
+  for (i = 0; j & CM_SPECIAL; i++) {
+    if (j & (CM_INVISIBLE << i)) {
+      j &= ~(CM_INVISIBLE << i);
+      if (k) {
+        roff(" It can ");
+        k = FALSE;
+      } else if (j & CM_SPECIAL)
+        roff(", ");
+      else
+        roff(" and ");
+      roff(desc_move[i]);
+    }
+  }
+  if (!k) roff(".");
+  /* Do we know its special weaknesses? Most cdefense flags. */
+  k = TRUE;
+  j = rcdefense;
+  for (i = 0; j & CD_WEAKNESS; i++) {
+    if (j & (CD_FROST << i)) {
+      j &= ~(CD_FROST << i);
+      if (k) {
+        roff(" It is susceptible to ");
+        k = FALSE;
+      } else if (j & CD_WEAKNESS)
+        roff(", ");
+      else
+        roff(" and ");
+      roff(desc_weakness[i]);
+    }
+  }
+  if (!k) roff(".");
+  if (rcdefense & CD_INFRA) roff(" It is warm blooded");
+  if (rcdefense & CD_NO_SLEEP) {
+    if (rcdefense & CD_INFRA)
+      roff(", and");
+    else
+      roff(" It");
+    roff(" cannot be charmed or slept");
+  }
+  if (rcdefense & (CD_NO_SLEEP | CD_INFRA)) roff(".");
+
+  /* Do we know how aware it is? */
+  if (((recall->r_wake * recall->r_wake) > cr_ptr->sleep) ||
+      (cr_ptr->sleep == 0 && recall->r_kills >= 10)) {
+    roff(" It ");
+    if (cr_ptr->sleep > 200)
+      roff("prefers to ignore");
+    else if (cr_ptr->sleep > 95)
+      roff("pays very little attention to");
+    else if (cr_ptr->sleep > 75)
+      roff("pays little attention to");
+    else if (cr_ptr->sleep > 45)
+      roff("tends to overlook");
+    else if (cr_ptr->sleep > 25)
+      roff("takes quite a while to see");
+    else if (cr_ptr->sleep > 10)
+      roff("takes a while to see");
+    else if (cr_ptr->sleep > 5)
+      roff("is fairly observant of");
+    else if (cr_ptr->sleep > 3)
+      roff("is observant of");
+    else if (cr_ptr->sleep > 1)
+      roff("is very observant of");
+    else if (cr_ptr->sleep != 0)
+      roff("is vigilant for");
+    else
+      roff("is ever vigilant for");
+    snprintf(AP(temp), " intruders, which it may notice from %d feet.",
+             10 * cr_ptr->aaf);
+    roff(temp);
+  }
+  /* Do we know what it might carry? */
+  if (rcmove & (CM_CARRY_OBJ | CM_CARRY_GOLD)) {
+    roff(" It may");
+    j = (rcmove & CM_TREASURE) >> CM_TR_SHIFT;
+    if (j == 1) {
+      if ((cr_ptr->cmove & CM_TREASURE) == CM_60_RANDOM)
+        roff(" sometimes");
+      else
+        roff(" often");
+    } else if ((j == 2) &&
+               ((cr_ptr->cmove & CM_TREASURE) == (CM_60_RANDOM | CM_90_RANDOM)))
+      roff(" often");
+    roff(" carry");
+    char* p = "";
+    if (rcmove & CM_SMALL_OBJ)
+      p = " small objects";
+    else
+      p = " objects";
+    if (j == 1) {
+      if (rcmove & CM_SMALL_OBJ)
+        p = " a small object";
+      else
+        p = " an object";
+    } else if (j == 2)
+      roff(" one or two");
+    else {
+      snprintf(AP(temp), " up to %d", j);
+      roff(temp);
+    }
+    if (rcmove & CM_CARRY_OBJ) {
+      roff(p);
+      if (rcmove & CM_CARRY_GOLD) {
+        roff(" or treasure");
+        if (j > 1) roff("s");
+      }
+      roff(".");
+    } else if (j != 1)
+      roff(" treasures.");
+    else
+      roff(" treasure.");
+  }
+
+  /* We know about attacks it has used on us, and maybe the damage they do. */
+  /* k is the total number of known attacks, used for punctuation */
+  k = 0;
+  for (j = 0; j < 4; j++)
+    if (recall->r_attacks[(int)j]) k++;
+  uint8_t* pu = cr_ptr->attack_list;
+  /* j counts the attacks as printed, used for punctuation */
+  j = 0;
+  for (i = 0; *pu != 0 && i < 4; pu++, i++) {
+    int att_type, att_how, d1, d2;
+    /* don't print out unknown attacks */
+    if (!recall->r_attacks[i]) continue;
+    att_type = attackD[*pu].attack_type;
+    att_how = attackD[*pu].attack_desc;
+    d1 = attackD[*pu].attack_dice;
+    d2 = attackD[*pu].attack_sides;
+    j++;
+    if (j == 1)
+      roff(" It can ");
+    else if (j == k)
+      roff(", and ");
+    else
+      roff(", ");
+    if (att_how > 19) att_how = 0;
+    roff(desc_amethod[att_how]);
+    if (att_type != 1 || d1 > 0 && d2 > 0) {
+      roff(" to ");
+      if (att_type > 24) att_type = 0;
+      roff(desc_atype[att_type]);
+      if (d1 && d2) {
+        if (((4 + (cr_ptr->level)) * (recall->r_attacks[i]) > 80 * (d1 * d2))) {
+          if (att_type == 19) /* Loss of experience */
+            roff(" by");
+          else
+            roff(" with damage");
+          snprintf(AP(temp), " %dd%d", d1, d2);
+          roff(temp);
+        }
+      }
+    }
+  }
+  if (j)
+    roff(".");
+  else if (k > 0 && recall->r_attacks[0] >= 10)
+    roff(" It has no physical attacks.");
+  else
+    roff(" Nothing is known about its attack.");
+  /* Always know the win creature. */
+  if (cr_ptr->cmove & CM_WIN) roff(" Killing one of these wins the game!");
+  roff(" ");
+}
+int
+roff(char* msg)
+{
+  apcat(AP(monmemD), msg);
+}
+STATIC void
+mon_look(midx)
+{
+  struct monS* mon = &entity_monD[midx];
+  mon_desc(midx);
+  // hack: mon death_descD pronoun is a/an
+  death_descD[0] |= 0x20;
+  char c =
+      CLOBBER_MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
+  if (c == 'O') {
+    death_descD[0] &= 0x20;
+
+    screen_submodeD = 1;
+
+    AC(monmemD);
+    roff_recall(mon->cidx, 2);
+
+    enum { LINE = 64 };
+    int offset = 0;
+    for (int line = 0; line < AL(screenD); ++line) {
+      int next_br = 0;
+      for (int it = LINE - 1; it > 0; --it) {
+        if (monmemD[offset + it] == ' ') {
+          next_br = it;
+          break;
+        }
+      }
+      memcpy(&screenD[line][0], &monmemD[offset], next_br);
+      screen_usedD[line] = next_br;
+
+      offset += next_br;
+      offset += 1;
+    }
+    CLOBBER_MSG("Monster Memory");
+  }
+}
 STATIC void
 py_look(y, x)
 {
@@ -12422,34 +12838,34 @@ py_look(y, x)
   struct objS* obj;
   struct monS* mon;
 
-  c_ptr = &caveD[y][x];
-  mon = &entity_monD[c_ptr->midx];
-  if (mon_lit(c_ptr->midx)) {
-    mon_desc(c_ptr->midx);
-    // hack: mon death_descD pronoun is a/an
-    death_descD[0] |= 0x20;
-    MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
-  } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
-    obj = &entity_objD[c_ptr->oidx];
-    if (obj->tval == TV_INVIS_TRAP) {
-      MSG("You see the dungeon floor.");
-    } else if (obj->tval == TV_SECRET_DOOR) {
-      MSG("You see a %s.", walls[0]);
+  if (!KEYBOARD) {
+    c_ptr = &caveD[y][x];
+    if (py_affect(MA_BLIND)) {
+      MSG("You can't see a thing!");
+    } else if (mon_lit(c_ptr->midx)) {
+      mon_look(c_ptr->midx);
+    } else if (c_ptr->oidx && (CF_VIZ & c_ptr->cflag)) {
+      obj = &entity_objD[c_ptr->oidx];
+      if (obj->tval == TV_INVIS_TRAP) {
+        MSG("You see the dungeon floor.");
+      } else if (obj->tval == TV_SECRET_DOOR) {
+        MSG("You see a %s.", walls[0]);
+      } else {
+        obj_desc(obj, obj->number);
+        MSG("You see %s.", descD);
+      }
+    } else if (y == uD.y && x == uD.x) {
+      MSG("Looking good, hero.");
+    } else if (c_ptr->cflag & CF_SEEN) {
+      if (c_ptr->fval >= MIN_WALL) {
+        int wall_idx = c_ptr->fval - MIN_WALL;
+        if (wall_idx < AL(walls)) MSG("You see a %s.", walls[wall_idx]);
+      } else {
+        MSG("You see the dungeon floor.");
+      }
     } else {
-      obj_desc(obj, obj->number);
-      MSG("You see %s.", descD);
+      MSG("You don't see anything.");
     }
-  } else if (y == uD.y && x == uD.x) {
-    MSG("Looking good, hero.");
-  } else if (c_ptr->cflag & CF_SEEN) {
-    if (c_ptr->fval >= MIN_WALL) {
-      int wall_idx = c_ptr->fval - MIN_WALL;
-      if (wall_idx < AL(walls)) MSG("You see a %s.", walls[wall_idx]);
-    } else {
-      MSG("You see the dungeon floor.");
-    }
-  } else {
-    MSG("You don't see anything.");
   }
 }
 STATIC int
@@ -12857,7 +13273,9 @@ mon_try_spell(midx, cdis)
 
       mlit = mon_lit(midx);
       mon_desc(midx);
-      if (spell_index < AL(mon_spell_nameD)) {
+
+      // -1: no message for drain mana
+      if (spell_index < AL(mon_spell_nameD) - 1) {
         MSG("%s casts a spell of %s.", descD, mon_spell_nameD[spell_index]);
       }
 
@@ -14121,13 +14539,7 @@ dungeon()
               }
               break;
             case 'O':
-              if (!KEYBOARD) {
-                if (py_affect(MA_BLIND)) {
-                  MSG("You can't see a thing!");
-                } else {
-                  py_look(ylookD, xlookD);
-                }
-              }
+              py_look(ylookD, xlookD);
               break;
             case CTRL('c'):
               platformD.savemidpoint();
