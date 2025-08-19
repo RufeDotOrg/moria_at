@@ -3920,6 +3920,10 @@ hard_reset()
   // Reset overlay modes
   overlay_submodeD = 0;
   screen_submodeD = 0;
+
+  // Monster memory
+  AC(recallD);
+
   return 0;
 }
 STATIC void
@@ -5521,6 +5525,11 @@ summon_object(y, x, num, typ)
   } while (num != 0);
 }
 STATIC void
+memory_of_death(cidx)
+{
+  recallD[cidx].r_kill += 1;
+}
+STATIC void
 mon_death(y, x, flags)
 {
   int i, number;
@@ -5562,6 +5571,7 @@ mon_take_hit(midx, dam)
 
     caveD[mon->fy][mon->fx].midx = 0;
     mon_death(mon->fy, mon->fx, cre->cmove);
+    memory_of_death(mon->cidx);
     mon_unuse(mon);
   }
 
@@ -11399,6 +11409,7 @@ py_menu()
         break;
 
       case 'g':
+        if (death) recallD[death_creD].r_death += 1;
         if (!death) platformD.savemidpoint();
         globalD.saveslot_class = -1;
         longjmp(restartD, 1);
@@ -12461,7 +12472,7 @@ roff_recall(mon_num, reveal)
     rcdefense = -1;
   }
 
-  snprintf(AP(temp), "'%c' The %s:", cr_ptr->cchar, cr_ptr->name);
+  snprintf(AP(temp), "'%c' The %s: ", cr_ptr->cchar, cr_ptr->name);
   roff(temp);
   if (recall->r_death) {
     snprintf(AP(temp), "%d of the contributors to your monster memory %s",
@@ -13574,6 +13585,7 @@ creatures()
           printf("local %s #%d | %d->%d msleep | %d mlit", cr_ptr->name,
                  it_index, mon->msleep, msleep, mlit);
         if (TEST_CREATURE && msleep == 0) l_wake[it_index] = 1;
+        if (msleep == 0) recallD[mon->cidx].r_wake += 1;
         mon->msleep = msleep;
       }
 
@@ -14824,6 +14836,7 @@ main(int argc, char** argv)
     dungeon();
 
     if (uD.new_level_flag != NL_DEATH) {
+      // recallD storage
       if (platformD.save(globalD.saveslot_class)) {
         longjmp(restartD, 1);
       } else {
