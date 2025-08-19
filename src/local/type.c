@@ -276,9 +276,9 @@ struct ownerS {
 struct recallS {
   uint32_t r_cmove;
   uint32_t r_spells;
-  uint32_t r_kills;
-  uint32_t r_deaths;
+  uint32_t r_kill;
+  uint32_t r_death;
   uint16_t r_cdefense;
   uint8_t r_wake, r_ignore;
-  uint8_t r_attacks[4];
+  uint8_t r_attack[4];
 };

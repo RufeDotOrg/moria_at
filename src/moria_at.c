@@ -12450,11 +12450,11 @@ roff_recall(mon_num, reveal)
   int ulev = uD.lev;
 
   if (reveal) {
-    recall->r_kills = 255;
+    recall->r_kill = 255;
     rcmove = cr_ptr->cmove;
     rcdefense = cr_ptr->cdefense;
     for (int it = 0; it < 4; ++it)
-      recall->r_attacks[it] = cr_ptr->attack_list[it];
+      recall->r_attack[it] = cr_ptr->attack_list[it];
   }
   if (reveal > 1) {
     rcmove = -1;
@@ -12463,21 +12463,21 @@ roff_recall(mon_num, reveal)
 
   snprintf(AP(temp), "'%c' The %s:", cr_ptr->cchar, cr_ptr->name);
   roff(temp);
-  if (recall->r_deaths) {
+  if (recall->r_death) {
     snprintf(AP(temp), "%d of the contributors to your monster memory %s",
-             recall->r_deaths, ((recall->r_deaths) == 1 ? "has" : "have"));
+             recall->r_death, ((recall->r_death) == 1 ? "has" : "have"));
     roff(temp);
     roff(" been killed by this creature, and ");
-    if (recall->r_kills == 0)
+    if (recall->r_kill == 0)
       roff("it is not ever known to have been defeated.");
     else {
       snprintf(AP(temp), "at least %d of the beasts %s been exterminated.",
-               recall->r_kills, ((recall->r_kills) == 1 ? "has" : "have"));
+               recall->r_kill, ((recall->r_kill) == 1 ? "has" : "have"));
       roff(temp);
     }
-  } else if (recall->r_kills) {
-    snprintf(AP(temp), "At least %d of these creatures %s", recall->r_kills,
-             ((recall->r_kills) == 1 ? "has" : "have"));
+  } else if (recall->r_kill) {
+    snprintf(AP(temp), "At least %d of these creatures %s", recall->r_kill,
+             ((recall->r_kill) == 1 ? "has" : "have"));
     roff(temp);
     roff(" been killed by contributors to your monster memory.");
   } else
@@ -12487,7 +12487,7 @@ roff_recall(mon_num, reveal)
   if (cr_ptr->level == 0) {
     roff(" It lives in the town");
     k = TRUE;
-  } else if (recall->r_kills) {
+  } else if (recall->r_kill) {
     /* The Balrog is a level 100 monster, but appears at 50 feet.  */
     i = cr_ptr->level;
     if (i > WIN_MON_APPEAR) i = WIN_MON_APPEAR;
@@ -12552,7 +12552,7 @@ roff_recall(mon_num, reveal)
 
   /* Kill it once to know experience, and quality (evil, undead, monsterous).
      The quality of being a dragon is obvious. */
-  if (recall->r_kills) {
+  if (recall->r_kill) {
     roff(" A kill of this");
     if (cr_ptr->cdefense & CD_ANIMAL) roff(" natural");
     if (cr_ptr->cdefense & CD_EVIL) roff(" evil");
@@ -12635,7 +12635,7 @@ roff_recall(mon_num, reveal)
   }
 
   /* Do we know how hard they are to kill? Armor class, hit die. */
-  if (((recall->r_kills) > 304 / (4 + (cr_ptr->level)))) {
+  if (((recall->r_kill) > 304 / (4 + (cr_ptr->level)))) {
     snprintf(AP(temp), " It has an armor rating of %d", cr_ptr->ac);
     roff(temp);
     snprintf(AP(temp), " and a%s life rating of %dd%d.",
@@ -12690,7 +12690,7 @@ roff_recall(mon_num, reveal)
 
   /* Do we know how aware it is? */
   if (((recall->r_wake * recall->r_wake) > cr_ptr->sleep) ||
-      (cr_ptr->sleep == 0 && recall->r_kills >= 10)) {
+      (cr_ptr->sleep == 0 && recall->r_kill >= 10)) {
     roff(" It ");
     if (cr_ptr->sleep > 200)
       roff("prefers to ignore");
@@ -12764,14 +12764,14 @@ roff_recall(mon_num, reveal)
   /* k is the total number of known attacks, used for punctuation */
   k = 0;
   for (j = 0; j < 4; j++)
-    if (recall->r_attacks[(int)j]) k++;
+    if (recall->r_attack[(int)j]) k++;
   uint8_t* pu = cr_ptr->attack_list;
   /* j counts the attacks as printed, used for punctuation */
   j = 0;
   for (i = 0; *pu != 0 && i < 4; pu++, i++) {
     int att_type, att_how, d1, d2;
     /* don't print out unknown attacks */
-    if (!recall->r_attacks[i]) continue;
+    if (!recall->r_attack[i]) continue;
     att_type = attackD[*pu].attack_type;
     att_how = attackD[*pu].attack_desc;
     d1 = attackD[*pu].attack_dice;
@@ -12790,7 +12790,7 @@ roff_recall(mon_num, reveal)
       if (att_type > 24) att_type = 0;
       roff(desc_atype[att_type]);
       if (d1 && d2) {
-        if (((4 + (cr_ptr->level)) * (recall->r_attacks[i]) > 80 * (d1 * d2))) {
+        if (((4 + (cr_ptr->level)) * (recall->r_attack[i]) > 80 * (d1 * d2))) {
           if (att_type == 19) /* Loss of experience */
             roff(" by");
           else
@@ -12803,7 +12803,7 @@ roff_recall(mon_num, reveal)
   }
   if (j)
     roff(".");
-  else if (k > 0 && recall->r_attacks[0] >= 10)
+  else if (k > 0 && recall->r_attack[0] >= 10)
     roff(" It has no physical attacks.");
   else
     roff(" Nothing is known about its attack.");
