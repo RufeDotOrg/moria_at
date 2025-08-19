@@ -108,6 +108,7 @@ GAME int turn_flag;
 GAME int pack_heavy;
 GAME int last_actuateD;
 GAME int last_castD;
+GAME int death_creD;
 
 // null terminated
 DATA char descD[80 - 4];

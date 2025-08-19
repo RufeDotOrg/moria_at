@@ -5444,10 +5444,33 @@ mon_desc(midx)
   else
     strcpy(descD, "It");
 
-  if (is_a_vowel(cre->name[0]))
-    snprintf(death_descD, AL(death_descD), "An %s", cre->name);
-  else
-    snprintf(death_descD, AL(death_descD), "A %s", cre->name);
+  death_creD = mon->cidx;
+}
+STATIC void
+death_desc(char* special)
+{
+  death_creD = 0;
+  strcpy(death_descD, special);
+}
+STATIC void
+death_obj(struct objS* obj)
+{
+  struct treasureS* tr_ptr = &treasureD[obj->tidx];
+  char* ptr = "";
+  if (tr_ptr->name) ptr = tr_ptr->name;
+  death_desc(ptr);
+}
+STATIC char*
+death_text()
+{
+  if (death_creD) {
+    struct creatureS* cre = &creatureD[death_creD];
+    if (is_a_vowel(cre->name[0]))
+      snprintf(death_descD, AL(death_descD), "an %s", cre->name);
+    else
+      snprintf(death_descD, AL(death_descD), "a %s", cre->name);
+  }
+  return death_descD;
 }
 // TBD: rewrite
 STATIC void
@@ -8455,7 +8478,7 @@ inven_eat(iidx)
           ident |= py_heal_hit(damroll(3, 12));
           break;
         case 27:
-          strcpy(death_descD, "poisonous food");
+          death_desc("poisonous food");
           py_take_hit(randint(18));
           ident |= TRUE;
           break;
@@ -11161,7 +11184,7 @@ py_saveslot_select()
     }
   } while (c != CTRL('c'));
 
-  memcpy(death_descD, AP(quit_stringD));
+  death_desc(quit_stringD);
 
   return 0;
 }
@@ -11236,8 +11259,7 @@ py_grave()
   TOMB("Depth : %d", dun_level * 50);
   line += 1;
   TOMB("Killed by");
-  death_descD[0] |= 0x20;
-  TOMB("%s.", death_descD);
+  TOMB("%s.", death_text());
 
   if (PC) msg_hint(AP("(CTRL-z) (c/o/p/ESC)"));
   // Centering text; portrait mode+hand_swap will show message history top left
@@ -12017,13 +12039,13 @@ chest_trap(y, x)
   obj = &entity_objD[caveD[y][x].oidx];
   if (CH_LOSE_STR & obj->flags) {
     msg_print("A small needle pricks you!");
-    strcpy(death_descD, "a poison needle");
+    death_desc("a poison needle");
     py_take_hit(damroll(1, 4));
     lose_stat(A_STR);
   }
   if (CH_POISON & obj->flags) {
     msg_print("A small needle pricks you!");
-    strcpy(death_descD, "a poison needle");
+    death_desc("a poison needle");
     py_take_hit(damroll(1, 6));
     countD.poison += 10 + randint(20);
   }
@@ -12045,7 +12067,7 @@ chest_trap(y, x)
   if (CH_EXPLODE & obj->flags) {
     msg_print("There is a sudden explosion!");
     delete_object(y, x);
-    strcpy(death_descD, "an exploding chest");
+    death_desc("an exploding chest");
     py_take_hit(damroll(5, 8));
   }
 }
@@ -12337,6 +12359,7 @@ py_monlook_dir(dir)
     for (int col = zr.x; col < limit.x; ++col) {
       struct caveS* c_ptr = &caveD[row][col];
       struct monS* mon = &entity_monD[c_ptr->midx];
+      struct creatureS* cre = &creatureD[mon->cidx];
       if (mon_lit(c_ptr->midx)) {
         oy = (ly != 0) * (-((mon->fy - y) < 0) + ((mon->fy - y) > 0));
         ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
@@ -12344,11 +12367,9 @@ py_monlook_dir(dir)
           seen += 1;
           ylookD = mon->fy;
           xlookD = mon->fx;
-          mon_desc(c_ptr->midx);
           if (mon->msleep) msg_hint(AP("(sleeping)"));
-          // hack: mon death_descD pronoun is a/an
-          death_descD[0] |= 0x20;
-          CLOBBER_MSG("You see %s.", death_descD);
+          CLOBBER_MSG("You see %s %s.", is_a_vowel(cre->name[0]) ? "a" : "an",
+                      cre->name);
         }
       }
     }
@@ -12799,14 +12820,11 @@ STATIC void
 mon_look(midx)
 {
   struct monS* mon = &entity_monD[midx];
-  mon_desc(midx);
-  // hack: mon death_descD pronoun is a/an
-  death_descD[0] |= 0x20;
-  char c =
-      CLOBBER_MSG("You see %s%s.", death_descD, mon->msleep ? " (asleep)" : "");
+  struct creatureS* cre = &creatureD[mon->cidx];
+  if (mon->msleep) msg_hint(AP("(sleeping)"));
+  char c = CLOBBER_MSG("You see %s %s.", is_a_vowel(cre->name[0]) ? "a" : "an",
+                       cre->name);
   if (c == 'O') {
-    death_descD[0] &= 0x20;
-
     screen_submodeD = 1;
 
     AC(monmemD);
@@ -13603,8 +13621,7 @@ STATIC void hit_trap(y, x, uy, ux) int *uy, *ux;
 
   dam = obj->damage[1] ? pdamroll(obj->damage) : 0;
 
-  obj_desc(obj, 1);
-  strcpy(death_descD, descD);
+  death_obj(obj);
   switch (obj->subval) {
     case 1: /* Open pit*/
       msg_print("You fall into a pit!");
@@ -13748,7 +13765,6 @@ STATIC void hit_trap(y, x, uy, ux) int *uy, *ux;
       break;
 
     default:
-      msg_print("Unknown trap value.");
       break;
   }
 }
@@ -14249,7 +14265,7 @@ tick()
     msg_print("You are getting weak from starvation.");
   } else if (tmp < 0) {
     if (turnD % 8 == 1) msg_print("You are starving.");
-    strcpy(death_descD, "starvation");
+    death_desc("starvation");
     py_take_hit(-tmp / 16);
   }
   uD.food = tmp;
@@ -14264,7 +14280,7 @@ tick()
     if (countD.poison == 1) {
       msg_print("You feel less ill.");
     } else {
-      strcpy(death_descD, "poison");
+      death_desc("poison");
       py_take_hit(poison_adj());
       if ((turnD % 16) == 0) {
         msg_print("You shiver from illness.");
@@ -14543,7 +14559,7 @@ dungeon()
               break;
             case CTRL('c'):
               platformD.savemidpoint();
-              memcpy(death_descD, AP(quit_stringD));
+              death_desc(quit_stringD);
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game
             case 'p':
@@ -14557,7 +14573,7 @@ dungeon()
               break;
             case CTRL('x'):
               if (HACK) {
-                memcpy(death_descD, AP(quit_stringD));
+                death_desc(quit_stringD);
                 uD.new_level_flag = NL_DEATH;
                 return;  // Interrupt game
               }
@@ -14811,11 +14827,11 @@ main(int argc, char** argv)
       if (platformD.save(globalD.saveslot_class)) {
         longjmp(restartD, 1);
       } else {
-        strcpy(death_descD, "Device I/O Error");
+        death_desc("Device I/O Error");
       }
     }
   } else if (!death_descD[0]) {
-    strcpy(death_descD, "Initialization Error");
+    death_desc("Initialization Error");
   }
 
   if (memcmp(death_descD, AP(quit_stringD)) != 0) {
