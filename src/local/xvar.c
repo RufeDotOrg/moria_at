@@ -40,7 +40,10 @@ DATA int last_turnD;
 
 // Character social class history text
 DATA char historyD[256];
+
+// Monster memory
 DATA char monmemD[1024];
+DATA struct recallS recallD[MAX_CREATURE];
 
 // Magic affect counters & names
 GAME int32_t maD[MA_COUNT];

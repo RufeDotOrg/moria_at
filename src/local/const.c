@@ -313,6 +313,7 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define MON_MULT_ADJ 7    /* High value slows multiplication       */
 #define MAX_WIN_MON 2     /* Total number of win creatures */
 #define WIN_MON_APPEAR 50 /* Level where winning creature begins */
+#define MAX_CREATURE 280
 #define CRE_LEV_ADJ 3
 #define MAX_SIGHT 16 /* Maximum distance a creature can be seen (1 chunk) */
 

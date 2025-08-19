@@ -12440,7 +12440,7 @@ roff_recall(mon_num, reveal)
     rcdefense = -1;
   }
 
-  snprintf(AP(temp), "'%c' The %s:\n", cr_ptr->cchar, cr_ptr->name);
+  snprintf(AP(temp), "'%c' The %s:", cr_ptr->cchar, cr_ptr->name);
   roff(temp);
   if (recall->r_deaths) {
     snprintf(AP(temp), "%d of the contributors to your monster memory %s",

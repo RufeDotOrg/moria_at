@@ -134,7 +134,7 @@ Area of affect (aaf) :  Max range that creature is able to "notice"
                         the player.
                                                                 */
 
-static struct creatureS creatureD[] = {
+static struct creatureS creatureD[MAX_CREATURE] = {
     {0},
     {"Filthy Street Urchin",
      0x0012000AL,
@@ -3831,7 +3831,6 @@ static struct attackS attackD[] = {
 
 static int m_level[MAX_MON_LEVEL + 1];
 
-DATA struct recallS recallD[AL(creatureD)];
 DATA char* desc_move[] = {"move invisibly",     "open doors",
                           "pass through walls", "kill weaker creatures",
                           "pick up objects",    "breed explosively"};
