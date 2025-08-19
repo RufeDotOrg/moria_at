@@ -2704,7 +2704,7 @@ struct objS* obj;
   return (tval < TV_MAX_PICK_UP);
 }
 STATIC int
-obj_mon_pickup(obj)
+mpickup_obj(obj)
 struct objS* obj;
 {
   // Underflow to exclude 0
@@ -4472,6 +4472,7 @@ struct monS* mon;
       if (c_ptr->fval <= MAX_OPEN_SPACE) {
         if (eats_others) {
           if (mexp >= creatureD[c_ptr->midx].mexp) {
+            recallD[mon->cidx].r_cmove |= CM_EATS_OTHER;
             mon_unuse(&entity_monD[c_ptr->midx]);
             c_ptr->midx = 0;
           }
@@ -4484,6 +4485,9 @@ struct monS* mon;
     }
     i++;
   } while (i <= 18);
+
+  recallD[mon->cidx].r_cmove |= CM_MULTIPLY;
+
   return FALSE;
 }
 STATIC void
@@ -5437,18 +5441,20 @@ STATIC void obj_desc(obj, number) struct objS* obj;
   }
 }
 #undef desc
-STATIC void
+STATIC int
 mon_desc(midx)
 {
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
+  int lit = mon_lit(midx);
 
-  if (mon_lit(midx))
+  if (lit)
     snprintf(descD, AL(descD), "The %s", cre->name);
   else
     strcpy(descD, "It");
 
   death_creD = mon->cidx;
+  return lit;
 }
 STATIC void
 death_desc(char* special)
@@ -11839,9 +11845,10 @@ mon_attack(midx)
   for (int it = 0; it < AL(cre->attack_list); ++it) {
     if (uD.new_level_flag) break;
     if (!cre->attack_list[it]) break;
-    mon_desc(midx);
+    int mlit = mon_desc(midx);
     struct attackS* attack = &attackD[cre->attack_list[it]];
 
+    int notice = mlit;
     int attack_type = attack->attack_type;
     int attack_desc = attack->attack_desc;
     bth = bth_adj(attack_type);
@@ -11863,6 +11870,8 @@ mon_attack(midx)
           py_take_hit(damage);
           if (randint(2) == 1) {
             lose_stat(A_STR);
+          } else {
+            notice = 0;
           }
           break;
         case 3: /*Confusion attack*/
@@ -11873,7 +11882,10 @@ mon_attack(midx)
               countD.confusion += 3 + randint(cre->level);
             } else {
               countD.confusion += 3;
+              notice = 0;
             }
+          } else {
+            notice = 0;
           }
           break;
         case 4: /*Fear attack  */
@@ -11886,6 +11898,7 @@ mon_attack(midx)
             ma_combat(MA_FEAR, 3 + randint(cre->level));
           } else {
             ma_combat(MA_FEAR, 3);
+            notice = 0;
           }
           break;
         case 5: /*Fire attack  */
@@ -11913,6 +11926,7 @@ mon_attack(midx)
           py_take_hit(damage);
           if (maD[MA_BLIND]) {
             ma_combat(MA_BLIND, 5);
+            notice = 0;
           } else {
             msg_print("Your eyes begin to sting.");
             ma_combat(MA_BLIND, 10 + randint(cre->level));
@@ -11927,6 +11941,8 @@ mon_attack(midx)
           else if (countD.paralysis < 1) {
             countD.paralysis = randint(cre->level) + 3;
             msg_print("You are paralyzed.");
+          } else {
+            notice = 0;
           }
           break;
         case 12: /*Steal Money    */
@@ -11987,7 +12003,7 @@ mon_attack(midx)
           aggravate_monster(20);
           break;
         case 21: /*Disenchant     */
-          equip_disenchant();
+          if (!equip_disenchant()) notice = 0;
           break;
         case 22: /*Eat food     */
         {
@@ -11995,6 +12011,8 @@ mon_attack(midx)
           if (l >= 0) {
             inven_destroy_num(l, 1);
             msg_print("It got at your rations!");
+          } else {
+            notice = 0;
           }
         } break;
         case 23: /*Eat light     */
@@ -12003,6 +12021,9 @@ mon_attack(midx)
           if (obj->p1 > 0) {
             obj->p1 = MAX(obj->p1 - 250 + randint(250), 1);
             see_print("Your light dims.");
+            notice = (maD[MA_BLIND] == 0);
+          } else {
+            notice = 0;
           }
         } break;
         case 24: /*Eat charges    */
@@ -12017,10 +12038,13 @@ mon_attack(midx)
               obj->p1 = 0;
               obj->idflag |= ID_EMPTY;
               msg_print("Energy drains from your pack!");
+            } else {
+              notice = 0;
             }
           }
         } break;
         case 99: {
+          notice = 0;
         } break;
       }
 
@@ -12036,6 +12060,8 @@ mon_attack(midx)
           mon->mconfused += 2 + randint(16);
         }
       }
+
+      if (notice) recallD[mon->cidx].r_attack[it] += 1;
     } else {
       MSG("%s misses you.", descD);
     }
@@ -12459,6 +12485,10 @@ roff_recall(mon_num, reveal)
   uint32_t rcmove = recall->r_cmove & cr_ptr->cmove;
   uint16_t rcdefense = recall->r_cdefense & cr_ptr->cdefense;
   int ulev = uD.lev;
+
+  // Quylthulgs
+  if (cr_ptr->cmove & CM_ONLY_MAGIC && recall->r_attack[0] > 20)
+    rcmove |= CM_ONLY_MAGIC;
 
   if (reveal) {
     recall->r_kill = 255;
@@ -13060,11 +13090,13 @@ STATIC void make_move(midx, mm) int* mm;
     else if (c_ptr->fval == FLOOR_OBST) {
       if (obj->tval == TV_CLOSED_DOOR || obj->tval == TV_SECRET_DOOR) {
         do_move = FALSE;
-        if (cmove & CM_OPEN_DOOR && obj->p1 == 0) {
+        if ((cmove & CM_OPEN_DOOR) != 0 && obj->p1 == 0) {
           obj->tval = TV_OPEN_DOOR;
           obj->tchar = '\'';
           if (c_ptr->cflag & CF_LIT) msg_print("A door creaks open.");
-        } else if (cmove & CM_OPEN_DOOR && obj->p1 > 0) {
+          if (c_ptr->cflag & CF_LIT)
+            recallD[m_ptr->cidx].r_cmove |= CM_OPEN_DOOR;
+        } else if ((cmove & CM_OPEN_DOOR) != 0 && obj->p1 > 0) {
           if (randint((m_ptr->hp + 1) * (50 + obj->p1)) <
               40 * (m_ptr->hp - 10 - obj->p1)) {
             msg_print("You hear the click of a lock being opened.");
@@ -13111,6 +13143,7 @@ STATIC void make_move(midx, mm) int* mm;
         /* Eat it or wait */
         if ((cmove & CM_EATS_OTHER) &&
             cr_ptr->mexp >= creatureD[c_ptr->midx].mexp) {
+          recallD[m_ptr->cidx].r_cmove |= CM_EATS_OTHER;
           mon_unuse(&entity_monD[c_ptr->midx]);
           c_ptr->midx = 0;
         } else
@@ -13119,10 +13152,12 @@ STATIC void make_move(midx, mm) int* mm;
     }
     /* Creature has been allowed move.   */
     if (do_move) {
-      if (cmove & CM_PICKS_UP && obj_mon_pickup(obj)) {
-        if (los(py, px, newy, newx)) {
-          mon_desc(midx);
+      if ((cmove & CM_PICKS_UP) != 0 && mpickup_obj(obj)) {
+        int lit = 0;
+        if (los(py, px, newy, newx)) lit = mon_desc(midx);
+        if (lit) {
           MSG("%s picks up an object.", descD);
+          recallD[m_ptr->cidx].r_cmove |= CM_PICKS_UP;
         }
         delete_object(newy, newx);
       }
@@ -13260,7 +13295,6 @@ mon_try_spell(midx, cdis)
   int spell_choice[32];
   int took_turn;
   struct monS* mon;
-  int mlit;
   struct creatureS* cr_ptr;
 
   mon = &entity_monD[midx];
@@ -13296,12 +13330,12 @@ mon_try_spell(midx, cdis)
     } else {
       took_turn = TRUE;
 
+      // Insane
       thrown_spell = spell_choice[randint(k) - 1];
       spell_index = thrown_spell - 4;
       ++thrown_spell;
 
-      mlit = mon_lit(midx);
-      mon_desc(midx);
+      int mlit = mon_desc(midx);
 
       // -1: no message for drain mana
       if (spell_index < AL(mon_spell_nameD) - 1) {
@@ -13425,6 +13459,10 @@ mon_try_spell(midx, cdis)
         default:
           MSG("%s cast unknown spell.", descD);
       }
+      if (mlit) {
+        int csflag = chance | (1 << (thrown_spell - 1));
+        recallD[mon->cidx].r_spells |= csflag;
+      }
     }
   }
   return took_turn;
@@ -13444,6 +13482,7 @@ mon_move(midx)
   cr_ptr = &creatureD[m_ptr->cidx];
   c_ptr = &caveD[m_ptr->fy][m_ptr->fx];
   if ((cr_ptr->cmove & CM_PHASE) == 0 && c_ptr->fval >= MIN_WALL) {
+    recallD[m_ptr->cidx].r_cmove |= CM_PHASE;
     if (mon_take_hit(midx, damroll(8, 8))) {
       msg_print("You hear a scream muffled by rock!");
       py_experience();
@@ -13465,6 +13504,7 @@ mon_move(midx)
     took_turn = mon_try_spell(midx, cdis) || (cr_ptr->cmove & CM_ONLY_MAGIC);
 
   if (!took_turn) {
+    uint32_t rcmove = 0;
     if (m_ptr->mconfused) {
       m_ptr->mconfused -= 1;
       if ((cr_ptr->cmove & CM_ATTACK_ONLY)) {
@@ -13481,8 +13521,9 @@ mon_move(midx)
       random = TRUE;
     } else if ((cr_ptr->cmove & CM_20_RANDOM) && randint(100) < 20) {
       random = TRUE;
-    } else if ((cr_ptr->cmove & CM_MOVE_NORMAL) && randint(200) == 1) {
-      random = TRUE;
+    } else if ((cr_ptr->cmove & CM_MOVE_NORMAL)) {
+      rcmove |= CM_MOVE_NORMAL;
+      if (randint(200) == 1) random = TRUE;
     }
 
     if (flee) {
@@ -13493,17 +13534,23 @@ mon_move(midx)
       mm[3] = randint(9); /* May attack only if cornered */
       mm[4] = randint(9);
     } else if (random) {
+      rcmove |= (cr_ptr->cmove & CM_RANDOM_MOVE);
       for (int it = 0; it < 5; ++it) {
         mm[it] = randint(9);
       }
     } else if (cdis < 2 || (cr_ptr->cmove & CM_ATTACK_ONLY) == 0) {
+      if (cr_ptr->cmove & CM_ONLY_MAGIC) recallD[m_ptr->cidx].r_attack[0] += 1;
       get_moves(midx, mm);
+    } else {
+      rcmove |= (cr_ptr->cmove & CM_ATTACK_ONLY);
     }
 
     if (mm[0]) {
       make_move(midx, mm);
       return 1;
     }
+
+    if (rcmove) recallD[m_ptr->cidx].r_cmove |= rcmove;
   }
   return 0;
 }
@@ -13561,9 +13608,14 @@ creatures()
     MUSE(u, x);
     MUSE(u, stealth);
     int aggr = py_tr(TR_AGGRAVATE);
+    int see_invis = py_tr(TR_SEE_INVIS);
 
     FOR_EACH(mon, {
       struct creatureS* cr_ptr = &creatureD[mon->cidx];
+
+      if (see_invis && (cr_ptr->cmove & CM_INVISIBLE) != 0)
+        recallD[mon->cidx].r_cmove |= CM_INVISIBLE;
+
       int move_count = movement_rate(mon->mspeed + adj_speed);
       int msleep = mon->msleep;
       if (msleep) {

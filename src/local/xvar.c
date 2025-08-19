@@ -43,7 +43,7 @@ DATA char historyD[256];
 
 // Monster memory
 DATA char monmemD[1024];
-DATA struct recallS recallD[MAX_CREATURE];
+DATA struct recallS recallD[MAX_CREATURE]; // TBD: handle overflow
 
 // Magic affect counters & names
 GAME int32_t maD[MA_COUNT];
