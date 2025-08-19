@@ -788,34 +788,42 @@ tot_dam(obj, tdam, cidx)
 struct objS* obj;
 {
   struct creatureS* cr_ptr;
+  struct recallS* r_ptr;
 
   cr_ptr = &creatureD[cidx];
+  r_ptr = &recallD[cidx];
   if ((obj->flags & TR_EGO_WEAPON) &&
       (obj->tval == TV_HAFTED || obj->tval == TV_POLEARM ||
        obj->tval == TV_SWORD)) {
     /* Slay Dragon  */
     if ((cr_ptr->cdefense & CD_DRAGON) && (obj->flags & TR_SLAY_DRAGON)) {
       tdam = tdam * 4;
+      r_ptr->r_cdefense |= CD_DRAGON;
     }
     /* Slay Undead  */
     else if ((cr_ptr->cdefense & CD_UNDEAD) && (obj->flags & TR_SLAY_UNDEAD)) {
       tdam = tdam * 3;
+      r_ptr->r_cdefense |= CD_UNDEAD;
     }
     /* Slay Animal  */
     else if ((cr_ptr->cdefense & CD_ANIMAL) && (obj->flags & TR_SLAY_ANIMAL)) {
       tdam = tdam * 2;
+      r_ptr->r_cdefense |= CD_ANIMAL;
     }
     /* Slay Evil     */
     else if ((cr_ptr->cdefense & CD_EVIL) && (obj->flags & TR_SLAY_EVIL)) {
       tdam = tdam * 2;
+      r_ptr->r_cdefense |= CD_EVIL;
     }
     /* Frost         */
     else if ((cr_ptr->cdefense & CD_FROST) && (obj->flags & TR_FROST_BRAND)) {
       tdam = tdam * 3 / 2;
+      r_ptr->r_cdefense |= CD_FROST;
     }
     /* Fire        */
     else if ((cr_ptr->cdefense & CD_FIRE) && (obj->flags & TR_FLAME_TONGUE)) {
       tdam = tdam * 3 / 2;
+      r_ptr->r_cdefense |= CD_FIRE;
     }
   }
   return (tdam);
@@ -7110,6 +7118,7 @@ STATIC void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         if (mod_light) c_ptr->cflag ^= CF_TEMP_LIGHT;
 
         if (harm_type & cre->cdefense) {
+          recallD[m_ptr->cidx].r_cdefense |= harm_type;
           dam = dam * 2;
         } else if (weapon_type & cre->spells) {
           dam = dam / 4;
@@ -7184,6 +7193,7 @@ STATIC void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
                   thit++;
                   dam = dam_hp;
                   if (harm_type & cr_ptr->cdefense) {
+                    recallD[m_ptr->cidx].r_cdefense |= harm_type;
                     dam = dam * 2;
                   } else if (weapon_type & cr_ptr->spells) {
                     dam = dam / 4;
@@ -7391,24 +7401,24 @@ confuse_monster(dir, y, x)
     else if (c_ptr->midx) {
       m_ptr = &entity_monD[c_ptr->midx];
       cr_ptr = &creatureD[m_ptr->cidx];
-      mon_desc(c_ptr->midx);
+      int mlit = mon_desc(c_ptr->midx);
       flag = TRUE;
       /* Monsters with innate resistence ignore the attack.
          Monsters which resisted the attack should wake up.  */
       if (CD_NO_SLEEP & cr_ptr->cdefense) {
+        if (mlit) recallD[m_ptr->cidx].r_cdefense |= CD_NO_SLEEP;
         MSG("%s is unaffected.", descD);
       } else if (randint(MAX_MON_LEVEL) < cr_ptr->level) {
         MSG("%s sounds disoriented, only for a moment.", descD);
-        m_ptr->msleep = 0;
       } else {
         if (m_ptr->mconfused)
           m_ptr->mconfused += 3;
         else
           m_ptr->mconfused = 2 + randint(16);
         confuse = TRUE;
-        m_ptr->msleep = 0;
         MSG("%s sounds confused.", descD);
       }
+      m_ptr->msleep = 0;
     }
   } while (!flag);
   return (confuse);
@@ -7436,17 +7446,18 @@ sleep_monster(dir, y, x)
       cr_ptr = &creatureD[m_ptr->cidx];
       flag = TRUE;
 
-      sleep = ((CD_NO_SLEEP & cr_ptr->cdefense) == 0) &&
-              (randint(MAX_MON_LEVEL) >= cr_ptr->level);
+      int sflag = CD_NO_SLEEP & cr_ptr->cdefense;
+      sleep = ((sflag) == 0) && (randint(MAX_MON_LEVEL) >= cr_ptr->level);
 
       if (sleep) m_ptr->msleep = 500;
 
-      if (mon_lit(c_ptr->midx)) {
-        mon_desc(c_ptr->midx);
+      int mlit = mon_desc(c_ptr->midx);
+      if (mlit) {
         if (sleep) {
           seen += 1;
           MSG("%s falls asleep.", descD);
         } else {
+          if (sflag) recallD[m_ptr->cidx].r_cdefense |= sflag;
           MSG("%s is unaffected.", descD);
         }
       }
@@ -7468,8 +7479,8 @@ sleep_monster_aoe(maxdis)
     cdis = distance(y, x, mon->fy, mon->fx);
     if ((cdis > maxdis) || !los(y, x, mon->fy, mon->fx)) continue;
 
-    sleep = ((CD_NO_SLEEP & cr_ptr->cdefense) == 0) &&
-            (randint(MAX_MON_LEVEL) >= cr_ptr->level);
+    int sflag = CD_NO_SLEEP & cr_ptr->cdefense;
+    sleep = ((sflag) == 0) && (randint(MAX_MON_LEVEL) >= cr_ptr->level);
 
     if (sleep) mon->msleep = 500;
 
@@ -7479,6 +7490,7 @@ sleep_monster_aoe(maxdis)
         seen += 1;
         MSG("%s falls asleep.", descD);
       } else {
+        if (sflag) recallD[mon->cidx].r_cdefense |= sflag;
         MSG("%s is unaffected.", descD);
       }
     }
@@ -7749,6 +7761,7 @@ dispel_creature(cflag, damage)
       } else {
         MSG("%s shudders.", descD);
       }
+      recallD[mon->cidx].r_cdefense |= cflag;
     }
   });
   msg_pause();
@@ -7857,8 +7870,9 @@ sleep_adjacent(y, x)
         cr_ptr = &creatureD[m_ptr->cidx];
 
         mon_desc(c_ptr->midx);
-        if ((randint(MAX_MON_LEVEL) < cr_ptr->level) ||
-            (CD_NO_SLEEP & cr_ptr->cdefense)) {
+        int sflag = CD_NO_SLEEP & cr_ptr->cdefense;
+        if ((randint(MAX_MON_LEVEL) < cr_ptr->level) || (sflag) != 0) {
+          if (sflag) recallD[m_ptr->cidx].r_cdefense |= sflag;
           MSG("%s is unaffected.", descD);
         } else {
           sleep = TRUE;
