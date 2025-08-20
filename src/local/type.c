@@ -278,7 +278,7 @@ struct recallS {
   uint32_t r_spells; // ok
   uint32_t r_kill; // ok
   uint32_t r_death; // ok
-  uint16_t r_cdefense;
+  uint16_t r_cdefense; // ok
   uint16_t r_wake; // ok
   uint8_t r_attack[4]; // ok
 };

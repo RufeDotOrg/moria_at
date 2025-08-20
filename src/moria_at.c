@@ -7061,6 +7061,7 @@ light_line(dir, y, x)
         cr_ptr = &creatureD[m_ptr->cidx];
         mon_desc(c_ptr->midx);
         if (CD_LIGHT & cr_ptr->cdefense) {
+          recallD[m_ptr->cidx].r_cdefense |= CD_LIGHT;
           if (mon_take_hit(c_ptr->midx, damroll(2, 8))) {
             MSG("%s shrivels away in the light!", descD);
             py_experience();
@@ -7306,6 +7307,7 @@ wall_to_mud(dir, y, x)
           MSG("%s grunts in pain!", descD);
         }
         flag = TRUE;
+        recallD[m_ptr->cidx].r_cdefense |= CD_STONE;
       }
     }
   } while (!flag);
@@ -7556,6 +7558,7 @@ drain_life(dir, y, x)
         } else {
           MSG("%s screams in agony.", descD);
         }
+        recallD[m_ptr->cidx].r_cdefense |= CD_UNDEAD;
       }
     }
   } while (!flag);
@@ -7945,10 +7948,11 @@ turn_undead()
         mon->msleep = 0;
       }
 
-      if (mon_lit(it_index)) {
-        mon_desc(it_index);
+      int mlit = mon_desc(it_index);
+      if (mlit) {
         if (success) {
           MSG("%s runs frantically!", descD);
+          recallD[mon->cidx].r_cdefense |= CD_UNDEAD;
         } else {
           MSG("%s is unaffected.", descD);
         }
