@@ -12421,9 +12421,8 @@ py_monlook_dir(dir)
           seen += 1;
           ylookD = mon->fy;
           xlookD = mon->fx;
-          if (mon->msleep) msg_hint(AP("(sleeping)"));
-          CLOBBER_MSG("You see %s %s.", is_a_vowel(cre->name[0]) ? "a" : "an",
-                      cre->name);
+          CLOBBER_MSG("You see %s %s.%s", is_a_vowel(cre->name[0]) ? "a" : "an",
+                      cre->name, mon->msleep ? " (sleeping)" : "");
         }
       }
     }
@@ -12879,9 +12878,10 @@ mon_look(midx)
 {
   struct monS* mon = &entity_monD[midx];
   struct creatureS* cre = &creatureD[mon->cidx];
-  if (mon->msleep) msg_hint(AP("(sleeping)"));
-  char c = CLOBBER_MSG("You see %s %s.", is_a_vowel(cre->name[0]) ? "a" : "an",
-                       cre->name);
+  msg_hint(AP("(tap for beastiary)"));
+  char c =
+      CLOBBER_MSG("You see %s %s.%s", is_a_vowel(cre->name[0]) ? "a" : "an",
+                  cre->name, mon->msleep ? " (sleeping)" : "");
   if (c == 'O') {
     screen_submodeD = 1;
 
