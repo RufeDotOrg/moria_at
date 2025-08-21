@@ -638,12 +638,11 @@ game_text()
       int delta = turnD - last_turnD;
       if (TEST_UI) delta = 1234567;
       if (delta) {
-        p.x += len * FWIDTH + 1;
-        if (delta > 0)
-          font_color(font_rgba(GREEN));
-        else
-          font_color(font_rgba(RED));
+        int c = globalD.font_color ? greyD[5] : font_rgba(YELLOW);
+        if (delta < 0) c = font_rgba(RED);
+        font_color(c);
 
+        p.x += len * FWIDTH + 1;
         len = snprintf(tmp, AL(tmp), "%+d", delta);
         render_monofont_string(renderer, &fontD, tmp, len, p);
         font_reset();
