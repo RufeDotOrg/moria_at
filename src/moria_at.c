@@ -5490,14 +5490,14 @@ death_text()
   }
   return death_descD;
 }
-// TBD: rewrite
-STATIC void
+STATIC int
 summon_object(y, x, num, typ)
 {
   int i, j, k;
   int py, px;
   struct caveS* c_ptr;
   int real_typ;
+  int seen = 0;
 
   py = uD.y;
   px = uD.x;
@@ -5530,6 +5530,8 @@ summon_object(y, x, num, typ)
           if (j == py && k == px) {
             msg_print("You feel something roll beneath your feet.");
           }
+          if (CF_VIZ & caveD[j][k].cflag) seen += real_typ;
+
           i = 20;
         }
       }
@@ -5537,36 +5539,44 @@ summon_object(y, x, num, typ)
     } while (i <= 20);
     num--;
   } while (num != 0);
+
+  return seen;
 }
 STATIC void
-memory_of_kill(cidx)
+memory_of_kill(cidx, ogcount)
 {
   recallD[cidx].r_kill += 1;
+
+  if (ogcount) {
+    int obj = ogcount % 256;
+    int gc = ogcount / 256;
+
+    uint32_t rcflag = 0;
+    if (obj) rcflag |= (CM_CARRY_OBJ | CM_SMALL_OBJ);
+    if (gc) rcflag |= CM_CARRY_GOLD;
+
+    ST_MAX(recallD[cidx].r_treasure, obj + gc);
+    if (rcflag) recallD[cidx].r_cmove |= rcflag;
+  }
 }
-STATIC void
+STATIC int
 mon_death(y, x, flags)
 {
-  int i, number;
-
-  if (flags & CM_CARRY_OBJ)
-    i = 1;
-  else
-    i = 0;
+  int i = 0;
+  if (flags & CM_CARRY_OBJ) i += 1;
   if (flags & CM_CARRY_GOLD) i += 2;
   if (flags & CM_SMALL_OBJ) i += 4;
 
-  number = 0;
+  int number = 0;
   if ((flags & CM_60_RANDOM) && (randint(100) < 60)) number++;
   if ((flags & CM_90_RANDOM) && (randint(100) < 90)) number++;
   if (flags & CM_1D2_OBJ) number += randint(2);
   if (flags & CM_2D2_OBJ) number += damroll(2, 2);
   if (flags & CM_4D2_OBJ) number += damroll(4, 2);
-  if (number > 0) summon_object(y, x, number, i);
 
-  if (flags & CM_WIN) {
-    // Player may be dead; check for level transition
-    uD.total_winner = (uD.new_level_flag == 0);
-  }
+  int ogcount = 0;
+  if (number > 0) ogcount = summon_object(y, x, number, i);
+  return ogcount;
 }
 STATIC int
 mon_take_hit(midx, dam)
@@ -5584,9 +5594,14 @@ mon_take_hit(midx, dam)
     uD.exp += (cre->mexp * cre->level) / uD.lev;
 
     caveD[mon->fy][mon->fx].midx = 0;
-    mon_death(mon->fy, mon->fx, cre->cmove);
-    memory_of_kill(mon->cidx);
+    int ogcount = mon_death(mon->fy, mon->fx, cre->cmove);
+    memory_of_kill(mon->cidx, ogcount);
     mon_unuse(mon);
+
+    if (cre->cmove & CM_WIN) {
+      // Player may be dead; check for level transition
+      uD.total_winner = (uD.new_level_flag == 0);
+    }
   }
 
   return death_blow;
@@ -12292,9 +12307,6 @@ open_object(y, x)
       /* Chest treasure is allocated as if a creature   */
       /* had been killed.  			   */
       if (flag) {
-        /* clear the cursed chest/monster win flag, so that people
-           can not win by opening a cursed chest */
-        obj->flags &= ~TR_CURSED;
         mon_death(y, x, obj->flags);
         obj->flags = 0;
       }
@@ -12612,9 +12624,7 @@ roff_recall(mon_num, reveal)
     if (cr_ptr->cdefense & CD_ANIMAL) roff(" natural");
     if (cr_ptr->cdefense & CD_EVIL) roff(" evil");
     if (cr_ptr->cdefense & CD_UNDEAD) roff(" undead");
-    /* calculate the integer exp part, can be larger than 64K when first
-       level character looks at Balrog info, so must store in long */
-    int tempxp = (long)cr_ptr->mexp * cr_ptr->level / ulev;
+    int tempxp = cr_ptr->mexp * cr_ptr->level / ulev;
     /* calculate the fractional exp part scaled by 100,
        must use long arithmetic to avoid overflow */
     j = (((long)cr_ptr->mexp * cr_ptr->level % ulev) * (long)1000 / ulev + 5) /
@@ -12682,7 +12692,7 @@ roff_recall(mon_num, reveal)
     }
   }
   if (rspells & (CS_BREATHE | CS_SPELLS)) {
-    if ((recall->r_spells & CS_FREQ) > 5) { /* Could offset by level */
+    if ((recall->r_spells & CS_FREQ) > 5) {
       snprintf(AP(temp), "; 1 time in %lu", cr_ptr->spells & CS_FREQ);
       roff(temp);
     }
@@ -12776,13 +12786,13 @@ roff_recall(mon_num, reveal)
   /* Do we know what it might carry? */
   if (rcmove & (CM_CARRY_OBJ | CM_CARRY_GOLD)) {
     roff(" It may");
-    j = (rcmove & CM_TREASURE) >> CM_TR_SHIFT;
-    if (j == 1) {
+    uint32_t trcount = recall->r_treasure;
+    if (trcount == 1) {
       if ((cr_ptr->cmove & CM_TREASURE) == CM_60_RANDOM)
         roff(" sometimes");
       else
         roff(" often");
-    } else if ((j == 2) &&
+    } else if ((trcount == 2) &&
                ((cr_ptr->cmove & CM_TREASURE) == (CM_60_RANDOM | CM_90_RANDOM)))
       roff(" often");
     roff(" carry");
@@ -12791,25 +12801,25 @@ roff_recall(mon_num, reveal)
       p = " small objects";
     else
       p = " objects";
-    if (j == 1) {
+    if (trcount == 1) {
       if (rcmove & CM_SMALL_OBJ)
         p = " a small object";
       else
         p = " an object";
-    } else if (j == 2)
+    } else if (trcount == 2)
       roff(" one or two");
     else {
-      snprintf(AP(temp), " up to %d", j);
+      snprintf(AP(temp), " up to %d", trcount);
       roff(temp);
     }
     if (rcmove & CM_CARRY_OBJ) {
       roff(p);
       if (rcmove & CM_CARRY_GOLD) {
         roff(" or treasure");
-        if (j > 1) roff("s");
+        if (trcount > 1) roff("s");
       }
       roff(".");
-    } else if (j != 1)
+    } else if (trcount != 1)
       roff(" treasures.");
     else
       roff(" treasure.");
