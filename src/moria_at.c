@@ -13078,7 +13078,8 @@ py_tunnel(iidx)
     tunnel_tool(y, x, iidx);
   }
 }
-STATIC void make_move(midx, mm) int* mm;
+STATIC void make_move(midx, mm, rc_ptr) int* mm;
+uint32_t* rc_ptr;
 {
   int fy, fx, newy, newx, do_move;
   int py, px;
@@ -13114,8 +13115,7 @@ STATIC void make_move(midx, mm) int* mm;
           obj->tval = TV_OPEN_DOOR;
           obj->tchar = '\'';
           if (c_ptr->cflag & CF_LIT) msg_print("A door creaks open.");
-          if (c_ptr->cflag & CF_LIT)
-            recallD[m_ptr->cidx].r_cmove |= CM_OPEN_DOOR;
+          if (c_ptr->cflag & CF_LIT) *rc_ptr |= CM_OPEN_DOOR;
         } else if ((cmove & CM_OPEN_DOOR) != 0 && obj->p1 > 0) {
           if (randint((m_ptr->hp + 1) * (50 + obj->p1)) <
               40 * (m_ptr->hp - 10 - obj->p1)) {
@@ -13163,7 +13163,7 @@ STATIC void make_move(midx, mm) int* mm;
         /* Eat it or wait */
         if ((cmove & CM_EATS_OTHER) &&
             cr_ptr->mexp >= creatureD[c_ptr->midx].mexp) {
-          recallD[m_ptr->cidx].r_cmove |= CM_EATS_OTHER;
+          *rc_ptr |= CM_EATS_OTHER;
           mon_unuse(&entity_monD[c_ptr->midx]);
           c_ptr->midx = 0;
         } else
@@ -13177,7 +13177,7 @@ STATIC void make_move(midx, mm) int* mm;
         if (los(py, px, newy, newx)) lit = mon_desc(midx);
         if (lit) {
           MSG("%s picks up an object.", descD);
-          recallD[m_ptr->cidx].r_cmove |= CM_PICKS_UP;
+          *rc_ptr |= CM_PICKS_UP;
         }
         delete_object(newy, newx);
       }
@@ -13497,6 +13497,7 @@ mon_move(midx)
   int mm[9];
   int took_turn, random, flee;
   int cdis;
+  uint32_t rcmove = 0;
 
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
@@ -13512,7 +13513,7 @@ mon_move(midx)
       }
       return 1;
     }
-    recallD[m_ptr->cidx].r_cmove |= CM_PHASE;
+    rcmove |= CM_PHASE;
   }
 
   AC(mm);
@@ -13526,7 +13527,6 @@ mon_move(midx)
     took_turn = mon_try_spell(midx, cdis) || (cr_ptr->cmove & CM_ONLY_MAGIC);
 
   if (!took_turn) {
-    uint32_t rcmove = 0;
     if (m_ptr->mconfused) {
       m_ptr->mconfused -= 1;
       if ((cr_ptr->cmove & CM_ATTACK_ONLY)) {
@@ -13568,12 +13568,11 @@ mon_move(midx)
     }
 
     if (mm[0]) {
-      make_move(midx, mm);
+      make_move(midx, mm, &rcmove);
       return 1;
     }
-
-    if (rcmove) recallD[m_ptr->cidx].r_cmove |= rcmove;
   }
+  if (rcmove) recallD[m_ptr->cidx].r_cmove |= rcmove;
   return 0;
 }
 STATIC int

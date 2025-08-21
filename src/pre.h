@@ -423,7 +423,7 @@ STATIC int FDECL(objdig_wall_plus,
 STATIC int FDECL(tunnel_tool, (int y, int x, int iidx));
 STATIC int FDECL(tunnel, (int y, int x));
 STATIC void FDECL(py_tunnel, (int iidx));
-STATIC void FDECL(make_move, (int midx, int* mm));
+STATIC void FDECL(make_move, (int midx, int* mm, uint32_t* rc_ptr));
 STATIC void FDECL(mon_breath_msg, (int breath));
 STATIC void FDECL(mon_breath_dam,
                   (int midx, int fy, int fx, int breath, int breath_maxdam));
