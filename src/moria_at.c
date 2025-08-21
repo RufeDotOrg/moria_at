@@ -12518,8 +12518,6 @@ roff_recall(mon_num, reveal)
     rcdefense = -1;
   }
 
-  snprintf(AP(temp), "'%c' The %s: ", cr_ptr->cchar, cr_ptr->name);
-  roff(temp);
   if (recall->r_death) {
     snprintf(AP(temp), "%d of the contributors to your monster memory %s",
              recall->r_death, ((recall->r_death) == 1 ? "has" : "have"));
@@ -12904,7 +12902,7 @@ mon_look(midx)
       offset += next_br;
       offset += 1;
     }
-    CLOBBER_MSG("Monster Memory");
+    CLOBBER_MSG("'%c' The %s:", cre->cchar, cre->name);
   }
 }
 STATIC void
