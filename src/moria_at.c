@@ -3929,9 +3929,6 @@ hard_reset()
   overlay_submodeD = 0;
   screen_submodeD = 0;
 
-  // Monster memory
-  AC(recallD);
-
   return 0;
 }
 STATIC void
@@ -14878,6 +14875,8 @@ main(int argc, char** argv)
       set_use_stat(it);
     }
 
+    if (!platformD.monster_memory(AB(recallD), 0)) AC(recallD);
+
     // Release objects in the cave
     FOR_EACH(obj, {
       if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
@@ -14905,7 +14904,7 @@ main(int argc, char** argv)
     dungeon();
 
     if (uD.new_level_flag != NL_DEATH) {
-      // recallD storage
+      platformD.monster_memory(AB(recallD), 1);
       if (platformD.save(globalD.saveslot_class)) {
         longjmp(restartD, 1);
       } else {

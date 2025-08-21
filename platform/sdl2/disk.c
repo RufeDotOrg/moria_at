@@ -2,6 +2,7 @@
 
 #define SAVENAME "savechar"
 #define CACHENAME "moria.cache"
+#define MEMORYNAME "moria.memory"
 enum { RESUME = 1 };
 
 DATA char cachepathD[1024];
@@ -403,6 +404,23 @@ disk_postgame()
 }
 
 STATIC int
+disk_monster_memory(ptr, size, op)
+uint8_t* ptr;
+{
+  int is_write = (op != 0);
+  char* acc = is_write ? "wb" : "rb";
+  SDL_RWops* opf = file_access(MEMORYNAME, acc);
+  int success = 0;
+
+  if (opf)
+    success = is_write ? SDL_RWwrite(opf, ptr, size, 1)
+                       : SDL_RWread(opf, ptr, size, 1);
+  if (opf) SDL_RWclose(opf);
+
+  return success != 0;
+}
+
+STATIC int
 disk_pregame()
 {
   if (__APPLE__) {
@@ -485,6 +503,7 @@ disk_pregame()
   platformD.save = platform_save;
   platformD.erase = platform_erase;
   platformD.savemidpoint = disk_savemidpoint;
+  platformD.monster_memory = disk_monster_memory;
   if (exportpath_usedD) platformD.saveex = platform_saveex;
   if (exportpath_usedD) platformD.testex = platform_testex;
   return 1;

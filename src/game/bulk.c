@@ -55,6 +55,7 @@ struct platformS {
   fn saveex;
   fn testex;
   fn dpad;
+  fn monster_memory;
 };
 static struct platformS platformD;
 struct __attribute__((aligned(4 * 1024))) padS {
