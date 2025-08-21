@@ -4354,20 +4354,23 @@ detect_obj(int (*valid)(), int known)
 }
 // Player may use detection flags to light creature up
 STATIC int
-dflags_by_creature(struct creatureS* cr_ptr)
+detect_by_mflag(mflag, cridx)
 {
+  struct creatureS* cr_ptr = &creatureD[cridx];
   int dflags = 0;
   if (CD_EVIL & cr_ptr->cdefense) {
     dflags |= (1 << MA_DETECT_EVIL);
+    recallD[cridx].r_cdefense |= CD_EVIL;
   }
 
   if ((CM_INVISIBLE & cr_ptr->cmove)) {
     dflags |= (1 << MA_DETECT_INVIS);
+    recallD[cridx].r_cmove |= CM_INVISIBLE;
   } else {
     dflags |= (1 << MA_DETECT_MON);
   }
 
-  return dflags;
+  return (mflag & dflags) != 0;
 }
 STATIC int
 detect_mon(ma_type, known)
@@ -4375,9 +4378,7 @@ detect_mon(ma_type, known)
   int flag = 0;
   int mflag = 1 << ma_type;
   FOR_EACH(mon, {
-    struct creatureS* cr_ptr = &creatureD[mon->cidx];
-    int df = dflags_by_creature(cr_ptr);
-    if (mflag & df) flag = 1;
+    if (detect_by_mflag(mflag, mon->cidx)) flag = 1;
   });
 
   if (flag) {
@@ -4430,10 +4431,8 @@ mon_lit(midx)
 
   if (midx) {
     m_ptr = &entity_monD[midx];
-    cr_ptr = &creatureD[m_ptr->cidx];
 
-    int df = dflags_by_creature(cr_ptr);
-    if (mflag & df) {
+    if (detect_by_mflag(mflag, m_ptr->cidx)) {
       lit = 1;
     } else if (maD[MA_BLIND] == 0)
     // direct check of MA_BLIND is because sight can change during creatures()
@@ -4443,10 +4442,14 @@ mon_lit(midx)
       cdis = distance(y, x, fy, fx);
       if (cdis <= MAX_SIGHT && los(y, x, fy, fx)) {
         c_ptr = &caveD[fy][fx];
+        cr_ptr = &creatureD[m_ptr->cidx];
         if ((CD_INFRA & cr_ptr->cdefense) && (cdis <= infra)) {
           lit = 1;
+          recallD[m_ptr->cidx].r_cdefense |= CD_INFRA;
         } else if (CF_LIT & c_ptr->cflag) {
           lit = perceive_creature(cr_ptr);
+          if (lit && (CM_INVISIBLE & cr_ptr->cmove))
+            recallD[m_ptr->cidx].r_cmove |= CM_INVISIBLE;
         }
       }
     }
@@ -13629,16 +13632,13 @@ creatures()
     int see_invis = py_tr(TR_SEE_INVIS);
 
     FOR_EACH(mon, {
-      struct creatureS* cr_ptr = &creatureD[mon->cidx];
-
-      if (see_invis && (cr_ptr->cmove & CM_INVISIBLE) != 0)
-        recallD[mon->cidx].r_cmove |= CM_INVISIBLE;
-
       int move_count = movement_rate(mon->mspeed + adj_speed);
       int msleep = mon->msleep;
       if (msleep) {
+        struct creatureS* cr_ptr = &creatureD[mon->cidx];
         int mlit = mon_lit(it_index);
         int cdis = distance(y, x, mon->fy, mon->fx);
+
         // Monster area of affect
         if (mlit || cdis <= cr_ptr->aaf) {
           if (aggr) msleep = 0;
