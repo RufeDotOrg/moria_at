@@ -5542,7 +5542,7 @@ summon_object(y, x, num, typ)
   } while (num != 0);
 }
 STATIC void
-memory_of_death(cidx)
+memory_of_kill(cidx)
 {
   recallD[cidx].r_kill += 1;
 }
@@ -5588,7 +5588,7 @@ mon_take_hit(midx, dam)
 
     caveD[mon->fy][mon->fx].midx = 0;
     mon_death(mon->fy, mon->fx, cre->cmove);
-    memory_of_death(mon->cidx);
+    memory_of_kill(mon->cidx);
     mon_unuse(mon);
   }
 
@@ -12042,7 +12042,6 @@ mon_attack(midx)
           if (obj->p1 > 0) {
             obj->p1 = MAX(obj->p1 - 250 + randint(250), 1);
             see_print("Your light dims.");
-            notice = (maD[MA_BLIND] == 0);
           } else {
             notice = 0;
           }
@@ -13502,16 +13501,18 @@ mon_move(midx)
   m_ptr = &entity_monD[midx];
   cr_ptr = &creatureD[m_ptr->cidx];
   c_ptr = &caveD[m_ptr->fy][m_ptr->fx];
-  if ((cr_ptr->cmove & CM_PHASE) == 0 && c_ptr->fval >= MIN_WALL) {
-    recallD[m_ptr->cidx].r_cmove |= CM_PHASE;
-    if (mon_take_hit(midx, damroll(8, 8))) {
-      msg_print("You hear a scream muffled by rock!");
-      py_experience();
-    } else {
-      msg_print("A creature digs itself out from the rock!");
-      twall(m_ptr->fy, m_ptr->fx);
+  if (c_ptr->fval >= MIN_WALL) {
+    if ((cr_ptr->cmove & CM_PHASE) == 0) {
+      if (mon_take_hit(midx, damroll(8, 8))) {
+        msg_print("You hear a scream muffled by rock!");
+        py_experience();
+      } else {
+        msg_print("A creature digs itself out from the rock!");
+        twall(m_ptr->fy, m_ptr->fx);
+      }
+      return 1;
     }
-    return 1;
+    recallD[m_ptr->cidx].r_cmove |= CM_PHASE;
   }
 
   AC(mm);
@@ -13629,7 +13630,6 @@ creatures()
     MUSE(u, x);
     MUSE(u, stealth);
     int aggr = py_tr(TR_AGGRAVATE);
-    int see_invis = py_tr(TR_SEE_INVIS);
 
     FOR_EACH(mon, {
       int move_count = movement_rate(mon->mspeed + adj_speed);
