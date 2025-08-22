@@ -77,9 +77,16 @@ enum { RELEASE };
 // Default Type init
 #define INIT(x, ...) x = (typeof(x)) { __VA_ARGS__ }
 #define DFT(x) ((x){0})
+#define SWAP(x, y)     \
+  do {                 \
+    typeof(x) tmp = x; \
+    x = y;             \
+    y = tmp;           \
+  } while (0);
 
 // Log
 #define show(x) printf("[%s] %s: %ld\n", __func__, #x, x)
+#define showf(x) printf("[%s] %s: %.03f\n", __func__, #x, x)
 #define showsize(x) printf("sizeof %s: %d\n", #x, sizeof(x));
 
 // Use global var
@@ -145,7 +152,5 @@ extern unsigned char __stop_game[] __attribute__((__weak__));
 #define V4f(v) V4(fptr(v))
 #define XY(v) (v).x, (v).y
 #define WH(r) (r).w, (r).h
-
-#define ENV_STEAMDECK "STEAMDECK"
 
 #endif // COMMON_H
