@@ -67,6 +67,10 @@ enum { RELEASE };
 #define MIN(x, y) (((x) < (y)) ? (x) : (y))
 #define ST_MIN(wv, rv) \
   if (rv < wv) wv = rv
+#define ST_INC(wv)                       \
+  do {                                   \
+    if (wv != (typeof(wv))(-1)) wv += 1; \
+  } while (0)
 #define INVERT(x) x = !x
 #define OF2(x) (((x - 1) & x) == 0)
 

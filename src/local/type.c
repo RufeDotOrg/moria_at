@@ -274,7 +274,7 @@ struct ownerS {
 };
 
 struct recallS {
-  uint32_t r_cmove;     // spells, breath, (CM_SPECIAL), (CM_MOVE)
+  uint32_t r_cmove;     // spells, breath, (CM_SPECIAL), (CM_MOVE), (CM_CARRY)
   uint32_t r_spells;    // ok
   uint32_t r_kill;      // ok
   uint32_t r_death;     // ok

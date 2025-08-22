@@ -5545,7 +5545,7 @@ summon_object(y, x, num, typ)
 STATIC void
 memory_of_kill(cidx, ogcount)
 {
-  recallD[cidx].r_kill += 1;
+  ST_INC(recallD[cidx].r_kill);
 
   if (ogcount) {
     int obj = ogcount % 256;
@@ -11448,7 +11448,7 @@ py_menu()
         break;
 
       case 'g':
-        if (death) recallD[death_creD].r_death += 1;
+        if (death) ST_INC(recallD[death_creD].r_death);
         if (!death) platformD.savemidpoint();
         globalD.saveslot_class = -1;
         longjmp(restartD, 1);
@@ -12093,7 +12093,7 @@ mon_attack(midx)
         }
       }
 
-      if (notice) recallD[mon->cidx].r_attack[it] += 1;
+      if (notice) ST_INC(recallD[mon->cidx].r_attack[it]);
     } else {
       MSG("%s misses you.", descD);
     }
@@ -13566,7 +13566,8 @@ mon_move(midx)
         mm[it] = randint(9);
       }
     } else if (cdis < 2 || (cr_ptr->cmove & CM_ATTACK_ONLY) == 0) {
-      if (cr_ptr->cmove & CM_ONLY_MAGIC) recallD[m_ptr->cidx].r_attack[0] += 1;
+      if (cr_ptr->cmove & CM_ONLY_MAGIC)
+        ST_INC(recallD[m_ptr->cidx].r_attack[0]);
       get_moves(midx, mm);
     } else {
       rcmove |= (cr_ptr->cmove & CM_ATTACK_ONLY);
@@ -13659,7 +13660,7 @@ creatures()
           printf("local %s #%d | %d->%d msleep | %d mlit", cr_ptr->name,
                  it_index, mon->msleep, msleep, mlit);
         if (TEST_CREATURE && msleep == 0) l_wake[it_index] = 1;
-        if (msleep == 0) recallD[mon->cidx].r_wake += 1;
+        if (msleep == 0) ST_INC(recallD[mon->cidx].r_wake);
         mon->msleep = msleep;
       }
 
