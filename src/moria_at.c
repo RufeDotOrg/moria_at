@@ -11153,18 +11153,7 @@ py_saveslot_select()
     // Import
     if (c == 'i') {
       if (using_external) {
-        int count = 0;
-        for (int it = 0; it < AL(classD); ++it) {
-          if (platformD.load(it, 1)) {
-            if (saveslot_validation()) {
-              if (platformD.save(it)) {
-                summary_update(&in_summary[it]);
-                count += 1;
-              }
-            }
-          }
-        }
-
+        int count = platformD.saveex(1);
         line = 0;
         BufMsg(overlay, "Loaded characters (x%d)", count);
         CLOBBER_MSG("%s Media Update", other_media);
@@ -11175,7 +11164,7 @@ py_saveslot_select()
     // Export
     if (c == 's') {
       if (has_external) {
-        int count = platformD.saveex();
+        int count = platformD.saveex(0);
         line = 0;
         BufMsg(overlay, "Saved characters (x%d)", count);
         CLOBBER_MSG("%s Media Update", other_media);

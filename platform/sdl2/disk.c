@@ -34,6 +34,30 @@ file_access(char* filename, char* access)
   if (!RELEASE && ret != 0) Log("%s file_access %s", access, filename);
   return ret;
 }
+STATIC int
+path_copy_to(char* srcpath, char* dstpath)
+{
+  SDL_RWops *readf, *writef;
+  readf = file_access(srcpath, "rb");
+  if (readf) {
+    writef = file_access(dstpath, "wb");
+    if (writef) {
+      char chunk[4 * 1024];
+      int read_count;
+      do {
+        read_count = SDL_RWread(readf, chunk, 1, AL(chunk));
+        if (read_count) {
+          int write_count = SDL_RWwrite(writef, chunk, 1, read_count);
+          if (write_count != read_count) return 1;
+        }
+      } while (read_count);
+      SDL_RWclose(writef);
+    }
+    SDL_RWclose(readf);
+  }
+
+  return readf == 0 || writef == 0;
+}
 
 // Disk I/O
 STATIC int
@@ -284,18 +308,30 @@ disk_savemidpoint()
   return ret;
 }
 STATIC int
-platform_saveex()
+platform_saveex(reverse)
 {
+  struct bufS srcpath = {savepathD, savepath_usedD};
+  struct bufS dstpath = {exportpathD, exportpath_usedD};
   char filename[16] = SAVENAME;
   int count = 0;
+  char *in_path, *out_path;
+
+  if (reverse) SWAP(srcpath, dstpath);
 
   for (int it = 0; it < AL(classD); ++it) {
     filename_by_class(filename, it);
-    char *in_path, *ex_path;
-    in_path = path_append_filename(savepathD, savepath_usedD, filename);
-    ex_path = path_append_filename(exportpathD, exportpath_usedD, filename);
-    if (path_load(in_path)) count += (path_save(ex_path) != 0);
+    in_path = path_append_filename(srcpath.mem, srcpath.mem_size, filename);
+    out_path = path_append_filename(dstpath.mem, dstpath.mem_size, filename);
+    if (path_load(in_path)) count += (path_save(out_path) != 0);
   }
+
+  // moria.memory is not "counted" as a character
+  {
+    in_path = path_append_filename(srcpath.mem, srcpath.mem_size, MEMORYNAME);
+    out_path = path_append_filename(dstpath.mem, dstpath.mem_size, MEMORYNAME);
+    path_copy_to(in_path, out_path);
+  }
+
   return count;
 }
 STATIC int
@@ -328,30 +364,6 @@ disk_cache_write()
   return ret;
 }
 
-STATIC int
-path_copy_to(char* srcpath, char* dstpath)
-{
-  SDL_RWops *readf, *writef;
-  readf = file_access(srcpath, "rb");
-  if (readf) {
-    writef = file_access(dstpath, "wb");
-    if (writef) {
-      char chunk[4 * 1024];
-      int read_count;
-      do {
-        read_count = SDL_RWread(readf, chunk, 1, AL(chunk));
-        if (read_count) {
-          int write_count = SDL_RWwrite(writef, chunk, 1, read_count);
-          if (write_count != read_count) return 1;
-        }
-      } while (read_count);
-      SDL_RWclose(writef);
-    }
-    SDL_RWclose(readf);
-  }
-
-  return readf == 0 || writef == 0;
-}
 STATIC int
 cache_version()
 {
