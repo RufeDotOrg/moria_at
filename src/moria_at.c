@@ -12544,7 +12544,7 @@ roff_recall(mon_num, reveal)
     roff(" It lives in the town");
     k = TRUE;
   } else if (recall->r_kill) {
-    /* The Balrog is a level 100 monster, but appears at 50 feet.  */
+    // The Balrog is a level 100 monster, but appears at 50 feet.
     i = cr_ptr->level;
     if (i > WIN_MON_APPEAR) i = WIN_MON_APPEAR;
     snprintf(AP(temp), " It is normally found at depths of %d feet", i * 50);
@@ -12552,7 +12552,7 @@ roff_recall(mon_num, reveal)
     k = TRUE;
   }
 
-  /* the c_list speed value is 10 greater, so that it can be a int8u */
+  // the c_list speed value is 10 greater, so that it can be a int8u
   int mspeed = cr_ptr->speed - 10;
   if (rcmove & CM_ALL_MV_FLAGS) {
     if (k)
@@ -12606,18 +12606,15 @@ roff_recall(mon_num, reveal)
   }
   if (k) roff(".");
 
-  /* Kill it once to know experience, and quality (evil, undead, monsterous).
-     The quality of being a dragon is obvious. */
+  // Kill it once to know experience, and quality (evil, undead, monsterous).
   if (recall->r_kill) {
     roff(" A kill of this");
     if (cr_ptr->cdefense & CD_ANIMAL) roff(" natural");
     if (cr_ptr->cdefense & CD_EVIL) roff(" evil");
     if (cr_ptr->cdefense & CD_UNDEAD) roff(" undead");
     int tempxp = cr_ptr->mexp * cr_ptr->level / ulev;
-    /* calculate the fractional exp part scaled by 100,
-       must use long arithmetic to avoid overflow */
-    j = (((long)cr_ptr->mexp * cr_ptr->level % ulev) * (long)1000 / ulev + 5) /
-        10;
+    // calculate the fractional exp part scaled by 100
+    j = ((cr_ptr->mexp * cr_ptr->level % ulev) * 1000 / ulev + 5) / 10;
     snprintf(AP(temp), " creature is worth %d.%02d point%s", tempxp, j,
              (tempxp == 1 && j == 0 ? "" : "s"));
     roff(temp);
@@ -12641,9 +12638,8 @@ roff_recall(mon_num, reveal)
     roff(temp);
   }
 
-  /* Spells known, if have been used against us.
-     Breath weapons or resistance might be known only because we cast spells
-     at it. */
+  // Spells known, if have been used against us.
+  // Breath weapons or resistance
   k = TRUE;
   j = rspells;
   for (i = 0; j & CS_BREATHE; i++) {
@@ -12688,7 +12684,7 @@ roff_recall(mon_num, reveal)
     roff(".");
   }
 
-  /* Do we know how hard they are to kill? Armor class, hit die. */
+  // Do we know how hard they are to kill? Armor class, hit die.
   if (((recall->r_kill) > 304 / (4 + (cr_ptr->level)))) {
     snprintf(AP(temp), " It has an armor rating of %d", cr_ptr->ac);
     roff(temp);
@@ -12698,7 +12694,7 @@ roff_recall(mon_num, reveal)
     roff(temp);
   }
 
-  /* Do we know how clever they are? Special abilities. */
+  // Do we know how clever they are? Special abilities.
   k = TRUE;
   j = rcmove;
   for (i = 0; j & CM_SPECIAL; i++) {
@@ -12715,7 +12711,7 @@ roff_recall(mon_num, reveal)
     }
   }
   if (!k) roff(".");
-  /* Do we know its special weaknesses? Most cdefense flags. */
+  // Do we know its special weaknesses? Most cdefense flags.
   k = TRUE;
   j = rcdefense;
   for (i = 0; j & CD_WEAKNESS; i++) {
@@ -12742,7 +12738,7 @@ roff_recall(mon_num, reveal)
   }
   if (rcdefense & (CD_NO_SLEEP | CD_INFRA)) roff(".");
 
-  /* Do we know how aware it is? */
+  // Do we know how aware it is?
   if (((recall->r_wake * recall->r_wake) > cr_ptr->sleep) ||
       (cr_ptr->sleep == 0 && recall->r_kill >= 10)) {
     roff(" It ");
@@ -12772,10 +12768,10 @@ roff_recall(mon_num, reveal)
              10 * cr_ptr->aaf);
     roff(temp);
   }
-  /* Do we know what it might carry? */
+  // Do we know what it might carry?
   if (rcmove & (CM_CARRY_OBJ | CM_CARRY_GOLD)) {
     roff(" It may");
-    uint32_t trcount = recall->r_treasure;
+    int trcount = recall->r_treasure;
     if (trcount == 1) {
       if ((cr_ptr->cmove & CM_TREASURE) == CM_60_RANDOM)
         roff(" sometimes");
@@ -12814,17 +12810,17 @@ roff_recall(mon_num, reveal)
       roff(" treasure.");
   }
 
-  /* We know about attacks it has used on us, and maybe the damage they do. */
-  /* k is the total number of known attacks, used for punctuation */
+  // We know about attacks it has used on us, and maybe the damage they do.
+  // k is the total number of known attacks, used for punctuation
   k = 0;
   for (j = 0; j < 4; j++)
-    if (recall->r_attack[(int)j]) k++;
+    if (recall->r_attack[j]) k++;
   uint8_t* pu = cr_ptr->attack_list;
-  /* j counts the attacks as printed, used for punctuation */
+  // j counts the attacks as printed, used for punctuation
   j = 0;
   for (i = 0; *pu != 0 && i < 4; pu++, i++) {
     int att_type, att_how, d1, d2;
-    /* don't print out unknown attacks */
+    // don't print out unknown attacks
     if (!recall->r_attack[i]) continue;
     att_type = attackD[*pu].attack_type;
     att_how = attackD[*pu].attack_desc;
@@ -12845,7 +12841,7 @@ roff_recall(mon_num, reveal)
       roff(desc_atype[att_type]);
       if (d1 && d2) {
         if (((4 + (cr_ptr->level)) * (recall->r_attack[i]) > 80 * (d1 * d2))) {
-          if (att_type == 19) /* Loss of experience */
+          if (att_type == 19)  // Loss of experience
             roff(" by");
           else
             roff(" with damage");
@@ -12861,7 +12857,7 @@ roff_recall(mon_num, reveal)
     roff(" It has no physical attacks.");
   else
     roff(" Nothing is known about its attack.");
-  /* Always know the win creature. */
+  // Always know the win creature.
   if (cr_ptr->cmove & CM_WIN) roff(" Killing one of these wins the game!");
   roff(" ");
 }
@@ -13146,15 +13142,14 @@ uint32_t* rc_ptr;
       }
     }
     if (do_move) {
-      /* Creature has attempted to move on player?     */
+      // Creature has attempted to move on player?
       if (newy == py && newx == px) {
         mon_attack(midx);
         do_move = FALSE;
         break;  // do_turn
       }
-      /* Creature is attempting to move on other creature?     */
+      // Creature is attempting to move on other creature?
       else if (c_ptr->midx && c_ptr->midx != midx) {
-        /* Eat it or wait */
         if ((cmove & CM_EATS_OTHER) &&
             cr_ptr->mexp >= creatureD[c_ptr->midx].mexp) {
           *rc_ptr |= CM_EATS_OTHER;
@@ -13164,7 +13159,7 @@ uint32_t* rc_ptr;
           do_move = FALSE;
       }
     }
-    /* Creature has been allowed move.   */
+    // Creature has been allowed move.
     if (do_move) {
       if ((cmove & CM_PICKS_UP) != 0 && mpickup_obj(obj)) {
         int lit = 0;
@@ -13175,7 +13170,7 @@ uint32_t* rc_ptr;
         }
         delete_object(newy, newx);
       }
-      /* Move creature record  	       */
+      // Move creature record
       move_rec(fy, fx, newy, newx);
       m_ptr->fy = newy;
       m_ptr->fx = newx;

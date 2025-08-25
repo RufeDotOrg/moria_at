@@ -273,13 +273,13 @@ struct ownerS {
   uint8_t insult_max;
 };
 
-struct recallS {
+struct __attribute__((aligned(32))) recallS {
   uint32_t r_cmove;     // spells, breath, (CM_SPECIAL), (CM_MOVE), (CM_CARRY)
   uint32_t r_spells;    // ok
-  uint32_t r_kill;      // ok
-  uint32_t r_death;     // ok
+  uint16_t r_kill;      // ok
+  uint16_t r_death;     // ok
   uint16_t r_cdefense;  // ok
   uint16_t r_wake;      // ok
   uint8_t r_attack[4];  // ok
-  uint32_t r_treasure;  // added
+  uint8_t r_treasure;  // added
 };
