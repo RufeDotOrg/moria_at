@@ -508,16 +508,24 @@ rate_of_refresh()
   return refresh_rate;
 }
 
-int
+extern int getentropy(void* buffer, size_t size);
+extern ssize_t getrandom(void* buf, size_t buflen, unsigned int flags);
+extern int open(const char* pathname, int flags);
+extern ssize_t read(int fd, void* buf, size_t count);
+extern int close(int fd);
+ptrsize
 platform_random()
 {
   int ret = -1;
-  SDL_RWops* readf = SDL_RWFromFile("/dev/urandom", "rb");
-  if (readf) {
-    SDL_RWread(readf, &ret, sizeof(ret), 1);
-    SDL_RWclose(readf);
+  ptrsize value = -1;
+  if (__APPLE__) ret = getentropy(&value, sizeof(value));
+  if (!__APPLE__) ret = getrandom(&value, sizeof(value), 0);
+  if (ret < 0) {
+    int fd = open("/dev/urandom", 0);
+    if (fd != -1) read(fd, &value, sizeof(value));
+    if (fd != -1) close(fd);
   }
-  return ret;
+  return value;
 }
 
 STATIC void
