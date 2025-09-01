@@ -53,6 +53,8 @@ enum { RELEASE };
 #define AS(arr, id) arr[(id) % AL(arr)]
 // Array End
 #define AE(arr) (arr + AL(arr))
+// Binary pair
+#define BP(b) &b, sizeof(b)
 // String Length
 #define SL(str) (AL(str) - 1)
 // String Pair
@@ -85,7 +87,8 @@ enum { RELEASE };
   } while (0);
 
 // Log
-#define show(x) printf("[%s] %s: %ld\n", __func__, #x, x)
+#define show(x) printf("[%s] %s: %ld\n", __func__, #x, (long)x)
+#define showx(x) printf("[%s] %s: %lx\n", __func__, #x, (long)x)
 #define showf(x) printf("[%s] %s: %.03f\n", __func__, #x, x)
 #define showsize(x) printf("sizeof %s: %d\n", #x, sizeof(x));
 
