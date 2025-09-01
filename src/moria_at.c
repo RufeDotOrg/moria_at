@@ -694,8 +694,8 @@ randnor(mean, stand)
   /* might end up one below target, check that here */
   if (normal_table[iindex] < tmp) iindex = iindex + 1;
 
-    /* normal_table is based on SD of 64, so adjust the index value here,
-       round the half way case up */
+  /* normal_table is based on SD of 64, so adjust the index value here,
+     round the half way case up */
 #define NORMAL_TABLE_SD 64
   offset = ((stand * iindex) + (NORMAL_TABLE_SD >> 1)) / NORMAL_TABLE_SD;
 
@@ -12398,37 +12398,54 @@ py_pickup(y, x, pickup)
 STATIC int
 py_monlook_dir(dir)
 {
-  int y, x, oy, ox, ly, lx, seen;
-
-  seen = 0;
-  y = uD.y;
-  x = uD.x;
-  ly = dir_y(dir);
-  lx = dir_x(dir);
+  int y = uD.y;
+  int x = uD.x;
+  int ly = dir_y(dir);
+  int lx = dir_x(dir);
 
   rect_t zr;
   zoom_rect(&zr);
 
-  point_t limit = {zr.x + zr.w, zr.y + zr.h};
-  for (int row = zr.y; row < limit.y; ++row) {
-    for (int col = zr.x; col < limit.x; ++col) {
+  int rownum = zr.y + zr.h;
+  int colnum = zr.x + zr.w;
+  int mon_list[AL(entity_monD)];
+  int mon_count = 0;
+  for (int row = zr.y; row < rownum; ++row) {
+    for (int col = zr.x; col < colnum; ++col) {
       struct caveS* c_ptr = &caveD[row][col];
-      struct monS* mon = &entity_monD[c_ptr->midx];
-      struct creatureS* cre = &creatureD[mon->cidx];
       if (mon_lit(c_ptr->midx)) {
-        oy = (ly != 0) * (-((mon->fy - y) < 0) + ((mon->fy - y) > 0));
-        ox = (lx != 0) * (-((mon->fx - x) < 0) + ((mon->fx - x) > 0));
-        if ((oy == ly) && (ox == lx) && los(y, x, mon->fy, mon->fx)) {
-          seen += 1;
-          ylookD = mon->fy;
-          xlookD = mon->fx;
-          CLOBBER_MSG("You see %s %s.%s", is_a_vowel(cre->name[0]) ? "a" : "an",
-                      cre->name, mon->msleep ? " (sleeping)" : "");
+        int fy = row;
+        int fx = col;
+        int oy = (ly != 0) * (-((fy - y) < 0) + ((fy - y) > 0));
+        int ox = (lx != 0) * (-((fx - x) < 0) + ((fx - x) > 0));
+        if ((oy == ly) && (ox == lx) && los(y, x, fy, fx)) {
+          mon_list[mon_count] = c_ptr->midx;
+          mon_count += 1;
         }
       }
     }
   }
-  return seen;
+
+  for (int i = 0; i < mon_count; ++i) {
+    for (int j = i + 1; j < mon_count; ++j) {
+      struct monS* lptr = &entity_monD[mon_list[i]];
+      struct monS* rptr = &entity_monD[mon_list[j]];
+      if (distance(y, x, rptr->fy, rptr->fx) <
+          distance(y, x, lptr->fy, lptr->fx))
+        SWAP(mon_list[i], mon_list[j]);
+    }
+  }
+
+  for (int it = 0; it < mon_count; ++it) {
+    int midx = mon_list[it];
+    struct monS* mon = &entity_monD[midx];
+    struct creatureS* cre = &creatureD[mon->cidx];
+    ylookD = mon->fy;
+    xlookD = mon->fx;
+    CLOBBER_MSG("You see %s %s.%s", is_a_vowel(cre->name[0]) ? "a" : "an",
+                cre->name, mon->msleep ? " (sleeping)" : "");
+  }
+  return mon_count;
 }
 STATIC int
 py_objlook_dir(dir)
