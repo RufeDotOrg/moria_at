@@ -510,7 +510,7 @@ rate_of_refresh()
 
 extern int getentropy(void* buffer, uint64_t size);
 extern int64_t getrandom(void* buf, uint64_t buflen, unsigned int flags);
-extern int open(const char* pathname, int flags);
+extern int open(const char* pathname, int flags, ...);
 extern int64_t read(int fd, void* buf, uint64_t count);
 extern int close(int fd);
 ptrsize
