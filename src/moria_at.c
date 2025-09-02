@@ -5447,7 +5447,7 @@ STATIC void obj_desc(obj, number) struct objS* obj;
       break;
     case TV_PAWN_DOOR:
     case TV_STORE_DOOR:
-      desc(store_name(obj->tchar));
+      prefix = store_name(obj->tchar);
       name = "entrance";
       break;
     default:
@@ -12493,8 +12493,7 @@ py_objlook_dir(dir)
         int fx = col;
         int oy = (ly != 0) * (-((fy - y) < 0) + ((fy - y) > 0));
         int ox = (lx != 0) * (-((fx - x) < 0) + ((fx - x) > 0));
-        if (oy == ly && ox == lx && (CF_VIZ & caveD[fy][fx].cflag) &&
-            los(y, x, fy, fx)) {
+        if (oy == ly && ox == lx && (CF_VIZ & caveD[fy][fx].cflag)) {
           obj_list[obj_count] = c_ptr->oidx;
           obj_count += 1;
         }
