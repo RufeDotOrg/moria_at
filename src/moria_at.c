@@ -5276,6 +5276,26 @@ char* dst;
   }
   return used + 3;
 }
+STATIC char*
+store_name(tchar)
+{
+  switch (tchar) {
+    default:
+      return "pawn shop";
+    case '1':
+      return "general store";
+    case '2':
+      return "armory";
+    case '3':
+      return "weaponsmith";
+    case '4':
+      return "temple";
+    case '5':
+      return "alchemy shop";
+    case '6':
+      return "magic shop";
+  }
+}
 #define desc(str) moria_ocat_num(AP(descD), str, number)
 STATIC void obj_desc(obj, number) struct objS* obj;
 {
@@ -5426,10 +5446,9 @@ STATIC void obj_desc(obj, number) struct objS* obj;
     case TV_GLYPH:
       break;
     case TV_PAWN_DOOR:
-      name = "pawn shop";
-      break;
     case TV_STORE_DOOR:
-      name = "store entrance";
+      desc(store_name(obj->tchar));
+      name = "entrance";
       break;
     default:
       name = "unknown object";
@@ -12442,68 +12461,90 @@ py_monlook_dir(dir)
     struct creatureS* cre = &creatureD[mon->cidx];
     ylookD = mon->fy;
     xlookD = mon->fx;
-    CLOBBER_MSG("You see %s %s.%s", is_a_vowel(cre->name[0]) ? "a" : "an",
-                cre->name, mon->msleep ? " (sleeping)" : "");
+    msg_hint(AP("(b: bestiary, ESC)"));
+    char c =
+        CLOBBER_MSG("You see %s %s.%s", is_a_vowel(cre->name[0]) ? "a" : "an",
+                    cre->name, mon->msleep ? " (sleeping)" : "");
+    if (c == ESCAPE) it = mon_count;
+    if (c == 'b') mon_bestiary(mon, cre);
   }
   return mon_count;
 }
 STATIC int
 py_objlook_dir(dir)
 {
-  int y, x, oy, ox, ly, lx, seen;
-
-  y = uD.y;
-  x = uD.x;
-  ly = dir_y(dir);
-  lx = dir_x(dir);
+  int y = uD.y;
+  int x = uD.x;
+  int ly = dir_y(dir);
+  int lx = dir_x(dir);
 
   rect_t zr;
   zoom_rect(&zr);
-  seen = 0;
-  point_t limit = {zr.x + zr.w, zr.y + zr.h};
-  for (int row = zr.y; row < limit.y; ++row) {
-    for (int col = zr.x; col < limit.x; ++col) {
+
+  int rownum = zr.y + zr.h;
+  int colnum = zr.x + zr.w;
+  int obj_list[AL(entity_objD)];
+  int obj_count = 0;
+  for (int row = zr.y; row < rownum; ++row) {
+    for (int col = zr.x; col < colnum; ++col) {
       struct caveS* c_ptr = &caveD[row][col];
-      struct objS* obj = &entity_objD[c_ptr->oidx];
-      if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_SECRET_DOOR) continue;
-      oy = (ly != 0) * (-((obj->fy - y) < 0) + ((obj->fy - y) > 0));
-      ox = (lx != 0) * (-((obj->fx - x) < 0) + ((obj->fx - x) > 0));
-      if (oy == ly && ox == lx && (CF_VIZ & caveD[obj->fy][obj->fx].cflag) &&
-          los(y, x, obj->fy, obj->fx)) {
-        seen += 1;
-        ylookD = obj->fy;
-        xlookD = obj->fx;
-        obj_desc(obj, obj->number);
-        CLOBBER_MSG("You see %s.", descD);
+      if (c_ptr->oidx) {
+        int fy = row;
+        int fx = col;
+        int oy = (ly != 0) * (-((fy - y) < 0) + ((fy - y) > 0));
+        int ox = (lx != 0) * (-((fx - x) < 0) + ((fx - x) > 0));
+        if (oy == ly && ox == lx && (CF_VIZ & caveD[fy][fx].cflag) &&
+            los(y, x, fy, fx)) {
+          obj_list[obj_count] = c_ptr->oidx;
+          obj_count += 1;
+        }
       }
     }
   }
 
-  return seen;
+  for (int i = 0; i < obj_count; ++i) {
+    for (int j = i + 1; j < obj_count; ++j) {
+      struct objS* lptr = &entity_objD[obj_list[i]];
+      struct objS* rptr = &entity_objD[obj_list[j]];
+      if (distance(y, x, rptr->fy, rptr->fx) <
+          distance(y, x, lptr->fy, lptr->fx))
+        SWAP(obj_list[i], obj_list[j]);
+    }
+  }
+
+  for (int it = 0; it < obj_count; ++it) {
+    int oidx = obj_list[it];
+    struct objS* obj = &entity_objD[oidx];
+    if (obj->tval == TV_INVIS_TRAP || obj->tval == TV_SECRET_DOOR) continue;
+    ylookD = obj->fy;
+    xlookD = obj->fx;
+    obj_desc(obj, obj->number);
+    msg_hint(AP("(ESC)"));
+    char c = CLOBBER_MSG("You see %s.", descD);
+    if (c == ESCAPE) it = obj_count;
+  }
+
+  return obj_count;
 }
 STATIC void
 py_examine()
 {
   int dir;
-  char* type;
 
-  type = 0;
   if (py_affect(MA_BLIND))
     msg_print("You can't see a thing!");
   else {
     if (get_dir("Which direction will you look?", &dir)) {
+      int seen = 0;
       msg_moreD = 1;
-      if (py_monlook_dir(dir))
-        type = "monsters";
-      else if (py_objlook_dir(dir))
-        type = "objects";
+      seen += py_monlook_dir(dir);
+      seen += py_objlook_dir(dir);
       msg_moreD = 0;
 
-      if (type) {
-        MSG("That's all the %s you see in that direction", type);
-      } else {
+      if (seen)
+        msg_print("That's all you see in that direction");
+      else
         msg_print("You see nothing in that direction.");
-      }
     }
   }
 }
@@ -12883,6 +12924,32 @@ roff(char* msg)
 {
   apcat(AP(monmemD), msg);
 }
+STATIC int
+mon_bestiary(struct monS* mon, struct creatureS* cre)
+{
+  screen_submodeD = 1;
+
+  AC(monmemD);
+  roff_recall(mon->cidx, 0);
+
+  enum { LINE = 64 };
+  int offset = 0;
+  for (int line = 0; line < AL(screenD); ++line) {
+    int next_br = 0;
+    for (int it = LINE - 1; it > 0; --it) {
+      if (monmemD[offset + it] == ' ') {
+        next_br = it;
+        break;
+      }
+    }
+    memcpy(&screenD[line][0], &monmemD[offset], next_br);
+    screen_usedD[line] = next_br;
+
+    offset += next_br;
+    offset += 1;
+  }
+  return CLOBBER_MSG("'%c' The %s:", cre->cchar, cre->name);
+}
 STATIC void
 mon_look(midx)
 {
@@ -12892,30 +12959,7 @@ mon_look(midx)
   char c =
       CLOBBER_MSG("You see %s %s.%s", is_a_vowel(cre->name[0]) ? "a" : "an",
                   cre->name, mon->msleep ? " (sleeping)" : "");
-  if (c == 'O') {
-    screen_submodeD = 1;
-
-    AC(monmemD);
-    roff_recall(mon->cidx, 0);
-
-    enum { LINE = 64 };
-    int offset = 0;
-    for (int line = 0; line < AL(screenD); ++line) {
-      int next_br = 0;
-      for (int it = LINE - 1; it > 0; --it) {
-        if (monmemD[offset + it] == ' ') {
-          next_br = it;
-          break;
-        }
-      }
-      memcpy(&screenD[line][0], &monmemD[offset], next_br);
-      screen_usedD[line] = next_br;
-
-      offset += next_br;
-      offset += 1;
-    }
-    CLOBBER_MSG("'%c' The %s:", cre->cchar, cre->name);
-  }
+  if (c == 'O') mon_bestiary(mon, cre);
 }
 STATIC void
 py_look(y, x)
