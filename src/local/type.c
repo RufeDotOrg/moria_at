@@ -36,7 +36,7 @@ struct uS {
   uint8_t melee_confuse;
   uint8_t melee_genocide;
   uint8_t melee_unused1;
-  uint8_t melee_unused2;
+  uint8_t exp_frac;
   // Stateful affects from magic spells
   int32_t ma_ac;
   int32_t mflag;

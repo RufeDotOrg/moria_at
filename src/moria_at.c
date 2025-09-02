@@ -5609,8 +5609,12 @@ mon_take_hit(midx, dam)
   death_blow = mon->hp < 0;
 
   if (death_blow) {
-    // TBD: frac_exp
-    uD.exp += (cre->mexp * cre->level) / uD.lev;
+    int ulev = uD.lev;
+    div_t dxp = div(cre->mexp * cre->level, ulev);
+    int frac = (dxp.rem * 32) / ulev + uD.exp_frac;
+
+    uD.exp_frac = (frac % 32);
+    uD.exp += dxp.quot + (frac >= 32);
 
     caveD[mon->fy][mon->fx].midx = 0;
     int ogcount = mon_death(mon->fy, mon->fx, cre->cmove);
