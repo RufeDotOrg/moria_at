@@ -1730,6 +1730,10 @@ feature_menutext(mflag)
         text = "orientation lock";
         value = opt[globalD.orientation_lock != 0];
         break;
+      case 'p':
+        text = "power: hi-cpu utilization";
+        value = opt[globalD.power_mode != 0];
+        break;
       case 'v':
         text = "version detail";
         value = versionD;
@@ -1767,6 +1771,7 @@ feature_menu()
     if (JOYSTICK) flag |= char_bit('l');
     flag |= char_bit('m');
     if (!PC) flag |= char_bit('o');
+    flag |= char_bit('p');
     flag |= char_bit('r');
     flag |= char_bit('v');
 
@@ -1817,6 +1822,9 @@ feature_menu()
       case 'o':
         INVERT(globalD.orientation_lock);
         platformD.orientation(0);
+        break;
+      case 'p':
+        INVERT(globalD.power_mode);
         break;
       case 'v':
         show_version();

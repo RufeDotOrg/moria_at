@@ -440,6 +440,14 @@ platform_vsync(vsync)
 }
 
 int
+platform_idle()
+{
+  int pm = globalD.power_mode + (PC != 0);
+  if (pm > 1) nanosleep(&(struct timespec){0, 8e6}, 0);
+  if (pm > 0) return CTRL('d');
+  return 0;
+}
+int
 sdl_pump()
 {
   SDL_Event event;
@@ -484,11 +492,7 @@ sdl_pump()
     }
   }
 
-  if (ret == 0) {
-    nanosleep(&(struct timespec){0, 8e6}, 0);
-    if (PC) ret = CTRL('d');
-  }
-
+  if (ret == 0) ret = platform_idle();
   return ret;
 }
 
