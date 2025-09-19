@@ -35,7 +35,7 @@ struct uS {
   int32_t gold;
   uint8_t melee_confuse;
   uint8_t melee_genocide;
-  uint8_t melee_unused1;
+  uint8_t vow_flag;
   uint8_t exp_frac;
   // Stateful affects from magic spells
   int32_t ma_ac;
@@ -90,9 +90,8 @@ struct cbS {
 GAME struct cbS cbD;
 
 struct countS {
-  // Player ailment counters
   int32_t poison;
-  int32_t unused_count1;
+  int32_t pdeath;  // player death counter
   int32_t confusion;
   int32_t imagine;
   int32_t rest;
@@ -281,5 +280,5 @@ struct __attribute__((aligned(32))) recallS {
   uint16_t r_cdefense;  // ok
   uint16_t r_wake;      // ok
   uint8_t r_attack[4];  // ok
-  uint8_t r_treasure;  // added
+  uint8_t r_treasure;   // added
 };

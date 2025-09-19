@@ -1478,7 +1478,7 @@ cave_color(row, col)
       } else if (obj->tval != 0 && obj->tval <= TV_MAX_PICK_UP ||
                  obj->tval == TV_CHEST) {
         color = rgba_by_palette(PINK);
-      } else if (obj->tval == TV_STORE_DOOR || obj->tval == TV_PAWN_DOOR) {
+      } else if (obj->tval == TV_STORE_DOOR) {
         color = rgba_by_palette(YELLOW);
       }
     }

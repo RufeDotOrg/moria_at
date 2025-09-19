@@ -190,8 +190,7 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define TV_SECRET_DOOR 109
 #define TV_STORE_DOOR 110
 #define TV_GLYPH 111
-#define TV_PAWN_DOOR 112
-#define TV_CHEST 113
+#define TV_CHEST 114
 #define TV_MAX_VISIBLE 113
 
 #define MAX_OBJ_LEVEL 50
@@ -478,6 +477,9 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define NL_TELEPORT 5
 #define NL_TRAP 6
 #define NL_MIDPOINT_LOST 7
+
+// Vows
+#define VOW_DEATH 0
 
 // Input
 #define ESCAPE '\033'

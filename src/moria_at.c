@@ -236,6 +236,11 @@ py_tr(trflag)
   return (cbD.tflag & trflag) == trflag;
 }
 STATIC int
+uvow(idx)
+{
+  return (1 << idx) & uD.vow_flag;
+}
+STATIC int
 py_speed()
 {
   return (py_affect(MA_SLOW) + py_tr(TR_SLOWNESS)) -
@@ -931,7 +936,6 @@ build_store(sidx, y, x)
   int yval, y_height, y_depth;
   int xval, x_left, x_right;
   int i, j, tmp;
-  struct objS* obj;
 
   yval = y * 7 + 4;
   xval = x * 8 + 8;
@@ -959,24 +963,21 @@ build_store(sidx, y, x)
       i = y_height;
   }
 
-  obj = obj_use();
+  struct objS* obj = obj_use();
   obj->fy = i;
   obj->fx = j;
   obj->tval = TV_STORE_DOOR;
-  obj->tchar = '0' + sidx + 1;
-  obj->subval = 100 + sidx + 1;
+  obj->tchar = '1' + sidx;
   obj->number = 1;
   caveD[i][j].oidx = obj_index(obj);
   caveD[i][j].fval = FLOOR_CORR;
 }
 STATIC void
-build_pawn()
+side_entrance(rv, tchar)
 {
-  int tmp, i, j, y, x, x_left, x_right;
-  struct objS* obj;
+  int y, x, x_left, x_right;
 
-  tmp = randint(2);
-  if (tmp == 1) {
+  if (rv == 1) {
     x_left = 1;
     x = x_right = 1 + randint(2) - 1;
   } else {
@@ -985,17 +986,17 @@ build_pawn()
   }
   y = SYMMAP_HEIGHT / 4 + randint(SYMMAP_HEIGHT / 2);
 
-  for (i = y - 1; i <= y + 1; i++)
-    for (j = x_left; j <= x_right; j++) {
+  for (int i = y - 1; i <= y + 1; i++)
+    for (int j = x_left; j <= x_right; j++) {
       caveD[i][j].fval = BOUNDARY_WALL;
       caveD[i][j].cflag |= CF_PERM_LIGHT;
     }
 
-  obj = obj_use();
+  struct objS* obj = obj_use();
   obj->fy = y;
   obj->fx = x;
-  obj->tval = TV_PAWN_DOOR;
-  obj->tchar = '0';
+  obj->tval = TV_STORE_DOOR;
+  obj->tchar = tchar;
   obj->number = 1;
   caveD[y][x].oidx = obj_index(obj);
   caveD[y][x].fval = FLOOR_CORR;
@@ -3883,7 +3884,9 @@ town_gen()
       room_used -= 1;
     }
 
-  build_pawn();
+  int tmp = randint(2);
+  side_entrance(tmp, '0');
+  side_entrance(!tmp, '9');
 
   do {
     i = 1 + randint(SYMMAP_HEIGHT - 3);
@@ -5280,7 +5283,7 @@ STATIC char*
 store_name(tchar)
 {
   switch (tchar) {
-    default:
+    case '0':
       return "pawn shop";
     case '1':
       return "general store";
@@ -5294,7 +5297,10 @@ store_name(tchar)
       return "alchemy shop";
     case '6':
       return "magic shop";
+    case '9':
+      return "player vow";
   }
+  return "";
 }
 #define desc(str) moria_ocat_num(AP(descD), str, number)
 STATIC void obj_desc(obj, number) struct objS* obj;
@@ -5445,7 +5451,6 @@ STATIC void obj_desc(obj, number) struct objS* obj;
     case TV_VIS_TRAP:
     case TV_GLYPH:
       break;
-    case TV_PAWN_DOOR:
     case TV_STORE_DOOR:
       prefix = store_name(obj->tchar);
       name = "entrance";
@@ -11318,6 +11323,7 @@ py_grave()
   TOMB("Exp : %d", uD.exp);
   TOMB("Gold : %d", uD.gold);
   TOMB("Depth : %d", dun_level * 50);
+  TOMB("Player Deaths: %d", countD.pdeath);
   line += 1;
   TOMB("Killed by");
   TOMB("%s.", death_text());
@@ -11399,6 +11405,9 @@ py_menu()
   char c = 0;
   char* prompt = "Advanced Game Actions";
   int death = (uD.new_level_flag == NL_DEATH);
+  int permadeath = 0;
+
+  if (death) permadeath = uvow(VOW_DEATH);
 
   if (death) prompt = "You are dead.";
   while (1) {
@@ -11409,21 +11418,24 @@ py_menu()
     overlay_submodeD = 0;
     int line = 0;
     if (death) {
-      BufMsg(overlay, "a) Ahh, death comes to us all");
+      char* msg =
+          permadeath ? "this death is permanent" : "death comes to us all";
+      BufMsg(overlay, "a) Ahh, %s", msg);
     } else {
       BufMsg(overlay, "a) Await event (health, malady, or recall)");
     }
 
+    BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
+           memory_ok ? "memory OK" : "memory FAIL");
     if (HACK) {
-      BufMsg(overlay, "b) Undo / Gameplay Rewind (%d) (%d) (%s)",
-             input_action_usedD, input_record_writeD,
-             memory_ok ? "memory OK" : "memory FAIL");
-    } else {
-      BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
-             memory_ok ? "memory OK" : "memory FAIL");
+      BufLineAppend(overlay, line - 1, " %d/%d action/input %lu/%lu",
+                    input_action_usedD, input_record_writeD, AL(input_actionD),
+                    AL(input_recordD));
     }
+
     BufMsg(overlay, "-");
-    BufMsg(overlay, "d) Dungeon reset");
+    if (permadeath) BufMsg(overlay, "-");
+    if (!permadeath) BufMsg(overlay, "d) Dungeon reset");
     BufMsg(overlay, "e) Extra features");
     BufMsg(overlay, "-");
     BufMsg(overlay, "g) Game reset");
@@ -11446,6 +11458,7 @@ py_menu()
         return 0;
 
       case 'd':
+        if (permadeath) continue;
         if (RESEED) {
           seed_changeD = 1;
           save_on_readyD = 1;
@@ -14152,14 +14165,11 @@ store_item_purchase(sidx, item)
     msg_pause();
   }
 }
-// entering a store or pawn shop passes a turn
-// this eliminates replay_hack() calls on sort, purchase, and sell
 STATIC void
 pawn_entrance()
 {
   char c;
 
-  overlay_submodeD = 'p';
   while (1) {
     pawn_display();
     if (!in_subcommand("What would you like to sell to Gilbrook The Thrifty?",
@@ -14177,15 +14187,69 @@ pawn_entrance()
       inven_sort();
     }
   }
+}
+STATIC void
+vow_display()
+{
+  USE(overlay_width);
 
-  turn_flag = 1;
+  static char vowD[][80] = {
+      "permanent death",
+  };
+  apspace(AB(overlayD));
+  apclear(AB(overlay_usedD));
+  int line = 0;
+  for (int it = 0; it < AL(vowD); ++it) {
+    int used = 0;
+    overlayD[line][used++] = '(';
+    overlayD[line][used++] = 'a' + it;
+    overlayD[line][used++] = ')';
+    overlayD[line][used++] = ' ';
+    overlayD[line][used++] = '[';
+    overlayD[line][used++] = 'o';
+    int flag = 1 << it;
+    if (flag & uD.vow_flag) {
+      overlayD[line][used++] = 'n';
+    } else {
+      overlayD[line][used++] = 'f';
+      overlayD[line][used++] = 'f';
+    }
+    overlayD[line][used++] = ']';
+    overlayD[line][used++] = ' ';
+    memcpy(overlayD[line] + used, vowD[it], overlay_width - used);
+    overlay_usedD[line] = overlay_width;
+    line += 1;
+  }
+}
+STATIC void
+vow_entrance()
+{
+  char c;
+
+  while (1) {
+    vow_display();
+
+    if (!in_subcommand("What do you vow?", &c)) {
+      break;
+    }
+
+    if (is_lower(c)) {
+      uint8_t item = c - 'a';
+      if (item < 8) uD.vow_flag ^= (1 << item);
+    }
+    // else if (is_upper(c)) {
+    //   uint8_t item = c - 'A';
+    //   if (item < INVEN_EQUIP) obj_study(obj_get(invenD[item]), 1);
+    // } else if (c == '-') {
+    //   inven_sort();
+    // }
+  }
 }
 STATIC void
 store_entrance(sidx)
 {
   char c;
   char tmp_str[80];
-
   snprintf(tmp_str, AL(tmp_str), "What would you like to purchase from %s?",
            ownerD[storeD[sidx]].name);
   overlay_submodeD = '0' + sidx;
@@ -14203,7 +14267,25 @@ store_entrance(sidx)
       store_sort(sidx);
     }
   }
+}
+STATIC void
+town_entrance(tval)
+{
+  overlay_submodeD = tval;
 
+  switch (tval) {
+    case '0':
+      pawn_entrance();
+      break;
+    case '9':
+      vow_entrance();
+      break;
+    default:
+      store_entrance(tval - '1');
+      break;
+  }
+
+  // this eliminates replay_hack() calls on sort, purchase, and sell
   turn_flag = 1;
 }
 STATIC void yx_autoinven(y_ptr, x_ptr, iidx) int *y_ptr, *x_ptr;
@@ -14586,11 +14668,7 @@ dungeon()
               break;
             case TV_STORE_DOOR:
               c = ' ';
-              store_entrance(tchar - '1');
-              break;
-            case TV_PAWN_DOOR:
-              c = ' ';
-              pawn_entrance();
+              town_entrance(tchar);
               break;
             default:
               c = 's';
@@ -14768,9 +14846,7 @@ dungeon()
             if (obj->tval == TV_CHEST && obj->sn != SN_EMPTY) {
               open_object(y, x);
             } else if (obj->tval == TV_STORE_DOOR) {
-              store_entrance(obj->tchar - '1');
-            } else if (obj->tval == TV_PAWN_DOOR) {
-              pawn_entrance();
+              town_entrance(obj->tchar);
             } else if (oset_pickup(obj)) {
               py_pickup(y, x, FALSE);
             }
@@ -14976,6 +15052,7 @@ main(int argc, char** argv)
 
     if (memcmp(death_descD, AP(quit_stringD)) != 0) {
       replay_stop();
+      countD.pdeath += 1;
       while (1) {
         py_endgame(py_grave);
         if (py_menu() == CTRL('c')) break;
