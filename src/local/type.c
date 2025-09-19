@@ -91,7 +91,8 @@ GAME struct cbS cbD;
 
 struct countS {
   int32_t poison;
-  int32_t pdeath;  // player death counter
+  uint16_t pdeath;  // player death counter
+  uint16_t pundo;   // player undo counter
   int32_t confusion;
   int32_t imagine;
   int32_t rest;

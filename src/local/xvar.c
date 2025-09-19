@@ -43,7 +43,7 @@ DATA char historyD[256];
 
 // Monster memory
 DATA char monmemD[1024];
-DATA struct recallS recallD[MAX_CREATURE]; // TBD: handle overflow
+DATA struct recallS recallD[MAX_CREATURE];  // TBD: handle overflow
 
 // Magic affect counters & names
 GAME int32_t maD[MA_COUNT];
@@ -153,6 +153,8 @@ DATA int input_resumeD;
 // Could optimize to uint8_t using record count
 DATA int16_t input_actionD[2 * 1024];
 DATA int input_action_usedD;
+// Player vows permit input mutation with current midpoint save
+DATA int input_mutationD;
 
 // Run
 GAME int find_threatD;

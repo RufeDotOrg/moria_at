@@ -3927,6 +3927,7 @@ hard_reset()
 
   // Replay state
   input_record_writeD = input_record_readD = 0;
+  input_mutationD = 0;
 
   // Reset overlay modes
   overlay_submodeD = 0;
@@ -11324,6 +11325,7 @@ py_grave()
   TOMB("Gold : %d", uD.gold);
   TOMB("Depth : %d", dun_level * 50);
   TOMB("Player Deaths: %d", countD.pdeath);
+  TOMB("Player Undos: %d", countD.pundo);
   line += 1;
   TOMB("Killed by");
   TOMB("%s.", death_text());
@@ -11406,8 +11408,12 @@ py_menu()
   char* prompt = "Advanced Game Actions";
   int death = (uD.new_level_flag == NL_DEATH);
   int permadeath = 0;
+  int undo_vow = 0;
 
   if (death) permadeath = uvow(VOW_DEATH);
+  if (uvow(VOW_UNDO_LIMIT)) {
+    if (input_mutationD == 0 && countD.pundo >= 3) undo_vow = 1;
+  }
 
   if (death) prompt = "You are dead.";
   while (1) {
@@ -11425,12 +11431,16 @@ py_menu()
       BufMsg(overlay, "a) Await event (health, malady, or recall)");
     }
 
-    BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
-           memory_ok ? "memory OK" : "memory FAIL");
+    if (undo_vow) {
+      BufMsg(overlay, "b) Undo restricted by player vows");
+    } else {
+      BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
+             memory_ok ? "memory OK" : "memory FAIL");
+    }
     if (HACK) {
-      BufLineAppend(overlay, line - 1, " %d/%d action/input %lu/%lu",
-                    input_action_usedD, input_record_writeD, AL(input_actionD),
-                    AL(input_recordD));
+      BufLineAppend(overlay, line - 1, " %d+%d/3 %d/%d action/input %lu/%lu",
+                    input_mutationD != 0, countD.pundo, input_action_usedD,
+                    input_record_writeD, AL(input_actionD), AL(input_recordD));
     }
 
     BufMsg(overlay, "-");
@@ -11454,6 +11464,7 @@ py_menu()
         return 0;
 
       case 'b':
+        if (undo_vow) continue;
         py_undo();
         return 0;
 
@@ -14193,9 +14204,6 @@ vow_display()
 {
   USE(overlay_width);
 
-  static char vowD[][80] = {
-      "permanent death",
-  };
   apspace(AB(overlayD));
   apclear(AB(overlay_usedD));
   int line = 0;
@@ -14990,6 +14998,9 @@ main(int argc, char** argv)
 
       // Replay state reset
       if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
+        int is_undo = input_resumeD < input_action_usedD;
+        input_mutationD += is_undo;
+
         replay_flag = TRUE;
         input_record_writeD = AS(input_actionD, input_resumeD - 1);
       } else {
@@ -15040,6 +15051,7 @@ main(int argc, char** argv)
 
       if (uD.new_level_flag != NL_DEATH) {
         platformD.monster_memory(AB(recallD), 1);
+        countD.pundo += (input_mutationD != 0);
         if (platformD.save(globalD.saveslot_class)) {
           longjmp(restartD, 1);
         } else {
