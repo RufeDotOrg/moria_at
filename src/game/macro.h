@@ -89,8 +89,7 @@ enum { RELEASE };
 // Log
 #define show(x) printf("[%s] %s: %ld\n", __func__, #x, (long)x)
 #define showx(x) printf("[%s] %s: %lx\n", __func__, #x, (long)x)
-#define showf(x) printf("[%s] %s: %.03f\n", __func__, #x, x)
-#define showsize(x) printf("sizeof %s: %d\n", #x, sizeof(x));
+#define showf(x) printf("[%s] %s: %.03f\n", __func__, #x, (float)x)
 
 // Use global var
 #define USE(x) typeof(x##D) x = x##D
