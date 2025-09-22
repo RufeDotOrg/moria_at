@@ -92,6 +92,7 @@ DATA rect_t display_rectD;
 DATA rect_t safe_rectD;
 DATA struct SDL_Renderer* rendererD;
 DATA uint32_t texture_formatD;
+DATA SDL_Event eventD;
 
 // Claimed vs. actualized refresh rate
 DATA int refresh_rateD;
@@ -450,44 +451,41 @@ platform_idle()
 int
 sdl_pump()
 {
-  SDL_Event event;
-  int ret;
-
-  ret = 0;
-  while (ret == 0 && SDL_PollEvent(&event)) {
-    switch (event.type) {
+  int ret = 0;
+  while (ret == 0 && SDL_PollEvent(&eventD)) {
+    switch (eventD.type) {
       case SDL_WINDOWEVENT:
-        ret = sdl_window_event(event);
+        ret = sdl_window_event(eventD);
         break;
       case SDL_QUIT:
         quitD = 1;
         break;
       case SDL_FINGERDOWN:
       case SDL_FINGERUP:
-        if (MOUSE || TOUCH) ret = sdl_touch_event(event);
+        if (MOUSE || TOUCH) ret = sdl_touch_event(eventD);
         break;
       case SDL_KEYDOWN:
         // case SDL_KEYUP: // (optional)
-        if (KEYBOARD) ret = sdl_keyboard_event(event);
-        if (SCREENSHOT && (event.key.keysym.mod & KMOD_CTRL) > 0 &&
-            (event.key.keysym.mod & KMOD_ALT) > 0 &&
-            event.key.keysym.sym == 's')
+        if (KEYBOARD) ret = sdl_keyboard_event(eventD);
+        if (SCREENSHOT && (eventD.key.keysym.mod & KMOD_CTRL) > 0 &&
+            (eventD.key.keysym.mod & KMOD_ALT) > 0 &&
+            eventD.key.keysym.sym == 's')
           platform_screenshot();
         break;
       case SDL_MOUSEMOTION:
       case SDL_FINGERMOTION:
-        if (MOTION) ret = sdl_motion(event);
+        if (MOTION) ret = sdl_motion(eventD);
         break;
       case SDL_JOYAXISMOTION:
-        if (JOYSTICK) ret = sdl_axis_motion(event);
+        if (JOYSTICK) ret = sdl_axis_motion(eventD);
         break;
       case SDL_JOYBUTTONDOWN:
       case SDL_JOYBUTTONUP:  // (optional)
-        if (JOYSTICK) ret = sdl_joystick_event(event);
+        if (JOYSTICK) ret = sdl_joystick_event(eventD);
         break;
       case SDL_JOYDEVICEADDED:
       case SDL_JOYDEVICEREMOVED:
-        if (JOYSTICK) sdl_joystick_device(event);
+        if (JOYSTICK) sdl_joystick_device(eventD);
         break;
     }
   }
@@ -605,14 +603,9 @@ platform_pregame()
     sdl_window_event(event);
   }
 
-  while (!PC && display_rectD.w == 0) {
-    SDL_Event event;
-    if (SDL_PollEvent(&event)) {
-      if (event.type == SDL_WINDOWEVENT) {
-        sdl_window_event(event);
-      }
-    }
-  }
+  sdl_pump();
+
+  while (!PC && display_rectD.w == 0) sdl_pump();
 
   return 0;
 }
