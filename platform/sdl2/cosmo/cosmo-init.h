@@ -101,17 +101,6 @@ steam_helper(char* exe, int errcode)
   return 0;
 }
 
-// Logging fix-up
-// Avoid default SDL behavior of accessing parent console window
-#include <libc/nexgen32e/nt2sysv.h>
-DATA const char* SDL_priority_prefixes[SDL_NUM_LOG_PRIORITIES] = {
-    NULL, "VERBOSE", "DEBUG", "INFO", "WARN", "ERROR", "CRITICAL"};
-void
-gamelog(void* nulldata, int category, SDL_LogPriority p, const char* message)
-{
-  printf("R_ %s: %s\r\n", SDL_priority_prefixes[p], message);
-}
-
 #include <libc/nt/events.h>
 // Not static (which would be optimized away)
 // This is enough for cosmocc to enable kNtImageSubsystemWindowsGui
@@ -241,11 +230,8 @@ cosmo_init(int argc, char** argv)
 
   if (COSMO_WINDOWAPP) enable_windows_gui();
 
-  if (IsWindows()) {
-    SDL_LogSetOutputFunction(NT2SYSV(gamelog), 0);
-  } else {
-    SDL_LogSetOutputFunction(gamelog, 0);
-  }
+  // Avoid default SDL behavior of accessing parent console window
+  SDL_LogSetOutputFunction(0, 0);
 
   global_init(argc, argv);
   platformD.seed = vptr(rdseed);

@@ -869,13 +869,5 @@
 // #define SDL_sscanf abi_SDL_sscanf
 // #define SDL_snprintf abi_SDL_snprintf
 
-// Elipsis call
-typedef void (*elipsis)(const char* a, ...);
-typedef void __attribute__((__ms_abi__)) (*win_elipsis)(const char* a, ...);
-#define SDL_Log(x, ...)                                            \
-  if (IsWindows())                                                 \
-    ((win_elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__); \
-  else if (IsXnu())                                                \
-    printf(x "\n", ##__VA_ARGS__);                                 \
-  else                                                             \
-    ((elipsis)cosmo_dlsym(libD, "SDL_Log"))(x, ##__VA_ARGS__);
+// Avoid elipsis calling conventions
+#define SDL_Log(x, ...) printf(x "\n", ##__VA_ARGS__)
