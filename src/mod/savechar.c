@@ -51,5 +51,3 @@ DATA struct bufS midpoint_bufD[] = {
     BUF(input_action_usedD),
     BUF(input_mutationD),
 };
-
-#define MOD_SAVECHAR 1

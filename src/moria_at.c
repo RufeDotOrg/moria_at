@@ -4,7 +4,6 @@ enum { RESEED = 0 };
 
 #include "src/game.c"
 
-enum { MOD_SAVECHAR = 0 };
 #include "src/mod/savechar.c"
 
 #include "platform/platform.c"
