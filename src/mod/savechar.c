@@ -44,10 +44,3 @@ DATA int* savefieldD[] = {
     savechar_v002,
     savechar_v003,
 };
-// midpoint extension
-DATA struct bufS midpoint_bufD[] = {
-    ABUF(input_recordD),
-    ABUF(input_actionD),
-    BUF(input_action_usedD),
-    BUF(input_mutationD),
-};

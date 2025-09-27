@@ -3,7 +3,6 @@
 #define SAVENAME "savechar"
 #define CACHENAME "moria.cache"
 #define MEMORYNAME "moria.memory"
-enum { RESUME = 1 };
 
 DATA char cachepathD[1024];
 DATA int cachepath_usedD;
@@ -87,16 +86,6 @@ clear_savebuf()
 
   return 0;
 }
-uint64_t
-midpoint_hash()
-{
-  uint64_t hash = DJB2;
-  for (int it = 0; it < AL(midpoint_bufD); ++it) {
-    struct bufS buf = midpoint_bufD[it];
-    hash = djb2(hash, buf.mem, buf.mem_size);
-  }
-  return hash;
-}
 // filename unchanged unless a valid classidx is specified
 STATIC char*
 filename_by_class(char* filename, int classidx)
@@ -175,85 +164,10 @@ path_load(char* path)
       save_size = 0;
     }
 
-    if (RESUME && input_resumeD == 0) {
-      if (save_size) {
-        char gh[AL(git_hashD)];
-        uint64_t midhash = 0;
-
-        if (SDL_RWread(readf, gh, sizeof(gh), 1)) {
-          int disk_fault = 0;
-          disk_fault += !SDL_RWread(readf, &midhash, sizeof(midhash), 1);
-
-          if (!disk_fault) {
-            int sum = 0;
-            for (int it = 0; it < AL(midpoint_bufD); ++it) {
-              sum += midpoint_bufD[it].mem_size;
-            }
-            int64_t offset = SDL_RWseek(readf, 0, RW_SEEK_CUR);
-            int64_t end = SDL_RWseek(readf, sum, RW_SEEK_CUR);
-            if (end > 0) {
-              SDL_RWseek(readf, offset, RW_SEEK_SET);
-              for (int it = 0; it < AL(midpoint_bufD); ++it) {
-                struct bufS buf = midpoint_bufD[it];
-                disk_fault += !SDL_RWread(readf, buf.mem, buf.mem_size, 1);
-              }
-            } else {
-              disk_fault += 1;
-            }
-          }
-
-          int errflag = 0;
-          errflag |= (memcmp(gh, git_hashD, sizeof(gh)) != 0) << 0;
-          errflag |= (disk_fault != 0) << 1;
-          errflag |= (midpoint_hash() != midhash) << 2;
-          if (errflag) {
-            mplostD = errflag;
-            for (int it = 0; it < AL(midpoint_bufD); ++it) {
-              struct bufS buf = midpoint_bufD[it];
-              memset(buf.mem, 0, buf.mem_size);
-            }
-            uD.new_level_flag = NL_MIDPOINT_LOST;
-          }
-          input_resumeD = errflag ? 0 : input_action_usedD;
-        }
-      }
-    }
-
     SDL_RWclose(readf);
   }
 
   return save_size != 0;
-}
-STATIC int
-path_savemidpoint(char* path)
-{
-  int save_size = 0;
-  int write_ok = 0;
-  int memory_ok;
-
-  memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
-               input_action_usedD <= AL(input_actionD) - 1);
-
-  if (memory_ok) {
-    uint64_t midhash = midpoint_hash();
-    SDL_RWops* rwfile = file_access(path, "rb+");
-    if (rwfile) {
-      SDL_RWread(rwfile, &save_size, sizeof(save_size), 1);
-
-      int64_t offset = SDL_RWseek(rwfile, save_size, RW_SEEK_CUR);
-      if (offset > 0) {
-        write_ok = SDL_RWwrite(rwfile, &git_hashD, sizeof(git_hashD), 1);
-        write_ok += SDL_RWwrite(rwfile, &midhash, sizeof(midhash), 1);
-        for (int it = 0; it < AL(midpoint_bufD); ++it) {
-          struct bufS buf = midpoint_bufD[it];
-          if (!SDL_RWwrite(rwfile, buf.mem, buf.mem_size, 1)) write_ok = 0;
-        }
-      }
-
-      SDL_RWclose(rwfile);
-    }
-  }
-  return write_ok >= 2;
 }
 STATIC int
 platform_load(saveslot, external)
@@ -294,18 +208,8 @@ platform_erase(saveslot, external)
 STATIC int
 disk_savemidpoint()
 {
-  int ret = 0;
-  if (uD.new_level_flag == 0) {
-    MUSE(global, saveslot_class);
-    if (saveslot_class >= 0 && saveslot_class < AL(classD)) {
-      char filename[16] = SAVENAME;
-      filename_by_class(filename, saveslot_class);
-      char* path = path_append_filename(savepathD, savepath_usedD, filename);
-      ret = path_savemidpoint(path);
-      if (!RELEASE) Log("save midpoint %d (%s)", ret, path);
-    }
-  }
-  return ret;
+  Log("save midpoint");
+  return 0;
 }
 STATIC int
 platform_saveex(reverse)
