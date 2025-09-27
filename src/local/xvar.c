@@ -155,6 +155,7 @@ DATA int16_t input_actionD[2 * 1024];
 DATA int input_action_usedD;
 // Player vows permit input mutation with current midpoint save
 DATA int input_mutationD;
+DATA struct replayS* replayD;
 
 // Run
 GAME int find_threatD;

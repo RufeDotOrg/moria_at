@@ -273,6 +273,9 @@ struct ownerS {
   uint8_t insult_max;
 };
 
+struct replayS {
+};
+
 struct __attribute__((aligned(32))) recallS {
   uint32_t r_cmove;     // spells, breath, (CM_SPECIAL), (CM_MOVE), (CM_CARRY)
   uint32_t r_spells;    // ok

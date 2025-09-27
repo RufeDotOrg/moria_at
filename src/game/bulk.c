@@ -58,6 +58,7 @@ struct platformS {
   fn testex;
   fn dpad;
   fn monster_memory;
+  fn mmap_replay;
 };
 static struct platformS platformD;
 struct __attribute__((aligned(4 * 1024))) padS {

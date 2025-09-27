@@ -4,12 +4,14 @@
 enum { DISK = 0 };
 enum { FONT = 0 };
 enum { COLOR = 0 };
+enum { MMAP = 0 };
 enum { PUFF_STREAM = 0 };
 
 // Override COLOR/DISK/FONT/PUFF_STREAM when included
 #include "color.c"
 #include "disk.c"
 #include "font.c"
+#include "mmap.c"
 #include "puff_stream.c"
 
 #include "asset/icon.c"
@@ -158,6 +160,7 @@ custom_pregame()
   if (DISK && !disk_pregame()) return 1;
   if (DISK && KEYBOARD)
     disk_read_keys(gameplay_inputD, sizeof(gameplay_inputD));
+  if (MMAP) mmap_init();
 
   if (platform_pregame() != 0) return 2;
 

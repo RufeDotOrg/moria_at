@@ -14980,6 +14980,7 @@ main(int argc, char** argv)
 
     if (ready) {
       globalD.saveslot_class = uD.clidx;
+      platformD.mmap_replay(&replayD);
       if (RESEED && seed_changeD) {
         rnd_seed += 1;
         seed_changeD = 0;
