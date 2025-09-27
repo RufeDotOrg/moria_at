@@ -3,17 +3,17 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-static void* replayD;
+static void* replaydatD;
 static int64_t replay_sizeD;
 // nm bin/moria_at | grep 'start_game'
-static void* ccoffset = 0x000000000049d880;  // 0x000000000069510;
+static void* ccoffset = (void*)0x000000000049d880;  // 0x000000000069510;
 
 static void
 replay_diverge_size()
 {
   USE(replay_size);
   int contig = 0;
-  int* lhs = vptr(replayD);
+  int* lhs = vptr(replaydatD);
   int* rhs = vptr(__start_game);
   for (int it = 0; it < replay_size / sizeof(int); ++it) {
     if (lhs[it] != rhs[it]) {
@@ -46,36 +46,37 @@ replay_diverge_size()
 static void
 replay_memcmp()
 {
-  if (!replayD) {
+  if (!replaydatD) {
     replay_sizeD = __stop_game - __start_game;
-    replayD = malloc(replay_sizeD);
+    replaydatD = malloc(replay_sizeD);
   }
   USE(replay_size);
 
   char name[64];
   int len =
-      snprintf(AP(name), "replay/replay_lev%02d_turn%07d", dun_level, turnD);
+      snprintf(AP(name), "record/replay_lev%02d_turn%07d", dun_level, turnD);
 
   int f = open(name, O_RDONLY, 0777);
   if (f > 0) {
-    int64_t count = read(f, replayD, replay_size);
+    int64_t count = read(f, replaydatD, replay_size);
     if (count == replay_size) {
-      int r = memcmp(replayD, __start_game, replay_size);
+      int r = memcmp(replaydatD, __start_game, replay_size);
       if (r != 0) {
         replay_desync = 1;
         printf("DESYNC DETAILS:\n");
         replay_diverge_size();
         puts(name);
         // Halt the replay to see what is happening
-        printf("input %d %d read/write\n", input_record_readD,
-               input_record_writeD);
-        input_record_writeD = input_record_readD;
-        if (input_action_usedD > 0) {
-          int begin = AS(input_actionD, input_action_usedD - 2);
-          int end = input_record_readD;
+        printf("input %d %d read/write\n", replayD->input_record_readD,
+               replayD->input_record_writeD);
+        replayD->input_record_writeD = replayD->input_record_readD;
+        if (replayD->input_action_usedD > 0) {
+          int begin =
+              AS(replayD->input_actionD, replayD->input_action_usedD - 2);
+          int end = replayD->input_record_readD;
           printf("Action range (%d->%d):", begin, end);
           for (int it = begin; it < end; ++it) {
-            char c = AS(input_recordD, it);
+            char c = AS(replayD->input_recordD, it);
             printf(" (%d:%c)", c, c);
           }
         }
