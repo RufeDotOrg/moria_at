@@ -274,6 +274,15 @@ struct ownerS {
 };
 
 struct replayS {
+  char input_recordD[4 * 1024];
+  // optimize to uint8_t using record count
+  int16_t input_actionD[2 * 1024];
+  uint32_t input_record_writeD;
+  uint32_t input_record_readD;
+  int input_resumeD;
+  int input_action_usedD;
+  // Player vows permit input mutation with current midpoint save
+  int input_mutationD;
 };
 
 struct __attribute__((aligned(32))) recallS {

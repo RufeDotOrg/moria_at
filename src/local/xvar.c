@@ -146,15 +146,6 @@ DATA uint8_t finger_colD;
 DATA int mplostD;
 DATA int replay_flag;
 DATA int replay_desync;
-DATA char input_recordD[4 * 1024];
-DATA uint32_t input_record_writeD;
-DATA uint32_t input_record_readD;
-DATA int input_resumeD;
-// Could optimize to uint8_t using record count
-DATA int16_t input_actionD[2 * 1024];
-DATA int input_action_usedD;
-// Player vows permit input mutation with current midpoint save
-DATA int input_mutationD;
 DATA struct replayS* replayD;
 
 // Run

@@ -656,11 +656,13 @@ game_text()
       if (PC && TEST_REPLAY) {
         p.x = grect.x + FWIDTH / 2;
         p.y += FHEIGHT;
-        len = snprintf(tmp, AL(tmp), "Input Actions: %d", input_action_usedD);
+        len = snprintf(tmp, AL(tmp), "Input Actions: %d",
+                       replayD->input_action_usedD);
         render_monofont_string(renderer, &fontD, tmp, len, p);
 
         p.y += FHEIGHT;
-        len = snprintf(tmp, AL(tmp), "Input Record: %d", input_record_readD);
+        len = snprintf(tmp, AL(tmp), "Input Record: %d",
+                       replayD->input_record_readD);
         render_monofont_string(renderer, &fontD, tmp, len, p);
 
         p.y += FHEIGHT;

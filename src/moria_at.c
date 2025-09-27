@@ -45,15 +45,15 @@ game_input()
 {
   char c;
 
-  if (input_record_readD < input_record_writeD) {
-    c = AS(input_recordD, input_record_readD++);
+  if (replayD->input_record_readD < replayD->input_record_writeD) {
+    c = AS(replayD->input_recordD, replayD->input_record_readD++);
   } else {
     c = read_input();
 
     // Ignore redraw (system generated input)
     if (c != CTRL('d')) {
-      AS(input_recordD, input_record_writeD++) = c;
-      input_record_readD += 1;
+      AS(replayD->input_recordD, replayD->input_record_writeD++) = c;
+      replayD->input_record_readD += 1;
     }
   }
 
@@ -372,8 +372,8 @@ STATIC void
 replay_stop()
 {
   if (replay_flag) replay_flag = 0;
-  if (input_record_readD < input_record_writeD)
-    input_record_readD = input_record_writeD;
+  if (replayD->input_record_readD < replayD->input_record_writeD)
+    replayD->input_record_readD = replayD->input_record_writeD;
 }
 STATIC int
 in_bounds(row, col)
@@ -3923,10 +3923,6 @@ hard_reset()
   AC(msg_cqD);
   death_descD[0] = 0;
   msg_writeD = 0;
-
-  // Replay state
-  input_record_writeD = input_record_readD = 0;
-  input_mutationD = 0;
 
   // Reset overlay modes
   overlay_submodeD = 0;
@@ -11077,9 +11073,6 @@ py_saveslot_select()
   int using_selection = (platformD.selection != noop);
   int testex = -1;
 
-  // Disable midpoint resume explicitly
-  input_resumeD = -1;
-
   // No active class
   globalD.saveslot_class = -1;
 
@@ -11230,9 +11223,6 @@ py_saveslot_select()
         }
 
         if (summary[iidx].slevel) {
-          // resume OK for internal save
-          if (!using_external) input_resumeD = 0;
-
           int ret = platformD.load(iidx, using_external);
           // save_on_ready: Transfer to internal storage
           if (using_external) save_on_readyD = 1;
@@ -11336,13 +11326,13 @@ py_grave()
 STATIC void
 py_undo()
 {
-  int memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
-                   input_action_usedD <= AL(input_actionD) - 1);
+  int memory_ok =
+      (replayD->input_record_writeD <= AL(replayD->input_recordD) - 1 &&
+       replayD->input_action_usedD <= AL(replayD->input_actionD) - 1);
   if (memory_ok) {
-    USE(input_action_used);
-    input_resumeD = (input_action_used - 1);
+    replayD->input_resumeD = (replayD->input_action_usedD - 1);
     // Disable midpoint resume explicitly
-    if (input_resumeD == 0) input_resumeD = -1;
+    if (replayD->input_resumeD == 0) replayD->input_resumeD = -1;
     longjmp(restartD, 1);
   }
 }
@@ -11411,14 +11401,15 @@ py_menu()
 
   if (death) permadeath = uvow(VOW_DEATH);
   if (uvow(VOW_UNDO_LIMIT)) {
-    if (input_mutationD == 0 && countD.pundo >= 3) undo_vow = 1;
+    if (replayD->input_mutationD == 0 && countD.pundo >= 3) undo_vow = 1;
   }
 
   if (death) prompt = "You are dead.";
   while (1) {
     // One command may be written ahead (e.g. py_look) and is invalid for replay
-    int memory_ok = (input_record_writeD <= AL(input_recordD) - 1 &&
-                     input_action_usedD <= AL(input_actionD) - 1);
+    int memory_ok =
+        (replayD->input_record_writeD <= AL(replayD->input_recordD) - 1 &&
+         replayD->input_action_usedD <= AL(replayD->input_actionD) - 1);
 
     overlay_submodeD = 0;
     int line = 0;
@@ -11438,8 +11429,9 @@ py_menu()
     }
     if (HACK) {
       BufLineAppend(overlay, line - 1, " %d+%d/3 %d/%d action/input %lu/%lu",
-                    input_mutationD != 0, countD.pundo, input_action_usedD,
-                    input_record_writeD, AL(input_actionD), AL(input_recordD));
+                    replayD->input_mutationD != 0, countD.pundo,
+                    replayD->input_action_usedD, replayD->input_record_writeD,
+                    AL(replayD->input_actionD), AL(replayD->input_recordD));
     }
 
     BufMsg(overlay, "-");
@@ -11474,7 +11466,7 @@ py_menu()
           save_on_readyD = 1;
         }
         // Disable midpoint resume explicitly
-        input_resumeD = -1;
+        replayD->input_resumeD = -1;
         longjmp(restartD, 1);
         break;
 
@@ -11664,7 +11656,7 @@ STATIC int
 py_endgame(fn endtype)
 {
   char c = 0;
-  int reset_input = input_record_writeD;
+  int reset_input = replayD->input_record_writeD;
   do {
     if (c == 'p') {
       c = show_history();
@@ -11680,7 +11672,7 @@ py_endgame(fn endtype)
       c = endtype();
     }
 
-    input_record_readD = input_record_writeD = reset_input;
+    replayD->input_record_readD = replayD->input_record_writeD = reset_input;
     if (c == CTRL('c')) break;
   } while (c != ESCAPE);
   return c;
@@ -14617,7 +14609,8 @@ dungeon()
 
   teleport = FALSE;
   do {
-    int last_action = AS(input_actionD, input_action_usedD - 1);
+    int last_action =
+        AS(replayD->input_actionD, replayD->input_action_usedD - 1);
     inven_check_weight();
     inven_check_light();
 
@@ -14625,12 +14618,14 @@ dungeon()
     turn_flag = (countD.rest != 0) || (countD.paralysis != 0);
     if (teleport) turn_flag = 0;
     while (!turn_flag) {
-      if (input_record_readD == input_record_writeD) {
-        if (last_action != input_record_writeD) {
+      if (replayD->input_record_readD == replayD->input_record_writeD) {
+        if (last_action != replayD->input_record_writeD) {
           if (TEST_REPLAY) {
-            printf("dropped %d inputs: ", input_record_writeD - last_action);
-            for (int it = last_action; it < input_record_writeD; ++it) {
-              char c = input_recordD[it];
+            printf("dropped %d inputs: ",
+                   replayD->input_record_writeD - last_action);
+            for (int it = last_action; it < replayD->input_record_writeD;
+                 ++it) {
+              char c = replayD->input_recordD[it];
               if (char_visible(c)) printf("(%c)", c);
               printf("%d ", c);
             }
@@ -14638,11 +14633,13 @@ dungeon()
             if (check_replay != rnd_seed) fail("seed moved; turn did not\n");
           }
 
-          input_record_readD = input_record_writeD = last_action;
+          replayD->input_record_readD = replayD->input_record_writeD =
+              last_action;
         }
       }
 
-      replay_flag = (input_record_readD < input_record_writeD);
+      replay_flag =
+          (replayD->input_record_readD < replayD->input_record_writeD);
       draw(DRAW_NOW);
 
       y = uD.y;
@@ -14870,8 +14867,9 @@ dungeon()
       }
     }
 
-    if (turn_flag && last_action != input_record_readD) {
-      AS(input_actionD, input_action_usedD++) = input_record_readD;
+    if (turn_flag && last_action != replayD->input_record_readD) {
+      AS(replayD->input_actionD, replayD->input_action_usedD++) =
+          replayD->input_record_readD;
     }
     if (uD.total_winner == 1) {
       if (!replay_flag) py_endgame(py_king);
@@ -14997,19 +14995,21 @@ main(int argc, char** argv)
       fixed_seed_func(town_seed, social_bonus);
 
       // Replay state reset
-      if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
-        int is_undo = input_resumeD < input_action_usedD;
-        input_mutationD += is_undo;
+      if (replayD->input_resumeD > 0 &&
+          replayD->input_resumeD <= replayD->input_action_usedD) {
+        int is_undo = replayD->input_resumeD < replayD->input_action_usedD;
+        replayD->input_mutationD += is_undo;
 
         replay_flag = TRUE;
-        input_record_writeD = AS(input_actionD, input_resumeD - 1);
+        replayD->input_record_writeD =
+            AS(replayD->input_actionD, replayD->input_resumeD - 1);
       } else {
         replay_flag = FALSE;
-        input_record_writeD = 0;
+        replayD->input_record_writeD = 0;
       }
-      input_resumeD = 0;
-      input_record_readD = 0;
-      input_action_usedD = 0;
+      replayD->input_resumeD = 0;
+      replayD->input_record_readD = 0;
+      replayD->input_action_usedD = 0;
 
       // Input reset (values are initialized by ui_stateD on first interaction)
       modeD = submodeD = 0;
@@ -15051,7 +15051,7 @@ main(int argc, char** argv)
 
       if (uD.new_level_flag != NL_DEATH) {
         platformD.monster_memory(AB(recallD), 1);
-        countD.pundo += (input_mutationD != 0);
+        countD.pundo += (replayD->input_mutationD != 0);
         if (platformD.save(globalD.saveslot_class)) {
           longjmp(restartD, 1);
         } else {
