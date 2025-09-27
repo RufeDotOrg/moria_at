@@ -11330,9 +11330,7 @@ py_undo()
       (replayD->input_record_writeD <= AL(replayD->input_recordD) - 1 &&
        replayD->input_action_usedD <= AL(replayD->input_actionD) - 1);
   if (memory_ok) {
-    replayD->input_resumeD = (replayD->input_action_usedD - 1);
-    // Disable midpoint resume explicitly
-    if (replayD->input_resumeD == 0) replayD->input_resumeD = -1;
+    replayD->input_action_usedD -= 1;
     longjmp(restartD, 1);
   }
 }
@@ -11466,7 +11464,7 @@ py_menu()
           save_on_readyD = 1;
         }
         // Disable midpoint resume explicitly
-        replayD->input_resumeD = -1;
+        replayD->input_action_usedD = 0;
         longjmp(restartD, 1);
         break;
 
@@ -14870,6 +14868,7 @@ dungeon()
     if (turn_flag && last_action != replayD->input_record_readD) {
       AS(replayD->input_actionD, replayD->input_action_usedD++) =
           replayD->input_record_readD;
+      show(replayD->input_action_usedD);
     }
     if (uD.total_winner == 1) {
       if (!replay_flag) py_endgame(py_king);
@@ -14979,6 +14978,7 @@ main(int argc, char** argv)
     if (ready) {
       globalD.saveslot_class = uD.clidx;
       platformD.mmap_replay(&replayD);
+      show(replayD->input_action_usedD);
       if (RESEED && seed_changeD) {
         rnd_seed += 1;
         seed_changeD = 0;
@@ -14995,19 +14995,14 @@ main(int argc, char** argv)
       fixed_seed_func(town_seed, social_bonus);
 
       // Replay state reset
-      if (replayD->input_resumeD > 0 &&
-          replayD->input_resumeD <= replayD->input_action_usedD) {
-        int is_undo = replayD->input_resumeD < replayD->input_action_usedD;
-        replayD->input_mutationD += is_undo;
-
+      if (replayD->input_action_usedD > 0) {
         replay_flag = TRUE;
         replayD->input_record_writeD =
-            AS(replayD->input_actionD, replayD->input_resumeD - 1);
+            AS(replayD->input_actionD, replayD->input_action_usedD - 1);
       } else {
         replay_flag = FALSE;
         replayD->input_record_writeD = 0;
       }
-      replayD->input_resumeD = 0;
       replayD->input_record_readD = 0;
       replayD->input_action_usedD = 0;
 
