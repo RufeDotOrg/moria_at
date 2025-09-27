@@ -11465,6 +11465,8 @@ py_menu()
         }
         // Disable midpoint resume explicitly
         replayD->input_action_usedD = 0;
+        // Record history mutation
+        replayD->input_mutationD = 1;
         longjmp(restartD, 1);
         break;
 
