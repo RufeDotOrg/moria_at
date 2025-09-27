@@ -14775,7 +14775,6 @@ dungeon()
               py_look(ylookD, xlookD);
               break;
             case CTRL('c'):
-              platformD.savemidpoint();
               death_desc(quit_stringD);
               uD.new_level_flag = NL_DEATH;
               return;  // Interrupt game
