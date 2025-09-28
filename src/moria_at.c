@@ -391,11 +391,10 @@ replay_start()
 // Safeguards in the case of a desync
 // Otherwise the death menu reads back trailing inputs
 STATIC void
-replay_stop()
+replay_noplayback()
 {
-  if (replay_flag) replay_flag = 0;
-  if (replayD->input_record_readD < replayD->input_record_writeD)
-    replayD->input_record_readD = replayD->input_record_writeD;
+  replay_flag = 0;
+  replayD->input_record_readD = replayD->input_record_writeD;
 }
 STATIC int
 in_bounds(row, col)
@@ -15085,7 +15084,7 @@ main(int argc, char** argv)
     }
 
     if (memcmp(death_descD, AP(quit_stringD)) != 0) {
-      replay_stop();
+      replay_noplayback();
       countD.pdeath += 1;
       while (1) {
         py_endgame(py_grave);
