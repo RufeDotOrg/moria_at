@@ -18,6 +18,7 @@
 
 #ifndef PLATFORM
 #define PLATFORM
+#include <fcntl.h>  // open (asm darwin tag)
 #include <setjmp.h>
 #include <time.h>
 
