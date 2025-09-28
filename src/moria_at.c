@@ -11323,13 +11323,26 @@ py_grave()
   // Centering text; portrait mode+hand_swap will show message history top left
   return CLOBBER_MSG("                You are dead, sorry!");
 }
+STATIC int
+can_undo(offset)
+{
+  int memory_ok = 1;
+  if (offset) {
+    // One command may be written ahead (e.g. py_look)
+    // invalidate the replay at one less than the limit
+    memory_ok = replayD->input_record_writeD < AL(replayD->input_recordD) &&
+                replayD->input_action_usedD < AL(replayD->input_actionD);
+  }
+  int vow_permit = 1;
+  if (uvow(VOW_UNDO_LIMIT)) {
+    vow_permit = replayD->input_mutationD != 0 || countD.pundo < 3;
+  }
+  return vow_permit && memory_ok;
+}
 STATIC void
 py_undo()
 {
-  int memory_ok =
-      (replayD->input_record_writeD <= AL(replayD->input_recordD) - 1 &&
-       replayD->input_action_usedD <= AL(replayD->input_actionD) - 1);
-  if (memory_ok) {
+  if (can_undo(1)) {
     replayD->input_action_usedD -= 1;
     replayD->input_mutationD = 1;
     longjmp(restartD, 1);
@@ -11396,20 +11409,11 @@ py_menu()
   char* prompt = "Advanced Game Actions";
   int death = (uD.new_level_flag == NL_DEATH);
   int permadeath = 0;
-  int undo_vow = 0;
 
   if (death) permadeath = uvow(VOW_DEATH);
-  if (uvow(VOW_UNDO_LIMIT)) {
-    if (replayD->input_mutationD == 0 && countD.pundo >= 3) undo_vow = 1;
-  }
 
   if (death) prompt = "You are dead.";
   while (1) {
-    // One command may be written ahead (e.g. py_look) and is invalid for replay
-    int memory_ok =
-        (replayD->input_record_writeD <= AL(replayD->input_recordD) - 1 &&
-         replayD->input_action_usedD <= AL(replayD->input_actionD) - 1);
-
     overlay_submodeD = 0;
     int line = 0;
     if (death) {
@@ -11420,12 +11424,8 @@ py_menu()
       BufMsg(overlay, "a) Await event (health, malady, or recall)");
     }
 
-    if (undo_vow) {
-      BufMsg(overlay, "b) Undo restricted by player vows");
-    } else {
-      BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
-             memory_ok ? "memory OK" : "memory FAIL");
-    }
+    BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
+           can_undo(1) ? "OK" : "RESTRICTED");
     if (HACK) {
       BufLineAppend(overlay, line - 1, " %d+%d/3 %d/%d action/input %lu/%lu",
                     replayD->input_mutationD != 0, countD.pundo,
@@ -11435,7 +11435,9 @@ py_menu()
 
     BufMsg(overlay, "-");
     if (permadeath) BufMsg(overlay, "-");
-    if (!permadeath) BufMsg(overlay, "d) Dungeon reset");
+    if (!permadeath)
+      BufMsg(overlay, "d) Dungeon reset (%s)",
+             can_undo(0) ? "OK" : "RESTRICTED");
     BufMsg(overlay, "e) Extra features");
     BufMsg(overlay, "-");
     BufMsg(overlay, "g) Game reset");
@@ -11454,7 +11456,6 @@ py_menu()
         return 0;
 
       case 'b':
-        if (undo_vow) continue;
         py_undo();
         return 0;
 
