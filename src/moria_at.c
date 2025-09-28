@@ -11331,6 +11331,7 @@ py_undo()
        replayD->input_action_usedD <= AL(replayD->input_actionD) - 1);
   if (memory_ok) {
     replayD->input_action_usedD -= 1;
+    replayD->input_mutationD = 1;
     longjmp(restartD, 1);
   }
 }
