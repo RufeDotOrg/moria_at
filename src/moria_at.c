@@ -14989,6 +14989,7 @@ main(int argc, char** argv)
       if (save_on_readyD) {
         save_on_readyD = 0;
         platformD.save(globalD.saveslot_class);
+        replayD->input_action_usedD = 0;
       }
 
       // Per-Player initialization
@@ -15051,6 +15052,7 @@ main(int argc, char** argv)
         platformD.monster_memory(AB(recallD), 1);
         countD.pundo += (replayD->input_mutationD != 0);
         replayD->input_mutationD = 0;
+        replayD->input_action_usedD = 0;
         if (platformD.save(globalD.saveslot_class)) {
           longjmp(restartD, 1);
         } else {
