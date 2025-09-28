@@ -43,17 +43,18 @@ read_input()
 STATIC char
 game_input()
 {
+  USE(replay);
   char c;
 
-  if (replayD->input_record_readD < replayD->input_record_writeD) {
-    c = AS(replayD->input_recordD, replayD->input_record_readD++);
+  if (replay->input_record_readD < replay->input_record_writeD) {
+    c = AS(replay->input_recordD, replay->input_record_readD++);
   } else {
     c = read_input();
 
     // Ignore redraw (system generated input)
     if (c != CTRL('d')) {
-      AS(replayD->input_recordD, replayD->input_record_writeD++) = c;
-      replayD->input_record_readD += 1;
+      AS(replay->input_recordD, replay->input_record_writeD++) = c;
+      replay->input_record_readD += 1;
     }
   }
 
@@ -478,7 +479,7 @@ draw(wait)
         if (c == CTRL('d')) break;
       } while (c != wait);
     }
-    if (wait < 0) c = game_input();
+    if (wait < 0) c = replayD ? game_input() : read_input();
     flush_draw = (c == CTRL('d'));
   }
 
@@ -11096,6 +11097,7 @@ py_saveslot_select()
 
   // No active class
   globalD.saveslot_class = -1;
+  platformD.mmap_replay(&replayD);
 
   // Clear delta visualization
   last_turnD = 0;

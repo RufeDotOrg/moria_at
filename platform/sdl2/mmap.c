@@ -8,6 +8,7 @@
 
 STATIC int mmap_replay(ptr) void** ptr;
 {
+  void* buf = 0;
   int size = REPLAYSIZE;
   if (*ptr) munmap(*ptr, size);
 
@@ -19,21 +20,20 @@ STATIC int mmap_replay(ptr) void** ptr;
       *dst++ = *src | 0x20;
     }
     *dst = 0;
-  }
 
-  int flag = O_RDWR;
-  struct stat sv;
-  if (stat(filename, &sv) == -1 || sv.st_size != size) flag |= O_CREAT;
-  int fd = open(filename, flag, 0644);
-  if (flag & O_CREAT) {
-    if (fd > 0 && ftruncate(fd, size) < 0) close(fd), fd = -1;
-  }
+    int flag = O_RDWR;
+    struct stat sv;
+    if (stat(filename, &sv) == -1 || sv.st_size != size) flag |= O_CREAT;
+    int fd = open(filename, flag, 0644);
+    if (flag & O_CREAT) {
+      if (fd > 0 && ftruncate(fd, size) < 0) close(fd), fd = -1;
+    }
 
-  void* buf = 0;
-  if (fd > 1) buf = mmap(0, size, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
-  if (fd > 1) close(fd);
-  showx(buf);
-  if (buf == (void*)-1) buf = 0;
+    if (fd > 1) buf = mmap(0, size, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+    if (fd > 1) close(fd);
+    showx(buf);
+    if (buf == (void*)-1) buf = 0;
+  }
   *ptr = buf;
   return buf != 0;
 }
