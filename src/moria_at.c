@@ -15050,6 +15050,7 @@ main(int argc, char** argv)
       if (uD.new_level_flag != NL_DEATH) {
         platformD.monster_memory(AB(recallD), 1);
         countD.pundo += (replayD->input_mutationD != 0);
+        replayD->input_mutationD = 0;
         if (platformD.save(globalD.saveslot_class)) {
           longjmp(restartD, 1);
         } else {
