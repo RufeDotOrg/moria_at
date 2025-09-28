@@ -8,9 +8,11 @@
 
 STATIC int mmap_replay(ptr) void** ptr;
 {
+  int size = REPLAYSIZE;
+  if (*ptr) munmap(*ptr, size);
+
   int classidx = globalD.saveslot_class;
   char filename[32] = REPLAYNAME;
-  int size = REPLAYSIZE;
   if (classidx >= 0 && classidx < AL(classD)) {
     char* dst = &filename[6];
     for (char* src = classD[classidx].name; *src != 0; ++src) {
@@ -29,6 +31,7 @@ STATIC int mmap_replay(ptr) void** ptr;
 
   void* buf = 0;
   if (fd > 1) buf = mmap(0, size, PROT_WRITE | PROT_READ, MAP_SHARED, fd, 0);
+  if (fd > 1) close(fd);
   showx(buf);
   if (buf == (void*)-1) buf = 0;
   *ptr = buf;
