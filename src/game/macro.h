@@ -43,7 +43,7 @@ enum { RELEASE };
 #define AC(x) memset(x, 0, sizeof(x))
 // Array Length
 #define AL(x) (sizeof(x) / sizeof(x[0]))
-// Array Binary
+// Array Binary (TBD: BA)
 #define AB(x) ((void*)x), sizeof(x)
 // Array Pair
 #define AP(x) x, AL(x)
@@ -88,7 +88,7 @@ enum { RELEASE };
 
 // Log
 #define show(x) printf("[%s] %s: %ld\n", __func__, #x, (long)x)
-#define showx(x) printf("[%s] %s: %lx\n", __func__, #x, (long)x)
+#define showx(x) printf("[%s] %s: 0x%lx\n", __func__, #x, (long)x)
 #define showf(x) printf("[%s] %s: %.03f\n", __func__, #x, (float)x)
 
 // Use global var

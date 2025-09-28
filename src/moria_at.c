@@ -366,6 +366,27 @@ replay_hack()
   // main loop should check input_action_usedD before changing input_records
   turn_flag = 1;
 }
+// Safeguard the reuse of simulation input
+STATIC uint64_t
+replay_hash()
+{
+  uint64_t hv = DJB2;
+  hv = djb2(hv, AB(versionD));
+  hv = djb2(hv, BP(dun_level));
+  hv = djb2(hv, BP(rnd_seed));
+  hv = djb2(hv, BP(uD.clidx));
+  return hv;
+}
+STATIC void
+replay_start()
+{
+  showx(replayD->input_rhashD);
+  uint64_t rhash = replay_hash();
+  showx(rhash);
+  if (replayD->input_rhashD != rhash) replayD->input_action_usedD = 0;
+  if (replayD->input_rhashD != rhash) replayD->input_mutationD = 0;
+  replayD->input_rhashD = rhash;
+}
 // Safeguards in the case of a desync
 // Otherwise the death menu reads back trailing inputs
 STATIC void
@@ -14989,7 +15010,6 @@ main(int argc, char** argv)
       if (save_on_readyD) {
         save_on_readyD = 0;
         platformD.save(globalD.saveslot_class);
-        replayD->input_action_usedD = 0;
       }
 
       // Per-Player initialization
@@ -14999,6 +15019,7 @@ main(int argc, char** argv)
       fixed_seed_func(town_seed, social_bonus);
 
       // Replay state reset
+      replay_start();
       if (replayD->input_action_usedD > 0) {
         replay_flag = TRUE;
         replayD->input_record_writeD =
@@ -15051,8 +15072,6 @@ main(int argc, char** argv)
       if (uD.new_level_flag != NL_DEATH) {
         platformD.monster_memory(AB(recallD), 1);
         countD.pundo += (replayD->input_mutationD != 0);
-        replayD->input_mutationD = 0;
-        replayD->input_action_usedD = 0;
         if (platformD.save(globalD.saveslot_class)) {
           longjmp(restartD, 1);
         } else {
