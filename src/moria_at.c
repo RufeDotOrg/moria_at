@@ -43,22 +43,25 @@ read_input()
 STATIC char
 game_input()
 {
-  USE(replay);
-  char c;
+  if (replay_flag) {
+    USE(replay);
+    char c;
+    if (replay->input_record_readD < replay->input_record_writeD) {
+      c = AS(replay->input_recordD, replay->input_record_readD++);
+    } else {
+      c = read_input();
 
-  if (replay->input_record_readD < replay->input_record_writeD) {
-    c = AS(replay->input_recordD, replay->input_record_readD++);
-  } else {
-    c = read_input();
-
-    // Ignore redraw (system generated input)
-    if (c != CTRL('d')) {
-      AS(replay->input_recordD, replay->input_record_writeD++) = c;
-      replay->input_record_readD += 1;
+      // Ignore redraw (system generated input)
+      if (c != CTRL('d')) {
+        AS(replay->input_recordD, replay->input_record_writeD++) = c;
+        replay->input_record_readD += 1;
+      }
     }
-  }
 
-  return c;
+    return c;
+  } else {
+    return read_input();
+  }
 }
 STATIC void
 vital_update()
@@ -223,6 +226,23 @@ los(fromY, fromX, toY, toX)
     }
   }
 }
+STATIC int
+replay_playback()
+{
+  return replay_flag == REPLAY_PLAYBACK;
+}
+STATIC int
+replay_completion()
+{
+  return (replay_flag == REPLAY_PLAYBACK &&
+          replayD->input_record_readD >= replayD->input_record_writeD);
+}
+STATIC int
+replay_recording()
+{
+  return (replay_flag == REPLAY_RECORD &&
+          replayD->input_record_readD == replayD->input_record_writeD);
+}
 // Match single index
 STATIC int
 py_affect(maid)
@@ -381,20 +401,33 @@ replay_hash()
 STATIC void
 replay_start()
 {
-  showx(replayD->input_rhashD);
-  uint64_t rhash = replay_hash();
-  showx(rhash);
-  if (replayD->input_rhashD != rhash) replayD->input_action_usedD = 0;
-  if (replayD->input_rhashD != rhash) replayD->input_mutationD = 0;
-  replayD->input_rhashD = rhash;
+  if (replayD) {
+    showx(replayD->input_rhashD);
+    uint64_t rhash = replay_hash();
+    showx(rhash);
+    if (replayD->input_rhashD != rhash) replayD->input_action_usedD = 0;
+    if (replayD->input_rhashD != rhash) replayD->input_mutationD = 0;
+    replayD->input_rhashD = rhash;
+
+    if (replayD->input_action_usedD > 0) {
+      replay_flag = REPLAY_PLAYBACK;
+      replayD->input_record_writeD =
+          AS(replayD->input_actionD, replayD->input_action_usedD - 1);
+    } else {
+      replay_flag = REPLAY_RECORD;
+      replayD->input_record_writeD = 0;
+    }
+    replayD->input_record_readD = 0;
+    replayD->input_action_usedD = 0;
+  }
 }
 // Safeguards in the case of a desync
 // Otherwise the death menu reads back trailing inputs
 STATIC void
-replay_noplayback()
+replay_end()
 {
   replay_flag = 0;
-  replayD->input_record_readD = replayD->input_record_writeD;
+  if (replayD) replayD->input_record_readD = replayD->input_record_writeD;
 }
 STATIC int
 in_bounds(row, col)
@@ -446,14 +479,13 @@ viz_magick()
 STATIC int
 draw(wait)
 {
-  int flush_draw = !replay_flag;
+  int flush_draw = !replay_playback();
   char c = 0;
 
   // Advance gamelog
   if (wait >= 0 && msg_advance()) msg_turnD = turnD;
 
-  // TBD: terrible hacks
-  if (replay_flag && wait < 0) {
+  if (replay_playback() && wait < 0) {
     c = game_input();
   }
 
@@ -478,7 +510,7 @@ draw(wait)
         if (c == CTRL('d')) break;
       } while (c != wait);
     }
-    if (wait < 0) c = replayD ? game_input() : read_input();
+    if (wait < 0) c = game_input();
     flush_draw = (c == CTRL('d'));
   }
 
@@ -3945,6 +3977,9 @@ hard_reset()
   death_descD[0] = 0;
   msg_writeD = 0;
 
+  // Replay
+  replay_flag = 0;
+
   // Reset overlay modes
   overlay_submodeD = 0;
   screen_submodeD = 0;
@@ -7167,7 +7202,7 @@ STATIC void magic_bolt(typ, dir, y, x, dam, bolt_typ) char* bolt_typ;
         descD[0] = descD[0] | 0x20;
         MSG("The %s strikes %s.", bolt_typ, descD);
 
-        if (!replay_flag) {
+        if (!replay_playback()) {
           viz_hookD = viz_magick;
           magick_distD = 0;
           magick_locD = (point_t){x, y};
@@ -7227,7 +7262,7 @@ STATIC void fire_ball(typ, dir, y, x, dam_hp, descrip) char* descrip;
           x = oldx;
         }
 
-        if (!replay_flag) {
+        if (!replay_playback()) {
           viz_hookD = viz_magick;
           magick_distD = FIRE_DIST;
           magick_locD = (point_t){x, y};
@@ -11096,7 +11131,6 @@ py_saveslot_select()
 
   // No active class
   globalD.saveslot_class = -1;
-  platformD.mmap_replay(&replayD);
 
   // Clear delta visualization
   last_turnD = 0;
@@ -11348,18 +11382,21 @@ py_grave()
 STATIC int
 can_undo(offset)
 {
-  int memory_ok = 1;
-  if (offset) {
-    // One command may be written ahead (e.g. py_look)
-    // invalidate the replay at one less than the limit
-    memory_ok = replayD->input_record_writeD < AL(replayD->input_recordD) &&
-                replayD->input_action_usedD < AL(replayD->input_actionD);
+  if (replay_flag) {
+    int memory_ok = 1;
+    if (offset) {
+      // One command may be written ahead (e.g. py_look)
+      // invalidate the replay at one less than the limit
+      memory_ok = replayD->input_record_writeD < AL(replayD->input_recordD) &&
+                  replayD->input_action_usedD < AL(replayD->input_actionD);
+    }
+    int vow_permit = 1;
+    if (uvow(VOW_UNDO_LIMIT)) {
+      vow_permit = replayD->input_mutationD != 0 || countD.pundo < 3;
+    }
+    return vow_permit && memory_ok;
   }
-  int vow_permit = 1;
-  if (uvow(VOW_UNDO_LIMIT)) {
-    vow_permit = replayD->input_mutationD != 0 || countD.pundo < 3;
-  }
-  return vow_permit && memory_ok;
+  return 0;
 }
 STATIC void
 py_undo()
@@ -11448,7 +11485,7 @@ py_menu()
 
     BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
            can_undo(1) ? "OK" : "RESTRICTED");
-    if (HACK) {
+    if (HACK && replay_flag) {
       BufLineAppend(overlay, line - 1, " %d+%d/3 %d/%d action/input %lu/%lu",
                     replayD->input_mutationD != 0, countD.pundo,
                     replayD->input_action_usedD, replayD->input_record_writeD,
@@ -11457,9 +11494,7 @@ py_menu()
 
     BufMsg(overlay, "-");
     if (permadeath) BufMsg(overlay, "-");
-    if (!permadeath)
-      BufMsg(overlay, "d) Dungeon reset (%s)",
-             can_undo(0) ? "OK" : "RESTRICTED");
+    if (!permadeath) BufMsg(overlay, "d) Dungeon reset");
     BufMsg(overlay, "e) Extra features");
     BufMsg(overlay, "-");
     BufMsg(overlay, "g) Game reset");
@@ -11487,10 +11522,12 @@ py_menu()
           seed_changeD = 1;
           save_on_readyD = 1;
         }
-        // Disable midpoint resume explicitly
-        replayD->input_action_usedD = 0;
-        // Record history mutation
-        replayD->input_mutationD = 1;
+        if (replay_flag) {
+          // Disable midpoint resume explicitly
+          replayD->input_action_usedD = 0;
+          // Record history mutation
+          replayD->input_mutationD = 1;
+        }
         longjmp(restartD, 1);
         break;
 
@@ -11680,7 +11717,6 @@ STATIC int
 py_endgame(fn endtype)
 {
   char c = 0;
-  int reset_input = replayD->input_record_writeD;
   do {
     if (c == 'p') {
       c = show_history();
@@ -11696,7 +11732,6 @@ py_endgame(fn endtype)
       c = endtype();
     }
 
-    replayD->input_record_readD = replayD->input_record_writeD = reset_input;
     if (c == CTRL('c')) break;
   } while (c != ESCAPE);
   return c;
@@ -13318,7 +13353,7 @@ mon_breath_dam(midx, fy, fx, breath, breath_maxdam)
   int y = uD.y;
   int x = uD.x;
 
-  if (!replay_flag) {
+  if (!replay_playback()) {
     viz_hookD = viz_magick;
     magick_distD = 2;
     magick_locD = (point_t){x, y};
@@ -13712,7 +13747,7 @@ creatures()
   int seen_threat = 1;
   int l_act[AL(monD)] = {0};
   int l_wake[AL(monD)] = {0};
-  if (TEST_CREATURE && !replay_flag) printf("----turn----\n");
+  if (TEST_CREATURE && !replay_playback()) printf("----turn----\n");
 
   // We calculate monster move_count & msleep prior to mon_move
   // This enables storing player state into registers
@@ -13743,7 +13778,7 @@ creatures()
             if (msleep) --move_count;
           }
         }
-        if (TEST_CREATURE && !replay_flag && cdis < MAX_SIGHT)
+        if (TEST_CREATURE && !replay_playback() && cdis < MAX_SIGHT)
           printf("local %s #%d | %d->%d msleep | %d mlit", cr_ptr->name,
                  it_index, mon->msleep, msleep, mlit);
         if (TEST_CREATURE && msleep == 0) l_wake[it_index] = 1;
@@ -14633,8 +14668,9 @@ dungeon()
 
   teleport = FALSE;
   do {
-    int last_action =
-        AS(replayD->input_actionD, replayD->input_action_usedD - 1);
+    int last_action = 0;
+    if (replay_flag)
+      last_action = AS(replayD->input_actionD, replayD->input_action_usedD - 1);
     inven_check_weight();
     inven_check_light();
 
@@ -14642,7 +14678,7 @@ dungeon()
     turn_flag = (countD.rest != 0) || (countD.paralysis != 0);
     if (teleport) turn_flag = 0;
     while (!turn_flag) {
-      if (replayD->input_record_readD == replayD->input_record_writeD) {
+      if (replay_recording()) {
         if (last_action != replayD->input_record_writeD) {
           if (TEST_REPLAY) {
             printf("dropped %d inputs: ",
@@ -14662,8 +14698,7 @@ dungeon()
         }
       }
 
-      replay_flag =
-          (replayD->input_record_readD < replayD->input_record_writeD);
+      if (replay_completion()) replay_flag = REPLAY_RECORD;
       draw(DRAW_NOW);
 
       y = uD.y;
@@ -14675,7 +14710,8 @@ dungeon()
       } else {
         // not running, not paralysed, not resting; what do we DO?
         char c = game_input();
-        if (!replay_flag && (c != CTRL('d') && c != ' ')) last_turnD = turnD;
+        if (!replay_playback() && (c != CTRL('d') && c != ' '))
+          last_turnD = turnD;
         if (TEST_REPLAY && !is_ctrl(c)) Log("execute (%c:%d)\n", c, c);
 
         // AWN: Period attempts auto-detection of a situational command
@@ -14890,13 +14926,15 @@ dungeon()
       }
     }
 
-    if (turn_flag && last_action != replayD->input_record_readD) {
-      AS(replayD->input_actionD, replayD->input_action_usedD++) =
-          replayD->input_record_readD;
-      show(replayD->input_action_usedD);
+    if (replay_flag) {
+      if (turn_flag && last_action != replayD->input_record_readD) {
+        AS(replayD->input_actionD, replayD->input_action_usedD++) =
+            replayD->input_record_readD;
+        show(replayD->input_action_usedD);
+      }
     }
     if (uD.total_winner == 1) {
-      if (!replay_flag) py_endgame(py_king);
+      if (!replay_playback()) py_endgame(py_king);
       uD.total_winner = 2;
     }
 
@@ -15021,16 +15059,6 @@ main(int argc, char** argv)
 
       // Replay state reset
       replay_start();
-      if (replayD->input_action_usedD > 0) {
-        replay_flag = TRUE;
-        replayD->input_record_writeD =
-            AS(replayD->input_actionD, replayD->input_action_usedD - 1);
-      } else {
-        replay_flag = FALSE;
-        replayD->input_record_writeD = 0;
-      }
-      replayD->input_record_readD = 0;
-      replayD->input_action_usedD = 0;
 
       // Input reset (values are initialized by ui_stateD on first interaction)
       modeD = submodeD = 0;
@@ -15084,7 +15112,7 @@ main(int argc, char** argv)
     }
 
     if (memcmp(death_descD, AP(quit_stringD)) != 0) {
-      replay_noplayback();
+      replay_end();
       countD.pdeath += 1;
       while (1) {
         py_endgame(py_grave);
