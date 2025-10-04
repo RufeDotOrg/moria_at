@@ -14621,9 +14621,9 @@ STATIC void
 dungeon()
 {
   int y, x;
-  uint32_t teleport;
   int town;
   int check_replay;
+  int teleport = 0;
 
   town = (dun_level == 0);
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
@@ -14666,7 +14666,6 @@ dungeon()
   uD.new_level_flag = 0;
   if (town) player_maint();
 
-  teleport = FALSE;
   do {
     int last_action = 0;
     if (replay_flag && replayD->input_action_usedD > 0)
@@ -14678,12 +14677,14 @@ dungeon()
     turn_flag = (countD.rest != 0) || (countD.paralysis != 0);
     if (teleport) turn_flag = 0;
     while (!turn_flag) {
+      int winner = (uD.total_winner == 1);  // once
+      uD.total_winner += winner;
+
       if (replay_recording()) {
-        if (last_action != replayD->input_record_writeD) {
-          if (TEST_REPLAY) replay_seedcmp(check_replay);
-          replayD->input_record_readD = replayD->input_record_writeD =
-              last_action;
-        }
+        if (winner) py_endgame(py_king);
+        if (TEST_REPLAY) replay_seedcmp(check_replay);
+        replayD->input_record_readD = replayD->input_record_writeD =
+            last_action;
       }
       if (replay_completion()) replay_flag = REPLAY_RECORD;
       draw(DRAW_NOW);
@@ -14920,10 +14921,6 @@ dungeon()
             replayD->input_record_readD;
         show(replayD->input_action_usedD);
       }
-    }
-    if (uD.total_winner == 1) {
-      if (!replay_playback()) py_endgame(py_king);
-      uD.total_winner = 2;
     }
 
     ma_tick();  // rising
