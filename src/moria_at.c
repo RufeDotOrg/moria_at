@@ -1031,7 +1031,7 @@ side_entrance(rv, tchar)
 {
   int y, x, x_left, x_right;
 
-  if (rv == 1) {
+  if (rv) {
     x_left = 1;
     x = x_right = 1 + randint(2) - 1;
   } else {
