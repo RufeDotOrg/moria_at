@@ -53,8 +53,10 @@ game_input()
 
       // Ignore redraw (system generated input)
       if (c != CTRL('d')) {
-        AS(replay->input_recordD, replay->input_record_writeD++) = c;
-        replay->input_record_readD += 1;
+        if (replay->input_record_writeD < AL(replay->input_recordD)) {
+          AS(replay->input_recordD, replay->input_record_writeD++) = c;
+          replay->input_record_readD += 1;
+        }
       }
     }
 
