@@ -14680,19 +14680,7 @@ dungeon()
     while (!turn_flag) {
       if (replay_recording()) {
         if (last_action != replayD->input_record_writeD) {
-          if (TEST_REPLAY) {
-            printf("dropped %d inputs: ",
-                   replayD->input_record_writeD - last_action);
-            for (int it = last_action; it < replayD->input_record_writeD;
-                 ++it) {
-              char c = replayD->input_recordD[it];
-              if (char_visible(c)) printf("(%c)", c);
-              printf("%d ", c);
-            }
-            printf("\n");
-            if (check_replay != rnd_seed) fail("seed moved; turn did not\n");
-          }
-
+          if (TEST_REPLAY) replay_seedcmp(check_replay);
           replayD->input_record_readD = replayD->input_record_writeD =
               last_action;
         }

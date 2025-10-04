@@ -44,6 +44,18 @@ replay_diverge_size()
 }
 
 static void
+replay_seedcmp(check_seed)
+{
+  printf("dropped %d inputs: ", replayD->input_record_writeD - last_action);
+  for (int it = last_action; it < replayD->input_record_writeD; ++it) {
+    char c = replayD->input_recordD[it];
+    if (char_visible(c)) printf("(%c)", c);
+    printf("%d ", c);
+  }
+  printf("\n");
+  if (check_seed != rnd_seed) fail("seed moved; turn did not\n");
+}
+static void
 replay_memcmp()
 {
   if (!replaydatD) {
