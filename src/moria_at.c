@@ -14621,7 +14621,7 @@ STATIC void
 dungeon()
 {
   int y, x;
-  uint32_t dir, teleport;
+  uint32_t teleport;
   int town;
   int check_replay;
 
@@ -14669,7 +14669,7 @@ dungeon()
   teleport = FALSE;
   do {
     int last_action = 0;
-    if (replay_flag)
+    if (replay_flag && replayD->input_action_usedD > 0)
       last_action = AS(replayD->input_actionD, replayD->input_action_usedD - 1);
     inven_check_weight();
     inven_check_light();
@@ -14685,7 +14685,6 @@ dungeon()
               last_action;
         }
       }
-
       if (replay_completion()) replay_flag = REPLAY_RECORD;
       draw(DRAW_NOW);
 
@@ -14729,7 +14728,7 @@ dungeon()
         }
 
         // (jhklnbyuJHKLNBYU)
-        dir = map_roguedir(c);
+        int dir = map_roguedir(c);
         if (dir > 0 && dir != 5) {
           // 75% random movement
           if (countD.confusion && randint(4) > 1) {
@@ -14915,7 +14914,8 @@ dungeon()
     }
 
     if (replay_flag) {
-      if (turn_flag && last_action != replayD->input_record_readD) {
+      if (replayD->input_action_usedD < AL(replayD->input_actionD) &&
+          last_action != replayD->input_record_readD) {
         AS(replayD->input_actionD, replayD->input_action_usedD++) =
             replayD->input_record_readD;
         show(replayD->input_action_usedD);
