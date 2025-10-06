@@ -133,19 +133,6 @@ ui_init()
   return t != 0;
 }
 
-int
-fs_upgrade()
-{
-  // Make a copy of all characters to external storage
-  platformD.saveex();
-
-  // Move default "savechar" into the class slot
-  if (platformD.load(-1, 0)) {
-    if (platformD.save(uD.clidx)) {
-      platformD.erase(-1, 0);
-    }
-  }
-}
 int puff_io(out, outmax, in, insize) void* out;
 void* in;
 {
@@ -291,19 +278,17 @@ custom_pregame()
   if (COSMO) phaseD = PHASE_GAME;
   Log("initialization complete");
 
-  // Migration code
-  if (platformD.load(-1, 0)) fs_upgrade();
-
   return 0;
 }
 
 int
 custom_postgame(may_exit)
 {
+  USE(phase);
   // Postgame activities should not be called from the crash handler
   if (COSMO) phaseD = PHASE_POSTGAME;
 
-  if (DISK) disk_postgame();
+  if (DISK && phase == PHASE_GAME) disk_postgame();
   if (JOYSTICK) joystick_assign(-1);
   return platform_postgame(may_exit);
 }

@@ -268,14 +268,29 @@ render_init()
       SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                         LANDSCAPE_X, LANDSCAPE_Y);
 
-  if (PC && bounds_rect.w > 0 && bounds_rect.h > 0) {
+  if (PC) {
     SDL_Event event;
     event.window.event = SDL_WINDOWEVENT_RESIZED;
     event.window.data1 = bounds_rect.w;
     event.window.data2 = bounds_rect.h;
-    sdl_window_event(event);
+    if (WINDOW) {
+      event.window.data1 = WINDOW_X;
+      event.window.data2 = WINDOW_Y;
+    }
+    if (event.window.data1 > 0 && event.window.data2 > 0)
+      sdl_window_event(event);
   }
 
+  return 1;
+}
+STATIC int
+render_target()
+{
+  USE(renderer);
+  USE(landscape);
+  if (!landscape) return 0;
+  if (SDL_SetRenderTarget(renderer, landscape) != 0) return 0;
+  if (SDL_SetRenderTarget(renderer, 0) != 0) return 0;
   return 1;
 }
 STATIC int
@@ -346,7 +361,7 @@ orientation_default()
 
   int dw = display_rectD.w;
   int dh = display_rectD.h;
-  return dw > dh ? SDL_ORIENTATION_LANDSCAPE : SDL_ORIENTATION_PORTRAIT;
+  return dw >= dh ? SDL_ORIENTATION_LANDSCAPE : SDL_ORIENTATION_PORTRAIT;
 }
 
 STATIC int
@@ -592,20 +607,16 @@ platform_pregame()
     SDL_version sv;
     SDL_GetVersion(&sv);
     Log("SDL version %d.%d.%d", V3b(&sv));
-    if (!render_init()) return 1;
+    if (!render_init()) return -1;
+    if (!render_target()) {
+      memcpy(globalD.pc_renderer, AP("software"));
+      return -1;
+    }
   }
 
-  if (WINDOW) {
-    SDL_Event event;
-    event.window.event = SDL_WINDOWEVENT_RESIZED;
-    event.window.data1 = WINDOW_X;
-    event.window.data2 = WINDOW_Y;
-    sdl_window_event(event);
-  }
-
-  sdl_pump();
-
-  while (!PC && display_rectD.w == 0) sdl_pump();
+  do {
+    sdl_pump();
+  } while (!PC && display_rectD.w == 0);
 
   return 0;
 }

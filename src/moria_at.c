@@ -14879,105 +14879,106 @@ main(int argc, char** argv)
 {
   global_init(argc, argv);
   platform_init();
-  platformD.pregame();
 
-  mon_level_init();
-  obj_level_init();
+  if (platformD.pregame() == 0) {
+    mon_level_init();
+    obj_level_init();
 
-  if (TEST_CHECKLEN) return obj_checklen();
+    if (TEST_CHECKLEN) return obj_checklen();
 
-  setjmp(restartD);
-  hard_reset();
+    setjmp(restartD);
+    hard_reset();
 
-  int ready = platformD.load(globalD.saveslot_class, 0);
-  if (!ready) ready = py_saveslot_select();
+    int ready = platformD.load(globalD.saveslot_class, 0);
+    if (!ready) ready = py_saveslot_select();
 
-  if (TEST_CAVEGEN) ready = test_cavegen();
+    if (TEST_CAVEGEN) ready = test_cavegen();
 
-  if (ready) {
-    globalD.saveslot_class = uD.clidx;
-    if (RESEED && seed_changeD) {
-      rnd_seed += 1;
-      seed_changeD = 0;
-    }
-    if (save_on_readyD) {
-      save_on_readyD = 0;
-      platformD.save(globalD.saveslot_class);
-    }
-
-    // Per-Player initialization
-    fixed_seed_func(obj_seed, magic_init);
-    fixed_seed_func(town_seed, heroname_init);
-    // recreate history text
-    fixed_seed_func(town_seed, social_bonus);
-
-    // Replay state reset
-    if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
-      replay_flag = TRUE;
-      input_record_writeD = AS(input_actionD, input_resumeD - 1);
-    } else {
-      replay_flag = FALSE;
-      input_record_writeD = 0;
-    }
-    input_resumeD = 0;
-    input_record_readD = 0;
-    input_action_usedD = 0;
-
-    // Input reset (values are initialized by ui_stateD on first interaction)
-    modeD = submodeD = 0;
-    finger_rowD = finger_colD = 0;
-
-    // may generate messages in calc_mana()->gain_prayer()
-    for (int it = 0; it < MAX_A; ++it) {
-      // Perform calculations
-      set_use_stat(it);
-    }
-
-    if (!platformD.monster_memory(AB(recallD), 0)) AC(recallD);
-
-    // Release objects in the cave
-    FOR_EACH(obj, {
-      if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
-        obj_unuse(obj);
+    if (ready) {
+      globalD.saveslot_class = uD.clidx;
+      if (RESEED && seed_changeD) {
+        rnd_seed += 1;
+        seed_changeD = 0;
       }
-    });
-    memset(&entity_objD[0], 0, sizeof(entity_objD[0]));
+      if (save_on_readyD) {
+        save_on_readyD = 0;
+        platformD.save(globalD.saveslot_class);
+      }
 
-    // a fresh cave!
-    if (dun_level != 0) {
-      cave_gen();
-    } else {
-      // Store rotation
-      store_maint();
-      // Generate town
-      fixed_seed_func(town_seed, town_gen);
-      // Random town monsters
-      alloc_townmon(randint(RND_MALLOC_LEVEL) + MIN_MALLOC_TOWN);
-      // Player random placement
-      py_intown();
-    }
+      // Per-Player initialization
+      fixed_seed_func(obj_seed, magic_init);
+      fixed_seed_func(town_seed, heroname_init);
+      // recreate history text
+      fixed_seed_func(town_seed, social_bonus);
 
-    panel_update(&panelD, uD.y, uD.x, TRUE);
-    py_check_view();
-    dungeon();
-
-    if (uD.new_level_flag != NL_DEATH) {
-      platformD.monster_memory(AB(recallD), 1);
-      if (platformD.save(globalD.saveslot_class)) {
-        longjmp(restartD, 1);
+      // Replay state reset
+      if (input_resumeD > 0 && input_resumeD <= input_action_usedD) {
+        replay_flag = TRUE;
+        input_record_writeD = AS(input_actionD, input_resumeD - 1);
       } else {
-        death_desc("Device I/O Error");
+        replay_flag = FALSE;
+        input_record_writeD = 0;
       }
-    }
-  } else if (!death_descD[0]) {
-    death_desc("Initialization Error");
-  }
+      input_resumeD = 0;
+      input_record_readD = 0;
+      input_action_usedD = 0;
 
-  if (memcmp(death_descD, AP(quit_stringD)) != 0) {
-    replay_stop();
-    while (1) {
-      py_endgame(py_grave);
-      if (py_menu() == CTRL('c')) break;
+      // Input reset (values are initialized by ui_stateD on first interaction)
+      modeD = submodeD = 0;
+      finger_rowD = finger_colD = 0;
+
+      // may generate messages in calc_mana()->gain_prayer()
+      for (int it = 0; it < MAX_A; ++it) {
+        // Perform calculations
+        set_use_stat(it);
+      }
+
+      if (!platformD.monster_memory(AB(recallD), 0)) AC(recallD);
+
+      // Release objects in the cave
+      FOR_EACH(obj, {
+        if (obj->tval > TV_MAX_PICK_UP || obj->fx || obj->fy) {
+          obj_unuse(obj);
+        }
+      });
+      memset(&entity_objD[0], 0, sizeof(entity_objD[0]));
+
+      // a fresh cave!
+      if (dun_level != 0) {
+        cave_gen();
+      } else {
+        // Store rotation
+        store_maint();
+        // Generate town
+        fixed_seed_func(town_seed, town_gen);
+        // Random town monsters
+        alloc_townmon(randint(RND_MALLOC_LEVEL) + MIN_MALLOC_TOWN);
+        // Player random placement
+        py_intown();
+      }
+
+      panel_update(&panelD, uD.y, uD.x, TRUE);
+      py_check_view();
+      dungeon();
+
+      if (uD.new_level_flag != NL_DEATH) {
+        platformD.monster_memory(AB(recallD), 1);
+        if (platformD.save(globalD.saveslot_class)) {
+          longjmp(restartD, 1);
+        } else {
+          death_desc("Device I/O Error");
+        }
+      }
+    } else if (!death_descD[0]) {
+      death_desc("Initialization Error");
+    }
+
+    if (memcmp(death_descD, AP(quit_stringD)) != 0) {
+      replay_stop();
+      while (1) {
+        py_endgame(py_grave);
+        if (py_menu() == CTRL('c')) break;
+      }
     }
   }
 
