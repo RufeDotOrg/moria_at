@@ -261,12 +261,17 @@ render_init()
     }
   }
 
+  int rts = SDL_RenderTargetSupported(rendererD);
+  Log("SDL_RenderTargetSupported %d", rts);
+  if (!rts) return 0;
+
   portraitD =
       SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                         PORTRAIT_X, PORTRAIT_Y);
   landscapeD =
       SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                         LANDSCAPE_X, LANDSCAPE_Y);
+  if (portraitD == 0 || landscapeD == 0) return 0;
 
   if (PC) {
     SDL_Event event;
@@ -281,16 +286,6 @@ render_init()
       sdl_window_event(event);
   }
 
-  return 1;
-}
-STATIC int
-render_target()
-{
-  USE(renderer);
-  USE(landscape);
-  if (!landscape) return 0;
-  if (SDL_SetRenderTarget(renderer, landscape) != 0) return 0;
-  if (SDL_SetRenderTarget(renderer, 0) != 0) return 0;
   return 1;
 }
 STATIC int
@@ -608,9 +603,6 @@ platform_pregame()
     SDL_GetVersion(&sv);
     Log("SDL version %d.%d.%d", V3b(&sv));
     if (!render_init()) return -1;
-    int rtv = render_target();
-    Log("verify render_target() support: %d", rtv);
-    if (!rtv) return -1;
   }
 
   do {
