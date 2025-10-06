@@ -154,7 +154,7 @@ apply_font()
 int
 custom_pregame()
 {
-  if (PC) phaseD = PHASE_PREGAME;
+  phaseD = PHASE_PREGAME;
   if (DISK && !disk_pregame()) return 1;
   if (DISK && KEYBOARD)
     disk_read_keys(gameplay_inputD, sizeof(gameplay_inputD));
@@ -275,7 +275,7 @@ custom_pregame()
   if (JOYSTICK) joystick_init();
 
   // Hardware dependent "risky" initialization complete!
-  if (PC) phaseD = PHASE_GAME;
+  phaseD = PHASE_GAME;
   Log("initialization complete");
 
   return 0;
@@ -286,7 +286,7 @@ custom_postgame(may_exit)
 {
   USE(phase);
   // Postgame activities should not be called from the crash handler
-  if (PC) phaseD = PHASE_POSTGAME;
+  phaseD = PHASE_POSTGAME;
 
   // Exit during pregame(); switch to "software" renderer
   if (DISK && phase == PHASE_PREGAME) {
