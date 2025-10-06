@@ -608,10 +608,7 @@ platform_pregame()
     SDL_GetVersion(&sv);
     Log("SDL version %d.%d.%d", V3b(&sv));
     if (!render_init()) return -1;
-    if (!render_target()) {
-      memcpy(globalD.pc_renderer, AP("software"));
-      return -1;
-    }
+    if (!render_target()) return -1;
   }
 
   do {
