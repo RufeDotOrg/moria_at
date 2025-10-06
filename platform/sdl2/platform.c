@@ -240,7 +240,7 @@ render_init()
 
   {
     int rw, rh;
-    if (SDL_GetRendererOutputSize(rendererD, &rw, &rh) != 0) return 1;
+    if (SDL_GetRendererOutputSize(rendererD, &rw, &rh) != 0) return 0;
     Log("Renderer output size %d %d", rw, rh);
 
     int ww, wh;
@@ -608,7 +608,9 @@ platform_pregame()
     SDL_GetVersion(&sv);
     Log("SDL version %d.%d.%d", V3b(&sv));
     if (!render_init()) return -1;
-    if (!render_target()) return -1;
+    int rtv = render_target();
+    Log("verify render_target() support: %d", rtv);
+    if (!rtv) return -1;
   }
 
   do {
