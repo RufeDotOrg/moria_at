@@ -221,14 +221,11 @@ render_init()
     }
   }
 
-  rendererD = SDL_CreateRenderer(windowD, -1, 0);
-  if (!rendererD) return 0;
-  // ANDROID fix for SDL Error: BLASTBufferQueue
-  if (ANDROID) SDL_RenderPresent(rendererD);
-  // APPLE fix for visual artifacts on first frame
-  if (__APPLE__) SDL_RenderClear(rendererD);
+  struct SDL_Renderer* renderer = SDL_CreateRenderer(windowD, -1, 0);
+  rendererD = renderer;
+  if (!renderer) return 0;
 
-  if (SDL_GetRendererInfo(rendererD, &rinfo) != 0) return 0;
+  if (SDL_GetRendererInfo(renderer, &rinfo) != 0) return 0;
 
   Log("SDL RendererInfo: "
       "rinfo.name %s "
@@ -240,7 +237,7 @@ render_init()
 
   {
     int rw, rh;
-    if (SDL_GetRendererOutputSize(rendererD, &rw, &rh) != 0) return 0;
+    if (SDL_GetRendererOutputSize(renderer, &rw, &rh) != 0) return 0;
     Log("Renderer output size %d %d", rw, rh);
 
     int ww, wh;
@@ -261,15 +258,20 @@ render_init()
     }
   }
 
-  int rts = SDL_RenderTargetSupported(rendererD);
+  int rts = SDL_RenderTargetSupported(renderer);
   Log("SDL_RenderTargetSupported %d", rts);
   if (!rts) return 0;
 
+  // ANDROID fix for SDL Error: BLASTBufferQueue
+  // APPLE fix for visual artifacts on first frame
+  // PC uncertain initialization state on some GPU drivers
+  platform_draw();
+
   portraitD =
-      SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+      SDL_CreateTexture(renderer, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                         PORTRAIT_X, PORTRAIT_Y);
   landscapeD =
-      SDL_CreateTexture(rendererD, texture_formatD, SDL_TEXTUREACCESS_TARGET,
+      SDL_CreateTexture(renderer, texture_formatD, SDL_TEXTUREACCESS_TARGET,
                         LANDSCAPE_X, LANDSCAPE_Y);
   if (portraitD == 0 || landscapeD == 0) return 0;
 
@@ -327,11 +329,11 @@ platform_draw()
   USE(renderer);
   USE(layout);
 
-  if (layout) {
-    SDL_SetRenderTarget(renderer, 0);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderClear(renderer);
+  SDL_SetRenderTarget(renderer, 0);
+  SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
 
+  if (layout) {
     USE(display_rect);
     USE(view_rect);
     rect_t target = {
@@ -426,6 +428,14 @@ platform_orientation(orientation)
       orientation, scale, layoutD != 0, xuse, yuse, xpad, ypad);
   SDL_FRect view = {xpad, ypad, xuse, yuse};
   view_rectD = view;
+
+  {
+    USE(renderer);
+    SDL_SetRenderTarget(renderer, layout);
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+    SDL_RenderClear(renderer);
+    SDL_SetRenderTarget(renderer, 0);
+  }
 
   return orientation;
 }

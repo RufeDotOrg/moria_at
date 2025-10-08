@@ -270,6 +270,7 @@ custom_pregame()
 
   map_textureD = SDL_CreateTexture(rendererD, texture_formatD,
                                    SDL_TEXTUREACCESS_TARGET, MAP_W, MAP_H);
+  if (!map_textureD) return 5;
   SDL_SetTextureBlendMode(map_textureD, SDL_BLENDMODE_NONE);
 
   if (JOYSTICK) joystick_init();
@@ -554,43 +555,40 @@ framing_base_step(rect_t frame, int base, int step)
 int
 vitalstat_layout()
 {
-  apclear(AB(stattextD));
-  if (uD.lev) {
-    int line = 0;
-    int pitch = AL(stattextD[0]);
+  int line = 0;
+  int pitch = AL(stattextD[0]);
 
-    if (uD.ridx < AL(raceD) && uD.clidx < AL(classD)) {
-      int len = strlen(raceD[uD.ridx].name) + strlen(classD[uD.clidx].name) + 1;
-      int wscount = pitch - len;
-      snprintf(&stattextD[line][wscount / 2], pitch, "%s %s",
-               raceD[uD.ridx].name, classD[uD.clidx].name);
-    }
-    ++line;
+  if (uD.ridx < AL(raceD) && uD.clidx < AL(classD)) {
+    int len = strlen(raceD[uD.ridx].name) + strlen(classD[uD.clidx].name) + 1;
+    int wscount = pitch - len;
+    snprintf(&stattextD[line][wscount / 2], pitch, "%s %s", raceD[uD.ridx].name,
+             classD[uD.clidx].name);
+  }
+  ++line;
 
-    for (int it = 0; it < MAX_A; ++it) {
-      snprintf(stattextD[line++], pitch, "%-4.04s: %7d %-4.04s: %6d",
-               vital_nameD[it], vitalD[it], stat_abbrD[it], vital_statD[it]);
-    }
-    {
-      snprintf(stattextD[line++], pitch, "%-4.04s: %7d", vital_nameD[MAX_A],
-               vitalD[MAX_A]);
+  for (int it = 0; it < MAX_A; ++it) {
+    snprintf(stattextD[line++], pitch, "%-4.04s: %7d %-4.04s: %6d",
+             vital_nameD[it], vitalD[it], stat_abbrD[it], vital_statD[it]);
+  }
+  {
+    snprintf(stattextD[line++], pitch, "%-4.04s: %7d", vital_nameD[MAX_A],
+             vitalD[MAX_A]);
+  }
+
+  char* affstr[AFF_X];
+  for (int it = 0; it < AFF_Y; ++it) {
+    for (int jt = 0; jt < AL(affstr); ++jt) {
+      int idx = AL(affstr) * it + jt;
+      if (TEST_UI) {
+        affstr[jt] = affectD[idx][0];
+      } else if (active_affectD[idx])
+        affstr[jt] = affectD[idx][active_affectD[idx] - 1];
+      else
+        affstr[jt] = "";
     }
 
-    char* affstr[AFF_X];
-    for (int it = 0; it < AFF_Y; ++it) {
-      for (int jt = 0; jt < AL(affstr); ++jt) {
-        int idx = AL(affstr) * it + jt;
-        if (TEST_UI) {
-          affstr[jt] = affectD[idx][0];
-        } else if (active_affectD[idx])
-          affstr[jt] = affectD[idx][active_affectD[idx] - 1];
-        else
-          affstr[jt] = "";
-      }
-
-      snprintf(stattextD[line++], pitch, "%-8.08s %-8.08s %-8.08s", affstr[0],
-               affstr[1], affstr[2]);
-    }
+    snprintf(stattextD[line++], pitch, "%-8.08s %-8.08s %-8.08s", affstr[0],
+             affstr[1], affstr[2]);
   }
 }
 int
@@ -843,6 +841,7 @@ map_draw()
 
   SDL_SetRenderTarget(renderer, map_textureD);
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
+  SDL_RenderClear(renderer);
   SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
 
   // Ascii renderer only
@@ -1617,17 +1616,20 @@ viz_minimap()
 int
 custom_predraw()
 {
-  FOR_EACH(mon, {
-    int draw = mon_lit(it_index);
+  apclear(AB(stattextD));
+  if (uD.lev) {
+    FOR_EACH(mon, {
+      int draw = mon_lit(it_index);
 
-    int cidx = 0;
-    if (draw) cidx = mon->cidx;
-    mon_drawD[it_index] = cidx;
-  });
+      int cidx = 0;
+      if (draw) cidx = mon->cidx;
+      mon_drawD[it_index] = cidx;
+    });
 
-  viz_update();
-  viz_minimap();
-  vitalstat_layout();
+    viz_update();
+    viz_minimap();
+    vitalstat_layout();
+  }
   return 1;
 }
 
