@@ -42,7 +42,6 @@ IsWindows()
 
 enum { SDL_EVLOG = 0 };
 enum { SDL_VERBOSE = 0 };
-enum { BATCHING = 1 };
 enum { REORIENTATION = 1 };
 #define ORIENTATION_LIST \
   "Portrait LandscapeRight PortraitUpsideDown LandscapeLeft"
@@ -66,11 +65,13 @@ enum { LANDSCAPE = 0 };
 
 enum { KEYBOARD = 0 };
 #if defined(ANDROID) || (TARGET_OS_IPHONE)
+enum { BATCHING = 1 };
 enum { TOUCH = 1 };
 enum { MOUSE = 0 };
 enum { JOYSTICK = 0 };
 enum { PC = 0 };
 #else
+enum { BATCHING = 0 };
 enum { TOUCH = 0 };
 enum { MOUSE = TOUCH };
 enum { JOYSTICK = 1 };
