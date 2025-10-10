@@ -51,7 +51,7 @@ enum { WINDOW = 0 };
 #define WINDOW_X 1920  // 1440, 1334
 #define WINDOW_Y 1080  // 720, 750
 
-// optional: layout restriction
+// optional: layout xy <= 2*1024
 enum { PORTRAIT = 0 };
 #define PORTRAIT_X 1080
 #define PORTRAIT_Y 1920
@@ -99,8 +99,6 @@ DATA SDL_Event eventD;
 DATA int refresh_rateD;
 DATA int vsync_rateD;
 
-DATA SDL_Texture* portraitD;
-DATA SDL_Texture* landscapeD;
 DATA SDL_Texture* layoutD;
 DATA SDL_Rect layout_rectD;
 DATA SDL_FRect view_rectD;
@@ -246,6 +244,10 @@ render_init()
     retina_scaleD = MAX((float)rw / ww, (float)rh / wh);
   }
 
+  // Check texture limitations
+  if (rinfo.max_texture_width < 2 * 1024 || rinfo.max_texture_height < 2 * 1024)
+    return 0;
+
   if (!texture_formatD) {
     texture_formatD = rinfo.texture_formats[0];
     for (int it = 0; it < rinfo.num_texture_formats; ++it) {
@@ -268,13 +270,9 @@ render_init()
   // PC uncertain initialization state on some GPU drivers
   platform_draw();
 
-  portraitD =
-      SDL_CreateTexture(renderer, texture_formatD, SDL_TEXTUREACCESS_TARGET,
-                        PORTRAIT_X, PORTRAIT_Y);
-  landscapeD =
-      SDL_CreateTexture(renderer, texture_formatD, SDL_TEXTUREACCESS_TARGET,
-                        LANDSCAPE_X, LANDSCAPE_Y);
-  if (portraitD == 0 || landscapeD == 0) return 0;
+  layoutD = SDL_CreateTexture(renderer, texture_formatD,
+                              SDL_TEXTUREACCESS_TARGET, 2 * 1024, 2 * 1024);
+  if (layoutD == 0) return 0;
 
   if (PC) {
     SDL_Event event;
@@ -310,7 +308,8 @@ platform_screenshot()
     Log("layoutD %dx%d", layout_rectD.w, layout_rectD.h);
     Log("sz %d pixels %p pitch %d", sz, pixels, pitch);
     if (pixels) {
-      SDL_RenderReadPixels(renderer, 0, SDL_PIXELFORMAT_NV12, pixels, pitch);
+      SDL_RenderReadPixels(renderer, &layout_rectD, SDL_PIXELFORMAT_NV12,
+                           pixels, pitch);
       struct padS header = {"nmg", layout_rectD.w, layout_rectD.h};
       SDL_RWops* f = SDL_RWFromFile(fname[it], "wb");
       if (f) {
@@ -337,13 +336,14 @@ platform_draw()
   if (layout) {
     USE(display_rect);
     USE(view_rect);
+    USE(layout_rect);
     rect_t target = {
         view_rect.x * display_rect.w,
         view_rect.y * display_rect.h,
         view_rect.w * display_rect.w,
         view_rect.h * display_rect.h,
     };
-    SDL_RenderCopy(renderer, layout, NULL, &target);
+    SDL_RenderCopy(renderer, layout, &layout_rect, &target);
   }
 
   SDL_RenderPresent(renderer);
@@ -373,10 +373,8 @@ platform_orientation(orientation)
 
   USE(safe_rect);
   float scale = 1.f;
-  void* layout = 0;
   SDL_Rect layout_rect = display_rectD;
   if (orientation == SDL_ORIENTATION_LANDSCAPE) {
-    layout = landscapeD;
     layout_rect = (rect_t){0, 0, LANDSCAPE_X, LANDSCAPE_Y};
 
     {
@@ -390,7 +388,6 @@ platform_orientation(orientation)
           safe_rect.w, display_rect.h);
     }
   } else if (orientation == SDL_ORIENTATION_PORTRAIT) {
-    layout = portraitD;
     layout_rect = (rect_t){0, 0, PORTRAIT_X, PORTRAIT_Y};
 
     {
@@ -404,12 +401,10 @@ platform_orientation(orientation)
           display_rect.w, safe_rect.h);
     }
   }
-  layoutD = layout;
   layout_rectD = layout_rect;
 
-  if (layout && scale != 1.f)
-    SDL_SetTextureScaleMode(layout, SDL_ScaleModeLinear);
-  if (layout && scale != 1.f) Log("layout using ScaleModeLinear");
+  if (scale != 1.f) SDL_SetTextureScaleMode(layoutD, SDL_ScaleModeLinear);
+  if (scale != 1.f) Log("layout using ScaleModeLinear");
 
   // Note tension: center of display vs. center of safe area
   //   affects visual aesthetic
@@ -429,14 +424,6 @@ platform_orientation(orientation)
       orientation, scale, layoutD != 0, xuse, yuse, xpad, ypad);
   SDL_FRect view = {xpad, ypad, xuse, yuse};
   view_rectD = view;
-
-  {
-    USE(renderer);
-    SDL_SetRenderTarget(renderer, layout);
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 0);
-    SDL_RenderClear(renderer);
-    SDL_SetRenderTarget(renderer, 0);
-  }
 
   return orientation;
 }
