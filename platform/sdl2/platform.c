@@ -245,7 +245,8 @@ render_init()
   }
 
   // Check texture limitations
-  if (rinfo.max_texture_width < 2 * 1024 || rinfo.max_texture_height < 2 * 1024)
+  if ((rinfo.max_texture_width && rinfo.max_texture_width < 2 * 1024) ||
+      (rinfo.max_texture_height && rinfo.max_texture_height < 2 * 1024))
     return 0;
 
   if (!texture_formatD) {
