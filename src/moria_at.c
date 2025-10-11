@@ -14868,6 +14868,7 @@ global_init(int argc, char** argv)
   globalD.small_text = 0;
   globalD.use_joystick = PC ? 1 : 0;
   globalD.power_mode = 0;
+  globalD.gpu_bypass = 0;
 
   globalD.ghash = djb2(DJB2, bptr(&globalD) + sizeof(globalD.ghash),
                        sizeof(globalD) - sizeof(globalD.ghash));

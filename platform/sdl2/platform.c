@@ -546,6 +546,11 @@ log_hint(char* name)
   if (val) Log("Hint: %s=%s", name, val);
 }
 
+STATIC char*
+platform_renderer()
+{
+  return globalD.gpu_bypass ? "software" : "opengl";
+}
 // Initialization
 int
 platform_pregame()
@@ -566,10 +571,7 @@ platform_pregame()
 
     if (PC) {
       if (!SDL_GetHint(SDL_HINT_RENDER_DRIVER)) {
-        if (globalD.pc_renderer[0])
-          SDL_SetHint(SDL_HINT_RENDER_DRIVER, globalD.pc_renderer);
-        else
-          SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengl");
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER, platform_renderer());
       }
       if (JOYSTICK) {
         log_hint(SDL_HINT_GAMECONTROLLERCONFIG);

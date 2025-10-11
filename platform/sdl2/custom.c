@@ -291,7 +291,7 @@ custom_postgame(may_exit)
 
   // Exit during pregame(); switch to "software" renderer
   if (DISK && phase == PHASE_PREGAME) {
-    memcpy(globalD.pc_renderer, AP("software"));
+    globalD.gpu_bypass = 1;
     disk_cache_write();
   }
 
@@ -1696,7 +1696,7 @@ feature_menutext(mflag)
         break;
       case 'g':
         text = "gpu interface";
-        value = globalD.pc_renderer[0] ? globalD.pc_renderer : default_renderer;
+        value = platform_renderer();
         break;
       case 'h':
         text = "hand-swap user interface";
@@ -1835,7 +1835,7 @@ custom_gamecrash_handler(int sig)
 
   // Crash during pregame(); switch to "software" renderer
   if (DISK && phase == PHASE_PREGAME) {
-    memcpy(globalD.pc_renderer, AP("software"));
+    globalD.gpu_bypass = 1;
     disk_cache_write();
   }
 
