@@ -37,33 +37,44 @@ read_input()
   if (c != CTRL('d')) viz_hookD = 0;
   return c;
 }
-
-// If a recording is loaded, read from the buffer
-// Otherwise read platform input, and keep record of it
+STATIC int
+replay_playback()
+{
+  return replay_flag == REPLAY_PLAYBACK;
+}
+STATIC int
+replay_recording()
+{
+  return replay_flag == REPLAY_RECORD;
+}
+STATIC int
+replay_resumed()
+{
+  return (replay_flag == REPLAY_PLAYBACK &&
+          replayD->input_record_readD >= replayD->input_record_writeD);
+}
+// replay playback or input recording
 STATIC char
 game_input()
 {
-  if (replay_flag) {
-    USE(replay);
-    char c;
-    if (replay->input_record_readD < replay->input_record_writeD) {
-      c = AS(replay->input_recordD, replay->input_record_readD++);
-    } else {
-      c = read_input();
+  USE(replay);
+  char c;
+  if (replay_playback() &&
+      replay->input_record_readD < replay->input_record_writeD) {
+    c = AS(replay->input_recordD, replay->input_record_readD++);
+  } else {
+    c = read_input();
 
-      // Ignore redraw (system generated input)
-      if (c != CTRL('d')) {
-        if (replay->input_record_writeD < AL(replay->input_recordD)) {
-          AS(replay->input_recordD, replay->input_record_writeD++) = c;
-          replay->input_record_readD += 1;
-        }
+    // Ignore redraw (system generated input)
+    if (c != CTRL('d') && replay_recording()) {
+      if (replay->input_record_writeD < AL(replay->input_recordD)) {
+        AS(replay->input_recordD, replay->input_record_writeD++) = c;
+        replay->input_record_readD = replay->input_record_writeD;
       }
     }
-
-    return c;
-  } else {
-    return read_input();
   }
+
+  return c;
 }
 STATIC void
 vital_update()
@@ -227,23 +238,6 @@ los(fromY, fromX, toY, toX)
       return TRUE;
     }
   }
-}
-STATIC int
-replay_playback()
-{
-  return replay_flag == REPLAY_PLAYBACK;
-}
-STATIC int
-replay_completion()
-{
-  return (replay_flag == REPLAY_PLAYBACK &&
-          replayD->input_record_readD >= replayD->input_record_writeD);
-}
-STATIC int
-replay_recording()
-{
-  return (replay_flag == REPLAY_RECORD &&
-          replayD->input_record_readD == replayD->input_record_writeD);
 }
 // Match single index
 STATIC int
@@ -423,13 +417,13 @@ replay_start()
     replayD->input_action_usedD = 0;
   }
 }
-// Safeguards in the case of a desync
-// Otherwise the death menu reads back trailing inputs
 STATIC void
 replay_end()
 {
-  replay_flag = 0;
-  if (replayD) replayD->input_record_readD = replayD->input_record_writeD;
+  if (replay_flag) {
+    replay_flag = REPLAY_DEAD;
+    replayD->input_record_readD = replayD->input_record_writeD;
+  }
 }
 STATIC int
 in_bounds(row, col)
@@ -14682,13 +14676,13 @@ dungeon()
       int winner = (uD.total_winner == 1);  // once
       uD.total_winner += winner;
 
-      if (replay_recording()) {
+      if (!replay_playback()) {
         if (winner) py_endgame(py_king);
         if (TEST_REPLAY) replay_seedcmp(check_replay);
         replayD->input_record_readD = replayD->input_record_writeD =
             last_action;
       }
-      if (replay_completion()) replay_flag = REPLAY_RECORD;
+      if (replay_resumed()) replay_flag = REPLAY_RECORD;
       draw(DRAW_NOW);
 
       y = uD.y;

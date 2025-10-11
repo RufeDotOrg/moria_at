@@ -498,7 +498,7 @@ enum { ART_W = 32 };
 enum { ART_H = 64 };
 
 // Game
-enum { REPLAY_NONE = 0, REPLAY_RECORD = 1, REPLAY_PLAYBACK = 2 };
+enum { REPLAY_NONE = 0, REPLAY_RECORD, REPLAY_PLAYBACK, REPLAY_DEAD };
 enum { WHITESPACE = 0x20202020 };
 enum { DRAW_NOW = 0 };
 enum { DRAW_WAIT = -1 };
