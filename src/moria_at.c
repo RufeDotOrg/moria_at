@@ -11354,7 +11354,7 @@ py_grave()
     }
   }
 
-  int xcenter = 26;
+  int xcenter = 25;
   char tmp[STRLEN_MSG + 1];
   int line = 3;
   TOMB("RIP");
@@ -11365,11 +11365,12 @@ py_grave()
   TOMB("Exp : %d", uD.exp);
   TOMB("Gold : %d", uD.gold);
   TOMB("Depth : %d", dun_level * 50);
-  TOMB("Player Deaths: %d", countD.pdeath);
-  TOMB("Player Undos: %d", countD.pundo);
   line += 1;
   TOMB("Killed by");
   TOMB("%s.", death_text());
+  line += 1;
+  TOMB("Undo Levels: %d", countD.pundo);
+  TOMB("Deaths: %d", countD.pdeath);
 
   if (PC) msg_hint(AP("(CTRL-z) (c/o/p/ESC)"));
   // Centering text; portrait mode+hand_swap will show message history top left
