@@ -11472,9 +11472,9 @@ py_menu()
     overlay_submodeD = 0;
     int line = 0;
     if (death) {
-      char* msg =
-          permadeath ? "this death is permanent" : "death comes to us all";
-      BufMsg(overlay, "a) Ahh, %s", msg);
+      char* msg = permadeath ? "A vow of death is permanent"
+                             : "Ahh, death comes to us all";
+      BufMsg(overlay, "a) %s", msg);
     } else {
       BufMsg(overlay, "a) Await event (health, malady, or recall)");
     }
