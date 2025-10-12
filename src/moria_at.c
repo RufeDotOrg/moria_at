@@ -11394,6 +11394,13 @@ can_undo(offset)
   }
   return 0;
 }
+STATIC int
+can_reset(death)
+{
+  int ok = 1;
+  if (death && uvow(VOW_DEATH)) ok = 0;
+  return ok;
+}
 STATIC void
 py_undo()
 {
@@ -11463,17 +11470,15 @@ py_menu()
   char c = 0;
   char* prompt = "Advanced Game Actions";
   int death = (uD.new_level_flag == NL_DEATH);
-  int permadeath = 0;
-
-  if (death) permadeath = uvow(VOW_DEATH);
 
   if (death) prompt = "You are dead.";
+
   while (1) {
     overlay_submodeD = 0;
     int line = 0;
     if (death) {
-      char* msg = permadeath ? "A vow of death is permanent"
-                             : "Ahh, death comes to us all";
+      char* msg = uvow(VOW_DEATH) ? "A vow of death is permanent"
+                                  : "Ahh, death comes to us all";
       BufMsg(overlay, "a) %s", msg);
     } else {
       BufMsg(overlay, "a) Await event (health, malady, or recall)");
@@ -11500,8 +11505,7 @@ py_menu()
     }
 
     BufMsg(overlay, "-");
-    if (permadeath) BufMsg(overlay, "-");
-    if (!permadeath) BufMsg(overlay, "d) Dungeon reset");
+    BufMsg(overlay, can_reset(death) ? "d) Dungeon reset" : "-");
     BufMsg(overlay, "e) Extra features");
     BufMsg(overlay, "-");
     BufMsg(overlay, "g) Game reset");
@@ -11524,18 +11528,19 @@ py_menu()
         return 0;
 
       case 'd':
-        if (permadeath) continue;
-        if (RESEED) {
-          seed_changeD = 1;
-          save_on_readyD = 1;
+        if (can_reset(death)) {
+          if (RESEED) {
+            seed_changeD = 1;
+            save_on_readyD = 1;
+          }
+          if (replay_flag) {
+            // Disable midpoint resume explicitly
+            replayD->input_action_usedD = 0;
+            // Record history mutation
+            replayD->input_mutationD = 1;
+          }
+          longjmp(restartD, 1);
         }
-        if (replay_flag) {
-          // Disable midpoint resume explicitly
-          replayD->input_action_usedD = 0;
-          // Record history mutation
-          replayD->input_mutationD = 1;
-        }
-        longjmp(restartD, 1);
         break;
 
       case 'e':
