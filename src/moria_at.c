@@ -11390,6 +11390,7 @@ can_undo(offset)
     if (uvow(VOW_UNDO_LIMIT)) {
       vow_permit = replayD->input_mutationD != 0 || countD.pundo < 3;
     }
+    if (uvow(VOW_DEATH) && uD.new_level_flag == NL_DEATH) vow_permit = 0;
     return vow_permit && memory_ok;
   }
   return 0;
@@ -11407,6 +11408,23 @@ py_undo()
   if (can_undo(1)) {
     replayD->input_action_usedD -= 1;
     replayD->input_mutationD = 1;
+    longjmp(restartD, 1);
+  }
+}
+STATIC void
+dungeon_reset(death)
+{
+  if (can_reset(death)) {
+    if (RESEED) {
+      seed_changeD = 1;
+      save_on_readyD = 1;
+    }
+    if (replay_flag) {
+      // Disable midpoint resume explicitly
+      replayD->input_action_usedD = 0;
+      // Record history mutation
+      replayD->input_mutationD = 1;
+    }
     longjmp(restartD, 1);
   }
 }
@@ -11485,15 +11503,17 @@ py_menu()
     }
 
     BufMsg(overlay, "b) Back / Gameplay Rewind: ");
-    if (uvow(VOW_UNDO_LIMIT)) {
-      if (replayD->input_mutationD != 0) {
-        BufLineAppend(overlay, line - 1, "Undo Active");
+    if (can_undo(1)) {
+      if (uvow(VOW_UNDO_LIMIT)) {
+        if (replayD->input_mutationD != 0) {
+          BufLineAppend(overlay, line - 1, "Undo Active");
+        } else {
+          BufLineAppend(overlay, line - 1, "%d Level Limit",
+                        MAX_UNDO_LEV - countD.pundo);
+        }
       } else {
-        BufLineAppend(overlay, line - 1, "%d Level Limit",
-                      MAX_UNDO_LEV - countD.pundo);
+        BufLineAppend(overlay, line - 1, "Enabled");
       }
-    } else if (can_undo(1)) {
-      BufLineAppend(overlay, line - 1, "Enabled");
     } else {
       BufLineAppend(overlay, line - 1, "Disabled");
     }
@@ -11528,19 +11548,7 @@ py_menu()
         return 0;
 
       case 'd':
-        if (can_reset(death)) {
-          if (RESEED) {
-            seed_changeD = 1;
-            save_on_readyD = 1;
-          }
-          if (replay_flag) {
-            // Disable midpoint resume explicitly
-            replayD->input_action_usedD = 0;
-            // Record history mutation
-            replayD->input_mutationD = 1;
-          }
-          longjmp(restartD, 1);
-        }
+        dungeon_reset(death);
         break;
 
       case 'e':
@@ -11548,6 +11556,7 @@ py_menu()
         break;
 
       case 'g':
+        // TBD: improve handling of game reset with vow of death
         if (death) ST_INC(recallD[death_creD].r_death);
         if (!death) platformD.savemidpoint();
         globalD.saveslot_class = -1;
