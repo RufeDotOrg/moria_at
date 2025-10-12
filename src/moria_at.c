@@ -11479,11 +11479,22 @@ py_menu()
       BufMsg(overlay, "a) Await event (health, malady, or recall)");
     }
 
-    BufMsg(overlay, "b) Undo / Gameplay Rewind (%s)",
-           can_undo(1) ? "OK" : "RESTRICTED");
+    BufMsg(overlay, "b) Back / Gameplay Rewind: ");
+    if (uvow(VOW_UNDO_LIMIT)) {
+      if (replayD->input_mutationD != 0) {
+        BufLineAppend(overlay, line - 1, "Undo Active");
+      } else {
+        BufLineAppend(overlay, line - 1, "%d Level Limit",
+                      MAX_UNDO_LEV - countD.pundo);
+      }
+    } else if (can_undo(1)) {
+      BufLineAppend(overlay, line - 1, "Enabled");
+    } else {
+      BufLineAppend(overlay, line - 1, "Disabled");
+    }
+
     if (HACK && replay_flag) {
-      BufLineAppend(overlay, line - 1, " %d+%d/3 %d/%d action/input %lu/%lu",
-                    replayD->input_mutationD != 0, countD.pundo,
+      BufLineAppend(overlay, line - 1, " %d/%d action/input %lu/%lu",
                     replayD->input_action_usedD, replayD->input_record_writeD,
                     AL(replayD->input_actionD), AL(replayD->input_recordD));
     }
