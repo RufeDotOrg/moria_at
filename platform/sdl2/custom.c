@@ -576,8 +576,12 @@ vitalstat_layout()
              vital_nameD[it], vitalD[it], stat_abbrD[it], vital_statD[it]);
   }
   {
-    snprintf(stattextD[line++], pitch, "%-4.04s: %7d", vital_nameD[MAX_A],
+    snprintf(stattextD[line], pitch / 2, "%-4.04s: %7d", vital_nameD[MAX_A],
              vitalD[MAX_A]);
+    if (uvow(VOW_UNDO_LIMIT))
+      snprintf(stattextD[line] + pitch / 2, pitch / 2, "Undo: %6d",
+               MAX_UNDO_LEV - countD.pundo);
+    line += 1;
   }
 
   char* affstr[AFF_X];
