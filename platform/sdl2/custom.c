@@ -562,10 +562,12 @@ vitalstat_layout()
   int pitch = AL(stattextD[0]);
 
   if (uD.ridx < AL(raceD) && uD.clidx < AL(classD)) {
-    int len = strlen(raceD[uD.ridx].name) + strlen(classD[uD.clidx].name) + 1;
+    char* desc = uvow(VOW_DEATH) ? " (mortal)" : "";
+    int len = strlen(desc) + strlen(raceD[uD.ridx].name) +
+              strlen(classD[uD.clidx].name) + 1;
     int wscount = pitch - len;
-    snprintf(&stattextD[line][wscount / 2], pitch, "%s %s", raceD[uD.ridx].name,
-             classD[uD.clidx].name);
+    snprintf(&stattextD[line][wscount / 2], pitch, "%s %s%s",
+             raceD[uD.ridx].name, classD[uD.clidx].name, desc);
   }
   ++line;
 
