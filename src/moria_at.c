@@ -11525,9 +11525,10 @@ py_menu()
     }
 
     if (HACK && replay_flag) {
-      BufLineAppend(overlay, line - 1, " %d/%d action/input %lu/%lu",
+      BufLineAppend(overlay, line - 1, " %d/%d action/input %d/%d",
                     replayD->input_action_usedD, replayD->input_record_writeD,
-                    AL(replayD->input_actionD), AL(replayD->input_recordD));
+                    (int)AL(replayD->input_actionD),
+                    (int)AL(replayD->input_recordD));
     }
 
     BufMsg(overlay, "-");
