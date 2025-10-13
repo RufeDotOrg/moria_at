@@ -482,11 +482,17 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 #define VOW_DEATH 0
 #define VOW_UNDO_THREAT 1
 #define VOW_UNDO_LIMIT 2
+#define VOW_DBREATH 3
+#define VOW_FOREGO_ID 4
+#define VOW_STAT_FEE 5
 #define MAX_UNDO_LEV 3
 DATA char vowD[][80] = {
     "permanent death",
     "endure threat (prohibits undo and reset)",
-    "limitation of undo and level reset (3)",
+    "limitation of undo and level reset (3 max)",
+    "potent dragon breath (no damage reduction by distance)",
+    "forego auto-identification in town",
+    "pay a fee for stat restoration (shop 8)",
 };
 
 // Input

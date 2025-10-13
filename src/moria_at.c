@@ -3934,7 +3934,10 @@ town_gen()
 
   int tmp = randint(2);
   side_entrance(tmp, '0');
-  side_entrance(!tmp, '9');
+  if (uD.exp == 0)
+    side_entrance(!tmp, '9');
+  else if (uvow(VOW_STAT_FEE))
+    side_entrance(!tmp, '8');
 
   do {
     i = 1 + randint(SYMMAP_HEIGHT - 3);
@@ -13366,8 +13369,8 @@ mon_breath_msg(breath)
 STATIC void
 mon_breath_dam(midx, fy, fx, breath, breath_maxdam)
 {
-  int reduce, harm_type;
-  uint32_t cdis, weapon_type;
+  int harm_type;
+  uint32_t weapon_type;
   struct caveS* c_ptr;
   struct monS* m_ptr;
   struct creatureS* cr_ptr;
@@ -13384,11 +13387,13 @@ mon_breath_dam(midx, fy, fx, breath, breath_maxdam)
     magick_hituD = 1;
   }
 
-  cdis = distance(y, x, fy, fx);
-  reduce = 0;
-  while (cdis) reduce = bit_pos(&cdis);
-  reduce += 1;
-  breath_maxdam /= reduce;
+  if (!uvow(VOW_DBREATH)) {
+    uint32_t cdis = distance(y, x, fy, fx);
+    int reduce = 0;
+    while (cdis) reduce = bit_pos(&cdis);
+    reduce += 1;
+    breath_maxdam /= reduce;
+  }
   breath_maxdam += (breath_maxdam == 0);
 
   get_flags(breath, &weapon_type, &harm_type);
@@ -14274,6 +14279,55 @@ pawn_entrance()
   }
 }
 STATIC void
+stat_display()
+{
+  USE(overlay_width);
+
+  apspace(AB(overlayD));
+  apclear(AB(overlay_usedD));
+  int line = 0;
+  for (int it = 0; it < MAX_A; ++it) {
+    int used = 0;
+    overlayD[line][used++] = '(';
+    overlayD[line][used++] = 'a' + it;
+    overlayD[line][used++] = ')';
+    overlayD[line][used++] = ' ';
+
+    char* stat = stat_nameD[it];
+    while (*stat && used < overlay_width) overlayD[line][used++] = *stat++;
+    overlay_usedD[line] = used;
+    line += 1;
+  }
+}
+STATIC void
+stat_entrance()
+{
+  int cost = 550 * chr_adj() / 100;
+  char c;
+  char tmp[128];
+
+  while (1) {
+    stat_display();
+
+    snprintf(AP(tmp), "What stat would you restore? [%d gp]", cost);
+    if (!in_subcommand(tmp, &c)) {
+      break;
+    }
+
+    if (is_lower(c)) {
+      uint8_t item = c - 'a';
+      int r = 0;
+      if (item < MAX_A) {
+        if (res_stat(item)) r = 1;
+      }
+      if (r) {
+        msg_pause();
+        uD.gold -= cost;
+      }
+    }
+  }
+}
+STATIC void
 vow_display()
 {
   USE(overlay_width);
@@ -14319,12 +14373,6 @@ vow_entrance()
       uint8_t item = c - 'a';
       if (item < 8) uD.vow_flag ^= (1 << item);
     }
-    // else if (is_upper(c)) {
-    //   uint8_t item = c - 'A';
-    //   if (item < INVEN_EQUIP) obj_study(obj_get(invenD[item]), 1);
-    // } else if (c == '-') {
-    //   inven_sort();
-    // }
   }
 }
 STATIC void
@@ -14358,6 +14406,9 @@ town_entrance(tval)
   switch (tval) {
     case '0':
       pawn_entrance();
+      break;
+    case '8':
+      stat_entrance();
       break;
     case '9':
       vow_entrance();
@@ -14478,18 +14529,22 @@ player_maint()
   int flag;
 
   inven_sort();
-  flag = inven_reveal();
-  if (flag)
-    msg_print("Town inhabitants share knowledge of items you gathered.");
+  if (!uvow(VOW_FOREGO_ID)) {
+    flag = inven_reveal();
+    if (flag)
+      msg_print("Town inhabitants share knowledge of items you gathered.");
+  }
 
-  flag = 0;
-  for (int it = 0; it < MAX_A; ++it) {
-    if (statD.cur_stat[it] < statD.max_stat[it]) {
-      if (!flag) {
-        flag = 1;
-        msg_print("A wind from the misty mountains renews your being.");
+  if (!uvow(VOW_STAT_FEE)) {
+    flag = 0;
+    for (int it = 0; it < MAX_A; ++it) {
+      if (statD.cur_stat[it] < statD.max_stat[it]) {
+        if (!flag) {
+          flag = 1;
+          msg_print("A wind from the misty mountains renews your being.");
+        }
+        res_stat(it);
       }
-      res_stat(it);
     }
   }
 
