@@ -480,11 +480,13 @@ enum { FT_ANY, FT_ROOM, FT_CORR };
 
 // Vows
 #define VOW_DEATH 0
-#define VOW_UNDO_LIMIT 1
+#define VOW_UNDO_THREAT 1
+#define VOW_UNDO_LIMIT 2
 #define MAX_UNDO_LEV 3
 DATA char vowD[][80] = {
     "permanent death",
-    "limitation of undo (3 levels)",
+    "endure threat (prohibits undo and reset)",
+    "limitation of undo and level reset (3)",
 };
 
 // Input

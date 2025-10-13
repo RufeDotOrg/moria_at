@@ -11392,6 +11392,7 @@ can_undo(offset)
       vow_permit = replayD->input_mutationD != 0 || countD.pundo < 3;
     }
     if (uvow(VOW_DEATH) && uD.new_level_flag == NL_DEATH) vow_permit = 0;
+    if (uvow(VOW_UNDO_THREAT) && find_threatD) vow_permit = 0;
     return vow_permit && memory_ok;
   }
   return 0;
@@ -11401,6 +11402,7 @@ can_reset(death)
 {
   int ok = 1;
   if (death && uvow(VOW_DEATH)) ok = 0;
+  if (uvow(VOW_UNDO_THREAT) && find_threatD) ok = 0;
   return ok;
 }
 STATIC void
