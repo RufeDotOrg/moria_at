@@ -157,6 +157,13 @@ main(int argc, char** argv)
       printf("joystick unassign, release\n");
       globalD.use_joystick = 0;
       joystick_update();
+
+      printf("platform vsync (on) test\n");
+      show(vsync_rateD);
+      platform_vsync(1);
+      printf("platform vsync (off) test\n");
+      platform_vsync(0);
+      show(vsync_rateD);
     }
   }
 
