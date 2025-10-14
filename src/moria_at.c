@@ -6801,6 +6801,14 @@ res_stat(stat)
   }
   return FALSE;
 }
+STATIC int
+low_stat()
+{
+  for (int it = 0; it < MAX_A; ++it) {
+    if (statD.max_stat[it] != statD.cur_stat[it]) return 1;
+  }
+  return 0;
+}
 STATIC void
 py_where_on_map()
 {
@@ -8564,34 +8572,22 @@ inven_eat(iidx)
           lose_stat(A_CON);
           break;
         case 16:
-          if (res_stat(A_STR)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_STR);
           break;
         case 17:
-          if (res_stat(A_CON)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_CON);
           break;
         case 18:
-          if (res_stat(A_INT)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_INT);
           break;
         case 19:
-          if (res_stat(A_WIS)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_WIS);
           break;
         case 20:
-          if (res_stat(A_DEX)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_DEX);
           break;
         case 21:
-          if (res_stat(A_CHR)) {
-            ident |= TRUE;
-          }
+          ident |= res_stat(A_CHR);
           break;
         case 22:
           ident |= py_heal_hit(randint(6));
@@ -14537,25 +14533,16 @@ regenmana(percent)
 STATIC void
 player_maint()
 {
-  int flag;
-
   inven_sort();
   if (!uvow(VOW_FOREGO_ID)) {
-    flag = inven_reveal();
-    if (flag)
+    if (inven_reveal())
       msg_print("Town inhabitants share knowledge of items you gathered.");
   }
 
   if (!uvow(VOW_STAT_FEE)) {
-    flag = 0;
-    for (int it = 0; it < MAX_A; ++it) {
-      if (statD.cur_stat[it] < statD.max_stat[it]) {
-        if (!flag) {
-          flag = 1;
-          msg_print("A wind from the misty mountains renews your being.");
-        }
-        res_stat(it);
-      }
+    if (low_stat()) {
+      msg_print("A wind from the misty mountains renews your being.");
+      for (int it = 0; it < MAX_A; ++it) res_stat(it);
     }
   }
 
