@@ -11542,6 +11542,11 @@ py_menu()
       BufMsg(overlay, "q) quit");
     }
 
+    if (uD.vow_flag) {
+      line = 'v' - 'a';
+      BufMsg(overlay, "v) vow display");
+    }
+
     if (!in_subcommand(prompt, &c)) break;
 
     switch (c) {
@@ -11575,6 +11580,10 @@ py_menu()
         break;
       case 'q':
         quitD = 1;
+        break;
+      case 'v':
+        vow_display();
+        c = CLOBBER_MSG("Viewing your vows:");
         break;
     }
   }
@@ -14337,6 +14346,8 @@ vow_display()
   apclear(AB(overlay_usedD));
   int line = 0;
   for (int it = 0; it < AL(vowD); ++it) {
+    int flag = 1 << it;
+    int on = flag & uD.vow_flag;
     int used = 0;
     overlayD[line][used++] = '(';
     overlayD[line][used++] = 'a' + it;
@@ -14344,8 +14355,7 @@ vow_display()
     overlayD[line][used++] = ' ';
     overlayD[line][used++] = '[';
     overlayD[line][used++] = 'o';
-    int flag = 1 << it;
-    if (flag & uD.vow_flag) {
+    if (on) {
       overlayD[line][used++] = 'n';
     } else {
       overlayD[line][used++] = 'f';
