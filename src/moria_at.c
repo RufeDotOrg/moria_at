@@ -15005,7 +15005,7 @@ dungeon()
           last_action != replayD->input_record_readD) {
         AS(replayD->input_actionD, replayD->input_action_usedD++) =
             replayD->input_record_readD;
-        show(replayD->input_action_usedD);
+        // show(replayD->input_action_usedD);
       }
     }
 
@@ -15112,7 +15112,7 @@ main(int argc, char** argv)
     if (ready) {
       globalD.saveslot_class = uD.clidx;
       platformD.mmap_replay(&replayD);
-      show(replayD->input_action_usedD);
+      // show(replayD->input_action_usedD);
       if (RESEED && seed_changeD) {
         rnd_seed += 1;
         seed_changeD = 0;
