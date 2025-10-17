@@ -14769,8 +14769,9 @@ dungeon()
       if (!replay_playback()) {
         if (winner) py_endgame(py_king);
         if (TEST_REPLAY) replay_seedcmp(check_replay);
-        replayD->input_record_readD = replayD->input_record_writeD =
-            last_action;
+        if (replay_recording())
+          replayD->input_record_readD = replayD->input_record_writeD =
+              last_action;
       }
       if (replay_resumed()) replay_flag = REPLAY_RECORD;
       draw(DRAW_NOW);
