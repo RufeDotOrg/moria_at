@@ -14378,7 +14378,7 @@ vow_entrance()
   while (1) {
     vow_display();
 
-    if (!in_subcommand("What do you vow?", &c)) {
+    if (!in_subcommand("Newcomer, what vows do you keep?", &c)) {
       break;
     }
 
