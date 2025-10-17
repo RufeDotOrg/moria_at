@@ -23,8 +23,9 @@ STATIC int mmap_replay(ptr) void** ptr;
 
     int flag = O_RDWR;
     struct stat sv;
-    if (stat(filename, &sv) == -1 || sv.st_size != size) flag |= O_CREAT;
-    int fd = open(filename, flag, 0644);
+    char* path = path_append_filename(savepathD, savepath_usedD, filename);
+    if (stat(path, &sv) == -1 || sv.st_size != size) flag |= O_CREAT;
+    int fd = open(path, flag, 0644);
     if (flag & O_CREAT) {
       if (fd > 0 && ftruncate(fd, size) < 0) close(fd), fd = -1;
     }
