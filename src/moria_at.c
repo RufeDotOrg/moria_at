@@ -5348,6 +5348,8 @@ store_name(tchar)
       return "alchemy shop";
     case '6':
       return "magic shop";
+    case '8':
+      return "sauna";
     case '9':
       return "player vow";
   }
@@ -6802,10 +6804,12 @@ res_stat(stat)
   return FALSE;
 }
 STATIC int
-low_stat()
+low_stat(uint32_t bf)
 {
   for (int it = 0; it < MAX_A; ++it) {
-    if (statD.max_stat[it] != statD.cur_stat[it]) return 1;
+    int check = ((1 << it) & bf) != 0;
+
+    if (check && statD.max_stat[it] != statD.cur_stat[it]) return 1;
   }
   return 0;
 }
@@ -14285,7 +14289,7 @@ pawn_entrance()
   }
 }
 STATIC void
-stat_display()
+sauna_display()
 {
   USE(overlay_width);
 
@@ -14299,21 +14303,23 @@ stat_display()
     overlayD[line][used++] = ')';
     overlayD[line][used++] = ' ';
 
-    char* stat = stat_nameD[it];
-    while (*stat && used < overlay_width) overlayD[line][used++] = *stat++;
+    if (low_stat(1 << it)) {
+      char* stat = stat_nameD[it];
+      while (*stat && used < overlay_width) overlayD[line][used++] = *stat++;
+    }
     overlay_usedD[line] = used;
     line += 1;
   }
 }
 STATIC void
-stat_entrance()
+sauna_entrance()
 {
   int cost = 550 * chr_adj() / 100;
   char c;
   char tmp[128];
 
   while (1) {
-    stat_display();
+    sauna_display();
 
     snprintf(AP(tmp), "What stat would you restore? [%d gp]", cost);
     if (!in_subcommand(tmp, &c)) {
@@ -14415,7 +14421,10 @@ town_entrance(tval)
       pawn_entrance();
       break;
     case '8':
-      stat_entrance();
+      if (low_stat(-1))
+        sauna_entrance();
+      else
+        msg_print("The sauna is closed.");
       break;
     case '9':
       vow_entrance();
@@ -14540,7 +14549,7 @@ player_maint()
   }
 
   if (!uvow(VOW_STAT_FEE)) {
-    if (low_stat()) {
+    if (low_stat(-1)) {
       msg_print("A wind from the misty mountains renews your being.");
       for (int it = 0; it < MAX_A; ++it) res_stat(it);
     }
