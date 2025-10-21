@@ -521,8 +521,8 @@ rate_of_refresh()
   return refresh_rate;
 }
 
-extern int getentropy(void* buffer, uint64_t size);
-extern int64_t getrandom(void* buf, uint64_t buflen, unsigned int flags);
+extern int getentropy(void* buffer, size_t size);
+extern ssize_t getrandom(void* buf, size_t buflen, unsigned int flags);
 ptrsize
 platform_random()
 {
