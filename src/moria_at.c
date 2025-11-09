@@ -398,7 +398,6 @@ STATIC void
 replay_start()
 {
   if (replayD) {
-    showx(replayD->input_rhashD);
     uint64_t rhash = replay_hash();
     showx(rhash);
     if (replayD->input_rhashD != rhash) replayD->input_action_usedD = 0;
