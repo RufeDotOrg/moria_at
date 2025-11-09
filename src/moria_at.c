@@ -8371,10 +8371,11 @@ starlite(y, x)
     if (it != 5) light_line(it, y, x);
 }
 STATIC int
-obj_cmp(a, b)
-struct objS *a, *b;
+invenobj_cmp(j, i)
 {
   int aid, bid, astack, bstack, ar, br, at, bt, ak, bk, known;
+  struct objS* a = obj_get(invenD[j]);
+  struct objS* b = obj_get(invenD[i]);
 
   aid = (a->id != 0);
   bid = (b->id != 0);
@@ -8411,22 +8412,15 @@ struct objS *a, *b;
 STATIC int
 inven_sort()
 {
-  int i, j;
-  struct objS* obj[INVEN_EQUIP];
-  void* swap;
-
-  for (i = 0; i < INVEN_EQUIP; ++i) obj[i] = obj_get(invenD[i]);
-
-  for (i = 0; i < INVEN_EQUIP; ++i) {
-    for (j = i + 1; j < INVEN_EQUIP; ++j) {
-      if (obj_cmp(obj[j], obj[i]) > 0) {
-        swap = ptr_xor(obj[j], obj[i]);
-        obj[j] = ptr_xor(obj[j], swap);
-        obj[i] = ptr_xor(obj[i], swap);
+  for (int i = 0; i < INVEN_EQUIP; ++i) {
+    for (int j = i + 1; j < INVEN_EQUIP; ++j) {
+      int swap = invenD[j] ^ invenD[i];
+      if (swap && invenobj_cmp(j, i) > 0) {
+        invenD[j] ^= swap;
+        invenD[i] ^= swap;
       }
     }
   }
-  for (i = 0; i < INVEN_EQUIP; ++i) invenD[i] = obj[i]->id;
   return 1;
 }
 STATIC int
