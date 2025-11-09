@@ -124,8 +124,8 @@ int
 zoom_rect(rect_t* po)
 {
   *po = (rect_t){
-      panelD.panel_row_min,
       panelD.panel_col_min,
+      panelD.panel_row_min,
       SYMMAP_WIDTH,
       SYMMAP_HEIGHT,
   };
