@@ -3,6 +3,8 @@
 // 15ead9a40d09a1eb9972215cceac2bf29c9b77f6
 // origin	https://github.com/libsdl-org/SDL.git
 // clang-format off
+#ifndef SDL__H
+#define SDL__H
 #define SDL_INIT_AUDIO 0x00000010u
 #define SDL_INIT_EVENTS 0x00004000u
 #define SDL_INIT_EVERYTHING ( SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_EVENTS | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_SENSOR )
@@ -3395,3 +3397,4 @@ extern Uint32 SDL_WasInit(Uint32 flags);
 extern void SDL_Quit(void);
 
 #include "sdlinline.c"
+#endif

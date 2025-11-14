@@ -14,6 +14,10 @@ enum { __APPLE__ };
 enum { ANDROID };
 #endif
 
+#ifndef __FATCOSMOCC__
+#define IsWindows() 0
+#endif
+
 #ifdef RELEASE
 #undef RELEASE
 #define RELEASE 1
