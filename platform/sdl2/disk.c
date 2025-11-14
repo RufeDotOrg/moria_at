@@ -10,6 +10,7 @@ DATA int cachepath_usedD;
 extern char* SDL_AppleGetDocumentPath(const char*, const char*);
 extern int SDL_AndroidGetExternalStorageState();
 extern char* SDL_AndroidGetExternalStoragePath();
+extern char* SDL_AndroidGetInternalStoragePath();
 extern char* SDL_GetCachePath(const char*, const char*);
 
 STATIC char*
@@ -385,6 +386,17 @@ disk_pregame()
         exportpath_usedD = len;
       }
       Log("storage: [state %d] exportpath: %s", state, exportpathD);
+    }
+
+    {
+      // Preferred over SDL_GetPrefPath(); does not require SDL_free()
+      char* prefpath = SDL_AndroidGetInternalStoragePath();
+      SDL_Log("%s InternalStoragePath", prefpath);
+      int len = snprintf(savepathD, AL(savepathD), "%s", prefpath);
+      if (len < 0 || len >= AL(savepathD))
+        savepathD[0] = 0;
+      else
+        savepath_usedD = len;
     }
 
     if (!PC && SL(CACHENAME) != 0) {
