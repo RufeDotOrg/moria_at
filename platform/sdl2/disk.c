@@ -1,5 +1,6 @@
 // Rufe.org LLC 2022-2025: ISC License
 
+#define MAX_FILENAME 32
 #define SAVENAME "savechar"
 #define CACHENAME "moria.cache"
 #define MEMORYNAME "moria.memory"
@@ -19,11 +20,13 @@ path_append_filename(char* path, int path_len, char* filename)
   int wridx = path_len;
   char* write = &path[wridx];
 
-  if (wridx) *write++ = '/';
-  for (char* iter = filename; *iter != 0; ++iter) {
-    *write++ = *iter;
+  if (path_len + MAX_FILENAME < 1024) {
+    if (wridx) *write++ = '/';
+    for (char* iter = filename; *iter != 0; ++iter) {
+      *write++ = *iter;
+    }
+    *write = 0;
   }
-  *write = 0;
 
   return path;
 }
