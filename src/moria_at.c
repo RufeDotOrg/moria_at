@@ -14535,11 +14535,11 @@ regenmana(percent)
 STATIC void
 player_maint()
 {
-  inven_sort();
   if (!uvow(VOW_FOREGO_ID)) {
     if (inven_reveal())
       msg_print("Town inhabitants share knowledge of items you gathered.");
   }
+  inven_sort();
 
   if (!uvow(VOW_STAT_FEE)) {
     if (low_stat(-1)) {
