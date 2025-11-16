@@ -11086,25 +11086,20 @@ py_notes_menu()
 {
   int line = 0;
   // clang-format off
-BufMsg(overlay, "* Victory Screen");
-BufMsg(overlay, "  Extra Feature: balrog reset (balrog spawning is otherwise disabled)");
-BufMsg(overlay, "* gp suffix for shop/pawn price (previously g)");
-BufMsg(overlay, "* digging tunnel rewrite");
-BufMsg(overlay, "  str bonus added per turn of digging tool (up to 5/4)");
-BufMsg(overlay, "  str bonus added per turn of non-digging tool (up to 5/16)");
-BufMsg(overlay, "  heavy weapon penalty removed (it's hard enough to carry tools when weak)");
-BufMsg(overlay, "  digging tools provide base 25; non-digging tools provide max dice roll");
-BufMsg(overlay, "  base/dice requirement: 80 granite, 16 magma, 10 quartz, 0 rubble");
-BufMsg(overlay, "");
-BufMsg(overlay, "## Mobile features");
-BufMsg(overlay, "* orientation lock option moves to Extra Features submenu");
-BufMsg(overlay, "  orientation lock supports toggle at runtime");
-BufMsg(overlay, "* new run/walk button with 2 icons");
-BufMsg(overlay, "  some users play exclusive with one hand");
-BufMsg(overlay, "  run mode is equivalent to holding one finger against the touch screen");
+BufMsg(overlay, "# Art");
+BufMsg(overlay, " * color palette gamma updates");
+BufMsg(overlay, " ");
+BufMsg(overlay, "# Gameplay");
+BufMsg(overlay, " * Player may vow to restore original umoria rules");
+BufMsg(overlay, " - 0 XP characters may perform vows in shop '9' of town");
+BufMsg(overlay, " ");
+BufMsg(overlay, "# Technical Updates");
+BufMsg(overlay, " * fil-C compiler verifies gameplay memory safety during test");
+BufMsg(overlay, " * replay system uses mmap()");
+BufMsg(overlay, " - save files are portable across systems");
   // clang-format on
 
-  CLOBBER_MSG("~2025~ Patch Q2");
+  CLOBBER_MSG("~2025~ Patch Q4");
   return 0;
 }
 STATIC int
