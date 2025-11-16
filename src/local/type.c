@@ -7,6 +7,7 @@ struct summaryS {
   int sclass;
   int srace;
   int sdepth;
+  int svow;
 };
 
 // Platform visualization info

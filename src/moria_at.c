@@ -10984,6 +10984,7 @@ summary_update(struct summaryS* summary)
   summary->sclass = uD.clidx;
   summary->srace = uD.ridx;
   summary->sdepth = MAX(uD.max_dlv, dun_level) * 50;
+  summary->svow = uD.vow_flag;
 }
 STATIC int
 py_archive_read(summary, external)
@@ -11144,9 +11145,10 @@ py_saveslot_select()
       if (summary[it].invalid) {
         BufMsg(overlay, "%c) Invalid %s data file", 'a' + it, classD[it].name);
       } else if (summary[it].slevel) {
-        BufMsg(overlay, "%c) Level %d %s %s (%d feet)", 'a' + it,
+        BufMsg(overlay, "%c) Level %d %s %s (%d feet)%c", 'a' + it,
                summary[it].slevel, raceD[summary[it].srace].name,
-               classD[summary[it].sclass].name, summary[it].sdepth);
+               classD[summary[it].sclass].name, summary[it].sdepth,
+               summary[it].svow ? '*' : ' ');
       } else {
         if (using_external) {
           BufMsg(overlay, " ");
