@@ -15077,6 +15077,9 @@ global_init(int argc, char** argv)
 
   globalD.ghash = djb2(DJB2, bptr(&globalD) + sizeof(globalD.ghash),
                        sizeof(globalD) - sizeof(globalD.ghash));
+
+  if (PC) globalD.gpu_bypass = 1;
+
   msg_widthD = overlay_widthD = 80;
 }
 #include "platform/platform.c"

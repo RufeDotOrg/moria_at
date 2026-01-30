@@ -294,7 +294,6 @@ custom_postgame(may_exit)
 
   // Exit during pregame(); switch to "software" renderer
   if (DISK && phase == PHASE_PREGAME) {
-    globalD.gpu_bypass = 1;
     disk_cache_write();
   }
 
@@ -1805,6 +1804,9 @@ feature_menu()
         globalD.font_color = (globalD.font_color + 1) % (COLOR_COUNT + 1);
         apply_font();
         break;
+      case 'g':
+        INVERT(globalD.gpu_bypass);
+        break;
       case 'h':
         INVERT(globalD.hand_swap);
         platformD.orientation(0);
@@ -1846,7 +1848,6 @@ custom_gamecrash_handler(int sig)
 
   // Crash during pregame(); switch to "software" renderer
   if (DISK && phase == PHASE_PREGAME) {
-    globalD.gpu_bypass = 1;
     disk_cache_write();
   }
 
