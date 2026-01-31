@@ -563,6 +563,8 @@ platform_pregame()
     if (QUALITY) SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
 
     if (PC) {
+      SDL_SetHint(SDL_HINT_DIRECTINPUT_ENABLED, "0");
+
       if (!SDL_GetHint(SDL_HINT_RENDER_DRIVER)) {
         SDL_SetHint(SDL_HINT_RENDER_DRIVER, platform_renderer());
       }
