@@ -648,9 +648,14 @@ game_text()
 
     {
       SDL_Point p = {grect.x + grect.w / 2, grect.y + grect.h + 24};
-      len = snprintf(tmp, AL(tmp), "%s", dun_descD);
-      p.x -= (len * FWIDTH) / 2;
-      render_monofont_string(renderer, &fontD, tmp, len, p);
+      if (dun_level == 0) {
+        p.x -= (10 * FWIDTH) / 2;
+        render_monofont_string(renderer, &fontD, AP("town square"), p);
+      } else {
+        len = strlen(dun_descD);
+        p.x -= (len * FWIDTH) / 2;
+        render_monofont_string(renderer, &fontD, dun_descD, len, p);
+      }
 
       if (PC && TEST_CAVEGEN) {
         p.y += FHEIGHT;

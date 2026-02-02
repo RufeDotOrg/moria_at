@@ -114,7 +114,7 @@ GAME int death_creD;
 DATA char descD[80 - 4];
 DATA char detailD[80 - 4];
 DATA char death_descD[80];
-DATA char dun_descD[16];
+DATA char dun_descD[32];
 
 DATA int ylookD;
 DATA int xlookD;

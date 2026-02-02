@@ -14703,11 +14703,7 @@ dungeon()
 
   town = (dun_level == 0);
   uD.max_dlv = MAX(uD.max_dlv, dun_level);
-
-  if (town)
-    snprintf(dun_descD, AL(dun_descD), "%s", "town square");
-  else
-    snprintf(dun_descD, AL(dun_descD), "%d feet", dun_level * 50);
+  snprintf(dun_descD, AL(dun_descD), "%d feet", dun_level * 50);
 
   switch (uD.new_level_flag) {
     default:
