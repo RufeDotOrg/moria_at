@@ -1141,16 +1141,24 @@ draw_menu(mode, using_selection)
   USE(renderer);
   char* msg = AS(msg_cqD, msg_writeD);
   int msg_used = AS(msglen_cqD, msg_writeD);
-  int is_text;
+  int is_text = 1;
   AUSE(grect, GR_OVERLAY);
+  char* textlist = &overlayD[0][0];
+  int* lenlist = overlay_usedD;
+  int step = AL(overlayD[0]);
+  int row_count = AL(overlayD);
+  USE(finger_row);
 
-  if (mode == 1) {
-    is_text = 1;
-  } else {
+  if (mode == 2) {
     is_text = (screen_submodeD != 0);
     if (screen_submodeD == 2) {
       grect = grectD[GR_WIDESCREEN];
     }
+    textlist = &screenD[0][0];
+    lenlist = screen_usedD;
+    step = AL(screenD[0]);
+    row_count = AL(screenD);
+    finger_row = -1;
   }
 
   SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -1162,31 +1170,13 @@ draw_menu(mode, using_selection)
   if (msg_used) render_monofont_string(renderer, &fontD, msg, msg_used, anchor);
   anchor.y += FHEIGHT * 2;
 
-  char* textlist = 0;
-  int* lenlist = 0;
-  int step = 0;
-  USE(finger_row);
-  switch (mode) {
-    case 1:
-      textlist = &overlayD[0][0];
-      lenlist = overlay_usedD;
-      step = AL(overlayD[0]);
-      break;
-    case 2:
-      textlist = &screenD[0][0];
-      lenlist = screen_usedD;
-      step = AL(screenD[0]);
-      finger_row = -1;
-      break;
-  }
-
-  for (int row = 0; row < AL(screenD); ++row) {
+  for (int row = 0; row < row_count; ++row) {
     SDL_Point p = {anchor.x, anchor.y + row * FHEIGHT};
     render_monofont_string(renderer, &fontD, &textlist[row * step],
                            lenlist[row], p);
   }
 
-  if (using_selection && finger_row >= 0) {
+  if (using_selection && finger_row >= 0 && finger_row < row_count) {
     SDL_Point p = {anchor.x, anchor.y + finger_row * FHEIGHT};
     int c = globalD.font_color ? greyD[5] : font_rgba(RED);
     font_color(c);
