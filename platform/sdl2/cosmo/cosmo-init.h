@@ -171,6 +171,17 @@ verify_init(char* path, int pathlen, int status)
   return 0;
 }
 
+#include <libc/calls/struct/cpuset.h>
+#include <libc/thread/thread.h>
+int
+pin_to_core0(void)
+{
+  cpu_set_t x, y;
+  CPU_ZERO(&x);
+  CPU_SET(0, &x);
+  pthread_setaffinity_np(pthread_self(), sizeof(x), &x);
+}
+
 int
 cosmo_init(int argc, char** argv)
 {
@@ -242,5 +253,8 @@ cosmo_init(int argc, char** argv)
     setenv(ENV_KPRINTF_LOG, FAIL_LOG, 0);
     ShowCrashReports();
   }
+
+  // P/E core systems may not play nice with longjmp()
+  pin_to_core0();
 }
 #define global_init cosmo_init
